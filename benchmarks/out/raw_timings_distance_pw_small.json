@@ -1,0 +1,259 @@
+{
+  "run_metadata": {
+    "timestamp": "2025-09-03T16:17:24.689174Z",
+    "config_path": "/media/dan/Data/git/pyspi/FullConfig.yaml",
+    "hardware": {
+      "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
+      "python": "3.9.23",
+      "cpu_count": 64,
+      "omp": "1",
+      "mkl": "1",
+      "openblas": "1",
+      "numexpr": "1"
+    },
+    "shapes_tested": [
+      {
+        "c": 2,
+        "t": 5,
+        "repeats": 1
+      },
+      {
+        "c": 3,
+        "t": 20,
+        "repeats": 1
+      }
+    ],
+    "max_seconds": 10.0
+  },
+  "results": [
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.003691380006785039
+          ],
+          "mean": 0.003691380006785039,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.00347717700060457
+          ],
+          "mean": 0.00347717700060457,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_euclidean"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 1
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029500960008590482
+          ],
+          "mean": 0.0029500960008590482,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.002956356001959648
+          ],
+          "mean": 0.002956356001959648,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_cityblock"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 2
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.0034939270044560544
+          ],
+          "mean": 0.0034939270044560544,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029161070051486604
+          ],
+          "mean": 0.0029161070051486604,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_cosine"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 3
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.0028530000054161064
+          ],
+          "mean": 0.0028530000054161064,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.0036843199995928444
+          ],
+          "mean": 0.0036843199995928444,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_chebyshev"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 4
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.0028799779975088313
+          ],
+          "mean": 0.0028799779975088313,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029361769993556663
+          ],
+          "mean": 0.0029361769993556663,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_canberra"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 5
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029516060021705925
+          ],
+          "mean": 0.0029516060021705925,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 10.0,
+          "status": "ok",
+          "times_sec": [
+            0.0036738310009241104
+          ],
+          "mean": 0.0036738310009241104,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_braycurtis"
+    }
+  ],
+  "totals": {
+    "tested": 6,
+    "ok": 6,
+    "failed": 0,
+    "timeout": 0,
+    "skipped": 0
+  }
+}

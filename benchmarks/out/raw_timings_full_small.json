@@ -1,0 +1,4837 @@
+{
+  "run_metadata": {
+    "timestamp": "2025-09-03T16:43:31.448126Z",
+    "config_path": "/media/dan/Data/git/pyspi/FullConfig.yaml",
+    "hardware": {
+      "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
+      "python": "3.9.23",
+      "cpu_count": 64,
+      "omp": "1",
+      "mkl": "1",
+      "openblas": "1",
+      "numexpr": "1"
+    },
+    "shapes_tested": [
+      {
+        "c": 2,
+        "t": 5,
+        "repeats": 3
+      },
+      {
+        "c": 3,
+        "t": 20,
+        "repeats": 3
+      },
+      {
+        "c": 4,
+        "t": 30,
+        "repeats": 3
+      },
+      {
+        "c": 6,
+        "t": 64,
+        "repeats": 3
+      },
+      {
+        "c": 8,
+        "t": 64,
+        "repeats": 3
+      }
+    ],
+    "max_seconds": 120.0
+  },
+  "results": [
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029420579958241433,
+            0.0015848050024942495,
+            0.001563276004162617
+          ],
+          "mean": 0.0020300463341603367,
+          "std": 0.0006449495213841025,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.002870110001822468,
+            0.001517747004982084,
+            0.0015920549994916655
+          ],
+          "mean": 0.001993304002098739,
+          "std": 0.0006207371909676721,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0030091849985183217,
+            0.0015848149996600114,
+            0.0015020270002423786
+          ],
+          "mean": 0.0020320089994735704,
+          "std": 0.0006917938821372178,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.002940808000857942,
+            0.0015382569981738925,
+            0.0014968379982747138
+          ],
+          "mean": 0.001991967665768849,
+          "std": 0.0006711444799778698,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.002885379006329458,
+            0.0014835490001132712,
+            0.0014859379953122698
+          ],
+          "mean": 0.0019516220005849998,
+          "std": 0.000660266631070185,
+          "note": null
+        }
+      ],
+      "identifier": "cov_EmpiricalCovariance"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 1
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.01828856200154405,
+            0.01494325900421245,
+            0.015826697999727912
+          ],
+          "mean": 0.016352839668494806,
+          "std": 0.0014154815029283746,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.02089675099705346,
+            0.018182996005634777,
+            0.018091079000441823
+          ],
+          "mean": 0.019056942001043353,
+          "std": 0.001301482498361182,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.021024907000537496,
+            0.019733212000573985,
+            0.01850345499406103
+          ],
+          "mean": 0.01975385799839084,
+          "std": 0.0010294819888858147,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.02315069199539721,
+            0.020547343003272545,
+            0.01973661200463539
+          ],
+          "mean": 0.02114488233443505,
+          "std": 0.0014564283905144247,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.022182116998010315,
+            0.02178105000348296,
+            0.019812098995316774
+          ],
+          "mean": 0.021258421998936683,
+          "std": 0.0010357288437375517,
+          "note": null
+        }
+      ],
+      "identifier": "cov_EllipticEnvelope"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 2
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.003368042001966387,
+            0.0018474249955033883,
+            0.001855585003795568
+          ],
+          "mean": 0.0023570173337551146,
+          "std": 0.0007149101604316529,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0036292329969001003,
+            0.002110146000632085,
+            0.0019423120029387064
+          ],
+          "mean": 0.0025605636668236307,
+          "std": 0.0007587633207968535,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0035282870012451895,
+            0.0020230800000717863,
+            0.002036518999375403
+          ],
+          "mean": 0.0025292953335641264,
+          "std": 0.0007064150884325327,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.003973081998992711,
+            0.0022300529963104054,
+            0.0022455610014731064
+          ],
+          "mean": 0.002816231998925408,
+          "std": 0.0008180409796368483,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.004032949000247754,
+            0.0025645109999459237,
+            0.002888718998292461
+          ],
+          "mean": 0.003162059666162046,
+          "std": 0.0006298750567724538,
+          "note": null
+        }
+      ],
+      "identifier": "cov_GraphicalLasso"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 3
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.04243494900583755,
+            0.03844109999772627,
+            0.034031043003778905
+          ],
+          "mean": 0.038302364002447575,
+          "std": 0.0034322825039273617,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.052210909001587424,
+            0.05160331999650225,
+            0.0478577009998844
+          ],
+          "mean": 0.050557309999324694,
+          "std": 0.0019249602008300252,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.05803293600183679,
+            0.05512237799848663,
+            0.05875620099686785
+          ],
+          "mean": 0.057303838332397085,
+          "std": 0.0015705317474405225,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.08089628799643833,
+            0.07083335999777773,
+            0.07399572899885243
+          ],
+          "mean": 0.07524179233102284,
+          "std": 0.004201597739542388,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.1005547029999434,
+            0.09292994900170015,
+            0.08922050800174475
+          ],
+          "mean": 0.09423505333446276,
+          "std": 0.004718295388085593,
+          "note": null
+        }
+      ],
+      "identifier": "cov_GraphicalLassoCV"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 4
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0030550640003639273,
+            0.00157792500249343,
+            0.0015444059972651303
+          ],
+          "mean": 0.0020591316667074957,
+          "std": 0.0007043634435169734,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0031167619963525794,
+            0.002005930000450462,
+            0.0019540520006557927
+          ],
+          "mean": 0.0023589146658196114,
+          "std": 0.0005362973453925432,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.002963097002066206,
+            0.001705930000753142,
+            0.0015967650033417158
+          ],
+          "mean": 0.0020885973353870213,
+          "std": 0.0006199685472836308,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0030616040021413937,
+            0.0017631579976296052,
+            0.001666572003159672
+          ],
+          "mean": 0.0021637780009768903,
+          "std": 0.0006360822063524068,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.003124971000943333,
+            0.0018383360002189875,
+            0.001733570003125351
+          ],
+          "mean": 0.002232292334762557,
+          "std": 0.0006326665152761354,
+          "note": null
+        }
+      ],
+      "identifier": "cov_LedoitWolf"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 5
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.019557847997930367,
+            0.015882086001511198,
+            0.016966988994681742
+          ],
+          "mean": 0.017468974331374437,
+          "std": 0.001542032970306994,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0199072960022022,
+            0.017891966002935078,
+            0.018003762001171708
+          ],
+          "mean": 0.018601008002102997,
+          "std": 0.0009248119955637175,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.022197065998625476,
+            0.019384644001547713,
+            0.019727361999684945
+          ],
+          "mean": 0.020436357333286043,
+          "std": 0.0012528461357279857,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.022208734997548163,
+            0.020386038995638955,
+            0.02003256099851569
+          ],
+          "mean": 0.020875778330567602,
+          "std": 0.0009535256614790223,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.022312221997708548,
+            0.019707723004103173,
+            0.021807969998917542
+          ],
+          "mean": 0.021275971666909754,
+          "std": 0.0011278653645617916,
+          "note": null
+        }
+      ],
+      "identifier": "cov_MinCovDet"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 6
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.002925677996245213,
+            0.0017739989998517558,
+            0.001484999003878329
+          ],
+          "mean": 0.0020615586666584327,
+          "std": 0.0006223112357667397,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.004110306996153668,
+            0.0015424470038851723,
+            0.0014229100052034482
+          ],
+          "mean": 0.002358554668414096,
+          "std": 0.0012396368922172906,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0031598499990650453,
+            0.0016275840025627986,
+            0.0016251540000666864
+          ],
+          "mean": 0.002137529333898177,
+          "std": 0.0007228905555930552,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 7
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 8
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 9
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 10
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 11
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 12
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 13
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 14
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 15
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 6
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 7
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 8
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 9
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 10
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 11
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 12
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 13
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 14
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 15
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "SpearmanR",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "SpearmanR",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "KendallTau",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "KendallTau",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "DistanceCorrelation",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "DistanceCorrelation",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "MultiscaleGraphCorrelation",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "HilbertSchmidtIndependenceCriterion",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "HilbertSchmidtIndependenceCriterion",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "HellerHellerGorfine",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "CrossMultiscaleGraphCorrelation",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "CrossMultiscaleGraphCorrelation",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "CrossDistanceCorrelation",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "CrossDistanceCorrelation",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "DynamicTimeWarping",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "DynamicTimeWarping",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "DynamicTimeWarping",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "SoftDynamicTimeWarping",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "SoftDynamicTimeWarping",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "SoftDynamicTimeWarping",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "LongestCommonSubsequence",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "LongestCommonSubsequence",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "LongestCommonSubsequence",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 6
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 7
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 8
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 9
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 10
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 11
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 12
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 13
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 14
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "Barycenter",
+        "config_index": 15
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "GromovWasserstainTau",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherencePhase",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherencePhase",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherencePhase",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherencePhase",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherencePhase",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherencePhase",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherenceMagnitude",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherenceMagnitude",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherenceMagnitude",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherenceMagnitude",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherenceMagnitude",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "CoherenceMagnitude",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "ImaginaryCoherence",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "ImaginaryCoherence",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "ImaginaryCoherence",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "ImaginaryCoherence",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "ImaginaryCoherence",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "ImaginaryCoherence",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseSlopeIndex",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseSlopeIndex",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseSlopeIndex",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLockingValue",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLockingValue",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLockingValue",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLockingValue",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLockingValue",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLockingValue",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLagIndex",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLagIndex",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLagIndex",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLagIndex",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLagIndex",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PhaseLagIndex",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "WeightedPhaseLagIndex",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "WeightedPhaseLagIndex",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "WeightedPhaseLagIndex",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "WeightedPhaseLagIndex",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "WeightedPhaseLagIndex",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "WeightedPhaseLagIndex",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredPhaseLagIndex",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredPhaseLagIndex",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredPhaseLagIndex",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredPhaseLagIndex",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredPhaseLagIndex",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredPhaseLagIndex",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredWeightedPhaseLagIndex",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredWeightedPhaseLagIndex",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredWeightedPhaseLagIndex",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredWeightedPhaseLagIndex",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredWeightedPhaseLagIndex",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DebiasedSquaredWeightedPhaseLagIndex",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PairwisePhaseConsistency",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PairwisePhaseConsistency",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PairwisePhaseConsistency",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PairwisePhaseConsistency",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PairwisePhaseConsistency",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PairwisePhaseConsistency",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedTransferFunction",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedTransferFunction",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedTransferFunction",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedTransferFunction",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedTransferFunction",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedTransferFunction",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedCoherence",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedCoherence",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedCoherence",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedCoherence",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedCoherence",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectedCoherence",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PartialDirectedCoherence",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PartialDirectedCoherence",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PartialDirectedCoherence",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PartialDirectedCoherence",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PartialDirectedCoherence",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "PartialDirectedCoherence",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "GeneralizedPartialDirectedCoherence",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "GeneralizedPartialDirectedCoherence",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "GeneralizedPartialDirectedCoherence",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "GeneralizedPartialDirectedCoherence",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "GeneralizedPartialDirectedCoherence",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "GeneralizedPartialDirectedCoherence",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectDirectedTransferFunction",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectDirectedTransferFunction",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectDirectedTransferFunction",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectDirectedTransferFunction",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectDirectedTransferFunction",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "DirectDirectedTransferFunction",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "GroupDelay",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "GroupDelay",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "GroupDelay",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 6
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 7
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 8
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 9
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 10
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 11
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 12
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 13
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 14
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 15
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 16
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 17
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 18
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 19
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 20
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 21
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 22
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.spectral",
+        "measure": "SpectralGrangerCausality",
+        "config_index": 23
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    }
+  ],
+  "totals": {
+    "tested": 198,
+    "ok": 6,
+    "failed": 192,
+    "timeout": 0,
+    "skipped": 0
+  }
+}

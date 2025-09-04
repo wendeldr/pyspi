@@ -1,0 +1,346 @@
+{
+  "run_metadata": {
+    "timestamp": "2025-09-03T17:14:31.421023Z",
+    "config_path": "/media/dan/Data/git/pyspi/FullConfig.yaml",
+    "hardware": {
+      "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
+      "python": "3.9.23",
+      "cpu_count": 64,
+      "omp": "1",
+      "mkl": "1",
+      "openblas": "1",
+      "numexpr": "1"
+    },
+    "shapes_tested": [
+      {
+        "c": 2,
+        "t": 5,
+        "repeats": 1
+      },
+      {
+        "c": 3,
+        "t": 20,
+        "repeats": 1
+      }
+    ],
+    "max_seconds": 20.0
+  },
+  "results": [
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "AdditiveNoiseModel",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0052534439964802004
+          ],
+          "mean": 0.0052534439964802004,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.009925766004016623
+          ],
+          "mean": 0.009925766004016623,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "anm"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "RegressionErrorCausalInference",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.005614621994027402
+          ],
+          "mean": 0.005614621994027402,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.013902578997658566
+          ],
+          "mean": 0.013902578997658566,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "reci"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "InformationGeometricConditionalIndependence",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.003578127005312126
+          ],
+          "mean": 0.003578127005312126,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.005600412005151156
+          ],
+          "mean": 0.005600412005151156,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "igci"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "ConvergentCrossMapping",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "ccm_E-None_mean"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "ConvergentCrossMapping",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "ccm_E-None_max"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "ConvergentCrossMapping",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "ccm_E-None_diff"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "ConvergentCrossMapping",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "ccm_E-1_mean"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "ConvergentCrossMapping",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "ccm_E-1_max"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "ConvergentCrossMapping",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "ccm_E-1_diff"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "ConvergentCrossMapping",
+        "config_index": 6
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "ccm_E-10_mean"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "ConvergentCrossMapping",
+        "config_index": 7
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "ccm_E-10_max"
+    },
+    {
+      "key": {
+        "module": ".statistics.causal",
+        "measure": "ConvergentCrossMapping",
+        "config_index": 8
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "ccm_E-10_diff"
+    }
+  ],
+  "totals": {
+    "tested": 12,
+    "ok": 3,
+    "failed": 9,
+    "timeout": 0,
+    "skipped": 0
+  }
+}

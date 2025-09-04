@@ -1,0 +1,222 @@
+{
+  "run_metadata": {
+    "timestamp": "2025-09-03T17:27:14.834164Z",
+    "config_path": "/media/dan/Data/git/pyspi/FullConfig.yaml",
+    "hardware": {
+      "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
+      "python": "3.9.23",
+      "cpu_count": 64,
+      "omp": "1",
+      "mkl": "1",
+      "openblas": "1",
+      "numexpr": "1"
+    },
+    "shapes_tested": [
+      {
+        "c": 2,
+        "t": 5,
+        "repeats": 1
+      },
+      {
+        "c": 3,
+        "t": 20,
+        "repeats": 1
+      }
+    ],
+    "max_seconds": 20.0
+  },
+  "results": [
+    {
+      "key": {
+        "module": ".statistics.misc",
+        "measure": "LinearModel",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.004370966002170462
+          ],
+          "mean": 0.004370966002170462,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.012054193997755647
+          ],
+          "mean": 0.012054193997755647,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "lmfit_Ridge"
+    },
+    {
+      "key": {
+        "module": ".statistics.misc",
+        "measure": "LinearModel",
+        "config_index": 1
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.004748313993331976
+          ],
+          "mean": 0.004748313993331976,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.008990643997094594
+          ],
+          "mean": 0.008990643997094594,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "lmfit_Lasso"
+    },
+    {
+      "key": {
+        "module": ".statistics.misc",
+        "measure": "LinearModel",
+        "config_index": 2
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.004313357996579725
+          ],
+          "mean": 0.004313357996579725,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0077402150054695085
+          ],
+          "mean": 0.0077402150054695085,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "lmfit_SGDRegressor"
+    },
+    {
+      "key": {
+        "module": ".statistics.misc",
+        "measure": "LinearModel",
+        "config_index": 3
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.004690506000770256
+          ],
+          "mean": 0.004690506000770256,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.008532979001756757
+          ],
+          "mean": 0.008532979001756757,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "lmfit_ElasticNet"
+    },
+    {
+      "key": {
+        "module": ".statistics.misc",
+        "measure": "LinearModel",
+        "config_index": 4
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.00498495500505669
+          ],
+          "mean": 0.00498495500505669,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.008386393994442187
+          ],
+          "mean": 0.008386393994442187,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "lmfit_BayesianRidge"
+    }
+  ],
+  "totals": {
+    "tested": 5,
+    "ok": 5,
+    "failed": 0,
+    "timeout": 0,
+    "skipped": 0
+  }
+}

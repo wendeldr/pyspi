@@ -1,0 +1,486 @@
+{
+  "run_metadata": {
+    "timestamp": "2025-09-03T16:14:49.240426Z",
+    "config_path": "/media/dan/Data/git/pyspi/FullConfig.yaml",
+    "hardware": {
+      "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
+      "python": "3.9.23",
+      "cpu_count": 64,
+      "omp": "1",
+      "mkl": "1",
+      "openblas": "1",
+      "numexpr": "1"
+    },
+    "shapes_tested": [
+      {
+        "c": 2,
+        "t": 5,
+        "repeats": 3
+      },
+      {
+        "c": 3,
+        "t": 20,
+        "repeats": 3
+      },
+      {
+        "c": 4,
+        "t": 30,
+        "repeats": 3
+      }
+    ],
+    "max_seconds": 20.0
+  },
+  "results": [
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029119969985913485,
+            0.0014196299962350167,
+            0.001370740996208042
+          ],
+          "mean": 0.0019007893303448025,
+          "std": 0.0007153103032117703,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029445160034811124,
+            0.0013917100004618987,
+            0.001380570996843744
+          ],
+          "mean": 0.0019055990002622518,
+          "std": 0.0007346393328399748,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0030010640039108694,
+            0.0014191390000632964,
+            0.0014754580042790622
+          ],
+          "mean": 0.001965220336084409,
+          "std": 0.0007328128618281269,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_euclidean"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 1
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029009270001552068,
+            0.0013725109965889715,
+            0.0013755609979853034
+          ],
+          "mean": 0.0018829996649098273,
+          "std": 0.0007197843985096967,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.00410947400087025,
+            0.00169776999973692,
+            0.0014419390063267201
+          ],
+          "mean": 0.0024163943356446302,
+          "std": 0.0012017352561740837,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.002855619000911247,
+            0.0013621420002891682,
+            0.0013091540022287518
+          ],
+          "mean": 0.0018423050011430557,
+          "std": 0.000716847672605215,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_cityblock"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 2
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0030260119965532795,
+            0.0014391189979505725,
+            0.0014152489966363646
+          ],
+          "mean": 0.0019601266637134054,
+          "std": 0.0007537577423872393,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029852340012439527,
+            0.00150151699926937,
+            0.001435279002180323
+          ],
+          "mean": 0.001974010000897882,
+          "std": 0.0007155544946503724,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0030424819997278973,
+            0.0014388190029421821,
+            0.0014302389972726814
+          ],
+          "mean": 0.0019705133333142535,
+          "std": 0.0007580044065192085,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_cosine"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 3
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029292659964994527,
+            0.0025189509979099967,
+            0.001790315996913705
+          ],
+          "mean": 0.0024128443304410516,
+          "std": 0.00047098884916037216,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.002893377997679636,
+            0.001346492994343862,
+            0.0013295630051288754
+          ],
+          "mean": 0.0018564779990507911,
+          "std": 0.0007332315966555536,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0034248089941684157,
+            0.0014836379996268079,
+            0.0013641219993587583
+          ],
+          "mean": 0.0020908563310513273,
+          "std": 0.0009445080903687016,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_chebyshev"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 4
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0028913980058860034,
+            0.0013654209978994913,
+            0.0013259030019980855
+          ],
+          "mean": 0.0018609073352611933,
+          "std": 0.0007288455184667479,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.002809441000863444,
+            0.0013718219997826964,
+            0.0013280929997563362
+          ],
+          "mean": 0.0018364520001341589,
+          "std": 0.0006882386955196847,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.002923346997704357,
+            0.0013502119982149452,
+            0.0013561219966504723
+          ],
+          "mean": 0.0018765603308565915,
+          "std": 0.0007401938829063946,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_canberra"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "PairwiseDistance",
+        "config_index": 5
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029801349955960177,
+            0.0014881079987389967,
+            0.0015299660008167848
+          ],
+          "mean": 0.001999402998383933,
+          "std": 0.0006936927566058764,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.002977954995003529,
+            0.001355362001049798,
+            0.0013415030043688603
+          ],
+          "mean": 0.0018916066668073956,
+          "std": 0.0007681851059816901,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.0028228099981788546,
+            0.0013738919951720163,
+            0.0013357830030145124
+          ],
+          "mean": 0.0018441616654551278,
+          "std": 0.000692183739180098,
+          "note": null
+        }
+      ],
+      "identifier": "pdist_braycurtis"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "DistanceCorrelation",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.2292600040018442,
+            0.0020202489977236837,
+            0.0019477309979265556
+          ],
+          "mean": 0.07774266133249814,
+          "std": 0.10713894455923455,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.2272841169979074,
+            0.0038128060041344725,
+            0.003388959994481411
+          ],
+          "mean": 0.0781619609988411,
+          "std": 0.10544542970566143,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.2330897149950033,
+            0.005485296998813283,
+            0.0056699600027059205
+          ],
+          "mean": 0.0814149906655075,
+          "std": 0.1072502526039843,
+          "note": null
+        }
+      ],
+      "identifier": "dcorr"
+    },
+    {
+      "key": {
+        "module": ".statistics.distance",
+        "measure": "DistanceCorrelation",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.22697125199920265,
+            0.0020047389989485964,
+            0.0019495520027703606
+          ],
+          "mean": 0.0769751810003072,
+          "std": 0.10606324134757339,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.23806703300215304,
+            0.0035143459972459823,
+            0.0034704579957178794
+          ],
+          "mean": 0.08168394566503896,
+          "std": 0.11057954297052343,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    }
+  ],
+  "totals": {
+    "tested": 8,
+    "ok": 7,
+    "failed": 1,
+    "timeout": 0,
+    "skipped": 0
+  }
+}

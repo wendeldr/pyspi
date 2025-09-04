@@ -1,0 +1,1390 @@
+{
+  "run_metadata": {
+    "timestamp": "2025-09-03T16:48:48.546702Z",
+    "config_path": "/media/dan/Data/git/pyspi/FullConfig.yaml",
+    "hardware": {
+      "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
+      "python": "3.9.23",
+      "cpu_count": 64,
+      "omp": "1",
+      "mkl": "1",
+      "openblas": "1",
+      "numexpr": "1"
+    },
+    "shapes_tested": [
+      {
+        "c": 2,
+        "t": 5,
+        "repeats": 3
+      },
+      {
+        "c": 3,
+        "t": 20,
+        "repeats": 3
+      },
+      {
+        "c": 4,
+        "t": 30,
+        "repeats": 3
+      },
+      {
+        "c": 6,
+        "t": 64,
+        "repeats": 3
+      },
+      {
+        "c": 8,
+        "t": 64,
+        "repeats": 3
+      }
+    ],
+    "max_seconds": 120.0
+  },
+  "results": [
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029900360023020767,
+            0.0016553219975321554,
+            0.001519746998383198
+          ],
+          "mean": 0.00205503499940581,
+          "std": 0.0006634582637771715,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029283979965839535,
+            0.0016296239991788752,
+            0.0017847279959823936
+          ],
+          "mean": 0.0021142499972484075,
+          "std": 0.0005791614835677873,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029243780008982867,
+            0.0016081339999800548,
+            0.0016758019992266782
+          ],
+          "mean": 0.0020694380000350066,
+          "std": 0.0006051647397403945,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0032326569998986088,
+            0.002015199002926238,
+            0.002280890003021341
+          ],
+          "mean": 0.002509582001948729,
+          "std": 0.0005226700784612589,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.002992055000504479,
+            0.001613663996977266,
+            0.0015579659957438707
+          ],
+          "mean": 0.0020545616644085385,
+          "std": 0.0006632977628252993,
+          "note": null
+        }
+      ],
+      "identifier": "cov_EmpiricalCovariance"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 1
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.017562467000971083,
+            0.01543719199980842,
+            0.015412502994877286
+          ],
+          "mean": 0.016137387331885595,
+          "std": 0.0010077339047492389,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.020743285997014027,
+            0.01916205200541299,
+            0.018893000997195486
+          ],
+          "mean": 0.0195994463332075,
+          "std": 0.0008162409748877206,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.021117723001225386,
+            0.018631571001606062,
+            0.018276353002875112
+          ],
+          "mean": 0.01934188233523552,
+          "std": 0.0012640549855901847,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.02267531899997266,
+            0.019287028000690043,
+            0.020331971005361993
+          ],
+          "mean": 0.020764772668674897,
+          "std": 0.0014167137875566616,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.022254963994782884,
+            0.019822259004286025,
+            0.019934455005568452
+          ],
+          "mean": 0.02067055933487912,
+          "std": 0.0011212792041293766,
+          "note": null
+        }
+      ],
+      "identifier": "cov_EllipticEnvelope"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 2
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0034751389976008795,
+            0.0019330530049046502,
+            0.0022332519947667606
+          ],
+          "mean": 0.0025471479990907633,
+          "std": 0.0006675354314518491,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.003585534999729134,
+            0.0021054459939477965,
+            0.0020968960016034544
+          ],
+          "mean": 0.002595958998426795,
+          "std": 0.0006997446069137974,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0036233139981050044,
+            0.00244599500001641,
+            0.002489462996891234
+          ],
+          "mean": 0.0028529239983375496,
+          "std": 0.0005450369592938029,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.003771087998757139,
+            0.0022747699986211956,
+            0.002221301998361014
+          ],
+          "mean": 0.002755719998579783,
+          "std": 0.0007183053383258303,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.004395936994114891,
+            0.002980505996674765,
+            0.0030214150028768927
+          ],
+          "mean": 0.003465952664555516,
+          "std": 0.0006578102698177801,
+          "note": null
+        }
+      ],
+      "identifier": "cov_GraphicalLasso"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 3
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.042179099000350107,
+            0.03917321399785578,
+            0.034003993998339865
+          ],
+          "mean": 0.038452102332181916,
+          "std": 0.003376199734835151,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.049151305996929295,
+            0.04905167999822879,
+            0.04673950099822832
+          ],
+          "mean": 0.048314162331128806,
+          "std": 0.00111419629326949,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.060878807002154645,
+            0.05466283400164684,
+            0.05458501700195484
+          ],
+          "mean": 0.05670888600191878,
+          "std": 0.002948750552637094,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.07161012299911818,
+            0.06761012299830327,
+            0.07253489099821309
+          ],
+          "mean": 0.07058504566521151,
+          "std": 0.0021371979503703497,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0906131700030528,
+            0.08689020000019809,
+            0.08434107899665833
+          ],
+          "mean": 0.08728148299996974,
+          "std": 0.0025754751260762664,
+          "note": null
+        }
+      ],
+      "identifier": "cov_GraphicalLassoCV"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 4
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029129090034984984,
+            0.001498797006206587,
+            0.0014918180022505112
+          ],
+          "mean": 0.001967841337318532,
+          "std": 0.0006682698291699198,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.002885239002353046,
+            0.0015143869968596846,
+            0.0015043579987832345
+          ],
+          "mean": 0.001967994665998655,
+          "std": 0.0006486026131262293,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0032363469945266843,
+            0.0021464349993038923,
+            0.001901843999803532
+          ],
+          "mean": 0.002428208664544703,
+          "std": 0.0005800987614471039,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.003016234993992839,
+            0.0017208200006280094,
+            0.0016631809994578362
+          ],
+          "mean": 0.002133411998026228,
+          "std": 0.0006246934689747555,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0032733560001361184,
+            0.001977601001271978,
+            0.0018846940001822077
+          ],
+          "mean": 0.002378550333863435,
+          "std": 0.000633858981692379,
+          "note": null
+        }
+      ],
+      "identifier": "cov_LedoitWolf"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 5
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.019004488000064157,
+            0.01627792199724354,
+            0.016795894000097178
+          ],
+          "mean": 0.017359434665801626,
+          "std": 0.0011822927170999178,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.02103891700244276,
+            0.01884962299664039,
+            0.018823974001861643
+          ],
+          "mean": 0.019570838000314932,
+          "std": 0.001038141427455742,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.022751367003365885,
+            0.024006982996070292,
+            0.01881404400046449
+          ],
+          "mean": 0.021857464666633557,
+          "std": 0.002212231135261787,
+          "note": null
+        },
+        {
+          "c": 6,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.02165826500277035,
+            0.02032918099575909,
+            0.019438951996562537
+          ],
+          "mean": 0.02047546599836399,
+          "std": 0.0009119163087956141,
+          "note": null
+        },
+        {
+          "c": 8,
+          "t": 64,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.022345211000356358,
+            0.020605062003596686,
+            0.019789160003711004
+          ],
+          "mean": 0.020913144335888017,
+          "std": 0.0010660003805394805,
+          "note": null
+        }
+      ],
+      "identifier": "cov_MinCovDet"
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 6
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.003019014999154024,
+            0.0016424029963673092,
+            0.0014903379997122101
+          ],
+          "mean": 0.0020505853317445144,
+          "std": 0.0006875914272982653,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "ok",
+          "times_sec": [
+            0.0029903960021329112,
+            0.0016094940001494251,
+            0.0014887080033076927
+          ],
+          "mean": 0.0020295326685300097,
+          "std": 0.0006812200200890181,
+          "note": null
+        },
+        {
+          "c": 4,
+          "t": 30,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 7
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 8
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 9
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 10
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 11
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 12
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 13
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 14
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Covariance",
+        "config_index": 15
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 6
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 7
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 8
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 9
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 10
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 11
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 12
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 13
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 14
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "Precision",
+        "config_index": 15
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "SpearmanR",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "SpearmanR",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "KendallTau",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "KendallTau",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    },
+    {
+      "key": {
+        "module": ".statistics.basic",
+        "measure": "CrossCorrelation",
+        "config_index": 5
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 3,
+          "wall_time_limit_sec": 120.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "BrokenPipeError: [Errno 32] Broken pipe"
+        }
+      ],
+      "identifier": null
+    }
+  ],
+  "totals": {
+    "tested": 42,
+    "ok": 6,
+    "failed": 36,
+    "timeout": 0,
+    "skipped": 0
+  }
+}

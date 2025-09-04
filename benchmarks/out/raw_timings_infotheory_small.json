@@ -1,0 +1,553 @@
+{
+  "run_metadata": {
+    "timestamp": "2025-09-03T17:20:08.223539Z",
+    "config_path": "/media/dan/Data/git/pyspi/FullConfig.yaml",
+    "hardware": {
+      "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
+      "python": "3.9.23",
+      "cpu_count": 64,
+      "omp": "1",
+      "mkl": "1",
+      "openblas": "1",
+      "numexpr": "1"
+    },
+    "shapes_tested": [
+      {
+        "c": 2,
+        "t": 5,
+        "repeats": 1
+      },
+      {
+        "c": 3,
+        "t": 20,
+        "repeats": 1
+      }
+    ],
+    "max_seconds": 20.0
+  },
+  "results": [
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "MutualInfo",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.008431009002379142
+          ],
+          "mean": 0.008431009002379142,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.005348227001377381
+          ],
+          "mean": 0.005348227001377381,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "mi_gaussian"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "MutualInfo",
+        "config_index": 1
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.11166488099843264
+          ],
+          "mean": 0.11166488099843264,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.20503395600098884
+          ],
+          "mean": 0.20503395600098884,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "mi_kraskov_NN-4"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "MutualInfo",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "mi_kraskov_NN-4_DCE"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "MutualInfo",
+        "config_index": 3
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.009382446995005012
+          ],
+          "mean": 0.009382446995005012,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.00935395800479455
+          ],
+          "mean": 0.00935395800479455,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "mi_kernel_W-0.25"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TimeLaggedMutualInfo",
+        "config_index": 0
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.006513259999337606
+          ],
+          "mean": 0.006513259999337606,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.005090415004815441
+          ],
+          "mean": 0.005090415004815441,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "tlmi_gaussian"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TimeLaggedMutualInfo",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "tlmi_kraskov_NN-4"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TimeLaggedMutualInfo",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "tlmi_kraskov_NN-4_DCE"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TimeLaggedMutualInfo",
+        "config_index": 3
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.005051396998169366
+          ],
+          "mean": 0.005051396998169366,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.008520163995854091
+          ],
+          "mean": 0.008520163995854091,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "tlmi_kernel_W-0.25"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TransferEntropy",
+        "config_index": 0
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "te_kraskov_NN-4_k-max-10_tau-max-4"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TransferEntropy",
+        "config_index": 1
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "te_kraskov_NN-4_DCE_k-max-10_tau-max-4"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TransferEntropy",
+        "config_index": 2
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TransferEntropy",
+        "config_index": 3
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TransferEntropy",
+        "config_index": 4
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "te_kraskov_NN-4_k-1_kt-1_l-1_lt-1"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TransferEntropy",
+        "config_index": 5
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.005104044001200236
+          ],
+          "mean": 0.005104044001200236,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.010916604995145462
+          ],
+          "mean": 0.010916604995145462,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "te_kernel_W-0.25_k-1"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TransferEntropy",
+        "config_index": 6
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "gc_gaussian_k-max-10_tau-max-2"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TransferEntropy",
+        "config_index": 7
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.006376721998094581
+          ],
+          "mean": 0.006376721998094581,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.006178908995934762
+          ],
+          "mean": 0.006178908995934762,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "gc_gaussian_k-1_kt-1_l-1_lt-1"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TransferEntropy",
+        "config_index": 8
+      },
+      "status": "ok",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.006746660001226701
+          ],
+          "mean": 0.006746660001226701,
+          "std": 0.0,
+          "note": null
+        },
+        {
+          "c": 3,
+          "t": 20,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "ok",
+          "times_sec": [
+            0.005811230999825057
+          ],
+          "mean": 0.005811230999825057,
+          "std": 0.0,
+          "note": null
+        }
+      ],
+      "identifier": "te_symbolic_k-1_kt-1_l-1_lt-1"
+    },
+    {
+      "key": {
+        "module": ".statistics.infotheory",
+        "measure": "TransferEntropy",
+        "config_index": 9
+      },
+      "status": "failed",
+      "attempts": [
+        {
+          "c": 2,
+          "t": 5,
+          "repeats": 1,
+          "wall_time_limit_sec": 20.0,
+          "status": "failed",
+          "times_sec": [],
+          "mean": null,
+          "std": null,
+          "note": "all_nan_output"
+        }
+      ],
+      "identifier": "te_symbolic_k-10_kt-1_l-1_lt-1"
+    }
+  ],
+  "totals": {
+    "tested": 18,
+    "ok": 8,
+    "failed": 10,
+    "timeout": 0,
+    "skipped": 0
+  }
+}
