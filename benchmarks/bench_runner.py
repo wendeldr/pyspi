@@ -8,7 +8,7 @@ import random
 import tempfile
 import time
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from multiprocessing import Process, Queue, get_context
 from typing import Any, Dict, List, Tuple, Optional
 
@@ -213,8 +213,43 @@ def run_benchmarks(
     dry_run: bool = False,
 ):
     _env_limit_threads()
+    
+    # Sort shapes by c values for smart timeout/failure prediction
+    shapes = sorted(shapes, key=lambda x: x[0])
+    
+    # Calculate total number of configurations and estimate max runtime
+    total_configs = 0
+    for module, module_dict in iter_module_blocks(config_path):
+        if modules_filter and module not in modules_filter:
+            continue
+        for measure, entry in module_dict.items():
+            if measures_filter and measure not in measures_filter:
+                continue
+            configs = entry.get("configs")
+            if configs is None:
+                configs = [None]
+            total_configs += len(configs)
+    
+    # Max runtime = total_configs * len(shapes) * (max_seconds + 5 for process overhead)
+    max_runtime_seconds = total_configs * len(shapes) * (max_seconds + 5)
+    
+    start_time = datetime.now()
+    estimated_finish_time = start_time + timedelta(seconds=max_runtime_seconds)
+    
+    print(f"Starting benchmark run at: {start_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    print(f"Total configurations to test: {total_configs}")
+    print(f"Data shapes to test: {len(shapes)}")
+    print(f"Maximum estimated runtime: {max_runtime_seconds/60:.1f} minutes ({max_runtime_seconds/3600:.1f} hours)")
+    print(f"Estimated finish time (worst case): {estimated_finish_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    print("-" * 60)
+    
     results = []
-    totals = {"tested": 0, "ok": 0, "failed": 0, "timeout": 0, "skipped": 0}
+    totals = {"tested": 0, "ok": 0, "failed": 0, "timeout": 0, "skipped": 0, "predicted_skipped": 0}
+    completed_configs = 0
+    
+    # Track which (module, measure, config_index) combinations have failed/timed out at specific c values
+    # This allows us to skip higher c values when lower ones fail/timeout
+    failure_patterns = {}  # key: (module, measure, config_index), value: {'failed_at_c': int, 'timeout_at_c': int}
 
     for module, module_dict in iter_module_blocks(config_path):
         if modules_filter and module not in modules_filter:
@@ -229,19 +264,42 @@ def run_benchmarks(
             for cfg_idx in range(len(configs)):
                 key = {"module": module, "measure": measure, "config_index": cfg_idx}
                 record: Dict[str, Any] = {"key": key, "status": None, "attempts": []}
+                config_key = (module, measure, cfg_idx)
+                
+                # Initialize failure tracking for this config
+                if config_key not in failure_patterns:
+                    failure_patterns[config_key] = {'failed_at_c': None, 'timeout_at_c': None}
 
-                # Skip if dependencies are missing will be handled by Calculator.
-                failed_or_timeout = False
                 for (c, t) in shapes:
-                    if failed_or_timeout:
-                        break
                     attempt_note = None
+                    should_skip = False
+                    skip_reason = None
+                    
+                    # Check if we should skip this c value based on previous failures/timeouts
+                    pattern = failure_patterns[config_key]
+                    if pattern['failed_at_c'] is not None and c >= pattern['failed_at_c']:
+                        should_skip = True
+                        skip_reason = f"skipped_failure_prediction_from_c{pattern['failed_at_c']}"
+                    elif pattern['timeout_at_c'] is not None and c >= pattern['timeout_at_c']:
+                        should_skip = True
+                        skip_reason = f"skipped_timeout_prediction_from_c{pattern['timeout_at_c']}"
 
                     micro_cfg = _build_micro_config(module, measure, entry, cfg_idx)
                     # Extract identifier consistently whether dry-run or not
                     ident = _extract_identifier_from_config(module, measure, entry, cfg_idx)
                     
-                    if dry_run:
+                    if should_skip:
+                        # Create a skipped attempt based on prediction
+                        if "failure" in skip_reason:
+                            status = "failed"
+                            attempt_note = skip_reason
+                        else:  # timeout prediction
+                            status = "timeout"
+                            attempt_note = skip_reason
+                        times = []
+                        mean = None
+                        std = None
+                    elif dry_run:
                         status = "ok"
                         times = [0.0]
                         mean = 0.0
@@ -264,7 +322,9 @@ def run_benchmarks(
                             mean = None
                             std = None
                             ident = None
-                            failed_or_timeout = True
+                            # Record this timeout for future predictions
+                            if failure_patterns[config_key]['timeout_at_c'] is None:
+                                failure_patterns[config_key]['timeout_at_c'] = c
                         else:
                             try:
                                 child_out = q.get_nowait()
@@ -278,9 +338,16 @@ def run_benchmarks(
                             # Use child identifier if available, otherwise use our extracted one
                             if child_ident is not None:
                                 ident = child_ident
-                            if status in ("failed", "timeout"):
-                                failed_or_timeout = True
+                            if status == "failed":
                                 attempt_note = child_out.get("error")
+                                # Record this failure for future predictions
+                                if failure_patterns[config_key]['failed_at_c'] is None:
+                                    failure_patterns[config_key]['failed_at_c'] = c
+                            elif status == "timeout":
+                                attempt_note = child_out.get("error")
+                                # Record this timeout for future predictions
+                                if failure_patterns[config_key]['timeout_at_c'] is None:
+                                    failure_patterns[config_key]['timeout_at_c'] = c
 
                     attempt = Attempt(
                         c=int(c),
@@ -296,12 +363,15 @@ def run_benchmarks(
                     record["attempts"].append(asdict(attempt))
 
                 # Summarize status for this key
-                all_status = [a["status"] for a in record["attempts"]]
+                all_attempts = record["attempts"]
+                all_status = [a["status"] for a in all_attempts]
+                predicted_skips = [a for a in all_attempts if a.get("note") and "skipped_" in a.get("note", "")]
+                
                 if any(s == "failed" for s in all_status):
                     record["status"] = "failed"
                     totals["failed"] += 1
                 elif any(s == "timeout" for s in all_status):
-                    record["status"] = "timeout"
+                    record["status"] = "timeout" 
                     totals["timeout"] += 1
                 elif all(s == "skipped_missing_dependency" for s in all_status):
                     record["status"] = "skipped_missing_dependency"
@@ -309,9 +379,28 @@ def run_benchmarks(
                 else:
                     record["status"] = "ok"
                     totals["ok"] += 1
+                    
+                # Count predicted skips separately for reporting
+                totals["predicted_skipped"] += len(predicted_skips)
                 totals["tested"] += 1
                 record["identifier"] = ident
                 results.append(record)
+                
+                completed_configs += 1
+                elapsed_time = datetime.now() - start_time
+                progress_pct = (completed_configs / total_configs) * 100
+                avg_time_per_config = elapsed_time.total_seconds() / completed_configs
+                remaining_configs = total_configs - completed_configs
+                estimated_remaining_time = remaining_configs * avg_time_per_config
+                estimated_completion = datetime.now() + timedelta(seconds=estimated_remaining_time)
+                
+                # Show prediction info if any shapes were skipped
+                predicted_count = len(predicted_skips) 
+                prediction_info = f" (predicted {predicted_count} skips)" if predicted_count > 0 else ""
+                print(f"Progress: {completed_configs}/{total_configs} ({progress_pct:.1f}%) | "
+                      f"Elapsed: {elapsed_time.total_seconds()/60:.1f}min | "
+                      f"ETA: {estimated_completion.strftime('%H:%M:%S')} | "
+                      f"Last: {module}.{measure}[{cfg_idx}] -> {record['status']}{prediction_info}")
 
     out = {
         "run_metadata": {
@@ -325,6 +414,16 @@ def run_benchmarks(
         "results": results,
         "totals": totals,
     }
+    # Add summary of smart prediction benefits
+    final_time = datetime.now()
+    total_runtime = final_time - start_time
+    print("-" * 60)
+    print(f"Benchmark completed at: {final_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    print(f"Total runtime: {total_runtime.total_seconds()/60:.1f} minutes")
+    if totals["predicted_skipped"] > 0:
+        print(f"Smart prediction saved {totals['predicted_skipped']} test runs by predicting failures/timeouts")
+    print(f"Final totals: {totals}")
+    
     os.makedirs(os.path.dirname(out_json), exist_ok=True)
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=2)
@@ -369,7 +468,8 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
-    first_col = curved_ints(2, 250)
+    # first_col = curved_ints(2, 250)[::2]
+    first_col = np.array([2, 10, 50, 80, 100, 150, 250])
     shapes = np.column_stack([first_col, np.full(first_col.size, 1024)])
 
     modules_filter = args.modules.split(",") if args.modules else None
