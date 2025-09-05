@@ -138,17 +138,25 @@ def fit_power_law(data: Dict[Tuple[float, float], List[float]]) -> Dict[str, Any
 
 
 def _merge_results(datasets: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    # Group results by config_path first, then by key signature
+    # Group results by config_hash first, then by key signature
+    # This ensures that runs with the same config (same hash) are considered duplicates,
+    # regardless of file path/name differences
     by_config_and_key: Dict[Tuple[str, str, str, int], Dict[str, Any]] = {}
     identifier_map: Dict[Tuple[str, str, str, int], str] = {}
     
     for data in datasets:
-        config_path = data.get("run_metadata", {}).get("config_path", "unknown")
+        run_metadata = data.get("run_metadata", {})
+        # Use config_hash for grouping instead of config_path
+        # This allows proper duplicate detection across runs with same config
+        config_hash = run_metadata.get("config_hash")
+        if config_hash is None:
+            # Fallback to config_path for backwards compatibility with old data
+            config_hash = run_metadata.get("config_path", "unknown")
         
         for rec in data.get("results", []):
-            # Create key signature from module, measure, config_index
+            # Create key signature from config_hash, module, measure, config_index
             key_info = rec["key"]
-            key_sig = (config_path, key_info["module"], key_info["measure"], key_info["config_index"])
+            key_sig = (config_hash, key_info["module"], key_info["measure"], key_info["config_index"])
             
             # Track identifier if it exists (successful runs have identifiers)
             if rec.get("identifier"):
@@ -162,7 +170,7 @@ def _merge_results(datasets: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
     # Create final results with proper naming
     results = []
     for key_sig, data in by_config_and_key.items():
-        config_path, module, measure, config_index = key_sig
+        config_hash, module, measure, config_index = key_sig
         
         # Use identifier if available, otherwise fall back to module::measure::config_index format
         final_identifier = identifier_map.get(key_sig, f"{module}::{measure}::{config_index}")

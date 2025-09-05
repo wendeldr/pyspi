@@ -1,0 +1,1738 @@
+{
+  "source": [
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_basic_full.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_basic_small.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_causal_small.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_distance_pw_small.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_distance_small.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_distance_subset.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_dry.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_full_small.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_infotheory_small.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_misc_small.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_small_r0.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_small_r1.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_spectral_cohm_small2.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_spectral_cohm_small3.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_spectral_cohm_small.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_spectral_subset.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_wavelet_small2.json",
+    "/media/dan/Data/git/pyspi/benchmarks/out/raw_timings_wavelet_small.json"
+  ],
+  "timestamp": "2025-09-03T16:48:48.546702Z",
+  "models": {
+    "cov_EmpiricalCovariance": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.867056542024633,
+        "alpha": -0.1668317690420379,
+        "beta": 0.005739445750287449
+      },
+      "metrics": {
+        "r2": -0.1196321783427361,
+        "rmse_log": 0.974039651360143,
+        "resid_std_log": 0.9239624873653752,
+        "n": 14
+      },
+      "fit_status": "ok"
+    },
+    "cov_EllipticEnvelope": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.081091273356547,
+        "alpha": 0.0019915870754424647,
+        "beta": 0.05072928890386108
+      },
+      "metrics": {
+        "r2": -0.21535935334201195,
+        "rmse_log": 0.263716388762948,
+        "resid_std_log": 0.25930712014361035,
+        "n": 14
+      },
+      "fit_status": "ok"
+    },
+    "cov_GraphicalLasso": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.506987378372023,
+        "alpha": 0.5991659491293272,
+        "beta": -0.3483251201330815
+      },
+      "metrics": {
+        "r2": -0.126416139100618,
+        "rmse_log": 0.7185184430189842,
+        "resid_std_log": 0.6835364074739737,
+        "n": 14
+      },
+      "fit_status": "ok"
+    },
+    "cov_GraphicalLassoCV": {
+      "type": "power_law",
+      "params": {
+        "log_k": -3.5507498308059207,
+        "alpha": 0.6761397784112138,
+        "beta": -0.06390142542128993
+      },
+      "metrics": {
+        "r2": 0.8471345049001338,
+        "rmse_log": 0.10447060050477669,
+        "resid_std_log": 0.10665833438465391,
+        "n": 14
+      },
+      "fit_status": "ok"
+    },
+    "cov_LedoitWolf": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.504087706150456,
+        "alpha": 0.23983913459938805,
+        "beta": -0.2554211744838914
+      },
+      "metrics": {
+        "r2": -0.006560574002157482,
+        "rmse_log": 0.6891262818653102,
+        "resid_std_log": 0.6689668810376813,
+        "n": 14
+      },
+      "fit_status": "ok"
+    },
+    "cov_MinCovDet": {
+      "type": "power_law",
+      "params": {
+        "log_k": -3.9180065160972584,
+        "alpha": 0.00663416690401219,
+        "beta": 0.011753819536131216
+      },
+      "metrics": {
+        "r2": -0.059271587036041185,
+        "rmse_log": 0.17690904540777255,
+        "resid_std_log": 0.18064188061881015,
+        "n": 14
+      },
+      "fit_status": "ok"
+    },
+    "cov_OAS": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.53462349587504,
+        "alpha": 1.5721493578701344,
+        "beta": -0.6456115246381393
+      },
+      "metrics": {
+        "r2": 0.037940196534871906,
+        "rmse_log": 0.7466217771134465,
+        "resid_std_log": 0.788755564849016,
+        "n": 9
+      },
+      "fit_status": "ok"
+    },
+    "cov_ShrunkCovariance": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.458770381245554,
+        "alpha": 0.05519091604298552,
+        "beta": -0.17157405979827914
+      },
+      "metrics": {
+        "r2": 0.20068524088239903,
+        "rmse_log": 0.33282340053063464,
+        "resid_std_log": 0.33386424541556686,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "cov-sq_EmpiricalCovariance": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.92400369357759,
+        "alpha": 0.22852891187471772,
+        "beta": -0.09350093481627472
+      },
+      "metrics": {
+        "r2": -0.22968219606630957,
+        "rmse_log": 0.44717436983536274,
+        "resid_std_log": 0.4584683913522419,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "cov-sq_EllipticEnvelope": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.01576443143091,
+        "alpha": -0.1451339621422746,
+        "beta": 0.16139245599482782
+      },
+      "metrics": {
+        "r2": -0.9031859772897388,
+        "rmse_log": 0.2569241575434067,
+        "resid_std_log": 0.2569259933399826,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "cov-sq_GraphicalLasso": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.969874288617522,
+        "alpha": 0.38637543404614255,
+        "beta": -0.11280495500015422
+      },
+      "metrics": {
+        "r2": -0.39137678552316646,
+        "rmse_log": 0.46451959842208146,
+        "resid_std_log": 0.4646659101682317,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "cov-sq_GraphicalLassoCV": {
+      "type": "power_law",
+      "params": {
+        "log_k": -3.525837431760669,
+        "alpha": 0.35976841533564474,
+        "beta": 0.07209465866680777
+      },
+      "metrics": {
+        "r2": -0.3319924153277678,
+        "rmse_log": 0.17271253750303336,
+        "resid_std_log": 0.17327996408464644,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "cov-sq_LedoitWolf": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.837606814545483,
+        "alpha": -0.18597650311672068,
+        "beta": 0.03302335974474682
+      },
+      "metrics": {
+        "r2": -0.23192345618654464,
+        "rmse_log": 0.4339332520256476,
+        "resid_std_log": 0.4339809658048647,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "cov-sq_MinCovDet": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.043609764291636,
+        "alpha": 0.24940136777274688,
+        "beta": 0.01377681279310118
+      },
+      "metrics": {
+        "r2": -0.8471422196070824,
+        "rmse_log": 0.2394931751447252,
+        "resid_std_log": 0.23949602880422707,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "cov-sq_OAS": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.071337745327359,
+        "alpha": 0.30605095044115793,
+        "beta": -0.08023374011328607
+      },
+      "metrics": {
+        "r2": -0.40174700283898335,
+        "rmse_log": 0.4524897580745306,
+        "resid_std_log": 0.4537019869731312,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "cov-sq_ShrunkCovariance": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.767590804843124,
+        "alpha": -0.4452788892419115,
+        "beta": 0.11859846423962478
+      },
+      "metrics": {
+        "r2": -0.1899132216412056,
+        "rmse_log": 0.3830896264601905,
+        "resid_std_log": 0.38516314586028916,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec_EmpiricalCovariance": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.927464152749502,
+        "alpha": -0.26438378251052547,
+        "beta": 0.09981641524477824
+      },
+      "metrics": {
+        "r2": -0.34807330535354164,
+        "rmse_log": 0.5138992537562912,
+        "resid_std_log": 0.5152502588010888,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec_EllipticEnvelope": {
+      "type": "power_law",
+      "params": {
+        "log_k": -3.6450990410436046,
+        "alpha": -0.3375398750935192,
+        "beta": 0.1275139262169664
+      },
+      "metrics": {
+        "r2": -0.015822108513381394,
+        "rmse_log": 0.16263306194445504,
+        "resid_std_log": 0.18636838018962157,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec_GraphicalLasso": {
+      "type": "power_law",
+      "params": {
+        "log_k": -3.632582565745514,
+        "alpha": -0.20105573242561903,
+        "beta": -0.2918642372833549
+      },
+      "metrics": {
+        "r2": 0.11134914434317889,
+        "rmse_log": 0.33998586777499884,
+        "resid_std_log": 0.3731458076256855,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec_GraphicalLassoCV": {
+      "type": "power_law",
+      "params": {
+        "log_k": -3.544627495400418,
+        "alpha": 0.24161564124238097,
+        "beta": 0.13279374850232328
+      },
+      "metrics": {
+        "r2": -0.16546833151006535,
+        "rmse_log": 0.16588797687377033,
+        "resid_std_log": 0.16594441080992542,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec_LedoitWolf": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.656391007609364,
+        "alpha": 0.3562672532032961,
+        "beta": -0.2352826539031665
+      },
+      "metrics": {
+        "r2": 0.019297672088430695,
+        "rmse_log": 0.403831707511714,
+        "resid_std_log": 0.40405531283690405,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec_MinCovDet": {
+      "type": "power_law",
+      "params": {
+        "log_k": -3.766432920570049,
+        "alpha": -0.33234188298493683,
+        "beta": 0.16472486210365314
+      },
+      "metrics": {
+        "r2": -0.538197544653205,
+        "rmse_log": 0.2155645168923318,
+        "resid_std_log": 0.22048504588942042,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec_OAS": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.875611061896166,
+        "alpha": 0.03767638034670627,
+        "beta": 0.001510763276000968
+      },
+      "metrics": {
+        "r2": -0.24201755224801702,
+        "rmse_log": 0.41654354698451496,
+        "resid_std_log": 0.43748834918599,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec_ShrunkCovariance": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.180735886866536,
+        "alpha": 0.035543513914091183,
+        "beta": -0.24425598891112094
+      },
+      "metrics": {
+        "r2": 0.33703623072327527,
+        "rmse_log": 0.33992176798725676,
+        "resid_std_log": 0.38050769700051873,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec-sq_EmpiricalCovariance": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.204562861995225,
+        "alpha": -0.45088441329740725,
+        "beta": -0.02693495895884503
+      },
+      "metrics": {
+        "r2": 0.22714241483050868,
+        "rmse_log": 0.3472221106473282,
+        "resid_std_log": 0.3968949347821373,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec-sq_EllipticEnvelope": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.161775883717246,
+        "alpha": 0.796471608866481,
+        "beta": -0.13023498776147654
+      },
+      "metrics": {
+        "r2": -0.6433464762027921,
+        "rmse_log": 0.2179337973980345,
+        "resid_std_log": 0.21973937833471943,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec-sq_GraphicalLasso": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.178531353202306,
+        "alpha": 0.846815205588013,
+        "beta": -0.5475691019601249
+      },
+      "metrics": {
+        "r2": 0.47027874301725525,
+        "rmse_log": 0.2986104323319137,
+        "resid_std_log": 0.2986725017247074,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec-sq_GraphicalLassoCV": {
+      "type": "power_law",
+      "params": {
+        "log_k": -3.3070052513729147,
+        "alpha": 1.1231100855093414,
+        "beta": -0.2762003293948978
+      },
+      "metrics": {
+        "r2": 0.5696085804929352,
+        "rmse_log": 0.09165738169192758,
+        "resid_std_log": 0.10485168866103009,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec-sq_LedoitWolf": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.128296821509301,
+        "alpha": 0.3221051354711055,
+        "beta": -0.030931201076286035
+      },
+      "metrics": {
+        "r2": -0.5654577979229976,
+        "rmse_log": 0.4837006491836763,
+        "resid_std_log": 0.4837016088518239,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec-sq_MinCovDet": {
+      "type": "power_law",
+      "params": {
+        "log_k": -3.815378222000789,
+        "alpha": -0.05250776053319727,
+        "beta": 0.06201792826471635
+      },
+      "metrics": {
+        "r2": -0.7335738733465649,
+        "rmse_log": 0.1519758020425083,
+        "resid_std_log": 0.15222674232898858,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec-sq_OAS": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.584898898923221,
+        "alpha": -0.11655749834649737,
+        "beta": -0.07190276493763917
+      },
+      "metrics": {
+        "r2": 0.09076330600854898,
+        "rmse_log": 0.38120293641579583,
+        "resid_std_log": 0.41275240967655336,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "prec-sq_ShrunkCovariance": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.056931446582546,
+        "alpha": 0.8367395655241683,
+        "beta": -0.2620410264334391
+      },
+      "metrics": {
+        "r2": -0.3981934860923073,
+        "rmse_log": 0.4444160249996233,
+        "resid_std_log": 0.44442748733129783,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "spearmanr-sq": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.010354445926159,
+        "alpha": 2.869972823021976,
+        "beta": -0.9002405931780901
+      },
+      "metrics": {
+        "r2": 0.18794138446434006,
+        "rmse_log": 0.3142577120044933,
+        "resid_std_log": 0.35884811450567006,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "spearmanr": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.183296006741107,
+        "alpha": 2.7237020130597416,
+        "beta": -0.7509852001213498
+      },
+      "metrics": {
+        "r2": -0.1269557967361996,
+        "rmse_log": 0.2736437004142076,
+        "resid_std_log": 0.2737645975341432,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "kendalltau-sq": {
+      "type": "power_law",
+      "params": {
+        "log_k": -7.619487382287168,
+        "alpha": 3.1409952817715636,
+        "beta": -0.5139806786633803
+      },
+      "metrics": {
+        "r2": 0.8301886968777843,
+        "rmse_log": 0.1879942603029376,
+        "resid_std_log": 0.18811998734984153,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "kendalltau": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.638844416636362,
+        "alpha": 2.3086907695584244,
+        "beta": -0.5362396801164405
+      },
+      "metrics": {
+        "r2": 0.9847855057163968,
+        "rmse_log": 0.033818215684261445,
+        "resid_std_log": 0.03531284251906177,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "xcorr_max_sig-True": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.162581862090831,
+        "alpha": 1.7609851190371997,
+        "beta": -0.6711033513823477
+      },
+      "metrics": {
+        "r2": 0.6228099545972197,
+        "rmse_log": 0.07344057203636423,
+        "resid_std_log": 0.08467019814687854,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "xcorr-sq_max_sig-True": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.6118895020700545,
+        "alpha": 1.1295785131116693,
+        "beta": -0.27818625711390466
+      },
+      "metrics": {
+        "r2": -0.2678453044068181,
+        "rmse_log": 0.14644888939907327,
+        "resid_std_log": 0.14708156233917727,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "xcorr_mean_sig-True": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.397981427920215,
+        "alpha": 1.3909763286086745,
+        "beta": -0.4691975100979873
+      },
+      "metrics": {
+        "r2": -0.286518466436843,
+        "rmse_log": 0.7122693180124058,
+        "resid_std_log": 0.7256729880290862,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "xcorr-sq_mean_sig-True": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.689371385995397,
+        "alpha": 1.168097093032103,
+        "beta": -0.2808004874383774
+      },
+      "metrics": {
+        "r2": -0.6518116508889822,
+        "rmse_log": 0.2640102599858967,
+        "resid_std_log": 0.2640103915205415,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "xcorr_mean_sig-False": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.431616002991209,
+        "alpha": -0.5053595930194135,
+        "beta": 0.27935453993678977
+      },
+      "metrics": {
+        "r2": -0.9087739545366769,
+        "rmse_log": 0.2354715151752984,
+        "resid_std_log": 0.23547161826224858,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "xcorr-sq_mean_sig-False": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.786793930101624,
+        "alpha": -1.4934068188527219,
+        "beta": 0.502721189524291
+      },
+      "metrics": {
+        "r2": -0.0450450569953893,
+        "rmse_log": 0.15338031929600637,
+        "resid_std_log": 0.15348689675049693,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    "anm": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.753183018162648,
+        "alpha": -1.053661180925016,
+        "beta": 0.7671335928744905
+      },
+      "metrics": {
+        "r2": 0.9999999999999993,
+        "rmse_log": 8.111069012897573e-09,
+        "resid_std_log": 6.293549681402055e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "reci": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.001119306114302,
+        "alpha": -1.0516644640456552,
+        "beta": 0.9616379547117279
+      },
+      "metrics": {
+        "r2": 0.9999999999999942,
+        "rmse_log": 3.44366623823463e-08,
+        "resid_std_log": 3.43485715426084e-08,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "igci": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.9035460532767186,
+        "alpha": -1.121688542323933,
+        "beta": 0.6512369735147512
+      },
+      "metrics": {
+        "r2": 0.9999999999997982,
+        "rmse_log": 1.0063345992156744e-07,
+        "resid_std_log": 5.4346501965341076e-08,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "ccm_E-None_mean": {
+      "fit_status": "insufficient_data"
+    },
+    "ccm_E-None_max": {
+      "fit_status": "insufficient_data"
+    },
+    "ccm_E-None_diff": {
+      "fit_status": "insufficient_data"
+    },
+    "ccm_E-1_mean": {
+      "fit_status": "insufficient_data"
+    },
+    "ccm_E-1_max": {
+      "fit_status": "insufficient_data"
+    },
+    "ccm_E-1_diff": {
+      "fit_status": "insufficient_data"
+    },
+    "ccm_E-10_mean": {
+      "fit_status": "insufficient_data"
+    },
+    "ccm_E-10_max": {
+      "fit_status": "insufficient_data"
+    },
+    "ccm_E-10_diff": {
+      "fit_status": "insufficient_data"
+    },
+    "pdist_euclidean": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.161197813136182,
+        "alpha": -1.4665515701980578,
+        "beta": 0.5730826967704709
+      },
+      "metrics": {
+        "r2": -0.11570116581155632,
+        "rmse_log": 0.27974112264233125,
+        "resid_std_log": 0.27821363957985534,
+        "n": 8
+      },
+      "fit_status": "ok"
+    },
+    "pdist_cityblock": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.672501141708138,
+        "alpha": -1.2879174197600698,
+        "beta": 0.35445858764092836
+      },
+      "metrics": {
+        "r2": 0.2005551575889123,
+        "rmse_log": 0.17198856097938245,
+        "resid_std_log": 0.18188831196296185,
+        "n": 8
+      },
+      "fit_status": "ok"
+    },
+    "pdist_cosine": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.123137198953198,
+        "alpha": 0.09898310406660706,
+        "beta": -0.06125195441769935
+      },
+      "metrics": {
+        "r2": -0.14865596992813956,
+        "rmse_log": 0.21989786386072838,
+        "resid_std_log": 0.2143639196448062,
+        "n": 8
+      },
+      "fit_status": "ok"
+    },
+    "pdist_chebyshev": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.812574278942854,
+        "alpha": -1.0529259723604627,
+        "beta": 0.3202749994434288
+      },
+      "metrics": {
+        "r2": 0.12609722898281894,
+        "rmse_log": 0.20411265276914098,
+        "resid_std_log": 0.21812017879957357,
+        "n": 8
+      },
+      "fit_status": "ok"
+    },
+    "pdist_canberra": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.113769378856088,
+        "alpha": 0.12711027322399968,
+        "beta": -0.10412022025495832
+      },
+      "metrics": {
+        "r2": -0.13936338471587462,
+        "rmse_log": 0.20449504277460526,
+        "resid_std_log": 0.19856021696718879,
+        "n": 8
+      },
+      "fit_status": "ok"
+    },
+    "pdist_braycurtis": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.184840861319319,
+        "alpha": 0.184617471954392,
+        "beta": -0.0824322985828068
+      },
+      "metrics": {
+        "r2": -0.1724404443645502,
+        "rmse_log": 0.26210395106888135,
+        "resid_std_log": 0.26093182119051506,
+        "n": 8
+      },
+      "fit_status": "ok"
+    },
+    "dcorr": {
+      "type": "power_law",
+      "params": {
+        "log_k": -1.518347297413237,
+        "alpha": 1.2556061885389629,
+        "beta": -0.8034588711706938
+      },
+      "metrics": {
+        "r2": 0.054804573568994264,
+        "rmse_log": 1.7676264835010898,
+        "resid_std_log": 1.8165141044878617,
+        "n": 6
+      },
+      "fit_status": "ok"
+    },
+    ".statistics.distance::DistanceCorrelation::1": {
+      "type": "power_law",
+      "params": {
+        "log_k": -2.532760421399327,
+        "alpha": -0.5033439003677121,
+        "beta": 0.20487765406817676
+      },
+      "metrics": {
+        "r2": 0.7209993617784628,
+        "rmse_log": 0.024861696892251633,
+        "resid_std_log": 0.028707814786415597,
+        "n": 4
+      },
+      "fit_status": "ok"
+    },
+    ".statistics.distance::MultiscaleGraphCorrelation::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::HilbertSchmidtIndependenceCriterion::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::HilbertSchmidtIndependenceCriterion::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::HellerHellerGorfine::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::CrossMultiscaleGraphCorrelation::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::CrossMultiscaleGraphCorrelation::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::CrossDistanceCorrelation::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::CrossDistanceCorrelation::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::DynamicTimeWarping::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::DynamicTimeWarping::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::DynamicTimeWarping::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::SoftDynamicTimeWarping::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::SoftDynamicTimeWarping::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::SoftDynamicTimeWarping::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::LongestCommonSubsequence::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::LongestCommonSubsequence::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::LongestCommonSubsequence::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::6": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::7": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::8": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::9": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::10": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::11": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::12": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::13": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::14": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::Barycenter::15": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.distance::GromovWasserstainTau::0": {
+      "fit_status": "insufficient_data"
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.587320041409751,
+        "alpha": -1.141120828539546,
+        "beta": 0.34652060964309356
+      },
+      "metrics": {
+        "r2": 0.999999999999606,
+        "rmse_log": 5.553481434916691e-09,
+        "resid_std_log": 8.589249311796721e-10,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.669309775802424,
+        "alpha": -1.1513348000196866,
+        "beta": 0.37345832188603756
+      },
+      "metrics": {
+        "r2": 0.999999999450055,
+        "rmse_log": 5.968011686136049e-07,
+        "resid_std_log": 4.2265739974567396e-07,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.342609350170565,
+        "alpha": -1.116379203047895,
+        "beta": 0.24350624994673883
+      },
+      "metrics": {
+        "r2": 0.9999952798918457,
+        "rmse_log": 0.00012482015605219855,
+        "resid_std_log": 8.826102649983625e-05,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.899106581161017,
+        "alpha": 0.015528893180342075,
+        "beta": 0.0274278506792564
+      },
+      "metrics": {
+        "r2": 0.9999999999999071,
+        "rmse_log": 6.75387431600807e-09,
+        "resid_std_log": 5.845252726288663e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.462726515268249,
+        "alpha": -1.1285501723808122,
+        "beta": 0.2923465290334836
+      },
+      "metrics": {
+        "r2": 0.9999999999999328,
+        "rmse_log": 6.779229658332275e-09,
+        "resid_std_log": 5.816363390920287e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.945750257653052,
+        "alpha": -0.008644365357478399,
+        "beta": 0.04063113822077298
+      },
+      "metrics": {
+        "r2": 0.9999999999999774,
+        "rmse_log": 3.974032447333796e-09,
+        "resid_std_log": 2.8342554969640332e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.623172370361565,
+        "alpha": -1.1454159959997754,
+        "beta": 0.35907147590446425
+      },
+      "metrics": {
+        "r2": -0.05339745761302406,
+        "rmse_log": 0.1073224438631834,
+        "resid_std_log": 0.1142288596232107,
+        "n": 7
+      },
+      "fit_status": "ok"
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.541784328327179,
+        "alpha": -1.1357509262716141,
+        "beta": 0.3294690414420732
+      },
+      "metrics": {
+        "r2": -0.12159269352168334,
+        "rmse_log": 0.09133133344694287,
+        "resid_std_log": 0.09248168895503613,
+        "n": 7
+      },
+      "fit_status": "ok"
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.566126990531629,
+        "alpha": -1.139984675814554,
+        "beta": 0.33424349255965663
+      },
+      "metrics": {
+        "r2": -0.04056105713264757,
+        "rmse_log": 0.11135560392974236,
+        "resid_std_log": 0.11802890264958582,
+        "n": 7
+      },
+      "fit_status": "ok"
+    },
+    "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.56210811076432,
+        "alpha": -1.141437184351435,
+        "beta": 0.32613821180162755
+      },
+      "metrics": {
+        "r2": -0.11080822717754835,
+        "rmse_log": 0.13114676973573774,
+        "resid_std_log": 0.13316267041288618,
+        "n": 7
+      },
+      "fit_status": "ok"
+    },
+    "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.668998154351308,
+        "alpha": -1.155471413235705,
+        "beta": 0.3597731190140513
+      },
+      "metrics": {
+        "r2": -0.12532159721591607,
+        "rmse_log": 0.12463971323385373,
+        "resid_std_log": 0.13096873195640799,
+        "n": 7
+      },
+      "fit_status": "ok"
+    },
+    "cohmag_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.577070273580503,
+        "alpha": -1.1437210860010658,
+        "beta": 0.33010357105435484
+      },
+      "metrics": {
+        "r2": -0.0005074211064999279,
+        "rmse_log": 0.11841169252796024,
+        "resid_std_log": 0.12764698367821092,
+        "n": 7
+      },
+      "fit_status": "ok"
+    },
+    "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.683056840342369,
+        "alpha": -1.1588499666418641,
+        "beta": 0.35806303677559853
+      },
+      "metrics": {
+        "r2": 0.9999999999997299,
+        "rmse_log": 6.887671079801656e-09,
+        "resid_std_log": 6.666950991274234e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    ".statistics.spectral::ImaginaryCoherence::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::ImaginaryCoherence::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::ImaginaryCoherence::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::ImaginaryCoherence::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::ImaginaryCoherence::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseSlopeIndex::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseSlopeIndex::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseSlopeIndex::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLockingValue::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLockingValue::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLockingValue::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLockingValue::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLockingValue::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLockingValue::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLagIndex::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLagIndex::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLagIndex::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLagIndex::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLagIndex::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PhaseLagIndex::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::WeightedPhaseLagIndex::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::WeightedPhaseLagIndex::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::WeightedPhaseLagIndex::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::WeightedPhaseLagIndex::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::WeightedPhaseLagIndex::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::WeightedPhaseLagIndex::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredPhaseLagIndex::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredPhaseLagIndex::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredPhaseLagIndex::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredPhaseLagIndex::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredPhaseLagIndex::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredPhaseLagIndex::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredWeightedPhaseLagIndex::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredWeightedPhaseLagIndex::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredWeightedPhaseLagIndex::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredWeightedPhaseLagIndex::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredWeightedPhaseLagIndex::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DebiasedSquaredWeightedPhaseLagIndex::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PairwisePhaseConsistency::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PairwisePhaseConsistency::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PairwisePhaseConsistency::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PairwisePhaseConsistency::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PairwisePhaseConsistency::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PairwisePhaseConsistency::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedTransferFunction::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedTransferFunction::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedTransferFunction::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedTransferFunction::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedTransferFunction::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedTransferFunction::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedCoherence::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedCoherence::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedCoherence::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedCoherence::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedCoherence::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectedCoherence::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PartialDirectedCoherence::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PartialDirectedCoherence::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PartialDirectedCoherence::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PartialDirectedCoherence::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PartialDirectedCoherence::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::PartialDirectedCoherence::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::GeneralizedPartialDirectedCoherence::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::GeneralizedPartialDirectedCoherence::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::GeneralizedPartialDirectedCoherence::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::GeneralizedPartialDirectedCoherence::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::GeneralizedPartialDirectedCoherence::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::GeneralizedPartialDirectedCoherence::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectDirectedTransferFunction::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectDirectedTransferFunction::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectDirectedTransferFunction::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectDirectedTransferFunction::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectDirectedTransferFunction::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::DirectDirectedTransferFunction::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::GroupDelay::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::GroupDelay::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::GroupDelay::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::0": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::1": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::2": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::3": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::4": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::5": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::6": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::7": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::8": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::9": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::10": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::11": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::12": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::13": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::14": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::15": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::16": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::17": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::18": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::19": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::20": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::21": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::22": {
+      "fit_status": "insufficient_data"
+    },
+    ".statistics.spectral::SpectralGrangerCausality::23": {
+      "fit_status": "insufficient_data"
+    },
+    "mi_gaussian": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.043514469399052,
+        "alpha": -0.9167923773621947,
+        "beta": -0.0601777184250224
+      },
+      "metrics": {
+        "r2": 1.0,
+        "rmse_log": 1.271401230201834e-10,
+        "resid_std_log": 1.1152634371569548e-10,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "mi_kraskov_NN-4": {
+      "type": "power_law",
+      "params": {
+        "log_k": -2.796577788874939,
+        "alpha": -0.4548315022076036,
+        "beta": 0.5713733514129036
+      },
+      "metrics": {
+        "r2": 1.0,
+        "rmse_log": 2.2341194380667004e-09,
+        "resid_std_log": 7.68214714064186e-10,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "mi_kraskov_NN-4_DCE": {
+      "fit_status": "insufficient_data"
+    },
+    "mi_kernel_W-0.25": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.461980437164895,
+        "alpha": -0.9145160935752543,
+        "beta": 0.26528517037766014
+      },
+      "metrics": {
+        "r2": 0.9999999999992398,
+        "rmse_log": 1.325712083022122e-09,
+        "resid_std_log": 9.75552971738125e-10,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "tlmi_gaussian": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.735749322569849,
+        "alpha": -0.054000289328253494,
+        "beta": -0.1620042020486425
+      },
+      "metrics": {
+        "r2": 0.9999999999999992,
+        "rmse_log": 3.555895083539063e-09,
+        "resid_std_log": 3.3519924613756302e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "tlmi_kraskov_NN-4": {
+      "fit_status": "insufficient_data"
+    },
+    "tlmi_kraskov_NN-4_DCE": {
+      "fit_status": "insufficient_data"
+    },
+    "tlmi_kernel_W-0.25": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.659958624342965,
+        "alpha": -1.0567992512641493,
+        "beta": 0.6861933562994791
+      },
+      "metrics": {
+        "r2": 0.9999999999999998,
+        "rmse_log": 3.817579087813175e-09,
+        "resid_std_log": 3.574995854904728e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "te_kraskov_NN-4_k-max-10_tau-max-4": {
+      "fit_status": "insufficient_data"
+    },
+    "te_kraskov_NN-4_DCE_k-max-10_tau-max-4": {
+      "fit_status": "insufficient_data"
+    },
+    "te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1": {
+      "fit_status": "insufficient_data"
+    },
+    "te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1": {
+      "fit_status": "insufficient_data"
+    },
+    "te_kraskov_NN-4_k-1_kt-1_l-1_lt-1": {
+      "fit_status": "insufficient_data"
+    },
+    "te_kernel_W-0.25_k-1": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.9235860684949815,
+        "alpha": -1.0644930725705366,
+        "beta": 0.8597500508436775
+      },
+      "metrics": {
+        "r2": 0.9999999999999997,
+        "rmse_log": 7.0230718490655655e-09,
+        "resid_std_log": 4.230238381808249e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "gc_gaussian_k-max-10_tau-max-2": {
+      "fit_status": "insufficient_data"
+    },
+    "gc_gaussian_k-1_kt-1_l-1_lt-1": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.798695946107218,
+        "alpha": -0.9883266906383413,
+        "beta": 0.2663356588639187
+      },
+      "metrics": {
+        "r2": 0.9999999999812222,
+        "rmse_log": 6.827701984254584e-08,
+        "resid_std_log": 4.3744778910337345e-08,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "te_symbolic_k-1_kt-1_l-1_lt-1": {
+      "type": "power_law",
+      "params": {
+        "log_k": -4.609002473413466,
+        "alpha": -0.9730625169959104,
+        "beta": 0.17693773456179435
+      },
+      "metrics": {
+        "r2": 0.9999999999999462,
+        "rmse_log": 1.731998060673043e-08,
+        "resid_std_log": 1.4182954810593174e-08,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "te_symbolic_k-10_kt-1_l-1_lt-1": {
+      "fit_status": "insufficient_data"
+    },
+    "lmfit_Ridge": {
+      "type": "power_law",
+      "params": {
+        "log_k": -6.364485084955258,
+        "alpha": -1.1060375966295906,
+        "beta": 1.0552508241737293
+      },
+      "metrics": {
+        "r2": 1.0,
+        "rmse_log": 1.3802588532182458e-09,
+        "resid_std_log": 1.124713655542564e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "lmfit_Lasso": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.852346485729504,
+        "alpha": -1.073537247244022,
+        "beta": 0.7744940772294738
+      },
+      "metrics": {
+        "r2": 0.9999999999999999,
+        "rmse_log": 2.5411738944352916e-09,
+        "resid_std_log": 7.461400386432615e-10,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "lmfit_SGDRegressor": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.882322995624203,
+        "alpha": -1.0905023566737384,
+        "beta": 0.7407325663602622
+      },
+      "metrics": {
+        "r2": 0.999999999999998,
+        "rmse_log": 1.2905825840848528e-08,
+        "resid_std_log": 1.1750519668396464e-08,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "lmfit_ElasticNet": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.817973409863296,
+        "alpha": -1.0743796649520632,
+        "beta": 0.7458888753008563
+      },
+      "metrics": {
+        "r2": 0.9999999999999999,
+        "rmse_log": 3.1512597402648324e-09,
+        "resid_std_log": 1.0287797280739142e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "lmfit_BayesianRidge": {
+      "type": "power_law",
+      "params": {
+        "log_k": -5.669639125838766,
+        "alpha": -1.0593145739505794,
+        "beta": 0.6850647162144002
+      },
+      "metrics": {
+        "r2": 0.9999999999999993,
+        "rmse_log": 6.709131217533387e-09,
+        "resid_std_log": 1.0498997227159634e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean": {
+      "type": "power_law",
+      "params": {
+        "log_k": 1.315142206251019,
+        "alpha": -1.6347416765065084,
+        "beta": -0.40052330110334183
+      },
+      "metrics": {
+        "r2": 0.9999999999999968,
+        "rmse_log": 1.7895009492185007e-08,
+        "resid_std_log": 2.5376724055448108e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "psi_wavelet_mean_fs-1_fmin-0_fmax-0-25_mean": {
+      "fit_status": "insufficient_data"
+    },
+    "psi_wavelet_mean_fs-1_fmin-0-25_fmax-0-5_mean": {
+      "type": "power_law",
+      "params": {
+        "log_k": -1.3270756431578257,
+        "alpha": 0.8985177082382106,
+        "beta": -0.6539755509033094
+      },
+      "metrics": {
+        "r2": 0.9999999999939821,
+        "rmse_log": 8.189547045189895e-09,
+        "resid_std_log": 4.090493055386446e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "psi_wavelet_max_fs-1_fmin-0_fmax-0-5_max": {
+      "type": "power_law",
+      "params": {
+        "log_k": -3.4897869188053408,
+        "alpha": 3.0860504903367185,
+        "beta": -0.7418374640932963
+      },
+      "metrics": {
+        "r2": 0.9999999999999999,
+        "rmse_log": 2.548584132238025e-09,
+        "resid_std_log": 1.4332141029527179e-09,
+        "n": 2
+      },
+      "fit_status": "ok"
+    },
+    "psi_wavelet_max_fs-1_fmin-0_fmax-0-25_max": {
+      "fit_status": "insufficient_data"
+    },
+    "psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max": {
+      "type": "power_law",
+      "params": {
+        "log_k": -1.4006531059651397,
+        "alpha": 0.9654582925496433,
+        "beta": -0.6661154889100268
+      },
+      "metrics": {
+        "r2": 0.9999999999577949,
+        "rmse_log": 2.4876634070063403e-08,
+        "resid_std_log": 1.8043633254194447e-08,
+        "n": 2
+      },
+      "fit_status": "ok"
+    }
+  }
+}

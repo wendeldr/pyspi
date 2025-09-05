@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -12,7 +13,6 @@ from multiprocessing import Process, Queue, get_context
 from typing import Any, Dict, List, Tuple, Optional
 
 import numpy as np
-import matplotlib.pyplot as plt
 import yaml
 
 from .yaml_stream import iter_module_blocks
@@ -46,7 +46,18 @@ def _child_worker(cfg: Dict[str, Any], c: int, t: int, repeats: int, max_seconds
 
     rng = np.random.RandomState(12345)
     times = []
+    
+    # Extract identifier from config structure before running calculations
     identifier = None
+    try:
+        # cfg structure: {module: {measure: {configs: [...], ...}}}
+        module = list(cfg.keys())[0]
+        measure_dict = cfg[module]
+        measure = list(measure_dict.keys())[0]
+        entry = measure_dict[measure]
+        identifier = _extract_identifier_from_config(module, measure, entry, 0)
+    except Exception:
+        identifier = None
     try:
         for r in range(repeats):
             if max_seconds is not None and (time.perf_counter() - start_all) >= max_seconds:
@@ -66,12 +77,6 @@ def _child_worker(cfg: Dict[str, Any], c: int, t: int, repeats: int, max_seconds
             with open(os.devnull, 'w') as devnull, contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(devnull):
                 calc.compute()
             dt = time.perf_counter() - t0
-            # Extract the identifier from resulting table columns (only one SPI)
-            if identifier is None and hasattr(calc, "table"):
-                try:
-                    identifier = list(calc.table.columns.levels[0])[0]
-                except Exception:
-                    identifier = None
             # Treat all-NaN output as failure and stop further repeats
             try:
                 if identifier is not None:
@@ -147,6 +152,44 @@ def _build_micro_config(module: str, measure: str, entry: Dict[str, Any], config
     return {module: body}
 
 
+def _compute_config_hash(config_path: str) -> str:
+    """Compute SHA-256 hash of the config file for comparison across runs."""
+    sha256_hash = hashlib.sha256()
+    with open(config_path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
+
+
+def _extract_identifier_from_config(module: str, measure: str, entry: Dict[str, Any], config_idx: int) -> str:
+    """Extract the SPI identifier without instantiating Calculator or running compute.
+    
+    This duplicates the logic from Calculator._load_yaml to generate identifiers
+    without requiring dependencies or data.
+    """
+    import importlib
+    
+    configs = entry.get("configs")
+    if configs is None:
+        params = {}
+    else:
+        params = configs[config_idx] if configs[config_idx] is not None else {}
+    
+    try:
+        # Import the module to get the class
+        mod = importlib.import_module(module, package='pyspi')
+        spi_class = getattr(mod, measure)
+        
+        # Create a temporary instance just to get the identifier
+        # This is what Calculator._load_yaml does on line 243
+        spi = spi_class(**params)
+        return spi.identifier
+    except Exception as e:
+        # If we can't instantiate (missing deps, etc.), create a fallback identifier
+        # This mirrors what the benchmark runner would show in dry-run mode
+        return f"{measure}(config={config_idx})"
+
+
 def _hardware_info() -> Dict[str, Any]:
     return {
         "platform": platform.platform(),
@@ -195,12 +238,14 @@ def run_benchmarks(
                     attempt_note = None
 
                     micro_cfg = _build_micro_config(module, measure, entry, cfg_idx)
+                    # Extract identifier consistently whether dry-run or not
+                    ident = _extract_identifier_from_config(module, measure, entry, cfg_idx)
+                    
                     if dry_run:
                         status = "ok"
                         times = [0.0]
                         mean = 0.0
                         std = 0.0
-                        ident = f"{measure}(config={cfg_idx})"
                     else:
                         q: Queue = get_context("spawn").Queue()
                         p = Process(
@@ -229,14 +274,17 @@ def run_benchmarks(
                             times = child_out.get("times_sec", [])
                             mean = child_out.get("mean")
                             std = child_out.get("std")
-                            ident = child_out.get("identifier")
+                            child_ident = child_out.get("identifier")
+                            # Use child identifier if available, otherwise use our extracted one
+                            if child_ident is not None:
+                                ident = child_ident
                             if status in ("failed", "timeout"):
                                 failed_or_timeout = True
                                 attempt_note = child_out.get("error")
 
                     attempt = Attempt(
-                        c=c,
-                        t=t,
+                        c=int(c),
+                        t=int(t),
                         repeats=repeats,
                         wall_time_limit_sec=max_seconds,
                         status=status,
@@ -269,8 +317,9 @@ def run_benchmarks(
         "run_metadata": {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "config_path": os.path.abspath(config_path),
+            "config_hash": _compute_config_hash(config_path),
             "hardware": _hardware_info(),
-            "shapes_tested": [{"c": c, "t": t, "repeats": repeats} for (c, t) in shapes],
+            "shapes_tested": [{"c": int(c), "t": int(t), "repeats": repeats} for (c, t) in shapes],
             "max_seconds": max_seconds,
         },
         "results": results,
