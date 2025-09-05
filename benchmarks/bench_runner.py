@@ -12,6 +12,7 @@ from multiprocessing import Process, Queue, get_context
 from typing import Any, Dict, List, Tuple, Optional
 
 import numpy as np
+import matplotlib.pyplot as plt
 import yaml
 
 from .yaml_stream import iter_module_blocks
@@ -291,11 +292,26 @@ def parse_shapes(s: str) -> List[Tuple[int, int]]:
         out.append((int(c_str), int(t_str)))
     return out
 
+def curved_ints(min_val=2, max_val=250):
+    num_tens = int(max_val // 10)
+    nums = []
+    for i in range(num_tens):
+        # z transitions from 10 (when i=0) to 1 (when i=num_tens-1)
+        z = 10 - (9 * (i / max(1, num_tens - 1))**0.1)
+        z = max(1, z)
+        x = np.linspace(0, 9, int(round(z))).astype(int) + (i * 10)
+        nums.extend(x)
+    nums = np.array(nums)
+    nums = np.clip(nums, min_val, max_val)
+    nums = np.sort(np.unique(nums))
+    return nums
+
+
 
 def main():
     ap = argparse.ArgumentParser(description="Benchmark pyspi measurement/config runtime")
     ap.add_argument("--config", required=True, help="Path to FullConfig.yaml or similar")
-    ap.add_argument("--shapes", default=None, help="Comma list c:t pairs, e.g., 2:10,3:20,4:30")
+    # ap.add_argument("--shapes", default=None, help="Comma list c:t pairs, e.g., 2:10,3:20,4:30")
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--max-seconds", type=float, default=180.0)
     ap.add_argument("--modules", default=None, help="Comma-separated module filters (e.g., .statistics.basic)")
@@ -304,7 +320,9 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
-    shapes = parse_shapes(args.shapes) if args.shapes else DEFAULT_SHAPES
+    first_col = curved_ints(2, 250)
+    shapes = np.column_stack([first_col, np.full(first_col.size, 1024)])
+
     modules_filter = args.modules.split(",") if args.modules else None
     measures_filter = args.measures.split(",") if args.measures else None
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
