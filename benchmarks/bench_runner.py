@@ -310,44 +310,70 @@ def run_benchmarks(
                             target=_child_worker,
                             args=(micro_cfg, c, t, repeats, max_seconds, q),
                         )
-                        p.start()
-                        p.join(timeout=max_seconds + 5.0)
+                        # Make child daemonic so the parent won't try to
+                        # implicitly join it during interpreter shutdown.
+                        p.daemon = True
+                        try:
+                            p.start()
+                            p.join(timeout=max_seconds + 5.0)
 
-                        if p.is_alive():
-                            # Hard timeout; terminate
-                            p.terminate()
-                            p.join(2.0)
-                            status = "timeout"
-                            times = []
-                            mean = None
-                            std = None
-                            ident = None
-                            # Record this timeout for future predictions
-                            if failure_patterns[config_key]['timeout_at_c'] is None:
-                                failure_patterns[config_key]['timeout_at_c'] = c
-                        else:
-                            try:
-                                child_out = q.get_nowait()
-                            except Exception:
-                                child_out = {"status": "failed", "error": "no output from child"}
-                            status = child_out.get("status", "failed")
-                            times = child_out.get("times_sec", [])
-                            mean = child_out.get("mean")
-                            std = child_out.get("std")
-                            child_ident = child_out.get("identifier")
-                            # Use child identifier if available, otherwise use our extracted one
-                            if child_ident is not None:
-                                ident = child_ident
-                            if status == "failed":
-                                attempt_note = child_out.get("error")
-                                # Record this failure for future predictions
-                                if failure_patterns[config_key]['failed_at_c'] is None:
-                                    failure_patterns[config_key]['failed_at_c'] = c
-                            elif status == "timeout":
-                                attempt_note = child_out.get("error")
+                            if p.is_alive():
+                                # Hard timeout; escalate to kill if needed.
+                                p.terminate()
+                                p.join(2.0)
+                                if p.is_alive():
+                                    p.kill()
+                                    p.join(2.0)
+                                status = "timeout"
+                                times = []
+                                mean = None
+                                std = None
+                                ident = None
                                 # Record this timeout for future predictions
                                 if failure_patterns[config_key]['timeout_at_c'] is None:
                                     failure_patterns[config_key]['timeout_at_c'] = c
+                            else:
+                                try:
+                                    child_out = q.get_nowait()
+                                except Exception:
+                                    child_out = {"status": "failed", "error": "no output from child"}
+                                status = child_out.get("status", "failed")
+                                times = child_out.get("times_sec", [])
+                                mean = child_out.get("mean")
+                                std = child_out.get("std")
+                                child_ident = child_out.get("identifier")
+                                # Use child identifier if available, otherwise use our extracted one
+                                if child_ident is not None:
+                                    ident = child_ident
+                                if status == "failed":
+                                    attempt_note = child_out.get("error")
+                                    # Record this failure for future predictions
+                                    if failure_patterns[config_key]['failed_at_c'] is None:
+                                        failure_patterns[config_key]['failed_at_c'] = c
+                                elif status == "timeout":
+                                    attempt_note = child_out.get("error")
+                                    # Record this timeout for future predictions
+                                    if failure_patterns[config_key]['timeout_at_c'] is None:
+                                        failure_patterns[config_key]['timeout_at_c'] = c
+                        finally:
+                            # Ensure the Queue's feeder thread is shut down to
+                            # prevent hangs at interpreter exit.
+                            try:
+                                while True:
+                                    try:
+                                        _ = q.get_nowait()
+                                    except Exception:
+                                        break
+                            except Exception:
+                                pass
+                            try:
+                                q.close()
+                            except Exception:
+                                pass
+                            try:
+                                q.join_thread()
+                            except Exception:
+                                pass
 
                     attempt = Attempt(
                         c=int(c),
