@@ -1,0 +1,37 @@
+{
+ "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+ "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+ "cpu": "x86_64",
+ "logical_cpus": 64,
+ "memory": 33497772032,
+ "packages": {
+  "numpy": "2.5.4",
+  "zarr": "3.4.1",
+  "numcodecs": "0.17.0",
+  "pcodec": "1.0.4",
+  "blosc2": "4.14.1",
+  "pyarrow": "26.0.0",
+  "zstandard": "0.25.0"
+ },
+ "args": {
+  "run": "transfer_105",
+  "patients": [
+   "105"
+  ],
+  "containers": [
+   "zarr_current",
+   "zarr_shard_pcodec8"
+  ],
+  "variants": [
+   "f64:exact"
+  ],
+  "tol": 1e-06,
+  "metrics": null,
+  "max_metrics": null,
+  "corrupt_metric": "cov_EmpiricalCovariance",
+  "no_corrupt": true,
+  "keep": true,
+  "zarr_threads": 1
+ },
+ "timing": "single-threaded codecs; zarr threading.max_workers as given; cold = after fsync + POSIX_FADV_DONTNEED of the variant's own files; warm = immediately repeated"
+}

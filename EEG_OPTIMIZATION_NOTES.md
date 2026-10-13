@@ -4,7 +4,7 @@ Updated 2026-10-13.
 
 The goal is to make pyspi easier to run for this EEG/sEEG workload and investigate improvements to total processing time and output size. Changes may include Python orchestration, lower-level implementation changes, or faster compatible dependencies. Improvements must be assessed against the actual workload and scientific interpretation.
 
-**Current scope:** the first selected target is a small lossless storage comparison using existing calculated outputs. A focused plan for that piece is still to be agreed. So far, work has consisted of discussion and read-only inspection; no benchmark, environment installation, calculation change, or data conversion has been performed.
+**Current scope:** implement and run a small lossless storage comparison using existing calculated outputs, following [the focused plan](storage_comparison/PLAN.md). Keep its code, environment, reports, and generated data under `storage_comparison/` so the experiment can be cleaned up after an output format is selected. Existing patient Zarr stores remain unchanged. No EEG recalculation or cohort conversion is part of this piece.
 
 ## Working agreement
 
@@ -83,6 +83,13 @@ Saved measurements and optional calibration on a representative sample are both 
 - Symmetry packing is a candidate only where reconstruction preserves the actual values. Labels alone are insufficient evidence that a stored matrix can be mirrored exactly.
 - Measure savings against the existing compressed output, along with read/write time, file counts, and memory use. Fewer stored entries do not guarantee the same proportional reduction in already-compressed disk size.
 - Validate exact reconstruction, including NaNs, infinities, channel/window order, and diagonal values. Existing inputs remain reference data; comparison artifacts belong in separate locations.
+- Outcome (2026-10-13; see the [storage report](storage_comparison/REPORT.md)). The measured candidate:
+  - Exact per-array structure packing: a triangle for bit-exact symmetric or antisymmetric matrices, a triangle plus an XOR residual for near-symmetric ones, and full storage otherwise.
+  - Zarr v3, with one CRC32C-checked shard file per array, compressed with pcodec.
+  - Size at float64: 0.66–0.70 of the current layout per patient; about 450–460 GiB of the 717 GiB cohort (projected).
+  - Size at float32: about 0.31.
+  - About 180× fewer files, with faster writes and reads.
+  - The production format is still to be chosen after review.
 
 ## Failures and invalid results
 
@@ -126,4 +133,4 @@ Relevant documentation includes the [pyspi FAQ](https://time-series-features.git
 
 ## Next discussion
 
-Agree a focused, bounded plan for the lossless storage comparison. Local execution, targeted calculation optimization, and difficult failure diagnosis remain later topics. Timing capture should develop alongside those pieces, with the runtime estimator added when enough useful measurements exist.
+Review the [storage comparison report](storage_comparison/REPORT.md) and its measured tradeoffs, then select a production output format. Local execution, targeted calculation optimization, and difficult failure diagnosis remain later topics. Timing capture should develop alongside those pieces, with the runtime estimator added when enough useful measurements exist.

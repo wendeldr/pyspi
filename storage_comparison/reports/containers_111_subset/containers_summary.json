@@ -1,0 +1,244 @@
+{
+ "variants": {
+  "111|zarr_current@f32:exact": {
+   "metrics": 10,
+   "source_bytes": 1889206262,
+   "bytes": 988330221,
+   "alloc": 999477248,
+   "files": 6026,
+   "write_s": 11.61763746899669,
+   "fsync_s": 3.168179666994547,
+   "cold_read_s": 4.310328800005664,
+   "cold_mean_s": 5.961330677993828,
+   "warm_read_s": 2.9376741930027492,
+   "window_read_s": 0.02050110200070776,
+   "raw_f64_bytes": 2985968160,
+   "load_s": 6.647753697987355,
+   "pack_s": 13.749126054994122,
+   "patient": "111",
+   "variant": "zarr_current@f32:exact",
+   "complete": false,
+   "n": 249,
+   "windows": 602,
+   "ratio_vs_raw": 3.0212251902797984,
+   "fraction_of_source": 0.5231457469094499,
+   "write_total_s": 14.785817135991238
+  },
+  "111|zarr_current@f64:exact": {
+   "metrics": 10,
+   "source_bytes": 1889206262,
+   "bytes": 1889207297,
+   "alloc": 1900830720,
+   "files": 6026,
+   "write_s": 18.292412716997205,
+   "fsync_s": 3.300130681011069,
+   "cold_read_s": 7.314001379003457,
+   "cold_mean_s": 7.839409505984804,
+   "warm_read_s": 4.5845229720071075,
+   "window_read_s": 0.027317770996887702,
+   "raw_f64_bytes": 2985968160,
+   "load_s": 6.647753697987355,
+   "pack_s": 24.28642519700952,
+   "patient": "111",
+   "variant": "zarr_current@f64:exact",
+   "complete": false,
+   "n": 249,
+   "windows": 602,
+   "ratio_vs_raw": 1.580540242852979,
+   "fraction_of_source": 1.0000005478491263,
+   "write_total_s": 21.592543398008274
+  },
+  "111|zarr_shard_pcodec8@f32:exact": {
+   "metrics": 10,
+   "source_bytes": 1889206262,
+   "bytes": 580977394,
+   "alloc": 581066752,
+   "files": 34,
+   "write_s": 5.318721595976967,
+   "fsync_s": 0.14538858000014443,
+   "cold_read_s": 3.9557811669874354,
+   "cold_mean_s": 3.4886459129920695,
+   "warm_read_s": 3.9827744039939716,
+   "window_read_s": 0.06453968799178256,
+   "raw_f64_bytes": 2985968160,
+   "load_s": 6.647753697987355,
+   "pack_s": 13.749126054994122,
+   "patient": "111",
+   "variant": "zarr_shard_pcodec8@f32:exact",
+   "complete": false,
+   "n": 249,
+   "windows": 602,
+   "ratio_vs_raw": 5.139559973997887,
+   "fraction_of_source": 0.3075245968033955,
+   "write_total_s": 5.464110175977112
+  },
+  "111|zarr_shard_pcodec8@f64:exact": {
+   "metrics": 10,
+   "source_bytes": 1889206262,
+   "bytes": 1248296422,
+   "alloc": 1248399360,
+   "files": 34,
+   "write_s": 7.018204882995633,
+   "fsync_s": 0.32731741999305086,
+   "cold_read_s": 5.995366431983712,
+   "cold_mean_s": 4.5667945409950335,
+   "warm_read_s": 5.845893215991964,
+   "window_read_s": 0.06434205199911958,
+   "raw_f64_bytes": 2985968160,
+   "load_s": 6.647753697987355,
+   "pack_s": 24.28642519700952,
+   "patient": "111",
+   "variant": "zarr_shard_pcodec8@f64:exact",
+   "complete": false,
+   "n": 249,
+   "windows": 602,
+   "ratio_vs_raw": 2.392034541936707,
+   "fraction_of_source": 0.6607517914314429,
+   "write_total_s": 7.345522302988684
+  }
+ },
+ "corruption": [
+  {
+   "patient": "111",
+   "corruption": "zarr_current@f64:exact",
+   "results": [
+    {
+     "position": "0.25",
+     "file": "cov_EmpiricalCovariance/c/0/0/437",
+     "offset": 96313,
+     "file_bytes": 385254,
+     "full_read": "silent_corruption",
+     "silent_bad_windows": 1,
+     "windows_recoverable": 601,
+     "windows_error": 0,
+     "windows_silent": 1,
+     "windows": 602
+    },
+    {
+     "position": "0.5",
+     "file": "cov_EmpiricalCovariance/c/0/0/437",
+     "offset": 192627,
+     "file_bytes": 385254,
+     "full_read": "silent_corruption",
+     "silent_bad_windows": 1,
+     "windows_recoverable": 601,
+     "windows_error": 0,
+     "windows_silent": 1,
+     "windows": 602
+    },
+    {
+     "position": "0.75",
+     "file": "cov_EmpiricalCovariance/c/0/0/437",
+     "offset": 288940,
+     "file_bytes": 385254,
+     "full_read": "silent_corruption",
+     "silent_bad_windows": 1,
+     "windows_recoverable": 601,
+     "windows_error": 0,
+     "windows_silent": 1,
+     "windows": 602
+    },
+    {
+     "position": "meta",
+     "file": "cov_EmpiricalCovariance/zarr.json",
+     "offset": 543,
+     "file_bytes": 1087,
+     "full_read": "error",
+     "error": "JSONDecodeError: Invalid control character at: line 36 column 26 (char 551)",
+     "windows_recoverable": 0,
+     "windows_error": 602,
+     "windows_silent": 0,
+     "windows": 602
+    }
+   ]
+  },
+  {
+   "patient": "111",
+   "corruption": "zarr_shard_pcodec8@f64:exact",
+   "results": [
+    {
+     "position": "0.25",
+     "file": "cov_EmpiricalCovariance/upper/c/0/0",
+     "offset": 32364569,
+     "file_bytes": 129458279,
+     "full_read": "error",
+     "error": "ValueError: Stored and computed checksum do not match. Stored: b'|w\\xb8\\x97'. Computed: b'\\xf6|q\\xb2'.",
+     "windows_recoverable": 594,
+     "windows_error": 8,
+     "windows_silent": 0,
+     "windows": 602
+    },
+    {
+     "position": "0.5",
+     "file": "cov_EmpiricalCovariance/upper/c/0/0",
+     "offset": 64729139,
+     "file_bytes": 129458279,
+     "full_read": "error",
+     "error": "ValueError: Stored and computed checksum do not match. Stored: b'\\x9bI\\x9f\\xf1'. Computed: b'\\xc6`\\xd8\\xdb'.",
+     "windows_recoverable": 594,
+     "windows_error": 8,
+     "windows_silent": 0,
+     "windows": 602
+    },
+    {
+     "position": "0.75",
+     "file": "cov_EmpiricalCovariance/upper/c/0/0",
+     "offset": 97093709,
+     "file_bytes": 129458279,
+     "full_read": "error",
+     "error": "ValueError: Stored and computed checksum do not match. Stored: b'\\xeb\\xc8\\x93\\xa6'. Computed: b'nXn%'.",
+     "windows_recoverable": 594,
+     "windows_error": 8,
+     "windows_silent": 0,
+     "windows": 602
+    },
+    {
+     "position": "meta",
+     "file": "cov_EmpiricalCovariance/upper/zarr.json",
+     "offset": 527,
+     "file_bytes": 1055,
+     "full_read": "error",
+     "error": "UnknownCodecError: An implementation for codec 'numcotecs.pcodec' is not available. Register one explicitly using the codec registry (see h",
+     "windows_recoverable": 0,
+     "windows_error": 602,
+     "windows_silent": 0,
+     "windows": 602
+    }
+   ]
+  }
+ ],
+ "projection": {
+  "zarr_current@f32:exact": {
+   "measured_channel_counts": [
+    249
+   ],
+   "estimated_bytes": 402661242538.92255,
+   "estimated_fraction": 0.5231457469094499,
+   "estimated_files": 8026632.0
+  },
+  "zarr_current@f64:exact": {
+   "measured_channel_counts": [
+    249
+   ],
+   "estimated_bytes": 769692701346.243,
+   "estimated_fraction": 1.0000005478491265,
+   "estimated_files": 8026632.0
+  },
+  "zarr_shard_pcodec8@f32:exact": {
+   "measured_channel_counts": [
+    249
+   ],
+   "estimated_bytes": 236699307968.51062,
+   "estimated_fraction": 0.3075245968033955,
+   "estimated_files": 45288.0
+  },
+  "zarr_shard_pcodec8@f64:exact": {
+   "measured_channel_counts": [
+    249
+   ],
+   "estimated_bytes": 508575552643.56445,
+   "estimated_fraction": 0.6607517914314429,
+   "estimated_files": 45288.0
+  }
+ }
+}
