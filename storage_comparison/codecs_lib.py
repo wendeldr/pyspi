@@ -7,6 +7,7 @@ hand integer arrays (XOR residuals) to blosc-zstd-bitshuffle, recorded as such.
 from __future__ import annotations
 
 import lzma
+import threading
 
 import blosc2
 import fpzip
@@ -19,10 +20,14 @@ blosc2.set_nthreads(1)
 
 
 def _zstd(level):
-    c = zstandard.ZstdCompressor(level=level)
-    d = zstandard.ZstdDecompressor()
-    return (lambda a: c.compress(a.tobytes()),
-            lambda b, dt, sh: np.frombuffer(d.decompress(b), dtype=dt).reshape(sh))
+    local = threading.local()          # zstandard contexts are not thread-safe: one per thread
+
+    def ctx():
+        if not hasattr(local, "c"):
+            local.c, local.d = zstandard.ZstdCompressor(level=level), zstandard.ZstdDecompressor()
+        return local.c, local.d
+    return (lambda a: ctx()[0].compress(a.tobytes()),
+            lambda b, dt, sh: np.frombuffer(ctx()[1].decompress(b), dtype=dt).reshape(sh))
 
 
 def _blosc(codec, clevel, filters):

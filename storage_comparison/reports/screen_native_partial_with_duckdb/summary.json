@@ -1,0 +1,43 @@
+{
+ "note": "Partial native screen (largest-n patient first), stopped at a DuckDB native-storage round-trip failure. Diagnosis on 004 found +0.0 read back as -0.0 (prec_GraphicalLassoCV: 27,650 values), so DuckDB's native storage does not preserve signed zeros. Sizes cover the arrays where all five codecs round-tripped bit-exactly.",
+ "f64": {
+  "arrays": 140,
+  "patients": [
+   "111"
+  ],
+  "ratio_vs_raw": {
+   "pcodec8": 2.9792124789299494,
+   "openzl_tsplit_zstd": 2.7310903169677188,
+   "openzl_tsplit_entropy": 2.682160299031233,
+   "vortex": 2.80328837802164,
+   "duckdb_native": 2.087909180302001
+  },
+  "vs_pcodec8": {
+   "pcodec8": 1.0,
+   "openzl_tsplit_zstd": 1.0908509544414176,
+   "openzl_tsplit_entropy": 1.1107510912028666,
+   "vortex": 1.062756333699947,
+   "duckdb_native": 1.426887963823708
+  }
+ },
+ "f32": {
+  "arrays": 140,
+  "patients": [
+   "111"
+  ],
+  "ratio_vs_raw": {
+   "pcodec8": 6.356654212679278,
+   "openzl_tsplit_zstd": 5.7875810678485236,
+   "openzl_tsplit_entropy": 5.719507565002518,
+   "vortex": 5.778154702541905,
+   "duckdb_native": 4.005469130698011
+  },
+  "vs_pcodec8": {
+   "pcodec8": 1.0,
+   "openzl_tsplit_zstd": 1.0983265958885828,
+   "openzl_tsplit_entropy": 1.111398864401446,
+   "vortex": 1.100118383795242,
+   "duckdb_native": 1.5869936842008665
+  }
+ }
+}

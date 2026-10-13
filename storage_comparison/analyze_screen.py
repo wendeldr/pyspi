@@ -10,7 +10,7 @@ for r in rows:
     a = agg[key(r)]
     a['raw'] += r['raw_bytes']; a['bytes'] += r['bytes']; a['enc'] += r['enc_s']; a['dec'] += r['dec_s']
     a['pack'] += r['pack_s']; a['unpack'] += r['unpack_s']; a['n'] += 1
-base = agg[('f64', 'full', 'wm', 'zstd3')]['bytes']
+base = agg.get(('f64', 'full', 'wm', 'zstd3'), {}).get('bytes') or float('nan')   # absent when the run omitted Zstd 3
 out = []
 for k, a in agg.items():
     out.append(dict(precision=k[0], structure=k[1], layout=k[2], codec=k[3], arrays=a['n'], ratio=a['raw'] / a['bytes'],

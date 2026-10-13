@@ -29,7 +29,7 @@ Projected to the 72-recording cohort (an extrapolation, see [Cohort projection](
 | | Size | Files |
 | --- | ---: | ---: |
 | Current | 717 GiB | 7.64 M |
-| float64, exact | about 450 GiB | about 42 k |
+| float64, exact | about 450–460 GiB | about 42 k |
 | float32 | about 210 GiB | about 41 k |
 
 Reading and writing are faster than now, not slower. The time mean is bit-identical to `np.nanmean(data, axis=2)`.
@@ -43,7 +43,7 @@ Reading and writing are faster than now, not slower. The time mean is bit-identi
 - Blosc2 frames: no checksums, so corruption passes silently.
 - zfp and fpzip: larger and slower.
 - Slower general compressors (xz, Zstd 19, pcodec 12): at most 0.2% smaller for 14–80× the encode time.
-- Newer native formats (OpenZL, Vortex, DuckDB's ALP storage): not smaller than pcodec.
+- Newer native formats: OpenZL and Vortex are 7–10% larger than pcodec and slower to decode. DuckDB's own ALP storage is 43–59% larger and not bit-exact: it read +0.0 back as −0.0.
 - Tolerance-based symmetric packing: under 1% smaller and not exact.
 
 ## Requirements and evidence
@@ -53,8 +53,8 @@ Reading and writing are faster than now, not slower. The time mean is bit-identi
 | Significantly less disk space | 0.66–0.70 of the current size at float64; 0.31–0.33 at float32. About 0.63 and 0.30 cohort-wide (projected). |
 | Data stays easy to access | `open_results(path).load(metric)` returns n×n×W (or n×n). `load(metric, windows=...)` reads a subset. Plain zarr + numpy works without the helper module ([Access](#access)). |
 | Easy time mean | `Results.mean(metric)`, bit-identical to `np.nanmean(load(metric), axis=2)`. It reads the triangle only, so it is 3.6× (105) to 17× (004) faster than with the current files. |
-| Easy transfer; no single huge fragile file | Each metric is 3–5 small files, with one data file per array. A failed or damaged copy costs one metric's file, not the patient or the cohort ([Transfer](#transfer-and-corruption)). |
-| Corruption detected and contained | Every chunk carries a CRC32C. A flipped byte gives a read error for about 30 windows of one metric. The current layout returns wrong numbers with no error. |
+| Easy transfer; no single huge fragile file | Each metric is 3–5 files: one data file per stored array (at most a few hundred MB; capped) plus tiny metadata files. A failed or damaged copy costs one metric's file, not the patient or the cohort ([Transfer](#transfer-and-corruption)). |
+| Corruption detected and contained | Every chunk carries a CRC32C. A flipped byte gives a read error for one chunk of one metric: 8 windows at n = 249, 30 at n = 131, and about 300 at n = 40 (chunks hold about 256k values). `pspi_store.py verify` checks a copy without the source. The current layout returns wrong numbers with no error. |
 | float64 first, float32 only if it pays | float64 is measured throughout. float32 halves the size again (0.66 → 0.31) with relative error ≤ 6e-8 ([float32](#float32)). |
 | Generic to any pyspi run (1 metric or all) | Structure is detected per array from the bits, so it works for any metric set. Nothing depends on the 185 metrics here. 115 synthetic round-trip tests cover the edge cases. |
 | Save/load time must not get worse | Writes are 6× (105) to 19× (004) faster; cold reads 1.8× to 14× faster; cold time means 3.6× to 17× faster than the current layout ([Containers](#full-patient-conversions)). |
@@ -64,11 +64,9 @@ Reading and writing are faster than now, not slower. The time mean is bit-identi
 
 These properties explain the results, so they are worth knowing before reading the size tables.
 
-**The numbers themselves barely compress.** The mantissas of the stored doubles are close to random noise:
-- 47 of the 52 mantissa bits are ones with probability within 1% of 0.5.
-- The low 32 bits of each value compress to 0.99 of their size even with xz -9e, Zstd 19, or pcodec 12.
+**The numbers themselves barely compress.** For the median metric, 46–47 of the 52 float64 mantissa bits are ones with probability within 1% of 0.5, i.e. noise. Metrics with many zeros, NaNs, or few distinct values compress better, so in aggregate the low 32 bits of each value shrink to 0.77–0.80 of their size ([Headroom](#headroom)).
 
-A codec alone therefore gains only 1.1–1.2× on dense data (full-matrix Zstd 3 reaches 1.62× vs raw, likely helped by matching the mirrored duplicates in symmetric matrices; pcodec on full matrices reaches only 1.49×). Most of the available saving comes from not storing redundant entries.
+On dense matrices a codec alone gains only 1.1–1.2× (full-matrix Zstd 3 reaches 1.62× vs raw, likely helped by matching the mirrored duplicates in symmetric matrices; pcodec on full matrices reaches only 1.49×). Most of the available saving comes from not storing redundant entries.
 
 **Most matrices are exactly redundant.** Bit-level analysis of 555 arrays over 3 patients:
 - 333 symmetric
@@ -80,7 +78,7 @@ A codec alone therefore gains only 1.1–1.2× on dense data (full-matrix Zstd 3
 About 95% of raw bytes are triangle-packable. Per patient this is 111 symmetric, 47 antisymmetric, 16 near-symmetric, 1 near-antisymmetric, and 10 full metrics.
 
 **Directed vs undirected is the main category split, but labels are not reliable enough to decide storage.**
-- phase, PLI, wPLI, and PSI are labelled undirected but are bit-exactly antisymmetric. The library computes both directions without an `abs`, so mirrored values are equal and opposite.
+- phase, PLI, wPLI, and PSI are labelled undirected but are bit-exactly antisymmetric: the two directions are stored equal and opposite, with no `abs` applied.
 - Group delay (`gd`) is labelled directed but its values are symmetric or antisymmetric. NaN entries are copied unchanged.
 - PLI zeros mirror as +0.0, not −0.0.
 - Covariance-type estimators such as `prec_*`, `pdist_euclidean`, `pec`, and `pec_log` are mathematically symmetric. In storage they differ from symmetric only by floating-point noise (relative asymmetry up to 5.4e-8). That is why the exact XOR residual exists: it keeps the noise bit-for-bit instead of discarding it.
@@ -113,7 +111,42 @@ In-memory screen of 3 patients (n = 40, 131, 249) × all 185 metrics × 64 middl
 
 ### Native candidates beyond the main screen
 
-⟨pending: OpenZL / Vortex / DuckDB-native screen over the same sample; headroom totals⟩
+The main screen's codecs are already native: pcodec is Rust; Zstd, LZ4, xz, and Blosc2 are C; zfp, fpzip, and Arrow are C++. To check that nothing newer does better, three more recent native designs ran on the same sample through their Python bindings, using exact packing, with the same bit-exact round-trip check:
+- **OpenZL** (Meta, C): format-aware graphs; here numeric input, byte-plane transpose, then Zstd or entropy coding per plane. Its float64 path has no dedicated float node.
+- **Vortex** (SpiralDB, Rust): adaptive cascading encodings including ALP and ALP-RD for floats; the file size is measured.
+- **DuckDB native storage** (C++): ALP and ALP-RD for DOUBLE and FLOAT; checkpointed database file size.
+
+| Precision | Codec | Ratio vs raw | vs pcodec 8 | Encode MB/s | Decode MB/s |
+| --- | --- | ---: | ---: | ---: | ---: |
+| f64 | **pcodec 8** | **2.775** | 1.000 | 200 | 1221 |
+| f64 | Vortex | 2.600 | 1.067 | 45 | 332 |
+| f64 | OpenZL transpose + Zstd | 2.587 | 1.073 | 180 | 266 |
+| f64 | OpenZL transpose + entropy | 2.559 | 1.084 | 210 | 253 |
+| f32 | **pcodec 8** | **5.925** | 1.000 | 340 | 2937 |
+| f32 | OpenZL transpose + Zstd | 5.487 | 1.080 | 387 | 594 |
+| f32 | OpenZL transpose + entropy | 5.456 | 1.086 | 507 | 566 |
+| f32 | Vortex | 5.391 | 1.099 | 83 | 700 |
+
+- Rows cover all 555 arrays (3 patients × 185 metrics × 64 windows). pcodec 8 reproduces the main screen's result exactly.
+- Throughput includes per-call setup in the Python bindings (contexts, temporary files for Vortex), so treat it as indicative.
+- **DuckDB native storage is not lossless for signed zeros.** The screen stopped when a DuckDB round trip failed. Diagnosis on 004 found `prec_GraphicalLassoCV` with 27,650 values of +0.0 read back as −0.0.
+- On the 140 arrays of 111 completed before the stop, DuckDB was 1.43× (f64) and 1.59× (f32) the size of pcodec 8; Vortex and OpenZL were 1.06–1.11× (`reports/screen_native_partial_with_duckdb/summary.json`).
+- Conclusion: no newer native format beats pcodec on these outputs, and the headroom check below explains why.
+
+### Headroom
+
+Is there a better lossless codec still to find? `headroom.py` takes the same sample (all 185 metrics × 3 patients × 64 windows, exact packing) and splits every stored value into its high and low halves: 32/32 bits for float64, 16/16 for float32. Each half is then compressed with the strongest general codecs available, keeping the best per array: xz -9e and Zstd 19 on byte-shuffled data, and pcodec 12 on the integers.
+
+| Patient | Precision | pcodec 8 on whole values | best per half, low half | best per half, high half | best per half, combined | Median uniform mantissa bits |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 004 | f64 | **0.659** | 0.774 | 0.555 | 0.664 | 46 of 52 |
+| 105 | f64 | **0.675** | 0.796 | 0.562 | 0.679 | 47 of 52 |
+| 111 | f64 | **0.667** | 0.787 | 0.551 | 0.669 | 47 of 52 |
+| 004 | f32 | **0.627** | 0.784 | 0.498 | 0.641 | 19 of 23 |
+| 105 | f32 | **0.641** | 0.804 | 0.494 | 0.649 | 19 of 23 |
+| 111 | f32 | **0.629** | 0.794 | 0.481 | 0.638 | 19 of 23 |
+
+Sizes are fractions of the packed payload, after packing. Splitting values and spending 10–80× more compute per half is still slightly larger than pcodec 8 on whole values. Together with the codec screen and the native candidates, this suggests little lossless headroom remains for these outputs. Further large gains would need fewer stored values (packing, already done) or fewer stored bits (float32 or quantization, a scientific decision).
 
 ## Full-patient conversions
 
@@ -150,7 +183,7 @@ Observations:
 - The recreated current layout matches the real store's size exactly (1.000). The baseline is the real layout, not an approximation.
 - With the current layout, time goes to file count, not data volume. 004 holds 0.69 GiB but takes 130 s to write and 44 s to read, because of its 108k files.
 - A one-window read decodes one ~256k-value chunk: about 7 ms per metric vs 2 ms now. Both are negligible.
-- Sharding changes size by nothing and cuts files 8× compared with the unsharded directory form.
+- Sharding changes size by nothing and cuts the file count 1.4× (004) to 8× (105) compared with the unsharded directory form.
 - The framed custom file is marginally smaller, with the fewest files, but needs its own reader. Zarr gives the same size with a standard reader.
 
 ## Transfer and corruption
@@ -162,14 +195,37 @@ One byte was flipped at 25%, 50%, and 75% of a data file of `cov_EmpiricalCovari
 | Format | Data byte flipped | Metadata byte flipped |
 | --- | --- | --- |
 | Current layout | **No error; one window silently wrong** | Metric unreadable |
-| Zarr + CRC32C (all codecs) | Error naming the metric; one chunk's windows unreadable (30 of 602 for 105, about 300 of 607 for 004); the rest readable | Metric unreadable (tiny file; re-copy it) |
+| Zarr + CRC32C (all codecs) | Error naming the metric; one chunk's windows unreadable (8 of 602 for 111, 30 of 602 for 105, about 300 of 607 for 004); the rest readable | Metric unreadable (tiny file; re-copy it) |
 | Framed custom (CRC32 blocks) | Same as Zarr | Readable or error, depending on the byte |
 | Parquet (page CRC) | Same as Zarr | Readable |
 | Blosc2 b2nd | **No error; 3–9 windows silently wrong** | Readable |
 
 ### Interrupted copy and bit rot on the copy
 
-⟨pending: 105 results from transfer_test.py⟩
+Patient 105 was converted in full and copied with `rsync -a` to another directory on the same drive, with the source evicted from the page cache first (`transfer_test.py`). Three cases:
+1. A plain copy.
+2. A copy interrupted with SIGINT at about 50%, then the same `rsync -a` rerun.
+3. One byte flipped in the copy with its timestamps restored (silent bit rot or a bad write), then repaired.
+
+The single-file tar of the recommended store stands in for any monolithic container (one HDF5 file, one database file, one archive).
+
+| | Current layout | Recommended f64 | Recommended f32 | Single tar file |
+| --- | ---: | ---: | ---: | ---: |
+| Files / bytes | 106,142 / 8.49 GB | 589 / 5.59 GB | 567 / 2.63 GB | 1 / 5.59 GB |
+| Plain copy | 23.5 s | **6.3 s** | 3.8 s | 6.2 s (+6.5 s to create the tar) |
+| Extra data re-sent after the interruption | 0.001% | **0.6%** (one in-flight 36 MB file) | 0.7% | **54%: the whole file again** |
+| Plain `rsync -a` notices the flipped byte | no | no | no | no |
+| Reading the copy notices it | **no: wrong values, no error** | **yes: names the metric** | yes | n/a |
+| Repair with `rsync -a --checksum` (whole tree) | 13.4 s, 1 file (88 KB) | 3.5 s, 1 file (36 MB) | 2.0 s, 1 file (17 MB) | 9.0 s, **5.59 GB re-sent** |
+| Repair of only the named metric | not possible (nothing flags it) | 0.1 s | 0.07 s | n/a |
+
+What this means for moving data between computers or drives:
+- **Interrupted copies.** rsync writes each file under a temporary name and renames it when complete, so an interrupted run costs only the file in flight. With the recommended format that is at most one array's shard: about 36 MB at n = 131, 247 MB for a directed metric at n = 249, and never more than the 1 GiB-of-raw-values shard cap that `pspi_store` enforces. A monolithic file is re-sent from the start. (`--partial` keeps the partial file, but local copies imply `--whole-file`, so rsync still rewrites it.)
+- **Silent damage.** Size and modification time stay the same, so a plain `rsync -a` re-run never repairs it, in any format. Only a content check finds it.
+  - With the current layout, the only way to find it is `rsync --checksum` against the source, reading every byte on both sides.
+  - With the recommended format, the copy checks itself: `python pspi_store.py verify <store>` reads every CRC32C-checked chunk and names the damaged metrics, with no source needed. One re-copy of those metric directories fixes it.
+  - Transfer checks can still be left to the copying tool, as the notes intended. The format adds the ability to check a copy where no source is available.
+- **File count.** The current layout took 23.5 s to copy against 6.3 s, even on the same NVMe drive. About 1.5× of that is its extra bytes; the rest is per-file overhead (361 vs 887 MB/s). The gap grows on USB drives and network filesystems, where each file costs more.
 
 ## Chunk size
 
@@ -202,11 +258,39 @@ n = 249, 602 windows, the largest recording in the cohort (32.7 GiB now). The sa
 
 ## Threads
 
-⟨pending: thread_scaling.py⟩
+One large metric: 111 `cov_EmpiricalCovariance`, 249 × 249 × 602, 299 MB raw float64, 76 chunks in one shard. Each setting ran in a fresh process with Zarr's `threading.max_workers` set (`thread_scaling.py`). "Raw codec pool" encodes or decodes the same 76 chunks with a Python thread pool, which shows whether the codec releases the GIL.
+
+| Codec | Threads | Write s | Cold read s | Cold mean s | Raw codec pool encode s | Raw codec pool decode s |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| pcodec 8 | 1 | 0.62 | 0.63 | 0.34 | 0.56 | 0.135 |
+| pcodec 8 | 4 | 0.29 | 0.62 | 0.39 | 0.15 | 0.032 |
+| pcodec 8 | 16 | 0.32 | 0.63 | 0.39 | 0.10 | 0.026 |
+| Zstd 3 | 1 | 0.55 | 0.68 | 0.42 | 0.61 | 0.248 |
+| Zstd 3 | 4 | 0.30 | 0.68 | 0.39 | 0.16 | 0.065 |
+| Zstd 3 | 16 | 0.26 | 0.66 | 0.39 | 0.07 | 0.029 |
+
+- Both codecs release the GIL: chunk encoding scales 5.5× (pcodec) and 8.8× (Zstd) at 16 threads, and decoding 5–9×.
+- Writes through Zarr gain about 2× from threads.
+- Reading one metric does not scale. Decoding is only about 0.13 s of the 0.63 s; the rest is Zarr's per-chunk work and unpacking the triangle into the n × n × W layout.
+- For whole-recording reads, parallelize across metrics (one process or thread per metric). The time mean skips most of the unpacking.
+- The first attempt crashed in the Zstd run with 4 threads. This was a harness bug: one `zstandard` context was shared across threads. The format and Zarr were not involved; the harness now uses one context per thread.
 
 ## Memory
 
-⟨pending: memory_probe.py⟩
+Peak resident memory above the post-import baseline, one fresh process per measurement (`memory_probe.py`), on the largest matrices: patient 111, 249 × 249 × 602, 299 MB per metric as float64. "Current" is `zarr.open_array(...)[:]` on the existing store, plus `np.nanmean(axis=2)` for the mean. "Packed" is `pspi_store.Results`, which reads in window blocks and averages in column blocks.
+
+| Metric (mode) | Operation | Current, default malloc | Packed, default malloc | Packed, fixed mmap threshold |
+| --- | --- | ---: | ---: | ---: |
+| cov_EmpiricalCovariance (sym) | load | 312 MB | 705 MB | 498 MB |
+| cov_EmpiricalCovariance (sym) | mean | 656 MB | **467 MB** | 230 MB |
+| te_symbolic (full) | load | 304 MB | 741 MB | 379 MB |
+| te_symbolic (full) | mean | 654 MB | 726 MB | 373 MB |
+
+- A full load with the reference reader peaks at about 2.4× the result under default glibc settings, against about 1.0× for the current files.
+- Most of the gap is freed decode buffers that glibc keeps mapped across Zarr's worker threads. `MALLOC_MMAP_THRESHOLD_=1048576` returns them and brings the load to 1.3–1.7×.
+- A time mean through the packed reader peaks lower than the usual load-then-`nanmean` on the current files, because only the triangle is read.
+- Even the largest recording needs well under 1 GB per metric. A production reader could decode straight into the output buffer to remove the remaining copies.
+- Before the reader was changed to work in blocks, a whole-shard `a[:]` held the compressed shard and the decoded array at the same time, peaking at 1.1 GB.
 
 ## float32
 
@@ -229,11 +313,19 @@ This is an extrapolation, not a measured conversion. The screen (every metric of
 | Zarr shard pcodec8, f32 | 211 GiB | 0.295 | 40,742 |
 | Zarr shard Zstd3, f32 | 243 GiB | 0.339 | 40,742 |
 
+A cross-check interpolates the fraction of current size over n instead. It uses 004 and 105 measured in full, plus the 111 point from its 10-metric subset, corrected by those 10 metrics' fraction on 105. It gives 460 GiB (0.642) for pcodec8 f64 and 216 GiB (0.302) for f32 (`project_cohort.py --subset`).
+
 The cohort fraction (0.63) is lower than 004's (0.70). The current layout compresses larger recordings slightly worse, while packing works equally well at every n: 2.77, 2.74, and 2.78× vs raw at n = 40, 131, and 249.
 
 ## Access
 
-⟨pending: examples_access.py on 105⟩
+`examples_access.py 105` writes three real metrics (one each of symmetric, antisymmetric, and full) and checks each access path against `np.nanmean` of the source:
+
+| Path | Time for one (131 × 131 × 602) metric | Agreement with `np.nanmean(source, axis=2)` |
+| --- | ---: | --- |
+| `Results.mean` (sym / anti / full) | 0.11 / 0.10 / 0.18 s | bit-identical for all three |
+| plain zarr + numpy on the stored triangle | – | max difference 1.1e-15 (summation order) |
+| DuckDB SQL `avg(value)` over a Parquet export | 0.10 s | max difference 1.1e-16 |
 
 ```python
 from pspi_store import open_results
@@ -282,6 +374,8 @@ The plain path differs from `np.nanmean(axis=2)` by about 1e-15, because summati
 4. Store recording metadata (channel names, window onsets, sampling, pyspi version and config) on the root group via `set_recording_info`. Store labels and source dtype per metric.
 5. Refuse silent overwrites; this is the default.
 6. Keep float64 as the default. float32 is an opt-in flag with the range guard.
+7. After copying a store, run `python pspi_store.py verify <store>`, then re-copy only the metric directories it names.
+8. For small n, consider also capping windows per chunk (for example 64). With 256k values per chunk, a 40-channel recording puts about 300 windows in one chunk; the chunk-size sweep shows smaller chunks cost little in size.
 
 ## Reproduction
 
@@ -294,7 +388,11 @@ python analyze_screen.py reports/screen_fast_w64
 python bench_containers.py --run containers_full --patients 004 105 --variants f64:exact f32:exact
 python analyze_containers.py reports/containers_full
 python project_cohort.py --screen reports/screen_fast_w64 --full reports/containers_full
-./run_queue.sh && ./run_queue2.sh                # 111 subset, chunk sweep, transfer, threads, examples,
-                                                 # native screen, headroom, memory
-TMPDIR=... python test_pspi_store.py            # 115 synthetic round trips
+./run_queue.sh      # 111 subset, chunk sweep, kept 105 conversion + transfer test, access examples
+./run_queue2.sh     # headroom (headroom.py) and peak memory (memory_probe.py); waits for run_queue.sh
+./run_queue3.sh     # native-codec screen (OpenZL, Vortex) and thread scaling; waits for run_queue2.sh
+python project_cohort.py --screen reports/screen_fast_w64 --full reports/containers_full \
+    --subset reports/containers_111_subset
+python analyze_containers.py --common-metrics reports/chunk_sweep_105 reports/containers_full
+TMPDIR=<scratch> python test_pspi_store.py      # 115 synthetic round trips + verify test
 ```
