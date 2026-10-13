@@ -32,7 +32,7 @@ Projected to the 72-recording cohort (an extrapolation, see [Cohort projection](
 | float64, exact | about 450–460 GiB | about 42 k |
 | float32 | about 210 GiB | about 41 k |
 
-Reading and writing are faster than now, not slower. The time mean is bit-identical to `np.nanmean(data, axis=2)`.
+Writes, full reads, and time means are faster than now for every recording measured; single-window reads take a few milliseconds either way. The time mean is bit-identical to `np.nanmean(data, axis=2)`.
 
 **Alternatives if pcodec is unwanted:**
 - **Same layout with Zstd level 3.** About 12% larger than pcodec. It uses only core Zarr v3 codecs, so any Zarr v3 reader in any language can open it without an extra codec package.
@@ -57,7 +57,7 @@ Reading and writing are faster than now, not slower. The time mean is bit-identi
 | Corruption detected and contained | Every chunk carries a CRC32C. A flipped byte gives a read error for one chunk of one metric: 8 windows at n = 249, 30 at n = 131, and about 300 at n = 40 (chunks hold about 256k values). `pspi_store.py verify` checks a copy without the source. The current layout returns wrong numbers with no error. |
 | float64 first, float32 only if it pays | float64 is measured throughout. float32 halves the size again (0.66 → 0.31) with relative error ≤ 6e-8 ([float32](#float32)). |
 | Generic to any pyspi run (1 metric or all) | Structure is detected per array from the bits, so it works for any metric set. Nothing depends on the 185 metrics here. 115 synthetic round-trip tests cover the edge cases. |
-| Save/load time must not get worse | Writes are 6× (105) to 19× (004) faster; cold reads 1.8× to 14× faster; cold time means 3.6× to 17× faster than the current layout ([Containers](#full-patient-conversions)). |
+| Save/load time must not get worse | Compared with the current layout ([Containers](#full-patient-conversions), [111](#large-recording-patient-111)):<br>• Writes are 3× (111) to 19× (004) faster.<br>• Cold full reads are 1.2× (111) to 14× (004) faster.<br>• Cold time means are 1.7× (111) to 17× (004) faster.<br>• Single-window reads take about 7 ms vs 2 ms per metric; both are negligible. |
 | Not limited to Zarr or Python | Tested codecs and containers are written in Rust (pcodec, Vortex), C (Zstd, LZ4, xz, Blosc2, OpenZL), and C++ (zfp, fpzip, Arrow/Parquet, DuckDB), all loadable from Python ([Native candidates](#native-candidates-beyond-the-main-screen)). |
 
 ## What the data looks like
@@ -128,7 +128,7 @@ The main screen's codecs are already native: pcodec is Rust; Zstd, LZ4, xz, and 
 | f32 | Vortex | 5.391 | 1.099 | 83 | 700 |
 
 - Rows cover all 555 arrays (3 patients × 185 metrics × 64 windows). pcodec 8 reproduces the main screen's result exactly.
-- Throughput includes per-call setup in the Python bindings (contexts, temporary files for Vortex), so treat it as indicative.
+- Throughput was measured with 12 concurrent workers and includes per-call setup in the Python bindings (contexts, temporary files for Vortex), so treat it as indicative.
 - **DuckDB native storage is not lossless for signed zeros.** The screen stopped when a DuckDB round trip failed. Diagnosis on 004 found `prec_GraphicalLassoCV` with 27,650 values of +0.0 read back as −0.0.
 - On the 140 arrays of 111 completed before the stop, DuckDB was 1.43× (f64) and 1.59× (f32) the size of pcodec 8; Vortex and OpenZL were 1.06–1.11× (`reports/screen_native_partial_with_duckdb/summary.json`).
 - Conclusion: no newer native format beats pcodec on these outputs, and the headroom check below explains why.
@@ -220,7 +220,7 @@ The single-file tar of the recommended store stands in for any monolithic contai
 | Repair of only the named metric | not possible (nothing flags it) | 0.1 s | 0.07 s | n/a |
 
 What this means for moving data between computers or drives:
-- **Interrupted copies.** rsync writes each file under a temporary name and renames it when complete, so an interrupted run costs only the file in flight. With the recommended format that is at most one array's shard: about 36 MB at n = 131, 247 MB for a directed metric at n = 249, and never more than the 1 GiB-of-raw-values shard cap that `pspi_store` enforces. A monolithic file is re-sent from the start. (`--partial` keeps the partial file, but local copies imply `--whole-file`, so rsync still rewrites it.)
+- **Interrupted copies.** rsync writes each file under a temporary name and renames it when complete, so an interrupted run costs only the file in flight. With the recommended format that is at most one array's shard: about 36 MB at n = 131, up to about 300 MB at n = 249 (247 MB for the largest measured), and never more than the 1 GiB-of-raw-values shard cap that `pspi_store` enforces. A monolithic file is re-sent from the start. (`--partial` keeps the partial file, but local copies imply `--whole-file`, so rsync still rewrites it.)
 - **Silent damage.** Size and modification time stay the same, so a plain `rsync -a` re-run never repairs it, in any format. Only a content check finds it.
   - With the current layout, the only way to find it is `rsync --checksum` against the source, reading every byte on both sides.
   - With the recommended format, the copy checks itself: `python pspi_store.py verify <store>` reads every CRC32C-checked chunk and names the damaged metrics, with no source needed. One re-copy of those metric directories fixes it.
@@ -254,7 +254,7 @@ n = 249, 602 windows, the largest recording in the cohort (32.7 GiB now). The sa
 
 - With larger matrices the current layout spends less per byte on file overhead, so read gains shrink to 1.2–1.7×. Writes stay 3× faster, and size and file count still fall.
 - A flipped byte costs 8 of 602 windows of one metric. The current layout returns one silently wrong window.
-- The largest data file at n = 249 is 247 MiB (a directed metric, all entries). Highly regular metrics are much smaller: group delay 5 MiB, PLI 7 MiB.
+- Among the measured metrics, the largest data file at n = 249 is 247 MiB (a directed metric, all entries). No array at this size can exceed its raw size, about 300 MB, so an interrupted copy here costs at most about 300 MB. Highly regular metrics are much smaller: group delay 5 MiB, PLI 7 MiB.
 
 ## Threads
 
@@ -288,7 +288,7 @@ Peak resident memory above the post-import baseline, one fresh process per measu
 
 - A full load with the reference reader peaks at about 2.4× the result under default glibc settings, against about 1.0× for the current files.
 - Most of the gap is freed decode buffers that glibc keeps mapped across Zarr's worker threads. `MALLOC_MMAP_THRESHOLD_=1048576` returns them and brings the load to 1.3–1.7×.
-- A time mean through the packed reader peaks lower than the usual load-then-`nanmean` on the current files, because only the triangle is read.
+- For triangle-packed metrics (about 95% of the data), a time mean through the packed reader peaks lower than the usual load-then-`nanmean` on the current files, because only the triangle is read. For full (directed) metrics the two are about equal under default malloc (726 vs 654 MB).
 - Even the largest recording needs well under 1 GB per metric. A production reader could decode straight into the output buffer to remove the remaining copies.
 - Before the reader was changed to work in blocks, a whole-shard `a[:]` held the compressed shard and the decoded array at the same time, peaking at 1.1 GB.
 
