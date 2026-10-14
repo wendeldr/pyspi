@@ -15,6 +15,11 @@ The migration is complete and locally verified. Golden values, tolerance
 policy, and existing patient outputs are unchanged. Production storage is now
 integrated; scientific review remains a separate piece.
 
+The counts and receipts below describe the migration and its immediate
+follow-up. Production integration and the later test review expanded the
+suites; [TEST_REVIEW.md](tests/TEST_REVIEW.md) and its receipt record the latest
+verification. Historical receipts are preserved unchanged.
+
 ## Baseline
 
 The starting commit was `be859fe`. Before edits or installations, all tracked
@@ -127,7 +132,7 @@ golden files and tolerance policy; failing comparisons were investigated rather
 than regenerated or relaxed. The new canonical-coherence reference was captured
 from the unmodified original environment before any upgrade.
 
-| Final unified environment run | Passed | Skipped | Expected failures |
+| Migration checkpoint run | Passed | Skipped | Expected failures |
 | --- | ---: | ---: | ---: |
 | Default | 563 | 15 | 10 |
 | Small goldens, all slow tests | 576 | 0 | 11 |
@@ -199,7 +204,7 @@ An initial diagnostic driver started the JVM before pytest and crashed when
 pytest installed its fault handler. The identical compatibility checks passed
 with that plugin disabled. Following [JPype's signal-handler guidance](https://jpype.readthedocs.io/en/stable/userguide.html#errors-reported-by-python-fault-handler),
 the root pytest configuration now disables `faulthandler` before JVM startup.
-The current default suite then passed **563 tests, with the original 15 skips
+The post-migration default suite then passed **563 tests, with the original 15 skips
 and 10 expected failures unchanged**. The crash log and successful control are
 retained with the other local verification artifacts.
 

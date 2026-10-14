@@ -1,6 +1,6 @@
 # Storage completion and partial recovery plan
 
-Status: implemented and tested, following the agreed recovery behavior. This piece fixes the missing-data integrity problem R1 in [the archived review](../../docs/storage_comparison/REVIEW.md). The implementation is now integrated into `pyspi.storage`; tests import the installed package. See [INTEGRITY_RESULTS.md](INTEGRITY_RESULTS.md) for historical validation and measured overhead, and [PRODUCTION_RESULTS.md](PRODUCTION_RESULTS.md) for integration validation.
+Status: implemented and tested, then integrated into `pyspi.storage`. This document preserves the original scope and implementation instructions for the prototype's R1 fix in [the archived review](../../docs/storage_comparison/REVIEW.md); it is not a remaining task list. Shard/selection decisions, mean relocation and repair, and production integration are subsequently complete. See [INTEGRITY_RESULTS.md](INTEGRITY_RESULTS.md) for historical measurements, [PRODUCTION_RESULTS.md](PRODUCTION_RESULTS.md) for integration validation, and [the test review](../TEST_REVIEW.md) for the latest verification. The current API is documented in [docs/storage.md](../../docs/storage.md).
 
 ## Agreed behavior
 
@@ -91,4 +91,6 @@ The existing optional mean helper must not bypass these checks and calculate fro
 5. Assert that read/verify do not modify outputs, failed writes do not claim completion, and verification reports missing declared metrics. Keep source patient stores entirely outside the tests.
 6. Run the focused suite and branch coverage. Make a bounded comparison of healthy full/subset reads and writes, including flush/completion overhead, so index checks and status tracking are assessed against the common case. Save measurements with the test artifacts; do not run EEG calculations or a cohort conversion.
 
-After these checks, review the diff and measured overhead before selecting production integration or further storage work.
+These checks and the subsequent production integration are complete. Further
+execution/checkpointing work is planned separately in the
+[project notes](../../EEG_OPTIMIZATION_NOTES.md).

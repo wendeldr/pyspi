@@ -26,9 +26,10 @@ uv run --no-sync python -m pytest -c tests/storage/pytest.ini tests/storage \
 
 Installed-package verification also builds and installs a noneditable wheel,
 changes out of the checkout, asserts that `pyspi` loads from site-packages, and
-runs these tests against that installed package. The fresh local installation
-and outside-checkout invocation passed, as recorded in
-[PRODUCTION_RESULTS.md](PRODUCTION_RESULTS.md). This checkout uses local
+runs these tests against that installed package. The initial installation check
+is recorded in [PRODUCTION_RESULTS.md](PRODUCTION_RESULTS.md); the subsequent
+[test review](../TEST_REVIEW.md) also passed all 439 cases against a fresh wheel
+outside the checkout. This checkout uses local
 verification; its unused GitHub Actions workflows were removed.
 
 ## Coverage and cases

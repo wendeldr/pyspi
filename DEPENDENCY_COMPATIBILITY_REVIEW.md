@@ -1,7 +1,10 @@
 # Dependency compatibility review
 
-This records the investigation before implementation. The subsequent migration
-and current installation instructions are in [DEPENDENCY_MIGRATION.md](DEPENDENCY_MIGRATION.md).
+This is a historical investigation before implementation. Statements about
+unchanged source, pending upgrades, and unverified tiers refer to that snapshot.
+The subsequent migration is complete; current installation instructions and
+its verification are in [DEPENDENCY_MIGRATION.md](DEPENDENCY_MIGRATION.md), with
+later test results in [TEST_REVIEW.md](tests/TEST_REVIEW.md).
 
 Investigated 2026-10-14. The question was whether older calculation dependencies are necessary, or newer versions can support both pyspi calculations and the chosen storage format.
 
@@ -88,7 +91,7 @@ New pyEDM 2.5.7 ran the fixed-E=2 CCM call with the current argument names, but 
 
 CDT 0.6.0 matched ANM, CDS, RECI, and IGCI in the selected probe; maximum observed absolute difference was approximately `5.6e-17`. Both comparisons explicitly used CPU settings. This does not certify all CDT features or its automatic device behavior.
 
-## Recommended next discussion
+## Recommendation at the investigation checkpoint
 
 The earlier suggestion to adapt storage down to the old NumPy stack is no longer the preferred starting point. A temporary modern Python/NumPy environment already runs both suites while retaining metric-library versions.
 

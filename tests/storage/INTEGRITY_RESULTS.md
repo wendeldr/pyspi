@@ -1,8 +1,8 @@
 # Storage integrity implementation results
 
-Historical results, completed 2026-10-13. This implemented the agreed [integrity contract](INTEGRITY_PLAN.md) for R1 in [the archived review](../../docs/storage_comparison/REVIEW.md). The candidate has since been integrated into `pyspi.storage`; see [PRODUCTION_RESULTS.md](PRODUCTION_RESULTS.md) for current verification. No patient store, scientific calculation, packing policy, or production pyspi dependency was changed in the historical integrity work below.
+Historical results, completed 2026-10-13. This implemented the agreed [integrity contract](INTEGRITY_PLAN.md) for R1 in [the archived review](../../docs/storage_comparison/REVIEW.md). The candidate has since been integrated into `pyspi.storage`; see [PRODUCTION_RESULTS.md](PRODUCTION_RESULTS.md) for initial integration and [the test review](../TEST_REVIEW.md) for the latest verification. Statements below about prototype formats, pending integration, and the temporary mean describe their historical checkpoint. No patient store, scientific calculation, packing policy, or production pyspi dependency was changed in the historical integrity work below.
 
-Follow-up 2026-10-14: the agreed window-selection and shard-size behaviors are now implemented. The current suite has **381 passes and two expected failures** confined to experimental tolerance packing. The original integrity measurements below retain their 2026-10-13 context; the final section records the follow-up.
+At the 2026-10-14 prototype follow-up, the agreed window-selection and shard-size behaviors were implemented, with **381 passes and two expected failures** confined to experimental tolerance packing. Those experiments are now archived; production storage has 439 passing cases with no expected failures. The original integrity measurements below retain their 2026-10-13 context; the final section records the prototype follow-up.
 
 ## Behavior
 
@@ -39,7 +39,7 @@ Write fault tests cover packing, array layout, partial residual writes, payload 
 | Reader/writer | 310/315 | 111/114 |
 | Integrity helper | 248/254 | 88/94 |
 
-Combined statement/branch coverage is approximately 98%; no code is excluded. The seven deferred R4/R5/R6 cases were also run with expected-failure handling disabled: all seven failed for their recorded assertions. The independent storage CI workflow is configured but has not run remotely.
+Combined statement/branch coverage was approximately 98%; no code was excluded. The seven deferred R4/R5/R6 cases were also run with expected-failure handling disabled: all seven failed for their recorded assertions. A storage CI workflow existed at that checkpoint but never ran remotely; all unused GitHub Actions workflows have since been removed in favor of local verification.
 
 ## Bounded healthy-path timings
 
@@ -83,14 +83,16 @@ git show ae55c26949d1144337e804a5ec1aaf7dd432cda3:storage_comparison/pspi_store.
 - The completion contract supports a local POSIX filesystem and one writer per recording. Concurrent-writer coordination, automatic retry/repair, and job scheduling are deferred. Tests inject I/O failures; they do not simulate physical power loss or a permanently unavailable filesystem during rollback.
 - Format 0.2 requires its manifest. Older prototype stores without one raise an explicit unsupported-format error; they are not migrated or rewritten. The previous implementation remains in Git for reproducing old experiments. Existing patient Zarr stores were never converted by this piece.
 - If the manifest cannot establish shape/decoding rules, reading raises an explicit metadata/format error. It does not guess an output shape. Recovering bytes beyond a failed checksum is outside scope.
-- The isolated tools now require Python ≥3.12 and Zarr ≥3.4.1. Production pyspi support is unchanged; dependency choices must be settled during integration.
+- At this checkpoint the isolated tools required Python ≥3.12 and Zarr ≥3.4.1 while production pyspi dependencies were unchanged. The subsequent [dependency migration](../../DEPENDENCY_MIGRATION.md) settled the unified Python 3.12/NumPy 2 environment.
 - At the initial 2026-10-13 checkpoint, R4 tolerance/infinity handling, R5 wide-window shard caps, and R6 selection coercion remained expected failures. R5/R6 are addressed by the 2026-10-14 follow-up below. The temporary mean helper's R3 signed-zero edge case remains. No mathematical definitions, signedness labels, roundoff-dropping policy, or residual selection strategy changed.
 
-The integrity piece is complete. Production integration, relocating the mean helper, and archiving the comparison folder require their own agreed scope.
+The integrity piece was complete at this checkpoint. Production integration,
+mean-helper relocation and repair, and comparison archival were subsequently
+completed under separate scopes.
 
 ## Follow-up: selection and shard-size contract, 2026-10-14
 
-The user selected exact residual preservation, integer-only window selection, and a shard-size target with a one-window minimum and warning. Those selection and sizing corrections are implemented in the candidate; production integration has not begun.
+The user selected exact residual preservation, integer-only window selection, and a shard-size target with a one-window minimum and warning. At this follow-up the selection and sizing corrections were implemented in the candidate, before production integration began.
 
 `Results.load(..., windows=...)` validates original elements before converting indices. Floats, booleans (including mixed integer/boolean lists), timestamps, and other noninteger values raise `TypeError`. Out-of-range and multidimensional selections raise `IndexError`. Large signed/unsigned integers are checked before int64 conversion. Valid integer indices/sequences retain negative indexing, shape, order, duplicates, and empty selections, including matching availability masks.
 
@@ -98,4 +100,4 @@ The user selected exact residual preservation, integer-only window selection, an
 
 Validation: **381 passing tests, two strict expected failures**, approximately 29 seconds with coverage enabled. The four R6 expected failures are now ordinary passing tests; the R5 strict-cap test was replaced with checks of the selected target/warning behavior. Both codecs, dtypes, every packing mode, and integrity recovery pass. The original script also passed its 115 synthetic round trips during this follow-up. Coverage is 104/104 packing statements and 24/24 branches; 345/350 reader/writer statements and 129/132 branches; and 248/254 integrity-helper statements and 88/94 branches. Combined statement/branch coverage remains approximately 98%.
 
-Only the optional lossy tolerance experiment retains expected failures (R4). Its algorithm, exact residual packing, scientific calculations, dependencies, the temporary mean helper, and existing patient stores were unchanged by this follow-up. Production integration and mean-helper separation remain the next discussion.
+Only the optional lossy tolerance experiment retained expected failures (R4) at that checkpoint. Its algorithm, exact residual packing, scientific calculations, dependencies, the temporary mean helper, and existing patient stores were unchanged by that follow-up. Production integration and mean-helper separation were completed afterward; the lossy experiment remains archived.

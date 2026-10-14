@@ -4,7 +4,7 @@ Updated 2026-10-14.
 
 The goal is to make pyspi easier to run for this EEG/sEEG workload and investigate improvements to total processing time and output size. Changes may include Python orchestration, lower-level implementation changes, or faster compatible dependencies. Improvements must be assessed against the actual workload and scientific interpretation.
 
-**Current scope:** production storage is integrated into `pyspi.storage`, with an explicit Calculator adapter and separate `pyspi.analysis.time_mean` helper. Exact values/native precision, ordering/metadata, integrity/recovery, selection, and shard-sizing behavior are retained. The [storage suite](tests/storage/README.md) tests the installed package; calculation and storage tests share the root lock, with only required production storage codecs. The [comparison archive](docs/storage_comparison/README.md) retains original reports, scientific findings, source/tests, raw evidence, and generated result copies. See [production validation and timings](tests/storage/PRODUCTION_RESULTS.md). Existing patient Zarr stores remain unchanged. No patient EEG recalculation or cohort conversion was performed in this piece.
+**Current state:** production storage and the adversarial test review are complete. The local calculation workflow is planned below but not implemented; each implementation stage will be scoped separately. Scientific/numerical review is being carried out separately and will be audited when complete. Production storage is in `pyspi.storage`, with an explicit Calculator adapter and separate `pyspi.analysis.time_mean` helper. Calculation and storage tests share the root lock. See the [current test results](tests/TEST_REVIEW.md), [storage API](docs/storage.md), and [initial production validation and timings](tests/storage/PRODUCTION_RESULTS.md). The [comparison archive](docs/storage_comparison/README.md) preserves historical evidence. Existing EDFs and patient stores remain unchanged; no cohort recalculation or conversion is authorized.
 
 ## Working agreement
 
@@ -15,7 +15,7 @@ The goal is to make pyspi easier to run for this EEG/sEEG workload and investiga
 - Avoid making global rules where the right decision depends on the metric, data, hardware, or measured benefit.
 - A complete benchmark of all 185 metrics is not a prerequisite for progress. Some existing single-window timings are already very long.
 - The earlier metric review was targeted at suspicious signs, transpose relationships, labels, and selected definitions. It was not a comprehensive mathematical validation of pyspi's calculations.
-- Other agents are building calculation regression tests to detect changes to existing behavior, including behavior with known issues. These baselines do not establish mathematical correctness; intentional corrections require separate supporting evidence and explicit baseline updates.
+- Calculation regression tests are implemented and have undergone an adversarial review. They detect changes to existing behavior, including known issues. These baselines do not establish mathematical correctness; intentional corrections require separate supporting evidence and explicit baseline updates.
 
 ## Data and workload
 
@@ -41,7 +41,7 @@ The goal is to make pyspi easier to run for this EEG/sEEG workload and investiga
 - For now, prepare a uniform sampling rate outside this workflow. A lightweight sampling-rate consistency check before calculations is desirable.
 - Use pyspi's existing preprocessing with both operations enabled: **detrend first, then z-score, within each window**.
 - Historical output metadata records the old order of z-scoring and then detrending. That historical order is not the desired behavior for new calculations.
-- Rereferencing, channel selection, and additional EEG preprocessing are deferred to later loading/preprocessing utilities.
+- The planned runner accepts a fixed, externally supplied channel selection/order for the recording. Deciding which electrodes are bad belongs to the data lake or preprocessing utilities. Rereferencing and additional EEG preprocessing remain later work.
 
 ## Execution and resource use
 
@@ -52,14 +52,14 @@ The goal is to make pyspi easier to run for this EEG/sEEG workload and investiga
 - The performance target includes **loading, preprocessing, calculation, and writing output**, not just an isolated algorithm call.
 - A normal run uses a configured collection of metrics. Preserve opportunities to share loaded data and intermediate calculations within metric families.
 - Batching and parallelization granularity remain to be measured. Window batches are a candidate; no single strategy has been selected as universally best.
-- Prefer resumability so an interrupted run can reuse completed work.
+- Retain completed metric/window work on interruption unless that requires substantial extra code complexity and coarser checkpoints are significantly simpler. Previously failed calculations are retried only on explicit request; successfully calculated NaNs count as completed work.
 - Use the root uv lock for calculation and production storage dependencies. Separate clean environments are useful for installation verification; the archived storage comparison is historical rather than an active environment.
 
 ## Dependency integration investigation, 2026-10-14
 
-The [compatibility review](DEPENDENCY_COMPATIBILITY_REVIEW.md) found that the original NumPy <2 limit dates to a 2024 tslearn incompatibility that was not reproduced with current tslearn. A frozen default calculation suite passed on Python 3.12.3/NumPy 2.5.4 together with current storage dependencies: 549 calculation passes (15 skipped, 10 expected failures) and 381 storage passes (two experimental expected failures). This required two `np.in1d` → `np.isin` substitutions in a temporary copy of spectral-connectivity 1.1.2; production source, existing environments, dependencies, and goldens were not changed. A NumPy-2 exception namespace in wavelet code also needs migration attention.
+The historical [compatibility review](DEPENDENCY_COMPATIBILITY_REVIEW.md) found that the original NumPy <2 limit dates to a 2024 tslearn incompatibility that was not reproduced in its probes. Its frozen default suite passed on Python 3.12.3/NumPy 2.5.4 with 549 calculation passes (15 skipped, 10 expected failures) and 381 prototype storage passes (two experimental expected failures). That investigation required temporary `np.in1d` → `np.isin` substitutions and identified the wavelet exception-namespace change; both compatibility paths were subsequently addressed in the migration.
 
-That investigation established feasibility, not mathematical validation. The user subsequently authorized the [dependency migration](DEPENDENCY_MIGRATION.md), completed on Python 3.12/NumPy 2.5.4 with one root lock for calculation and storage tests. MNE/MNE-Connectivity and CDT upgrades passed the unchanged default, small/slow, and full/slow goldens. The final default suite has 563 passes, 15 original skips, and 10 expected failures; each slow tier has 576 passes and 11 expected failures with no ordinary skips. Storage has 381 passes and two existing experimental expected failures. Clean editable and wheel installations, dependency reinstallation, and runtime-only installation were verified. SciPy 1.18 changed ANM beyond the existing tolerances, so SciPy 1.17 is retained. Spectral-connectivity 1.1.2 and pyEDM 1.15.2.0 preserve the existing frequency conventions and CCM estimator; their newer numerical implementations still require individual review. The setuptools bound now correctly excludes 82 and newer. The packaged compatibility fixes cover the spectral dependency's obsolete NumPy calls, the wavelet exception namespace, and the full-tier CCM scalar-conversion issue. Existing patient outputs and golden values remain unchanged.
+That investigation established feasibility, not mathematical validation. The user subsequently authorized the [dependency migration](DEPENDENCY_MIGRATION.md), completed on Python 3.12/NumPy 2.5.4 with one root lock for calculation and storage tests. MNE/MNE-Connectivity and CDT upgrades passed the unchanged default, small/slow, and full/slow goldens. At the migration checkpoint, the default suite had 563 passes, 15 skips, and 10 expected failures; each slow tier had 576 passes and 11 expected failures, and prototype storage had 381 passes and two experimental expected failures. Those are historical counts; the subsequent [test review](tests/TEST_REVIEW.md) records the expanded current suites. Clean editable and wheel installations, dependency reinstallation, and runtime-only installation were verified. SciPy 1.18 changed ANM beyond the existing tolerances, so SciPy 1.17 is retained. Spectral-connectivity 1.1.2 and pyEDM 1.15.2.0 preserve the existing frequency conventions and CCM estimator; their newer numerical implementations still require individual review. The setuptools bound excludes 82 and newer. The packaged compatibility fixes cover the spectral dependency's obsolete NumPy calls, the wavelet exception namespace, and the full-tier CCM scalar-conversion issue. Existing patient outputs and golden values remain unchanged.
 
 Review follow-up: the actual local Java 21 JPype runtime and successful default run are recorded in [review_verification.json](tests/compatibility/review_verification.json). The redundant storage-test project, lock, and virtual environment were removed. The documented pip CPU command was actually installed and used for calculations in a fresh environment. Pytest's fault-handler plugin is disabled for calculations after a reproduced JPype signal-handler conflict and successful controlled verification. Production integration has now replaced prototype imports; current evidence is in [production_verification.json](tests/storage/production_verification.json). Calculation implementations, original regression functions, goldens, and existing patient stores remain unchanged. The user subsequently confirmed that this project uses local verification, so the unused GitHub Actions workflows were removed.
 
@@ -80,7 +80,7 @@ Review follow-up: the actual local Java 21 JPype runtime and successful default 
 
 Saved measurements and optional calibration on a representative sample are both acceptable. A rough range and conservatively biased planning estimate are useful; perfect accuracy is unnecessary. Curves or equations versus compute are desirable where supported, with shared work, memory limits, and measured parallel scaling accounted for.
 
-## Lossless storage comparison as the first target
+## Completed storage comparison and agreed policy
 
 - Use existing calculated results so storage investigation does not require expensive EEG recalculation.
 - Retain every window's results. Storing only time averages is insufficient.
@@ -98,11 +98,11 @@ Saved measurements and optional calibration on a representative sample are both 
 - Measure savings against the existing compressed output, along with read/write time, file counts, and memory use. Fewer stored entries do not guarantee the same proportional reduction in already-compressed disk size.
 - Validate exact reconstruction, including NaNs, infinities, channel/window order, and diagonal values. Existing inputs remain reference data; comparison artifacts belong in separate locations.
 - Outcome (2026-10-13; see the [archived storage report](docs/storage_comparison/REPORT.md)). The measured candidate:
-  - Exact per-array structure packing: a triangle for bit-exact symmetric or antisymmetric matrices, a triangle plus an XOR residual for near-symmetric ones, and full storage otherwise.
-  - Zarr v3, with one CRC32C-checked shard file per array, compressed with pcodec.
+  - Exact per-array structure packing: a triangle for bit-exact symmetric or antisymmetric matrices, otherwise full storage or a triangle plus an exact XOR residual. A residual can encode substantial directional differences; its presence does not establish approximate symmetry.
+  - Zarr v3 arrays with CRC32C-checked chunks, grouped into shards and compressed with pcodec. Shard sizes follow the agreed target/one-window contract above.
   - Size at float64: 0.66–0.70 of the current layout per patient; about 450–460 GiB of the 717 GiB cohort (projected).
-  - Size at float32: about 0.31.
-  - About 180× fewer files, with faster writes and reads.
+  - Direct-cast float32 experiment: about 0.31 of the old size; the review found underflow and an unmeasured fallback policy. No precision conversion was adopted.
+  - About 180× fewer files in the compared patient cases. The [correctness review](docs/storage_comparison/REVIEW.md) qualifies the original write totals, mean claims, and scientific interpretations; production timings include packing and durability work.
   - Exact residual preservation is selected and now used by the production API. Float32 conversion and lossy packing were omitted; supplied native float32 is preserved without conversion.
 
 Production integration (2026-10-14): the installed wheel passed 419 storage/analysis cases with approximately 98% combined coverage, and actual Calculator single/windowed round trips were bit-exact. The default calculation tier retained 563 passes, 15 skips, and 10 expected failures. Bounded synthetic benchmarks include packing and compression selection in durable write totals; these are storage costs, not cohort runtime estimates. Scientific definition/label discussions remain pending individually; integration does not settle them. The local calculation workflow remains a separate future piece.
@@ -122,8 +122,8 @@ The subsequent [adversarial test review](tests/TEST_REVIEW.md) strengthens recor
 
 - Later preprocessing utilities may live beside data loading rather than inside metric implementations.
 - Desired reference schemes include common average, bipolar, and possibly others.
-- Later channel selection should support inclusions/exclusions and bad electrodes. Existing project Zarr files contain bad-electrode information; otherwise, all EEG channels can be the default when no selection is supplied.
-- Additional EEG preprocessing belongs in this later discussion. These utilities are outside the current storage piece.
+- The runner's planned input contract accepts fixed channel inclusions/order supplied externally. Existing project Zarr files contain bad-electrode information; deciding those exclusions and generating the selection belong to the data lake/preprocessing utilities. All EEG channels can be the default when no selection is supplied.
+- Additional EEG preprocessing belongs in this later discussion; it is not part of metric implementations or storage.
 
 ## Read only findings relevant to later work
 
@@ -151,7 +151,7 @@ Relevant documentation includes the [pyspi FAQ](https://time-series-features.git
 
 ## Completed foundations and consolidated remaining work
 
-Updated after production storage integration, 2026-10-14. Earlier task lists duplicated storage integration, scientific review, the local workflow, and optimization; the sequence below consolidates them.
+Updated after production storage integration, the adversarial test review, and local workflow discussion, 2026-10-14. Earlier task lists duplicated these pieces; the sequence below consolidates them.
 
 Completed:
 
@@ -160,7 +160,7 @@ Completed:
 - Calculation regression tests and the storage integrity suite are in the main repository. These detect behavior changes; they are not comprehensive mathematical validation.
 - The adversarial test review and targeted test improvements are documented in [TEST_REVIEW.md](tests/TEST_REVIEW.md), with passing-control mutation checks and measured coverage. Scientific decisions remain separate from regression preservation.
 - The [dependency migration](DEPENDENCY_MIGRATION.md) is complete: Python 3.12/NumPy 2.5.4, upgraded MNE/MNE-Connectivity and CDT, packaged compatibility fixes, and one root dependency lock. SciPy 1.17, pyEDM 1.15.2.0, and spectral-connectivity 1.1.2 are retained with documented reasons. Local full/slow and installation checks passed. Unused GitHub Actions workflows were removed; verification is local.
-- Production storage is integrated into `pyspi.storage`, including single/windowed matrices, an explicit Calculator adapter, native precision, ordering/metadata, integrity/recovery, selection, and shard sizing. The installed wheel passed 419 storage/analysis cases, and the default calculation tier retained 563 passes, 15 skips, and 10 expected failures. Documentation, bounded benchmarks, and installation evidence are in [production results](tests/storage/PRODUCTION_RESULTS.md).
+- Production storage is integrated into `pyspi.storage`, including single/windowed matrices, an explicit Calculator adapter, native precision, ordering/metadata, integrity/recovery, selection, and shard sizing. Initial integration counts, bounded benchmarks, and installation evidence are in [production results](tests/storage/PRODUCTION_RESULTS.md); the subsequent [test review](tests/TEST_REVIEW.md) records the expanded suites and latest verification.
 - Time averaging is separate in `pyspi.analysis.time_mean`; its antisymmetric subnormal signed-zero defect is fixed and tested. Lossy tolerance packing and precision conversion are excluded from production. The comparison implementation, reports, scientific findings, and evidence are [archived](docs/storage_comparison/README.md). Existing patient stores remain untouched.
 
 Remaining, in recommended order:
@@ -169,11 +169,198 @@ Remaining, in recommended order:
 2. **Local calculation workflow.** Build a terminal/configuration workflow for loading, configurable windows/overlap, sampling-rate consistency checks, detrend-then-z-score preprocessing, grouped calculations/shared intermediates, memory-aware batching, resumability, diagnostics, timing capture, and production storage output. Benchmark representative workloads before choosing concurrency. Resampling remains external initially; arbitrary channel/window/patient bounds are not part of the design.
 3. **Calculation and end-to-end optimization.** Prioritize the retained 185, relevant exploratory features, and EEG/sEEG measures. Evaluate shared computation, batching, existing faster implementations, compiled code, and GPU options where measurements justify them. Include loading and output costs. Preserve selected metric definitions unless a separate change is agreed.
 4. **Runtime estimator.** Build estimates from accumulated timings and optional short calibration, allowing configuration, cohort/window counts, and available compute to inform a conservative range. The estimator is not a prerequisite or a reason to wait for all metrics to finish.
-5. **Later utilities and expanded scope.** Rereferencing, channel inclusion/exclusion and bad-electrode handling, additional metrics, and difficult calculation failures remain later work. Straightforward failures can be addressed when encountered; distinguish unavailable output from calculated NaNs and nonconvergence. Precision reduction and conversion of existing patient stores each require separate justification and discussion.
+5. **Later utilities and expanded scope.** Rereferencing, project-specific bad-electrode selection/preparation, additional metrics, and difficult calculation failures remain later work. The planned runner can consume an externally supplied fixed channel list without implementing that project-specific logic. Straightforward failures can be addressed when encountered; distinguish unavailable output from calculated NaNs and nonconvergence. Precision reduction and conversion of existing patient stores each require separate justification and discussion.
+6. **Simplify calculation naming and parameter representation, near the end of EEG optimization.** Discuss simple metric names with explicit parameters in metadata/configuration or a companion file. Current identifiers embed cumbersome and inconsistent decimal/percentage representations. Preserve unambiguous identification of parameter variants; final names and the representation will be discussed before changing them.
 
-Recommended next goal, pending the user's choice:
+Current assignments: scientific/numerical review is being carried out separately.
+This agent will audit that work when it is complete. The proposed local workflow
+plan is recorded below; implementation has not started, and its first goal will
+be scoped separately. The current request is documentation cleanup, commit, and
+pause.
 
-> Independently validate the PSI implementations used by pyspi. Trace their formulas, frequency-band handling, wavelet result axes, sign conventions, and labels. Compare current behavior against reference equations using small reproducible examples and independent tests. Document confirmed defects, intentional variants, historical compatibility implications, and correction options in a tracked report. Update project tracking, then pause for discussion before changing calculation implementations, labels, existing goldens, or patient outputs.
+## Local workflow planning discussion
+
+- Logical output should remain connectivity matrices with a known corresponding
+  channel/window order. Reporting the actual order used is acceptable so the
+  project's own Zarr metadata can use it. Project-specific patient metadata is
+  outside this calculation workflow.
+- The user needs easy linkage of patient/calculation metadata and
+  per-patient, per-metric `(channels, channels, time)` access for prediction
+  caches. A metadata pass may need to precede calculation so known bad channels
+  are excluded from the input rather than removed afterward.
+- Bad-channel exclusions apply to the entire recording, as confirmed by the
+  user. Use one fixed selected channel set and order across all metrics and
+  windows in a recording/run. Window-specific channel removal is unnecessary
+  for this workflow.
+- Read-only inspection of `exploratory/stronger_networks/build_cache.py` found
+  that it assumes the connectivity axes, `patient_info/electrode`, and SOZ
+  arrays are already aligned. It removes infinities and selected extreme values
+  before taking a NaN-ignoring mean. `pyspi.analysis.time_mean` exists, but does
+  not perform those project-specific cleaning steps. The cache's direct reads
+  of old dense Zarr arrays will need an adapter for the new packed stores.
+- The data lake's current `build_patient_info` takes included channels/order
+  from historical channel-name CSVs and records bad-channel QC afterward. A new
+  metadata-first path must separate channel selection from those historical
+  calculation artifacts. Proposed boundary, still for discussion: data lake
+  supplies recording identity and an ordered selection mapped to original input
+  channels; pyspi records the actual axes, windows, configuration, and
+  preprocessing used. Data lake joins patient metadata by identity and validates
+  alignment. The agreed patient-folder layout below keeps metadata/results
+  together through relative links while preserving the packed representation.
+- Existing cache scripts and repositories may be rewritten; their file layouts
+  are examples of usage, not compatibility requirements. Additional examples
+  inspected were `exploratory/linear-vs-nonlinear/build_cache.py` (all 185 time
+  means plus metadata) and the older IJCNN camera-ready data-preparation scripts
+  (HDF5 input, dense matrices or derived graph caches).
+- User-facing output layout agreed: one top-level folder per patient, holding
+  patient metadata and a calculations subfolder. For the current dataset this
+  normally contains one recording/run result store with all selected metrics
+  and windows; additional calculation runs can coexist within the patient
+  folder. Keep metadata/result links relative so they travel together. The
+  illustrative calculation-store names were placeholders. Exact configuration
+  and identities must be stored explicitly, rather than inferred by parsing
+  directory names. Final naming and the simpler metric/parameter representation
+  are deferred to discussion near the end of EEG optimization.
+- An axis-direction discrepancy is visible in the current downstream loaders:
+  `stronger_networks/data.py` uses `means[source, destination]`, whereas
+  `linear-vs-nonlinear/data.py` uses `means[destination, source]`. This inspection
+  does not establish which is mathematically correct. Preserve native matrices;
+  require documented, validated per-metric direction when building graph edges.
+  Channel identity/order alone does not settle directional interpretation.
+- Discard a trailing incomplete window by default. Emit a short warning so the
+  user knows it happened; no special persistent tail record is needed.
+- The patient-folder interface is agreed; internal window batches/checkpoint
+  files remain an execution design choice. Preserve per-recording/per-metric
+  matrix access and ordering while comparing those implementation options.
+- Interruption policy preference: retain completed work, including individual
+  metric/window results. Coarser checkpoints with some recomputation are an
+  acceptable alternative if retaining each result adds substantial code
+  complexity and recomputing is significantly simpler. Assess that tradeoff
+  before selecting an implementation; do not equate finishing computation with
+  durable storage. Checkpoint/write costs belong in end-to-end measurements.
+- Resume must not automatically retry previously failed calculations. Record
+  failed attempts and their diagnostics; retry them only when explicitly
+  requested. A successful calculation returning NaNs is completed work, not a
+  failure inferred from the values. Missing/uncommitted output after an
+  interrupted write is unfinished work, not a recorded calculation failure.
+- A read-only, header-only inspection found 72 EDFs: 67 uniformly at 2048 Hz,
+  two at 1024 Hz, and three at 512 Hz. No file had mixed ordinary-signal rates
+  or an EDF+D discontinuity marker. Native signal counts were 71–263 and
+  durations 252–305.1875 seconds; these include channels not yet classified or
+  excluded. No EEG sample payloads were read in this inspection. Resampling
+  remains external, as previously agreed.
+- The current storage writer consumes a whole supplied metric array; it has no
+  streaming window append API. Accumulating every result for 185 metrics and
+  600 windows would require about 11.52 GiB at 118 channels or 74.43 GiB at
+  300 channels before extra working memory. Bounded output and checkpointing
+  need an explicit design before large runs.
+- Multiprocessing must respect JPype's [spawn requirement](https://jpype.readthedocs.io/en/latest/userguide.html#multiprocessing).
+  EDF sampling checks must use native signal rates, since
+  [MNE can automatically upsample mixed-rate signals](https://mne.tools/stable/generated/mne.io.read_raw_edf.html).
+  These are planning constraints, not changes to calculation definitions.
+
+## Proposed workflow implementation stages
+
+This is a plan for discussion, not authorization to implement every stage.
+Each stage should be a separately scoped goal. Scientific changes remain with
+the separate review; audit its completed work before depending on any changed
+definitions. Existing EDFs and patient stores remain reference inputs.
+
+1. **Configuration, input contract, and preflight.** Define a small workflow
+   configuration around pyspi's existing metric configuration. Accept recording
+   identity/source, an optional externally supplied ordered channel selection
+   and name mapping, windows/step, and an output location. The data lake remains
+   responsible for deciding which electrodes are bad and supplying project
+   metadata. Check native EDF signal rates before a reader can resample them,
+   resolve channels uniquely, and compute full-window sample ranges without
+   reading sample payloads or running metrics. Validate actual resolved metric
+   parameters, dependencies, order, and duplicate identifiers rather than
+   accepting Calculator's fallback/skipping behavior. Reconcile the historical
+   config's 186 declared configurations with the retained 185 identifiers;
+   changes to estimators are not part of that reconciliation. Report sampling
+   mismatches for external resampling. Specify integer sample conversion and
+   window boundaries; discard a partial tail with a warning only. A preflight
+   command reports the selected inputs, axes, metrics, and window counts; it is
+   not the later runtime estimator. Verify with small fixtures and read-only
+   checks against the current EDF headers.
+
+2. **Calculation reporting and timing.** Add the minimum instrumentation around
+   the existing calculation loop to expose metric/window success, reported
+   failure, warnings, elapsed time, and completed values to the runner. Preserve
+   the existing preprocessing/calculation semantics and diagonal handling.
+   Do not infer calculation status from NaNs or treat storage errors as metric
+   exceptions. Check that instrumentation leaves existing numerical results
+   unchanged and separates successful all-NaN output from actual exceptions.
+
+3. **Bounded output, checkpoints, and resume.** Design a single-writer path that
+   retains completed metric/window results without accumulating a patient's
+   full result set. Compare a bounded checkpoint/finalization approach against
+   an incremental production writer, measuring code complexity, write/fsync
+   cost, temporary space, and finalization overhead before selecting one.
+   Avoid assuming a file for every metric/window is the best design. Retain the
+   exact production packing and per-metric `(N, N, time)` reader interface under
+   the agreed patient-folder layout. Define run identity so changed input,
+   channel mapping, windows, preprocessing, metric parameters, or incompatible
+   calculation versions cannot silently share a resumed result. Distinguish
+   successful values, recorded calculation failures, and unfinished writes;
+   failed calculations are retried explicitly. Test interruption at write and
+   completion boundaries, reconstruction/order, incompatible resume, and
+   bounded working memory. Discuss a coarser checkpoint tradeoff only if the
+   preferred granularity has substantial implementation overhead.
+
+4. **Serial end-to-end runner.** Connect EDF loading, fixed channel selection,
+   windowing, detrend-then-z-score preprocessing, grouped calculations, durable
+   output, and resume through terminal commands. Use a fresh Data/cache per
+   window and share that window's intermediates across metrics. Compare reader
+   preload/memmap/lazy choices as needed; avoid repeated decoding and needless
+   full-recording copies. Maintain a bounded output queue and actual saved axis
+   metadata, with separate source-channel identity and project name mapping.
+   Preserve all windows' values; cleaning, averaging, and prediction caches
+   remain downstream. Record loading, preprocessing, calculation, packing,
+   writing, and finalization costs alongside total wall time. Validate a small
+   complete recording and bounded representative real-data samples against
+   direct Calculator output, including a nonalphabetical channel selection,
+   overlapping windows, one-window output, and resume. Examine stochastic/shared
+   cache behavior under resume and document seeding semantics without silently
+   changing estimator parameters. Reuse of SPI instances across windows must
+   be justified by agreement with fresh construction.
+
+5. **Measured parallelization and resource control.** Establish the serial
+   baseline, then compare patient-level and window-batch execution on short
+   typical and larger-channel examples using successful representative metric
+   families. Bound profiling so progress does not wait for all 185 expensive
+   calculations. Include loading and durable output in comparisons. Use spawned
+   processes for JPype, initialize worker thread limits before numerical
+   imports, and account for BLAS/OMP and estimator-internal concurrency. Choose
+   automatic concurrency from available CPUs/memory and measured working sets;
+   bound in-flight work and keep one writer per result path. Resource detection
+   and graceful handling reduce exhaustion risk; third-party peak allocations
+   cannot be guaranteed from array dimensions alone. Test serial/parallel
+   ordering, seeded numerical behavior, worker failures, and recovery. Do not
+   impose arbitrary channel/patient counts or the discussed 24-hour kill limit.
+
+6. **Validate and document the usable workflow.** Run the relevant numerical
+   regression and storage suites plus targeted runner integrations. Demonstrate
+   selective metric loading, matching metadata/channel/window axes, downstream
+   time averaging, portable relative links, and clean interruption/resume.
+   Document a retained-185 example configuration, external resampling and
+   metadata-selection inputs, diagnostics, explicit retries, and measured
+   limitations. Updating the data-lake/cache repositories remains a separate
+   integration task after this contract is settled. Save timing evidence for
+   the later estimator; do not make the estimator or naming redesign a
+   prerequisite for this workflow.
+
+Recommended first goal text:
+
+> Implement and test workflow configuration and EDF preflight only. Resolve
+> recording identity, externally supplied fixed channel selection/order, the
+> retained metric configuration, native sampling-rate checks, and exact
+> full-window sample ranges. Provide a terminal preflight report without
+> calculating connectivity, resampling, or modifying existing patient data.
+> Reject ambiguous channels, duplicate metrics, invalid parameters, and unmet
+> requested dependencies instead of silently substituting or omitting work.
+> Keep execution, checkpoint writing, parallelization, and naming redesign for
+> separate goals.
 
 ## Storage integration context
 

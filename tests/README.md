@@ -1,6 +1,6 @@
 # pyspi test suite
 
-The suite is a **change detector**. The golden values under `tests/regression/goldens/` record what the code produced when they were generated; a passing run means outputs have not changed, not that they are mathematically correct. Known bugs are locked in as they are (see [Known bugs](#known-bugs-locked-not-fixed)).
+The suite is a **change detector**. The golden values under `tests/regression/goldens/` record what the code produced when they were generated; a passing comparison means agreement within its tolerance and status checks, not mathematical correctness. Known bugs are locked in as they are (see [Known bugs](#known-bugs-locked-not-fixed)).
 
 The [adversarial test review](TEST_REVIEW.md) records weaknesses found and fixed,
 independent references, mutation checks, coverage, and remaining limitations.
@@ -66,7 +66,7 @@ Always run from the repository root.
 
 | command | what runs |
 |---|---|
-| `.venv/bin/python -m pytest` | default tier: small goldens (5 processes x 64 observations), no `slow` tests, no legacy benchmark; see the migration report for current counts; original baseline: 553 passed, 15 skipped, 10 xfailed |
+| `.venv/bin/python -m pytest` | default tier: small goldens (5 processes x 64 observations), no `slow` tests, no legacy benchmark; latest Java-required verification: 694 passed, 15 skipped, 9 xfailed (see [test review](TEST_REVIEW.md)) |
 | `.venv/bin/python -m pytest --runslow` | adds the slow SPI tests, the full-config `Calculator` end-to-end test, the slow known-bug tests (ccm) and the legacy benchmark |
 | `.venv/bin/python -m pytest --pyspi-size=full --runslow --timeout=1800` | full tier: 7 x 100 goldens, everything |
 | `.venv/bin/python -m pytest --runslow -m slow --ignore=tests/test_SPIs.py` | only the slow tests (14 at small size), without the legacy benchmark's recompute (see below) |
@@ -154,7 +154,7 @@ Phi checking compares its defining parameter metadata as well as its values.
 
 # the extra goldens have their own check (same command as their regeneration below, plus --check)
 
-# regenerate (add --repeat 2 to audit determinism: min time kept, disagreeing repeats reported)
+# regenerate (two repeats check determinism; disagreements refuse to write)
 .venv/bin/python tests/regression/generate_goldens.py --size small --repeat 2
 .venv/bin/python tests/regression/generate_goldens.py --size full --repeat 2
 .venv/bin/python tests/regression/generate_goldens.py --preproc --repeat 2
@@ -166,7 +166,7 @@ Phi checking compares its defining parameter metadata as well as its values.
 .venv/bin/python tests/regression/generate_goldens.py --size all --spis 'cov_*'
 ```
 
-`--size` takes `small`, `full` or `all` (both). `--spis GLOB` is an fnmatch filter on identifiers; when writing, the result is merged into the existing set and stored SPIs that are no longer in the catalogue are dropped (and printed). `--out DIR` writes elsewhere (default `tests/regression/goldens`). `--configfile PATH` uses another SPI config (default `pyspi/config.yaml`). `--check` compares values with the `spi_policy` tolerances and also compares each identifier's catalogue fields (`module`, `cls`, `params`, `deps`, and `labels` as sets) with the stored meta, printing a `CATALOGUE CHANGE` line for each mismatch. After regenerating, run `--check` once more on the same environment; it must pass. Regenerate after upgrading sklearn or tslearn (stochastic SPIs) and refresh `tests/requirements-test-lock.txt` when the environment changes.
+`--size` takes `small`, `full` or `all` (both). `--spis GLOB` is an fnmatch filter on identifiers; when writing, the result is merged into the existing set and stored SPIs that are no longer in the catalogue are dropped (and printed). `--out DIR` writes elsewhere (default `tests/regression/goldens`). `--configfile PATH` uses another SPI config (default `pyspi/config.yaml`). `--check` compares values with the `spi_policy` tolerances and also compares each identifier's catalogue fields (`module`, `cls`, `params`, `deps`, and `labels` as sets) with the stored meta, printing a `CATALOGUE CHANGE` line for each mismatch. After regenerating, run `--check` once more on the same environment; it must pass. After upgrading sklearn or tslearn, investigate stochastic-output changes before approving any regeneration; an upgrade alone is not a reason to accept changed values. Refresh the exported `tests/requirements-test-lock.txt` from the root lock when the environment intentionally changes.
 
 A parameter change in `config.yaml` that keeps the identifier fails `test_catalogue_matches_golden_meta` (and `--check`) until the goldens are regenerated. That is expected for an intentional change; regenerate and say why in the commit message.
 
@@ -195,7 +195,7 @@ Bugs 1 and 9 need the JVM (`java`). **Some SPIs are never exercised by a default
 
 ### Flagged for investigation (locked as-is, not confirmed bugs)
 
-- **Degenerate outputs in the extra wavelet set** (`goldens/extra/small`, the nine `*_wavelet_*` classes absent from `config.yaml`). Off the diagonal, `cohmag` and `plv` are exactly 1.0 everywhere, `ppc` and `dspli` are `-inf` everywhere, `dwspli` is 0 everywhere, `icoh` is rounding noise (about 1e-16), and those six are identical for all six band/statistic configs. Only `phase`, `pli` and `wspli` vary with the input and the band. The likely cause is that `mne._get_cache` hands `mne.connectivity.spectral_connectivity` a single epoch (the array is `1 x processes x samples`), and these measures are defined as averages of phase consistency across epochs: with one epoch a consistency measure is trivially 1 and pairwise phase consistency divides by `n(n-1) = 0`. The six `psi_wavelet_*` SPIs in `config.yaml` use a separate cache (`data.mne_psi`) and are not degenerate. These nine classes need checking (epoching, or a different estimator) before they are used for anything; the goldens lock the degenerate values so a change shows up as a failure, not as silent agreement.
+- **Degenerate outputs in the extra wavelet set** (`goldens/extra/small`, the nine `*_wavelet_*` classes absent from `config.yaml`). Off the diagonal, `cohmag` and `plv` are exactly 1.0 everywhere, `ppc` and `dspli` are `-inf` everywhere, `dwspli` is 0 everywhere, `icoh` is rounding noise (about 1e-16), and those six are identical for all six band/statistic configs. Only `phase`, `pli` and `wspli` vary with the input and the band. The wrapper passes a single epoch (`1 x processes x samples`) to `mne_connectivity.spectral_connectivity_epochs`, replacing the original `mne.connectivity.spectral_connectivity` path during migration while preserving its outputs. The likely cause of the degeneracy is aggregation across a single epoch: phase consistency is trivially 1 and pairwise phase consistency divides by `n(n-1) = 0`. The six `psi_wavelet_*` SPIs in `config.yaml` use a separate cache (`data.mne_psi`); their nondegenerate snapshots do not validate their axis selection or formula. Estimator usability remains a scientific review item; the goldens preserve the observed values so changes are detected.
 
 ### Dependency constraints that affect calculations
 

@@ -1,6 +1,11 @@
 # Production storage validation
 
-Validated 2026-10-14 on Linux x86-64, Python 3.12.3, NumPy 2.5.4, and Java 21.0.12.1.
+Initial integration validated 2026-10-14 on Linux x86-64, Python 3.12.3, NumPy 2.5.4, and Java 21.0.12.1.
+
+The counts and receipt below describe that integration checkpoint. The subsequent
+[adversarial test review](../TEST_REVIEW.md) expanded storage/analysis verification
+to 439 passing cases and records the latest calculation-suite counts and
+coverage. The integration receipt and benchmark measurements remain unchanged.
 
 ## Installed-package verification
 

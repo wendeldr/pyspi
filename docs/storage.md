@@ -205,6 +205,9 @@ float32 inputs. It requires complete readable input, warning and raising on
 unavailable data. Empty/all-NaN series return NaN with reduction warnings
 suppressed. The antisymmetric subnormal signed-zero defect from the prototype is
 fixed by reconstructing lower series before reducing. Storage has no mean method.
+This is a NaN-ignoring mean of the stored values; it does not remove infinities
+or apply project-specific outlier filtering. Those choices belong in downstream
+analysis, such as the project's prediction-cache builder.
 
 ## Validation and bounded timings
 

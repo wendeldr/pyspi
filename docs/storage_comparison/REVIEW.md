@@ -2,13 +2,13 @@
 
 Reviewed 2026-10-13 against commit `ae55c26949d1144337e804a5ec1aaf7dd432cda3`.
 
-**Implementation follow-up (2026-10-14):** R1 and R6 are fixed in the candidate, and R5 implements the agreed size-target/warning contract. The [storage suite](../../tests/storage/README.md) has 381 passing tests and two strict expected failures confined to experimental R4 tolerance packing. [Integrity results](../../tests/storage/INTEGRITY_RESULTS.md) retain the original measurements and record the follow-up. This review below retains the original evidence and scientific discussion. Production integration and the remaining scientific decisions are still pending.
+**Current status:** production integration and the adversarial test review are complete. R1/R6 are fixed, R5 uses the agreed size-target/warning contract, and R3 is fixed in the separate analysis helper. Experimental R4 tolerance packing and precision conversion are excluded from production. The [storage suite](../../tests/storage/README.md) has 439 passing cases with no expected failures; [the test review](../../tests/TEST_REVIEW.md) records current calculation/storage verification. Scientific decisions remain separate, with review in progress and an audit due when complete. The original findings and prototype-stage follow-ups below are historical evidence, not the current implementation status.
 
-The lossless triangle and XOR representation is sound on the tested inputs, and the measured float64 size savings have supporting data. **The implementation is not ready to adopt unchanged:** verification misses deleted data, some claims exceed what was measured, and mathematical discrepancies need individual decisions. No implementation, tests, labels, or existing patient outputs were changed during this review.
+At the original review checkpoint, the lossless triangle and XOR representation was sound on the tested inputs, and the measured float64 size savings had supporting data. **That prototype was not ready to adopt unchanged:** verification missed deleted data, some claims exceeded what was measured, and mathematical discrepancies needed individual decisions. No implementation, tests, labels, or existing patient outputs were changed during that review.
 
 ## Evidence and scope
 
-Scope clarification (2026-10-14): this was a targeted investigation of suspicious matrix relationships, labels, and selected definitions, not a comprehensive mathematical review of all pyspi calculations. The calculation regression tests being developed by other agents preserve existing behavior and detect changes; they do not certify that behavior as mathematically correct.
+Scope clarification (2026-10-14): this was a targeted investigation of suspicious matrix relationships, labels, and selected definitions, not a comprehensive mathematical review of all pyspi calculations. The calculation regression tests subsequently implemented and reviewed preserve existing behavior and detect changes; they do not certify that behavior as mathematically correct.
 
 - The existing `test_pspi_store.py` passed its 115 generated round-trip cases, including subset reads, float64 means, both codecs, and a flipped-byte check. Additional disposable-store probes preserved arbitrary float32 and float64 bit patterns through both codecs.
 - Targeted probes below reproduce defects absent from those cases. They ran without editing the implementation. Zarr's background event loop hung in the restricted sandbox; rerunning the storage probes outside it succeeded. Those sandbox attempts were stopped.
@@ -204,7 +204,7 @@ These negatives do not encode an edge direction and should not be converted with
 
 Two distinct concepts would avoid a pseudo-undirected catch-all: the scientific interpretation of an edge and its matrix relationship. Candidate fields could describe `symmetric`, `antisymmetric`, or `general` relationships separately from signedness, estimator range, direction/conditioning meaning, parameters, and band aggregation. Undefined/all-NaN results need their own status. Storage may exploit redundancy in any of these scientific classes, but it should not assign their meaning from observed symmetry alone.
 
-## Testing should precede implementation changes
+## Original recommendation: testing before implementation changes
 
 The review of questions 1 and 2 can be completed without first rewriting the suite. **Before fixing storage, changing metric definitions, relabeling, or optimizing calculations, strengthening tests is the logical next implementation piece.** That can be focused rather than attempting a complete 185-metric scientific validation first.
 
@@ -217,7 +217,7 @@ Proposed test priorities, pending discussion:
 3. **Independent mathematical oracles:** covariance symmetry; phase conjugation and branch endpoints; PLI/wPLI signed and unsigned definitions including the placement of `abs`; standard versus historical PSI; delayed-signal orientation; and legitimate negative bias-corrected estimates. Compare formulas from the same intermediate inputs so preprocessing and estimator differences cannot explain a mismatch.
 4. **Integration and regression gates:** explicitly assert expected NaN masks, finite-result presence, parameter and channel order, detrend-then-z-score behavior, cache consistency across metric order, and independent label lists. Separate fast deterministic tests from slow, optional-dependency benchmarks. Make genuine discrepancies fail rather than merely printing a warning, while retaining per-metric tolerances where justified.
 
-## Discussion queue
+## Discussion queue at the prototype checkpoint
 
 Status updated 2026-10-14: the integrity contract and exact residual retention are settled. The remaining scientific items are targeted questions, not a completed comprehensive mathematical review.
 
@@ -231,7 +231,7 @@ Status updated 2026-10-14: the integrity contract and exact residual retention a
 
 The full expensive calculation/failure investigation, broader parallel execution work, and output migration remain outside this review.
 
-## Follow-up discussion and scope
+## Historical follow-up discussion and scope
 
 The user confirmed the distinction between stored calculation results (including calculated NaNs) and unavailable stored data. Agreed partial reads preserve requested shape and original window positions, retain recoverable entries even within a partially readable matrix, fill unavailable entries with NaN, and identify availability separately. Missing or unreadable requested data emits a warning; a NaN actually saved by a calculation does not.
 

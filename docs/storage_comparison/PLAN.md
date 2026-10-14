@@ -1,12 +1,17 @@
 # Lossless connectivity storage comparison
 
+This is the archived comparison plan, completed before production integration.
+The [archive index](README.md) locates its preserved source and evidence. Use
+[the production storage guide](../storage.md) for the current API and
+[the project notes](../../EEG_OPTIMIZATION_NOTES.md) for remaining work.
+
 ## Scope
 
 Compare a bounded set of lossless representations of existing connectivity results. The output is a reproducible comparison of disk size, file counts, memory use, and read/write costs that can guide the later output writer and batching decisions.
 
 This is the first piece from [the overall discussion](../../EEG_OPTIMIZATION_NOTES.md). It uses already calculated matrices and preserves their float64 values. Calculation optimization, the runtime estimator, EEG preprocessing utilities, and difficult failure diagnosis remain later work.
 
-Status (2026-10-13): comparison complete; results and recommendation are in [REPORT.md](REPORT.md). All benchmark code, environment files, reports, and generated data live under `storage_comparison/`. Existing patient stores were only read.
+Status at the 2026-10-13 checkpoint: comparison complete; results and recommendation are in [REPORT.md](REPORT.md). At that point benchmark code, environments, reports, and generated data lived under `storage_comparison/`; they have since been archived as described above. Existing patient stores were only read.
 
 The work went beyond the plan below in these ways:
 - The screen used 64 middle windows instead of 16.

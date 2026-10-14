@@ -16,7 +16,8 @@ experimental codecs are archived, with no active production or test imports.
 * [source-a2c3300.tar.gz](source-a2c3300.tar.gz): original tracked comparison
   source, experimental registry, environments, and storage tests from commit
   `a2c3300`, including the old integrity benchmark. Report text is retained here;
-  only relative test-document links were adjusted for the move.
+  relative links and status notes identify the archive and subsequent work.
+  Original source/report snapshots remain available in Git and the archive.
 
 The generated `runs/` directory was moved here unchanged rather than deleting
 its result copies. It remains ignored. Original patient recordings and output

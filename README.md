@@ -102,8 +102,20 @@ To access a table with a high-level overview of the _pyspi_ library of SPIs, inc
 For detailed descriptions of each SPI, as well as its associated estimators, we provide a full breakdown in the [SPI descriptions](https://time-series-features.gitbook.io/pyspi/spis/spi-descriptions) page of our documentation. 
 
 ## Documentation
-The full documentation is hosted on [GitBooks](https://time-series-features.gitbook.io/pyspi/). 
-Use the following links to quickly access some of the key sections:
+Local documentation describes this checkout:
+
+- [EEG optimization decisions and proposed workflow stages](EEG_OPTIMIZATION_NOTES.md)
+- [Exact result storage and time averaging](docs/storage.md)
+- [Calculation tests](tests/README.md), [storage tests](tests/storage/README.md), and [the completed test review](tests/TEST_REVIEW.md)
+- [Dependency migration and installation evidence](DEPENDENCY_MIGRATION.md)
+
+The local EDF runner is planned; it is not implemented yet. Patient-folder
+organization, fixed recording-level channel selection, and explicit retries
+are agreed requirements, not existing runner features.
+
+The upstream documentation is hosted on [GitBooks](https://time-series-features.gitbook.io/pyspi/).
+It describes the original release; use the local guides for this checkout's
+installation, storage API, and verification. Upstream reference sections include:
 
 - [Full installation guide](https://time-series-features.gitbook.io/pyspi/installation)
 - [Troubleshooting](https://time-series-features.gitbook.io/pyspi/installation/troubleshooting)
