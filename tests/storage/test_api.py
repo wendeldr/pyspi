@@ -182,3 +182,16 @@ def test_analysis_invalid_series_and_single_matrices(tmp_path, windows):
     assert actual.shape == (2, 2) and np.isnan(actual).all()
     storage.write_metric(tmp_path, "single", np.eye(2, dtype=np.float32))
     assert_bits(time_mean(storage.open_results(tmp_path), "single"), np.eye(2))
+
+
+@pytest.mark.parametrize("kind", ["full", "sym", "anti", "sym_res", "anti_res"])
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+def test_analysis_reduction_crosses_column_blocks_and_remainders(store, force_mode, monkeypatch, tmp_path, kind, dtype):
+    from pyspi import analysis
+    monkeypatch.setattr(analysis, "MEAN_BLOCK_COLUMNS", 3)
+    force_mode(kind)
+    data = matrix_case(kind, n=5, windows=13, dtype=dtype)
+    data[0, 0, 0] = np.nan
+    storage.write_metric(tmp_path, "blocks", data)
+    expected = np.nanmean(data, axis=2, dtype=np.float64)
+    assert_bits(time_mean(storage.open_results(tmp_path), "blocks"), expected)

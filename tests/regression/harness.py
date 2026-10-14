@@ -264,9 +264,40 @@ def make_data(raw, spec):
 def compute_spi(spi, data):
     """``spi.multivariate(data)`` post-processed exactly like ``Calculator.compute``."""
     S = spi.multivariate(data)
+    S = _real_array(S, spi.identifier)
+    assert S.shape == (data.n_processes, data.n_processes), (
+        f"{spi.identifier}: expected square process matrix, got {S.shape}")
     S = np.array(S, dtype=np.float64, copy=True)
     np.fill_diagonal(S, np.nan)
     return S
+
+
+def compute_recorded(entry, data, seed, seed_fn=seed_all):
+    """Compare failure identity as well as values against a recorded SPI run.
+
+    Constructor and seeding failures always propagate. Only the recorded
+    calculation exception may become an all-NaN block; a new exception, or a
+    successful call replacing a recorded error, is a behavior change.
+    """
+    spi = build_spi(entry)
+    identifier = spi.identifier
+    seed_fn(seed)
+    try:
+        out = compute_spi(spi, data)
+    except Exception as exc:
+        if entry["status"] != "error":
+            raise
+        assert repr(exc) == entry["error"], (
+            f"{identifier}: calculation error changed: "
+            f"expected {entry['error']}, got {exc!r}")
+        return np.full((data.n_processes, data.n_processes), np.nan)
+    assert entry["status"] != "error", (
+        f"{identifier}: expected recorded calculation error "
+        f"{entry['error']}, but calculation succeeded")
+    assert status_of(out) == entry["status"], (
+        f"{identifier}: calculation status changed: "
+        f"{entry['status']} -> {status_of(out)}")
+    return out
 
 
 def status_of(S):
@@ -280,13 +311,20 @@ def status_of(S):
     return "ok"
 
 
+def _real_array(value, identifier):
+    array = np.asarray(value)
+    assert np.issubdtype(array.dtype, np.number) and not np.iscomplexobj(array), (
+        f"{identifier}: expected real numeric values, got {array.dtype}")
+    return array
+
+
 def assert_spi_allclose(actual, expected, identifier, rtol=None, atol=None):
     if rtol is None or atol is None:
         prtol, patol = spi_policy.tolerance_for(identifier)
         rtol = prtol if rtol is None else rtol
         atol = patol if atol is None else atol
-    actual = np.asarray(actual, dtype=np.float64)
-    expected = np.asarray(expected, dtype=np.float64)
+    actual = _real_array(actual, identifier).astype(np.float64)
+    expected = _real_array(expected, identifier).astype(np.float64)
     assert actual.shape == expected.shape, f"{identifier}: shape {actual.shape} != {expected.shape}"
     np.testing.assert_array_equal(np.isnan(actual), np.isnan(expected),
                                   err_msg=f"{identifier}: NaN mask differs")
@@ -297,16 +335,20 @@ def assert_spi_allclose(actual, expected, identifier, rtol=None, atol=None):
 def max_differences(actual, expected):
     """``(max_abs, max_rel)`` over entries that differ, ignoring positions that
     are NaN in both or equal in both (so equal infinities do not give NaN)."""
-    a = np.asarray(actual, dtype=np.float64)
-    e = np.asarray(expected, dtype=np.float64)
+    a, e = np.asarray(actual), np.asarray(expected)
+    if (a.shape != e.shape or any(not np.issubdtype(x.dtype, np.number) or np.iscomplexobj(x)
+                                  for x in (a, e))):
+        return float("inf"), float("inf")
+    a, e = a.astype(np.float64), e.astype(np.float64)
     both = ~(np.isnan(a) & np.isnan(e)) & ~(a == e)
     if not both.any():
         return 0.0, 0.0
+    if not (np.isfinite(a[both]).all() and np.isfinite(e[both]).all()):
+        return float("inf"), float("inf")
     diff = np.abs(a[both] - e[both])
     with np.errstate(divide="ignore", invalid="ignore"):
         rel = diff / np.abs(e[both])
-    rel = rel[np.isfinite(rel)]
-    return float(np.nanmax(diff)) if diff.size else 0.0, float(rel.max()) if rel.size else 0.0
+    return float(diff.max()), float(rel.max())
 
 
 # --------------------------------------------------------------------------- #
@@ -319,6 +361,14 @@ def golden_dir(name):
 def golden_exists(name):
     d = golden_dir(name)
     return (d / "values.npz").is_file() and (d / "meta.json").is_file()
+
+
+def require_golden(name):
+    """Committed regression inputs are required; missing files must fail loudly."""
+    if not golden_exists(name):
+        raise FileNotFoundError(
+            f"required golden set {name!r} is missing at {golden_dir(name)}; "
+            "restore the committed files before running regression tests")
 
 
 @functools.lru_cache(maxsize=None)

@@ -85,3 +85,42 @@ def test_exact_packing_preserves_incompatible_infinities(packing, upper, lower):
 def test_lossy_structure_is_not_supported(packing):
     with pytest.raises(ValueError, match="structure must be exact or full"):
         packing.pack(matrix_case("sym"), structure="tol")
+
+
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+@pytest.mark.parametrize("mode", ["full", "sym", "anti", "sym_res", "anti_res"])
+def test_packed_layout_and_decoder_have_independent_fixed_oracles(packing, dtype, mode):
+    # Explicit payloads protect against a packer and decoder sharing the same
+    # accidental transpose, triangle permutation, or residual-order change.
+    data = np.array([[[1, 11], [2, 12], [3, 13]],
+                     [[2, 12], [4, 14], [5, 15]],
+                     [[3, 13], [5, 15], [6, 16]]], dtype=dtype)
+    upper = np.array([[1, 2, 3, 4, 5, 6], [11, 12, 13, 14, 15, 16]], dtype=dtype)
+    if mode.startswith("anti") or mode == "full":
+        data[1, 0] *= -1
+        data[2, 0] *= -1
+        data[2, 1] *= -1
+    if mode == "full":
+        data[2, 0, 1] = 99
+        payload = np.array([[1, 2, 3, -2, 4, 5, -3, -5, 6],
+                            [11, 12, 13, -12, 14, 15, 99, -15, 16]], dtype=dtype)
+        fixed = packing.Packed(mode, 3, 2, np.dtype(dtype).str, full=payload)
+    elif mode.endswith("_res"):
+        uint = np.uint64 if dtype == np.float64 else np.uint32
+        original = data[2, 0, 1:2].copy().view(uint)[0]
+        data[2, 0, 1] = np.nextafter(data[2, 0, 1], dtype(np.inf))
+        residual = np.zeros((2, 3), dtype=uint)
+        residual[1, 1] = original ^ data[2, 0, 1:2].view(uint)[0]
+        fixed = packing.Packed(mode, 3, 2, np.dtype(dtype).str, upper=upper, residual=residual)
+    else:
+        fixed = packing.Packed(mode, 3, 2, np.dtype(dtype).str, upper=upper)
+    packed = packing.pack(data, structure="full" if mode == "full" else "exact")
+    assert packed.mode == mode
+    for name, expected in fixed.arrays().items():
+        actual = packed.arrays()[name]
+        if name == "residual":
+            np.testing.assert_array_equal(actual, expected)
+        else:
+            assert_bits(actual, expected)
+    assert_bits(packing.unpack(fixed), data)
+    assert_bits(packing.unpack(fixed, windows=[1, 0, 1]), data[..., [1, 0, 1]])

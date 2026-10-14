@@ -33,16 +33,8 @@ from regression import harness, spi_policy
 EXTRA_SET = "extra/small"
 EXTRA_CONFIG = harness.TESTS_DIR / "regression" / "extra_config.yaml"
 
-pytestmark = pytest.mark.skipif(
-    not harness.golden_exists(EXTRA_SET),
-    reason=f"no extra goldens at {harness.golden_dir(EXTRA_SET)}: run tests/regression/generate_goldens.py "
-           "--size small --configfile tests/regression/extra_config.yaml --out tests/regression/goldens/extra",
-)
-
-
 def _params():
-    if not harness.golden_exists(EXTRA_SET):
-        return []
+    harness.require_golden(EXTRA_SET)
     meta = harness.load_meta(EXTRA_SET)
     params = []
     for ident in meta["calculator_order"]:
@@ -89,23 +81,17 @@ def test_extra_set_matches_config(extra_meta):
     assert set(by_id) == set(extra_meta["spis"])  # meta.json is written with sorted keys
     assert len(by_id) == 54
     assert all(e["cls"] != "PhaseSlopeIndex" for e in entries)
+    from regression.generate_goldens import catalogue_mismatches
+    for ident, entry in by_id.items():
+        assert not catalogue_mismatches(extra_meta["spis"][ident], entry), ident
 
 
 @pytest.mark.regression
 @pytest.mark.parametrize("extra_identifier", _params())
 def test_extra_spi_matches_golden(extra_identifier, extra_meta, extra_values, extra_data, seed_all):
     entry = extra_meta["spis"][extra_identifier]
-    spi = harness.build_spi(entry)
-    seed_all(extra_meta["seed"])
-    if entry["status"] == "error":
-        # Calculator.compute stores an all-NaN block when an SPI raises.
-        try:
-            out = harness.compute_spi(spi, extra_data)
-        except Exception:
-            n = extra_data.n_processes
-            out = np.full((n, n), np.nan)
-    else:
-        out = harness.compute_spi(spi, extra_data)
+    out = harness.compute_recorded(dict(entry, identifier=extra_identifier),
+                                   extra_data, extra_meta["seed"], seed_all)
     harness.assert_spi_allclose(out, extra_values[extra_identifier], extra_identifier)
 
 

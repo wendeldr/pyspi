@@ -42,30 +42,18 @@ from regression import harness, spi_policy
 def pytest_generate_tests(metafunc):
     if "identifier" in metafunc.fixturenames:
         size = metafunc.config.getoption("--pyspi-size")
-        idents = list(harness.load_meta(size)["spis"]) if harness.golden_exists(size) else []
+        harness.require_golden(size)
+        idents = list(harness.load_meta(size)["spis"])
         metafunc.parametrize("identifier", idents, ids=str)
     if "preproc_key" in metafunc.fixturenames:
-        keys = list(harness.load_meta("preproc")["variants"]) if harness.golden_exists("preproc") else []
+        harness.require_golden("preproc")
+        keys = list(harness.load_meta("preproc")["variants"])
         metafunc.parametrize("preproc_key", keys, ids=[k.replace("::", "-") for k in keys])
 
 
 def _compute(entry, data, seed, seed_all):
-    """Build, seed and compute one SPI the way ``Calculator.compute`` would.
-
-    When the golden recorded ``status == "error"`` the computation raised at
-    generation time and ``Calculator.compute`` stores an all-NaN block; an
-    exception is then mapped to that block so the unchanged behaviour still
-    passes. Any other exception propagates and fails the test.
-    """
-    spi = harness.build_spi(entry)
-    seed_all(seed)
-    if entry["status"] != "error":
-        return harness.compute_spi(spi, data)
-    try:
-        return harness.compute_spi(spi, data)
-    except Exception:
-        n = data.n_processes
-        return np.full((n, n), np.nan)
+    """Build, seed and compute, enforcing the recorded success/error identity."""
+    return harness.compute_recorded(entry, data, seed, seed_all)
 
 
 # --------------------------------------------------------------------------- #
@@ -87,7 +75,7 @@ def test_preprocessing_variant_matches_golden(preproc_key, preproc_meta, preproc
     spec = dict(preproc_meta["dataset"], normalise=normalise, detrend=detrend)
     data = harness.make_data(harness.load_raw(spec), spec)
     # Build from the SPI entry; the status that decides error handling is the variant's.
-    entry = dict(preproc_meta["spis"][identifier], status=preproc_meta["variants"][preproc_key]["status"])
+    entry = {**preproc_meta["spis"][identifier], **preproc_meta["variants"][preproc_key]}
     out = _compute(entry, data, preproc_meta["seed"], seed_all)
     harness.assert_spi_allclose(out, preproc_values[preproc_key], identifier)
 

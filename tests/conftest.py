@@ -17,7 +17,7 @@ import pytest
 
 from regression import harness, spi_policy
 
-# The storage-format suite has its own requirements and CI job; pyproject's
+# The storage-format suite has its own pytest configuration; pyproject's
 # ``--ignore=tests/storage`` only applies from the repo root, so also ignore it
 # when pytest is started from inside tests/.
 collect_ignore = ["storage"]
@@ -38,6 +38,10 @@ def pytest_addoption(parser):
         action="store_true",
         default=False,
         help="Run tests marked slow (and the legacy CML7 benchmark).",
+    )
+    parser.addoption(
+        "--require-java", action="store_true", default=False,
+        help="Fail instead of skipping when the JIDT JVM is unavailable.",
     )
 
 
@@ -111,13 +115,16 @@ def pyspi_size(pytestconfig):
 
 
 @pytest.fixture(scope="session")
-def jvm():
+def jvm(pytestconfig):
     """Start the JIDT JVM once per process. Returns True when it is running.
 
     Does not skip by itself: tests that need Java carry the ``java`` marker
     (or request ``jvm`` and check it) and are skipped by ``_skip_java_without_jvm``.
     """
-    return bool(harness.ensure_jvm())
+    available = bool(harness.ensure_jvm())
+    if not available and pytestconfig.getoption("--require-java"):
+        pytest.fail("JIDT JVM is required by --require-java but is unavailable")
+    return available
 
 
 @pytest.fixture(scope="session")
@@ -149,8 +156,7 @@ def seed_all(statistics_modules):
 
 @pytest.fixture(scope="session")
 def golden_meta(pyspi_size):
-    if not harness.golden_exists(pyspi_size):
-        pytest.skip(f"no goldens for size {pyspi_size!r}: run tests/regression/generate_goldens.py --size {pyspi_size}")
+    harness.require_golden(pyspi_size)
     return harness.load_meta(pyspi_size)
 
 
@@ -173,8 +179,7 @@ def spi_data(raw_dataset, golden_meta):
 
 @pytest.fixture(scope="session")
 def preproc_meta():
-    if not harness.golden_exists("preproc"):
-        pytest.skip("no preprocessing goldens: run tests/regression/generate_goldens.py --preproc")
+    harness.require_golden("preproc")
     return harness.load_meta("preproc")
 
 

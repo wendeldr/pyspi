@@ -2,6 +2,9 @@
 
 The suite is a **change detector**. The golden values under `tests/regression/goldens/` record what the code produced when they were generated; a passing run means outputs have not changed, not that they are mathematically correct. Known bugs are locked in as they are (see [Known bugs](#known-bugs-locked-not-fixed)).
 
+The [adversarial test review](TEST_REVIEW.md) records weaknesses found and fixed,
+independent references, mutation checks, coverage, and remaining limitations.
+
 ## Layout
 
 | path | what it covers |
@@ -12,6 +15,8 @@ The suite is a **change detector**. The golden values under `tests/regression/go
 | `regression/generate_goldens.py` | writes and checks the goldens |
 | `compatibility/` | targeted NumPy 2 spectral and wavelet paths, frozen baseline inventory |
 | `unit/` | `Data`, base-class dispatch, `Calculator` config loading and failure handling, frames, utils, `phi_native` golden, known bugs |
+| `unit/test_regression_guards.py`, `regression/test_golden_contract.py` | tests of comparison/error handling, baseline completeness, generator checks, and required-JVM verification |
+| `unit/test_numeric_boundaries.py`, `unit/test_ids_reference.py` | nondegenerate spectral/wavelet aggregation, independent covariance/precision and IDS references, preprocessing axes, dataset reload, and seeded shared-cache calculations |
 | `test_calc.py`, `test_utils.py`, `test_phi_native.py` | original tests, unchanged |
 | `test_SPIs.py` | original CML7 z-score benchmark (`legacy`, `slow`) |
 | `storage/` | storage-format suite, run separately (below) |
@@ -47,7 +52,8 @@ baseline hashes, test results, remaining restrictions, and upgrade decisions.
 A Java runtime is needed for the JIDT SPIs. Local verification uses OpenJDK
 21.0.12.1. Without a JVM,
 the Java-dependent tests explicitly skip. A complete verification run must
-confirm that Java is available and those tests ran. Storage tests remain an
+confirm that Java is available and those tests ran. Add `--require-java` to make
+an unavailable JVM fail rather than silently reducing coverage. Storage tests remain an
 explicit second invocation because they have their own pytest configuration;
 they run in the same locked environment as calculations. This checkout uses
 local verification; its unused GitHub Actions workflows were removed.
@@ -65,12 +71,13 @@ Always run from the repository root.
 | `.venv/bin/python -m pytest --pyspi-size=full --runslow --timeout=1800` | full tier: 7 x 100 goldens, everything |
 | `.venv/bin/python -m pytest --runslow -m slow --ignore=tests/test_SPIs.py` | only the slow tests (14 at small size), without the legacy benchmark's recompute (see below) |
 | `.venv/bin/python -m pytest tests/regression -k "cov_ or dcorr"` | select SPIs by identifier |
-| `.venv/bin/python -m pytest -m "not java"` | deselects every `java`-marked test: 57 of the 578 collected at small size (39 JIDT per-SPI tests, 8 preprocessing variants, the catalogue test, 2 `Calculator` end-to-end tests, 7 unit tests) |
+| `.venv/bin/python -m pytest -m "not java"` | deselects tests explicitly marked `java`; use `--collect-only` to inspect the selected tests |
 
 Options:
 
-- `--pyspi-size small|full` picks the golden set (default `small`; environment fallback `PYSPI_TEST_SIZE`). A missing golden set skips its tests with a message naming the generator command.
+- `--pyspi-size small|full` picks the golden set (default `small`; environment fallback `PYSPI_TEST_SIZE`). Missing committed goldens fail; restore them rather than regenerating references to make a run pass.
 - `--runslow` runs tests marked `slow`; otherwise they are reported as skipped (`slow: needs --runslow`).
+- `--require-java` fails if the JIDT JVM cannot start. Use it for complete local verification, together with `--runslow` for the slow calculations.
 - Any `--runslow` invocation makes `tests/test_SPIs.py` recompute all 285 SPIs on the CML7 benchmark while it is being collected (about 2.5 min on the generating machine, measured with `--collect-only`), whatever `-m` or `-k` selects; with `-n N` every worker repeats it. Add `--ignore=tests/test_SPIs.py` (or give explicit test paths) unless you want the legacy benchmark.
 - `-n 4` runs in parallel with pytest-xdist. Every test is independent; each worker starts its own JVM.
 - `--timeout=N` (pytest-timeout) overrides the default 300 s per test. It uses `signal` and cannot interrupt code inside Java or numba frames, so it is a safety net only.
@@ -85,7 +92,7 @@ Options:
 | `java` | needs the JIDT JVM (from the SPI's `deps`) |
 | `regression` | golden-value comparison |
 | `stochastic` | draws from the global numpy RNG; reproducible only with `seed_all()` immediately before compute |
-| `nan_golden` | golden is all-NaN (status `all_nan` or `error`) for this test; a per-SPI test gets value coverage only at `--pyspi-size=full`, a preprocessing variant none |
+| `nan_golden` | golden is all-NaN (status `all_nan` or `error`); this locks missing-value or failure behavior, without finite-value coverage for that case |
 | `legacy` | original CML7 benchmark in `test_SPIs.py` |
 
 `slow`, `java`, `stochastic` and `nan_golden` are attached by `tests/conftest.py`:
@@ -100,12 +107,13 @@ Options:
 
 ## How the SPI regression works
 
-- `test_spi_matches_golden[<identifier>]`: builds the SPI from its `meta.json` entry (module, class, params; `params: null` records that `Calculator._load_yaml` default-constructed the class, otherwise the recorded params are passed as-is with no fallback, so a renamed or removed constructor argument fails loudly), makes a fresh `Data` from the recorded dataset spec, calls `seed_all(42)`, runs `multivariate`, sets the diagonal to NaN like `Calculator.compute`, and compares with the golden. The NaN mask must match exactly; then `assert_allclose` with the policy tolerance. An SPI whose golden status is `error` is compared as all-NaN: an exception is mapped to all-NaN exactly as `Calculator.compute` does, so either raising or returning all-NaN keeps the test green, while any real values fail the NaN-mask check.
+- `test_spi_matches_golden[<identifier>]`: builds the SPI from its `meta.json` entry (module, class, params; `params: null` records default construction, otherwise recorded params are passed without fallback), makes a fresh `Data`, seeds the RNGs, runs `multivariate`, and sets the diagonal to NaN like `Calculator.compute`. Output must be a real square process matrix. The NaN mask and success/error status must match; values use the policy tolerance. A recorded calculation error must reproduce its exact exception representation (type and message). Another exception, or a successful all-NaN return replacing an error, fails. Constructor and seeding failures always propagate.
 - `test_preprocessing_variant_matches_golden[<identifier>-n?d?]` (golden key `<identifier>::n?d?`): 24 representative SPIs (`spi_policy.PREPROC_SPIS`: three to five per statistics module, except wavelet, which has one because its six SPIs are all `psi_wavelet` band variants; `anm` is included because its output changes with `normalise`, while `igci` and `reci` differ between `n1d0` and `n0d0` by at most 3e-15) under all four `(normalise, detrend)` combinations, 96 keys in all, on the small window of cml7 with a fixed per-channel affine distortion (`x * scale + offset + slope * t`, recorded in `goldens/preproc/meta.json`) so that each flag measurably changes the input. Suffix `n1d0` is the Calculator default; `n1d1` is the EEG workflow (detrend, then z-score). 95 variants have status `ok`; `xcorr_max_sig-True::n0d0` raises `IndexError` today and is locked as an error (marker `nan_golden`). No variant is `slow`; the slowest, `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1::n1d0`, measured 1.94 s, just under the 2.0 s threshold. The 24 resolved identifiers (from `goldens/preproc/meta.json` `spis`): `anm`, `bary_euclidean_mean`, `cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5`, `coint_johansen_max_eig_stat_order-1_ardiff-1`, `cov_EmpiricalCovariance`, `dcorr`, `dtw`, `gwtau`, `ids`, `igci`, `kendalltau`, `lmfit_Ridge`, `mi_gaussian`, `pdist_euclidean`, `pec`, `phi_star_t-1_norm-0`, `plv_multitaper_mean_fs-1_fmin-0_fmax-0-5`, `prec_EmpiricalCovariance`, `psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean`, `reci`, `sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5`, `spearmanr`, `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1`, `xcorr_max_sig-True`.
 - Two fixture checks: `spearmanr`, `kendalltau` and `dcorr` give the same golden for `n1d0` and `n0d0` (rank-based or per-variable scale-invariant; measured max difference 0, 0 and 1.9e-15), and `cov_EmpiricalCovariance` differs between them.
 - `test_calculator_table_matches_goldens_fast` (default tier, `java`): writes a temporary config holding every identifier of the package's `config.yaml` that has a golden and is not `slow` at the selected size (module and class order kept, so the shared caches fill in the same order as a full pass), checks that the `Calculator` loads exactly those identifiers, runs one seeded `Calculator` pass with shared caches and compares each table block with its per-SPI golden. At small size that is 274 SPIs (285 minus the 11 slow ones) measured here at 32 s when run alone (plus 4 s setup for the JVM and imports) and 17 s inside a full default run, where earlier tests have already paid the first-call costs. It is the default-tier test that notices a cache-keying change (two SPIs reading each other's cached spectra), which the per-SPI tests cannot see because each runs on a fresh `Data`.
 - `test_calculator_table_matches_goldens` (`slow`, `java`): the same over the full `config.yaml`.
 - Both end-to-end tests skip `spi_policy.CALC_E2E_SKIP` (`cov*MinCovDet`, `prec*MinCovDet`, `bary*_sgddtw_*`; 8 identifiers): a single seeded pass draws from the global RNG in a different order than per-SPI seeding, and these then differ from their goldens. The four `*EllipticEnvelope` SPIs are `stochastic` too but reproduce their per-SPI goldens in that pass, so they are compared. All mismatches are reported together.
+- A separate shared-cache test includes all 12 stochastic identifiers, reseeding immediately before each SPI while retaining the shared `Data` caches. This provides numerical comparisons for the eight exclusions under controlled RNG conditions; the normal Calculator tests retain their existing seeding behavior.
 - `test_catalogue_matches_golden_meta` (`java`): loads the imported package's `config.yaml` through both `harness.catalogue` and `Calculator`, and asserts that the identifier sets equal the recorded ones, that the harness order and classes match what the `Calculator` loaded, and that for every identifier `module`, `cls`, `params` and `deps` equal `meta.json` (after a JSON round trip) and `labels` match as sorted sets. The per-SPI tests rebuild each SPI from the recorded params, so this is what reports a `config.yaml` parameter edit that keeps the identifier (for example `terms` of `ids`).
 - `test_spi_catalogue[all|fast|sonnet|fabfour]`: subset sizes 285/217/14/4; for `all`, identifier order equals `calculator_order` and each SPI's labels equal the recorded ones.
 
@@ -129,11 +137,16 @@ The iterative optimisers (`*GraphicalLassoCV*`, `phi_*`, `gpfit_*`, `anm`) have 
 
 The goldens are in `regression/goldens/extra/small/{values.npz,meta.json}`, generated on the small window (5 processes x 64 observations, `normalise=True`, `detrend=False`, seed 42) with mne 0.23.0. All 54 have status `ok`, and none is `slow`, `java` or `stochastic`. These are snapshots of current output, and many are degenerate on the single-epoch input: off the diagonal, `cohmag` and `plv` are 1, `ppc` and `dspli` are `-inf` (status `ok` counts only NaN), `dwspli` is 0 and `icoh` is rounding noise (below 2e-14, inside the 1e-8 `atol`); `plv`, `ppc`, `dspli` and `dwspli` give the same matrix for all six bands. Only `phase`, `pli` and `wspli` carry non-trivial values. They are locked as they are.
 
-`regression/test_extra_goldens.py` has 56 tests: one check that the set's identifiers and order match `extra_config.yaml` and its dataset is the small window, 54 per-SPI tests (`test_extra_spi_matches_golden[<identifier>]`) and one `Calculator` end-to-end test over `extra_config.yaml`, which also checks that the shared `data.mne` cache holds exactly the 9 measures. They run in the default tier in a few seconds, need no Java, use their own data from the set's `meta.json` (so `--pyspi-size` does not affect them) and skip cleanly if `goldens/extra/small` is absent.
+`regression/test_extra_goldens.py` has 56 tests: one check that the set's identifiers, order, constructor parameters, dependencies, and labels match `extra_config.yaml`, 54 per-SPI tests, and one `Calculator` end-to-end test checking the shared cache. They need no Java, use their own stored dataset spec independently of `--pyspi-size`, and fail if the required golden files are absent. Nondegenerate frequency/time tensors in `unit/test_numeric_boundaries.py` supplement these snapshots, checking aggregation, endpoint selection, angle/magnitude transforms, orientation, and cache reuse without claiming to validate MNE's estimator formulas.
 
 ## Regenerating the goldens
 
 **Regenerate only for an intentional change to an output, and say why in the commit message.** A failing golden test after an optimisation is the suite doing its job: first find out why the value moved.
+
+Checks also compare dataset/seed and failure identity. Partial regeneration
+refuses to mix a different dataset or seed into the existing set. Detected
+non-reproducible repeats fail `--check` and refuse to write that unstable set.
+Phi checking compares its defining parameter metadata as well as its values.
 
 ```bash
 # check the current code against the goldens; writes nothing, exit 1 on drift
@@ -165,13 +178,13 @@ Compare the checkout, lock, selected test tier, installed packages (`uv pip chec
 
 ## Known bugs (locked, not fixed)
 
-Each is locked in `unit/test_known_bugs.py`: bugs 1-9 have a test of the current behaviour paired with a strict xfail of the fixed behaviour, so a fix shows up as XPASS(strict) and must be acknowledged.
+The confirmed implementation issues below are locked in `unit/test_known_bugs.py`, generally with a current-behavior test and a strict xfail describing a proposed change. These are change alarms; they do not independently establish the mathematical correctness of the proposed behavior. Item 5 is a pending scientific decision, with a current-behavior check and no assumed fix.
 
 1. `TransferEntropy(estimator='symbolic')` falls through to the Gaussian calculator (`te_symbolic_* == gc_gaussian_*`).
 2. `ConvergentCrossMapping(embedding_dimension=None)` picks max E (10), not best-rho E (`ccm_E-None == ccm_E-10`). Both tests are `slow`.
 3. `SoftDynamicTimeWarping` ignores `global_constraint` (three identical configs).
 4. `SpearmanR`/`KendallTau` mutate the class-level `labels` list (instances carry both `signed` and `unsigned`).
-5. "Undirected" spectral SPIs (`phase`, `psi`, `pli`, `wpli`, ...) are not symmetrised (MRO bypasses `Undirected.multivariate`).
+5. PLI currently produces signed, antisymmetric values despite its unsigned/undirected labels. The test checks finite, nonzero signed antisymmetry. The former expected-failure assertion demanding symmetry was removed because signed versus unsigned definitions and labeling remain undecided; a symmetry assertion was not a justified mathematical oracle. Related phase/PSI/wPLI findings remain in the [scientific review](../docs/storage_comparison/REVIEW.md).
 6. `Calculator` duplicate-identifier check is dead code (dict keys are unique; collisions overwrite silently).
 7. `Data(procnames=...)` is validated but never stored.
 8. `Data.convert_to_numpy` for `.csv` passes `','` as dtype.

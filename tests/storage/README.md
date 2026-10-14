@@ -33,10 +33,14 @@ verification; its unused GitHub Actions workflows were removed.
 
 ## Coverage and cases
 
-The final production suite has **419 passing cases**, with no skips or expected
+The current production suite has **439 passing cases**, with no skips or expected
 failures. The selected exact implementation has approximately 98% combined
 statement/branch coverage. Exact packing, Calculator adaptation, and the analysis
 helper have full statement and branch coverage.
+
+The [adversarial review](../TEST_REVIEW.md) adds fixed payload/decoder oracles
+that catch a packer and decoder sharing the same ordering error, plus mean
+reduction checks across multiple column blocks and a final partial block.
 
 Cases include all five exact representations, float32/float64 and arbitrary IEEE
 bits, one channel/window, empty windows, noncontiguous/read-only inputs, supplied

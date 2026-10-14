@@ -97,7 +97,7 @@ def run_one(entry, raw, spec, repeat):
 
     problem = None
     for k, (Sk, errk) in enumerate(results[1:], start=2):
-        if (errk is None) != (err0 is None):
+        if errk != err0:
             problem = f"repeat {k}: error state differs ({err0!r} vs {errk!r})"
             break
         try:
@@ -272,6 +272,11 @@ def merge_into_existing(name, values, meta, partial):
     old_values = harness.load_values(name)
     with open(harness.golden_dir(name) / "meta.json") as f:
         old_meta = json.load(f)
+    for field in ("dataset", "seed"):
+        if old_meta[field] != meta[field]:
+            raise ValueError(
+                f"cannot partially regenerate {name!r} with a different {field}; "
+                "regenerate the whole set to keep all values on the same inputs")
     current = set(meta["calculator_order"])
     stale_keys = sorted(k for k in old_values if _key_identifier(k) not in current)
     stale_ids = sorted(i for i in old_meta.get("spis", {}) if i not in current)
@@ -307,6 +312,9 @@ def check_set(name, values, meta, partial):
     missing = sorted(set(values) - set(gold))          # computed, not in golden
     extra = [] if partial else sorted(set(gold) - set(values))  # in golden, not computed
     failures, status_changes, rows = [], [], []
+    for field in ("dataset", "seed"):
+        if gmeta.get(field) != meta.get(field):
+            failures.append((field, "differs from golden metadata"))
 
     # Catalogue fields per identifier: what test_spi_catalogue and build_spi
     # rely on must match the stored meta, not only the values.
@@ -331,6 +339,12 @@ def check_set(name, values, meta, partial):
             failures.append((key, str(exc).strip().splitlines()[0]))
         if gstatus.get(key) != nstatus.get(key):
             status_changes.append((key, gstatus.get(key), nstatus.get(key)))
+            ok = False
+        old_record = gmeta.get("variants", gmeta["spis"]).get(key, {})
+        new_record = meta.get("variants", meta["spis"]).get(key, {})
+        if old_record.get("error") != new_record.get("error"):
+            failures.append((key, f"calculation error changed: {old_record.get('error')!r} "
+                                  f"-> {new_record.get('error')!r}"))
             ok = False
         rows.append((key, mabs, mrel, ok))
 
@@ -440,6 +454,12 @@ def do_phi(check):
         log(f"CHECK phi: keys differ {sorted(set(gold) ^ set(vals))}")
     for k in sorted(set(gold) & set(vals)):
         if k == "params_json":
+            old = json.loads(str(gold[k]))
+            new = json.loads(str(vals[k]))
+            for field in ("seed", "Z", "params", "type_of_dist", "keys"):
+                if old.get(field) != new.get(field):
+                    log(f"CHECK phi: {field} differs from golden metadata")
+                    ok = False
             continue
         # inputs must match exactly; phi values use the phi_* policy tolerance
         rtol, atol = spi_policy.tolerance_for(k) if k.startswith("phi_") else (0.0, 0.0)
@@ -512,6 +532,10 @@ def main(argv=None):
             values, meta, problems = build()
             summarise(name, meta, problems, rkey, values)
             log(f"wall time '{name}': {time.perf_counter() - t0:.1f}s")
+            if problems:
+                ok = False
+                if not args.check:
+                    raise ValueError(f"refusing to save non-reproducible golden set {name!r}")
             if args.check:
                 ok &= check_set(name, values, meta, partial)
             else:

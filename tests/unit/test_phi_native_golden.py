@@ -16,7 +16,7 @@ PHI_GOLDEN = harness.GOLDEN_DIR / "phi_native.npz"
 
 def _load_phi_golden():
     if not PHI_GOLDEN.is_file():
-        pytest.skip(f"missing {PHI_GOLDEN}: run tests/regression/generate_goldens.py --phi")
+        pytest.fail(f"required golden file {PHI_GOLDEN} is missing; restore the committed file")
     with np.load(PHI_GOLDEN) as z:
         return {k: z[k] for k in z.files}
 
