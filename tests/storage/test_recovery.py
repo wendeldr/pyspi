@@ -59,7 +59,7 @@ def test_missing_primary_preserves_positions_and_exact_survivors(store, force_mo
     force_mode(kind)
     data = matrix_case(kind, windows=9, dtype=dtype)
     primary_columns = 16 if kind == "full" else 10
-    store.write_metric(tmp_path, "metric", data, dtype=dtype, codec=codec,
+    store.write_metric(tmp_path, "metric", data, codec=codec,
                        target_chunk_values=primary_columns * 2, max_shard_values=primary_columns * 4)
     assert store.open_results(tmp_path).info("metric")["mode"] == kind
     key = "full" if kind == "full" else "upper"
@@ -86,7 +86,7 @@ def test_missing_primary_preserves_positions_and_exact_survivors(store, force_mo
 def test_missing_residual_retains_upper_and_diagonal(store, force_mode, tmp_path, codec, kind, dtype):
     force_mode(kind)
     data = matrix_case(kind, windows=9, dtype=dtype)
-    store.write_metric(tmp_path, "metric", data, dtype=dtype, codec=codec,
+    store.write_metric(tmp_path, "metric", data, codec=codec,
                        target_chunk_values=20, max_shard_values=40)
     remove_inner(tmp_path / "metric" / "residual")  # three windows per residual chunk
     mask = np.ones(data.shape, dtype=bool)
@@ -141,7 +141,7 @@ def test_out_of_shape_padded_slots_are_not_missing_data(store, tmp_path, codec):
 def test_saved_nan_inf_and_zero_chunks_are_available_without_warning(store, tmp_path, codec, dtype):
     data = np.resize(special_values(dtype), (4, 4, 9)).copy()
     data[:, :, :2] = 0
-    store.write_metric(tmp_path, "special", data, codec=codec, dtype=dtype,
+    store.write_metric(tmp_path, "special", data, codec=codec,
                        target_chunk_values=32, max_shard_values=64)
     with warnings.catch_warnings():
         warnings.simplefilter("error", store.PartialReadWarning)
@@ -215,7 +215,7 @@ def test_batch_inventory_survives_interruption(store, tmp_path, monkeypatch):
 @pytest.mark.parametrize("stage", ["pack", "payload", "flush", "publish", "publish_directory_flush"])
 @pytest.mark.parametrize("overwrite", [False, True])
 def test_failed_write_never_claims_complete(store, tmp_path, monkeypatch, stage, overwrite):
-    import store_integrity
+    from pyspi.storage import _integrity as store_integrity
 
     data = matrix_case("sym")
     if overwrite:
@@ -338,16 +338,17 @@ def test_partial_warning_can_be_promoted_to_error(store, tmp_path):
 
 @pytest.mark.parametrize("kind", ["full", "sym", "anti", "sym_res", "anti_res"])
 def test_mean_uses_checked_reads_and_rejects_partial_input(store, force_mode, tmp_path, codec, kind):
+    from pyspi.analysis import time_mean
     force_mode(kind)
     data = matrix_case(kind)
     store.write_metric(tmp_path, "metric", data, codec=codec)
     reader = store.open_results(tmp_path)
-    assert_bits(reader.mean("metric"), np.nanmean(data, axis=2))
+    assert_bits(time_mean(reader, "metric"), np.nanmean(data, axis=2))
     key = "residual" if kind.endswith("_res") else ("full" if kind == "full" else "upper")
     data_files(tmp_path / "metric" / key)[0].unlink()
     with pytest.warns(store.PartialReadWarning):
         with pytest.raises(store.StorageIntegrityError):
-            reader.mean("metric")
+            time_mean(reader, "metric")
 
 
 @pytest.mark.parametrize("stage", ["before_layout", "after_upper"])

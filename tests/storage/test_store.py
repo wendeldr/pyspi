@@ -17,7 +17,7 @@ def test_every_mode_through_real_codecs(store, force_mode, codec, tmp_path, kind
     original = data.copy()
     original.flags.writeable = False
     path = tmp_path / "recording.pspi"
-    meta = store.write_metric(path, "metric", original, dtype=dtype, codec=codec,
+    meta = store.write_metric(path, "metric", original, codec=codec,
                               labels=["deliberately_unreliable_label"], target_chunk_values=20,
                               max_shard_values=60)
     assert meta["mode"] == kind
@@ -43,7 +43,7 @@ def test_ieee_values_are_preserved_on_disk(store, codec, tmp_path, dtype):
     values = special_values(dtype)
     data = np.tile(values, 4).reshape(2, 2, -1)
     with np.errstate(invalid="ignore", over="ignore"):
-        store.write_metric(tmp_path, "special", data, dtype=dtype, codec=codec)
+        store.write_metric(tmp_path, "special", data, codec=codec)
         assert_bits(store.open_results(tmp_path).load("special"), data)
     assert store.verify(tmp_path) == {}
 
@@ -53,15 +53,15 @@ def test_random_bit_patterns_are_preserved_on_disk(store, codec, tmp_path, dtype
     uint = np.uint64 if dtype == np.float64 else np.uint32
     data = np.random.default_rng(9).integers(0, np.iinfo(uint).max, size=(4, 4, 5), dtype=uint).view(dtype)
     with np.errstate(invalid="ignore", over="ignore"):
-        store.write_metric(tmp_path, "bits", data, dtype=dtype, codec=codec)
+        store.write_metric(tmp_path, "bits", data, codec=codec)
         assert_bits(store.open_results(tmp_path).load("bits"), data)
 
 
 @pytest.mark.parametrize("value", [0.0, -0.0, np.nan, np.inf, -np.inf])
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])
 def test_constant_invalid_or_zero_data_is_legitimate_output(store, codec, tmp_path, value, dtype):
-    data = np.full((3, 3, 5), value)
-    store.write_metric(tmp_path, "constant", data, codec=codec, dtype=dtype)
+    data = np.full((3, 3, 5), value, dtype=dtype)
+    store.write_metric(tmp_path, "constant", data, codec=codec)
     assert_bits(store.open_results(tmp_path).load("constant"), data.astype(dtype))
     assert store.verify(tmp_path) == {}
 
@@ -87,7 +87,7 @@ def test_metadata_multiple_metrics_and_recording_merge(store, tmp_path):
                         recording={"channels": ["A", "B", "C", "D"], "sampling_rate": 2048})
     store.set_recording_info(tmp_path, {"sampling_rate": 1024, "window_onsets": [0, 512]})
     reader = store.open_results(tmp_path)
-    assert reader.metrics == ["alpha", "zeta"]
+    assert reader.metrics == ["zeta", "alpha"]
     assert reader.recording == {"channels": ["A", "B", "C", "D"], "sampling_rate": 1024,
                                 "window_onsets": [0, 512]}
     assert reader.info("alpha")["labels"] == ["signed", "directed"]
@@ -104,8 +104,8 @@ def test_extra_metadata_and_custom_codec_level(store, tmp_path, codec):
     store.write_metric(tmp_path, "metadata", data, codec=codec, level=4,
                        attrs={"estimator": "example", "parameters": {"window_ms": 500}})
     reader = store.open_results(tmp_path)
-    assert reader.info("metadata")["parameters"] == {"window_ms": 500}
-    assert reader.info("metadata")["estimator"] == "example"
+    assert reader.info("metadata")["attrs"]["parameters"] == {"window_ms": 500}
+    assert reader.info("metadata")["attrs"]["estimator"] == "example"
     assert_bits(reader.load("metadata"), data)
 
 
@@ -182,56 +182,15 @@ def test_invalid_shapes_are_rejected_before_creating_output(store, tmp_path, sha
     assert not path.exists()
 
 
-def test_unsupported_target_dtype_is_rejected(store, tmp_path):
+@pytest.mark.parametrize("dtype", [np.int64, np.complex128, np.float16, ">f8"])
+def test_unsupported_input_dtype_is_rejected(store, tmp_path, dtype):
     with pytest.raises(ValueError, match="float64 or float32"):
-        store.write_metric(tmp_path / "invalid", "metric", matrix_case("sym"), dtype="int64")
+        store.write_metric(tmp_path / "invalid", "metric", matrix_case("sym").astype(dtype))
 
 
 def test_unknown_codec_is_rejected_instead_of_silently_using_another(store, tmp_path):
     with pytest.raises(ValueError, match="unknown codec"):
         store.write_metric(tmp_path, "metric", matrix_case("sym"), codec="unknown")
-
-
-def test_float32_is_explicit_and_records_conversion(store, tmp_path):
-    data = matrix_case("full") + 1 / 7
-    store.write_metric(tmp_path, "default", data)
-    store.write_metric(tmp_path, "rounded", data, dtype="float32")
-    reader = store.open_results(tmp_path)
-    assert_bits(reader.load("default"), data)
-    assert_bits(reader.load("rounded"), data.astype(np.float32))
-    assert reader.info("rounded")["source_dtype"] == np.dtype(np.float64).str
-    assert reader.info("rounded")["float32_fallback"] is None
-
-
-@pytest.mark.parametrize("value", [1e-40, 1e300, -1e300])
-def test_float32_range_fallback_preserves_whole_array(store, tmp_path, value):
-    data = matrix_case("sym")
-    data[0, 1, 0] = value
-    store.write_metric(tmp_path, "fallback", data, dtype="float32")
-    reader = store.open_results(tmp_path)
-    assert reader.info("fallback")["float32_fallback"]
-    assert reader.info("fallback")["dtype"] == np.dtype(np.float64).str
-    assert_bits(reader.load("fallback"), data)
-
-
-@pytest.mark.parametrize("policy", ["error", "allow"])
-def test_float32_range_policy_is_explicit(store, tmp_path, policy):
-    data = matrix_case("sym")
-    data[0, 1, 0] = 1e-40
-    if policy == "error":
-        with pytest.raises(ValueError, match="metric"):
-            store.write_metric(tmp_path, "metric", data, dtype="float32", float32_out_of_range=policy)
-    else:
-        store.write_metric(tmp_path, "metric", data, dtype="float32", float32_out_of_range=policy)
-        assert_bits(store.open_results(tmp_path).load("metric"), data.astype(np.float32))
-
-
-def test_float32_normal_boundaries_and_existing_infinities_are_supported(store, tmp_path):
-    info = np.finfo(np.float32)
-    data = np.array([info.tiny, info.max, -info.max, np.inf, -np.inf, np.nan, 0, -0.0]).reshape(2, 2, 2)
-    assert store.float32_range_problem(data) is None
-    store.write_metric(tmp_path, "range", data, dtype="float32")
-    assert_bits(store.open_results(tmp_path).load("range"), data.astype(np.float32))
 
 
 @pytest.mark.parametrize("selection", [
@@ -286,7 +245,7 @@ def test_oversized_windows_warn_and_round_trip_in_one_window_shards(store, force
     force_mode(kind)
     data = matrix_case(kind, windows=5, dtype=dtype)
     with pytest.warns(store.ShardSizeWarning, match="one window per shard") as caught:
-        meta = store.write_metric(tmp_path, "wide", data, codec=codec, dtype=dtype, max_shard_values=5)
+        meta = store.write_metric(tmp_path, "wide", data, codec=codec, max_shard_values=5)
     assert meta["mode"] == kind
     assert len(caught) == len(meta["arrays"])
     for key in meta["arrays"]:

@@ -1,9 +1,7 @@
 """Generic matrix-structure packing for channels x channels x windows results.
 
-Each array is inspected at write time; nothing depends on metric names. Exact modes
-reconstruct every float bit pattern. The optional tolerance mode is a deliberate,
-recorded precision choice for matrices that are mathematically symmetric or
-antisymmetric but differ by floating-point noise.
+Each array is inspected at write time; nothing depends on metric names. Every
+mode reconstructs every float bit pattern. No tolerance-based packing is used.
 
 Payload layout is window-major: ``upper`` has shape (windows, n*(n+1)/2) holding the
 diagonal and strict upper triangle in ``np.triu_indices(n)`` order. ``full`` has shape
@@ -66,40 +64,16 @@ def _triangles(tf: np.ndarray):
     return upper, strict, lower
 
 
-def analyse(data: np.ndarray) -> dict:
-    """Structure statistics used to pick a mode. ``data`` is (n, n, W)."""
-    tf = time_first(data)
-    ut = UINT[tf.dtype]
-    upper, strict, lower = _triangles(tf)
-    lb = lower.view(ut)
-    sym_ref = strict.view(ut)
-    anti_ref = _negate_bits(strict, tf.dtype)
-    sym_match = float(np.mean(lb == sym_ref)) if lb.size else 1.0
-    anti_match = float(np.mean(lb == anti_ref)) if lb.size else 1.0
-    fin = np.isfinite(strict) & np.isfinite(lower)
-    with np.errstate(invalid="ignore", divide="ignore", over="ignore"):
-        scale = np.maximum(np.abs(strict), np.abs(lower))
-        rel_sym = np.where(scale > 0, np.abs(strict - lower) / scale, 0.0)
-        rel_anti = np.where(scale > 0, np.abs(strict + lower) / scale, 0.0)
-    nan_mismatch = int(np.sum(np.isnan(strict) != np.isnan(lower)))
-    return dict(
-        sym_match=sym_match, anti_match=anti_match,
-        max_rel_asym=float(rel_sym[fin].max()) if fin.any() else 0.0,
-        max_rel_antiasym=float(rel_anti[fin].max()) if fin.any() else 0.0,
-        nan_mismatch=nan_mismatch,
-    )
-
-
-def pack(data: np.ndarray, *, structure: str = "exact", tolerance: float = 0.0, residual_ok=None) -> Packed:
+def pack(data: np.ndarray, *, structure: str = "exact", residual_ok=None) -> Packed:
     """Pack (n, n, W) data.
 
     structure:
       ``full``  -- no structure exploitation.
       ``exact`` -- sym/anti if bit-exact, else triangle + XOR residual when ``residual_ok(packed_res, packed_full)``
                    returns True (caller compares encoded sizes), else full.
-      ``tol``   -- like exact, but if the maximum relative (anti)asymmetry over finite entries is
-                   <= tolerance and NaN positions mirror, store the triangle only (upper values kept as-is).
     """
+    if structure not in ("exact", "full"):
+        raise ValueError("structure must be exact or full")
     if data.ndim != 3 or data.shape[0] != data.shape[1]:
         raise ValueError(f"expected (n, n, W), got {data.shape}")
     dtype = data.dtype
@@ -119,16 +93,10 @@ def pack(data: np.ndarray, *, structure: str = "exact", tolerance: float = 0.0, 
     anti_ref = _negate_bits(strict, dtype)
     if np.array_equal(lb, anti_ref):
         return Packed("anti", upper=upper, **base)
-    stats = analyse(data)
-    if structure == "tol" and stats["nan_mismatch"] == 0:
-        if stats["max_rel_asym"] <= tolerance:
-            return Packed("sym", upper=upper, info=dict(tolerance_applied=True, **stats), **base)
-        if stats["max_rel_antiasym"] <= tolerance:
-            return Packed("anti", upper=upper, info=dict(tolerance_applied=True, **stats), **base)
-    use_anti = stats["anti_match"] > stats["sym_match"]
+    use_anti = np.count_nonzero(lb == anti_ref) > np.count_nonzero(lb == sym_ref)
     ref = anti_ref if use_anti else sym_ref
-    res = Packed("anti_res" if use_anti else "sym_res", upper=upper, residual=np.ascontiguousarray(lb ^ ref), info=stats, **base)
-    full = Packed("full", full=tf.reshape(w, n * n), info=stats, **base)
+    res = Packed("anti_res" if use_anti else "sym_res", upper=upper, residual=np.ascontiguousarray(lb ^ ref), **base)
+    full = Packed("full", full=tf.reshape(w, n * n), **base)
     if residual_ok is None or residual_ok(res, full):
         return res
     return full

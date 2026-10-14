@@ -1,6 +1,6 @@
 # Storage completion and partial recovery plan
 
-Status: implemented and tested, following the agreed recovery behavior. This piece fixes the missing-data integrity problem R1 in [the review](../../storage_comparison/REVIEW.md). The candidate remains in `storage_comparison/`; the regression tests remain in the main repository. See [INTEGRITY_RESULTS.md](INTEGRITY_RESULTS.md) for validation and measured overhead.
+Status: implemented and tested, following the agreed recovery behavior. This piece fixes the missing-data integrity problem R1 in [the archived review](../../docs/storage_comparison/REVIEW.md). The implementation is now integrated into `pyspi.storage`; tests import the installed package. See [INTEGRITY_RESULTS.md](INTEGRITY_RESULTS.md) for historical validation and measured overhead, and [PRODUCTION_RESULTS.md](PRODUCTION_RESULTS.md) for integration validation.
 
 ## Agreed behavior
 

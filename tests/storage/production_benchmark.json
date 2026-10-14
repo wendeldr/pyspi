@@ -1,0 +1,1281 @@
+{
+  "python": "3.12.3",
+  "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+  "logical_cpus": 64,
+  "cpu_model": "AMD Ryzen Threadripper 3970X 32-Core Processor",
+  "package_origin": "/tmp/pyspi-storage-installed/lib/python3.12/site-packages/pyspi/storage/_store.py",
+  "packages": {
+    "pyspi": "2.0.2",
+    "numpy": "2.5.4",
+    "zarr": "3.4.1",
+    "numcodecs": "0.17.0",
+    "pcodec": "1.0.4",
+    "google-crc32c": "1.9.0"
+  },
+  "repetitions": 3,
+  "temporary_directory": "/tmp",
+  "method": "Bounded synthetic storage timings, including packing, codec selection, and fsync.\n\nUses installed pyspi; never opens patient data. Timings are warm-cache local\nmeasurements, not cohort throughput estimates. Component timings overlap:\ncompression selection is included in packing, which is included in write time.\n",
+  "rows": [
+    {
+      "channels": 50,
+      "windows": 64,
+      "metrics": 1,
+      "input_kind": "full",
+      "codec": "pcodec",
+      "mode": "full",
+      "input_bytes": 1280000,
+      "file_bytes": 1114007,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.009548065001581563,
+          "write_manifest": 0.011908134001714643,
+          "compression_selection": 0.013916445997892879,
+          "pack": 0.017737335998390336,
+          "write_total": 0.06718345999979647,
+          "read_all": 0.007889941000030376,
+          "read_subset": 0.0065998049976769835,
+          "verify": 0.006182019002153538
+        },
+        {
+          "sync_tree": 0.004961720002029324,
+          "write_manifest": 0.011618034001003252,
+          "compression_selection": 0.018278987001394853,
+          "pack": 0.023360283998044906,
+          "write_total": 0.07143723599801888,
+          "read_all": 0.009400780003488762,
+          "read_subset": 0.006233187999896472,
+          "verify": 0.006143971000710735
+        },
+        {
+          "sync_tree": 0.005133545000717277,
+          "write_manifest": 0.012067768995621009,
+          "compression_selection": 0.02128649399674032,
+          "pack": 0.02641778899851488,
+          "write_total": 0.07241542200063122,
+          "read_all": 0.008874388000549516,
+          "read_subset": 0.00807536499996786,
+          "verify": 0.0052784090003115125
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.005133545000717277,
+        "write_manifest": 0.011908134001714643,
+        "compression_selection": 0.018278987001394853,
+        "pack": 0.023360283998044906,
+        "write_total": 0.07143723599801888,
+        "read_all": 0.008874388000549516,
+        "read_subset": 0.0065998049976769835,
+        "verify": 0.006143971000710735
+      }
+    },
+    {
+      "channels": 50,
+      "windows": 64,
+      "metrics": 1,
+      "input_kind": "full",
+      "codec": "zstd",
+      "mode": "full",
+      "input_bytes": 1280000,
+      "file_bytes": 1229336,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.005418565000582021,
+          "write_manifest": 0.01224713300325675,
+          "compression_selection": 0.006878105999930995,
+          "pack": 0.012348870001005707,
+          "write_total": 0.0518727119997493,
+          "read_all": 0.009908603002259042,
+          "read_subset": 0.007088947997544892,
+          "verify": 0.00799309799913317
+        },
+        {
+          "sync_tree": 0.005293820999213494,
+          "write_manifest": 0.012609858997166157,
+          "compression_selection": 0.006441341000027023,
+          "pack": 0.011529016999702435,
+          "write_total": 0.049092577002738835,
+          "read_all": 0.00995777000207454,
+          "read_subset": 0.008863627001119312,
+          "verify": 0.008817320001980988
+        },
+        {
+          "sync_tree": 0.005338218001270434,
+          "write_manifest": 0.012406314996042056,
+          "compression_selection": 0.006453071000578348,
+          "pack": 0.011547845999302808,
+          "write_total": 0.050824976999138016,
+          "read_all": 0.008578627999668242,
+          "read_subset": 0.008623846002592472,
+          "verify": 0.0085386290011229
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.005338218001270434,
+        "write_manifest": 0.012406314996042056,
+        "compression_selection": 0.006453071000578348,
+        "pack": 0.011547845999302808,
+        "write_total": 0.050824976999138016,
+        "read_all": 0.009908603002259042,
+        "read_subset": 0.008623846002592472,
+        "verify": 0.0085386290011229
+      }
+    },
+    {
+      "channels": 50,
+      "windows": 64,
+      "metrics": 1,
+      "input_kind": "sym",
+      "codec": "pcodec",
+      "mode": "sym",
+      "input_bytes": 1280000,
+      "file_bytes": 569563,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.004776518002472585,
+          "write_manifest": 0.011041283993108664,
+          "pack": 0.003727994000655599,
+          "write_total": 0.041058410999539774,
+          "compression_selection": 0.0,
+          "read_all": 0.011011064998456277,
+          "read_subset": 0.007455675997334765,
+          "verify": 0.006984311999985948
+        },
+        {
+          "sync_tree": 0.004670140999223804,
+          "write_manifest": 0.011311303998809308,
+          "pack": 0.0031323929979407694,
+          "write_total": 0.040481310003087856,
+          "compression_selection": 0.0,
+          "read_all": 0.0108891890013183,
+          "read_subset": 0.006790149000153178,
+          "verify": 0.006129700999736087
+        },
+        {
+          "sync_tree": 0.004697129999840399,
+          "write_manifest": 0.01150192799832439,
+          "pack": 0.0031528319996141363,
+          "write_total": 0.04301313399992068,
+          "compression_selection": 0.0,
+          "read_all": 0.012378388000797713,
+          "read_subset": 0.0062294079980347306,
+          "verify": 0.004883243000222137
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.004697129999840399,
+        "write_manifest": 0.011311303998809308,
+        "pack": 0.0031528319996141363,
+        "write_total": 0.041058410999539774,
+        "compression_selection": 0.0,
+        "read_all": 0.011011064998456277,
+        "read_subset": 0.006790149000153178,
+        "verify": 0.006129700999736087
+      }
+    },
+    {
+      "channels": 50,
+      "windows": 64,
+      "metrics": 1,
+      "input_kind": "sym",
+      "codec": "zstd",
+      "mode": "sym",
+      "input_bytes": 1280000,
+      "file_bytes": 628294,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.004664161999244243,
+          "write_manifest": 0.011492349000036484,
+          "pack": 0.0031306829987443052,
+          "write_total": 0.037872299002629006,
+          "compression_selection": 0.0,
+          "read_all": 0.011903173999598948,
+          "read_subset": 0.008258059002400842,
+          "verify": 0.00744697600021027
+        },
+        {
+          "sync_tree": 0.004906792997644516,
+          "write_manifest": 0.011577956000110134,
+          "pack": 0.0030914050003048033,
+          "write_total": 0.03874194899981376,
+          "compression_selection": 0.0,
+          "read_all": 0.011701981002261164,
+          "read_subset": 0.007486094000341836,
+          "verify": 0.006191879001562484
+        },
+        {
+          "sync_tree": 0.004918242997518973,
+          "write_manifest": 0.0117602979989897,
+          "pack": 0.0031058539971127175,
+          "write_total": 0.03815561000010348,
+          "compression_selection": 0.0,
+          "read_all": 0.011267556001257617,
+          "read_subset": 0.0068184680021659005,
+          "verify": 0.005901039003219921
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.004906792997644516,
+        "write_manifest": 0.011577956000110134,
+        "pack": 0.0031058539971127175,
+        "write_total": 0.03815561000010348,
+        "compression_selection": 0.0,
+        "read_all": 0.011701981002261164,
+        "read_subset": 0.007486094000341836,
+        "verify": 0.006191879001562484
+      }
+    },
+    {
+      "channels": 50,
+      "windows": 64,
+      "metrics": 1,
+      "input_kind": "sym_res",
+      "codec": "pcodec",
+      "mode": "sym_res",
+      "input_bytes": 1280000,
+      "file_bytes": 571429,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.006695162002870347,
+          "write_manifest": 0.011179559001902817,
+          "compression_selection": 0.01819890000115265,
+          "pack": 0.022619548999500694,
+          "write_total": 0.0736604499979876,
+          "read_all": 0.015537229999608826,
+          "read_subset": 0.011212507997697685,
+          "verify": 0.010518131002754671
+        },
+        {
+          "sync_tree": 0.007153436996304663,
+          "write_manifest": 0.011113519998616539,
+          "compression_selection": 0.01662904299882939,
+          "pack": 0.02102566299799946,
+          "write_total": 0.08535751000090386,
+          "read_all": 0.015404804998979671,
+          "read_subset": 0.01213898700007121,
+          "verify": 0.010179143002460478
+        },
+        {
+          "sync_tree": 0.011298844001430552,
+          "write_manifest": 0.010464015998877585,
+          "compression_selection": 0.017954708000615938,
+          "pack": 0.022373936997610144,
+          "write_total": 0.07745009000063874,
+          "read_all": 0.01485731299908366,
+          "read_subset": 0.010992175000865245,
+          "verify": 0.009991119000915205
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.007153436996304663,
+        "write_manifest": 0.011113519998616539,
+        "compression_selection": 0.017954708000615938,
+        "pack": 0.022373936997610144,
+        "write_total": 0.07745009000063874,
+        "read_all": 0.015404804998979671,
+        "read_subset": 0.011212507997697685,
+        "verify": 0.010179143002460478
+      }
+    },
+    {
+      "channels": 50,
+      "windows": 64,
+      "metrics": 1,
+      "input_kind": "sym_res",
+      "codec": "zstd",
+      "mode": "sym_res",
+      "input_bytes": 1280000,
+      "file_bytes": 630370,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.006577755000762409,
+          "write_manifest": 0.010533021999435732,
+          "compression_selection": 0.014996529000200098,
+          "pack": 0.019337290999828838,
+          "write_total": 0.06375251699864748,
+          "read_all": 0.01497631900201668,
+          "read_subset": 0.012028680001094472,
+          "verify": 0.01019785199969192
+        },
+        {
+          "sync_tree": 0.006592654997803038,
+          "write_manifest": 0.010789921001560288,
+          "compression_selection": 0.01480540600095992,
+          "pack": 0.019209165002394002,
+          "write_total": 0.06395893000080832,
+          "read_all": 0.015805500999704236,
+          "read_subset": 0.01157834499827004,
+          "verify": 0.010984825999912573
+        },
+        {
+          "sync_tree": 0.006669032998615876,
+          "write_manifest": 0.011140501002955716,
+          "compression_selection": 0.014989998999226373,
+          "pack": 0.01937492900106008,
+          "write_total": 0.06500108399995952,
+          "read_all": 0.01564394700108096,
+          "read_subset": 0.011637373998382827,
+          "verify": 0.010859549998713192
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.006592654997803038,
+        "write_manifest": 0.010789921001560288,
+        "compression_selection": 0.014989998999226373,
+        "pack": 0.019337290999828838,
+        "write_total": 0.06395893000080832,
+        "read_all": 0.01564394700108096,
+        "read_subset": 0.011637373998382827,
+        "verify": 0.010859549998713192
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 96,
+      "metrics": 1,
+      "input_kind": "full",
+      "codec": "pcodec",
+      "mode": "full",
+      "input_bytes": 10693632,
+      "file_bytes": 9317434,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.0071499769983347505,
+          "write_manifest": 0.01134759499473148,
+          "compression_selection": 0.08197202600058517,
+          "pack": 0.10702666200086242,
+          "write_total": 0.1783136320009362,
+          "read_all": 0.03170129900172469,
+          "read_subset": 0.015095914997800719,
+          "verify": 0.019958119999500923
+        },
+        {
+          "sync_tree": 0.007347098999161972,
+          "write_manifest": 0.01103490500463522,
+          "compression_selection": 0.07670123500065529,
+          "pack": 0.10288749300161726,
+          "write_total": 0.1705347780007287,
+          "read_all": 0.02585628900123993,
+          "read_subset": 0.014542103999701794,
+          "verify": 0.019568702999094967
+        },
+        {
+          "sync_tree": 0.006886145998578286,
+          "write_manifest": 0.011603123999520903,
+          "compression_selection": 0.07677893300206051,
+          "pack": 0.09725892499773181,
+          "write_total": 0.16181457499988028,
+          "read_all": 0.022019330001057824,
+          "read_subset": 0.011979851999058155,
+          "verify": 0.021678691999113653
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.0071499769983347505,
+        "write_manifest": 0.01134759499473148,
+        "compression_selection": 0.07677893300206051,
+        "pack": 0.10288749300161726,
+        "write_total": 0.1705347780007287,
+        "read_all": 0.02585628900123993,
+        "read_subset": 0.014542103999701794,
+        "verify": 0.019958119999500923
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 96,
+      "metrics": 1,
+      "input_kind": "full",
+      "codec": "zstd",
+      "mode": "full",
+      "input_bytes": 10693632,
+      "file_bytes": 10251957,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.007524872002250049,
+          "write_manifest": 0.010667776998161571,
+          "compression_selection": 0.025165761999232927,
+          "pack": 0.0463467400004447,
+          "write_total": 0.09750116700161016,
+          "read_all": 0.02380321899909177,
+          "read_subset": 0.013398464001511456,
+          "verify": 0.016122789998917142
+        },
+        {
+          "sync_tree": 0.007180505002907012,
+          "write_manifest": 0.0103110080017359,
+          "compression_selection": 0.025054745998204453,
+          "pack": 0.04601483100123005,
+          "write_total": 0.09696227500171517,
+          "read_all": 0.023995052000827854,
+          "read_subset": 0.01334424500237219,
+          "verify": 0.017737766000209376
+        },
+        {
+          "sync_tree": 0.007533273001172347,
+          "write_manifest": 0.011388934995920863,
+          "compression_selection": 0.026052771998365643,
+          "pack": 0.04672193700025673,
+          "write_total": 0.09849165299965534,
+          "read_all": 0.022718005999195157,
+          "read_subset": 0.014390010001079645,
+          "verify": 0.017058638997696107
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.007524872002250049,
+        "write_manifest": 0.010667776998161571,
+        "compression_selection": 0.025165761999232927,
+        "pack": 0.0463467400004447,
+        "write_total": 0.09750116700161016,
+        "read_all": 0.02380321899909177,
+        "read_subset": 0.013398464001511456,
+        "verify": 0.017058638997696107
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 96,
+      "metrics": 1,
+      "input_kind": "sym",
+      "codec": "pcodec",
+      "mode": "sym",
+      "input_bytes": 10693632,
+      "file_bytes": 4716493,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.0062968249985715374,
+          "write_manifest": 0.01169452099566115,
+          "pack": 0.018703761998040136,
+          "write_total": 0.07745351999983541,
+          "compression_selection": 0.0,
+          "read_all": 0.03440304700052366,
+          "read_subset": 0.01403390199993737,
+          "verify": 0.010000878999562701
+        },
+        {
+          "sync_tree": 0.005976047003059648,
+          "write_manifest": 0.010657297996658599,
+          "pack": 0.02081008100140025,
+          "write_total": 0.07488063799974043,
+          "compression_selection": 0.0,
+          "read_all": 0.034301551000680774,
+          "read_subset": 0.013649274998897454,
+          "verify": 0.010208441999566276
+        },
+        {
+          "sync_tree": 0.006264016999921296,
+          "write_manifest": 0.011350303997460287,
+          "pack": 0.021052173000498442,
+          "write_total": 0.07596317099887528,
+          "compression_selection": 0.0,
+          "read_all": 0.032692344997485634,
+          "read_subset": 0.013275657001941,
+          "verify": 0.010094056000525597
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.006264016999921296,
+        "write_manifest": 0.011350303997460287,
+        "pack": 0.02081008100140025,
+        "write_total": 0.07596317099887528,
+        "compression_selection": 0.0,
+        "read_all": 0.034301551000680774,
+        "read_subset": 0.013649274998897454,
+        "verify": 0.010094056000525597
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 96,
+      "metrics": 1,
+      "input_kind": "sym",
+      "codec": "zstd",
+      "mode": "sym",
+      "input_bytes": 10693632,
+      "file_bytes": 5170651,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.007602771001984365,
+          "write_manifest": 0.01161956399664632,
+          "pack": 0.0195973320005578,
+          "write_total": 0.072374122999463,
+          "compression_selection": 0.0,
+          "read_all": 0.03508636399783427,
+          "read_subset": 0.015138284001295688,
+          "verify": 0.011512698001752142
+        },
+        {
+          "sync_tree": 0.006014245998812839,
+          "write_manifest": 0.010945696001726901,
+          "pack": 0.02113996900152415,
+          "write_total": 0.06491843700132449,
+          "compression_selection": 0.0,
+          "read_all": 0.03434485899924766,
+          "read_subset": 0.015619077003066195,
+          "verify": 0.011716929999238346
+        },
+        {
+          "sync_tree": 0.006315054000879172,
+          "write_manifest": 0.01173646100141923,
+          "pack": 0.020694694998383056,
+          "write_total": 0.06784643799983314,
+          "compression_selection": 0.0,
+          "read_all": 0.035026616002141964,
+          "read_subset": 0.0156601460003003,
+          "verify": 0.012136106000980362
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.006315054000879172,
+        "write_manifest": 0.01161956399664632,
+        "pack": 0.020694694998383056,
+        "write_total": 0.06784643799983314,
+        "compression_selection": 0.0,
+        "read_all": 0.035026616002141964,
+        "read_subset": 0.015619077003066195,
+        "verify": 0.011716929999238346
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 96,
+      "metrics": 1,
+      "input_kind": "sym_res",
+      "codec": "pcodec",
+      "mode": "sym_res",
+      "input_bytes": 10693632,
+      "file_bytes": 4718193,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.0082984380023845,
+          "write_manifest": 0.011746078998839948,
+          "compression_selection": 0.06514415899800952,
+          "pack": 0.09113105399956112,
+          "write_total": 0.1662902319985733,
+          "read_all": 0.04182215400214773,
+          "read_subset": 0.016054712003096938,
+          "verify": 0.01662185299937846
+        },
+        {
+          "sync_tree": 0.00792755899601616,
+          "write_manifest": 0.010620667999319267,
+          "compression_selection": 0.06975548199989134,
+          "pack": 0.09187500899861334,
+          "write_total": 0.1600784139991447,
+          "read_all": 0.032880348997423425,
+          "read_subset": 0.01478277600108413,
+          "verify": 0.016819176998978946
+        },
+        {
+          "sync_tree": 0.00801065700215986,
+          "write_manifest": 0.011422319996199803,
+          "compression_selection": 0.06663492899679113,
+          "pack": 0.08638092600085656,
+          "write_total": 0.15856071499729296,
+          "read_all": 0.03630483300003107,
+          "read_subset": 0.01505197699952987,
+          "verify": 0.016952461999608204
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.00801065700215986,
+        "write_manifest": 0.011422319996199803,
+        "compression_selection": 0.06663492899679113,
+        "pack": 0.09113105399956112,
+        "write_total": 0.1600784139991447,
+        "read_all": 0.03630483300003107,
+        "read_subset": 0.01505197699952987,
+        "verify": 0.016819176998978946
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 96,
+      "metrics": 1,
+      "input_kind": "sym_res",
+      "codec": "zstd",
+      "mode": "sym_res",
+      "input_bytes": 10693632,
+      "file_bytes": 5173632,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.008310886998515343,
+          "write_manifest": 0.011042744001315441,
+          "compression_selection": 0.05427798999880906,
+          "pack": 0.07606880700041074,
+          "write_total": 0.13597639499857905,
+          "read_all": 0.03994937900279183,
+          "read_subset": 0.0156260170006135,
+          "verify": 0.018382243000814924
+        },
+        {
+          "sync_tree": 0.00896883400491788,
+          "write_manifest": 0.012034259001666214,
+          "compression_selection": 0.05430145900027128,
+          "pack": 0.07409716499751084,
+          "write_total": 0.13661800399859203,
+          "read_all": 0.042550539001240395,
+          "read_subset": 0.0150483270008408,
+          "verify": 0.01696621100199991
+        },
+        {
+          "sync_tree": 0.008998173998406855,
+          "write_manifest": 0.012941269000293687,
+          "compression_selection": 0.05779941000218969,
+          "pack": 0.08017141800155514,
+          "write_total": 0.1408203200007847,
+          "read_all": 0.04009294299976318,
+          "read_subset": 0.016882935000467114,
+          "verify": 0.018143311001040274
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.00896883400491788,
+        "write_manifest": 0.012034259001666214,
+        "compression_selection": 0.05430145900027128,
+        "pack": 0.07606880700041074,
+        "write_total": 0.13661800399859203,
+        "read_all": 0.04009294299976318,
+        "read_subset": 0.0156260170006135,
+        "verify": 0.018143311001040274
+      }
+    },
+    {
+      "channels": 300,
+      "windows": 32,
+      "metrics": 1,
+      "input_kind": "full",
+      "codec": "pcodec",
+      "mode": "full",
+      "input_bytes": 23040000,
+      "file_bytes": 20009120,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.009625311999116093,
+          "write_manifest": 0.011705522003467195,
+          "compression_selection": 0.17053762700015795,
+          "pack": 0.22806921700248495,
+          "write_total": 0.31907799399778014,
+          "read_all": 0.052514140003040666,
+          "read_subset": 0.01705449899964151,
+          "verify": 0.040570627999841236
+        },
+        {
+          "sync_tree": 0.009870703997876262,
+          "write_manifest": 0.01239515699853655,
+          "compression_selection": 0.16318817799765384,
+          "pack": 0.23109060400020098,
+          "write_total": 0.3156979189989215,
+          "read_all": 0.04976433400224778,
+          "read_subset": 0.01421082600063528,
+          "verify": 0.03699859900007141
+        },
+        {
+          "sync_tree": 0.010044139002275188,
+          "write_manifest": 0.012629349999770056,
+          "compression_selection": 0.16428803999951924,
+          "pack": 0.228069325999968,
+          "write_total": 0.31549866599743837,
+          "read_all": 0.04129222299889079,
+          "read_subset": 0.014098809002462076,
+          "verify": 0.03859365500102285
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.009870703997876262,
+        "write_manifest": 0.01239515699853655,
+        "compression_selection": 0.16428803999951924,
+        "pack": 0.228069325999968,
+        "write_total": 0.3156979189989215,
+        "read_all": 0.04976433400224778,
+        "read_subset": 0.01421082600063528,
+        "verify": 0.03859365500102285
+      }
+    },
+    {
+      "channels": 300,
+      "windows": 32,
+      "metrics": 1,
+      "input_kind": "full",
+      "codec": "zstd",
+      "mode": "full",
+      "input_bytes": 23040000,
+      "file_bytes": 22085083,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.009749517004820518,
+          "write_manifest": 0.011328623997542309,
+          "compression_selection": 0.054719175001082476,
+          "pack": 0.11663834499995573,
+          "write_total": 0.18762261500160093,
+          "read_all": 0.050611265000043204,
+          "read_subset": 0.01633834300082526,
+          "verify": 0.031148268000833923
+        },
+        {
+          "sync_tree": 0.01064735600084532,
+          "write_manifest": 0.011394610999559518,
+          "compression_selection": 0.052832399000180885,
+          "pack": 0.11767393000263837,
+          "write_total": 0.18612065600245842,
+          "read_all": 0.05079053900044528,
+          "read_subset": 0.016679800999554573,
+          "verify": 0.041841234000457916
+        },
+        {
+          "sync_tree": 0.010199342999840155,
+          "write_manifest": 0.010494782003661385,
+          "compression_selection": 0.052983344001404475,
+          "pack": 0.11836153599870158,
+          "write_total": 0.18989407800108893,
+          "read_all": 0.05682532300124876,
+          "read_subset": 0.01748676400166005,
+          "verify": 0.04294837600173196
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.010199342999840155,
+        "write_manifest": 0.011328623997542309,
+        "compression_selection": 0.052983344001404475,
+        "pack": 0.11767393000263837,
+        "write_total": 0.18762261500160093,
+        "read_all": 0.05079053900044528,
+        "read_subset": 0.016679800999554573,
+        "verify": 0.041841234000457916
+      }
+    },
+    {
+      "channels": 300,
+      "windows": 32,
+      "metrics": 1,
+      "input_kind": "sym",
+      "codec": "pcodec",
+      "mode": "sym",
+      "input_bytes": 23040000,
+      "file_bytes": 10067339,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.007785145000525517,
+          "write_manifest": 0.010078715007693972,
+          "pack": 0.04398440099976142,
+          "write_total": 0.10312112499741488,
+          "compression_selection": 0.0,
+          "read_all": 0.058032462002302054,
+          "read_subset": 0.015260860000125831,
+          "verify": 0.018743451000773348
+        },
+        {
+          "sync_tree": 0.007185163998656208,
+          "write_manifest": 0.010764262995508034,
+          "pack": 0.04568246300186729,
+          "write_total": 0.10646885100140935,
+          "compression_selection": 0.0,
+          "read_all": 0.0579752429985092,
+          "read_subset": 0.015084816001035506,
+          "verify": 0.016792368001915747
+        },
+        {
+          "sync_tree": 0.00742712699866388,
+          "write_manifest": 0.011551447001693305,
+          "pack": 0.04376182899795822,
+          "write_total": 0.10259693300031358,
+          "compression_selection": 0.0,
+          "read_all": 0.05969277500116732,
+          "read_subset": 0.014886341999954311,
+          "verify": 0.01772913599779713
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.00742712699866388,
+        "write_manifest": 0.010764262995508034,
+        "pack": 0.04398440099976142,
+        "write_total": 0.10312112499741488,
+        "compression_selection": 0.0,
+        "read_all": 0.058032462002302054,
+        "read_subset": 0.015084816001035506,
+        "verify": 0.01772913599779713
+      }
+    },
+    {
+      "channels": 300,
+      "windows": 32,
+      "metrics": 1,
+      "input_kind": "sym",
+      "codec": "zstd",
+      "mode": "sym",
+      "input_bytes": 23040000,
+      "file_bytes": 11081444,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.007500755000364734,
+          "write_manifest": 0.01091601799998898,
+          "pack": 0.04362836400105152,
+          "write_total": 0.09479136899972218,
+          "compression_selection": 0.0,
+          "read_all": 0.05554981699970085,
+          "read_subset": 0.017588900998816825,
+          "verify": 0.01786922099927324
+        },
+        {
+          "sync_tree": 0.007422316997690359,
+          "write_manifest": 0.010575120002613403,
+          "pack": 0.04360186399935628,
+          "write_total": 0.09709634099999676,
+          "compression_selection": 0.0,
+          "read_all": 0.06114361599975382,
+          "read_subset": 0.01760628999909386,
+          "verify": 0.017868440998427104
+        },
+        {
+          "sync_tree": 0.0070859579973330256,
+          "write_manifest": 0.010401287003332982,
+          "pack": 0.04697611899973708,
+          "write_total": 0.0952213339987793,
+          "compression_selection": 0.0,
+          "read_all": 0.05856356299773324,
+          "read_subset": 0.017034938999131555,
+          "verify": 0.01929734200166422
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.007422316997690359,
+        "write_manifest": 0.010575120002613403,
+        "pack": 0.04362836400105152,
+        "write_total": 0.0952213339987793,
+        "compression_selection": 0.0,
+        "read_all": 0.05856356299773324,
+        "read_subset": 0.017588900998816825,
+        "verify": 0.01786922099927324
+      }
+    },
+    {
+      "channels": 300,
+      "windows": 32,
+      "metrics": 1,
+      "input_kind": "sym_res",
+      "codec": "pcodec",
+      "mode": "sym_res",
+      "input_bytes": 23040000,
+      "file_bytes": 10069661,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.009424609001143835,
+          "write_manifest": 0.011706039997079642,
+          "compression_selection": 0.13981903399690054,
+          "pack": 0.198290600998007,
+          "write_total": 0.2743024310002511,
+          "read_all": 0.06996244599940837,
+          "read_subset": 0.017247081999812508,
+          "verify": 0.028496859002189012
+        },
+        {
+          "sync_tree": 0.009860735000984278,
+          "write_manifest": 0.01064640599724953,
+          "compression_selection": 0.1384518909981125,
+          "pack": 0.1920635639980901,
+          "write_total": 0.27192767200176604,
+          "read_all": 0.06765195399930235,
+          "read_subset": 0.014049531000637216,
+          "verify": 0.024193105000449577
+        },
+        {
+          "sync_tree": 0.009851505001279293,
+          "write_manifest": 0.010931097000138834,
+          "compression_selection": 0.13993509000283666,
+          "pack": 0.19459077800274827,
+          "write_total": 0.2712396950009861,
+          "read_all": 0.07271664200015948,
+          "read_subset": 0.014020701997651486,
+          "verify": 0.024589741999079706
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.009851505001279293,
+        "write_manifest": 0.010931097000138834,
+        "compression_selection": 0.13981903399690054,
+        "pack": 0.19459077800274827,
+        "write_total": 0.27192767200176604,
+        "read_all": 0.06996244599940837,
+        "read_subset": 0.014049531000637216,
+        "verify": 0.024589741999079706
+      }
+    },
+    {
+      "channels": 300,
+      "windows": 32,
+      "metrics": 1,
+      "input_kind": "sym_res",
+      "codec": "zstd",
+      "mode": "sym_res",
+      "input_bytes": 23040000,
+      "file_bytes": 11083658,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.01381918900005985,
+          "write_manifest": 0.011628633004875155,
+          "compression_selection": 0.09583584300344228,
+          "pack": 0.1490525199988042,
+          "write_total": 0.22192598599940538,
+          "read_all": 0.06964007599890465,
+          "read_subset": 0.018351014998188475,
+          "verify": 0.03302276500107837
+        },
+        {
+          "sync_tree": 0.009854714000539389,
+          "write_manifest": 0.011922962996322894,
+          "compression_selection": 0.0958283729996765,
+          "pack": 0.1541410760000872,
+          "write_total": 0.22151341999779106,
+          "read_all": 0.06794389400238288,
+          "read_subset": 0.01798072699966724,
+          "verify": 0.028145961001428077
+        },
+        {
+          "sync_tree": 0.009767227002157597,
+          "write_manifest": 0.011360641998180654,
+          "compression_selection": 0.09580624500085833,
+          "pack": 0.14890543499859632,
+          "write_total": 0.21295494199875975,
+          "read_all": 0.06593204300224897,
+          "read_subset": 0.016871125000761822,
+          "verify": 0.028159609999420354
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.009854714000539389,
+        "write_manifest": 0.011628633004875155,
+        "compression_selection": 0.0958283729996765,
+        "pack": 0.1490525199988042,
+        "write_total": 0.22151341999779106,
+        "read_all": 0.06794389400238288,
+        "read_subset": 0.01798072699966724,
+        "verify": 0.028159609999420354
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 600,
+      "metrics": 1,
+      "input_kind": "full",
+      "codec": "pcodec",
+      "mode": "full",
+      "input_bytes": 66835200,
+      "file_bytes": 58068561,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.018538587999501033,
+          "write_manifest": 0.011268305002886336,
+          "compression_selection": 0.5020811379981751,
+          "pack": 0.6263685099984286,
+          "write_total": 0.8031527149978501,
+          "read_all": 0.11482095700193895,
+          "read_subset": 0.007310721000976628,
+          "verify": 0.07156232099805493
+        },
+        {
+          "sync_tree": 0.0183293850022892,
+          "write_manifest": 0.016791137000836898,
+          "compression_selection": 0.502541650999774,
+          "pack": 0.6346937569978763,
+          "write_total": 0.8124090700002853,
+          "read_all": 0.11881926099886186,
+          "read_subset": 0.0088549089996377,
+          "verify": 0.0748975269998482
+        },
+        {
+          "sync_tree": 0.018722692999290302,
+          "write_manifest": 0.012068767995515373,
+          "compression_selection": 0.5034220519992232,
+          "pack": 0.6398030729978927,
+          "write_total": 0.8120247629994992,
+          "read_all": 0.12614645999929053,
+          "read_subset": 0.00877715100068599,
+          "verify": 0.07366186899889726
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.018538587999501033,
+        "write_manifest": 0.012068767995515373,
+        "compression_selection": 0.502541650999774,
+        "pack": 0.6346937569978763,
+        "write_total": 0.8120247629994992,
+        "read_all": 0.11881926099886186,
+        "read_subset": 0.00877715100068599,
+        "verify": 0.07366186899889726
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 600,
+      "metrics": 1,
+      "input_kind": "full",
+      "codec": "zstd",
+      "mode": "full",
+      "input_bytes": 66835200,
+      "file_bytes": 64060444,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.0196556810005859,
+          "write_manifest": 0.011333163998642704,
+          "compression_selection": 0.185455909002485,
+          "pack": 0.32006777100104955,
+          "write_total": 0.4639670360011223,
+          "read_all": 0.12861960699956398,
+          "read_subset": 0.009840855000220472,
+          "verify": 0.07478809100211947
+        },
+        {
+          "sync_tree": 0.019824743998469785,
+          "write_manifest": 0.011279805996309733,
+          "compression_selection": 0.19017844799964223,
+          "pack": 0.31802315099776024,
+          "write_total": 0.46266003100026865,
+          "read_all": 0.12691628399988986,
+          "read_subset": 0.011036414001864614,
+          "verify": 0.08180275199993048
+        },
+        {
+          "sync_tree": 0.02914622599928407,
+          "write_manifest": 0.013569986997026717,
+          "compression_selection": 0.1892037710022123,
+          "pack": 0.3198220300000685,
+          "write_total": 0.48828432699883706,
+          "read_all": 0.11862352699972689,
+          "read_subset": 0.011100630999862915,
+          "verify": 0.0719261189988174
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.019824743998469785,
+        "write_manifest": 0.011333163998642704,
+        "compression_selection": 0.1892037710022123,
+        "pack": 0.3198220300000685,
+        "write_total": 0.4639670360011223,
+        "read_all": 0.12691628399988986,
+        "read_subset": 0.011036414001864614,
+        "verify": 0.07478809100211947
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 600,
+      "metrics": 1,
+      "input_kind": "sym",
+      "codec": "pcodec",
+      "mode": "sym",
+      "input_bytes": 66835200,
+      "file_bytes": 29291454,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.01216112499969313,
+          "write_manifest": 0.011116000001493376,
+          "pack": 0.0829041450015211,
+          "write_total": 0.19158570999934454,
+          "compression_selection": 0.0,
+          "read_all": 0.16147056599947973,
+          "read_subset": 0.008917295999708585,
+          "verify": 0.04905910799789126
+        },
+        {
+          "sync_tree": 0.012036209001962561,
+          "write_manifest": 0.010473165002622409,
+          "pack": 0.08092156199927558,
+          "write_total": 0.18435547600165592,
+          "compression_selection": 0.0,
+          "read_all": 0.15563670600022306,
+          "read_subset": 0.009101799998461502,
+          "verify": 0.045008066001173574
+        },
+        {
+          "sync_tree": 0.011789947999204742,
+          "write_manifest": 0.009845165001024725,
+          "pack": 0.08106162699914421,
+          "write_total": 0.1896059669998067,
+          "compression_selection": 0.0,
+          "read_all": 0.15652294599931338,
+          "read_subset": 0.007911671000329079,
+          "verify": 0.04247563299941248
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.012036209001962561,
+        "write_manifest": 0.010473165002622409,
+        "pack": 0.08106162699914421,
+        "write_total": 0.1896059669998067,
+        "compression_selection": 0.0,
+        "read_all": 0.15652294599931338,
+        "read_subset": 0.008917295999708585,
+        "verify": 0.045008066001173574
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 600,
+      "metrics": 1,
+      "input_kind": "sym",
+      "codec": "zstd",
+      "mode": "sym",
+      "input_bytes": 66835200,
+      "file_bytes": 32302725,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.012598610999702942,
+          "write_manifest": 0.0115807539987145,
+          "pack": 0.0849856130007538,
+          "write_total": 0.17425312100021983,
+          "compression_selection": 0.0,
+          "read_all": 0.16654854400258046,
+          "read_subset": 0.009664869998232462,
+          "verify": 0.04663589999836404
+        },
+        {
+          "sync_tree": 0.012804934001906076,
+          "write_manifest": 0.010872227994696004,
+          "pack": 0.08459541699994588,
+          "write_total": 0.17073409099975834,
+          "compression_selection": 0.0,
+          "read_all": 0.16022502899795654,
+          "read_subset": 0.010165003997826716,
+          "verify": 0.0493342779991508
+        },
+        {
+          "sync_tree": 0.012645878003240796,
+          "write_manifest": 0.015409345996886259,
+          "pack": 0.08353028299825382,
+          "write_total": 0.17501547500069137,
+          "compression_selection": 0.0,
+          "read_all": 0.1567792770001688,
+          "read_subset": 0.01075433300138684,
+          "verify": 0.04010596399893984
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.012645878003240796,
+        "write_manifest": 0.0115807539987145,
+        "pack": 0.08459541699994588,
+        "write_total": 0.17425312100021983,
+        "compression_selection": 0.0,
+        "read_all": 0.16022502899795654,
+        "read_subset": 0.010165003997826716,
+        "verify": 0.04663589999836404
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 600,
+      "metrics": 1,
+      "input_kind": "sym_res",
+      "codec": "pcodec",
+      "mode": "sym_res",
+      "input_bytes": 66835200,
+      "file_bytes": 29296190,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.014164967000397155,
+          "write_manifest": 0.010947528000542661,
+          "compression_selection": 0.4101962690001528,
+          "pack": 0.5285801340032776,
+          "write_total": 0.664412195001205,
+          "read_all": 0.18156451100003324,
+          "read_subset": 0.013699363000341691,
+          "verify": 0.07972841200171388
+        },
+        {
+          "sync_tree": 0.01393619499867782,
+          "write_manifest": 0.015589028003887506,
+          "compression_selection": 0.42647661400042125,
+          "pack": 0.5605944329981867,
+          "write_total": 0.7027467279986013,
+          "read_all": 0.17588085499664885,
+          "read_subset": 0.013943934998678742,
+          "verify": 0.07000541300294572
+        },
+        {
+          "sync_tree": 0.013669584001036128,
+          "write_manifest": 0.010837869005626999,
+          "compression_selection": 0.42412586499995086,
+          "pack": 0.541440455999691,
+          "write_total": 0.6753004530000908,
+          "read_all": 0.1728924070011999,
+          "read_subset": 0.014659710999694653,
+          "verify": 0.0640197979992081
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.01393619499867782,
+        "write_manifest": 0.010947528000542661,
+        "compression_selection": 0.42412586499995086,
+        "pack": 0.541440455999691,
+        "write_total": 0.6753004530000908,
+        "read_all": 0.17588085499664885,
+        "read_subset": 0.013943934998678742,
+        "verify": 0.07000541300294572
+      }
+    },
+    {
+      "channels": 118,
+      "windows": 600,
+      "metrics": 1,
+      "input_kind": "sym_res",
+      "codec": "zstd",
+      "mode": "sym_res",
+      "input_bytes": 66835200,
+      "file_bytes": 32309691,
+      "samples_seconds": [
+        {
+          "sync_tree": 0.014943670998036396,
+          "write_manifest": 0.010970016995997867,
+          "compression_selection": 0.34154515900081606,
+          "pack": 0.4584423849992163,
+          "write_total": 0.5639016209970578,
+          "read_all": 0.19087363500148058,
+          "read_subset": 0.01651568700253847,
+          "verify": 0.06656618199849618
+        },
+        {
+          "sync_tree": 0.015073236001626356,
+          "write_manifest": 0.011106860998552293,
+          "compression_selection": 0.3384808230002818,
+          "pack": 0.45379839300221647,
+          "write_total": 0.5568807299969194,
+          "read_all": 0.17644112600100925,
+          "read_subset": 0.012877121000201441,
+          "verify": 0.06961801699799253
+        },
+        {
+          "sync_tree": 0.019216395001421915,
+          "write_manifest": 0.011371682991011767,
+          "compression_selection": 0.33834367800227483,
+          "pack": 0.4528510849995655,
+          "write_total": 0.5614411739989009,
+          "read_all": 0.17617744499875698,
+          "read_subset": 0.015360286000941414,
+          "verify": 0.06582253699889407
+        }
+      ],
+      "median_seconds": {
+        "sync_tree": 0.015073236001626356,
+        "write_manifest": 0.011106860998552293,
+        "compression_selection": 0.3384808230002818,
+        "pack": 0.45379839300221647,
+        "write_total": 0.5614411739989009,
+        "read_all": 0.17644112600100925,
+        "read_subset": 0.015360286000941414,
+        "verify": 0.06656618199849618
+      }
+    }
+  ],
+  "batch": {
+    "channels": 4,
+    "windows": 7,
+    "metrics": 185,
+    "codec": "pcodec",
+    "file_bytes": 562752,
+    "samples_seconds": [
+      5.702097387998947,
+      6.030805288002739,
+      5.564203095000266
+    ],
+    "median_seconds": 5.702097387998947
+  }
+}

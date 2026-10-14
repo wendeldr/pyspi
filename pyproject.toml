@@ -60,25 +60,17 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+storage = [
+    "zarr>=3.4.1,<4",
+    "google-crc32c>=1.9,<2",
+    "numcodecs>=0.17,<0.18",
+    "pcodec>=1.0.4,<2",
+]
 testing = [
     "pytest>=8.4,<10",
     "pytest-timeout>=2.4,<3",
     "pytest-xdist>=3.8,<4",
     "pytest-cov>=7,<8",
-]
-
-[dependency-groups]
-# The comparison registry still imports experimental compressors. Keep them
-# out of pyspi's runtime dependencies until production storage integration.
-storage-test = [
-    "zarr>=3.4.1,<4",
-    "google-crc32c>=1.9,<2",
-    "numcodecs>=0.17,<0.18",
-    "pcodec>=1.0.4,<2",
-    "zstandard>=0.25,<1",
-    "blosc2>=4.14.1,<5",
-    "zfpy>=1.0.1,<2",
-    "fpzip>=1.2.5,<2",
 ]
 
 [tool.setuptools.packages.find]
@@ -106,11 +98,12 @@ Documentation = "https://time-series-features.gitbook.io/pyspi/"
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["tests"]
-addopts = "-ra --strict-markers --strict-config --ignore=tests/storage --timeout=300"
+# JPype's JVM needs its own SIGSEGV handlers; pytest must not replace them.
+addopts = "-ra --strict-markers --strict-config --ignore=tests/storage --timeout=300 -p no:faulthandler"
 timeout_method = "signal"
 xfail_strict = true
 pythonpath = ["tests"]
-norecursedirs = [".venv", "storage_comparison", "build", "dist", ".git"]
+norecursedirs = [".venv", "docs", "build", "dist", ".git"]
 markers = [
     "slow: measured above SLOW_THRESHOLD_S at the selected size (FORCE_SLOW only when no time is recorded); skipped unless --runslow",
     "java: requires a running JVM (JIDT); skipped when the JVM cannot be started",

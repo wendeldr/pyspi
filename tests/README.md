@@ -22,7 +22,7 @@ The supported checkout environment is **Python 3.12 with NumPy 2.5**. Calculatio
 and storage tests use one root `uv.lock`; install both into `.venv` with:
 
 ```bash
-uv sync --locked --extra testing --group storage-test
+uv sync --locked --extra testing --extra storage
 uv pip check
 uv run --no-sync python -m pytest
 uv run --no-sync python -m pytest -c tests/storage/pytest.ini tests/storage
@@ -44,11 +44,13 @@ site-packages. The former requires setuptools below 82 because it imports
 `pkg_resources`. See [the migration report](../DEPENDENCY_MIGRATION.md) for
 baseline hashes, test results, remaining restrictions, and upgrade decisions.
 
-A Java runtime (tested with Java 17) is needed for the JIDT SPIs. Without a JVM,
+A Java runtime is needed for the JIDT SPIs. Local verification uses OpenJDK
+21.0.12.1. Without a JVM,
 the Java-dependent tests explicitly skip. A complete verification run must
 confirm that Java is available and those tests ran. Storage tests remain an
 explicit second invocation because they have their own pytest configuration;
-they now run in the same installed environment and CI job as calculations.
+they run in the same locked environment as calculations. This checkout uses
+local verification; its unused GitHub Actions workflows were removed.
 
 `meta.json` in each golden set records the Python, Java and package versions and the `OMP_NUM_THREADS` setting it was generated with.
 
@@ -73,7 +75,7 @@ Options:
 - `-n 4` runs in parallel with pytest-xdist. Every test is independent; each worker starts its own JVM.
 - `--timeout=N` (pytest-timeout) overrides the default 300 s per test. It uses `signal` and cannot interrupt code inside Java or numba frames, so it is a safety net only.
 
-`addopts` already passes `--ignore=tests/storage`, `--strict-markers`, `--strict-config` and `-ra`; `xfail_strict = true`. That `--ignore` path only resolves from the repository root, so `tests/conftest.py` also sets `collect_ignore = ["storage"]`; a run started from inside `tests/` skips the storage suite too.
+`addopts` already passes `--ignore=tests/storage`, `--strict-markers`, `--strict-config` and `-ra`; `xfail_strict = true`. It also disables pytest's `faulthandler` plugin: JPype's JVM uses its own native signal handlers, which that plugin can replace and cause a process crash. This follows [JPype's guidance](https://jpype.readthedocs.io/en/stable/userguide.html#errors-reported-by-python-fault-handler). That `--ignore` path only resolves from the repository root, so `tests/conftest.py` also sets `collect_ignore = ["storage"]`; a run started from inside `tests/` skips the storage suite too.
 
 ### Markers
 
@@ -155,9 +157,11 @@ The goldens are in `regression/goldens/extra/small/{values.npz,meta.json}`, gene
 
 A parameter change in `config.yaml` that keeps the identifier fails `test_catalogue_matches_golden_meta` (and `--check`) until the goldens are regenerated. That is expected for an intentional change; regenerate and say why in the commit message.
 
-## Red in CI, green locally
+## Reproducing failures across environments
 
-The push CI matrix installs from `requirements.txt`, which is mostly unpinned, so a library upgrade (scikit-learn, tslearn, JIDT, scipy) can move an output past its tolerance without any change to pyspi. The stochastic SPIs (see the tolerance table) and the iterative optimisers (`*GraphicalLassoCV*`, `phi_*`, `gpfit_*`, `anm`, which use the default tolerance) are the usual suspects. The `test-pinned-env` CI job runs the same default tier on the lock file the goldens were generated in; if it is green while the matrix is red, compare the failing job's package versions with `tests/requirements-test-lock.txt` and the versions recorded in the golden `meta.json` before looking for a code change. Locally, `generate_goldens.py --check` prints the per-SPI differences.
+Install the root `uv.lock` with `uv sync --locked --extra testing --extra storage`, then use the calculation and storage commands above. Select the same default/full tier and slow-test options as the run being investigated.
+
+Compare the checkout, lock, selected test tier, installed packages (`uv pip check` and `uv pip freeze`), Python and JVM versions, and thread settings between environments. Local verification uses Java 21; vendor, patch, platform, BLAS, and runtime differences can still matter with identical Python package versions. Package drift can follow an intentional lock update or a local install outside the lock; a failing test alone does not identify its cause. The versions in golden `meta.json` describe the original generation environment, not necessarily the current lock. `generate_goldens.py --check` reports per-SPI differences; investigate those before regenerating values or changing tolerances.
 
 ## Known bugs (locked, not fixed)
 
@@ -189,7 +193,7 @@ Also worth knowing (not bugs): `utils.normalise` default `nan_policy='propogate'
 
 ## Storage suite
 
-`tests/storage/` is a separate suite with its own locked environment (Python 3.12, NumPy 2) and `pytest.ini`. The root run ignores it. Run it as described in [storage/README.md](storage/README.md).
+`tests/storage/` has its own `pytest.ini` and runs explicitly in the same root-locked environment as calculations. The default root invocation ignores it. Run it as described in [storage/README.md](storage/README.md); there is no separate storage-test project or lock.
 
 ## SPI coverage
 

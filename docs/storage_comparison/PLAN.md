@@ -4,7 +4,7 @@
 
 Compare a bounded set of lossless representations of existing connectivity results. The output is a reproducible comparison of disk size, file counts, memory use, and read/write costs that can guide the later output writer and batching decisions.
 
-This is the first piece from [the overall discussion](../EEG_OPTIMIZATION_NOTES.md). It uses already calculated matrices and preserves their float64 values. Calculation optimization, the runtime estimator, EEG preprocessing utilities, and difficult failure diagnosis remain later work.
+This is the first piece from [the overall discussion](../../EEG_OPTIMIZATION_NOTES.md). It uses already calculated matrices and preserves their float64 values. Calculation optimization, the runtime estimator, EEG preprocessing utilities, and difficult failure diagnosis remain later work.
 
 Status (2026-10-13): comparison complete; results and recommendation are in [REPORT.md](REPORT.md). All benchmark code, environment files, reports, and generated data live under `storage_comparison/`. Existing patient stores were only read.
 

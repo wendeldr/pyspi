@@ -121,7 +121,7 @@ def test_verification_command_reports_failures_and_exit_status(store, tmp_path, 
         target.write_bytes(raw)
     monkeypatch.setattr("sys.argv", arguments)
     with pytest.raises(SystemExit) as exited:
-        runpy.run_path(store.__file__, run_name="__main__")
+        runpy.run_module("pyspi.storage", run_name="__main__")
     if case == "usage":
         assert "usage:" in str(exited.value.code)
     else:

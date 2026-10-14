@@ -1,0 +1,214 @@
+{
+  "reviewed_commit": "a2c3300",
+  "scope": "Post-review verification; original migration run provenance is not retroactively changed.",
+  "java": {
+    "exit_code": 0,
+    "jvm_started": true,
+    "java": "21.0.12.1",
+    "java_runtime": "21.0.12.1+1-1-24.04.4-Ubuntu",
+    "java_vendor": "Ubuntu",
+    "jvm_library": "/usr/lib/jvm/java-21-openjdk-amd64/lib/server/libjvm.so"
+  },
+  "ci_java_major": 21,
+  "runs": {
+    "current_default": {
+      "passed": 563,
+      "skipped": 15,
+      "xfailed": 10,
+      "failures": 0,
+      "errors": 0,
+      "ordinary_skips": {
+        "test_spi_matches_golden[ccm_E-10_diff]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-10_max]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-10_mean]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-1_diff]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-1_max]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-1_mean]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-None_diff]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-None_max]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-None_mean]": "slow: needs --runslow",
+        "test_spi_matches_golden[te_kraskov_NN-4_DCE_k-max-10_tau-max-4]": "slow: needs --runslow",
+        "test_spi_matches_golden[te_kraskov_NN-4_k-max-10_tau-max-4]": "slow: needs --runslow",
+        "test_calculator_table_matches_goldens": "slow: needs --runslow",
+        "test_mpi[NOTSET]": "got empty parameter set for (est, est_ob, mpi_benchmark, mpi_new)",
+        "test_ccm_auto_embedding_current": "slow: needs --runslow",
+        "test_ccm_auto_embedding_fixed": "slow: needs --runslow"
+      },
+      "expected_failures": {
+        "test_te_symbolic_fixed": "known bug: symbolic TE uses TransferEntropyCalculatorGaussian",
+        "test_softdtw_global_constraint_fixed": "known bug: SoftDynamicTimeWarping.bivariate never passes global_constraint",
+        "test_rank_labels_shared_fixed[SpearmanR]": "known bug: __init__ does self.labels += [...] on the class-level list",
+        "test_rank_labels_shared_fixed[KendallTau]": "known bug: __init__ does self.labels += [...] on the class-level list",
+        "test_undirected_spectral_symmetry_fixed": "known bug: spectral MRO bypasses Undirected.multivariate",
+        "test_duplicate_identifiers_fixed": "known bug: duplicates are counted on dict keys, which are already unique",
+        "test_data_procnames_fixed": "known bug: Data.__init__ asserts len(procnames) but never stores them",
+        "test_convert_to_numpy_csv_fixed": "known bug: np.genfromtxt(data, ',') passes the delimiter as dtype",
+        "test_correlation_frame_fixed": "known bug: Calculator._get_correlation_df(with_labels=True) calls self.getstatlabels()",
+        "test_convert_mdf_to_ddf_pivots_to_spi_pair_by_dataset": "known bug: convert_mdf_to_ddf passes stack(dropna=False), rejected by pandas>=3 (current behaviour locked in test_known_bugs.py)"
+      }
+    },
+    "root_storage": {
+      "passed": 381,
+      "skipped": 0,
+      "xfailed": 2,
+      "failures": 0,
+      "errors": 0,
+      "ordinary_skips": {},
+      "expected_failures": {
+        "test_tolerance_preserves_nonfinite_value_classes[inf-7.0]": "R4: tolerance ignores incompatible infinity entries",
+        "test_tolerance_preserves_nonfinite_value_classes[-inf-7.0]": "R4: tolerance ignores incompatible infinity entries"
+      }
+    },
+    "jvm_first_with_faulthandler_disabled": {
+      "passed": 10,
+      "skipped": 0,
+      "xfailed": 0,
+      "failures": 0,
+      "errors": 0,
+      "ordinary_skips": {},
+      "expected_failures": {}
+    }
+  },
+  "fresh_pip_install": {
+    "python": "3.12.3",
+    "package_origin": "/tmp/pyspi-review-pip-runtime/lib/python3.12/site-packages/pyspi/__init__.py",
+    "java": "21.0.12.1",
+    "torch": "2.14.1+cpu",
+    "torch_cuda": null,
+    "pytest_present": false,
+    "zarr_present": false,
+    "metrics": {
+      "cov_EmpiricalCovariance": {
+        "shape": [
+          4,
+          4
+        ],
+        "finite_off_diagonal": 12
+      },
+      "spearmanr-sq": {
+        "shape": [
+          4,
+          4
+        ],
+        "finite_off_diagonal": 12
+      },
+      "di_gaussian": {
+        "shape": [
+          4,
+          4
+        ],
+        "finite_off_diagonal": 12
+      },
+      "pec": {
+        "shape": [
+          4,
+          4
+        ],
+        "finite_off_diagonal": 12
+      }
+    },
+    "packages": {
+      "narwhals": "2.27.1",
+      "pandas": "3.0.6",
+      "hyppo": "0.5.2",
+      "kiwisolver": "1.5.1",
+      "platformdirs": "4.13.0",
+      "urllib3": "2.8.0",
+      "packaging": "26.3",
+      "future": "1.0.0",
+      "h5py": "3.16.0",
+      "mpmath": "1.3.0",
+      "tqdm": "4.70.1",
+      "python-dateutil": "2.9.0.post0",
+      "cycler": "0.12.1",
+      "interface_meta": "2.0.1",
+      "pip": "26.2.1",
+      "xarray": "2026.9.0",
+      "requests": "2.34.2",
+      "sympy": "1.14.0",
+      "pyEDM": "1.15.2.0",
+      "cloudpickle": "3.1.2",
+      "llvmlite": "0.50.0",
+      "numpy": "2.5.4",
+      "pybind11": "3.1.0",
+      "decorator": "5.3.1",
+      "fsspec": "2026.9.0",
+      "charset-normalizer": "3.5.2",
+      "numba": "0.68.0",
+      "mne-connectivity": "0.9.0",
+      "PyYAML": "6.0.3",
+      "mne": "1.13.2",
+      "pyspi": "2.0.2",
+      "cdt": "0.6.0",
+      "threadpoolctl": "3.7.0",
+      "networkx": "3.7",
+      "matplotlib": "3.11.2",
+      "skrebate": "0.8.4",
+      "netCDF4": "1.7.4",
+      "joblib": "1.6.0",
+      "dill": "0.4.1",
+      "cftime": "1.6.6",
+      "filelock": "4.1.2",
+      "MarkupSafe": "3.0.4",
+      "fonttools": "4.67.0",
+      "six": "1.17.0",
+      "wrapt": "2.5.1",
+      "autograd": "1.9.1",
+      "Jinja2": "3.1.6",
+      "patsy": "1.0.3",
+      "sktime": "1.2.0",
+      "pyparsing": "3.3.3",
+      "pillow": "12.3.0",
+      "pooch": "1.9.0",
+      "torch": "2.14.1+cpu",
+      "spectral-connectivity": "1.1.2",
+      "seaborn": "0.13.2",
+      "certifi": "2026.7.22",
+      "scikit-base": "1.1.1",
+      "tslearn": "0.9.0",
+      "jpype1": "1.7.1",
+      "formulaic": "1.2.2",
+      "statsmodels": "0.15.0",
+      "typing_extensions": "4.16.0",
+      "contourpy": "1.4.0",
+      "colorama": "0.4.6",
+      "idna": "3.20",
+      "scipy": "1.17.1",
+      "nitime": "0.12.1",
+      "lazy-loader": "0.6",
+      "GPUtil": "1.4.0",
+      "scikit-learn": "1.9.1",
+      "setuptools": "81.0.0"
+    }
+  },
+  "checks": {
+    "root_dependency_check": true,
+    "fresh_pip_dependency_check": true,
+    "root_lock_current": true,
+    "original_test_functions_and_goldens_unchanged": true
+  },
+  "removed_redundant_environment": [
+    "tests/storage/pyproject.toml",
+    "tests/storage/uv.lock",
+    "tests/storage/.venv"
+  ],
+  "native_crash": {
+    "driver": "A diagnostic driver started the JVM before invoking pytest.",
+    "exit_code": 139,
+    "evidence": "tests/storage/.artifacts/review_cleanup/java-tests.log",
+    "resolution": "Disable pytest faulthandler before JVM initialization; controlled rerun passed, and the root pytest configuration now applies it.",
+    "guidance": "https://jpype.readthedocs.io/en/stable/userguide.html#errors-reported-by-python-fault-handler"
+  },
+  "sha256": {
+    "pyproject.toml": "f801ddeb006abe20e65d19baa573b8e1042ad7d8bdbe7c9288cd01336248e95d",
+    "uv.lock": "3500d65038d5e53b169b52450b3f5d31a9943bcab108a3b40d487d0409631090",
+    "tests/requirements-test-lock.txt": "48209df7d4f1b624931c0ca4ad24619f6a286b5d3feb699bbe53c993269ae3a4",
+    ".github/workflows/run_unit_tests.yaml": "07789450c83f27ff217c4494ed833643501adc0dba427e704e00bafc8ec2025a",
+    "pyspi/_spectral_compat.py": "52ca7b6f9206dc9e6bea32232945980e2d6b19ac3b0280197b17132b741f6360",
+    "pyspi/statistics/spectral.py": "b57cee42f427cd78196d0ea8ea73be1831f2d862afa533fa7907a1540d3550fb",
+    "pyspi/statistics/wavelet.py": "0c77b8582448f3cc247365c93c834111e0644f8a9971a7b8d22cd8c16826117f",
+    "pyspi/statistics/misc.py": "eaa58be873f6919c96e3098c1cb5ca53a5d02bc6172cdef063c8533c8358c2a1",
+    "pyspi/statistics/causal.py": "3a18a98b94c265043e2668852d16e7d872a34bf236aef2c77c8e85ddf8502751"
+  },
+  "remote_ci_run_claimed": false
+}

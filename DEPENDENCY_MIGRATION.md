@@ -2,14 +2,18 @@
 
 This checkout targets Python **3.12**, NumPy **2.5**, and a unified calculation
 and storage-test environment. The supported reference installation is the root
-`uv.lock`, using CPU PyTorch wheels. Local verification uses Linux x86-64,
-Python 3.12.3, and Java 17. Other operating systems are not certified by these
+`uv.lock`, using CPU PyTorch wheels. Local verification uses Linux x86-64 and
+Python 3.12.3. The original migration artifacts did not record the JVM version;
+the post-review check records OpenJDK 21.0.12.1 and its JPype library path in
+[review_verification.json](tests/compatibility/review_verification.json).
+Verification is local; the unused GitHub Actions workflows were removed at the
+user's request. Other operating systems are not certified by these
 results. The package declares `>=3.12,<3.13`; older interpreters and NumPy 1
 are outside this checkout's supported range.
 
 The migration is complete and locally verified. Golden values, tolerance
-policy, and existing patient outputs are unchanged. The scientific review and
-production storage integration remain separate pieces.
+policy, and existing patient outputs are unchanged. Production storage is now
+integrated; scientific review remains a separate piece.
 
 ## Baseline
 
@@ -88,7 +92,7 @@ without the previous machine-local editable path.
 From the repository root, with uv 0.8.17 and a Java runtime available:
 
 ```bash
-uv sync --locked --extra testing --group storage-test
+uv sync --locked --extra testing --extra storage
 uv pip check
 uv run --no-sync python -m pytest
 uv run --no-sync python -m pytest -c tests/storage/pytest.ini tests/storage
@@ -103,16 +107,17 @@ python -m pip install --extra-index-url https://download.pytorch.org/whl/cpu -r 
 python -m pip install --no-deps -e '.[testing]'
 ```
 
-The root `storage-test` group still includes the comparison registry's
-experimental compressors. These are development dependencies, not new runtime
-requirements. Production storage integration and registry cleanup are a later
-piece; existing storage code and patient stores are unchanged.
+The migration initially used a `storage-test` group containing experimental
+comparison compressors. Production integration has replaced it with the
+`storage` extra (Zarr, numcodecs, pcodec, and google-crc32c), removed the registry
+dependency, and archived the prototype. The root lock and exported test
+requirements now reflect that smaller dependency set. See
+[storage usage](docs/storage.md) and [production verification](tests/storage/PRODUCTION_RESULTS.md).
+Existing patient stores remain unchanged.
 
-The unified GitHub workflow installs this lock, starts with Java 17, and runs
-calculation/compatibility tests plus storage coverage on pushes and pull requests.
-Manual dispatch also runs the full/slow tier and the legacy benchmark. The
-redundant standalone storage workflow was consolidated into this workflow.
-No remote CI execution is claimed.
+Use the local commands above for calculation/compatibility, storage, full/slow,
+and legacy benchmark checks. GitHub Actions test, dataset-generation, and
+publishing workflows have been removed because this project does not use them.
 
 ## Validation and limits
 
@@ -134,7 +139,7 @@ from the unmodified original environment before any upgrade.
 There are no unexpected failures or errors. Default skips match the original
 baseline exactly. The full and small/slow tiers ran the Java tests and retain
 the original 11 expected-failure identities and reasons. Both slow tiers used
-two pytest workers, matching the full CI command. Storage coverage remains
+two pytest workers. Storage coverage remains
 about 98%; its two expected failures are confined to experimental tolerance
 packing. The legacy benchmark's reported 23-entry deviation table is identical
 to the original baseline's table.
@@ -144,8 +149,10 @@ their hashes. Ten new compatibility checks cover the removed NumPy APIs,
 canonical-coherence outputs captured before migration, and a four-metric
 calculation over two 1024-sample windows with exact pcodec storage/reconstruction
 (including diagonal NaNs, availability, and repeated/out-of-order selection).
-Results and final source/lock hashes are in
-[results.json](tests/compatibility/results.json).
+The migration results and source/lock hashes for commit `a2c3300` are in
+[results.json](tests/compatibility/results.json). Subsequent review changes to
+test configuration are recorded separately in
+[review_verification.json](tests/compatibility/review_verification.json).
 
 Both a source distribution and wheel built successfully. Required configurations,
 bundled datasets, JIDT jar, and calculation modules were checked inside the wheel.
@@ -165,3 +172,43 @@ benchmark reports numerical deviations and does not fail merely because values
 differ, so full per-SPI golden comparisons are the stronger preservation check.
 Test durations are not controlled performance benchmarks. No patient recordings
 or existing patient output stores were opened or modified for this migration.
+
+## Review follow-up
+
+The independent review found no calculation differences. Its four setup and
+documentation findings were resolved and checked:
+
+* The test guide describes locked local verification and troubleshooting.
+* Local verification uses Java 21. A new
+  test-run receipt records OpenJDK 21.0.12.1, vendor, runtime version, and JPype
+  library path. The original migration artifacts did not record their JVM;
+  their provenance has not been retroactively rewritten.
+* The pip runtime command explicitly selects the CPU index and torch CPU build.
+  That command installed into a fresh Python 3.12 environment. From outside the
+  checkout, the installed package calculated all four fabfour metrics on a
+  synthetic 4-channel, 1024-sample window with finite off-diagonal results.
+  Torch reported `2.14.1+cpu`, no CUDA runtime, and no NVIDIA packages were
+  installed. No pytest or Zarr was needed for that runtime calculation.
+* The duplicate `tests/storage` project, lock, and derived virtual environment
+  were removed. Storage tests now use only the root lock; all 381 passed with
+  the same two expected failures. The active comparison implementation remains
+  required by these tests at that point; production integration has since
+  replaced those imports and archived the comparison source.
+
+An initial diagnostic driver started the JVM before pytest and crashed when
+pytest installed its fault handler. The identical compatibility checks passed
+with that plugin disabled. Following [JPype's signal-handler guidance](https://jpype.readthedocs.io/en/stable/userguide.html#errors-reported-by-python-fault-handler),
+the root pytest configuration now disables `faulthandler` before JVM startup.
+The current default suite then passed **563 tests, with the original 15 skips
+and 10 expected failures unchanged**. The crash log and successful control are
+retained with the other local verification artifacts.
+
+No calculation implementations, original test functions, goldens, dependency
+lock, or patient stores changed during this cleanup. Local commands were
+verified. Java 17 was not backtested because the user chose the current Java 21
+setup. The unused GitHub Actions workflows were subsequently removed at the
+user's request; earlier receipts retain their historical workflow hashes.
+
+The original migration and review receipts describe their respective earlier
+states. Current storage integration, dependency, source, and wheel evidence is
+recorded in [production_verification.json](tests/storage/production_verification.json).

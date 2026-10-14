@@ -75,39 +75,13 @@ def test_rejects_unsupported_payload_dtype(packing, dtype):
         packing.pack(np.ones((2, 2, 3), dtype=dtype))
 
 
-@pytest.mark.parametrize("kind", ["sym_res", "anti_res"])
-def test_tolerance_mode_records_deliberate_loss_of_exactness(packing, kind):
-    data = matrix_case(kind)
-    packed = packing.pack(data, structure="tol", tolerance=1e-6)
-    assert packed.info["tolerance_applied"] is True
-    reconstructed = packing.unpack(packed)
-    i, j = np.triu_indices(4)
-    assert_bits(reconstructed[i, j], data[i, j])
-    assert np.allclose(reconstructed, data, rtol=1e-6, atol=0)
-    assert reconstructed.tobytes() != data.tobytes()
-
-
-def test_tolerance_does_not_drop_unmatched_nan_positions(packing):
-    data = matrix_case("sym")
-    data[1, 0, 0] = np.nan
-    packed = packing.pack(data, structure="tol", tolerance=1e-6)
-    assert not packed.info.get("tolerance_applied", False)
-    assert_bits(packing.unpack(packed), data)
-
-
-@pytest.mark.parametrize("kind", ["sym_res", "anti_res"])
-def test_tolerance_zero_preserves_nonzero_reciprocal_difference(packing, kind):
-    data = matrix_case(kind)
-    packed = packing.pack(data, structure="tol", tolerance=0)
-    assert not packed.info.get("tolerance_applied", False)
-    assert_bits(packing.unpack(packed), data)
-
-
-@pytest.mark.known_defect
-@pytest.mark.xfail(reason="R4: tolerance ignores incompatible infinity entries", raises=AssertionError, strict=True)
 @pytest.mark.parametrize("upper,lower", [(np.inf, 7.0), (-np.inf, 7.0)])
-def test_tolerance_preserves_nonfinite_value_classes(packing, upper, lower):
+def test_exact_packing_preserves_incompatible_infinities(packing, upper, lower):
     data = np.zeros((2, 2, 1))
     data[0, 1, 0], data[1, 0, 0] = upper, lower
-    result = packing.unpack(packing.pack(data, structure="tol", tolerance=1e-6))
-    assert_bits(result, data)
+    assert_bits(packing.unpack(packing.pack(data)), data)
+
+
+def test_lossy_structure_is_not_supported(packing):
+    with pytest.raises(ValueError, match="structure must be exact or full"):
+        packing.pack(matrix_case("sym"), structure="tol")

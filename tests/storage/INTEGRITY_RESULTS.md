@@ -1,6 +1,6 @@
 # Storage integrity implementation results
 
-Completed 2026-10-13. This implements the agreed [integrity contract](INTEGRITY_PLAN.md) for R1 in [the review](../../storage_comparison/REVIEW.md). The implementation remains a candidate in `storage_comparison/`. No patient store, scientific calculation, packing policy, or production pyspi dependency was changed.
+Historical results, completed 2026-10-13. This implemented the agreed [integrity contract](INTEGRITY_PLAN.md) for R1 in [the archived review](../../docs/storage_comparison/REVIEW.md). The candidate has since been integrated into `pyspi.storage`; see [PRODUCTION_RESULTS.md](PRODUCTION_RESULTS.md) for current verification. No patient store, scientific calculation, packing policy, or production pyspi dependency was changed in the historical integrity work below.
 
 Follow-up 2026-10-14: the agreed window-selection and shard-size behaviors are now implemented. The current suite has **381 passes and two expected failures** confined to experimental tolerance packing. The original integrity measurements below retain their 2026-10-13 context; the final section records the follow-up.
 
@@ -62,15 +62,20 @@ Across all 24 cases, the median write differences ranged from −0.5 to +24.7 ms
 
 A separate batch with **185 tiny 4×4×7 metrics** exposed manifest growth without running a large conversion. Median durable batch-write time increased from **2.21 to 6.09 seconds**; file bytes increased from 374,383 to 528,712. This approximately four-second fixed cost matters for very small batches. It does not establish an end-to-end patient processing ratio. The batch remains fully readable and passes verification.
 
-Raw samples and environment metadata are saved locally in [integrity_benchmark.json](.artifacts/integrity_benchmark.json), with console rows in `.artifacts/integrity_benchmark.log`. Reproduce with the locked test environment:
+Raw samples and environment metadata are saved locally in [integrity_benchmark.json](.artifacts/integrity_benchmark.json), with console rows in `.artifacts/integrity_benchmark.log`. The old benchmark and its comparison environment are preserved in [the source archive](../../docs/storage_comparison/source-a2c3300.tar.gz). To reproduce from the current repository root, extract historical code into a scratch directory and use its environment:
 
 ```bash
-mkdir -p tests/storage/.artifacts
+scratch_dir="$(mktemp -d)"
+tar -xzf docs/storage_comparison/source-a2c3300.tar.gz -C "$scratch_dir"
+mkdir -p "$scratch_dir/tests/storage/.artifacts"
 git show ae55c26949d1144337e804a5ec1aaf7dd432cda3:storage_comparison/pspi_store.py \
-  > tests/storage/.artifacts/baseline_pspi_store.py
-uv run --project tests/storage --locked python tests/storage/benchmark_integrity.py \
-  --baseline tests/storage/.artifacts/baseline_pspi_store.py \
-  --output tests/storage/.artifacts/integrity_benchmark.json
+  > "$scratch_dir/tests/storage/.artifacts/baseline_pspi_store.py"
+(
+  cd "$scratch_dir"
+  uv run --project storage_comparison --locked python tests/storage/benchmark_integrity.py \
+    --baseline tests/storage/.artifacts/baseline_pspi_store.py \
+    --output tests/storage/.artifacts/integrity_benchmark.json
+)
 ```
 
 ## Limits and remaining decisions

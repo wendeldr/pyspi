@@ -12,7 +12,6 @@
 <p align="center">
  	<a href="https://zenodo.org/badge/latestdoi/601919618"><img src="https://zenodo.org/badge/601919618.svg" height="20"/></a>
     <a href="https://www.gnu.org/licenses/gpl-3.0"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" height="20"/></a>
-    <a href="https://github.com/DynamicsAndNeuralSystems/pyspi/actions/workflows/run_unit_tests.yaml"><img src="https://github.com/DynamicsAndNeuralSystems/pyspi/actions/workflows/run_unit_tests.yaml/badge.svg" height="20"/></a>
     <a href="https://twitter.com/compTimeSeries"><img src="https://img.shields.io/twitter/url/https/twitter.com/compTimeSeries.svg?style=social&label=Follow%20%40compTimeSeries" height="20"/></a><br>
     <a href="https://www.python.org"><img src="https://img.shields.io/badge/Python-3.12-3776AB.svg?style=flat&logo=python&logoColor=white" alt="Python 3.12"></a><br>
     <a href="https://pepy.tech/projects/pyspi"><img src="https://static.pepy.tech/personalized-badge/pyspi?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=BLUE&left_text=downloads" alt="pyspi downloads" height="20"/></a>
@@ -45,23 +44,35 @@ uv sync --locked
 uv run --no-sync python -c "from pyspi.calculator import Calculator"
 ```
 
-For development, install calculation tests and the storage comparison's test
+For development, install calculation tests and production storage's test
 dependencies into the same environment:
 
 ```bash
-uv sync --locked --extra testing --group storage-test
+uv sync --locked --extra testing --extra storage
 uv run --no-sync python -m pytest
 uv run --no-sync python -m pytest -c tests/storage/pytest.ini tests/storage
 ```
 
-The lock selects CPU PyTorch wheels. A Java runtime (tested with Java 17) is
-needed for JIDT calculations. Python 3.13 and newer are outside the supported
+The lock selects CPU PyTorch wheels. A Java runtime is needed for JIDT
+calculations; the locally verified runtime is OpenJDK 21.0.12.1. This checkout
+uses local verification; the unused GitHub Actions workflows were removed.
+Python 3.13 and newer are outside the supported
 range while the existing pyEDM implementation is retained. Package versions
 and migration results are documented in [DEPENDENCY_MIGRATION.md](DEPENDENCY_MIGRATION.md);
 the [test guide](tests/README.md) describes the default and full tiers.
 
-For pip in a Python 3.12 environment, `python -m pip install .` installs this
-checkout's runtime dependencies. To reproduce the unified locked test versions:
+Exact single/windowed connectivity storage is available with the `storage`
+extra. See [installation, the public API, Calculator output, and recovery](docs/storage.md).
+
+For a runtime-only pip installation on the tested Linux platform:
+
+```bash
+python -m pip install --extra-index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu' .
+```
+
+Pip ignores uv's index configuration. The explicit CPU index and torch pin
+keep this command on the CPU build; plain `pip install .` can select the much
+larger CUDA build from PyPI. To reproduce the unified locked test versions:
 
 ```bash
 python -m pip install --extra-index-url https://download.pytorch.org/whl/cpu -r tests/requirements-test-lock.txt

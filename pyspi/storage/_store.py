@@ -1,4 +1,4 @@
-"""Reference reader/writer for compact pyspi results with explicit completion tracking.
+"""Exact reader/writer for compact pyspi results with explicit completion tracking.
 
 Layout (a Zarr v3 hierarchy; one directory per recording, one group per metric)::
 
@@ -17,9 +17,8 @@ Structure is detected per array at write time (never from metric names):
 Reads return (n, n, windows) arrays, or (n, n) for results written as a single matrix.
 Unavailable entries are NaN with a PartialReadWarning. ``return_availability=True``
 also returns a same-shape boolean mask; stored NaNs remain available.
-``verify(path)`` (or ``python pspi_store.py verify <path>``) reads every checksummed chunk, e.g.
+``verify(path)`` (or ``python -m pyspi.storage verify <path>``) reads every checksummed chunk, e.g.
 after a copy, and names the metrics that fail so only those directories need copying again.
-The optional analysis convenience ``mean`` requires complete readable input.
 Local POSIX filesystems and a single writer per recording are supported.
 """
 
@@ -34,12 +33,13 @@ from pathlib import Path
 from typing import Iterable, Mapping
 
 import numpy as np
+import numcodecs
 import zarr
 import zarr.codecs.numcodecs as zn
 from zarr.codecs import Crc32cCodec, ZstdCodec
 
-from packing import UINT, Packed, _negate_bits, pack, unpack
-from store_integrity import (
+from ._packing import UINT, Packed, pack, unpack
+from ._integrity import (
     SCHEMA, MANIFEST, MODES, CheckedArray, Issue, MetadataError, PartialReadWarning,
     StorageFormatError, StorageIntegrityError, describe, metric_name, metric_sources,
     read_json, read_manifest, sync_tree, validate_entry, write_manifest,
@@ -48,7 +48,6 @@ from store_integrity import (
 TARGET_CHUNK_VALUES = 256 * 1024          # values per independently decoded, crc-checked chunk
 MAX_SHARD_VALUES = 128 * 1024 * 1024      # target per shard (1 GiB raw float64), minimum one window
 READ_BLOCK_VALUES = 4 * 1024 * 1024       # full loads unpack this many stored values at a time
-MEAN_BLOCK_COLUMNS = 8192                 # time means reduce this many matrix entries at a time
 
 
 class ShardSizeWarning(UserWarning):
@@ -68,17 +67,25 @@ def _positive_value_count(value, name):
 
 
 def _codec_chain(codec: str, level: int | None):
+    if level is not None:
+        if isinstance(level, (bool, np.bool_)):
+            raise TypeError("level must be an integer")
+        level = operator.index(level)
     if codec == "pcodec":
+        if level is not None and not 0 <= level <= 12:
+            raise ValueError("pcodec level must be between 0 and 12")
         return zn.PCodec(level=8 if level is None else level), [Crc32cCodec()]
     if codec == "zstd":
         return "auto", [ZstdCodec(level=3 if level is None else level), Crc32cCodec()]
     raise ValueError(f"unknown codec {codec!r} (use 'pcodec' or 'zstd')")
 
 
-def _residual_smaller(codec: str):
+def _residual_smaller(codec: str, level: int | None = None):
     """Keep the residual form only if it encodes smaller than the full matrix."""
-    from codecs_lib import ALL
-    enc = ALL["pcodec8" if codec == "pcodec" else "zstd3"][0]
+    encoder = (numcodecs.PCodec(level=8 if level is None else level) if codec == "pcodec"
+               else numcodecs.Zstd(level=3 if level is None else level))
+    def enc(a):
+        return encoder.encode(np.ascontiguousarray(a).ravel())
 
     def ok(res: Packed, full: Packed) -> bool:
         return sum(len(enc(a)) for a in res.arrays().values()) < sum(len(enc(a)) for a in full.arrays().values())
@@ -127,55 +134,72 @@ def _root_issues(path, windows):
         return [Issue("root metadata", 0, windows, str(exc))]
 
 
+def _json_mapping(value, name):
+    """Validate and detach JSON metadata before any output is modified."""
+    if not isinstance(value, Mapping):
+        raise TypeError(f"{name} must be a mapping")
+    def check_keys(item):
+        if isinstance(item, Mapping):
+            if any(not isinstance(key, str) for key in item):
+                raise TypeError(f"{name} requires string JSON object keys")
+            for child in item.values():
+                check_keys(child)
+        elif isinstance(item, (list, tuple)):
+            for child in item:
+                check_keys(child)
+    check_keys(value)
+    return json.loads(json.dumps(dict(value), allow_nan=False))
+
+
+def _prepare_metric(metric, values, labels, attrs, codec, level, chunk, shard):
+    metric_name(metric)
+    values = np.asarray(values)
+    single, n, windows = _shape(values)
+    if values.dtype not in UINT:
+        raise ValueError("values must have native float64 or float32 dtype; storage does not convert precision")
+    _codec_chain(codec, level)
+    _positive_value_count(chunk, "target_chunk_values")
+    _positive_value_count(shard, "max_shard_values")
+    if isinstance(labels, str):
+        raise TypeError("labels must be an iterable of strings, not one string")
+    labels = list(labels)
+    if any(not isinstance(label, str) for label in labels):
+        raise TypeError("labels must contain strings")
+    meta = dict(schema=SCHEMA, mode=None, n=n, windows=windows, single_matrix=single,
+                dtype=values.dtype.str, codec=codec, level=None if level is None else operator.index(level),
+                arrays=[], labels=labels, attrs=_json_mapping({} if attrs is None else attrs, "attrs"))
+    return values, meta
+
+
 def write_metric(root, metric: str, values: np.ndarray, *, labels: Iterable[str] = (),
-                 dtype="float64", codec: str = "pcodec", level: int | None = None,
+                 codec: str = "pcodec", level: int | None = None,
                  attrs: Mapping | None = None, overwrite: bool = False,
-                 target_chunk_values: int = TARGET_CHUNK_VALUES, max_shard_values: int = MAX_SHARD_VALUES,
-                 float32_out_of_range: str = "fallback") -> dict:
+                 target_chunk_values: int = TARGET_CHUNK_VALUES, max_shard_values: int = MAX_SHARD_VALUES) -> dict:
     """Write one metric: ``values`` is (n, n) or (n, n, windows). Returns the stored metadata.
 
-    With ``dtype="float32"``, an array whose finite values would overflow or fall below the
-    float32 normal range is stored as float64 instead (``"fallback"``), rejected (``"error"``),
-    or rounded anyway (``"allow"``). The decision is recorded as ``float32_fallback``.
+    Input must have native float32 or float64 dtype, which is preserved exactly.
+    No dtype conversion is performed. ``attrs`` holds JSON-compatible user metadata.
 
     ``target_chunk_values`` and ``max_shard_values`` count uncompressed stored
     values. Shards target the latter size, with a one-window minimum. A window
     that exceeds it emits ShardSizeWarning and is stored intact in its own shard.
     This target is not a guarantee about compressed file bytes.
     """
-    values = np.asarray(values)
-    metric = metric_name(metric)
-    single, n, windows = _shape(values)
+    values, meta = _prepare_metric(metric, values, labels, attrs, codec, level,
+                                    target_chunk_values, max_shard_values)
+    single, n, windows = meta["single_matrix"], meta["n"], meta["windows"]
     if single:
         values = values[:, :, None]
-    dt = np.dtype(dtype)
-    if dt not in UINT:
-        raise ValueError("dtype must be float64 or float32")
-    if float32_out_of_range not in ("fallback", "error", "allow"):
-        raise ValueError("float32_out_of_range must be fallback, error, or allow")
-    _codec_chain(codec, level)  # Reject unsupported configuration before touching the store.
     target_chunk_values = _positive_value_count(target_chunk_values, "target_chunk_values")
     max_shard_values = _positive_value_count(max_shard_values, "max_shard_values")
-    fallback = None
-    if dt == np.float32 and values.dtype != np.float32:
-        fallback = float32_range_problem(values)
-        if fallback and float32_out_of_range == "fallback":
-            dt = np.dtype("float64")
-        elif fallback and float32_out_of_range == "error":
-            raise ValueError(f"{metric}: {fallback}")
-    data = np.ascontiguousarray(values, dtype=dt)
+    data = np.ascontiguousarray(values)
     path = Path(root)
-    meta = dict(schema=SCHEMA, mode=None, n=n, windows=windows, single_matrix=single,
-                dtype=dt.str, source_dtype=values.dtype.str, requested_dtype=np.dtype(dtype).str,
-                float32_fallback=fallback, codec=codec, arrays=[],
-                labels=list(labels), **(dict(attrs) if attrs else {}))
-    json.dumps(meta, allow_nan=False)  # Invalid user metadata cannot strand an earlier complete metric.
     manifest = _ensure_store(path)
     _check_existing(path, manifest, metric, overwrite)
     entry = {"state": "pending", "meta": meta, "array_metadata": {}}
     manifest["metrics"][metric] = entry
     write_manifest(path, manifest)
-    p = pack(data, structure="exact", residual_ok=_residual_smaller(codec))
+    p = pack(data, structure="exact", residual_ok=_residual_smaller(codec, level))
     meta.update(mode=p.mode, arrays=sorted(p.arrays()))
     entry["state"] = "writing"
     write_manifest(path, manifest)
@@ -229,47 +253,50 @@ def write_metric(root, metric: str, values: np.ndarray, *, labels: Iterable[str]
     return meta
 
 
-def float32_range_problem(values: np.ndarray) -> str | None:
-    """Reason a float32 cast would lose more than rounding (overflow or sub-normal-range values)."""
-    finite = values[np.isfinite(values)]
-    if not finite.size:
-        return None
-    mag = np.abs(finite)
-    info = np.finfo(np.float32)
-    over = int(np.sum(mag > info.max))
-    under = int(np.sum((mag > 0) & (mag < info.tiny)))
-    if over or under:
-        return f"{over} values overflow and {under} values underflow float32"
-    return None
-
-
 def write_results(path, results: Mapping[str, np.ndarray], *, labels: Mapping[str, Iterable[str]] | None = None,
-                  recording: Mapping | None = None, **kwargs) -> None:
-    """Write several metrics; ``recording`` holds shared metadata (channel names, window onsets, ...)."""
+                  recording: Mapping | None = None, attrs: Mapping[str, Mapping] | None = None,
+                  codec: str = "pcodec", level: int | None = None, overwrite: bool = False,
+                  target_chunk_values: int = TARGET_CHUNK_VALUES,
+                  max_shard_values: int = MAX_SHARD_VALUES) -> None:
+    """Write metrics in mapping order, declaring the complete batch before writing.
+
+    ``recording`` holds shared JSON metadata; ``attrs`` and ``labels`` are keyed
+    by metric. Each input retains its own dtype and shape. A failed batch is
+    not rolled back: the manifest identifies completed and unfinished metrics.
+    """
     pending = {}
-    dt = np.dtype(kwargs.get("dtype", "float64"))
-    if dt not in UINT:
-        raise ValueError("dtype must be float64 or float32")
-    for name, default in (("target_chunk_values", TARGET_CHUNK_VALUES), ("max_shard_values", MAX_SHARD_VALUES)):
-        _positive_value_count(kwargs.get(name, default), name)
+    prepared = {}
+    options = dict(codec=codec, level=level, overwrite=overwrite,
+                   target_chunk_values=target_chunk_values, max_shard_values=max_shard_values)
+    _codec_chain(codec, level)
+    _positive_value_count(target_chunk_values, "target_chunk_values")
+    _positive_value_count(max_shard_values, "max_shard_values")
+    if recording is not None:
+        recording = _json_mapping(recording, "recording")
+    for mapping, name in ((labels, "labels"), (attrs, "attrs")):
+        if mapping is not None and (not isinstance(mapping, Mapping) or set(mapping) - set(results)):
+            raise ValueError(f"{name} must be keyed only by supplied metrics")
     for metric, values in results.items():
-        metric_name(metric)
-        single, n, windows = _shape(np.asarray(values))
-        pending[metric] = {"state": "pending", "meta": dict(schema=SCHEMA, mode=None, arrays=[],
-                           n=n, windows=windows, dtype=dt.str, single_matrix=single), "array_metadata": {}}
+        values, meta = _prepare_metric(metric, values, (labels or {}).get(metric, ()),
+                                       (attrs or {}).get(metric), codec, level,
+                                       target_chunk_values, max_shard_values)
+        prepared[metric] = values
+        pending[metric] = {"state": "pending", "meta": meta, "array_metadata": {}}
     manifest = _ensure_store(path)
     for metric in pending:
-        _check_existing(path, manifest, metric, kwargs.get("overwrite", False))
+        _check_existing(path, manifest, metric, overwrite)
     manifest["metrics"].update(pending)
     write_manifest(path, manifest)
     if recording is not None:
         set_recording_info(path, recording)
-    for metric, values in results.items():
-        write_metric(path, metric, values, labels=(labels or {}).get(metric, ()), **kwargs)
+    for metric, values in prepared.items():
+        meta = pending[metric]["meta"]
+        write_metric(path, metric, values, labels=meta["labels"], attrs=meta["attrs"], **options)
 
 
 def set_recording_info(path, info: Mapping) -> None:
     """Store JSON-serialisable recording metadata on the root group (merged with existing)."""
+    info = _json_mapping(info, "recording")
     _ensure_store(path)
     root = zarr.open_group(str(path), mode="a")
     store_attrs = dict(root.attrs.get("pspi_store", {"schema": SCHEMA}))
@@ -288,7 +315,8 @@ class Results:
 
     @property
     def metrics(self) -> list[str]:
-        return sorted(read_manifest(self.path)["metrics"])
+        """Declared metrics in insertion order, including incomplete metrics."""
+        return list(read_manifest(self.path)["metrics"])
 
     @property
     def recording(self) -> dict:
@@ -296,7 +324,9 @@ class Results:
         return dict(root.attrs.get("pspi_store", {}).get("recording", {}))
 
     def info(self, metric: str) -> dict:
-        return dict(validate_entry(read_manifest(self.path)["metrics"][metric]))
+        """Declared layout/user metadata and state (pending, writing, complete)."""
+        entry = read_manifest(self.path)["metrics"][metric]
+        return {**validate_entry(entry), "state": entry["state"]}
 
     def _sources(self, metric):
         entry = read_manifest(self.path)["metrics"][metric]
@@ -400,16 +430,6 @@ class Results:
                 available = available[:, :, 0]
         return (data, available) if return_availability else data
 
-    def mean(self, metric: str) -> np.ndarray:
-        """Existing packed float64 time mean; requires complete readable input.
-
-        This temporary analysis helper retains its existing numerical behavior,
-        including the signed-zero edge case documented as R3 in REVIEW.md.
-        """
-        meta, arrays = self._arrays(metric)
-        return _mean_from_packed(meta, arrays)
-
-
 def verify(path) -> dict[str, str]:
     """Read every stored chunk of every metric; return {metric: error} for failures (empty if clean).
 
@@ -449,49 +469,3 @@ def _block_windows(a) -> int:
 
 def open_results(path) -> Results:
     return Results(path)
-
-
-def _rows_nanmean(payload_wp: np.ndarray) -> np.ndarray:
-    """nanmean over windows for each stored column, a column block at a time (same summation order
-    as ``np.nanmean(x, axis=2)`` on the (n, n, W) array, so the result is bit-identical)."""
-    out = np.empty(payload_wp.shape[1])
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        for c in range(0, payload_wp.shape[1], MEAN_BLOCK_COLUMNS):
-            block = np.ascontiguousarray(payload_wp[:, c:c + MEAN_BLOCK_COLUMNS].T).astype(np.float64, copy=False)
-            out[c:c + MEAN_BLOCK_COLUMNS] = np.nanmean(block, axis=1)
-    return out
-
-
-def _mean_from_packed(meta, arrays):
-    n, mode, dtype = meta["n"], meta["mode"], np.dtype(meta["dtype"])
-    if mode == "full":
-        return _rows_nanmean(arrays["full"]).reshape(n, n)
-    iu, js = np.triu_indices(n), np.triu_indices(n, 1)
-    out = np.empty((n, n))
-    out[iu[0], iu[1]] = _rows_nanmean(arrays["upper"])
-    up = np.ascontiguousarray(out[js[0], js[1]])
-    if mode == "sym":
-        out[js[1], js[0]] = up
-    elif mode == "anti":
-        out[js[1], js[0]] = _negate_bits(up, np.float64).view(np.float64)
-    else:
-        strict_cols = np.flatnonzero(iu[0] != iu[1])
-        lower = np.empty(len(strict_cols))
-        for c in range(0, len(strict_cols), MEAN_BLOCK_COLUMNS):
-            strict = arrays["upper"][:, strict_cols[c:c + MEAN_BLOCK_COLUMNS]]
-            ref = strict.view(UINT[dtype]) if mode == "sym_res" else _negate_bits(strict, dtype)
-            lower[c:c + MEAN_BLOCK_COLUMNS] = _rows_nanmean((ref ^ arrays["residual"][:, c:c + MEAN_BLOCK_COLUMNS]).view(dtype))
-        out[js[1], js[0]] = lower
-    return out
-
-
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 3 or sys.argv[1] != "verify":
-        sys.exit("usage: pspi_store.py verify <store>")
-    failures = verify(sys.argv[2])
-    for metric, err in failures.items():
-        print(f"FAILED {metric}: {err}")
-    print(f"{len(failures)} damaged metric(s)" if failures else "all metrics verified")
-    sys.exit(1 if failures else 0)

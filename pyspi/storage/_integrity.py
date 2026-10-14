@@ -1,4 +1,4 @@
-"""Local-filesystem completion records and checked reads for the storage prototype.
+"""Local-filesystem completion records and checked reads for pyspi storage.
 
 One writer owns a recording path. Zarr remains responsible for numeric decoding;
 the small shard-index check prevents absent inner chunks becoming fill values.
@@ -16,7 +16,7 @@ import google_crc32c
 import numpy as np
 import zarr
 
-SCHEMA = "pspi-store/0.2"
+SCHEMA = "pspi-store/1.0"
 MANIFEST = "pspi-manifest.json"
 MODES = {"full": ("full",), "sym": ("upper",), "anti": ("upper",),
          "sym_res": ("residual", "upper"), "anti_res": ("residual", "upper")}
@@ -41,7 +41,7 @@ class PartialReadWarning(UserWarning):
 
 
 def metric_name(name):
-    if not isinstance(name, str) or not name or name in (".", "..", "zarr.json", MANIFEST) or \
+    if not isinstance(name, str) or not name or name in (".", "..", "zarr.json", MANIFEST, "__store__") or \
        "/" in name or "\\" in name or "\x00" in name:
         raise ValueError("metric must be a single nonempty path component")
     return name
@@ -201,7 +201,7 @@ class CheckedArray:
         grid = expected["chunk_grid"]
         encoding = expected["chunk_key_encoding"]
         if grid["name"] != "regular" or encoding["name"] != "default":
-            raise StorageFormatError("only the candidate's regular/default chunk layout is supported")
+            raise StorageFormatError("only the regular/default chunk layout is supported")
         self.separator = encoding["configuration"]["separator"]
         if self.separator not in ("/", "."):
             raise StorageFormatError("unsupported chunk-key separator")
