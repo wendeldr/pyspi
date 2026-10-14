@@ -1,5 +1,7 @@
 # Storage comparison for pyspi results
 
+**Historical measurements:** this report describes the original comparison implementation. The later [correctness review](REVIEW.md) qualifies its write-time, mean, shard-cap, and scientific-symmetry claims. The [integrity implementation results](../tests/storage/INTEGRITY_RESULTS.md) describe the new 0.2 manifest format, partial-read behavior, and additional overhead. Old prototype outputs were not migrated, and current adoption decisions should include both follow-ups.
+
 Measured on 2026-10-13 using the existing sEEG outputs in `/media/dan/Data/outputs/calculated_seeg_patient_data` (read only, never modified). Everything here was produced by the scripts in this directory. Section [Reproduction](#reproduction) lists the commands.
 
 ## Bottom line
