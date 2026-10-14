@@ -1,10 +1,10 @@
 # EEG and sEEG optimization discussion
 
-Updated 2026-10-13.
+Updated 2026-10-14.
 
 The goal is to make pyspi easier to run for this EEG/sEEG workload and investigate improvements to total processing time and output size. Changes may include Python orchestration, lower-level implementation changes, or faster compatible dependencies. Improvements must be assessed against the actual workload and scientific interpretation.
 
-**Current scope:** implement and run a small lossless storage comparison using existing calculated outputs, following [the focused plan](storage_comparison/PLAN.md). Keep its code, environment, reports, and generated data under `storage_comparison/` so the experiment can be cleaned up after an output format is selected. Existing patient Zarr stores remain unchanged. No EEG recalculation or cohort conversion is part of this piece.
+**Current scope:** the focused storage integrity implementation and agreed selection/shard-size corrections are complete, with [validation and timings](tests/storage/INTEGRITY_RESULTS.md). The suite and isolated environment live in [tests/storage](tests/storage/README.md); the candidate remains in `storage_comparison/` until production integration and dependencies are settled. The completed comparison and [correctness review](storage_comparison/REVIEW.md) remain reference material. Existing patient Zarr stores remain unchanged. No EEG recalculation or cohort conversion was performed in this piece.
 
 ## Working agreement
 
@@ -13,6 +13,8 @@ The goal is to make pyspi easier to run for this EEG/sEEG workload and investiga
 - Preserve the latest decisions in this note as the work develops so context compaction does not lose them.
 - Avoid making global rules where the right decision depends on the metric, data, hardware, or measured benefit.
 - A complete benchmark of all 185 metrics is not a prerequisite for progress. Some existing single-window timings are already very long.
+- The earlier metric review was targeted at suspicious signs, transpose relationships, labels, and selected definitions. It was not a comprehensive mathematical validation of pyspi's calculations.
+- Other agents are building calculation regression tests to detect changes to existing behavior, including behavior with known issues. These baselines do not establish mathematical correctness; intentional corrections require separate supporting evidence and explicit baseline updates.
 
 ## Data and workload
 
@@ -52,6 +54,12 @@ The goal is to make pyspi easier to run for this EEG/sEEG workload and investiga
 - Prefer resumability so an interrupted run can reuse completed work.
 - An isolated uv or conda environment with compatible, pinned dependencies is acceptable when needed. The storage comparison can use a small separate environment without requiring the full calculation dependency stack.
 
+## Dependency integration investigation, 2026-10-14
+
+The [compatibility review](DEPENDENCY_COMPATIBILITY_REVIEW.md) found that the original NumPy <2 limit dates to a 2024 tslearn incompatibility that was not reproduced with current tslearn. A frozen default calculation suite passed on Python 3.12.3/NumPy 2.5.4 together with current storage dependencies: 549 calculation passes (15 skipped, 10 expected failures) and 381 storage passes (two experimental expected failures). This required two `np.in1d` → `np.isin` substitutions in a temporary copy of spectral-connectivity 1.1.2; production source, existing environments, dependencies, and goldens were not changed. A NumPy-2 exception namespace in wavelet code also needs migration attention.
+
+This establishes feasibility of a modern unified environment, not a completed dependency migration or mathematical validation. A narrow Python/NumPy compatibility migration is now a candidate before trying to downgrade storage. New MNE/MNE-Connectivity and CDT worked with small API probes and closely matching results, but need broader coverage. New spectral-connectivity changes the frequency grid and exposes existing band-forwarding behavior; pyEDM 2.x changed the tested CCM values. Those upgrades require individual decisions. The setuptools limit is tied to pyEDM's example-data loader; actual removal of `pkg_resources` is in setuptools 82, so the current <81 bound is conservative. No dependency upgrade has been approved or applied to the working environments.
+
 ## Timing priorities and the future estimator
 
 - The previous cohort run of about 72 patients reportedly took roughly 15 days. Treat that as approximate historical context.
@@ -75,6 +83,9 @@ Saved measurements and optional calibration on a representative sample are both 
 - Retain every window's results. Storing only time averages is insufficient.
 - Common downstream use is averaging across time for each patient/metric, then reading selected metrics for a patient. Efficient access to subsets of metrics matters.
 - Prefer exact preservation of stored values. Float32, quantization, or other reductions in precision require separate evidence and discussion; do not assume they are acceptable for this comparison.
+- Decision confirmed 2026-10-14: retain exact residuals. The measured additional disk savings from discarding candidate reciprocal roundoff (about 0.7–0.9% in the inspected samples) are insufficient to justify changing stored values. This decision does not require classifying residual bits as scientific signal or noise.
+- Storage-reader selection agreed and implemented 2026-10-14: `Results.load(..., windows=...)` accepts integer indices and one-dimensional integer selections; preserves negative indices, order, duplicates, and empty selections; and rejects floats and booleans with a clear error. This selects saved result windows, not EEG window duration or overlap. Original elements are validated before conversion; large unsigned integers cannot wrap into a valid negative index.
+- Shard sizing agreed and implemented 2026-10-14: treat the configured uncompressed size as a target, with a one-window minimum. When a single stored payload row for a window exceeds the target, allow the larger shard and emit an identifying `ShardSizeWarning`. Do not split within a matrix or impose a channel-count limit for this piece. This is not a guaranteed compressed-file byte limit. Chunk sizing now respects the target when a window does fit. Both size settings must be positive integers and are validated before modifying output.
 - A custom compact representation and a loader that reconstructs NxN matrices are acceptable if the disk savings are substantial. The storage implementation need not be Python as long as downstream access remains practical.
 - Zarr is convenient and portable, but other formats may be considered. pyspi does not need to reproduce the project's complete Zarr metadata schema.
 - Favor manageable independent files or pieces for transfers between computers and drives. The user experienced severe corruption problems when copying enormous HDF5 files and values the easier transfer of partitioned Zarr stores.
@@ -133,4 +144,8 @@ Relevant documentation includes the [pyspi FAQ](https://time-series-features.git
 
 ## Next discussion
 
-Review the [storage comparison report](storage_comparison/REPORT.md) and its measured tradeoffs, then select a production output format. Local execution, targeted calculation optimization, and difficult failure diagnosis remain later topics. Timing capture should develop alongside those pieces, with the runtime estimator added when enough useful measurements exist.
+The [main-repository storage suite](tests/storage/README.md) has 381 passing cases and two expected failures confined to the unselected lossy tolerance experiment. The implemented recovery behavior preserves requested shapes and window positions, retains every recoverable matrix entry, fills unavailable entries with NaN, and identifies availability separately. Missing or unreadable requested data emits a warning; NaNs actually saved by a calculation do not emit that warning.
+
+The new format declares requested metrics before writing and publishes completion after payload, presence checks, and flushing. Interrupted writes remain identifiable; verification detects missing required data and deleted declared metrics. Copy verification stays with copying tools; no copying or repair system was added. The [focused integrity plan](tests/storage/INTEGRITY_PLAN.md) and [implementation results](tests/storage/INTEGRITY_RESULTS.md) record the contract, limitations, and costs. The tiny 185-metric batch added about four seconds of durable-write overhead; this is not a full-patient timing estimate.
+
+The user agreed that time averaging belongs outside storage itself. Retain the existing optimized mean temporarily for later relocation to an optional analysis helper if its speed benefit is worthwhile. Exact residual retention is decided, and the selected window/shard corrections are implemented. Production integration is the next discussion: public interface, module location, dependencies, connection to calculation output, and separation of the mean helper. The tolerance experiment is outside the chosen exact writer. Metric-definition decisions and archiving the comparison folder remain separate work. Local execution, targeted calculation optimization, and difficult failure diagnosis remain later topics. Timing capture should develop alongside those pieces, with the runtime estimator added when enough useful measurements exist.
