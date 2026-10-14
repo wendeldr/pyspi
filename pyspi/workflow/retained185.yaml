@@ -1,0 +1,598 @@
+# Retained 185 identifiers reconstructed from the saved patient-store inventory.
+# Based on historical used.yaml, with its cross-correlation choices aligned
+# to that inventory and its omitted Gaussian GC configuration restored.
+# Metric fs/bands remain explicit; EDF sampling_rate_hz does not rewrite them.
+# This is identifier/parameter reconstruction, not mathematical validation.
+.statistics.basic:
+  Covariance:
+    labels:
+    - undirected
+    - linear
+    - signed
+    - multivariate
+    - contemporaneous
+    dependencies: null
+    configs:
+    - estimator: EmpiricalCovariance
+    - estimator: GraphicalLassoCV
+    - estimator: LedoitWolf
+    - estimator: MinCovDet
+    - estimator: OAS
+    - estimator: ShrunkCovariance
+    - estimator: EmpiricalCovariance
+      squared: true
+    - estimator: GraphicalLasso
+      squared: true
+    - estimator: GraphicalLassoCV
+      squared: true
+    - estimator: LedoitWolf
+      squared: true
+    - estimator: MinCovDet
+      squared: true
+    - estimator: OAS
+      squared: true
+    - estimator: ShrunkCovariance
+      squared: true
+  Precision:
+    labels:
+    - undirected
+    - linear
+    - signed
+    - multivariate
+    - contemporaneous
+    dependencies: null
+    configs:
+    - estimator: EmpiricalCovariance
+    - estimator: EllipticEnvelope
+    - estimator: GraphicalLasso
+    - estimator: GraphicalLassoCV
+    - estimator: LedoitWolf
+    - estimator: MinCovDet
+    - estimator: OAS
+    - estimator: ShrunkCovariance
+    - estimator: EmpiricalCovariance
+      squared: true
+    - estimator: EllipticEnvelope
+      squared: true
+    - estimator: GraphicalLasso
+      squared: true
+    - estimator: GraphicalLassoCV
+      squared: true
+    - estimator: LedoitWolf
+      squared: true
+    - estimator: MinCovDet
+      squared: true
+    - estimator: OAS
+      squared: true
+    - estimator: ShrunkCovariance
+      squared: true
+  SpearmanR:
+    labels:
+    - undirected
+    - nonlinear
+    - signed
+    - bivariate
+    - contemporaneous
+    dependencies: null
+    configs:
+    - squared: true
+    - squared: false
+  KendallTau:
+    labels:
+    - undirected
+    - nonlinear
+    - signed
+    - bivariate
+    - contemporaneous
+    dependencies: null
+    configs:
+    - squared: true
+  CrossCorrelation:
+    labels:
+    - undirected
+    - linear
+    - signed/unsigned
+    - bivariate
+    - time-dependent
+    dependencies: null
+    configs:
+    - statistic: max
+      sigonly: false
+    - statistic: max
+      squared: true
+      sigonly: false
+    - statistic: mean
+      sigonly: false
+    - statistic: mean
+      squared: true
+      sigonly: false
+.statistics.distance:
+  PairwiseDistance:
+    labels:
+    - unsigned
+    - unordered
+    - nonlinear
+    - undirected
+    dependencies: null
+    configs:
+    - metric: euclidean
+    - metric: cityblock
+    - metric: cosine
+    - metric: chebyshev
+    - metric: canberra
+    - metric: braycurtis
+  Barycenter:
+    labels:
+    - undirected
+    - nonlinear
+    - unsigned
+    - bivariate
+    - time-dependent
+    dependencies: null
+    configs:
+    - mode: euclidean
+      statistic: mean
+    - mode: euclidean
+      statistic: max
+    - mode: euclidean
+      statistic: mean
+      squared: true
+    - mode: euclidean
+      statistic: max
+      squared: true
+.statistics.causal:
+  RegressionErrorCausalInference:
+    labels:
+    - directed
+    - nonlinear
+    - unsigned
+    - bivariate
+    - contemporaneous
+    dependencies: null
+    configs: null
+.statistics.infotheory:
+  JointEntropy:
+    labels:
+    - undirected
+    - nonlinear
+    - unsigned
+    - bivariate
+    - contemporaneous
+    dependencies:
+    - java
+    configs:
+    - estimator: gaussian
+  ConditionalEntropy:
+    labels:
+    - undirected
+    - nonlinear
+    - unsigned
+    - bivariate
+    - contemporaneous
+    dependencies:
+    - java
+    configs:
+    - estimator: gaussian
+  MutualInfo:
+    labels:
+    - undirected
+    - nonlinear
+    - unsigned
+    - bivariate
+    - contemporaneous
+    dependencies:
+    - java
+    configs:
+    - estimator: gaussian
+  TimeLaggedMutualInfo:
+    labels:
+    - directed
+    - nonlinear
+    - unsigned
+    - bivariate
+    - time-dependent
+    dependencies:
+    - java
+    configs:
+    - estimator: gaussian
+  TransferEntropy:
+    labels:
+    - directed
+    - nonlinear
+    - unsigned
+    - bivariate
+    - time-dependent
+    dependencies:
+    - java
+    configs:
+    - estimator: gaussian
+      k_history: 1
+      l_history: 1
+    - estimator: symbolic
+      k_history: 1
+      l_history: 1
+    - estimator: symbolic
+      k_history: 10
+      l_history: 1
+.statistics.spectral:
+  CoherencePhase:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  CoherenceMagnitude:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  ImaginaryCoherence:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  PhaseSlopeIndex:
+    labels:
+    - directed
+    - linear/nonlinear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  PhaseLockingValue:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  PhaseLagIndex:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  WeightedPhaseLagIndex:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  DebiasedSquaredPhaseLagIndex:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  DebiasedSquaredWeightedPhaseLagIndex:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  PairwisePhaseConsistency:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  GroupDelay:
+    labels:
+    - directed
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+      statistic: delay
+    - fmin: 0.001953125
+      fmax: 0.00390625
+      statistic: delay
+    - fmin: 0.00390625
+      fmax: 0.005859375
+      statistic: delay
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+      statistic: delay
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+      statistic: delay
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+      statistic: delay
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+      statistic: delay
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+      statistic: delay
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+      statistic: delay
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+      statistic: delay
+.statistics.misc:
+  LinearModel:
+    labels:
+    - directed
+    - linear
+    - unsigned
+    - bivariate
+    - contemporaneous
+    dependencies: null
+    configs:
+    - model: Ridge
+    - model: Lasso
+    - model: SGDRegressor
+    - model: ElasticNet
+    - model: BayesianRidge
+  PowerEnvelopeCorrelation:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - time-dependent
+    dependencies: null
+    configs:
+    - orth: false
+      log: false
+      absolute: false
+    - orth: true
+      log: false
+      absolute: false
+    - orth: false
+      log: true
+      absolute: false
+    - orth: true
+      log: true
+      absolute: false
+    - orth: true
+      log: false
+      absolute: true
+    - orth: true
+      log: true
+      absolute: true

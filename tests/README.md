@@ -20,6 +20,7 @@ independent references, mutation checks, coverage, and remaining limitations.
 | `test_calc.py`, `test_utils.py`, `test_phi_native.py` | original tests, unchanged |
 | `test_SPIs.py` | original CML7 z-score benchmark (`legacy`, `slow`) |
 | `storage/` | storage-format suite, run separately (below) |
+| `workflow/` | strict workflow/metric configuration, EDF headers, channel identity/order, sampling checks, window plans, and terminal preflight; no signal Data or connectivity calculation |
 
 ## Environment
 
@@ -66,7 +67,7 @@ Always run from the repository root.
 
 | command | what runs |
 |---|---|
-| `.venv/bin/python -m pytest` | default tier: small goldens (5 processes x 64 observations), no `slow` tests, no legacy benchmark; latest Java-required verification: 694 passed, 15 skipped, 9 xfailed (see [test review](TEST_REVIEW.md)) |
+| `.venv/bin/python -m pytest` | default tier: small goldens (5 processes x 64 observations), no `slow` tests, no legacy benchmark; test-review checkpoint: 694 passed, 15 skipped, 9 xfailed (see [test review](TEST_REVIEW.md)); the newer workflow cases are verified separately below |
 | `.venv/bin/python -m pytest --runslow` | adds the slow SPI tests, the full-config `Calculator` end-to-end test, the slow known-bug tests (ccm) and the legacy benchmark |
 | `.venv/bin/python -m pytest --pyspi-size=full --runslow --timeout=1800` | full tier: 7 x 100 goldens, everything |
 | `.venv/bin/python -m pytest --runslow -m slow --ignore=tests/test_SPIs.py` | only the slow tests (14 at small size), without the legacy benchmark's recompute (see below) |
@@ -207,6 +208,16 @@ Also worth knowing (not bugs): `utils.normalise` default `nan_policy='propogate'
 ## Storage suite
 
 `tests/storage/` has its own `pytest.ini` and runs explicitly in the same root-locked environment as calculations. The default root invocation ignores it. Run it as described in [storage/README.md](storage/README.md); there is no separate storage-test project or lock.
+
+## Workflow preflight suite
+
+Run `.venv/bin/python -m pytest tests/workflow --require-java` for the configuration
+and header-only preflight goal. These tests prohibit signal Data construction and
+Calculator computation, and include Java-dependent metric constructor checks.
+The suite is also collected by the normal root invocation. See the
+[workflow guide](../docs/workflow.md) and [verification receipt](workflow/verification.json)
+for its independently recorded results; earlier full calculation-suite receipts
+remain historical evidence.
 
 ## SPI coverage
 

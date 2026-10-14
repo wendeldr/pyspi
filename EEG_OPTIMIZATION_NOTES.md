@@ -4,7 +4,7 @@ Updated 2026-10-14.
 
 The goal is to make pyspi easier to run for this EEG/sEEG workload and investigate improvements to total processing time and output size. Changes may include Python orchestration, lower-level implementation changes, or faster compatible dependencies. Improvements must be assessed against the actual workload and scientific interpretation.
 
-**Current state:** production storage and the adversarial test review are complete. The local calculation workflow is planned below but not implemented; each implementation stage will be scoped separately. Scientific/numerical review is being carried out separately and will be audited when complete. Production storage is in `pyspi.storage`, with an explicit Calculator adapter and separate `pyspi.analysis.time_mean` helper. Calculation and storage tests share the root lock. See the [current test results](tests/TEST_REVIEW.md), [storage API](docs/storage.md), and [initial production validation and timings](tests/storage/PRODUCTION_RESULTS.md). The [comparison archive](docs/storage_comparison/README.md) preserves historical evidence. Existing EDFs and patient stores remain unchanged; no cohort recalculation or conversion is authorized.
+**Current state:** production storage and the adversarial test review are complete. The first local workflow goal implements configuration and read-only EDF preflight in `pyspi.workflow`; validation is recorded in [the workflow guide](docs/workflow.md) and [its receipt](tests/workflow/verification.json). Signal loading/execution, resampling, checkpointing, and parallelization remain subsequent goals. Scientific/numerical review is being carried out separately and will be audited when complete. Production storage is in `pyspi.storage`, with an explicit Calculator adapter and separate `pyspi.analysis.time_mean` helper. Calculation, storage, and workflow tests share the root lock. See the [earlier full test review](tests/TEST_REVIEW.md), [storage API](docs/storage.md), and [initial production validation and timings](tests/storage/PRODUCTION_RESULTS.md). The [comparison archive](docs/storage_comparison/README.md) preserves historical evidence. Existing EDFs and patient stores remain unchanged; no cohort recalculation or conversion is authorized.
 
 ## Working agreement
 
@@ -38,7 +38,7 @@ The goal is to make pyspi easier to run for this EEG/sEEG workload and investiga
 ## Sampling and preprocessing
 
 - The project normally records at 2048 Hz, with a few exceptions. Sampling rate must remain configurable rather than hardcoded to 2048 Hz.
-- For now, prepare a uniform sampling rate outside this workflow. A lightweight sampling-rate consistency check before calculations is desirable.
+- Recordings not at the configured expected rate must be upsampled or downsampled before calculation. Where and how resampling happens remains for discussion during workflow implementation or after the other pieces are implemented. The current preflight goal only checks native rates and identifies preparation needed; it does not resample.
 - Use pyspi's existing preprocessing with both operations enabled: **detrend first, then z-score, within each window**.
 - Historical output metadata records the old order of z-scoring and then detrending. That historical order is not the desired behavior for new calculations.
 - The planned runner accepts a fixed, externally supplied channel selection/order for the recording. Deciding which electrodes are bad belongs to the data lake or preprocessing utilities. Rereferencing and additional EEG preprocessing remain later work.
@@ -166,17 +166,17 @@ Completed:
 Remaining, in recommended order:
 
 1. **Scientific and numerical review, one finding at a time.** Resolve standard versus historical PSI, spectral band forwarding, wavelet PSI axis selection, signed PLI/wPLI, phase aggregation/endpoints, parameter-specific labels and shared label state, legitimate negative estimators, and automatic CCM embedding selection. Evaluate newer spectral-connectivity and pyEDM, and SciPy/ANM drift, through separate numerical decisions. MNE/CDT upgrades are completed; their regression agreement does not replace independent mathematical checks. Add independent oracles for each proposed correction before changing definitions or expected results. This remains targeted review work, not a completed audit of all 185 calculations.
-2. **Local calculation workflow.** Build a terminal/configuration workflow for loading, configurable windows/overlap, sampling-rate consistency checks, detrend-then-z-score preprocessing, grouped calculations/shared intermediates, memory-aware batching, resumability, diagnostics, timing capture, and production storage output. Benchmark representative workloads before choosing concurrency. Resampling remains external initially; arbitrary channel/window/patient bounds are not part of the design.
+2. **Local calculation workflow.** Configuration and header-only EDF preflight are implemented as the first goal. Subsequent stages connect loading, detrend-then-z-score preprocessing, grouped calculations/shared intermediates, memory-aware batching, resumability, diagnostics, timing capture, and production storage output. Benchmark representative workloads before choosing concurrency. Resampling to the expected rate is required for mismatched inputs; its method and location remain for discussion. Arbitrary channel/window/patient bounds are not part of the design.
 3. **Calculation and end-to-end optimization.** Prioritize the retained 185, relevant exploratory features, and EEG/sEEG measures. Evaluate shared computation, batching, existing faster implementations, compiled code, and GPU options where measurements justify them. Include loading and output costs. Preserve selected metric definitions unless a separate change is agreed.
 4. **Runtime estimator.** Build estimates from accumulated timings and optional short calibration, allowing configuration, cohort/window counts, and available compute to inform a conservative range. The estimator is not a prerequisite or a reason to wait for all metrics to finish.
 5. **Later utilities and expanded scope.** Rereferencing, project-specific bad-electrode selection/preparation, additional metrics, and difficult calculation failures remain later work. The planned runner can consume an externally supplied fixed channel list without implementing that project-specific logic. Straightforward failures can be addressed when encountered; distinguish unavailable output from calculated NaNs and nonconvergence. Precision reduction and conversion of existing patient stores each require separate justification and discussion.
 6. **Simplify calculation naming and parameter representation, near the end of EEG optimization.** Discuss simple metric names with explicit parameters in metadata/configuration or a companion file. Current identifiers embed cumbersome and inconsistent decimal/percentage representations. Preserve unambiguous identification of parameter variants; final names and the representation will be discussed before changing them.
 
 Current assignments: scientific/numerical review is being carried out separately.
-This agent will audit that work when it is complete. The proposed local workflow
-plan is recorded below; implementation has not started, and its first goal will
-be scoped separately. The current request is documentation cleanup, commit, and
-pause.
+This agent will audit that work when it is complete. The local workflow stages
+are recorded below. The current goal authorizes configuration and EDF preflight
+only; it does not authorize connectivity calculation, resampling, execution,
+checkpointing, or parallelization.
 
 ## Local workflow planning discussion
 
@@ -247,8 +247,9 @@ pause.
   two at 1024 Hz, and three at 512 Hz. No file had mixed ordinary-signal rates
   or an EDF+D discontinuity marker. Native signal counts were 71–263 and
   durations 252–305.1875 seconds; these include channels not yet classified or
-  excluded. No EEG sample payloads were read in this inspection. Resampling
-  remains external, as previously agreed.
+  excluded. No EEG sample payloads were read in this inspection. Mismatched
+  inputs require resampling before calculation; its method/location remain
+  undecided, and preflight itself does not resample.
 - The current storage writer consumes a whole supplied metric array; it has no
   streaming window append API. Accumulating every result for 185 metrics and
   600 windows would require about 11.52 GiB at 118 channels or 74.43 GiB at
@@ -259,14 +260,18 @@ pause.
   [MNE can automatically upsample mixed-rate signals](https://mne.tools/stable/generated/mne.io.read_raw_edf.html).
   These are planning constraints, not changes to calculation definitions.
 
-## Proposed workflow implementation stages
+## Workflow implementation stages
 
-This is a plan for discussion, not authorization to implement every stage.
-Each stage should be a separately scoped goal. Scientific changes remain with
+Only the first stage is implemented in the current goal. Later stages remain a
+plan for discussion, not authorization to implement every stage. Each stage
+should be a separately scoped goal. Scientific changes remain with
 the separate review; audit its completed work before depending on any changed
 definitions. Existing EDFs and patient stores remain reference inputs.
 
-1. **Configuration, input contract, and preflight.** Define a small workflow
+1. **Configuration, input contract, and preflight (implemented).** The
+   [workflow guide](docs/workflow.md) documents the implemented contract and
+   [verification receipt](tests/workflow/verification.json). Original scope:
+   define a small workflow
    configuration around pyspi's existing metric configuration. Accept recording
    identity/source, an optional externally supplied ordered channel selection
    and name mapping, windows/step, and an output location. The data lake remains
@@ -277,8 +282,9 @@ definitions. Existing EDFs and patient stores remain reference inputs.
    parameters, dependencies, order, and duplicate identifiers rather than
    accepting Calculator's fallback/skipping behavior. Reconcile the historical
    config's 186 declared configurations with the retained 185 identifiers;
-   changes to estimators are not part of that reconciliation. Report sampling
-   mismatches for external resampling. Specify integer sample conversion and
+   changes to estimators are not part of that reconciliation. Identify sampling
+   mismatches requiring resampling to the configured target; its implementation
+   and location remain undecided. Specify integer sample conversion and
    window boundaries; discard a partial tail with a warning only. A preflight
    command reports the selected inputs, axes, metrics, and window counts; it is
    not the later runtime estimator. Verify with small fixtures and read-only
@@ -343,14 +349,14 @@ definitions. Existing EDFs and patient stores remain reference inputs.
    regression and storage suites plus targeted runner integrations. Demonstrate
    selective metric loading, matching metadata/channel/window axes, downstream
    time averaging, portable relative links, and clean interruption/resume.
-   Document a retained-185 example configuration, external resampling and
+   Document a retained-185 example configuration, required resampling and
    metadata-selection inputs, diagnostics, explicit retries, and measured
    limitations. Updating the data-lake/cache repositories remains a separate
    integration task after this contract is settled. Save timing evidence for
    the later estimator; do not make the estimator or naming redesign a
    prerequisite for this workflow.
 
-Recommended first goal text:
+First goal text:
 
 > Implement and test workflow configuration and EDF preflight only. Resolve
 > recording identity, externally supplied fixed channel selection/order, the
@@ -361,6 +367,18 @@ Recommended first goal text:
 > requested dependencies instead of silently substituting or omitting work.
 > Keep execution, checkpoint writing, parallelization, and naming redesign for
 > separate goals.
+
+First-goal verification: **130 tests passed** in the checkout and against an
+installed wheel outside the checkout, with Java required and signal Data/
+connectivity computation prohibited. Workflow statement coverage is 98.78% and
+branch coverage is 96.88%. Header-only preflight of the actual 72-recording
+cohort resolved 185 metrics: 67 recordings match 2048 Hz, five require resampling,
+and matching recordings have 504–610 full half-second windows. Source sizes and
+modification times were unchanged. The retained preset matches all three saved
+metric inventories; its parameter provenance and reconstruction limits are
+documented in [the workflow guide](docs/workflow.md). Calculation implementations,
+existing configurations, golden values, and the dependency lock are unchanged.
+See [verification.json](tests/workflow/verification.json) for scoped evidence.
 
 ## Storage integration context
 

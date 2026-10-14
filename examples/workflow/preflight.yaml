@@ -1,0 +1,14 @@
+# Replace the paths for your input recordings and intended output location.
+# Preflight reads headers only and does not create or write output_directory.
+version: 1
+edf_glob: /path/to/baseline_edfs/*.[Ee][Dd][Ff]
+metrics:
+  preset: retained185
+sampling_rate_hz: 2048
+window:
+  length_seconds: 0.5
+  step_seconds: 0.5
+preprocessing:
+  detrend: true
+  zscore: true
+output_directory: /path/to/new_results

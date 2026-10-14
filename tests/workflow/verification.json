@@ -1,0 +1,108 @@
+{
+  "scope": "workflow configuration and header-only EDF preflight; no connectivity calculation or resampling",
+  "date_utc": "2026-10-14T20:30:14.892421+00:00",
+  "baseline_commit": "de5300fccafcdb1d20002c7178c94b400ed15e0b",
+  "environment": {
+    "python": "3.12.3",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.39",
+    "packages": {
+      "pyspi": "2.0.2",
+      "numpy": "2.5.4",
+      "pyyaml": "6.0.3",
+      "jpype1": "1.7.1",
+      "mne": "1.13.2",
+      "mne-connectivity": "0.9.0",
+      "scikit-learn": "1.9.1",
+      "pytest": "9.1.1",
+      "pytest-cov": "7.1.0"
+    }
+  },
+  "tests": {
+    "checkout": {
+      "tests": 130,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "installed_wheel_outside_checkout": {
+      "tests": 130,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "java_required": true,
+    "signal_Data_and_Calculator_compute_prohibited": true
+  },
+  "coverage": {
+    "covered_lines": 484,
+    "num_statements": 490,
+    "missing_lines": 6,
+    "covered_branches": 186,
+    "num_branches": 192,
+    "missing_branches": 6,
+    "percent_statements_covered": 98.77551020408163,
+    "percent_branches_covered": 96.875,
+    "percent_covered": 98.24046920821114
+  },
+  "real_cohort": {
+    "inspection": "installed-wheel fixed/signal header reads and file sizes; no sample payloads",
+    "recordings": 72,
+    "metric_count": 185,
+    "target_sampling_rate_hz": 2048.0,
+    "statuses": {
+      "requires_resampling": 5,
+      "ready": 67
+    },
+    "recordings_requiring_resampling": [
+      "001_Baseline.EDF",
+      "004_Baseline.EDF",
+      "037_Baseline.EDF",
+      "038_Baseline.EDF",
+      "041_Baseline.EDF"
+    ],
+    "ready_window_count_range": [
+      504,
+      610
+    ],
+    "source_size_and_mtime_unchanged": true
+  },
+  "packaging": {
+    "wheel": "pyspi-2.0.2-py3-none-any.whl",
+    "sha256": "296bacf64dd66d303200af0cb3010d2841f9cb18daff83e28f99515476217087",
+    "all_workflow_modules_and_preset_match_source": true,
+    "installed_origin": "/tmp/pyspi-preflight-wheel-installed/pyspi/__init__.py",
+    "uv_lock_check": "passed"
+  },
+  "retained_preset": {
+    "unique_identifiers": 185,
+    "matches_all_three_archived_surveys": true,
+    "changes_from_historical_timing_config": "replace four sigonly=True xcorr requests with two stored sigonly=False max variants; add omitted Gaussian GC; preserve other parameters",
+    "original_run_numerical_equivalence_claimed": false
+  },
+  "unchanged_tracked_source_and_golden_files": 52,
+  "sha256": {
+    "pyproject.toml": "038ddbaafc29828d02546e7f8876cbb01a9add9b0fbfbbd76ec9cfe0bc887ee9",
+    "pyspi/workflow/__init__.py": "686f86946cffa4c785745189b889bb6e0f28c8a0174e3cc94721c4314517efd6",
+    "pyspi/workflow/__main__.py": "d98b5970163b26b7c0bffc1bd984a4d06dd6627cf841a3e802b4bf9f9d0dd2b5",
+    "pyspi/workflow/_config.py": "75e7e91fabd7a0049ff3095fb175bd51a662bd115321ab5e088583c2a43f66ca",
+    "pyspi/workflow/_edf.py": "de0495329f532d3a5c462650861617dd077e3bd52560f6c1cc98837ee5dd646d",
+    "pyspi/workflow/_metrics.py": "b14855a7b7fb09e3c8767c50a2ff888b91ae8d4036dfddf335fd07cab0e34bbb",
+    "pyspi/workflow/_preflight.py": "1c9dd2200039d58d7848b47419802d89b3f4d0f06a0011fddd6199d73ad42dd9",
+    "pyspi/workflow/_windows.py": "e4cc59389544b8dd6e415671886d87dba68a3c305e5a9658cf14f6a8f3e13840",
+    "pyspi/workflow/retained185.yaml": "4279b7a6df817b09dbbf91b2cee860934e5496ab3a5de2c2caec1ba65a2b4b2b",
+    "tests/workflow/conftest.py": "1ee3dff751b9e3dbf59a6165f0948bb94db527093df4e3815981862498ba5bca",
+    "tests/workflow/test_config.py": "a575da40d2eebe6ca9217a3c219250b0e505fef38eb839826e835c3ba14951ca",
+    "tests/workflow/test_edf.py": "a36b05785bc856c637d617938ea40d3d27a7c60addff022e91b135bfa4b9117b",
+    "tests/workflow/test_metrics.py": "d074d19929a3855e1e3e93b71843668660e2c6d96eedb26469739485c0a45fc7",
+    "tests/workflow/test_preflight.py": "0d8563de57d7af9fb3c901d590452ce9bdb82154902970c450590a354808919d"
+  },
+  "artifacts": "/tmp/pyspi-preflight-validation",
+  "limits": [
+    "Execution, resampling, checkpointing, parallelization, and runtime estimation are unimplemented.",
+    "No connectivity calculations or existing numerical regression runs were performed in this goal.",
+    "EDF header type inference cannot identify every untyped non-EEG channel; an explicit selection can override it.",
+    "EDF+D/BDF and nonintegral target window sample grids are rejected.",
+    "Data-dependent estimator validity and convergence are outside header-only preflight.",
+    "Resampling method and output sample geometry remain undecided; mismatched recordings have no calculation window plan."
+  ]
+}
