@@ -2,10 +2,13 @@ name: Unit Testing Pipeline
 
 on: 
   push:
+  workflow_dispatch:
 
 jobs:
   test-ubuntu:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
@@ -16,19 +19,61 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
-      - name: Install octave
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential octave
-      - name: Install pyspi dependencies
+      - name: Install pyspi and test dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install .
-      - name: Run pyspi calculator/utils unit tests
+          pip install -r requirements.txt -r tests/requirements-test.txt && pip install -e .
+      - name: Run pyspi test suite (default tier)
         run: |
-          pytest -v ./tests/test_calc.py
-          pytest -v ./tests/test_utils.py
-      - name: Run pyspi SPI unit tests
+          pytest
+
+  # Same default tier, but on the pinned environment the goldens were generated
+  # in (tests/requirements-test-lock.txt). If this job is green while the
+  # unpinned matrix above is red, a library upgrade moved an output, not pyspi.
+  test-pinned-env:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+      - name: Install pinned test environment
         run: |
-          pytest -v ./tests/test_SPIs.py
+          python -m pip install --upgrade pip
+          grep -v '^-e ' tests/requirements-test-lock.txt > "$RUNNER_TEMP/requirements-lock-ci.txt"
+          pip install --extra-index-url https://download.pytorch.org/whl/cpu -r "$RUNNER_TEMP/requirements-lock-ci.txt" && pip install --no-deps -e .
+      - name: Run pyspi test suite (default tier, pinned)
+        run: |
+          pytest
+
+  full-tier:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+      - name: Install pinned test environment
+        run: |
+          python -m pip install --upgrade pip
+          # The lock records this checkout as an editable entry with a machine-local
+          # path; strip it and install the package itself from this checkout.
+          # torch is pinned to the CPU wheel (+cpu), which only the PyTorch index serves.
+          grep -v '^-e ' tests/requirements-test-lock.txt > "$RUNNER_TEMP/requirements-lock-ci.txt"
+          pip install --extra-index-url https://download.pytorch.org/whl/cpu -r "$RUNNER_TEMP/requirements-lock-ci.txt" && pip install --no-deps -e .
+      # The legacy benchmark runs serially: its only output (the SPI BENCHMARKING
+      # SUMMARY printed at session finish) is lost inside xdist workers.
+      - name: Run legacy benchmark (serial)
+        run: |
+          pytest tests/test_SPIs.py --runslow --timeout=1800
+      - name: Run pyspi test suite (full tier)
+        run: |
+          pytest --pyspi-size=full --runslow --timeout=1800 -n 2 --ignore=tests/test_SPIs.py

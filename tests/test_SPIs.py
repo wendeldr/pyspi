@@ -1,22 +1,28 @@
+from pathlib import Path
+
 from pyspi.calculator import Calculator
 import pytest
 import dill
 import pyspi
 import numpy as np
 
+pytestmark = [pytest.mark.legacy, pytest.mark.slow]
+
+TESTS_DIR = Path(__file__).resolve().parent
+
 ############# Fixtures and helper functions #########
 
 def load_benchmark_tables():
     """Function to load the mean and standard deviation tables for each MPI."""
     table_fname = 'CML7_benchmark_tables.pkl'
-    with open(f"tests/{table_fname}", "rb") as f:
+    with open(TESTS_DIR / table_fname, "rb") as f:
         loaded_tables = dill.load(f)
     
     return loaded_tables
 
 def load_benchmark_dataset():
     dataset_fname = 'cml7.npy'
-    dataset = np.load(f"pyspi/data/{dataset_fname}").T
+    dataset = np.load(TESTS_DIR.parent / "pyspi" / "data" / dataset_fname).T
     return dataset
 
 def compute_new_tables():
@@ -46,11 +52,17 @@ def generate_SPI_test_params():
     
     return params
 
-params = generate_SPI_test_params()
 def pytest_generate_tests(metafunc):
-    """Create a hook to generate parameter combinations for parameterised test"""
+    """Create a hook to generate parameter combinations for parameterised test.
+
+    The full 285-SPI computation only runs with --runslow; otherwise the test
+    is parametrized with an empty set and reported as skipped."""
     if "est" in metafunc.fixturenames:
-        metafunc.parametrize("est, est_ob, mpi_benchmark,mpi_new", params)
+        if metafunc.config.getoption("--runslow"):
+            params = generate_SPI_test_params()
+        else:
+            params = []
+        metafunc.parametrize("est, est_ob, mpi_benchmark, mpi_new", params)
         
 
 def test_mpi(est, est_ob, mpi_benchmark, mpi_new, spi_warning_logger):

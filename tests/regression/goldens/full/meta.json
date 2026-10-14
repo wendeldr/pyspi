@@ -1,0 +1,5989 @@
+{
+ "calculator_order": [
+  "cov_EmpiricalCovariance",
+  "cov_EllipticEnvelope",
+  "cov_GraphicalLasso",
+  "cov_GraphicalLassoCV",
+  "cov_LedoitWolf",
+  "cov_MinCovDet",
+  "cov_OAS",
+  "cov_ShrunkCovariance",
+  "cov-sq_EmpiricalCovariance",
+  "cov-sq_EllipticEnvelope",
+  "cov-sq_GraphicalLasso",
+  "cov-sq_GraphicalLassoCV",
+  "cov-sq_LedoitWolf",
+  "cov-sq_MinCovDet",
+  "cov-sq_OAS",
+  "cov-sq_ShrunkCovariance",
+  "prec_EmpiricalCovariance",
+  "prec_EllipticEnvelope",
+  "prec_GraphicalLasso",
+  "prec_GraphicalLassoCV",
+  "prec_LedoitWolf",
+  "prec_MinCovDet",
+  "prec_OAS",
+  "prec_ShrunkCovariance",
+  "prec-sq_EmpiricalCovariance",
+  "prec-sq_EllipticEnvelope",
+  "prec-sq_GraphicalLasso",
+  "prec-sq_GraphicalLassoCV",
+  "prec-sq_LedoitWolf",
+  "prec-sq_MinCovDet",
+  "prec-sq_OAS",
+  "prec-sq_ShrunkCovariance",
+  "spearmanr-sq",
+  "spearmanr",
+  "kendalltau-sq",
+  "kendalltau",
+  "xcorr_max_sig-True",
+  "xcorr-sq_max_sig-True",
+  "xcorr_mean_sig-True",
+  "xcorr-sq_mean_sig-True",
+  "xcorr_mean_sig-False",
+  "xcorr-sq_mean_sig-False",
+  "pdist_euclidean",
+  "pdist_cityblock",
+  "pdist_cosine",
+  "pdist_chebyshev",
+  "pdist_canberra",
+  "pdist_braycurtis",
+  "dcorr",
+  "dcorr_biased",
+  "mgc",
+  "hsic",
+  "hsic_biased",
+  "hhg",
+  "mgcx_maxlag-1",
+  "mgcx_maxlag-10",
+  "dcorrx_maxlag-1",
+  "dcorrx_maxlag-10",
+  "dtw",
+  "dtw_constraint-itakura",
+  "dtw_constraint-sakoe-chiba",
+  "softdtw",
+  "softdtw_constraint-itakura",
+  "softdtw_constraint-sakoe-chiba",
+  "lcss",
+  "lcss_constraint-itakura",
+  "lcss_constraint-sakoe-chiba",
+  "bary_euclidean_mean",
+  "bary_euclidean_max",
+  "bary_dtw_mean",
+  "bary_dtw_max",
+  "bary_sgddtw_mean",
+  "bary_sgddtw_max",
+  "bary_softdtw_mean",
+  "bary_softdtw_max",
+  "bary-sq_euclidean_mean",
+  "bary-sq_euclidean_max",
+  "bary-sq_dtw_mean",
+  "bary-sq_dtw_max",
+  "bary-sq_sgddtw_mean",
+  "bary-sq_sgddtw_max",
+  "bary-sq_softdtw_mean",
+  "bary-sq_softdtw_max",
+  "gwtau",
+  "anm",
+  "cds",
+  "reci",
+  "igci",
+  "ccm_E-None_mean",
+  "ccm_E-None_max",
+  "ccm_E-None_diff",
+  "ccm_E-1_mean",
+  "ccm_E-1_max",
+  "ccm_E-1_diff",
+  "ccm_E-10_mean",
+  "ccm_E-10_max",
+  "ccm_E-10_diff",
+  "je_gaussian",
+  "je_kozachenko",
+  "je_kernel_W-0.5",
+  "ce_gaussian",
+  "ce_kozachenko",
+  "ce_kernel_W-0.5",
+  "cce_gaussian",
+  "cce_kozachenko",
+  "cce_kernel_W-0.5",
+  "xme_gaussian_k1",
+  "xme_kozachenko_k1",
+  "xme_kernel_W-0.5_k1",
+  "xme_gaussian_k10",
+  "xme_kozachenko_k10",
+  "xme_kernel_W-0.5_k10",
+  "di_gaussian",
+  "di_kozachenko",
+  "di_kernel_W-0.5",
+  "si_gaussian_k-1",
+  "si_kozachenko_k-1",
+  "si_kernel_W-0.5_k-1",
+  "mi_gaussian",
+  "mi_kraskov_NN-4",
+  "mi_kraskov_NN-4_DCE",
+  "mi_kernel_W-0.25",
+  "tlmi_gaussian",
+  "tlmi_kraskov_NN-4",
+  "tlmi_kraskov_NN-4_DCE",
+  "tlmi_kernel_W-0.25",
+  "te_kraskov_NN-4_k-max-10_tau-max-4",
+  "te_kraskov_NN-4_DCE_k-max-10_tau-max-4",
+  "te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1",
+  "te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1",
+  "te_kraskov_NN-4_k-1_kt-1_l-1_lt-1",
+  "te_kernel_W-0.25_k-1",
+  "gc_gaussian_k-max-10_tau-max-2",
+  "gc_gaussian_k-1_kt-1_l-1_lt-1",
+  "te_symbolic_k-1_kt-1_l-1_lt-1",
+  "te_symbolic_k-10_kt-1_l-1_lt-1",
+  "phi_star_t-1_norm-0",
+  "phi_star_t-1_norm-1",
+  "phi_Geo_t-1_norm-0",
+  "phi_Geo_t-1_norm-1",
+  "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "phase_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "phase_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "cohmag_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "icoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "icoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "icoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "icoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "plv_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "plv_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "plv_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "plv_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "plv_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "pli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "pli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "pli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "pli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "pli_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "wpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "wpli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "wpli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "wpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "dspli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "dspli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "dspli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "dspli_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "dswpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "dswpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "ppc_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "ppc_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "ppc_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "dtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "dtf_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "dtf_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "dtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "dcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "pdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "pdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "gpdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "gpdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+  "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+  "ddtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+  "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-5",
+  "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-25",
+  "ddtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+  "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5",
+  "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25",
+  "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5",
+  "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5",
+  "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-25",
+  "sgc_nonparametric_mean_fs-1_fmin-0-25_fmax-0-5",
+  "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-5",
+  "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-25",
+  "sgc_nonparametric_max_fs-1_fmin-0-25_fmax-0-5",
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None",
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None",
+  "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None",
+  "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1",
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1",
+  "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1",
+  "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20",
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20",
+  "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20",
+  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None",
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None",
+  "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None",
+  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1",
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1",
+  "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1",
+  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20",
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20",
+  "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20",
+  "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean",
+  "psi_wavelet_mean_fs-1_fmin-0_fmax-0-25_mean",
+  "psi_wavelet_mean_fs-1_fmin-0-25_fmax-0-5_mean",
+  "psi_wavelet_max_fs-1_fmin-0_fmax-0-5_max",
+  "psi_wavelet_max_fs-1_fmin-0_fmax-0-25_max",
+  "psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max",
+  "lmfit_Ridge",
+  "lmfit_Lasso",
+  "lmfit_SGDRegressor",
+  "lmfit_ElasticNet",
+  "lmfit_BayesianRidge",
+  "gpfit_DotProduct",
+  "gpfit_RBF",
+  "coint_johansen_max_eig_stat_order-0_ardiff-10",
+  "coint_johansen_trace_stat_order-0_ardiff-10",
+  "coint_johansen_max_eig_stat_order-0_ardiff-1",
+  "coint_johansen_trace_stat_order-0_ardiff-1",
+  "coint_johansen_max_eig_stat_order-1_ardiff-10",
+  "coint_johansen_trace_stat_order-1_ardiff-10",
+  "coint_johansen_max_eig_stat_order-1_ardiff-1",
+  "coint_johansen_trace_stat_order-1_ardiff-1",
+  "coint_aeg_tstat_trend-c_autolag-aic_maxlag-10",
+  "coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10",
+  "coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10",
+  "pec",
+  "pec_orth",
+  "pec_log",
+  "pec_orth_log",
+  "pec_orth_abs",
+  "pec_orth_log_abs",
+  "ids"
+ ],
+ "configfile": "config.yaml",
+ "dataset": {
+  "detrend": false,
+  "dim_order": "sp",
+  "file": "cml7.npy",
+  "n_observations": null,
+  "n_processes": null,
+  "normalise": true,
+  "transform": null
+ },
+ "duplicate_identifiers": [],
+ "environment": {
+  "java": "21.0.12.1",
+  "omp_num_threads": "1",
+  "packages": {
+   "cdt": "0.5.23",
+   "hyppo": "0.5.2",
+   "jpype1": "1.7.1",
+   "mne": "0.23.0",
+   "nitime": "0.12.1",
+   "numpy": "1.26.4",
+   "pandas": "3.0.6",
+   "pyEDM": "1.15.2.0",
+   "pyyaml": "6.0.3",
+   "scikit-learn": "1.9.1",
+   "scipy": "1.17.1",
+   "sktime": "1.2.0",
+   "spectral-connectivity": "1.1.2",
+   "statsmodels": "0.15.0",
+   "torch": "2.14.1+cpu",
+   "tslearn": "0.9.0"
+  },
+  "platform": "linux",
+  "pyspi_commit": "ae55c26949d1144337e804a5ec1aaf7dd432cda3",
+  "pyspi_version": "2.0.2",
+  "python": "3.11.16"
+ },
+ "generated": "2026-10-14T14:53:55+00:00",
+ "name": "full",
+ "schema": 1,
+ "seed": 42,
+ "spis": {
+  "anm": {
+   "cls": "AdditiveNoiseModel",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "linear",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": null,
+   "status": "ok",
+   "time_s": 0.827214
+  },
+  "bary-sq_dtw_max": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "dtw",
+    "squared": true,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.023175
+  },
+  "bary-sq_dtw_mean": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "dtw",
+    "squared": true,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.023683
+  },
+  "bary-sq_euclidean_max": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "euclidean",
+    "squared": true,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.015064
+  },
+  "bary-sq_euclidean_mean": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "euclidean",
+    "squared": true,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.015596
+  },
+  "bary-sq_sgddtw_max": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "sgddtw",
+    "squared": true,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.034965
+  },
+  "bary-sq_sgddtw_mean": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "sgddtw",
+    "squared": true,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.035496
+  },
+  "bary-sq_softdtw_max": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "softdtw",
+    "squared": true,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.114485
+  },
+  "bary-sq_softdtw_mean": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "softdtw",
+    "squared": true,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 1.114697
+  },
+  "bary_dtw_max": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "dtw",
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.022496
+  },
+  "bary_dtw_mean": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "dtw",
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.023027
+  },
+  "bary_euclidean_max": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "euclidean",
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.015057
+  },
+  "bary_euclidean_mean": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "euclidean",
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.015698
+  },
+  "bary_sgddtw_max": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "sgddtw",
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.034595
+  },
+  "bary_sgddtw_mean": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "sgddtw",
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.034935
+  },
+  "bary_softdtw_max": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "softdtw",
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.143479
+  },
+  "bary_softdtw_mean": {
+   "cls": "Barycenter",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "mode": "softdtw",
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 1.123698
+  },
+  "cce_gaussian": {
+   "cls": "CausalEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "gaussian"
+   },
+   "status": "ok",
+   "time_s": 0.113355
+  },
+  "cce_kernel_W-0.5": {
+   "cls": "CausalEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kernel"
+   },
+   "status": "ok",
+   "time_s": 0.954764
+  },
+  "cce_kozachenko": {
+   "cls": "CausalEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kozachenko"
+   },
+   "status": "ok",
+   "time_s": 0.185903
+  },
+  "ccm_E-10_diff": {
+   "cls": "ConvergentCrossMapping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "signed",
+    "temporal"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": {
+    "embedding_dimension": 10,
+    "statistic": "diff"
+   },
+   "status": "ok",
+   "time_s": 14.55828
+  },
+  "ccm_E-10_max": {
+   "cls": "ConvergentCrossMapping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "signed",
+    "temporal"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": {
+    "embedding_dimension": 10,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 14.441895
+  },
+  "ccm_E-10_mean": {
+   "cls": "ConvergentCrossMapping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "signed",
+    "temporal"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": {
+    "embedding_dimension": 10,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 14.418535
+  },
+  "ccm_E-1_diff": {
+   "cls": "ConvergentCrossMapping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "signed",
+    "temporal"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": {
+    "embedding_dimension": 1,
+    "statistic": "diff"
+   },
+   "status": "ok",
+   "time_s": 12.313287
+  },
+  "ccm_E-1_max": {
+   "cls": "ConvergentCrossMapping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "signed",
+    "temporal"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": {
+    "embedding_dimension": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 12.657578
+  },
+  "ccm_E-1_mean": {
+   "cls": "ConvergentCrossMapping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "signed",
+    "temporal"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": {
+    "embedding_dimension": 1,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 12.589641
+  },
+  "ccm_E-None_diff": {
+   "cls": "ConvergentCrossMapping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "signed",
+    "temporal"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": {
+    "statistic": "diff"
+   },
+   "status": "ok",
+   "time_s": 14.999629
+  },
+  "ccm_E-None_max": {
+   "cls": "ConvergentCrossMapping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "signed",
+    "temporal"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": {
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 14.73568
+  },
+  "ccm_E-None_mean": {
+   "cls": "ConvergentCrossMapping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "signed",
+    "temporal"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": {
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 14.600924
+  },
+  "cds": {
+   "cls": "ConditionalDistributionSimilarity",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": null,
+   "status": "ok",
+   "time_s": 0.212679
+  },
+  "ce_gaussian": {
+   "cls": "ConditionalEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "gaussian"
+   },
+   "status": "ok",
+   "time_s": 0.004359
+  },
+  "ce_kernel_W-0.5": {
+   "cls": "ConditionalEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kernel"
+   },
+   "status": "ok",
+   "time_s": 0.005122
+  },
+  "ce_kozachenko": {
+   "cls": "ConditionalEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kozachenko"
+   },
+   "status": "ok",
+   "time_s": 0.008411
+  },
+  "cohmag_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "CoherenceMagnitude",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002203
+  },
+  "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "CoherenceMagnitude",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002202
+  },
+  "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "CoherenceMagnitude",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002208
+  },
+  "cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "CoherenceMagnitude",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.002207
+  },
+  "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "CoherenceMagnitude",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.002217
+  },
+  "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "CoherenceMagnitude",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 0.002211
+  },
+  "coint_aeg_tstat_trend-c_autolag-aic_maxlag-10": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "autolag": "aic",
+    "maxlag": 10,
+    "method": "aeg",
+    "statistic": "tstat",
+    "trend": "c"
+   },
+   "status": "ok",
+   "time_s": 0.056074
+  },
+  "coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "autolag": "aic",
+    "maxlag": 10,
+    "method": "aeg",
+    "statistic": "tstat",
+    "trend": "ct"
+   },
+   "status": "ok",
+   "time_s": 0.053707
+  },
+  "coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "autolag": "bic",
+    "maxlag": 10,
+    "method": "aeg",
+    "statistic": "tstat",
+    "trend": "ct"
+   },
+   "status": "ok",
+   "time_s": 0.053075
+  },
+  "coint_johansen_max_eig_stat_order-0_ardiff-1": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "det_order": 0,
+    "k_ar_diff": 1,
+    "method": "johansen",
+    "statistic": "max_eig_stat"
+   },
+   "status": "ok",
+   "time_s": 0.015726
+  },
+  "coint_johansen_max_eig_stat_order-0_ardiff-10": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "det_order": 0,
+    "k_ar_diff": 10,
+    "method": "johansen",
+    "statistic": "max_eig_stat"
+   },
+   "status": "ok",
+   "time_s": 0.019053
+  },
+  "coint_johansen_max_eig_stat_order-1_ardiff-1": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "det_order": 1,
+    "k_ar_diff": 1,
+    "method": "johansen",
+    "statistic": "max_eig_stat"
+   },
+   "status": "ok",
+   "time_s": 0.016042
+  },
+  "coint_johansen_max_eig_stat_order-1_ardiff-10": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "det_order": 1,
+    "k_ar_diff": 10,
+    "method": "johansen",
+    "statistic": "max_eig_stat"
+   },
+   "status": "ok",
+   "time_s": 0.019961
+  },
+  "coint_johansen_trace_stat_order-0_ardiff-1": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "det_order": 0,
+    "k_ar_diff": 1,
+    "method": "johansen",
+    "statistic": "trace_stat"
+   },
+   "status": "ok",
+   "time_s": 0.015668
+  },
+  "coint_johansen_trace_stat_order-0_ardiff-10": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "det_order": 0,
+    "k_ar_diff": 10,
+    "method": "johansen",
+    "statistic": "trace_stat"
+   },
+   "status": "ok",
+   "time_s": 0.019666
+  },
+  "coint_johansen_trace_stat_order-1_ardiff-1": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "det_order": 1,
+    "k_ar_diff": 1,
+    "method": "johansen",
+    "statistic": "trace_stat"
+   },
+   "status": "ok",
+   "time_s": 0.015969
+  },
+  "coint_johansen_trace_stat_order-1_ardiff-10": {
+   "cls": "Cointegration",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "det_order": 1,
+    "k_ar_diff": 10,
+    "method": "johansen",
+    "statistic": "trace_stat"
+   },
+   "status": "ok",
+   "time_s": 0.019926
+  },
+  "cov-sq_EllipticEnvelope": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "EllipticEnvelope",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.02291
+  },
+  "cov-sq_EmpiricalCovariance": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "EmpiricalCovariance",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.000354
+  },
+  "cov-sq_GraphicalLasso": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "GraphicalLasso",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.002399
+  },
+  "cov-sq_GraphicalLassoCV": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "GraphicalLassoCV",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.331764
+  },
+  "cov-sq_LedoitWolf": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "LedoitWolf",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.000438
+  },
+  "cov-sq_MinCovDet": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "MinCovDet",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.023017
+  },
+  "cov-sq_OAS": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "OAS",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.000359
+  },
+  "cov-sq_ShrunkCovariance": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "ShrunkCovariance",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.000451
+  },
+  "cov_EllipticEnvelope": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "EllipticEnvelope"
+   },
+   "status": "ok",
+   "time_s": 0.02326
+  },
+  "cov_EmpiricalCovariance": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "EmpiricalCovariance"
+   },
+   "status": "ok",
+   "time_s": 0.000376
+  },
+  "cov_GraphicalLasso": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "GraphicalLasso"
+   },
+   "status": "ok",
+   "time_s": 0.002474
+  },
+  "cov_GraphicalLassoCV": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "GraphicalLassoCV"
+   },
+   "status": "ok",
+   "time_s": 0.327854
+  },
+  "cov_LedoitWolf": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "LedoitWolf"
+   },
+   "status": "ok",
+   "time_s": 0.000435
+  },
+  "cov_MinCovDet": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "MinCovDet"
+   },
+   "status": "ok",
+   "time_s": 0.022687
+  },
+  "cov_OAS": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "OAS"
+   },
+   "status": "ok",
+   "time_s": 0.000344
+  },
+  "cov_ShrunkCovariance": {
+   "cls": "Covariance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "ShrunkCovariance"
+   },
+   "status": "ok",
+   "time_s": 0.000446
+  },
+  "dcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "DirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.911501
+  },
+  "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "DirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.892683
+  },
+  "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "DirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.890282
+  },
+  "dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "DirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 1.878884
+  },
+  "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "DirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 1.887707
+  },
+  "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "DirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 1.886337
+  },
+  "dcorr": {
+   "cls": "DistanceCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "biased": false
+   },
+   "status": "ok",
+   "time_s": 0.023158
+  },
+  "dcorr_biased": {
+   "cls": "DistanceCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "biased": true
+   },
+   "status": "ok",
+   "time_s": 0.02264
+  },
+  "dcorrx_maxlag-1": {
+   "cls": "CrossDistanceCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "distance",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "max_lag": 1
+   },
+   "status": "ok",
+   "time_s": 0.065817
+  },
+  "dcorrx_maxlag-10": {
+   "cls": "CrossDistanceCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "distance",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "max_lag": 10
+   },
+   "status": "ok",
+   "time_s": 0.284531
+  },
+  "ddtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "DirectDirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 2.490611
+  },
+  "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "DirectDirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 2.491088
+  },
+  "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "DirectDirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 2.48971
+  },
+  "ddtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "DirectDirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 2.489646
+  },
+  "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "DirectDirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 2.501631
+  },
+  "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "DirectDirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 2.56313
+  },
+  "di_gaussian": {
+   "cls": "DirectedInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "gaussian"
+   },
+   "status": "ok",
+   "time_s": 0.118899
+  },
+  "di_kernel_W-0.5": {
+   "cls": "DirectedInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kernel"
+   },
+   "status": "ok",
+   "time_s": 0.810227
+  },
+  "di_kozachenko": {
+   "cls": "DirectedInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kozachenko"
+   },
+   "status": "ok",
+   "time_s": 0.214134
+  },
+  "dspli_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "DebiasedSquaredPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002191
+  },
+  "dspli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "DebiasedSquaredPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002152
+  },
+  "dspli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "DebiasedSquaredPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002162
+  },
+  "dspli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "DebiasedSquaredPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.002193
+  },
+  "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "DebiasedSquaredPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.002212
+  },
+  "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "DebiasedSquaredPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 0.00221
+  },
+  "dswpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002386
+  },
+  "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.00234
+  },
+  "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002382
+  },
+  "dswpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.002397
+  },
+  "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.002388
+  },
+  "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 0.002397
+  },
+  "dtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "DirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.284898
+  },
+  "dtf_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "DirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.286933
+  },
+  "dtf_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "DirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.283014
+  },
+  "dtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "DirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 1.269469
+  },
+  "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "DirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 1.271094
+  },
+  "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "DirectedTransferFunction",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 1.260284
+  },
+  "dtw": {
+   "cls": "DynamicTimeWarping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "global_constraint": null
+   },
+   "status": "ok",
+   "time_s": 0.016208
+  },
+  "dtw_constraint-itakura": {
+   "cls": "DynamicTimeWarping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "global_constraint": "itakura"
+   },
+   "status": "ok",
+   "time_s": 0.01584
+  },
+  "dtw_constraint-sakoe-chiba": {
+   "cls": "DynamicTimeWarping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "global_constraint": "sakoe_chiba"
+   },
+   "status": "ok",
+   "time_s": 0.015007
+  },
+  "gc_gaussian_k-1_kt-1_l-1_lt-1": {
+   "cls": "TransferEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "gaussian",
+    "k_history": 1,
+    "l_history": 1
+   },
+   "status": "ok",
+   "time_s": 0.002205
+  },
+  "gc_gaussian_k-max-10_tau-max-2": {
+   "cls": "TransferEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "auto_embed_method": "MAX_CORR_AIS",
+    "estimator": "gaussian",
+    "k_search_max": 10,
+    "tau_search_max": 2
+   },
+   "status": "ok",
+   "time_s": 0.074777
+  },
+  "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "GroupDelay",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 8,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "delay"
+   },
+   "status": "partial_nan",
+   "time_s": 0.010884
+  },
+  "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25": {
+   "cls": "GroupDelay",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 18,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "delay"
+   },
+   "status": "partial_nan",
+   "time_s": 0.009741
+  },
+  "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5": {
+   "cls": "GroupDelay",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 2,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0,
+    "statistic": "delay"
+   },
+   "status": "partial_nan",
+   "time_s": 0.011712
+  },
+  "gpdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "GeneralizedPartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.948716
+  },
+  "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "GeneralizedPartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.95752
+  },
+  "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "GeneralizedPartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.948065
+  },
+  "gpdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "GeneralizedPartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 1.950496
+  },
+  "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "GeneralizedPartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 1.955768
+  },
+  "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "GeneralizedPartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 1.957707
+  },
+  "gpfit_DotProduct": {
+   "cls": "GPModel",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "misc",
+    "nonlinear",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "kernel": "DotProduct"
+   },
+   "status": "ok",
+   "time_s": 0.609954
+  },
+  "gpfit_RBF": {
+   "cls": "GPModel",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "misc",
+    "nonlinear",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "kernel": "RBF"
+   },
+   "status": "ok",
+   "time_s": 0.977451
+  },
+  "gwtau": {
+   "cls": "GromovWasserstainTau",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": null,
+   "status": "ok",
+   "time_s": 0.001913
+  },
+  "hhg": {
+   "cls": "HellerHellerGorfine",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "distance",
+    "nonlinear",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": null,
+   "status": "ok",
+   "time_s": 0.295172
+  },
+  "hsic": {
+   "cls": "HilbertSchmidtIndependenceCriterion",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "biased": false
+   },
+   "status": "ok",
+   "time_s": 0.047398
+  },
+  "hsic_biased": {
+   "cls": "HilbertSchmidtIndependenceCriterion",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "biased": true
+   },
+   "status": "ok",
+   "time_s": 0.047177
+  },
+  "icoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "ImaginaryCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002169
+  },
+  "icoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "ImaginaryCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002182
+  },
+  "icoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "ImaginaryCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002168
+  },
+  "icoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "ImaginaryCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.002192
+  },
+  "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "ImaginaryCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.002192
+  },
+  "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "ImaginaryCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 0.0022
+  },
+  "ids": {
+   "cls": "InterDependenceScore",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "bandwidth": 0.5,
+    "pnorm": "max",
+    "terms": 6
+   },
+   "status": "ok",
+   "time_s": 0.000201
+  },
+  "igci": {
+   "cls": "InformationGeometricConditionalIndependence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": null,
+   "status": "ok",
+   "time_s": 0.043066
+  },
+  "je_gaussian": {
+   "cls": "JointEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "gaussian"
+   },
+   "status": "ok",
+   "time_s": 0.005465
+  },
+  "je_kernel_W-0.5": {
+   "cls": "JointEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kernel"
+   },
+   "status": "ok",
+   "time_s": 0.008921
+  },
+  "je_kozachenko": {
+   "cls": "JointEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kozachenko"
+   },
+   "status": "ok",
+   "time_s": 0.013567
+  },
+  "kendalltau": {
+   "cls": "KendallTau",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "rank",
+    "signed",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "squared": false
+   },
+   "status": "ok",
+   "time_s": 0.009887
+  },
+  "kendalltau-sq": {
+   "cls": "KendallTau",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "rank",
+    "signed",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.00993
+  },
+  "lcss": {
+   "cls": "LongestCommonSubsequence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "global_constraint": null
+   },
+   "status": "ok",
+   "time_s": 0.016628
+  },
+  "lcss_constraint-itakura": {
+   "cls": "LongestCommonSubsequence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "global_constraint": "itakura"
+   },
+   "status": "ok",
+   "time_s": 0.016969
+  },
+  "lcss_constraint-sakoe-chiba": {
+   "cls": "LongestCommonSubsequence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "global_constraint": "sakoe_chiba"
+   },
+   "status": "ok",
+   "time_s": 0.016517
+  },
+  "lmfit_BayesianRidge": {
+   "cls": "LinearModel",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "linear",
+    "misc",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "model": "BayesianRidge"
+   },
+   "status": "ok",
+   "time_s": 0.039072
+  },
+  "lmfit_ElasticNet": {
+   "cls": "LinearModel",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "linear",
+    "misc",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "model": "ElasticNet"
+   },
+   "status": "ok",
+   "time_s": 0.037856
+  },
+  "lmfit_Lasso": {
+   "cls": "LinearModel",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "linear",
+    "misc",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "model": "Lasso"
+   },
+   "status": "ok",
+   "time_s": 0.03741
+  },
+  "lmfit_Ridge": {
+   "cls": "LinearModel",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "linear",
+    "misc",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "model": "Ridge"
+   },
+   "status": "ok",
+   "time_s": 0.034933
+  },
+  "lmfit_SGDRegressor": {
+   "cls": "LinearModel",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "linear",
+    "misc",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "model": "SGDRegressor"
+   },
+   "status": "ok",
+   "time_s": 0.037677
+  },
+  "mgc": {
+   "cls": "MultiscaleGraphCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": null,
+   "status": "ok",
+   "time_s": 0.177961
+  },
+  "mgcx_maxlag-1": {
+   "cls": "CrossMultiscaleGraphCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "distance",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "max_lag": 1
+   },
+   "status": "ok",
+   "time_s": 0.768073
+  },
+  "mgcx_maxlag-10": {
+   "cls": "CrossMultiscaleGraphCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "distance",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "max_lag": 10
+   },
+   "status": "ok",
+   "time_s": 2.277519
+  },
+  "mi_gaussian": {
+   "cls": "MutualInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "gaussian"
+   },
+   "status": "ok",
+   "time_s": 0.001704
+  },
+  "mi_kernel_W-0.25": {
+   "cls": "MutualInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kernel",
+    "kernel_width": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.006884
+  },
+  "mi_kraskov_NN-4": {
+   "cls": "MutualInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kraskov",
+    "prop_k": 4
+   },
+   "status": "ok",
+   "time_s": 0.22829
+  },
+  "mi_kraskov_NN-4_DCE": {
+   "cls": "MutualInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "dyn_corr_excl": "AUTO",
+    "estimator": "kraskov",
+    "prop_k": 4
+   },
+   "status": "ok",
+   "time_s": 0.226116
+  },
+  "pdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "PartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.346599
+  },
+  "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "PartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.299563
+  },
+  "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "PartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 1.281458
+  },
+  "pdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "PartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 1.292952
+  },
+  "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "PartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 1.298965
+  },
+  "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "PartialDirectedCoherence",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 1.313552
+  },
+  "pdist_braycurtis": {
+   "cls": "PairwiseDistance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "metric": "braycurtis"
+   },
+   "status": "ok",
+   "time_s": 0.000175
+  },
+  "pdist_canberra": {
+   "cls": "PairwiseDistance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "metric": "canberra"
+   },
+   "status": "ok",
+   "time_s": 0.00017
+  },
+  "pdist_chebyshev": {
+   "cls": "PairwiseDistance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "metric": "chebyshev"
+   },
+   "status": "ok",
+   "time_s": 0.000171
+  },
+  "pdist_cityblock": {
+   "cls": "PairwiseDistance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "metric": "cityblock"
+   },
+   "status": "ok",
+   "time_s": 0.000166
+  },
+  "pdist_cosine": {
+   "cls": "PairwiseDistance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "metric": "cosine"
+   },
+   "status": "ok",
+   "time_s": 0.000301
+  },
+  "pdist_euclidean": {
+   "cls": "PairwiseDistance",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "metric": "euclidean"
+   },
+   "status": "ok",
+   "time_s": 0.000197
+  },
+  "pec": {
+   "cls": "PowerEnvelopeCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "absolute": false,
+    "log": false,
+    "orth": false
+   },
+   "status": "ok",
+   "time_s": 0.000186
+  },
+  "pec_log": {
+   "cls": "PowerEnvelopeCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "absolute": false,
+    "log": true,
+    "orth": false
+   },
+   "status": "ok",
+   "time_s": 0.000186
+  },
+  "pec_orth": {
+   "cls": "PowerEnvelopeCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "absolute": false,
+    "log": false,
+    "orth": true
+   },
+   "status": "ok",
+   "time_s": 0.000353
+  },
+  "pec_orth_abs": {
+   "cls": "PowerEnvelopeCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "absolute": true,
+    "log": false,
+    "orth": true
+   },
+   "status": "ok",
+   "time_s": 0.000345
+  },
+  "pec_orth_log": {
+   "cls": "PowerEnvelopeCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "absolute": false,
+    "log": true,
+    "orth": true
+   },
+   "status": "ok",
+   "time_s": 0.000395
+  },
+  "pec_orth_log_abs": {
+   "cls": "PowerEnvelopeCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "misc",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.misc",
+   "nan_offdiag": 0,
+   "params": {
+    "absolute": true,
+    "log": true,
+    "orth": true
+   },
+   "status": "ok",
+   "time_s": 0.000402
+  },
+  "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "CoherencePhase",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002236
+  },
+  "phase_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "CoherencePhase",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.00222
+  },
+  "phase_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "CoherencePhase",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002223
+  },
+  "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "CoherencePhase",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.002249
+  },
+  "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "CoherencePhase",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.002257
+  },
+  "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "CoherencePhase",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 0.002278
+  },
+  "phi_Geo_t-1_norm-0": {
+   "cls": "IntegratedInformation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "phitype": "Geo"
+   },
+   "status": "ok",
+   "time_s": 0.190151
+  },
+  "phi_Geo_t-1_norm-1": {
+   "cls": "IntegratedInformation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "normalization": 1,
+    "phitype": "Geo"
+   },
+   "status": "ok",
+   "time_s": 0.191221
+  },
+  "phi_star_t-1_norm-0": {
+   "cls": "IntegratedInformation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "phitype": "star"
+   },
+   "status": "ok",
+   "time_s": 0.077276
+  },
+  "phi_star_t-1_norm-1": {
+   "cls": "IntegratedInformation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "normalization": 1,
+    "phitype": "star"
+   },
+   "status": "ok",
+   "time_s": 0.082373
+  },
+  "pli_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "PhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002105
+  },
+  "pli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "PhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002115
+  },
+  "pli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "PhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002393
+  },
+  "pli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "PhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.002135
+  },
+  "pli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "PhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.002142
+  },
+  "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "PhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 0.002153
+  },
+  "plv_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "PhaseLockingValue",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.00219
+  },
+  "plv_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "PhaseLockingValue",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002206
+  },
+  "plv_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "PhaseLockingValue",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002214
+  },
+  "plv_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "PhaseLockingValue",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.00229
+  },
+  "plv_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "PhaseLockingValue",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.003941
+  },
+  "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "PhaseLockingValue",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 0.004379
+  },
+  "ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "PairwisePhaseConsistency",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002287
+  },
+  "ppc_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "PairwisePhaseConsistency",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002292
+  },
+  "ppc_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "PairwisePhaseConsistency",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002298
+  },
+  "ppc_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "PairwisePhaseConsistency",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.002305
+  },
+  "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "PairwisePhaseConsistency",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.002329
+  },
+  "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "PairwisePhaseConsistency",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 0.002316
+  },
+  "prec-sq_EllipticEnvelope": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "EllipticEnvelope",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.023059
+  },
+  "prec-sq_EmpiricalCovariance": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "EmpiricalCovariance",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.000359
+  },
+  "prec-sq_GraphicalLasso": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "GraphicalLasso",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.002395
+  },
+  "prec-sq_GraphicalLassoCV": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "GraphicalLassoCV",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.33113
+  },
+  "prec-sq_LedoitWolf": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "LedoitWolf",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.000453
+  },
+  "prec-sq_MinCovDet": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "MinCovDet",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.022924
+  },
+  "prec-sq_OAS": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "OAS",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.000356
+  },
+  "prec-sq_ShrunkCovariance": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "ShrunkCovariance",
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.000444
+  },
+  "prec_EllipticEnvelope": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "EllipticEnvelope"
+   },
+   "status": "ok",
+   "time_s": 0.023176
+  },
+  "prec_EmpiricalCovariance": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "EmpiricalCovariance"
+   },
+   "status": "ok",
+   "time_s": 0.000356
+  },
+  "prec_GraphicalLasso": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "GraphicalLasso"
+   },
+   "status": "ok",
+   "time_s": 0.002418
+  },
+  "prec_GraphicalLassoCV": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "GraphicalLassoCV"
+   },
+   "status": "ok",
+   "time_s": 0.333405
+  },
+  "prec_LedoitWolf": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "LedoitWolf"
+   },
+   "status": "ok",
+   "time_s": 0.000449
+  },
+  "prec_MinCovDet": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "MinCovDet"
+   },
+   "status": "ok",
+   "time_s": 0.022911
+  },
+  "prec_OAS": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "OAS"
+   },
+   "status": "ok",
+   "time_s": 0.000344
+  },
+  "prec_ShrunkCovariance": {
+   "cls": "Precision",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "ShrunkCovariance"
+   },
+   "status": "ok",
+   "time_s": 0.000443
+  },
+  "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "PhaseSlopeIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.005015
+  },
+  "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "PhaseSlopeIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.005018
+  },
+  "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "PhaseSlopeIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.00703
+  },
+  "psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max": {
+   "cls": "PhaseSlopeIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "module": ".statistics.wavelet",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002047
+  },
+  "psi_wavelet_max_fs-1_fmin-0_fmax-0-25_max": {
+   "cls": "PhaseSlopeIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "module": ".statistics.wavelet",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002054
+  },
+  "psi_wavelet_max_fs-1_fmin-0_fmax-0-5_max": {
+   "cls": "PhaseSlopeIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "module": ".statistics.wavelet",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002057
+  },
+  "psi_wavelet_mean_fs-1_fmin-0-25_fmax-0-5_mean": {
+   "cls": "PhaseSlopeIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "module": ".statistics.wavelet",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.002097
+  },
+  "psi_wavelet_mean_fs-1_fmin-0_fmax-0-25_mean": {
+   "cls": "PhaseSlopeIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "module": ".statistics.wavelet",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.002099
+  },
+  "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean": {
+   "cls": "PhaseSlopeIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "module": ".statistics.wavelet",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 0.002129
+  },
+  "reci": {
+   "cls": "RegressionErrorCausalInference",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.causal",
+   "nan_offdiag": 0,
+   "params": null,
+   "status": "ok",
+   "time_s": 0.072278
+  },
+  "sgc_nonparametric_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "method": "nonparametric",
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.343528
+  },
+  "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "method": "nonparametric",
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.337476
+  },
+  "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0,
+    "method": "nonparametric",
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.3466
+  },
+  "sgc_nonparametric_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "method": "nonparametric",
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.342056
+  },
+  "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "method": "nonparametric",
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.349703
+  },
+  "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0,
+    "method": "nonparametric",
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.32638
+  },
+  "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "method": "parametric",
+    "order": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.009287
+  },
+  "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "method": "parametric",
+    "order": 20,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.045882
+  },
+  "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "method": "parametric",
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.013376
+  },
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "method": "parametric",
+    "order": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.009192
+  },
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "method": "parametric",
+    "order": 20,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.04575
+  },
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "method": "parametric",
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.013356
+  },
+  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "method": "parametric",
+    "order": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.00889
+  },
+  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "method": "parametric",
+    "order": 20,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.045821
+  },
+  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "method": "parametric",
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.013373
+  },
+  "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "method": "parametric",
+    "order": 1,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.0089
+  },
+  "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "method": "parametric",
+    "order": 20,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.045871
+  },
+  "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "method": "parametric",
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.013418
+  },
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "method": "parametric",
+    "order": 1,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.00888
+  },
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "method": "parametric",
+    "order": 20,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.045659
+  },
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "method": "parametric",
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.013464
+  },
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0,
+    "method": "parametric",
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.013513
+  },
+  "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "method": "parametric",
+    "order": 1,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.008925
+  },
+  "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "method": "parametric",
+    "order": 20,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.04584
+  },
+  "si_gaussian_k-1": {
+   "cls": "StochasticInteraction",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "gaussian"
+   },
+   "status": "ok",
+   "time_s": 0.027329
+  },
+  "si_kernel_W-0.5_k-1": {
+   "cls": "StochasticInteraction",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kernel"
+   },
+   "status": "ok",
+   "time_s": 0.047141
+  },
+  "si_kozachenko_k-1": {
+   "cls": "StochasticInteraction",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kozachenko"
+   },
+   "status": "ok",
+   "time_s": 0.046034
+  },
+  "softdtw": {
+   "cls": "SoftDynamicTimeWarping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "global_constraint": null
+   },
+   "status": "ok",
+   "time_s": 0.041806
+  },
+  "softdtw_constraint-itakura": {
+   "cls": "SoftDynamicTimeWarping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "global_constraint": "itakura"
+   },
+   "status": "ok",
+   "time_s": 0.041646
+  },
+  "softdtw_constraint-sakoe-chiba": {
+   "cls": "SoftDynamicTimeWarping",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.distance",
+   "nan_offdiag": 0,
+   "params": {
+    "global_constraint": "sakoe_chiba"
+   },
+   "status": "ok",
+   "time_s": 0.041244
+  },
+  "spearmanr": {
+   "cls": "SpearmanR",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "rank",
+    "signed",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "squared": false
+   },
+   "status": "ok",
+   "time_s": 0.011198
+  },
+  "spearmanr-sq": {
+   "cls": "SpearmanR",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "rank",
+    "signed",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "squared": true
+   },
+   "status": "ok",
+   "time_s": 0.011279
+  },
+  "te_kernel_W-0.25_k-1": {
+   "cls": "TransferEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kernel",
+    "k_history": 1,
+    "kernel_width": 0.25,
+    "l_history": 1
+   },
+   "status": "ok",
+   "time_s": 0.005127
+  },
+  "te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1": {
+   "cls": "TransferEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "dyn_corr_excl": "AUTO",
+    "estimator": "kraskov",
+    "k_history": 1,
+    "l_history": 1,
+    "prop_k": 4
+   },
+   "status": "ok",
+   "time_s": 0.231905
+  },
+  "te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1": {
+   "cls": "TransferEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "dyn_corr_excl": "AUTO",
+    "estimator": "kraskov",
+    "k_history": 2,
+    "l_history": 1,
+    "prop_k": 4
+   },
+   "status": "ok",
+   "time_s": 0.234446
+  },
+  "te_kraskov_NN-4_DCE_k-max-10_tau-max-4": {
+   "cls": "TransferEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "auto_embed_method": "MAX_CORR_AIS",
+    "dyn_corr_excl": "AUTO",
+    "estimator": "kraskov",
+    "k_search_max": 10,
+    "prop_k": 4,
+    "tau_search_max": 4
+   },
+   "status": "ok",
+   "time_s": 16.197229
+  },
+  "te_kraskov_NN-4_k-1_kt-1_l-1_lt-1": {
+   "cls": "TransferEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kraskov",
+    "k_history": 1,
+    "l_history": 1,
+    "prop_k": 4
+   },
+   "status": "ok",
+   "time_s": 0.225636
+  },
+  "te_kraskov_NN-4_k-max-10_tau-max-4": {
+   "cls": "TransferEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "auto_embed_method": "MAX_CORR_AIS",
+    "estimator": "kraskov",
+    "k_search_max": 10,
+    "prop_k": 4,
+    "tau_search_max": 4
+   },
+   "status": "ok",
+   "time_s": 16.208999
+  },
+  "te_symbolic_k-10_kt-1_l-1_lt-1": {
+   "cls": "TransferEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "symbolic",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "symbolic",
+    "k_history": 10,
+    "l_history": 1
+   },
+   "status": "ok",
+   "time_s": 0.00358
+  },
+  "te_symbolic_k-1_kt-1_l-1_lt-1": {
+   "cls": "TransferEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "symbolic",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "symbolic",
+    "k_history": 1,
+    "l_history": 1
+   },
+   "status": "ok",
+   "time_s": 0.002184
+  },
+  "tlmi_gaussian": {
+   "cls": "TimeLaggedMutualInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "gaussian"
+   },
+   "status": "ok",
+   "time_s": 0.001539
+  },
+  "tlmi_kernel_W-0.25": {
+   "cls": "TimeLaggedMutualInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kernel",
+    "kernel_width": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.005949
+  },
+  "tlmi_kraskov_NN-4": {
+   "cls": "TimeLaggedMutualInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kraskov",
+    "prop_k": 4
+   },
+   "status": "ok",
+   "time_s": 0.220082
+  },
+  "tlmi_kraskov_NN-4_DCE": {
+   "cls": "TimeLaggedMutualInfo",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "dyn_corr_excl": "AUTO",
+    "estimator": "kraskov",
+    "prop_k": 4
+   },
+   "status": "ok",
+   "time_s": 0.223616
+  },
+  "wpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "WeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002188
+  },
+  "wpli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+   "cls": "WeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002183
+  },
+  "wpli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+   "cls": "WeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.002206
+  },
+  "wpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+   "cls": "WeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.5,
+    "fmin": 0.25
+   },
+   "status": "ok",
+   "time_s": 0.002215
+  },
+  "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+   "cls": "WeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fmax": 0.25,
+    "fmin": 0
+   },
+   "status": "ok",
+   "time_s": 0.00222
+  },
+  "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+   "cls": "WeightedPhaseLagIndex",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1
+   },
+   "status": "ok",
+   "time_s": 0.002221
+  },
+  "xcorr-sq_max_sig-True": {
+   "cls": "CrossCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "squared": true,
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.003559
+  },
+  "xcorr-sq_mean_sig-False": {
+   "cls": "CrossCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "sigonly": false,
+    "squared": true,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.003166
+  },
+  "xcorr-sq_mean_sig-True": {
+   "cls": "CrossCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "squared": true,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.003637
+  },
+  "xcorr_max_sig-True": {
+   "cls": "CrossCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "statistic": "max"
+   },
+   "status": "ok",
+   "time_s": 0.003529
+  },
+  "xcorr_mean_sig-False": {
+   "cls": "CrossCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "sigonly": false,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.003152
+  },
+  "xcorr_mean_sig-True": {
+   "cls": "CrossCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.003578
+  },
+  "xme_gaussian_k1": {
+   "cls": "CrossmapEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "gaussian",
+    "history_length": 1
+   },
+   "status": "ok",
+   "time_s": 0.010117
+  },
+  "xme_gaussian_k10": {
+   "cls": "CrossmapEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "gaussian",
+    "history_length": 10
+   },
+   "status": "ok",
+   "time_s": 0.011727
+  },
+  "xme_kernel_W-0.5_k1": {
+   "cls": "CrossmapEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kernel",
+    "history_length": 1
+   },
+   "status": "ok",
+   "time_s": 0.014793
+  },
+  "xme_kernel_W-0.5_k10": {
+   "cls": "CrossmapEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kernel",
+    "history_length": 10
+   },
+   "status": "ok",
+   "time_s": 0.017669
+  },
+  "xme_kozachenko_k1": {
+   "cls": "CrossmapEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kozachenko",
+    "history_length": 1
+   },
+   "status": "ok",
+   "time_s": 0.019847
+  },
+  "xme_kozachenko_k10": {
+   "cls": "CrossmapEntropy",
+   "deps": [
+    "java"
+   ],
+   "error": null,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "module": ".statistics.infotheory",
+   "nan_offdiag": 0,
+   "params": {
+    "estimator": "kozachenko",
+    "history_length": 10
+   },
+   "status": "ok",
+   "time_s": 0.028827
+  }
+ }
+}

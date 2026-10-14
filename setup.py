@@ -23,7 +23,7 @@ install_requires = [
         'jpype1',
         'sktime',
         'dill',
-        'spectral-connectivity',
+        'spectral-connectivity<2',
         'torch',
         'cdt==0.5.23',
         'tslearn',
