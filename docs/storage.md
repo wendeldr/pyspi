@@ -122,8 +122,9 @@ recording names in that row order, which is useful with Calculator's existing
 metadata and never used to infer matrix symmetry.
 
 The adapter does not calculate, preprocess, window, resample, or track calculation
-success. Calculator currently does not expose whether its NaN-filled table has
-been computed. Call `compute()` first; failed-calculation NaNs are saved as actual
+success. Calculator now exposes [per-metric reports](calculation_reporting.md),
+but this adapter does not consult or store them. Call `compute()` first;
+failed-calculation NaNs are saved as actual
 values, rather than inferred to be unavailable. Holding a sequence of calculated
 windows in memory is an adapter convenience; streaming calculation orchestration
 and append/resume APIs are future work.

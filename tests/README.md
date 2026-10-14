@@ -15,6 +15,7 @@ independent references, mutation checks, coverage, and remaining limitations.
 | `regression/generate_goldens.py` | writes and checks the goldens |
 | `compatibility/` | targeted NumPy 2 spectral and wavelet paths, frozen baseline inventory |
 | `unit/` | `Data`, base-class dispatch, `Calculator` config loading and failure handling, frames, utils, `phi_native` golden, known bugs |
+| `unit/test_calculation_reporting.py` | completion/failure versus NaN values, callback ordering/ownership/error propagation, timing boundaries, warning filters/visibility, interruption, and report lifecycle |
 | `unit/test_regression_guards.py`, `regression/test_golden_contract.py` | tests of comparison/error handling, baseline completeness, generator checks, and required-JVM verification |
 | `unit/test_numeric_boundaries.py`, `unit/test_ids_reference.py` | nondegenerate spectral/wavelet aggregation, independent covariance/precision and IDS references, preprocessing axes, dataset reload, and seeded shared-cache calculations |
 | `test_calc.py`, `test_utils.py`, `test_phi_native.py` | original tests, unchanged |
@@ -23,6 +24,23 @@ independent references, mutation checks, coverage, and remaining limitations.
 | `workflow/` | strict workflow/metric configuration, EDF headers, channel identity/order, sampling checks, window plans, and terminal preflight; no signal Data or connectivity calculation |
 
 ## Environment
+
+Calculator reporting can be checked separately with:
+
+```bash
+uv run --no-sync python -m pytest tests/unit/test_calculation_reporting.py tests/unit/test_calculator.py --require-java
+```
+
+The main and extra-wavelet shared-cache Calculator golden passes now run with
+and without completion callbacks. Their numerical comparison policies are
+unchanged. These checks supplement controlled failure/NaN cases, exact snapshot
+bits and ownership, consumer exceptions, monotonic timing, warning visibility
+and suppression, and report reset/interruption tests. Reporting does not fix
+existing calculation limitations, including covariance's one-channel error.
+See [the reporting API](../docs/calculation_reporting.md).
+The [reporting verification receipt](calculation_reporting_results.json) records
+the default/full tiers, installed-wheel checks, coverage scope, direct
+pre-change comparisons, and the test-namespace/sandbox findings.
 
 The supported checkout environment is **Python 3.12 with NumPy 2.5**. Calculation
 and storage tests use one root `uv.lock`; install both into `.venv` with:

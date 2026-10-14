@@ -300,6 +300,30 @@ def compute_recorded(entry, data, seed, seed_fn=seed_all):
     return out
 
 
+def compute_calculator_with_reports(calc, with_callback):
+    """Check callback/table bit agreement in real shared-cache Calculator passes."""
+    observed = []
+
+    def consume(report, values):
+        assert calc.metric_reports[report.identifier] is report
+        if report.status == "success":
+            expected = calc.table[report.identifier].to_numpy()
+            assert values.dtype == expected.dtype and values.shape == expected.shape
+            assert values.tobytes(order="C") == expected.tobytes(order="C")
+            assert not values.flags.writeable
+            assert report.error is None
+        else:
+            assert values is None
+            assert report.error is not None
+            assert np.isnan(calc.table[report.identifier].to_numpy()).all()
+        observed.append(report.identifier)
+
+    assert calc.compute(on_metric_complete=consume if with_callback else None) is None
+    assert list(calc.metric_reports) == list(calc.spis)
+    assert observed == (list(calc.spis) if with_callback else [])
+    assert all(report.elapsed_seconds >= 0 for report in calc.metric_reports.values())
+
+
 def status_of(S):
     """``ok | partial_nan | all_nan`` using ``inspect_calc_results``'s rule."""
     n = S.shape[0]

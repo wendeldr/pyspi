@@ -107,10 +107,12 @@ Local documentation describes this checkout:
 - [EEG optimization decisions and proposed workflow stages](EEG_OPTIMIZATION_NOTES.md)
 - [Exact result storage and time averaging](docs/storage.md)
 - [Workflow configuration and read-only EDF preflight](docs/workflow.md)
+- [Calculator completion reports, callbacks, and timing](docs/calculation_reporting.md)
 - [Calculation tests](tests/README.md), [storage tests](tests/storage/README.md), and [the completed test review](tests/TEST_REVIEW.md)
 - [Dependency migration and installation evidence](DEPENDENCY_MIGRATION.md)
 
-Workflow configuration and EDF preflight are implemented. Signal loading,
+Workflow configuration, EDF preflight, and Calculator completion/timing reports
+are implemented. Workflow signal loading,
 calculation execution, resampling, checkpointing, and parallelization remain
 planned. Patient-folder organization and explicit retries are agreed execution
 requirements; preflight resolves the fixed recording-level channel selection.

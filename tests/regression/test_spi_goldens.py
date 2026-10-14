@@ -173,7 +173,8 @@ def _calculator_mismatches(calc, golden_meta, golden_values, identifiers):
 
 @pytest.mark.java
 @pytest.mark.regression
-def test_calculator_table_matches_goldens_fast(golden_meta, golden_values, raw_dataset, seed_all, tmp_path):
+@pytest.mark.parametrize("with_callback", [False, True], ids=["default", "callback"])
+def test_calculator_table_matches_goldens_fast(golden_meta, golden_values, raw_dataset, seed_all, tmp_path, with_callback):
     """Calculator pass (shared caches) over the non-slow SPIs only."""
     from pyspi.calculator import Calculator
 
@@ -185,7 +186,7 @@ def test_calculator_table_matches_goldens_fast(golden_meta, golden_values, raw_d
     calc = Calculator(dataset=data, configfile=str(configfile))
     assert list(calc.spis) == kept
     seed_all(golden_meta["seed"])
-    calc.compute()
+    harness.compute_calculator_with_reports(calc, with_callback)
 
     failures = _calculator_mismatches(calc, golden_meta, golden_values, kept)
     assert not failures, "Calculator table differs from per-SPI goldens:\n" + "\n".join(failures)
@@ -194,13 +195,14 @@ def test_calculator_table_matches_goldens_fast(golden_meta, golden_values, raw_d
 @pytest.mark.slow
 @pytest.mark.java
 @pytest.mark.regression
-def test_calculator_table_matches_goldens(golden_meta, golden_values, raw_dataset, seed_all):
+@pytest.mark.parametrize("with_callback", [False, True], ids=["default", "callback"])
+def test_calculator_table_matches_goldens(golden_meta, golden_values, raw_dataset, seed_all, with_callback):
     from pyspi.calculator import Calculator
 
     data = harness.make_data(raw_dataset, golden_meta["dataset"])
     calc = Calculator(dataset=data)
     seed_all(golden_meta["seed"])
-    calc.compute()
+    harness.compute_calculator_with_reports(calc, with_callback)
 
     failures = _calculator_mismatches(calc, golden_meta, golden_values, golden_meta["spis"])
     assert not failures, "Calculator table differs from per-SPI goldens:\n" + "\n".join(failures)

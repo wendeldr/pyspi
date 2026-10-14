@@ -96,7 +96,8 @@ def test_extra_spi_matches_golden(extra_identifier, extra_meta, extra_values, ex
 
 
 @pytest.mark.regression
-def test_extra_calculator_matches_goldens(extra_meta, extra_values, extra_raw, seed_all):
+@pytest.mark.parametrize("with_callback", [False, True], ids=["default", "callback"])
+def test_extra_calculator_matches_goldens(extra_meta, extra_values, extra_raw, seed_all, with_callback):
     """One Calculator pass over extra_config.yaml on a single ``Data``.
 
     The six band variants of each class reuse one ``data.mne[measure]`` entry
@@ -109,7 +110,7 @@ def test_extra_calculator_matches_goldens(extra_meta, extra_values, extra_raw, s
     calc = Calculator(dataset=data, configfile=str(EXTRA_CONFIG))
     assert list(calc.spis) == extra_meta["calculator_order"]
     seed_all(extra_meta["seed"])
-    calc.compute()
+    harness.compute_calculator_with_reports(calc, with_callback)
 
     measures = {spi.measure for spi in calc.spis.values()}
     assert len(measures) == 9

@@ -7,6 +7,10 @@ preprocess, calculate connectivity, resample, create output directories, or
 write into existing patient stores. Execution, checkpoints, parallelization,
 and the data-lake integration remain subsequent goals.
 
+Calculator's [completion reporting and timing](calculation_reporting.md) are
+implemented separately, providing diagnostics and a callback for the future
+runner without starting EDF execution.
+
 ## Terminal usage
 
 Use the root locked environment. Edit the paths in

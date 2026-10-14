@@ -4,12 +4,14 @@ import pandas as pd
 import copy, yaml, importlib, time, warnings, os
 from tqdm import tqdm
 from collections import Counter
+from types import MappingProxyType
 from scipy import stats
 from colorama import init, Fore
 init(autoreset=True)
 
 # From this package
 from .data import Data
+from .calculation import MetricReport, _capture_metric_warnings, _describe_error
 from .utils import convert_mdf_to_ddf, check_optional_deps, inspect_calc_results
 
 
@@ -48,6 +50,7 @@ class Calculator:
         detrend=False, normalise=True
     ):
         self._spis = {}
+        self._metric_reports = {}
         self._excluded_spis = list()
         self._normalise = normalise
         self._detrend = detrend
@@ -187,6 +190,16 @@ class Calculator:
         )
 
     @property
+    def metric_reports(self):
+        """Read-only reports for finished attempts in the latest compute call.
+
+        Empty before computation and after loading another dataset. Interrupted
+        or unattempted metrics have no report. Records contain no result arrays
+        and do not establish whether a callback has durably saved its values.
+        """
+        return MappingProxyType(self._metric_reports)
+
+    @property
     def group(self):
         """The numerical group assigned during :meth:`~pyspi.Calculator.calculator.set_group`."""
         try:
@@ -277,31 +290,71 @@ class Calculator:
             index=self._dataset.procnames,
         )
         self._table.columns.name = "process"
+        self._metric_reports.clear()
 
-    def compute(self):
-        """Compute the SPIs on the MVTS dataset."""
+    def compute(self, *, on_metric_complete=None):
+        """Compute the SPIs on the MVTS dataset, returning None as before.
+
+        ``on_metric_complete(report, values)`` is optional and is called after
+        each finished attempt, in SPI order. A successful attempt supplies a
+        detached, read-only NumPy copy of its stored matrix (including the NaN
+        diagonal); a failed attempt supplies None. Callback exceptions propagate
+        unchanged and stop the loop, without relabeling a calculation as failed.
+
+        ``metric_reports`` is reset for each call. Timing uses a monotonic clock
+        around calculation, diagonal masking, table update and failure
+        diagnostics, excluding callback/copy time and the final console summary.
+        Emitted warnings remain visible under the caller's active filters and
+        are described in each report. Warning capture is process-global on the
+        supported Python 3.12; do not compute concurrently in multiple threads.
+        """
         if not hasattr(self, "_dataset"):
             raise AttributeError(
                 "Dataset not loaded yet. Please initialise with load_dataset."
             )
+        if on_metric_complete is not None and not callable(on_metric_complete):
+            raise TypeError("on_metric_complete must be callable or None")
 
+        self._metric_reports.clear()
         pbar = tqdm(self.spis.keys())
-        for spi in pbar:
-            pbar.set_description(f"Processing [{self._name}: {spi}]")
-            start_time = time.time()
-            try:
-                # Get the MPI from the dataset
-                S = self._spis[spi].multivariate(self.dataset)
+        try:
+            for spi in pbar:
+                pbar.set_description(f"Processing [{self._name}: {spi}]")
+                error = None
+                failure_warning = None
+                with _capture_metric_warnings() as emitted:
+                    start_time = time.perf_counter()
+                    try:
+                        # Get the MPI from the dataset
+                        S = self._spis[spi].multivariate(self.dataset)
 
-                # Ensure the diagonal is NaN (sometimes set within the functions)
-                np.fill_diagonal(S, np.nan)
+                        # Ensure the diagonal is NaN (sometimes set within the functions)
+                        np.fill_diagonal(S, np.nan)
 
-                # Save results
-                self._table[spi] = S
-            except Exception as err:
-                warnings.warn(f'Caught {type(err)} for SPI "{spi}": {err}')
-                self._table[spi] = np.nan
-        pbar.close()
+                        # Save results
+                        self._table[spi] = S
+                    except Exception as err:
+                        self._table[spi] = np.nan
+                        error = _describe_error(err)
+                        failure_warning = f'Caught {type(err)} for SPI "{spi}": {err}'
+                    elapsed = time.perf_counter() - start_time
+
+                report = MetricReport(
+                    identifier=spi, status="success" if error is None else "failed",
+                    elapsed_seconds=elapsed, warnings=tuple(emitted), error=error,
+                )
+                self._metric_reports[spi] = report
+                if on_metric_complete is not None:
+                    values = None
+                    if error is None:
+                        values = self._table[spi].to_numpy(copy=True)
+                        values.flags.writeable = False
+                    # This boundary must stay outside the metric exception handler.
+                    on_metric_complete(report, values)
+                if failure_warning is not None:
+                    warnings.warn(failure_warning)
+        finally:
+            pbar.close()
         print(Fore.GREEN + f"\nCalculation complete. Time taken: {pbar.format_dict['elapsed']:.4f}s")
         inspect_calc_results(self)
         

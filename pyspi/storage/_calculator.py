@@ -17,8 +17,8 @@ def write_calculator(path, calculator, *, metrics=None, channel_names=None,
     metrics; ``channel_names`` supplies recording names in the first table's
     row order without changing numeric axes. Calculations must already have run.
 
-    The adapter cannot distinguish a calculated NaN from an uncomputed table's
-    NaN: Calculator does not expose completion status. Both are stored as values.
+    The adapter does not consult Calculator.metric_reports to distinguish a
+    calculated NaN from an uncomputed table's NaN. Both are stored as values.
     Other options are passed to :func:`write_results`.
     """
     single = hasattr(calculator, "table")

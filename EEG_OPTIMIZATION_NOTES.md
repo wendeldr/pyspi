@@ -4,7 +4,7 @@ Updated 2026-10-14.
 
 The goal is to make pyspi easier to run for this EEG/sEEG workload and investigate improvements to total processing time and output size. Changes may include Python orchestration, lower-level implementation changes, or faster compatible dependencies. Improvements must be assessed against the actual workload and scientific interpretation.
 
-**Current state:** production storage and the adversarial test review are complete. The first local workflow goal implements configuration and read-only EDF preflight in `pyspi.workflow`; validation is recorded in [the workflow guide](docs/workflow.md) and [its receipt](tests/workflow/verification.json). Signal loading/execution, resampling, checkpointing, and parallelization remain subsequent goals. Scientific/numerical review is being carried out separately and will be audited when complete. Production storage is in `pyspi.storage`, with an explicit Calculator adapter and separate `pyspi.analysis.time_mean` helper. Calculation, storage, and workflow tests share the root lock. See the [earlier full test review](tests/TEST_REVIEW.md), [storage API](docs/storage.md), and [initial production validation and timings](tests/storage/PRODUCTION_RESULTS.md). The [comparison archive](docs/storage_comparison/README.md) preserves historical evidence. Existing EDFs and patient stores remain unchanged; no cohort recalculation or conversion is authorized.
+**Current state:** production storage and the adversarial test review are complete. Local workflow configuration and read-only EDF preflight are implemented in `pyspi.workflow`; validation is recorded in [the workflow guide](docs/workflow.md) and [its receipt](tests/workflow/verification.json). Calculator now exposes [per-metric completion/failure reports, timing, and an optional callback](docs/calculation_reporting.md). Signal loading/execution, resampling, checkpointing, and parallelization remain subsequent goals. Scientific/numerical review is being carried out separately and will be audited when complete. Production storage is in `pyspi.storage`, with an explicit Calculator adapter and separate `pyspi.analysis.time_mean` helper. Calculation, storage, and workflow tests share the root lock. See the [earlier full test review](tests/TEST_REVIEW.md), [storage API](docs/storage.md), and [initial production validation and timings](tests/storage/PRODUCTION_RESULTS.md). The [comparison archive](docs/storage_comparison/README.md) preserves historical evidence. Existing EDFs and patient stores remain unchanged; no cohort recalculation or conversion is authorized.
 
 ## Working agreement
 
@@ -131,7 +131,7 @@ The subsequent [adversarial test review](tests/TEST_REVIEW.md) strengthens recor
 - In the fully inspected `001.zarr` connectivity group, all 185 metric arrays have shape `(118, 118, 609)`, float64 values, Zstd compression, and chunks shaped `(118, 118, 1)`. The store already uses Zarr format 3.
 - In the current [generic undirected implementation](pyspi/base.py), both ordered directions of each pair are calculated before one triangle is overwritten. Avoiding redundant work is a concrete optimization candidate for methods using that path; correctness, shared-cache effects, and total runtime benefit still need checking.
 - The current [spectral implementation](pyspi/statistics/spectral.py) caches results for parameter variants. Grouping decisions should preserve useful shared work.
-- The [calculator](pyspi/calculator.py) catches metric exceptions and fills that metric's result with NaNs. Durable diagnostics and timing reports remain topics for later execution work.
+- The [calculator](pyspi/calculator.py) catches metric exceptions and fills that metric's result with NaNs. Structured reports now distinguish those failures from successful NaN outputs and expose timing, emitted warnings, and completed matrices to a callback. Persisting diagnostics and coordinating durable writes remain later execution work.
 - The current [data preprocessing](pyspi/data.py) supports the desired detrend-then-z-score order.
 - GPU options exist through [Spectral Connectivity](https://spectral-connectivity.readthedocs.io/en/latest/) and [JIDT](https://github.com/jlizier/jidt/wiki/GPU). JIDT's guide describes GPU parallelism primarily across surrogates and warns that single-value calls often gain little. Current [pyspi information-theory methods](pyspi/statistics/infotheory.py) use single-value calls. This is a possible explanation to investigate, not an established diagnosis of the user's old GPU tests.
 
@@ -174,9 +174,9 @@ Remaining, in recommended order:
 
 Current assignments: scientific/numerical review is being carried out separately.
 This agent will audit that work when it is complete. The local workflow stages
-are recorded below. The current goal authorizes configuration and EDF preflight
-only; it does not authorize connectivity calculation, resampling, execution,
-checkpointing, or parallelization.
+are recorded below. Configuration/EDF preflight are complete. The calculation
+reporting goal adds diagnostics and callback exposure to Calculator; it does not
+authorize cohort execution, resampling, checkpointing, or parallelization.
 
 ## Local workflow planning discussion
 
@@ -262,7 +262,7 @@ checkpointing, or parallelization.
 
 ## Workflow implementation stages
 
-Only the first stage is implemented in the current goal. Later stages remain a
+The first two stages are implemented. Later stages remain a
 plan for discussion, not authorization to implement every stage. Each stage
 should be a separately scoped goal. Scientific changes remain with
 the separate review; audit its completed work before depending on any changed
@@ -290,13 +290,16 @@ definitions. Existing EDFs and patient stores remain reference inputs.
    not the later runtime estimator. Verify with small fixtures and read-only
    checks against the current EDF headers.
 
-2. **Calculation reporting and timing.** Add the minimum instrumentation around
-   the existing calculation loop to expose metric/window success, reported
-   failure, warnings, elapsed time, and completed values to the runner. Preserve
-   the existing preprocessing/calculation semantics and diagonal handling.
-   Do not infer calculation status from NaNs or treat storage errors as metric
-   exceptions. Check that instrumentation leaves existing numerical results
-   unchanged and separates successful all-NaN output from actual exceptions.
+2. **Calculation reporting and timing (implemented).** Calculator exposes
+   immutable per-metric reports with success/failure, emitted warnings, exception
+   details, and monotonic elapsed time. An optional completion callback receives
+   a detached matrix on success and None on failure; consumer errors propagate
+   without becoming metric exceptions. Existing numerical behavior,
+   preprocessing defaults, diagonal masking, and compute's None return are
+   preserved. Successful NaNs remain successful. Reports are in-memory only;
+   window identity and persistence belong to the future runner. See the
+   [reporting guide](docs/calculation_reporting.md) and
+   [verification receipt](tests/calculation_reporting_results.json).
 
 3. **Bounded output, checkpoints, and resume.** Design a single-writer path that
    retains completed metric/window results without accumulating a patient's

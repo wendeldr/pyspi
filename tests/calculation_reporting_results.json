@@ -1,0 +1,300 @@
+{
+  "date": "2026-10-14",
+  "baseline_commit": "45981a4",
+  "scope": "Calculator metric completion/failure reporting, warning diagnostics, timing, and optional result callback",
+  "python": "3.12.3",
+  "packages": {
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "pytest": "9.1.1",
+    "pytest-cov": "7.1.0",
+    "jpype1": "1.7.1"
+  },
+  "jvm": {
+    "jvm_path": "/usr/lib/jvm/java-21-openjdk-amd64/lib/server/libjvm.so",
+    "java_version": "21.0.12.1",
+    "java_runtime_version": "21.0.12.1+1-1-24.04.4-Ubuntu"
+  },
+  "candidate_sha256": {
+    "pyspi/calculation.py": "46c02db9614cd29d8e3d3dd3ab733aaa5725cd5fabcbd40da9a7c69f1a6ff65a",
+    "pyspi/calculator.py": "599da14d3c6928b12517991020822c3b55a49f17a027a33b66aef5fc15c2cc84",
+    "tests/unit/test_calculation_reporting.py": "03bd6fb1d9175ffe6ee16e2dd9454e918caf152b41729f165df518f030d8309a",
+    "tests/regression/harness.py": "2e3a76085bd93b2c4de10459a91d0e2353994c429af65c17104bbceb3e88f953",
+    "tests/workflow/__init__.py": "c5def257544dbc2d7f702a5f217a1afe6b8c86cb091836f41ebcb5bc068ad646"
+  },
+  "runs": [
+    {
+      "name": "default with required JVM, outside sandbox",
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MPLCONFIGDIR=/tmp/pyspi-matplotlib-reporting MNE_DONTWRITE_HOME=true .venv/bin/python -m pytest --require-java --cov=pyspi.calculation --cov=pyspi.calculator --cov-branch",
+      "passed": 866,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 16,
+      "xfailed": 9,
+      "seconds": 158.246,
+      "junit_path": "/tmp/pyspi-reporting-default-final.xml",
+      "junit_sha256": "06d13cfa00d437c8ec6772822717ad3f6b3d10926fe7b19ef4edd2f369214492"
+    },
+    {
+      "name": "full/slow with required JVM, outside sandbox",
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MPLCONFIGDIR=/tmp/pyspi-matplotlib-reporting MNE_DONTWRITE_HOME=true .venv/bin/python -m pytest --pyspi-size=full --runslow --ignore=tests/test_SPIs.py --require-java",
+      "passed": 880,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 10,
+      "seconds": 604.664,
+      "junit_path": "/tmp/pyspi-reporting-full-final.xml",
+      "junit_sha256": "72660124811020590ac083944a423f9283fe1554c59872ea2d77a8e194fdc6e5"
+    },
+    {
+      "name": "focused against installed wheel outside checkout",
+      "command": "cd /tmp && PYTHONPATH=/tmp/pyspi-reporting-installed OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MPLCONFIGDIR=/tmp/pyspi-matplotlib-reporting MNE_DONTWRITE_HOME=true /media/dan/Data/git/pyspi/.venv/bin/python -m pytest /media/dan/Data/git/pyspi/tests/unit/test_calculation_reporting.py /media/dan/Data/git/pyspi/tests/unit/test_calculator.py --require-java --cov=pyspi.calculation --cov=pyspi.calculator --cov-branch",
+      "passed": 50,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "seconds": 9.324,
+      "junit_path": "/tmp/pyspi-reporting-wheel.xml",
+      "junit_sha256": "8654a96f7b7583daa8c2e311ce94dde829757553d1fa1b51f4799b963f591673"
+    },
+    {
+      "name": "workflow and regression guards collected together",
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MPLCONFIGDIR=/tmp/pyspi-matplotlib-reporting MNE_DONTWRITE_HOME=true .venv/bin/python -m pytest tests/workflow tests/unit/test_regression_guards.py --require-java",
+      "passed": 176,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "seconds": 6.356,
+      "junit_path": "/tmp/pyspi-reporting-fixture-isolation.xml",
+      "junit_sha256": "49092cdb0369309457b32a53c59ff6af82ec762f9239c09dcb08b95dcfae3ca7"
+    },
+    {
+      "name": "isolated calculation/storage integration outside sandbox",
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MPLCONFIGDIR=/tmp/pyspi-matplotlib-reporting MNE_DONTWRITE_HOME=true .venv/bin/python -m pytest tests/compatibility/test_calculation_storage.py --require-java --timeout=60",
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "xfailed": 0,
+      "seconds": 5.72,
+      "junit_path": "/tmp/pyspi-reporting-integration.xml",
+      "junit_sha256": "c1e60d5495213db58467de9f02a8635ee56102c833e38a85d075a987e35219e8"
+    }
+  ],
+  "focused_coverage": {
+    "pyspi.calculation": {
+      "covered_lines": 39,
+      "num_statements": 39,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 0,
+      "num_partial_branches": 0,
+      "covered_branches": 0,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    },
+    "Calculator.compute": {
+      "covered_lines": 35,
+      "num_statements": 35,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 12,
+      "num_partial_branches": 0,
+      "covered_branches": 12,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    }
+  },
+  "direct_prechange_comparison": {
+    "baseline_commit": "45981a4",
+    "baseline_calculator_sha256": "96d7f4412095d695b31b4da4b492c2527ce478a741f25090354ddfe1e0452d76",
+    "candidate_calculator_sha256": "599da14d3c6928b12517991020822c3b55a49f17a027a33b66aef5fc15c2cc84",
+    "bit_identical_arrays": 408,
+    "cases": [
+      {
+        "shape": [
+          2,
+          64
+        ],
+        "detrend": false,
+        "normalise": true,
+        "config": "pyspi/sonnet_config.yaml",
+        "identical_arrays": 14
+      },
+      {
+        "shape": [
+          2,
+          64
+        ],
+        "detrend": false,
+        "normalise": true,
+        "config": "tests/regression/extra_config.yaml",
+        "identical_arrays": 54
+      },
+      {
+        "shape": [
+          2,
+          64
+        ],
+        "detrend": true,
+        "normalise": true,
+        "config": "pyspi/sonnet_config.yaml",
+        "identical_arrays": 14
+      },
+      {
+        "shape": [
+          2,
+          64
+        ],
+        "detrend": true,
+        "normalise": true,
+        "config": "tests/regression/extra_config.yaml",
+        "identical_arrays": 54
+      },
+      {
+        "shape": [
+          5,
+          128
+        ],
+        "detrend": false,
+        "normalise": true,
+        "config": "pyspi/sonnet_config.yaml",
+        "identical_arrays": 14
+      },
+      {
+        "shape": [
+          5,
+          128
+        ],
+        "detrend": false,
+        "normalise": true,
+        "config": "tests/regression/extra_config.yaml",
+        "identical_arrays": 54
+      },
+      {
+        "shape": [
+          5,
+          128
+        ],
+        "detrend": true,
+        "normalise": true,
+        "config": "pyspi/sonnet_config.yaml",
+        "identical_arrays": 14
+      },
+      {
+        "shape": [
+          5,
+          128
+        ],
+        "detrend": true,
+        "normalise": true,
+        "config": "tests/regression/extra_config.yaml",
+        "identical_arrays": 54
+      },
+      {
+        "shape": [
+          7,
+          100
+        ],
+        "detrend": false,
+        "normalise": true,
+        "config": "pyspi/sonnet_config.yaml",
+        "identical_arrays": 14
+      },
+      {
+        "shape": [
+          7,
+          100
+        ],
+        "detrend": false,
+        "normalise": true,
+        "config": "tests/regression/extra_config.yaml",
+        "identical_arrays": 54
+      },
+      {
+        "shape": [
+          7,
+          100
+        ],
+        "detrend": true,
+        "normalise": true,
+        "config": "pyspi/sonnet_config.yaml",
+        "identical_arrays": 14
+      },
+      {
+        "shape": [
+          7,
+          100
+        ],
+        "detrend": true,
+        "normalise": true,
+        "config": "tests/regression/extra_config.yaml",
+        "identical_arrays": 54
+      }
+    ]
+  },
+  "unchanged_numerical_sources_configs_goldens_dependencies": {
+    "pyproject.toml": "038ddbaafc29828d02546e7f8876cbb01a9add9b0fbfbbd76ec9cfe0bc887ee9",
+    "pyspi/__init__.py": "c95f32131d40bcd18ff0e5c4d0279571d1a3ed24fa3560ef4ccf8c2449db0bc4",
+    "pyspi/base.py": "a4e6f71b635cc789a94765fab66b52929aaa05eaa65137d91be13ecf87a03c07",
+    "pyspi/config.yaml": "26e72aefa3e2bc91107fa2d2ab8b8799e45b5d3faa0364d367062c0483a829dc",
+    "pyspi/data.py": "6b7257010588e94559352ef3fcef64a483db068e17619873e675977b9a2bb7d0",
+    "pyspi/fabfour_config.yaml": "33d7beed31ed1abf093cc62cb2ec746f9935ffe2fad31c20718502524b5d31e5",
+    "pyspi/fast_config.yaml": "c4dd7a6de0dbe4bc8f10de90541985480373877860ca597ff4892da204c6024e",
+    "pyspi/sonnet_config.yaml": "f8820feb35061dbe6bca5ad2c65e5617b740f766880a5d7bfb992d3cd273b0be",
+    "pyspi/statistics/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pyspi/statistics/basic.py": "9395e02543cdd89dab51a4b183ba20bff16e0a1b4a0eca13839cdcd1f7dfbd22",
+    "pyspi/statistics/causal.py": "3a18a98b94c265043e2668852d16e7d872a34bf236aef2c77c8e85ddf8502751",
+    "pyspi/statistics/distance.py": "3c37eca135b3dd12ffda3c2a1d40d8ffdee538a1f37ff06fa179e1fae045ac5e",
+    "pyspi/statistics/infotheory.py": "4756adea3449df022e3c0f050df92e8053e999e111e1b4a4cc406995df6c2472",
+    "pyspi/statistics/misc.py": "eaa58be873f6919c96e3098c1cb5ca53a5d02bc6172cdef063c8533c8358c2a1",
+    "pyspi/statistics/spectral.py": "b57cee42f427cd78196d0ea8ea73be1831f2d862afa533fa7907a1540d3550fb",
+    "pyspi/statistics/wavelet.py": "0c77b8582448f3cc247365c93c834111e0644f8a9971a7b8d22cd8c16826117f",
+    "pyspi/workflow/retained185.yaml": "4279b7a6df817b09dbbf91b2cee860934e5496ab3a5de2c2caec1ba65a2b4b2b",
+    "tests/regression/goldens/extra/small/meta.json": "78ff91b91b9bc0fe1218092ed4570704dee255f294ee792814f3cfd8d1007ff2",
+    "tests/regression/goldens/extra/small/values.npz": "5f9a8fa887ab8c930d5c7c3cec946462dae3f6454d57866225a5aef11595671f",
+    "tests/regression/goldens/full/meta.json": "a1c3d309cf97628ac060c757f62c6ccf0c8cd983920aa99a0f7eddfef3cae7ac",
+    "tests/regression/goldens/full/values.npz": "23346d35af11445741e0c5fa772343dd3bccb040a6de3cbc9729b7113eacec3d",
+    "tests/regression/goldens/phi_native.npz": "74dbf0685a2e2c8d1a0ba622070e38796d01cd4f66495a3fcf9a1da4a6d5e88f",
+    "tests/regression/goldens/preproc/meta.json": "7004fa569504b6f69dfeb3d15cee012f468448b084eabb1c7b013d2c07b00d58",
+    "tests/regression/goldens/preproc/values.npz": "6c8989efa5d6fa497b0e2cc3919b3607618f2524774839ba0777d7d728901347",
+    "tests/regression/goldens/small/meta.json": "7563a22c07f3d670f5b86a076dc38d79658d6458d9366a211579e3bfc6919276",
+    "tests/regression/goldens/small/values.npz": "3289d5a3c141546e2240cdf649ce0627645099182394192947552325d30a9819",
+    "uv.lock": "f6c266d1f5e900d0e70cda43715b55c99e002519444658dc25326ac23da25382"
+  },
+  "other_checks": [
+    "Wheel installed with --no-deps into /tmp/pyspi-reporting-installed; imports asserted to resolve there",
+    "Installed calculation.py/calculator.py/storage adapter bytes equal current source",
+    "Documentation Python example completed all 14 metrics and serialized reports with allow_nan=False",
+    "uv lock --check and uv pip check passed without dependency changes",
+    "Relative links in modified guides exist; git diff --check passed"
+  ],
+  "findings": {
+    "preflight_test_namespace": "Initial combined run exposed tests/workflow/conftest.py shadowing the root conftest in three JVM guard tests. Adding tests/workflow/__init__.py isolates the fixture module; the joint 176-case check and final broad suites verify it.",
+    "sandbox_zarr": "Sandboxed default run timed out opening a temporary Zarr group after calculations completed. A 30-second integration retry also timed out. A standalone zarr.open_group probe without importing Calculator timed out after 15 seconds. The integration passed outside the sandbox; final broad suites therefore run outside it. No storage behavior was changed.",
+    "existing_one_channel_covariance": "Pre-change and candidate both raise the existing sklearn Expected 2D array error. Tests preserve and report this failure rather than changing the calculation.",
+    "warnings": "Only emitted Python warnings are observed under active filters; logging and internally captured warnings are excluded. Python 3.12 warning observation is process-global, so threaded concurrent compute calls remain unsupported.",
+    "completion": "Reports describe finished calculation attempts; consumer/copy failures propagate and do not establish durable write completion. Internally swallowed SPI errors returning NaNs remain success at this boundary."
+  },
+  "deferred": [
+    "EDF execution/loading",
+    "resampling",
+    "checkpoint orchestration and resume",
+    "parallelization/resource scheduling",
+    "scientific corrections and golden updates"
+  ],
+  "local_artifacts": "/tmp/pyspi-reporting-*"
+}
