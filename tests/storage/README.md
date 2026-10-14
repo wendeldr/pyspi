@@ -1,29 +1,29 @@
 # Storage regression tests
 
-These main-repository tests validate the candidate in `storage_comparison/` using deterministic arrays and temporary stores. No patient output is modified and no EEG calculations run. Production integration and the main pyspi dependency environment remain separate work.
+These main-repository tests validate the candidate in `storage_comparison/` using deterministic arrays and temporary stores. No patient output is modified and no EEG calculations run in this suite. The calculation and storage dependency environment is now unified; production storage integration remains later work.
 
 After the agreed selection and shard-sizing corrections on 2026-10-14, the candidate passes **381 cases**, with **two strict expected failures** confined to experimental tolerance packing, on Python 3.12.3. All nine original R1 integrity regressions pass. The original prototype script also passed its 115 synthetic round trips. See [INTEGRITY_RESULTS.md](INTEGRITY_RESULTS.md) for behavior, measured overhead, and limits.
 
 ## Run from the repository root
 
-Install and run the separate locked environment:
+Install and run the unified locked environment:
 
 ```bash
-uv sync --project tests/storage --locked
-uv run --project tests/storage --locked python -m pytest \
+uv sync --locked --extra testing --group storage-test
+uv run --no-sync python -m pytest \
   -c tests/storage/pytest.ini tests/storage
 ```
 
-The explicit configuration avoids collecting the legacy SPI benchmark, which calculates metrics during import. A separate [CI workflow](../../.github/workflows/storage_tests.yaml) runs the storage suite on Python 3.12 and saves JUnit and coverage reports. The workflow has been configured locally; no remote CI run is claimed.
+The explicit configuration avoids collecting the legacy SPI benchmark, which calculates metrics during import. The [unified CI workflow](../../.github/workflows/run_unit_tests.yaml) installs the root lock and runs calculation and storage suites on Python 3.12, saving JUnit and coverage reports. No remote CI run is claimed.
 
-The isolated environments require Python 3.12 or newer, NumPy 2, and Zarr 3.4.1 or newer. The latter provides the per-array strict-read setting used by the integrity implementation. `fpzip`, `zfpy`, and Blosc2 remain dependencies because the prototype's compressor registry imports them. Production dependency cleanup remains deferred.
+The older standalone comparison environment remains available with `uv sync --project tests/storage --locked` and `uv run --project tests/storage --locked python -m pytest -c tests/storage/pytest.ini tests/storage`. Zarr 3.4.1 provides the per-array strict-read setting used by the integrity implementation. `fpzip`, `zfpy`, and Blosc2 remain development dependencies because the prototype's compressor registry imports them. Production dependency cleanup remains deferred.
 
 ## Coverage
 
 ```bash
 mkdir -p tests/storage/.artifacts
 COVERAGE_FILE=tests/storage/.artifacts/.coverage \
-uv run --project tests/storage --locked python -m pytest \
+uv run --no-sync python -m pytest \
   -c tests/storage/pytest.ini tests/storage \
   --cov=packing --cov=pspi_store --cov=store_integrity --cov-branch \
   --cov-report=term-missing \

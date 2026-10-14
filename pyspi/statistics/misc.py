@@ -7,7 +7,7 @@ from statsmodels.tsa.vector_ar.vecm import coint_johansen
 from sklearn.gaussian_process import kernels, GaussianProcessRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn import linear_model
-import mne.connectivity as mnec
+import mne_connectivity as mnec
 from pyspi.lib.ids.dependence import compute_IDS
 
 from pyspi.base import (
@@ -170,7 +170,7 @@ class PowerEnvelopeCorrelation(Undirected, Unsigned):
         adj = np.squeeze(
             mnec.envelope_correlation(
                 z, orthogonalize=self._orth, log=self._log, absolute=self._absolute
-            )
+            ).combine("mean").get_data(output="dense")
         )
         np.fill_diagonal(adj, np.nan)
         return adj
@@ -198,4 +198,3 @@ class InterDependenceScore(Undirected, Unsigned):
         ids = compute_IDS(z, num_terms=self._num_terms, p_norm=self._p_norm, 
                            bandwidth_term=self._bandwidth_term)
         return ids
-    

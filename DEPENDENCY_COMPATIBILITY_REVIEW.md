@@ -1,5 +1,8 @@
 # Dependency compatibility review
 
+This records the investigation before implementation. The subsequent migration
+and current installation instructions are in [DEPENDENCY_MIGRATION.md](DEPENDENCY_MIGRATION.md).
+
 Investigated 2026-10-14. The question was whether older calculation dependencies are necessary, or newer versions can support both pyspi calculations and the chosen storage format.
 
 **Finding: Python 3.12 and NumPy 2 can run calculation and storage tests together.** A temporary environment with Python 3.12.3, NumPy 2.5.4, Zarr 3.4.1, and numcodecs 0.17.0 passed the frozen default calculation suite and the storage suite. It retained the older metric-library versions and required two `np.in1d` → `np.isin` substitutions inside a temporary copy of spectral-connectivity 1.1.2. This is evidence for a small compatibility migration, not approval to change the project's dependencies or a proof that every calculation is mathematically correct.

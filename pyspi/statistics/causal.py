@@ -118,7 +118,9 @@ class ConvergentCrossMapping(Directed, Signed):
             for _i in range(M):
                 for _j in range(_i + 1, M):
                     try:
-                        E = int(max(embedding[[_i, _j]]))
+                        # np.max returns a scalar for both embedding layouts;
+                        # NumPy 2 no longer converts a length-one array to int.
+                        E = int(np.max(embedding[[_i, _j]]))
                     except NameError:
                         E = int(self._E)
 

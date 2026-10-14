@@ -1,7 +1,7 @@
 import numpy as np
 from copy import deepcopy
 
-import spectral_connectivity as sc  # For directed spectral statistics (excl. spectral GC)
+from pyspi._spectral_compat import spectral_connectivity as sc
 from pyspi.base import (
     Directed,
     Undirected,

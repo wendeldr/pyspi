@@ -1,79 +1,89 @@
-name: Unit Testing Pipeline
+name: Calculation and storage tests
 
-on: 
+on:
   push:
+  pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+
 jobs:
-  test-ubuntu:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-      - name: Install pyspi and test dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt -r tests/requirements-test.txt && pip install -e .
-      - name: Run pyspi test suite (default tier)
-        run: |
-          pytest
-
-  # Same default tier, but on the pinned environment the goldens were generated
-  # in (tests/requirements-test-lock.txt). If this job is green while the
-  # unpinned matrix above is red, a library upgrade moved an output, not pyspi.
-  test-pinned-env:
-    if: github.event_name == 'push'
+  unified-default:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Setup python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: 'pip'
-      - name: Install pinned test environment
+          python-version: "3.12"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.17"
+          enable-cache: true
+      - name: Install the unified locked environment
         run: |
-          python -m pip install --upgrade pip
-          grep -v '^-e ' tests/requirements-test-lock.txt > "$RUNNER_TEMP/requirements-lock-ci.txt"
-          pip install --extra-index-url https://download.pytorch.org/whl/cpu -r "$RUNNER_TEMP/requirements-lock-ci.txt" && pip install --no-deps -e .
-      - name: Run pyspi test suite (default tier, pinned)
+          uv sync --locked --extra testing --group storage-test
+          uv pip check
+      - name: Run calculation and compatibility tests
         run: |
-          pytest
+          mkdir -p tests/storage/.artifacts
+          uv run --no-sync python -m pytest --junitxml=tests/storage/.artifacts/calculations.xml
+      - name: Run storage tests and branch coverage in the same environment
+        env:
+          COVERAGE_FILE: tests/storage/.artifacts/.coverage
+        run: |
+          uv run --no-sync python -m pytest -c tests/storage/pytest.ini tests/storage \
+            --cov=packing --cov=pspi_store --cov=store_integrity --cov-branch --cov-report=term-missing \
+            --cov-report=xml:tests/storage/.artifacts/storage-coverage.xml \
+            --junitxml=tests/storage/.artifacts/storage.xml
+      - name: Save verification reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-default-reports
+          path: tests/storage/.artifacts/*.xml
 
-  full-tier:
+  unified-full:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
-      - name: Setup python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: 'pip'
-      - name: Install pinned test environment
+          python-version: "3.12"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.17"
+          enable-cache: true
+      - name: Install the unified locked environment
         run: |
-          python -m pip install --upgrade pip
-          # The lock records this checkout as an editable entry with a machine-local
-          # path; strip it and install the package itself from this checkout.
-          # torch is pinned to the CPU wheel (+cpu), which only the PyTorch index serves.
-          grep -v '^-e ' tests/requirements-test-lock.txt > "$RUNNER_TEMP/requirements-lock-ci.txt"
-          pip install --extra-index-url https://download.pytorch.org/whl/cpu -r "$RUNNER_TEMP/requirements-lock-ci.txt" && pip install --no-deps -e .
-      # The legacy benchmark runs serially: its only output (the SPI BENCHMARKING
-      # SUMMARY printed at session finish) is lost inside xdist workers.
-      - name: Run legacy benchmark (serial)
+          uv sync --locked --extra testing --group storage-test
+          uv pip check
+      - name: Run the legacy benchmark serially
         run: |
-          pytest tests/test_SPIs.py --runslow --timeout=1800
-      - name: Run pyspi test suite (full tier)
+          mkdir -p tests/storage/.artifacts
+          uv run --no-sync python -m pytest tests/test_SPIs.py --runslow --timeout=1800 \
+            --junitxml=tests/storage/.artifacts/legacy.xml
+      - name: Run full and slow calculation regressions
         run: |
-          pytest --pyspi-size=full --runslow --timeout=1800 -n 2 --ignore=tests/test_SPIs.py
+          uv run --no-sync python -m pytest --pyspi-size=full --runslow --timeout=1800 \
+            -n 2 --ignore=tests/test_SPIs.py --junitxml=tests/storage/.artifacts/full.xml
+      - name: Save verification reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-full-reports
+          path: tests/storage/.artifacts/*.xml

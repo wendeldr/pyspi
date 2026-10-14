@@ -1,0 +1,172 @@
+{
+  "python": "3.12.3",
+  "packages": {
+    "numpy": "2.5.4",
+    "scipy": "1.17.1",
+    "mne": "1.13.2",
+    "mne-connectivity": "0.9.0",
+    "cdt": "0.6.0",
+    "pyEDM": "1.15.2.0",
+    "spectral-connectivity": "1.1.2",
+    "setuptools": "81.0.0",
+    "pytest": "9.1.1",
+    "zarr": "3.4.1",
+    "numcodecs": "0.17.0",
+    "pcodec": "1.0.4",
+    "torch": "2.14.1+cpu"
+  },
+  "runs": {
+    "default": {
+      "evidence": "tests/storage/.artifacts/dependency_migration/migrated-default-final.xml",
+      "tests": 588,
+      "passed": 563,
+      "skipped": 15,
+      "xfailed": 10,
+      "failures": 0,
+      "errors": 0,
+      "expected_failures": {
+        "test_te_symbolic_fixed": "known bug: symbolic TE uses TransferEntropyCalculatorGaussian",
+        "test_softdtw_global_constraint_fixed": "known bug: SoftDynamicTimeWarping.bivariate never passes global_constraint",
+        "test_rank_labels_shared_fixed[SpearmanR]": "known bug: __init__ does self.labels += [...] on the class-level list",
+        "test_rank_labels_shared_fixed[KendallTau]": "known bug: __init__ does self.labels += [...] on the class-level list",
+        "test_undirected_spectral_symmetry_fixed": "known bug: spectral MRO bypasses Undirected.multivariate",
+        "test_duplicate_identifiers_fixed": "known bug: duplicates are counted on dict keys, which are already unique",
+        "test_data_procnames_fixed": "known bug: Data.__init__ asserts len(procnames) but never stores them",
+        "test_convert_to_numpy_csv_fixed": "known bug: np.genfromtxt(data, ',') passes the delimiter as dtype",
+        "test_correlation_frame_fixed": "known bug: Calculator._get_correlation_df(with_labels=True) calls self.getstatlabels()",
+        "test_convert_mdf_to_ddf_pivots_to_spi_pair_by_dataset": "known bug: convert_mdf_to_ddf passes stack(dropna=False), rejected by pandas>=3 (current behaviour locked in test_known_bugs.py)"
+      },
+      "ordinary_skips": {
+        "test_spi_matches_golden[ccm_E-10_diff]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-10_max]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-10_mean]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-1_diff]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-1_max]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-1_mean]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-None_diff]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-None_max]": "slow: needs --runslow",
+        "test_spi_matches_golden[ccm_E-None_mean]": "slow: needs --runslow",
+        "test_spi_matches_golden[te_kraskov_NN-4_DCE_k-max-10_tau-max-4]": "slow: needs --runslow",
+        "test_spi_matches_golden[te_kraskov_NN-4_k-max-10_tau-max-4]": "slow: needs --runslow",
+        "test_calculator_table_matches_goldens": "slow: needs --runslow",
+        "test_mpi[NOTSET]": "got empty parameter set for (est, est_ob, mpi_benchmark, mpi_new)",
+        "test_ccm_auto_embedding_current": "slow: needs --runslow",
+        "test_ccm_auto_embedding_fixed": "slow: needs --runslow"
+      }
+    },
+    "small_slow": {
+      "evidence": "tests/storage/.artifacts/dependency_migration/migrated-small-slow.xml",
+      "tests": 587,
+      "passed": 576,
+      "skipped": 0,
+      "xfailed": 11,
+      "failures": 0,
+      "errors": 0,
+      "expected_failures": {
+        "test_te_symbolic_fixed": "known bug: symbolic TE uses TransferEntropyCalculatorGaussian",
+        "test_ccm_auto_embedding_fixed": "known bug: ccm E=None takes EmbedDimension().max()['E'] (max E), not the best-rho E",
+        "test_softdtw_global_constraint_fixed": "known bug: SoftDynamicTimeWarping.bivariate never passes global_constraint",
+        "test_rank_labels_shared_fixed[SpearmanR]": "known bug: __init__ does self.labels += [...] on the class-level list",
+        "test_rank_labels_shared_fixed[KendallTau]": "known bug: __init__ does self.labels += [...] on the class-level list",
+        "test_undirected_spectral_symmetry_fixed": "known bug: spectral MRO bypasses Undirected.multivariate",
+        "test_duplicate_identifiers_fixed": "known bug: duplicates are counted on dict keys, which are already unique",
+        "test_data_procnames_fixed": "known bug: Data.__init__ asserts len(procnames) but never stores them",
+        "test_convert_to_numpy_csv_fixed": "known bug: np.genfromtxt(data, ',') passes the delimiter as dtype",
+        "test_correlation_frame_fixed": "known bug: Calculator._get_correlation_df(with_labels=True) calls self.getstatlabels()",
+        "test_convert_mdf_to_ddf_pivots_to_spi_pair_by_dataset": "known bug: convert_mdf_to_ddf passes stack(dropna=False), rejected by pandas>=3 (current behaviour locked in test_known_bugs.py)"
+      },
+      "ordinary_skips": {}
+    },
+    "full_slow": {
+      "evidence": "tests/storage/.artifacts/dependency_migration/migrated-full.xml",
+      "tests": 587,
+      "passed": 576,
+      "skipped": 0,
+      "xfailed": 11,
+      "failures": 0,
+      "errors": 0,
+      "expected_failures": {
+        "test_te_symbolic_fixed": "known bug: symbolic TE uses TransferEntropyCalculatorGaussian",
+        "test_ccm_auto_embedding_fixed": "known bug: ccm E=None takes EmbedDimension().max()['E'] (max E), not the best-rho E",
+        "test_softdtw_global_constraint_fixed": "known bug: SoftDynamicTimeWarping.bivariate never passes global_constraint",
+        "test_rank_labels_shared_fixed[SpearmanR]": "known bug: __init__ does self.labels += [...] on the class-level list",
+        "test_rank_labels_shared_fixed[KendallTau]": "known bug: __init__ does self.labels += [...] on the class-level list",
+        "test_undirected_spectral_symmetry_fixed": "known bug: spectral MRO bypasses Undirected.multivariate",
+        "test_duplicate_identifiers_fixed": "known bug: duplicates are counted on dict keys, which are already unique",
+        "test_data_procnames_fixed": "known bug: Data.__init__ asserts len(procnames) but never stores them",
+        "test_convert_to_numpy_csv_fixed": "known bug: np.genfromtxt(data, ',') passes the delimiter as dtype",
+        "test_correlation_frame_fixed": "known bug: Calculator._get_correlation_df(with_labels=True) calls self.getstatlabels()",
+        "test_convert_mdf_to_ddf_pivots_to_spi_pair_by_dataset": "known bug: convert_mdf_to_ddf passes stack(dropna=False), rejected by pandas>=3 (current behaviour locked in test_known_bugs.py)"
+      },
+      "ordinary_skips": {}
+    },
+    "legacy": {
+      "evidence": "tests/storage/.artifacts/dependency_migration/migrated-legacy-final.xml",
+      "tests": 285,
+      "passed": 285,
+      "skipped": 0,
+      "xfailed": 0,
+      "failures": 0,
+      "errors": 0,
+      "expected_failures": {},
+      "ordinary_skips": {}
+    },
+    "storage": {
+      "evidence": "tests/storage/.artifacts/dependency_migration/migrated-storage.xml",
+      "tests": 383,
+      "passed": 381,
+      "skipped": 0,
+      "xfailed": 2,
+      "failures": 0,
+      "errors": 0,
+      "expected_failures": {
+        "test_tolerance_preserves_nonfinite_value_classes[inf-7.0]": "R4: tolerance ignores incompatible infinity entries",
+        "test_tolerance_preserves_nonfinite_value_classes[-inf-7.0]": "R4: tolerance ignores incompatible infinity entries"
+      },
+      "ordinary_skips": {}
+    },
+    "reinstalled_wheel": {
+      "evidence": "tests/storage/.artifacts/dependency_migration/wheel-smoke.xml",
+      "tests": 10,
+      "passed": 10,
+      "skipped": 0,
+      "xfailed": 0,
+      "failures": 0,
+      "errors": 0
+    }
+  },
+  "original_tests_and_goldens_unchanged": 36,
+  "original_golden_values_and_tolerance_policy_changed": false,
+  "sha256": {
+    "pyproject.toml": "a3590af28a7f79675d7395ae90ca39cd9ce6ac5232785c280d932f0b6c242d43",
+    "uv.lock": "3500d65038d5e53b169b52450b3f5d31a9943bcab108a3b40d487d0409631090",
+    "tests/requirements-test-lock.txt": "48209df7d4f1b624931c0ca4ad24619f6a286b5d3feb699bbe53c993269ae3a4",
+    "pyspi/_spectral_compat.py": "52ca7b6f9206dc9e6bea32232945980e2d6b19ac3b0280197b17132b741f6360",
+    "pyspi/statistics/spectral.py": "b57cee42f427cd78196d0ea8ea73be1831f2d862afa533fa7907a1540d3550fb",
+    "pyspi/statistics/wavelet.py": "0c77b8582448f3cc247365c93c834111e0644f8a9971a7b8d22cd8c16826117f",
+    "pyspi/statistics/causal.py": "3a18a98b94c265043e2668852d16e7d872a34bf236aef2c77c8e85ddf8502751",
+    "pyspi/statistics/misc.py": "eaa58be873f6919c96e3098c1cb5ca53a5d02bc6172cdef063c8533c8358c2a1",
+    "tests/compatibility/test_numpy2.py": "55db0db25d1ccd6bcfb64f59b24a5d17c83ddbf4bedf4a15ca3546cf7fe61ccd",
+    "tests/compatibility/test_calculation_storage.py": "1c95b93398f4b7169c4f77066b1751cc57348d25466c1f5171b2e988b1a37c10",
+    "tests/compatibility/spectral_reference.npz": "f6041838c1d46f5b616230322402ac9e2b2b39af8f2dafc0463680759a97ab4e",
+    ".github/workflows/run_unit_tests.yaml": "303f0494feb4a86768b7f93958bc2f5d27441d24a7b7aa043d24406196d1f8e5"
+  },
+  "installation": {
+    "root_uv_sync_locked": true,
+    "root_dependency_check": true,
+    "source_distribution_and_wheel_build": true,
+    "pip_lock_installed_cleanly": true,
+    "wheel_dependency_check": true,
+    "wheel_required_resources_verified": 14,
+    "runtime_only_install_without_pytest_or_zarr": true,
+    "runtime_only_fabfour_metrics_finite": 4,
+    "wheel_smoke_after_reinstall": true
+  },
+  "limits": [
+    "Regression agreement is not comprehensive mathematical validation.",
+    "Known expected failures and unsuccessful/all-NaN goldens remain.",
+    "No remote CI execution or performance improvement is claimed.",
+    "Patient inputs and existing patient stores were not accessed."
+  ],
+  "legacy_reported_deviation_table_unchanged": true
+}

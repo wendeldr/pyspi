@@ -10,6 +10,7 @@ The suite is a **change detector**. The golden values under `tests/regression/go
 | `regression/test_extra_goldens.py`, `regression/extra_config.yaml` | snapshot goldens for nine wavelet classes that `config.yaml` leaves out (see [Extra goldens](#extra-goldens)) |
 | `regression/harness.py`, `regression/spi_policy.py` | shared build/seed/compute/compare code and the per-SPI policy (tolerances, slow, stochastic) |
 | `regression/generate_goldens.py` | writes and checks the goldens |
+| `compatibility/` | targeted NumPy 2 spectral and wavelet paths, frozen baseline inventory |
 | `unit/` | `Data`, base-class dispatch, `Calculator` config loading and failure handling, frames, utils, `phi_native` golden, known bugs |
 | `test_calc.py`, `test_utils.py`, `test_phi_native.py` | original tests, unchanged |
 | `test_SPIs.py` | original CML7 z-score benchmark (`legacy`, `slow`) |
@@ -17,16 +18,37 @@ The suite is a **change detector**. The golden values under `tests/regression/go
 
 ## Environment
 
-Python 3.11 in a uv environment at the repository root. Install from `requirements.txt` so the upstream pins apply (`pyEDM==1.15.2.0`, `setuptools<81`, `numpy<2`, `mne==0.23.0`, `cdt==0.5.23`).
+The supported checkout environment is **Python 3.12 with NumPy 2.5**. Calculation
+and storage tests use one root `uv.lock`; install both into `.venv` with:
 
 ```bash
-uv venv --python 3.11 .venv
-uv pip install --python .venv torch --index-url https://download.pytorch.org/whl/cpu   # CPU wheel; cdt needs torch
-uv pip install --python .venv -r requirements.txt -r tests/requirements-test.txt -e .
-uv pip freeze --python .venv > tests/requirements-test-lock.txt
+uv sync --locked --extra testing --group storage-test
+uv pip check
+uv run --no-sync python -m pytest
+uv run --no-sync python -m pytest -c tests/storage/pytest.ini tests/storage
 ```
 
-`spectral-connectivity` must stay below 2 (2.x breaks pyspi); the lock already has 1.1.2. To reproduce the golden environment exactly, install from the lock instead: `uv pip install --python .venv -f https://download.pytorch.org/whl/cpu/torch/ -r tests/requirements-test-lock.txt -e .` (the lock pins the CPU-only torch wheel, `torch==2.14.1+cpu`, which only the PyTorch index serves; with pip use `--extra-index-url https://download.pytorch.org/whl/cpu` instead, as the CI lock jobs do; pyspi reaches torch only through `cdt`, and the SPIs it uses do not run on it). A JDK is needed for the 39 JIDT (`java`) SPIs. Without a JVM, `pyspi.statistics.infotheory` still imports (its Java packages resolve lazily), but its classes cannot be instantiated, so the test harness leaves that module out. Every `java`-marked test then skips: the 39 JIDT per-SPI tests, the 8 `mi_gaussian`/`te_kraskov` preprocessing variants, `test_catalogue_matches_golden_meta`, both `Calculator` end-to-end tests over `config.yaml`, and the Java-dependent unit tests (`test_subset_counts`, the two tests in `unit/test_frames.py`, and the `te_symbolic` and `CorrelationFrame` known-bug pairs). `test_spi_catalogue` checks for the JVM itself and skips too. Everything else still runs, including `test_extra_goldens.py`, which needs no Java.
+`pyproject.toml` is the dependency source of truth. `tests/requirements-test-lock.txt`
+is an exported, portable pip equivalent of the unified lock, without an editable
+machine-local path. In a clean Python 3.12 environment:
+
+```bash
+python -m pip install --extra-index-url https://download.pytorch.org/whl/cpu -r tests/requirements-test-lock.txt
+python -m pip install --no-deps -e '.[testing]'
+```
+
+The lock selects CPU PyTorch wheels. `pyEDM==1.15.2.0` and
+`spectral-connectivity==1.1.2` preserve the selected estimators and frequency
+conventions; the packaged spectral adapter supports NumPy 2 without editing
+site-packages. The former requires setuptools below 82 because it imports
+`pkg_resources`. See [the migration report](../DEPENDENCY_MIGRATION.md) for
+baseline hashes, test results, remaining restrictions, and upgrade decisions.
+
+A Java runtime (tested with Java 17) is needed for the JIDT SPIs. Without a JVM,
+the Java-dependent tests explicitly skip. A complete verification run must
+confirm that Java is available and those tests ran. Storage tests remain an
+explicit second invocation because they have their own pytest configuration;
+they now run in the same installed environment and CI job as calculations.
 
 `meta.json` in each golden set records the Python, Java and package versions and the `OMP_NUM_THREADS` setting it was generated with.
 
@@ -36,7 +58,7 @@ Always run from the repository root.
 
 | command | what runs |
 |---|---|
-| `.venv/bin/python -m pytest` | default tier: small goldens (5 processes x 64 observations), no `slow` tests, no legacy benchmark; 553 passed, 15 skipped, 10 xfailed in 89-98 s serial on the generating machine |
+| `.venv/bin/python -m pytest` | default tier: small goldens (5 processes x 64 observations), no `slow` tests, no legacy benchmark; see the migration report for current counts; original baseline: 553 passed, 15 skipped, 10 xfailed |
 | `.venv/bin/python -m pytest --runslow` | adds the slow SPI tests, the full-config `Calculator` end-to-end test, the slow known-bug tests (ccm) and the legacy benchmark |
 | `.venv/bin/python -m pytest --pyspi-size=full --runslow --timeout=1800` | full tier: 7 x 100 goldens, everything |
 | `.venv/bin/python -m pytest --runslow -m slow --ignore=tests/test_SPIs.py` | only the slow tests (14 at small size), without the legacy benchmark's recompute (see below) |
@@ -160,7 +182,7 @@ Bugs 1 and 9 need the JVM (`java`). **Some SPIs are never exercised by a default
 
 ### Dependency constraints that affect calculations
 
-- **`spectral-connectivity` must stay below 2** (pinned in `requirements.txt` and `setup.py`). Version 2 requires a 3-D `(time, trials, signals)` input; pyspi passes 2-D, every multitaper call raises, and `Calculator.compute` turns the exception into an all-NaN block for all 114 spectral SPIs without failing. An unpinned install therefore loses all spectral output silently.
+- **`spectral-connectivity` is pinned to 1.1.2 in `pyproject.toml`.** Version 2 requires a 3-D `(time, trials, signals)` input and changes the frequency grid. The existing wrapper passes 2-D; an unadapted upgrade turns its multitaper outputs into all-NaN blocks through `Calculator.compute`. An upgrade needs API and numerical validation. The packaged adapter supports the retained version on NumPy 2 without editing dependency files.
 - **`torch` is installed but no calculation runs on it.** `pyspi/statistics/causal.py` imports ANM, CDS, IGCI and RECI from `cdt.causality.pairwise`; those four are numpy, scikit-learn and scipy code. `cdt` imports torch at package import time for its neural-network algorithms (SAM, CGNN, NCC) and does not declare it as a dependency, so pyspi lists torch itself; blocking the torch import makes `import cdt` fail. The CPU wheel is sufficient (see Environment). Dropping torch would mean vendoring the four pairwise functions out of cdt or stubbing the import before `cdt` loads; both are package changes and have not been made. The `anm`, `cds`, `igci` and `reci` goldens would show any numeric difference from such a change.
 
 Also worth knowing (not bugs): `utils.normalise` default `nan_policy='propogate'` always raises; the spectral cache's first insert is keyed by `self.measure`, causing one redundant recompute; `dtf_* == pdcoh_*`, and auto-embedding TE kraskov equals fixed k=1 on cml7.

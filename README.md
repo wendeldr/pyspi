@@ -14,7 +14,7 @@
     <a href="https://www.gnu.org/licenses/gpl-3.0"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" height="20"/></a>
     <a href="https://github.com/DynamicsAndNeuralSystems/pyspi/actions/workflows/run_unit_tests.yaml"><img src="https://github.com/DynamicsAndNeuralSystems/pyspi/actions/workflows/run_unit_tests.yaml/badge.svg" height="20"/></a>
     <a href="https://twitter.com/compTimeSeries"><img src="https://img.shields.io/twitter/url/https/twitter.com/compTimeSeries.svg?style=social&label=Follow%20%40compTimeSeries" height="20"/></a><br>
-    <a href="https://www.python.org"><img src="https://img.shields.io/badge/Python-3.8%20|%203.9%20|%203.10%20|%203.11%20|%203.12-3776AB.svg?style=flat&logo=python&logoColor=white" alt="Python 3.8 | 3.9 | 3.10 | 3.11 | 3.12"></a><br>
+    <a href="https://www.python.org"><img src="https://img.shields.io/badge/Python-3.12-3776AB.svg?style=flat&logo=python&logoColor=white" alt="Python 3.12"></a><br>
     <a href="https://pepy.tech/projects/pyspi"><img src="https://static.pepy.tech/personalized-badge/pyspi?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=BLUE&left_text=downloads" alt="pyspi downloads" height="20"/></a>
 </p>
 
@@ -37,25 +37,39 @@ Feedback is much appreciated through [issues](https://github.com/DynamicsAndNeur
 <hr style="border-top: 3px solid #bbb;">
 
 ## Installation 📥
-The simplest way to get the _pyspi_ package up and running is to install the package using `pip install`.
+This checkout targets **Python 3.12 and NumPy 2.5**. From the repository root,
+use uv to reproduce the calculation environment:
 
-#### 1. Create a conda environment (Optional, Recommended)
-While you can also install _pyspi_ outside of a conda environment, it depends on a lot of user packages that may make managing dependencies quite difficult. 
-So, we would also recommend installing pyspi in a conda environment. Firstly, create a fresh conda environment:
-```
-conda create -n pyspi python=3.9.0
-```
-Once you have created the environment, activate it using `conda activate pyspi`.
-
-#### 2. Install with _pip_
-Using `pip` for [`pyspi`](https://pypi.org/project/pyspi/):
-```
-pip install pyspi
+```bash
+uv sync --locked
+uv run --no-sync python -c "from pyspi.calculator import Calculator"
 ```
 
-For a more detailed guide on how to install _pyspi_, please see the [full documentation](https://time-series-features.gitbook.io/pyspi/installation/installing-pyspi).
-Additionally, we provide a comprehensive [troubleshooting guide](https://time-series-features.gitbook.io/pyspi/installation/troubleshooting) for users who encounter issues installing _pyspi_ on their system,
-as well as [alternative installation options](https://time-series-features.gitbook.io/pyspi/installation/alternative-installation-options). 
+For development, install calculation tests and the storage comparison's test
+dependencies into the same environment:
+
+```bash
+uv sync --locked --extra testing --group storage-test
+uv run --no-sync python -m pytest
+uv run --no-sync python -m pytest -c tests/storage/pytest.ini tests/storage
+```
+
+The lock selects CPU PyTorch wheels. A Java runtime (tested with Java 17) is
+needed for JIDT calculations. Python 3.13 and newer are outside the supported
+range while the existing pyEDM implementation is retained. Package versions
+and migration results are documented in [DEPENDENCY_MIGRATION.md](DEPENDENCY_MIGRATION.md);
+the [test guide](tests/README.md) describes the default and full tiers.
+
+For pip in a Python 3.12 environment, `python -m pip install .` installs this
+checkout's runtime dependencies. To reproduce the unified locked test versions:
+
+```bash
+python -m pip install --extra-index-url https://download.pytorch.org/whl/cpu -r tests/requirements-test-lock.txt
+python -m pip install --no-deps -e '.[testing]'
+```
+
+The upstream online documentation describes the original release; its older
+installation instructions do not describe this checkout's dependency stack.
 
 ## Getting Started 🚀
 

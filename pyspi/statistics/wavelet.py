@@ -1,4 +1,4 @@
-import mne.connectivity as mnec
+import mne_connectivity as mnec
 from pyspi.base import (
     Directed,
     Undirected,
@@ -7,6 +7,7 @@ from pyspi.base import (
     parse_multivariate,
 )
 import numpy as np
+from numpy.exceptions import AxisError
 import warnings
 from functools import partial
 
@@ -52,7 +53,7 @@ class mne(Unsigned):
 
             cwt_freqs = np.linspace(0.2, 0.5, 125)
             cwt_n_cycles = cwt_freqs / 7.0
-            conn, freq, _, _, _ = mnec.spectral_connectivity(
+            connectivity = mnec.spectral_connectivity_epochs(
                 data=z,
                 method=self.measure,
                 mode="cwt_morlet",
@@ -64,6 +65,8 @@ class mne(Unsigned):
                 cwt_n_cycles=cwt_n_cycles,
                 verbose="WARNING",
             )
+            conn = connectivity.get_data(output="dense")
+            freq = np.asarray(connectivity.freqs)
 
             try:
                 data.mne[self.measure] = (conn, freq)
@@ -79,7 +82,7 @@ class mne(Unsigned):
         adj_freq, freq_id = self._get_cache(data)
         try:
             adj = self._statfn(adj_freq[..., freq_id, :], axis=(2, 3))
-        except np.AxisError:
+        except AxisError:
             adj = self._statfn(adj_freq[..., freq_id], axis=2)
         ui = np.triu_indices(data.n_processes, 1)
         adj[ui] = adj.T[ui]
@@ -204,7 +207,7 @@ class PhaseSlopeIndex(mne, Undirected):
             z = np.moveaxis(data.to_numpy(), 2, 0)
 
             freqs = np.linspace(0.2, 0.5, 10)
-            psi, freq, _, _, _ = mnec.phase_slope_index(
+            connectivity = mnec.phase_slope_index(
                 data=z,
                 mode="cwt_morlet",
                 sfreq=self._fs,
@@ -212,7 +215,10 @@ class PhaseSlopeIndex(mne, Undirected):
                 cwt_freqs=freqs,
                 verbose="WARNING",
             )
-            freq = freq[0]
+            psi = connectivity.get_data(output="dense")
+            # Match the old API's computed frequencies, not the new result's
+            # band centres. Preserve the wrapper's existing selection here.
+            freq = np.asarray(connectivity.attrs["freqs_computed"][0])
             data.mne_psi = dict(psi=psi, freq=freq)
 
         # freq = conn.frequencies
