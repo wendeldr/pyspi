@@ -1,0 +1,233 @@
+{
+ "P": 8,
+ "T": 1024,
+ "baseline_rss_mb": 457.8,
+ "budget_s": 120.0,
+ "data_kind": "synthetic",
+ "data_sha256": "8e7e5fadc565fde86c145bcd58801cc90799abd9427b553b966b0df36ab32ada",
+ "edf": null,
+ "entry_sources": {
+  "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean": "config"
+ },
+ "env": {
+  "java": null,
+  "omp_num_threads": "1",
+  "packages": {
+   "cdt": "0.6.0",
+   "hyppo": "0.5.2",
+   "jpype1": "1.7.1",
+   "mne": "1.13.2",
+   "nitime": "0.12.1",
+   "numpy": "2.5.4",
+   "pandas": "3.0.6",
+   "pyEDM": "1.15.2.0",
+   "pyyaml": "6.0.3",
+   "scikit-learn": "1.9.1",
+   "scipy": "1.17.1",
+   "sktime": "1.2.0",
+   "spectral-connectivity": "1.1.2",
+   "statsmodels": "0.15.0",
+   "torch": "2.14.1+cpu",
+   "tslearn": "0.9.0"
+  },
+  "platform": "linux",
+  "pyspi_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+  "pyspi_version": "2.0.2",
+  "python": "3.12.3"
+ },
+ "error": null,
+ "family": "wavelet_psi",
+ "finished_at": "2026-10-15T05:11:23+00:00",
+ "fit": null,
+ "git_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+ "hwm_reset": true,
+ "identifiers": [
+  "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean"
+ ],
+ "jvm_requested": false,
+ "jvm_started": false,
+ "measure_mode": "measured",
+ "mode": "profile",
+ "n_pairs": null,
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)",
+ "opaque_share": 0.1893917763980543,
+ "opaque_share_by_owner": {
+  "builtin": 0.0005759543354146158,
+  "python": 0.0067246844968202974,
+  "third-party:mne": 0.030498963200497612,
+  "third-party:mne_connectivity": 0.09823713985063087,
+  "third-party:numpy": 0.004740545568438924,
+  "third-party:packaging": 0.00023413127450316052,
+  "third-party:pandas": 0.0017889005350146898,
+  "third-party:scipy": 0.037792120151784216,
+  "third-party:xarray": 0.008799336984949911
+ },
+ "pair_basis": "multivariate",
+ "peak_rss_delta_mb": 19.0,
+ "peak_rss_mb": 476.7,
+ "process_peak_rss_mb": 476.7,
+ "pstats": "audit/profiles/wavelet.psi__8x1024.pstats",
+ "pyspi_dirty": false,
+ "reason": null,
+ "repeats": 1,
+ "repeats_extended": null,
+ "repeats_planned": null,
+ "representative": "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean",
+ "result_status": "ok",
+ "ru_maxrss_mb": 476.7,
+ "schema": 1,
+ "self_time_share_by_owner": {
+  "builtin": 0.0005759543354146158,
+  "harness": 0.0003706326024940298,
+  "pyspi": 0.0028682048611242544,
+  "python": 0.07171681734200258,
+  "third-party:mne": 0.11959629748371464,
+  "third-party:mne_connectivity": 0.6414873996524981,
+  "third-party:numba": 4.622426447950368e-05,
+  "third-party:numpy": 0.024496688708689308,
+  "third-party:packaging": 0.0012179126205743836,
+  "third-party:pandas": 0.029787410522723823,
+  "third-party:scipy": 0.06009218881309172,
+  "third-party:xarray": 0.04774426879319504
+ },
+ "shape": "8x1024",
+ "spi_seed": 42,
+ "started_at": "2026-10-15T05:11:23+00:00",
+ "status": "ok",
+ "synth_seed": 20261014,
+ "t_cold_s": 0.2179891880005016,
+ "t_per_pair_ms": null,
+ "threads": {
+  "affinity_cpus": 64,
+  "jvm_running": false,
+  "numba_threads": 64,
+  "omp_num_threads": "1",
+  "os_threads": 1,
+  "threadpools": [
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   }
+  ],
+  "torch_threads": 1
+ },
+ "timeout_s": 360.0,
+ "top10_cumulative": [
+  {
+   "cumtime_s": 0.046485579000000006,
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "harness",
+   "tottime_s": 9.849e-06
+  },
+  {
+   "cumtime_s": 0.046452900000000005,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 1.411e-05
+  },
+  {
+   "cumtime_s": 0.04643806,
+   "function": "pyspi/statistics/wavelet.py:multivariate",
+   "line": 229,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 5.6028000000000006e-05
+  },
+  {
+   "cumtime_s": 0.046192839,
+   "function": "pyspi/statistics/wavelet.py:_get_cache",
+   "line": 202,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 6.2419e-05
+  },
+  {
+   "cumtime_s": 0.045827961,
+   "function": "<decorator-gen-296>:phase_slope_index",
+   "line": 1,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "python",
+   "tottime_s": 0.002008082
+  },
+  {
+   "cumtime_s": 0.043423312000000006,
+   "function": "mne_connectivity/effective.py:phase_slope_index",
+   "line": 19,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:mne_connectivity",
+   "tottime_s": 6.7409e-05
+  },
+  {
+   "cumtime_s": 0.034756590000000004,
+   "function": "<decorator-gen-294>:spectral_connectivity_epochs",
+   "line": 1,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "python",
+   "tottime_s": 4.2608e-05
+  },
+  {
+   "cumtime_s": 0.034673123,
+   "function": "mne_connectivity/spectral/epochs.py:spectral_connectivity_epochs",
+   "line": 768,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:mne_connectivity",
+   "tottime_s": 0.001409641
+  },
+  {
+   "cumtime_s": 0.020270914,
+   "function": "mne_connectivity/spectral/epochs.py:_epoch_spectral_connectivity",
+   "line": 497,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:mne_connectivity",
+   "tottime_s": 0.003783943
+  },
+  {
+   "cumtime_s": 0.009237812,
+   "function": "mne_connectivity/spectral/epochs_bivariate.py:accumulate",
+   "line": 66,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:mne_connectivity",
+   "tottime_s": 0.009237812
+  }
+ ],
+ "total_tt_s": 0.04651236799999992,
+ "traceback_tail": null,
+ "unit_id": "wavelet.psi",
+ "wall_cv": null,
+ "wall_median_s": null,
+ "wall_profiled_s": 0.046563465999497566,
+ "wall_s": null,
+ "walls_s": null,
+ "warmup_error": null,
+ "warmup_shape": "8x1024"
+}

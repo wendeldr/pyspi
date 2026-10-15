@@ -1,0 +1,524 @@
+unit_id: distance.gwtau
+status: profiled
+
+correctness:
+  metric_name_standard: >-
+    GW-tau (GWτ) distance between time series: 2-Wasserstein distance between the distributions of
+    intrinsic (arc-length) distances from the trajectory start, a Gromov-Wasserstein-type upper bound
+  canonical_ref: >-
+    Kravtsova N, McGee RL II, Dawes AT (2023) "Scalable Gromov-Wasserstein Based Comparison of Biological
+    Time Series", Bull Math Biol 85:77, doi:10.1007/s11538-023-01175-y (PMC10326159): Def. 1 Eq. 5 (GWτ, general case);
+    Def. 2 Eqs. 6-7 (point sets X, Y), Eqs. 8-9 (polygonal arc length d_X, d_Y), Eq. 10 (empirical GWτ),
+    with the uniform measures mu_X, mu_Y given as an unnumbered display after Eq. 9; closed forms Eqs. 11
+    (equal sizes) and 12 (unequal sizes, lambda_ij weights) in the proof of Prop. 1(e); Prop. 1(a) GWτ =
+    W_p of root-distance push-forwards, Prop. 1(b) GW <= GWτ. Equation labels read from the Europe PMC
+    JATS full text (ebi.ac.uk/europepmc/webservices/rest/PMC10326159/fullTextXML, <label> of Equ1-Equ12;
+    the measure display Equ16 has no label); the journal PDF was not separately consulted. Authors' reference code: github.com/kravtsova2/GWtau, GWtau_tutorial/vec_geo_dist.m,
+    wass_sorted.m, gwtau_tutorial_main.m.
+  canonical_definition: >-
+    For a 1-D series {(t_i, h(t_i))}, i=1..n, the trajectory is f(t)=(t,h(t)) in R^2; X={x_i=f(t_i)} with
+    uniform measure mu_X = sum_{i=1}^n (1/n) delta_{x_i} (unnumbered display in Def. 2); intrinsic distance d_X(x_i,x_j) = sum_{k=i}^{j-1}
+    ||f(t_{k+1})-f(t_k)|| (polygonal arc length, Eq. 8); root r_X = f(t_1). GWτ_p(X,Y) = inf over couplings
+    of (sum |d_X(r_X,x) - d_Y(r_Y,y)|^p mu(x,y))^{1/p} = W_p(d_X(r_X,.)#mu_X, d_Y(r_Y,.)#mu_Y), no factor 1/2;
+    experiments use p=2. Equal n: W_2^2 = (1/n) sum_i (z_(i) - w_(i))^2 over sorted root distances
+    (n values per series, the root's own value 0 included by the empty-sum convention of Eq. 8).
+  documented_definition: >-
+    No supplement section covers gwtau (supplement.txt has no Gromov/Wasserstein/gwtau entry; it predates
+    the SPI). GitBook distance-similarity.md lines 164-180 ("Gromov-Wasserstein Distance", base identifier
+    gwtau, keywords undirected, nonlinear, unsigned, unordered, distance): "represents each time series as a
+    metric space and computing the distances from the start of each time series to every point. These
+    distance distributions are then compared using the Wasserstein distance ... making it robust to shifts
+    and perturbations ... based on the algorithm proposed by Kravtsova et al. (2023)." Docstring
+    distance.py:267 "Gromov-Wasserstain distance (GWTau)".
+  delegate_lib: >-
+    pyspi (native numpy: np.diff, np.linalg.norm, np.cumsum, np.sort, np.mean, np.sqrt); a Python port of
+    the authors' MATLAB functions vec_geo_dist.m and wass_sorted.m
+  implemented_as: >-
+    Calculator default Data(normalise=True, detrend=False): each series z-scored with ddof=1
+    (data.py:193-195). For a pair (i,j), x=z_i, y=z_j (shape (T,1) from the 3-D data array). Trajectory
+    (k, x_k), k=0..T-1 (sample index as time, unit step, amplitude in SD units). vec_geo_dist returns the
+    T-1 cumulative segment lengths L_x(k) = sum_{t<k} sqrt(1+(x_{t+1}-x_t)^2), k=1..T-1 (the root, value 0,
+    is NOT included). wass_sorted sorts both vectors descending and, for equal lengths (always the case in
+    pyspi), returns sqrt(mean_k (L_x(k)-L_y(k))^2) over T-1 entries. Because every segment has length >= 1
+    the vectors are already strictly increasing, so the sort is a no-op and the value is exactly the RMS
+    over time of the difference of the two cumulative arc-length curves. The unequal-length branch
+    (quantile-overlap coupling lambda_ij, Eq. 12) is unreachable from pyspi. Undirected.multivariate
+    computes every ordered pair and then copies the upper triangle into the lower.
+  implementation_trace:
+    - "pyspi/calculator.py:277 Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend); defaults detrend=False, normalise=True at calculator.py:50 (lines at HEAD a42ebc1; SPI construction in _load_yaml calculator.py:230, config loop 251-267)"
+    - "pyspi/data.py:184-195 optional scipy.signal.detrend then scipy.stats.zscore(data, axis=1, nan_policy='omit', ddof=1)"
+    - "pyspi/calculator.py:327-339 Calculator.compute: S = self._spis[spi].multivariate(self.dataset) (329), np.fill_diagonal(S, np.nan) (332), self._table[spi] = S (335), except -> NaN table entry and error report (336-339), warnings.warn(failure_warning) (354-355)"
+    - "pyspi/base.py:132-138 Undirected.multivariate -> Directed.multivariate (base.py:85-94, loops all i != j calling bivariate) then A[li] = A.T[li] mirrors upper triangle to lower"
+    - "pyspi/base.py:27-47 parse_bivariate wrapper (wraps two 1-D arrays into Data; unequal lengths fail in Data.add_process)"
+    - "pyspi/statistics/distance.py:317-322 GromovWasserstainTau.bivariate: x, y = data.to_numpy()[[i, j]]; stat = self.gwtau(x, y)"
+    - "pyspi/statistics/distance.py:304-315 gwtau: time = np.arange(len(x)); traj = np.column_stack([time, x]); vec_geo_dist on each; wass_sorted"
+    - "pyspi/statistics/distance.py:273-277 vec_geo_dist: np.diff(axis=0) -> np.linalg.norm(axis=1) -> np.cumsum (length T-1, root excluded)"
+    - "pyspi/statistics/distance.py:279-302 wass_sorted: descending sort (281-282); equal length sqrt(mean((x1-x2)^2)) (284-285); unequal length lambda coupling (286-300)"
+    - "authors' reference (same lineage): https://raw.githubusercontent.com/kravtsova2/GWtau/main/GWtau_tutorial/vec_geo_dist.m (loop i=1..n-1, v(i)=dold+norm(X(i,:)-X(i+1,:)), root excluded), wass_sorted.m (sort 'descend'; equal length sqrt(sum((v1-v2).^2)/length(v1)); unequal length lambda loop), gwtau_tutorial_main.m (time=(0:n_time_pts-1)', Traji=[timei X(:,i)])"
+  deviation_from_documented: >-
+    (1) Keyword "unordered" (distance.py:271, config.yaml:314-320, GitBook line 166): neither
+    "unordered" nor "temporal" is defined anywhere in the documentation. The GitBook keyword table
+    (spis/glossary-of-terms.md:21) defines Undirected, Directed, Linear, Nonlinear, Signed, Univariate,
+    Bivariate, Multivariate, Contemporaneous, Time-dependent, Frequency-dependent and Time-frequency
+    dependent only, and development/development/incorporating-new-spis.md:430,546 describes labels only
+    as "descriptive keywords" used for filtering (that page uses gwtau's own label list as its worked
+    example, lines 441, 516, 558). There is therefore no documented definition to deviate from. The
+    inconsistency is with sibling usage: the value depends on the temporal order of samples through the
+    increments x_{t+1}-x_t (probe: jointly permuting both series with one permutation changed the value
+    from 13.527 to 5.126 at T=256), while the order-dependent distances in the same file carry "temporal"
+    (dcorrx distance.py:119, mgcx :139, TimeWarping (dtw, lcss, softdtw) :156, bary :215; xcorr basic.py:78). Read
+    as the opposite of "temporal", "unordered" does not describe the computation. (2) GitBook "distances from the start ... to every point":
+    the code omits the start point itself (T-1 distances, not T). (3) GitBook "robust to shifts" does not say
+    what is shifted (time, phase, amplitude). For time shifts it contradicts the cited source paper,
+    whose design intent is the opposite: Kravtsova et al. 2023, section "Empirical Results on Synthetic,
+    Model-Based, and Publicly Available Real-World Data": "GWτ is able to distinguish between shifts since
+    a shifted version of a trajectory has a different distribution of intrinsic distances, and the larger
+    the shift, the easier it is for GWτ to distinguish between the trajectories", and "successfully
+    capturing time shifts as class indicators is a desirable property". The paper's only robustness
+    statement is narrower: for oscillations with "slight phase shifts within the class", "Slightly shifted
+    versions of qualitatively similar trajectories will be matched by an optimal transport routine
+    producing a small distance". Separately, on sampled data even that narrower statement fails for a
+    phase shift relative to the sampling grid (see candidates: sampled sinusoid at f0=0.25 shifted by
+    pi/4 gives a distance growing ∝ T). The constant offset x -> x + c is the one shift the value is
+    exactly invariant to (z-scoring removes it, and gwtau(z, z + c) ~ 1e-14 without z-scoring). Otherwise
+    the computation matches the GitBook prose.
+  deviation_from_canonical: >-
+    (a) Root exclusion: the paper's discrete measure is uniform on all n points including the root
+    (distance 0); vec_geo_dist returns n-1 values, so for equal lengths pyspi = canonical *
+    sqrt(T/(T-1)) exactly (probe T=256: canonical/pyspi = 0.998044963916957 = sqrt(255/256)). This is a
+    constant factor at fixed T (ranking-preserving) and is inherited verbatim from the authors' own MATLAB
+    vec_geo_dist.m. (b) Time coordinate: pyspi always uses sample index 0..T-1 with unit spacing against
+    z-scored amplitude (an implicit time/amplitude scale ratio of 1 sample : 1 SD); the paper allows actual
+    (unequally spaced) times t_i and does not prescribe normalisation; matches the authors' tutorial
+    (time=(0:n-1)'). (c) p fixed at 2 (paper's experimental choice). Descending sort is equivalent to the
+    paper's ascending Eq. 11 (both vectors sorted the same way). Otherwise none.
+  units_and_range: >-
+    Non-negative real, unbounded, in units of the trajectory metric (samples combined with SD units after
+    z-scoring); 0 for identical increment-magnitude sequences (e.g. x vs -x, x vs x+c). Not normalised by
+    length: under independence the value grows roughly ∝ sqrt(T) (probe: mean over 20 iid pairs 4.09,
+    8.67, 15.2, 32.6 at T=64, 256, 1024, 4096). A pseudometric on series (zero for distinct series).
+    No NaN for finite input with T>=2; NaN diagonal set by Calculator.
+  direction_convention: >-
+    Undirected: A[i,j] = gwtau(z_i, z_j) = A[j,i]; formula symmetric in its arguments
+    ((a-b)^2 == (b-a)^2 bitwise) and Undirected.multivariate mirrors the upper triangle (base.py:136-137).
+    Probe: bivariate(i=0,j=1) == bivariate(i=1,j=0) exactly; A == A.T exactly on 5 datasets.
+  symmetry_expected: sym
+  already_documented: "no"
+  new_finding_candidates:
+    - >-
+      Candidate (label): "unordered" label is inconsistent with sibling usage for gwtau; the statistic
+      depends on temporal order. Neither "unordered" nor "temporal" is defined in the GitBook keyword
+      table (spis/glossary-of-terms.md:21) or the development docs (incorporating-new-spis.md:430,546), so
+      this is a labelling inconsistency, not a deviation from a documented definition. Evidence: probe1
+      joint permutation of both z-scored series (same permutation) changed gwtau 13.527087919699273 ->
+      5.126367497972419 (T=256, seed 0); computation uses np.diff along time (distance.py:275).
+      Order-dependent siblings in distance.py carry "temporal" (lines 119, 139, 156, 215).
+    - >-
+      Candidate (definition, shared with authors' code): root point excluded from the uniform measure, so
+      pyspi = sqrt(T/(T-1)) x paper Def. 2 value. Evidence: distance.py:274-277 returns cumsum of T-1
+      segment lengths; probe ratio canonical-with-root/pyspi = 0.998044963916957 = sqrt(255/256) at T=256;
+      authors' vec_geo_dist.m has the same loop i=1..n-1.
+    - >-
+      Candidate (interpretation): the descending sort in wass_sorted is a no-op in pyspi because each
+      segment length sqrt(1+dx^2) >= 1 makes the cumulative vector strictly increasing (probe: min step
+      1.000064667). gwtau therefore equals sqrt(mean_{k=1..T-1} (sum_{t<k} [g(dx_t) - g(dy_t)])^2) with
+      g(u)=sqrt(1+u^2): an RMS of the running difference of local roughness, not a distribution comparison
+      that discards time order.
+    - >-
+      Candidate (scale): no length normalisation; under independence the value grows ~ sqrt(T) (probe mean
+      over 20 iid pairs: 4.09 / 8.67 / 15.2 / 32.6 at T = 64 / 256 / 1024 / 4096), so values are not
+      comparable across recording lengths. Inherited from the canonical definition (property, not a bug).
+    - >-
+      Candidate (doc claim "robust to shifts"): two separate points. (i) Time-shift sensitivity is
+      intended by the source paper: "GWτ is able to distinguish between shifts since a shifted version of a trajectory has
+      a different distribution of intrinsic distances, and the larger the shift, the easier it is for GWτ
+      to distinguish" (section "Empirical Results on Synthetic, Model-Based, and Publicly Available
+      Real-World Data"). [Corrected at the check stage: the same section also says "Slightly shifted
+      versions of qualitatively similar trajectories will be matched by an optimal transport routine
+      producing a small distance", so the unqualified GitBook sentence is an incomplete paraphrase of the
+      paper (small shifts small, larger shifts distinguished), not a contradiction of it; both quotes
+      re-read verbatim in the Europe PMC JATS full text of PMC10326159 on 2026-10-15.] (ii) The paper does claim small distances for "slightly shifted versions" of
+      oscillations; on sampled sinusoids the arc length depends on phase relative to the sampling grid,
+      so two phase-shifted copies of the same oscillation can get a distance growing ∝ T. Evidence: narrowband_f0-0.25 row 0 = [nan, 16.181, 0.527] at T=256 and
+      [nan, 267.909, 2.116] at T=4096 (pair 0-1 is a pi/4 shift, pair 0-2 a -pi/2 shift); at f0=0.25 the
+      noise-free z-scored samples have |dz| = sqrt(2) every step for phases 0 and -pi/2 but alternate
+      0 / 2 for phase pi/4, so arc length per two steps is 2*sqrt(3) = 3.464 vs 1 + sqrt(5) = 3.236; the
+      drift 0.114 per step gives RMS ~ 0.114*T/sqrt(3) ~ 269.6 at T=4096, matching 267.9. Noise-free
+      probe (gwtau_fix/probe_shift.py: z-scored cos(pi t/2) vs cos(pi t/2 + pi/4)): 16.50 at T=256 and
+      269.27 at T=4096 (prediction 16.85 / 269.63); the -pi/2 copy gives ~1e-13 / ~2e-11. Point (ii) is an
+      additional effect of the canonical construction on discrete data, separate from point (i).
+    - >-
+      Candidate (preprocessing dependence): with normalise=False the value depends on raw amplitude units
+      because sqrt(1+dx^2) mixes the unit time step with amplitude (probe scaled_offset T=1024 row 0:
+      [929.0, 2891.7, 6022.2] raw vs [12.25, 21.00, 9.65] z-scored); with the default z-scoring the
+      statistic is invariant to per-series affine maps including sign flips (scaled_offset matrix equals
+      bivariate_gaussian matrix to the printed digits).
+  proposed_checks:
+    - datasets: ["iid_gaussian", "delayed_noise", "var2_bivariate", "narrowband_f0-0.25", "trending"]
+      path: pipeline
+      reference: >-
+        from-scratch numpy: z = scipy.stats.zscore(x, ddof=1); L = np.cumsum(np.sqrt(1 + np.diff(z)**2));
+        value = sqrt(mean((L_i - L_j)^2)) (root excluded, pyspi convention), all T in {64,256,1024,4096}
+      reference_kind: independent-impl
+      criterion: tolerance
+      expected_outcome: >-
+        Every off-diagonal entry of the Calculator matrix agrees with the from-scratch value to rel <= 1e-12
+        (identical arithmetic up to summation order).
+    - datasets: ["iid_gaussian", "bivariate_gaussian", "narrowband_f0-0.25"]
+      path: kernel
+      reference: >-
+        paper Def. 2 / Eq. 11 from scratch with the root included (n = T points, d(root,root) = 0,
+        uniform 1/T weights), W_2 by sorted matching
+      reference_kind: analytic
+      criterion: exact
+      expected_outcome: >-
+        canonical / pyspi = sqrt((T-1)/T) for every pair and every T (to rel 1e-12); documents the
+        root-exclusion deviation as a pure constant factor at fixed T.
+    - datasets: ["iid_gaussian", "bivariate_gaussian"]
+      path: kernel
+      reference: >-
+        line-by-line Python transcription of the authors' MATLAB vec_geo_dist.m + wass_sorted.m (explicit
+        loops, both branches); labelled same-lineage because pyspi is a port of these files
+      reference_kind: same-lineage
+      criterion: tolerance
+      expected_outcome: >-
+        Equal-length outputs agree to rel <= 1e-12; unequal-length branch (truncate one series to random
+        lengths) agrees to rel <= 1e-12 with the vectorised lambda coupling.
+    - datasets: ["iid_gaussian"]
+      path: kernel
+      reference: >-
+        from-scratch 1-D W_2 via quantile functions: merge breakpoints {i/N} U {j/M}, sum over sub-intervals
+        (width) * (F^-1(u) - G^-1(u))^2 at interval midpoints; applied to GromovWasserstainTau.wass_sorted
+        with unequal lengths (e.g. 37 vs 53, 100 vs 80) taken from dataset rows
+      reference_kind: independent-impl
+      criterion: tolerance
+      expected_outcome: >-
+        wass_sorted equals the quantile W_2 to rel <= 1e-12 for unequal and equal lengths (probe already
+        gave 0.3499664167975089 vs 0.34996641679750884); branch is unreachable from Calculator, so this is a
+        kernel-only statement.
+    - datasets: ["var2_bivariate", "delayed_noise", "iid_gaussian"]
+      path: pipeline
+      reference: "analytic symmetry: A[i,j] vs A[j,i] and direct bivariate(i,j) vs bivariate(j,i)"
+      reference_kind: analytic
+      criterion: direction
+      expected_outcome: >-
+        Direction convention: A[i,j] == A[j,i] bitwise and both equal gwtau(z_i, z_j) computed by the
+        from-scratch reference in either argument order; no directional information (var2_bivariate X->Y
+        gives the same value in both cells).
+    - datasets: ["scaled_offset", "bivariate_gaussian"]
+      path: pipeline
+      reference: "invariance: scaled_offset is the bivariate_gaussian draw times per-process scale plus offset"
+      reference_kind: analytic
+      criterion: tolerance
+      expected_outcome: >-
+        With normalise=True the scaled_offset matrix equals the bivariate_gaussian matrix to rel <= 1e-10
+        for every T; with normalise=False the matrices differ (qualitative demonstration of the
+        time/amplitude scale coupling).
+    - datasets: ["iid_gaussian"]
+      path: kernel
+      reference: "analytic invariances: gwtau(z, -z) = 0, gwtau(z, z + c) = 0; joint time permutation of both series"
+      reference_kind: analytic
+      criterion: qualitative
+      expected_outcome: >-
+        Sign flip and constant offset give 0 (to ~1e-13); a common random permutation of the time index
+        changes the value by O(1) relative, refuting the "unordered" label.
+    - datasets: ["iid_gaussian"]
+      path: pipeline
+      reference: "null scaling law: random-walk argument for partial sums of g(dx)-g(dy), E[gwtau] ∝ sqrt(T)"
+      reference_kind: analytic
+      criterion: statistical
+      expected_outcome: >-
+        Slope of log(mean off-diagonal gwtau) vs log T over T in {64,256,1024,4096} is about 0.5 (between 0.35
+        and 0.65), documenting that values are not length-normalised.
+    - datasets: ["narrowband_f0-0.25", "delayed_noise", "iid_gaussian"]
+      path: pipeline
+      reference: "discretisation argument on per-step arc lengths for sinusoids sampled at f0 = 0.25"
+      reference_kind: analytic
+      criterion: qualitative
+      expected_outcome: >-
+        narrowband_f0-0.25 pair (0,1) (pi/4 shift) grows roughly ∝ T while pair (0,2) (-pi/2 shift) stays
+        O(1)-O(sqrt T); delayed_noise pairs (lags 1,3,5) stay well below iid_gaussian pairs at T=4096
+        (probe: 3.6-6.5 vs 22-53). Tests the GitBook "robust to shifts" claim.
+  check_method: analytic
+  check_reference: >-
+    audit/checks/refs/gwtau.py: chk_def (from-scratch GWtau via audit/checks/refs/_kernels_distance.py:gwtau =
+    root_arc_lengths + wasserstein2_1d, merged-quantile W2, no pyspi import), chk_canon (Kravtsova et al. 2023
+    Def. 2 / Eq. 11 with the root included, analytic factor sqrt(T/(T-1))), chk_pot (POT==0.9.7.post1
+    ot.wasserstein_1d(p=2) on the same arc-length samples, external-pkg), chk_sin / chk_xfreq (closed-form
+    increments of sampled sinusoids, sinusoid_steps), chk_affine / chk_invar / chk_detrendinv (analytic
+    invariances), chk_perm_def / chk_rev (kernel on permuted / reversed rows), chk_perm_change (pyspi vs pyspi,
+    same-lineage, with a kernel-only repeat), chk_null / chk_null_m2 / chk_slope (Monte Carlo null and analytic E[gwtau^2] = gamma0 T/2 +
+    gamma1 (T-2)), chk_unequal (unequal-length branch vs quantile W2, POT and Octave), chk_fs / chk_fs_ratio
+    (sampling-rate probe vs Eq. 8 with real times t_k = k/fs), chk_octave (audit/checks/octave/gwtau.m, a loop
+    transcription of the authors' vec_geo_dist.m and wass_sorted.m, GNU Octave, same-lineage); probes in
+    audit/checks/probes/gwtau_probes.py
+  check_data: >-
+    pipeline: iid_gaussian, delayed_noise, var2_bivariate, narrowband_f0-0.25, trending at T64/256/1024/4096;
+    bivariate_gaussian, scaled_offset, var2_chain, narrowband_f0-0.1, narrowband_f0-0.4, logistic_maps,
+    logistic_maps_bidir, logistic_maps_chaotic, logistic_maps_sugihara, nonlinear_dependence, contaminated,
+    cointegrated, anm, sparse_precision, shared_envelope, gauss_ar1_pair at T1024; kernel: iid_gaussian
+    T64-4096, bivariate_gaussian T256/1024/4096, narrowband_f0-0.25 T256/4096, scaled_offset T1024;
+    pipeline-detrend: trending T1024/4096, delayed_noise T1024; probe rows: noise-free sinusoids (f = 0.25,
+    0.1, 0.4, 10/256, 0.2), joint permutation and reversal, sign/offset/scale copies, unequal-length prefixes,
+    one continuous pair sampled at 16-256 Hz
+  agreement_criterion: >-
+    exact/tolerance: rtol 1e-10, atol 1e-12 (Octave same-lineage rtol 1e-12; closed-form sinusoids rtol/atol
+    1e-9); null (statistical): every entry inside the empirical Bonferroni 5 % band of a 4000-pair Monte Carlo
+    null (value = band midpoint, se = width/4); null-m2 (qualitative): analytic E[gwtau^2] within 3 Monte Carlo
+    se of the Monte Carlo mean and the observed 10-pair mean of A^2 inside the empirical Bonferroni band
+    (a = 0.05/4). This null-m2 rule is post hoc: it replaced the drafted rule (observed 10-pair mean of A^2
+    within 2 Monte Carlo sd of the analytic value) after the drafted rule flagged the T=256 draw; the drafted
+    rule is still reported (drafted_rule_z, drafted_rule_ok) and fails at T=256. Both rules test the data draw,
+    not pyspi, which equals the from-scratch kernel exactly on those rows; perm-change (qualitative,
+    same-lineage): every pair changes by > 1e-6 relative under a joint time permutation; direction: A == A.T bitwise and the unmirrored ordered-pair matrix equal to the
+    from-scratch matrix; qualitative runs as stated in each run's notes
+  closeness: >-
+    114/114 runs pass. From-scratch definition: 46 def runs (kernel, pipeline, pipeline-detrend; 21 datasets,
+    T 64-4096) max_rel 1.2e-13, max_abs 1.7e-12. Paper Def. 2 with the root: canonical/pyspi =
+    sqrt((T-1)/T) to 2.2e-16 at every T (canon runs; pyspi exceeds canonical by 0.79 % at T=64, 0.20 % at 256,
+    0.049 % at 1024, 0.012 % at 4096). POT ot.wasserstein_1d on the same arc lengths: 5 runs max_rel 1.9e-15;
+    unequal-length branch vs quantile W2 1.3e-15, POT 1.7e-14, Octave 1.5e-15. Octave transcription of the
+    authors' code 6.5e-15 (same-lineage). Closed-form sinusoids: sin-freq (f 0.1 vs 0.4) max_abs 1.4e-11,
+    pair (0,1) leading order |s(0.1) - s(0.4)| T/sqrt(3) within 6.1e-5 relative at T=4096; sin-grid25 max_abs
+    4.6e-11; sin-eeg 2.1e-11. Invariances: z-scored scaled_offset equals z-scored bivariate_gaussian to
+    3.4e-14 relative (T 64-4096); gwtau(x, -x), gwtau(x, x+5) <= 4.8e-14 (kernel) and gwtau(x, 3x-2) = 0.0 on
+    the pipeline but 1198.4 on the kernel path; shared_envelope identical pair 0.0 exactly; detrend recovers
+    the untrended value to 5.0e-14. Null: pair means 3.42 / 8.87 / 19.65 / 36.55 at T 64/256/1024/4096 vs
+    Monte Carlo 4.32 / 8.74 / 17.33 / 34.95; log-log slope 0.570 (Monte Carlo 0.502); analytic E[gwtau^2]
+    39.9 / 160.8 / 644.5 / 2579.0 vs Monte Carlo 39.1 / 159.4 / 652.7 / 2558.8 (|z| <= 1.66); the T=256
+    kernel draw sits at the 98th Monte Carlo percentile (inside the band; under the drafted 2-sd rule, replaced
+    post hoc, it fails at z = 2.64, pyspi mean A^2 404.5 vs analytic 160.8, Monte Carlo sd 92.3; the other three
+    T give z = -0.85 / 0.17 / 0.62). Order dependence: a common time
+    permutation changes values by 9-74 % (iid_gaussian), 6.9 % (var2_bivariate) and 33-69x
+    (narrowband_f0-0.1) (perm-change, pyspi vs pyspi, same-lineage; the kernel alone gives the same changes to
+    <= 7.1e-15). Sampling grid: narrowband_f0-0.25 pair (0,1) 16.18 -> 267.91 from T=256 to 4096
+    (ratio 16.56; noise-free closed form 17.03 -> 269.81), pair (0,2) 0.53 -> 2.12; f = 10/256 phase pairs
+    0.0846 -> 0.0847. Sampling rate: same 16 s pair gives 5.80 / 4.37 / 2.46 / 1.27 / 0.64 at 16 / 32 / 64 /
+    128 / 256 Hz (ratio 256/32 = 0.147) while Eq. 8 with real times gives 6.48 / 9.43 / 9.51 / 9.62 / 9.66
+    (ratio 1.025).
+  verdict: variant
+  score_0_10: 8
+  score_rubric: 8
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 8 names a constant factor such as T/(T-1): pyspi leaves the root out of the uniform measure, so pyspi = canonical * sqrt(T/(T-1)) (0.79
+    % at T=64, 0.012 % at T=4096). The authors'' MATLAB code does the same.'
+  documentation_status: silent
+  verdict_adjusted: variant
+  score_adjusted: 8
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: >-
+    pyspi's output agrees with the authors' MATLAB GWtau formula (checked against an independent merged-quantile W2,
+    POT and closed forms), which differs from the paper's Def. 2 by a constant factor at fixed T: the root
+    point (distance 0) is left out of the uniform measure, so pyspi = canonical * sqrt(T/(T-1)) (rubric 8,
+    constant factor; 0.79 % at T=64, 0.012 % at T=4096). The GitBook's "distances from the start ... to
+    every point" also includes the start, so the same factor separates pyspi from the documentation. The
+    descending sort is a no-op (every segment length sqrt(1 + dx^2) >= 1), so the value is the RMS over time
+    of the difference of the two cumulative arc-length curves; the closed-form sinusoid references, which
+    never sort, match to 1e-11. Properties of the canonical construction, measured here: the value grows
+    about as sqrt(T) under independence, depends on the sampling rate because time is the sample index
+    (unit step against z-scored amplitude), and depends on the phase relative to the sampling grid for
+    oscillations at frequencies p/q with small q (f0 = 0.25). Labelling: the "unordered" keyword is
+    inconsistent with the order dependence (siblings that depend on order carry "temporal"; the pdist SPIs,
+    which are order-invariant, carry "unordered").
+  new_finding: true
+  definition_under_review: false
+  check_cost: "cheap: <= 0.017 s per pyspi run at T=4096 (P <= 6); whole family 114 runs, about 1 min including references"
+  symmetry_observed: >-
+    sym: max|A - A.T| = 0.0 on every run (sym runs on var2_bivariate, var2_chain, delayed_noise,
+    logistic_maps_chaotic, anm, iid_gaussian T4096); the unmirrored probe (base.Directed.multivariate,
+    both bivariate(i,j) and bivariate(j,i) computed) is also bitwise symmetric (max asym 0.0, 6 datasets),
+    so the mirroring in Undirected.multivariate changes nothing
+  direction_observed: >-
+    undirected: A[i,j] = A[j,i] = gwtau(z_i, z_j) bitwise; on var2_bivariate (x -> y), var2_chain,
+    delayed_noise, logistic_maps_chaotic and anm the two orientations are identical, so the value carries
+    no directional information
+  candidate_resolutions:
+    - candidate: '"unordered" label inconsistent with sibling usage; the statistic depends on temporal order'
+      outcome: confirmed
+      evidence: >-
+        distance.gwtau|iid_gaussian|1024|pipeline|perm-change (relative change 9.0-73.8 %, median 37.0 %),
+        distance.gwtau|var2_bivariate|1024|pipeline|perm-change (6.9 %),
+        distance.gwtau|narrowband_f0-0.1|1024|pipeline|perm-change (33-69x). The perm-change pass flags compare
+        pyspi with pyspi and are labelled same-lineage; the independent evidence is that pyspi equals the
+        from-scratch kernel on the permuted rows (perm-def runs, max_rel 2.5e-16) and on the original rows (def
+        runs), and that the kernel alone changes by the same amounts (perm-change kernel_rel_change_min 0.0905,
+        0.0691, 33.24; kernel vs pyspi relative changes agree to <= 7.1e-15); contrast: the order-invariant
+        distance.pdist.*|bivariate_gaussian|1024|pipeline|perm runs (pdist family, max_abs <= 1.8e-12). Not
+        in KNOWN_ISSUES.md (REVIEW M9 is a general label discussion that does not name gwtau).
+    - candidate: root point excluded, so pyspi = sqrt(T/(T-1)) x paper Def. 2 value
+      outcome: confirmed
+      evidence: >-
+        distance.gwtau|iid_gaussian|{64,256,1024,4096}|kernel|canon, bivariate_gaussian|1024|kernel|canon,
+        narrowband_f0-0.25|1024|pipeline|canon: canonical/pyspi = sqrt((T-1)/T) to <= 2.2e-16. Inherited
+        from the authors' vec_geo_dist.m (loop i = 1..n-1, read 2026-10-15); constant factor at fixed T.
+    - candidate: descending sort is a no-op; gwtau is the RMS of the running difference of cumulative arc lengths
+      outcome: confirmed
+      evidence: >-
+        segment lengths sqrt(1 + dx^2) >= 1 make the cumulative vectors strictly increasing (analytic);
+        the closed-form references that compute sqrt(mean((L_i - L_j)^2)) in time order without sorting match
+        pyspi (distance.gwtau|narrowband_f0-0.1|4096|pipeline|sin-freq max_abs 1.4e-11,
+        narrowband_f0-0.25|4096|pipeline|sin-grid25 4.6e-11, narrowband_f0-0.1|4096|pipeline|sin-eeg 2.1e-11)
+    - candidate: no length normalisation; null value grows about as sqrt(T)
+      outcome: confirmed
+      evidence: >-
+        distance.gwtau|iid_gaussian|4096|pipeline|slope (log-log slope 0.570, Monte Carlo 0.502),
+        distance.gwtau|iid_gaussian|{64,256,1024,4096}|kernel|null-m2 (analytic E[gwtau^2] = gamma0 T/2 +
+        gamma1 (T-2) within |z| <= 1.66 of Monte Carlo), iid_gaussian|*|pipeline|null (all entries inside the
+        Monte Carlo band). A property of the canonical definition, not an implementation defect.
+    - candidate: >-
+        GitBook "robust to shifts" (scoped at the check stage): fails for a phase shift of a sampled oscillation at
+        f0 = fs/4 (value grows about in proportion to T), slowly at fs/5; holds for delayed white noise and for
+        f = 10/256; the "contradicts the paper" half of the trace candidate is not supported
+      outcome: confirmed
+      evidence: >-
+        Confirmed only in the scoped form above. Most realistic cases support the GitBook sentence; the
+        failure is the grid-commensurate case. (i) literature, re-read 2026-10-15 in the Europe PMC JATS full
+        text (PMC10326159, section "Empirical Results on Synthetic, Model-Based, and Publicly Available
+        Real-World Data"): the paper says larger shifts are distinguished AND that "Slightly shifted versions of
+        qualitatively similar trajectories will be matched by an optimal transport routine producing a small
+        distance"; the unqualified GitBook sentence is therefore an incomplete paraphrase, not a contradiction,
+        and that half of the trace candidate is withdrawn. The journal PDF was not opened.
+        (ii) distance.gwtau|narrowband_f0-0.25|4096|pipeline|shift: pair (0,1) (pi/4) 16.18 -> 267.91 from
+        T=256 to 4096 (ratio 16.56), noise-free closed form 17.03 -> 269.81
+        (narrowband_f0-0.25|{256,4096}|pipeline|sin-grid25); pair (0,2) 0.53 -> 2.12. Scope:
+        distance.gwtau|narrowband_f0-0.1|4096|pipeline|eeg-grid shows no growth for f = 10/256 (0.0846 ->
+        0.0847) and slow growth for f = 0.2 (0.56 -> 1.09); delayed white noise stays below the 1 % null
+        quantile (delayed_noise|{1024,4096}|pipeline|delay, max 2.99 vs 6.42 and 6.47 vs 12.79). At T=4096
+        the f0 = fs/4 pi/4 pair (267.91) is far above the upper end of the iid null band (102.86,
+        iid_gaussian|4096|pipeline|null), so a slight phase shift there is not matched with a small distance,
+        contrary to the paper's own claim for slightly shifted oscillations.
+    - candidate: value depends on preprocessing (raw units without z-scoring); affine invariant with z-scoring
+      outcome: confirmed
+      evidence: >-
+        distance.gwtau|scaled_offset|1024|kernel|rawunits (raw/z-scored ratio 75.8-624.2),
+        scaled_offset|{64,1024,4096}|pipeline|affine (3.4e-14 relative), iid_gaussian|1024|{kernel,pipeline}|invar
+        (x vs 3x-2: 1198.4 raw, 0.0 z-scored). Extended by the sampling-rate probe:
+        distance.gwtau|iid_gaussian|1024|pipeline|fs-ratio (pyspi 256 Hz / 32 Hz = 0.147 for the same 16 s of
+        signal; Eq. 8 with real times 1.025).
+  checks_run:
+    - run_ids:
+        - "distance.gwtau|*|*|*|def (46 runs: 21 datasets, kernel / pipeline / pipeline-detrend, T 64-4096)"
+      reference: audit/checks/refs/gwtau.py:chk_def (audit/checks/refs/_kernels_distance.py:gwtau)
+      outcome: 46/46 pass; max_rel 1.2e-13, max_abs 1.7e-12
+    - run_ids:
+        - distance.gwtau|iid_gaussian|64|kernel|canon
+        - distance.gwtau|iid_gaussian|256|kernel|canon
+        - distance.gwtau|iid_gaussian|1024|kernel|canon
+        - distance.gwtau|iid_gaussian|4096|kernel|canon
+        - distance.gwtau|bivariate_gaussian|1024|kernel|canon
+        - distance.gwtau|narrowband_f0-0.25|1024|pipeline|canon
+      reference: audit/checks/refs/gwtau.py:chk_canon (paper Def. 2 with the root, times sqrt(T/(T-1)))
+      outcome: 6/6 pass; canonical/pyspi = sqrt((T-1)/T) to 2.2e-16
+    - run_ids:
+        - distance.gwtau|iid_gaussian|256|pipeline|pot
+        - distance.gwtau|iid_gaussian|4096|pipeline|pot
+        - distance.gwtau|bivariate_gaussian|1024|kernel|pot
+        - distance.gwtau|narrowband_f0-0.25|4096|pipeline|pot
+        - distance.gwtau|delayed_noise|1024|pipeline|pot
+        - distance.gwtau|iid_gaussian|256|kernel|unequal-pot
+      reference: audit/checks/refs/gwtau.py:chk_pot, chk_unequal (POT==0.9.7.post1 ot.wasserstein_1d)
+      outcome: 6/6 pass; max_rel 1.9e-15 (equal lengths), 1.7e-14 (unequal-length branch)
+    - run_ids:
+        - distance.gwtau|iid_gaussian|256|kernel|unequal-quantile
+        - distance.gwtau|iid_gaussian|256|kernel|unequal-octave
+        - distance.gwtau|iid_gaussian|256|kernel|octave
+        - distance.gwtau|bivariate_gaussian|1024|pipeline|octave
+      reference: audit/checks/refs/gwtau.py:chk_unequal, chk_octave (audit/checks/octave/gwtau.m, same-lineage)
+      outcome: 4/4 pass; quantile W2 1.3e-15, Octave 1.5e-15 / 6.5e-15
+    - run_ids:
+        - distance.gwtau|narrowband_f0-0.25|256|pipeline|sin-grid25
+        - distance.gwtau|narrowband_f0-0.25|4096|pipeline|sin-grid25
+        - distance.gwtau|narrowband_f0-0.1|256|pipeline|sin-freq
+        - distance.gwtau|narrowband_f0-0.1|4096|pipeline|sin-freq
+        - distance.gwtau|narrowband_f0-0.1|256|pipeline|sin-eeg
+        - distance.gwtau|narrowband_f0-0.1|4096|pipeline|sin-eeg
+        - distance.gwtau|narrowband_f0-0.1|256|pipeline|xfreq
+        - distance.gwtau|narrowband_f0-0.1|4096|pipeline|xfreq
+        - distance.gwtau|narrowband_f0-0.25|4096|pipeline|shift
+        - distance.gwtau|narrowband_f0-0.1|4096|pipeline|eeg-grid
+      reference: audit/checks/refs/gwtau.py:chk_sin, chk_xfreq, chk_shift, chk_eeg_grid (closed-form sampled sinusoids)
+      outcome: 10/10 pass; closed forms max_abs <= 4.6e-11; pi/4 pair at f0 = 0.25 grows 16.56x from T=256 to 4096; f = 10/256 does not grow
+    - run_ids:
+        - distance.gwtau|scaled_offset|64|pipeline|affine
+        - distance.gwtau|scaled_offset|1024|pipeline|affine
+        - distance.gwtau|scaled_offset|4096|pipeline|affine
+        - distance.gwtau|scaled_offset|1024|kernel|rawunits
+        - distance.gwtau|iid_gaussian|1024|kernel|invar
+        - distance.gwtau|iid_gaussian|1024|pipeline|invar
+        - distance.gwtau|trending|1024|pipeline-detrend|detrendinv
+        - distance.gwtau|trending|4096|pipeline-detrend|detrendinv
+        - distance.gwtau|trending|1024|pipeline|trend-nodetrend
+        - distance.gwtau|shared_envelope|1024|pipeline|ident
+        - distance.gwtau|iid_gaussian|1024|pipeline|fs
+        - distance.gwtau|iid_gaussian|1024|pipeline|fs-ratio
+      reference: audit/checks/refs/gwtau.py:chk_affine, chk_rawunits, chk_invar, chk_detrendinv, chk_trend_nodetrend, chk_ident, chk_fs, chk_fs_ratio
+      outcome: 12/12 pass; affine 3.4e-14; sign/offset zeros <= 4.8e-14; identical pair 0.0; pyspi 256 Hz / 32 Hz ratio 0.147 vs real-time 1.025
+    - run_ids:
+        - distance.gwtau|iid_gaussian|1024|pipeline|perm-def
+        - distance.gwtau|var2_bivariate|1024|pipeline|perm-def
+        - distance.gwtau|narrowband_f0-0.1|1024|pipeline|perm-def
+        - distance.gwtau|iid_gaussian|1024|pipeline|perm-change
+        - distance.gwtau|var2_bivariate|1024|pipeline|perm-change
+        - distance.gwtau|narrowband_f0-0.1|1024|pipeline|perm-change
+        - distance.gwtau|narrowband_f0-0.1|1024|pipeline|rev
+      reference: >-
+        audit/checks/refs/gwtau.py:chk_perm_def, chk_rev (independent-impl, from-scratch kernel on permuted /
+        reversed rows), chk_perm_change (same-lineage: pyspi permuted vs pyspi original; kernel-only repeat stored as
+        kernel_rel_change_*)
+      outcome: >-
+        7/7 pass; permuted rows exact (2.5e-16); joint permutation changes the value by 6.9 % to 69x (pyspi and
+        kernel alike, relative changes agree to <= 7.1e-15); reversal changes the median by 28 %
+    - run_ids:
+        - distance.gwtau|iid_gaussian|64|pipeline|null
+        - distance.gwtau|iid_gaussian|256|pipeline|null
+        - distance.gwtau|iid_gaussian|1024|pipeline|null
+        - distance.gwtau|iid_gaussian|4096|pipeline|null
+        - distance.gwtau|iid_gaussian|64|kernel|null-m2
+        - distance.gwtau|iid_gaussian|256|kernel|null-m2
+        - distance.gwtau|iid_gaussian|1024|kernel|null-m2
+        - distance.gwtau|iid_gaussian|4096|kernel|null-m2
+        - distance.gwtau|iid_gaussian|4096|pipeline|slope
+        - distance.gwtau|delayed_noise|1024|pipeline|delay
+        - distance.gwtau|delayed_noise|4096|pipeline|delay
+      reference: audit/checks/refs/gwtau.py:chk_null, chk_null_m2, chk_slope, chk_delay (Monte Carlo + analytic E[gwtau^2])
+      outcome: >-
+        11/11 pass; slope 0.570 (Monte Carlo 0.502); analytic vs Monte Carlo |z| <= 1.66; delayed pairs below the
+        1 % null quantile. null-m2 uses a post hoc rule; under the drafted 2-sd rule the T=256 draw fails
+        (z = 2.64, 98th Monte Carlo percentile)
+    - run_ids:
+        - distance.gwtau|var2_bivariate|1024|pipeline|sym
+        - distance.gwtau|var2_chain|1024|pipeline|sym
+        - distance.gwtau|delayed_noise|1024|pipeline|sym
+        - distance.gwtau|logistic_maps_chaotic|1024|pipeline|sym
+        - distance.gwtau|anm|1024|pipeline|sym
+        - distance.gwtau|iid_gaussian|4096|pipeline|sym
+        - distance.gwtau|var2_bivariate|1024|pipeline|unmirrored
+        - distance.gwtau|var2_chain|1024|pipeline|unmirrored
+        - distance.gwtau|delayed_noise|1024|pipeline|unmirrored
+        - distance.gwtau|logistic_maps_chaotic|1024|pipeline|unmirrored
+        - distance.gwtau|anm|1024|pipeline|unmirrored
+        - distance.gwtau|iid_gaussian|1024|pipeline|unmirrored
+      reference: audit/checks/refs/gwtau.py:chk_sym, chk_unmirrored
+      outcome: 12/12 pass; max|A - A.T| = 0.0, unmirrored matrices bitwise symmetric and equal to the reference (1.9e-16)
+optimisation:
+  complexity_P_T: 'O(P^2 T log T): per ordered pair (Undirected over Directed.multivariate) two arc-length vectors (pyspi/statistics/distance.py:GromovWasserstainTau.gwtau stacks time and value with column_stack, then GromovWasserstainTau.vec_geo_dist: diff, norm, cumsum), two descending sorts and an RMS difference (wass_sorted). Measured P_exponent 2.04, T_exponent 0.37 (per-call overhead dominates at T <= 1024); 118x1024 measured 1.31 s. The per-pair term dominates.'
+  hotspot_1: 'pyspi/statistics/distance.py:GromovWasserstainTau.vec_geo_dist (pyspi) 53.6% of the profiled SPI call at 8x1024 (7.7 ms total; numpy linalg.norm 32.7%, cumsum 9.0%, diff 7.8%); the trajectory column_stack (7.0%) is called from GromovWasserstainTau.gwtau, not from vec_geo_dist'
+  hotspot_2: pyspi/statistics/distance.py:GromovWasserstainTau.wass_sorted (pyspi) 22.0% (np.sort 10.5%)
+  hotspot_owner: pyspi
+  opaque_share: 0.4867
+  profile_file: audit/profiles/distance.gwtau__8x1024.pstats
+  opportunities:
+  - opportunity_id: gwtau-1
+    opportunity: 'Per-channel cache: each channel''s arc-length vector and its descending sort depend on that channel only, so compute them once
+      per window (P instead of 2P(P-1) times) and leave only sqrt(mean((a_i - a_j)^2)) per pair, looped or vectorised over the pairs.'
+    opp_type: cache-sharing
+    expected_speedup: '3-50x'
+    speedup_basis: 'profile:audit/profiles/distance.gwtau__8x1024.pstats vec_geo_dist 53.6% + column_stack 7.0% (called from gwtau) + sort 10.5% = about 71% per-channel work + complexity: the low end keeps pyspi''s per-pair dispatch (Directed.multivariate -> bivariate -> mean of squared differences) and removes only the per-channel work, Amdahl about 3.5x; the high end bypasses the per-pair Python loop and vectorises the RMS differences over the cached sorted vectors (P^2/2 T operations, milliseconds at 118x1024 against 1.31 s measured)'
+    output_risk: unverified-bit-identical
+    risk_evidence: per-channel arc lengths and sorts are pure functions of one channel; per pair the same subtraction, square and mean over the
+      same sorted vectors (a dot-product expansion over pairs would be within-tolerance instead)
+    effort: S
+    depends_on:
+    - xc-undirected-upper

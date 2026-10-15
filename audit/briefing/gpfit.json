@@ -1,0 +1,91 @@
+{
+ "family": "gpfit",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/miscellaneous.md"
+ ],
+ "hypotheses": [
+  "kernel = Constant + White + {DotProduct, RBF}; hyperparameters optimised (fmin_l_bfgs_b), n_restarts 0, random_state None; in-sample MSE",
+  "local optimum dependence; compare own posterior mean at fitted hyperparameters"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/misc.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    888,
+    903
+   ],
+   "section": "1.6.2",
+   "title": "Gaussian process model fit (gpfit)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/gaussian_process/kernels.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "kernel": "DotProduct"
+   },
+   "identifier_params": {
+    "gpfit_DotProduct": {
+     "kernel": "DotProduct"
+    }
+   },
+   "identifiers": [
+    "gpfit_DotProduct"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "misc",
+    "nonlinear",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "sklearn GP DotProduct",
+   "module": "misc",
+   "pair_basis": "ordered",
+   "pyspi_class": "GPModel",
+   "representative": "gpfit_DotProduct",
+   "source": "config",
+   "unit_id": "misc.gpfit.DotProduct"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "kernel": "RBF"
+   },
+   "identifier_params": {
+    "gpfit_RBF": {
+     "kernel": "RBF"
+    }
+   },
+   "identifiers": [
+    "gpfit_RBF"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "misc",
+    "nonlinear",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "sklearn GP RBF",
+   "module": "misc",
+   "pair_basis": "ordered",
+   "pyspi_class": "GPModel",
+   "representative": "gpfit_RBF",
+   "source": "config",
+   "unit_id": "misc.gpfit.RBF"
+  }
+ ]
+}

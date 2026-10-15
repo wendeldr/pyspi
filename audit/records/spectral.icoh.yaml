@@ -1,0 +1,276 @@
+unit_id: spectral.icoh
+status: profiled
+correctness:
+  metric_name_standard: band mean / band max of the ABSOLUTE imaginary part of multitaper coherency |Im C_ij(f)| (absolute imaginary coherence)
+  canonical_ref: 'Nolte, Bai, Wheaton, Mari, Vorbach & Hallett 2004, Clin. Neurophysiol. 115:2292-2307 (imaginary part of coherency; supplement ref [64]); Bastos & Schoffelen 2016, Front. Syst. Neurosci. 9:175 (supplement [59]). Equation numbers not re-checked (from memory: coherency defined as C_ij = S_ij/sqrt(S_ii S_jj), S_ij = <x_i(f) x_j*(f)>, ImCoh = Im C_ij).'
+  canonical_definition: ImCoh_ij(f) = Im[S_ij(f)/sqrt(S_ii(f) S_jj(f))], signed, in [-1, 1], antisymmetric (ImCoh_ji = -ImCoh_ij); zero in expectation for instantaneous (zero-lag) mixing; the sign indicates which signal leads at frequency f. Many applications report |ImCoh|, but Nolte 2004 defines and interprets the signed quantity.
+  documented_definition: 'supplement §1.5.5, p.14 (supplement.txt:670-682): "The imaginary part of the complex-valued coherency (referred to as imaginary coherence [59]) is argued as a means to obtain the coherence exclusively caused by a time delay (i.e., by removing instantaneous interactions that are present in the real axis) [64]. We compute the imaginary coherence for the three typical frequency ranges and two summary statistics". Keywords "undirected, linear, unsigned, bivariate, frequency-dependent". Same text GitBook spectral.md:152-173. Common section: supplement §1.5, p.12 (heading at supplement.txt:570): "Each measure is based on the cross- and power-spectral densities at a given frequency and sampling rate, which is estimated via the multitaper technique ... we assume a sampling frequency fs = 1 throughout ... We use 125 uniformly sampled bins across the entire frequency range, f ∈ [f0, fs/2], where fs/2 is the Nyquist frequency and f0 = 4/T ... we take the mean (mean) and the maximum (max) values of each measure over three ranges ... fmin-0_fmax-0-5: f ∈ [0, fs/2]; fmin-0_fmax-0-25: f ∈ [0, fs/4]; fmin-0-25_fmax-0-5: f ∈ [fs/4, fs/2]" (supplement.txt:570-599; same text GitBook spectral.md:14-20). The briefing pack line ranges (582-613, 614-628, 629-642, 684-700) are offset by 12-14 lines from the headings in this copy of supplement.txt; the line numbers cited here are the ones opened.'
+  delegate_lib: spectral-connectivity==1.1.2 Connectivity.imaginary_coherence (connectivity.py:345-373) = abs(E[S].imag / sqrt(P_i P_j)) on non-negative frequencies; spectra from Multitaper.fft (scipy.fftpack.fft); band selection and nanmean/nanmax in pyspi (numpy 2.5.4)
+  implemented_as: 'Input z-scored per channel (ddof=1; optional linear detrend first; Data defaults). The whole (P, T) record is one window: spectral_connectivity 1.1.2 Multitaper with defaults NW=3, n_tapers=floor(2*NW-1)=5, low-bias filter (DPSS concentration > 0.9; all 5 kept for T >= 8 in the probe), per-window constant (mean) detrend, tapers scaled by sqrt(fs), scipy.fftpack.fft with n_fft = next_fast_len(T) (zero padding when T is not 5-smooth, e.g. T=67 -> 72), divided by fs. Connectivity expectation "trials_tapers" = unweighted mean over the 5 tapers: S_ij(f) = (1/K) sum_k X_ik(f) conj(X_jk(f)). Coherency C_ij = S_ij / sqrt(S_ii S_jj). Only the first (n_fft+1)//2 FFT bins are kept: DC included, Nyquist dropped for even n_fft (T=256: 128 bins k/256, k=0..127). pyspi selects bins with fmin <= f <= fmax (closed at both ends) and applies np.nanmean or np.nanmax over that axis, then sets the diagonal to NaN; no Undirected mirroring. The cached spectral result (keyed by (measure,)) is shared by all six band/statistic identifiers of the unit. Measure: |Im S_ij(f)| / sqrt(S_ii(f) S_jj(f)) per bin (absolute value taken per frequency BEFORE the band mean/max; no norm==0 guard and no NaN diagonal in this library method, pyspi sets the diagonal to NaN). At DC Im S_ij = 0 exactly for real input, so a band containing f=0 averages one structural zero. Probe: equals the from-scratch reference to <= 1.4e-13.'
+  implementation_trace:
+  - 'pyspi/config.yaml:635-720 .statistics.spectral CoherencePhase (637-663), CoherenceMagnitude (665-691), ImaginaryCoherence (694-720): six configs each (fs:1 | fmin 0/fmax 0.25 | fmin 0.25/fmax 0.5) x (mean | statistic: max)'
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then zscore(axis=1, nan_policy="omit", ddof=1) when normalise=True (default)'
+  - 'pyspi/calculator.py:295-345 Calculator.compute (HEAD a1f20c7): S = self._spis[spi].multivariate(self.dataset) (329); np.fill_diagonal(S, np.nan) (332); any exception -> self._table[spi] = NaN and a failed MetricReport (336-339) (trace-stage probe: Calculator output equals direct multivariate, max|diff| 0.0)'
+  - pyspi/statistics/spectral.py:4 imports spectral_connectivity via pyspi/_spectral_compat.py:10-28 (adapter only replaces np.in1d in the connectivity module namespace; not used by these three measures)
+  - 'pyspi/statistics/spectral.py:20-43 NonparametricSpectral.__init__: fmax default fs/2 (21-22); statistic mean -> np.nanmean, max -> np.nanmax (29-32); identifier suffix _multitaper_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g} with "." -> "-" (38-43)'
+  - pyspi/statistics/spectral.py:45-50 key = (self.measure,) for these classes, so all band/statistic configs share one cached spectrum
+  - 'pyspi/statistics/spectral.py:64-83 NonparametricSpectralMultivariate._get_cache: z = data.to_numpy(squeeze=True).T (T, P) (69); sc.Multitaper(z, sampling_frequency=self._fs) with all other defaults (70); Connectivity.from_multitaper(m) (71); res = getattr(conn, self.measure)() (73); freq = conn.frequencies (77); cache insert (78-81; first insert keyed by measure string, see tests/README.md "worth knowing")'
+  - 'pyspi/statistics/spectral.py:85-102 multivariate: freq_id = where((freq >= fmin) * (freq <= fmax)) (88, closed band); adj = statfn(adj_freq[0, freq_id, :, :], axis=0) (91); fill_diagonal NaN (101)'
+  - 'pyspi/base.py:121-138 Undirected.multivariate (mirror of the upper triangle) is NOT reached: MRO is [cls, NonparametricSpectralMultivariate, NonparametricSpectral, Unsigned, Undirected, Directed] (probe), so spectral.py:85-102 wins'
+  - 'pyspi/statistics/spectral.py:157-164 ImaginaryCoherence(NonparametricSpectralMultivariate, Undirected): identifier "icoh", _measure "imaginary_coherence"'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:74-102 Multitaper.__init__ defaults: time_halfbandwidth_product=3 (78), detrend_type="constant" (79), n_tapers=None, n_fft_samples=None, is_low_bias=True (88)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:154-164 n_tapers = floor(2*NW - 1) = 5
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:166-178 n_time_samples_per_window = full series length (single window); 192-205 step = window
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:180-190 n_fft_samples = next_fast_len(window) (scipy.fftpack, imported at :29); frequencies = fftfreq(n_fft, 1/fs)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:238-260 fft(): _add_axes (263-271), _sliding_window (274-332, one window), detrend(type="constant") (253-254 -> 747-748 subtracts the mean), _multitaper_fft, swapaxes -> (windows, trials, tapers, n_fft, signals)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:335-354 _multitaper_fft: fft(time_series * tapers, n=n_fft, axis=-2) / sampling_frequency'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:357-387 _make_tapers -> dpss_windows (469-543: tridiagonal Slepian eigenproblem 575-629, sign fix 632-657, eigenvalues 676-698, low-bias filter eigenvalue > 0.9 at 668-673); tapers.T * sqrt(fs). Probe: tapers equal scipy.signal.windows.dpss(T, 3, Kmax=5) to 3.7e-15'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:156-172 Connectivity.from_multitaper: fourier_coefficients = m.fft(), expectation_type="trials_tapers"'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:45-53 EXPECTATION["trials_tapers"] = mean over axes (1, 2) (trials, tapers): unweighted taper average; 276-278 _expectation'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:73-89 _non_negative_frequencies: keeps indices 0..(n+1)//2 - 1 (DC kept, Nyquist dropped for even n_fft); applied to frequencies at 174-180'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:189-193 _power = E[X * conj(X)].real
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:195-208 _cross_spectral_matrix = _complex_inner_product(X[..., None], X[..., None]); 1187-1190 matmul(a, _conjugate_transpose(b)); 1485-1487 swapaxes(-1,-2).conjugate() => S_ij = X_i conj(X_j)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:210-220 _expectation_cross_spectral_matrix (blocks=None): expectation of the full CSM'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:295-313 coherency(): norm = sqrt(P_i P_j), norm==0 -> NaN (308), C = E[S] / norm (309), diagonal set to NaN (310-312), decorated with _non_negative_frequencies(axis=-3) (295)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:345-373 imaginary_coherence(): decorated _asnumpy and _non_negative_frequencies(axis=-3) (345-346); return xp.abs(self._expectation_cross_spectral_matrix().imag / xp.sqrt(self._power[..., :, None] * self._power[..., None, :])) (370-373); docstring cites Nolte 2004 and names the return "imaginary_coherence_magnitude" (360)'
+  deviation_from_documented: '(1) Documented as "the imaginary part of the complex-valued coherency"; implemented as its absolute value per frequency (consistent with the "unsigned"/"undirected" labels, not with "imaginary part"). (2) Frequency grid: documented 125 bins on [f0 = 4/T, fs/2]; implemented FFT grid with DC included (where Im C = 0 exactly, so bands starting at 0 are scaled by (n-1)/n relative to excluding DC: probe var2 T=256 low band 0.389088 = 0.395168 * 64/65) and Nyquist excluded; low/high bands share the 0.25 bin. (3) No mirroring (REVIEW M1; tests/README.md bug 5 before b2f6d7e) has no numeric effect: |A - A^T| = 0.0 exactly in the probe.'
+  deviation_from_canonical: 'Nolte 2004 ImCoh is signed and antisymmetric; pyspi takes |.| per bin, discarding lead/lag (probe delayed_noise T=1024: A[0,1] = A[1,0] = 0.6293 while signed mean ImC is +0.6283 / -0.6283). Because abs is applied before the band mean, mean|Im C| differs from |mean Im C| when the sign changes over the band (probe delayed_noise pair (0,3), delay 5, full band: 0.6315 vs 0.1262). The absolute value plus fixed K=5 tapers gives a positive null level that does not shrink with T (probe iid_gaussian mean 0.2623 / 0.2517 / 0.2554 / 0.2577 at T=64/256/1024/4096; population 0) and upward bias (var2_bivariate T=4096 full band 0.3626 vs population mean |Im C| 0.2871).'
+  units_and_range: 'Dimensionless, non-negative, in [0, 1]. Symmetric exactly. 0.0 exactly for identical series (shared_envelope x0 == x2). NaN on the diagonal (set by pyspi; the library returns 0 there); a zero-power channel gives 0/0 = NaN in its row and column (no guard in the library method; check stage: spectral.icoh|iid_gaussian|1024|kernel|const0:* and const3.7:*); empty band -> all-NaN (mean) or ValueError (max).'
+  direction_convention: 'Undirected by construction: A[i,j] = A[j,i] = band statistic of |Im S_ij|/sqrt(S_ii S_jj) with S_ij = mean_k X_i,k conj(X_j,k). The sign that would indicate lead/lag (positive Im C_ij means i leads j under this S_ij convention, consistent with the phase unit) is discarded by spectral_connectivity/connectivity.py:370.'
+  symmetry_expected: sym
+  already_documented: REVIEW M1 (no Undirected mirroring; no numeric effect here; tests/README.md bug 5 before b2f6d7e); DEPENDENCY_COMPATIBILITY_REVIEW.md:74-82 and tests/README.md dependency constraints (Nyquist bin, pinned 1.1.2); REVIEW M4 notes the DC-included / Nyquist-excluded slice (for phase). The absolute value in imaginary coherence is not listed in KNOWN_ISSUES (M3 covers the opposite case for PLI/wPLI, which are signed).
+  new_finding_candidates:
+  - 'CANDIDATE (pack hypothesis confirmed): icoh is |Im C| per bin, whereas Nolte 2004 ImCoh is signed. connectivity.py:370-373 "return xp.abs(self._expectation_cross_spectral_matrix().imag / xp.sqrt(...))"; probe delayed_noise T=1024 pair (0,1): pyspi 0.6293 both directions, signed reference +0.6283 / -0.6283. Note the opposite convention from PLI/wPLI (signed, REVIEW M3) inside the same family of labels.'
+  - 'CANDIDATE: abs before band averaging changes the quantity when the sign varies over the band: delayed_noise T=1024 pair (0,3) full band pyspi 0.6315 vs |mean signed ImC| 0.1262 (signed mean 0.1262).'
+  - 'CANDIDATE: positive null level about 0.25 independent of T (probe iid_gaussian 0.2623, 0.2517, 0.2554, 0.2577 at T=64, 256, 1024, 4096), from |.| of a K=5 estimate; var2_bivariate T=4096 0.3626 vs population 0.2871.'
+  - 'CANDIDATE: the DC bin is a structural zero (Im of the DC cross-spectrum of real data is exactly 0; probe max|Im C(DC)| = 0.0 on all datasets), so bands with fmin = 0 are multiplied by (n-1)/n: probe var2 T=256 low band 0.389088 vs 0.395168 without DC (65 bins).'
+  - 'CANDIDATE: documented grid ("125 uniformly sampled bins", f0 = 4/T) differs from the FFT grid used; low/high bands share the 0.25 bin; empty bands give NaN (mean) or ValueError (max) (probe T=64, band [1/2048, 4/2048]).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - var2_bivariate
+    - delayed_noise
+    - narrowband_f0-0.1
+    - shared_envelope
+    - gauss_ar1_pair
+    path: kernel
+    reference: 'from-scratch numpy: subtract per-channel mean; tapers = scipy.signal.windows.dpss(T, 3, Kmax=5, return_ratios=True) filtered by ratio > 0.9; X = numpy.fft.fft(taper * x, n=scipy.fftpack.next_fast_len(T)) (the library grid rule, spectral_connectivity transforms.py:29,184; scipy.fft.next_fast_len differs for non-5-smooth T: 63 -> 63 vs 64, 67 -> 70 vs 72, 77 -> 77 vs 80, and probe7 shows the scipy.fft rule misses the library by up to 0.24 (cohmag) at T=67 while the fftpack rule agrees to <= 1.4e-14 at T in {63, 67, 77}); S_ij = mean_k X_i conj(X_j); C = S_ij/sqrt(S_ii S_jj); keep first (n_fft+1)//2 bins; band fmin <= f <= fmax; np.nanmean / np.nanmax (no spectral_connectivity import; scratchpad prototype spectral_coherence/ref.py); measure |Im C|'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: agreement to <= 1e-10 absolute for every pair and identifier (probe max 1.4e-13)
+  - datasets:
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic: x2 bit-identical to x0, S_02 = |X_0|^2 real, Im C_02 = 0'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: A[0,2] = 0.0 exactly for mean and max (probe 0.0)
+  - datasets:
+    - narrowband_f0-0.1
+    path: kernel
+    reference: 'analytic: pure sinusoids with phase shifts (0, +pi/4, -pi/2) and small noise give |Im C_ij(f0)| = |sin(dphi_ij)| (0.7071, 1.0, 0.7071) on a narrow custom band [0.095, 0.105]'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: within 0.02 of |sin(dphi)| at T=1024 (probe 0.7162, 0.9947, 0.6970)
+  - datasets:
+    - delayed_noise
+    - narrowband_f0-0.1
+    - var2_bivariate
+    path: kernel
+    reference: signed Nolte ImCoh from the from-scratch coherency (mean of Im C over the band) for both orders (i,j) and (j,i)
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'signed reference is antisymmetric with positive sign for the leading channel first (delayed_noise T=1024: Im C_01 mean +0.6283 with x0 leading); pyspi equals the band mean of |Im C| and is symmetric (0.6293); documents that the direction information is discarded'
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic null: population Im C = 0; distribution of |Im C_hat| for K=5 by Monte Carlo of the from-scratch reference on fresh iid draws'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pyspi band mean about 0.25 at every T, not decreasing with T (probe 0.262, 0.252, 0.255, 0.258), matching the Monte Carlo null mean
+  - datasets:
+    - var2_bivariate
+    path: kernel
+    reference: 'population S_true from the dataset: band mean of |Im C_true| and of signed Im C_true on the FFT grid'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pyspi above the population |Im C| band mean by the K=5 noise floor (probe T=4096 full band 0.3626 vs 0.2871), no convergence with T
+  - datasets:
+    - var2_bivariate
+    - iid_gaussian
+    path: kernel
+    reference: 'exact DC accounting: for bands with fmin = 0, pyspi value (mean) = (n-1)/n * mean over the bins excluding DC, using the from-scratch reference'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: identity holds to 1e-12 (probe var2 T=256 low band 0.389088360132251 vs 0.38908836013225095)
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'invariance to per-channel scale/offset: Data(scaled_offset, normalise=False) vs Data(bivariate_gaussian)'
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: equal to 1e-12 (probe 1.1e-16)
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - var2_bivariate
+    - delayed_noise
+    - narrowband_f0-0.1
+    - shared_envelope
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'self-consistency: A == A.T exactly and permutation equivariance'
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: hold exactly (probe |A - A^T| = 0.0)
+  check_method: analytic
+  check_reference: 'audit/checks/refs/spectral_coherence.py:do_impl (independent re-implementation, |Im C| per bin), do_identical / do_f0bin / do_pop_or_mcexp (analytic: identical pair, |sin dphi| at f0, population Im C = 0 for zero-lag mixing and S = H Sigma H^H), do_signed (Nolte 2004 signed form), do_null / mcexp (Monte Carlo), do_mne (mne-connectivity==0.9.0 imcoh), do_invariance / do_perm (same-lineage pyspi-vs-pyspi self-consistency, no verdict rests on them); probes audit/checks/probes/spectral_coherence_bands.py'
+  check_data: iid_gaussian, bivariate_gaussian, scaled_offset, trending, var2_bivariate, delayed_noise, narrowband_f0-0.1, narrowband_f0-0.25, shared_envelope, gauss_ar1_pair; T in {64, 256, 1024, 4096} plus truncations to 67 and 97
+  agreement_criterion: 'independent re-implementation: rtol = atol = 1e-10; analytic identities exact; single f0 bin atol = 4 x MC RMS; null/expectation |pyspi - value| <= 2 se, se = MC sd x z(1-0.05/(2m))/2'
+  closeness: '|Im C| band statistics reproduced exactly: 120/120 impl runs, max_abs 7.4e-13; EEG bands 7.3e-14; f0 bin within 1.1e-3 of |sin dphi|; identical pair 0.0. Against signed Nolte ImCoh: max_abs 1.2575 (delayed_noise A[0,1] = A[1,0] = 0.6293 vs +0.6283 / -0.6283; pair (0,3) 0.6315 vs 0.1262); mne |imcoh| agrees to 7.1e-5, signed mne imcoh differs by 0.700 (var2). Null level 0.252-0.262 for T=64..4096 (population 0); zero-lag bivariate pair 0.2437 at T=4096 vs population 0 (max_z 27.49).'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 8 fails because abs comes before the band mean (delayed_noise lag 5: 0.6315 vs |mean Im C| 0.1262). Anchor 7''s supplement-variant clause
+    holds only through the ''unsigned'' keyword. The supplement prose names the imaginary part of coherency, while pyspi takes |Im C| per bin. Keywords are metadata,
+    so the row keeps 7 as the nearest anchor. Grid deviations are scored under spectral.band_selection.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'pyspi returns |Im C_ij(f)| per bin (library spectral_connectivity/connectivity.py:370-373), then the band mean / max, whereas Nolte et al. 2004 define the signed, antisymmetric Im C_ij whose sign gives lead/lag; the supplement text says ''the imaginary part'' while the labels say unsigned. Consequences measured here: the matrix is exactly symmetric and carries no direction; the absolute value is taken before the band mean, so a band where Im C changes sign averages magnitudes (0.6315 vs |mean Im C| 0.1262 for lag 5 over the full band); with K=5 tapers the absolute value gives a positive null level of about 0.26 at every T (population 0) and 0.24 for purely zero-lag (instantaneous) coupling, which is the case imaginary coherence is meant to suppress. DC adds one structural zero to every band starting at 0 (|Im C(DC)| = 0.0 exactly). Grid, shared 0.25 bin and empty-band behaviour as for cohmag. Rubric anchor 7 (matches the supplement variant, keywords ''undirected, unsigned'', but differs from canonical in a value-changing way). Anchor 8 (monotone relationship, abs of a signed canonical quantity) holds only per bin: the SPI is the band mean / max taken after the absolute value, which has no monotone relation to the canonical signed band mean (0.6315 vs 0.1262 above; 0.24-0.26 where the population value is 0). The score was 8 before the check-stage review. Rubric reading is nearest-anchor 7 (score_rubric_note), because the supplement-variant clause holds only through the ''unsigned'' keyword, which is metadata; the ''Rubric anchor 7'' wording above is the original reasoning for score_0_10.'
+  new_finding: true
+  definition_under_review: true
+  check_cost: 'cheap: 191 pyspi runs of this unit at T <= 4096 (largest 0.7 s, family total 32 s for 582 runs); references including 400-draw Monte Carlo about 70 s for the family'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 exactly in all 120 impl runs; the signed canonical form would be antisymmetric (signed run: Im C_01 = +0.6283, Im C_10 = -0.6283)'
+  direction_observed: 'none: the lead/lag sign is discarded; A[0,1] = A[1,0] = 0.6293 on delayed_noise T=1024 although the signed Im C_01 = +0.6283 marks x0 as leading (same convention as the phase unit: positive Im C_ij means i leads j)'
+  candidate_resolutions:
+  - candidate: icoh is |Im C| per bin, whereas Nolte 2004 ImCoh is signed
+    outcome: confirmed
+    evidence: spectral.icoh|delayed_noise|1024|kernel|signed:mean-full (max_abs 1.2575; 0.6293 both ways vs +-0.6283); impl ref_alt_signed_maxabs up to 1.347; spectral.icoh|delayed_noise|1024|kernel|mne:mean-full (|imcoh| 2.7e-5, signed 1.258)
+  - candidate: abs before band averaging changes the quantity when Im C changes sign in the band
+    outcome: confirmed
+    evidence: 'spectral.icoh|delayed_noise|1024|kernel|signed:mean-full (pair (0,3): pyspi 0.6315 vs signed band mean 0.1262 = |mean Im C|)'
+  - candidate: positive null level about 0.25 independent of T; var2 above the population
+    outcome: confirmed
+    evidence: spectral.icoh|iid_gaussian|{64,256,1024,4096}|kernel|null:mean-full (0.2623/0.2517/0.2554/0.2577, MC 0.2456-0.2586); spectral.icoh|bivariate_gaussian|4096|kernel|pop:mean-full (0.2437 vs 0, max_z 27.49); spectral.icoh|var2_bivariate|4096|kernel|pop:mean-full (0.3626 vs 0.2871, max_z 8.82)
+  - candidate: the DC bin is a structural zero, scaling bands with fmin = 0 by (n-1)/n
+    outcome: confirmed
+    evidence: spectral.icoh|*|impl:* (ref_dc_abs_imag_coherency_max = 0.0 in all 120 runs; ref_alt_no_dc_maxabs up to 0.039, i.e. the inclusive mean equals (n-1)/n times the DC-free mean)
+  - candidate: documented grid (125 bins, f0 = 4/T) differs; shared 0.25 bin; empty band NaN/ValueError
+    outcome: confirmed
+    evidence: spectral.icoh|delayed_noise|1024|kernel|grid{67,97,1024}:mean-full; impl ref_alt_strict_band_maxabs min 1.3e-4 over mean runs; spectral.icoh|iid_gaussian|256|kernel|emptymax:max-delta; spectral.icoh|delayed_noise|256|pipeline-detrend|eeg:mean-eeg11
+  checks_run:
+  - run_ids:
+    - spectral.icoh|*|*|kernel|impl:*
+    - spectral.icoh|*|1024|pipeline|impl:*
+    - spectral.icoh|trending|1024|pipeline-detrend|impl:*
+    reference: audit/checks/refs/spectral_coherence.py:do_impl (independent numpy/scipy re-implementation)
+    outcome: pass 120/120 (6 identifiers x 7 datasets at T=1024, x 3 datasets at T=64/256/4096, pipeline and detrend paths); max_abs 7.4e-13 (kernel), 1.0e-13 (pipeline), 7.2e-14 (pipeline-detrend); |Im C(DC)| = 0.0 exactly in all 120 runs
+  - run_ids:
+    - spectral.icoh|scaled_offset|1024|kernel|invariance:*
+    - spectral.icoh|delayed_noise|1024|kernel|perm:*
+    - spectral.icoh|shared_envelope|1024|pipeline|identical:*
+    reference: 'audit/checks/refs/spectral_coherence.py:do_invariance, do_perm (same-lineage: pyspi-vs-pyspi self-consistency), do_identical (analytic)'
+    outcome: 'pass 18/18: scale/offset invariance max_abs <= 1.8e-15, permutation equivariance max_abs 0.0, identical pair x2 == x0 icoh A[0,2] = 0.0 exactly'
+  - run_ids:
+    - spectral.icoh|narrowband_f0-0.25|1024|kernel|f0bin:mean-f0
+    - spectral.icoh|narrowband_f0-0.25|4096|kernel|f0bin:mean-f0
+    reference: audit/checks/refs/spectral_coherence.py:do_f0bin (analytic C(f0) = exp(i dphi); probe audit/checks/probes/spectral_coherence_bands.py:custom_band fmin = fmax = 0.25)
+    outcome: 'pass 2/2: |Im C_ij(f0)| = |sin(phi_i - phi_j)| (0.7071, 1.0, 0.7071) within max_abs 1.1e-3 (T=1024, atol 9.7e-3 = 4 x MC RMS) and 9.7e-4 (T=4096, atol 4.7e-3)'
+  - run_ids:
+    - spectral.icoh|iid_gaussian|*|kernel|null:*
+    reference: audit/checks/refs/spectral_coherence.py:do_null (Monte Carlo of the independent estimator, 400 fresh draws)
+    outcome: 'pass 8/8: band-mean null level pyspi 0.2623 / 0.2517 / 0.2554 / 0.2577 at T=64/256/1024/4096 vs MC 0.2456 / 0.2556 / 0.2582 / 0.2586 (population 0); band-max pyspi 0.6899 / 0.7780 / 0.8090 / 0.8891 vs MC 0.6285 / 0.7500 / 0.8258 / 0.8773'
+  - run_ids:
+    - spectral.icoh|var2_bivariate|*|kernel|pop:*
+    - spectral.icoh|bivariate_gaussian|*|kernel|pop:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_pop_or_mcexp population branch (analytic S = H Sigma H^H; C = rho)
+    outcome: 'fail 8/11 (expected; documents abs + fixed-K bias): bivariate_gaussian (zero-lag mixing, population Im C = 0, Nolte''s case) pyspi 0.2293 (T=1024) / 0.2437 (T=4096) on pair (0,1), max_z 14.84 / 27.49; var2 full band pyspi 0.3373 / 0.3890 / 0.3626 at T=256/1024/4096 vs population mean |Im C| 0.2871 (max_z 1.34 / 5.52 / 8.82); T=256 var2 passes in all three bands'
+  - run_ids:
+    - spectral.icoh|var2_bivariate|*|kernel|mcexp:*
+    - spectral.icoh|bivariate_gaussian|*|kernel|mcexp:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_pop_or_mcexp Monte Carlo branch (expectation of the estimator as coded)
+    outcome: 'pass 11/11: pyspi within the Monte Carlo spread of the estimator (var2 T=4096 full band 0.3626 vs MC 0.3624, max_z 0.02; bivariate T=4096 max_z 0.81)'
+  - run_ids:
+    - spectral.icoh|delayed_noise|1024|pipeline-detrend|eeg:mean-eeg11
+    - spectral.icoh|delayed_noise|256|pipeline-detrend|eeg:mean-eeg11
+    - spectral.icoh|iid_gaussian|1024|pipeline-detrend|eeg:mean-eeg11
+    - spectral.icoh|iid_gaussian|256|kernel|emptymax:max-delta
+    reference: audit/checks/refs/spectral_coherence.py:do_eeg, do_emptymax (probe audit/checks/probes/spectral_coherence_bands.py:eeg_bands, empty_max)
+    outcome: 'pass 4/4: the 11 retained EEG identifiers match the independent reference to max_abs 7.3e-14; at T=1024 the inclusive bands hold [2, 35, 125, 3, 3, 10, 21, 41, 91, 51] bins (strict would be [1, 34, 124, 1, 1, 8, 19, 39, 89, 49]); at T=256 the 1-4 Hz band is empty and all-NaN on both sides; statistic=max on the empty band raises ValueError zero-size array'
+  - run_ids:
+    - spectral.icoh|delayed_noise|1024|kernel|nfft67:*
+    - spectral.icoh|delayed_noise|1024|kernel|nfft97:*
+    - spectral.icoh|delayed_noise|1024|kernel|grid67:mean-full
+    - spectral.icoh|delayed_noise|1024|kernel|grid97:mean-full
+    - spectral.icoh|delayed_noise|1024|kernel|grid1024:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_nfft, do_grid (probe audit/checks/probes/spectral_coherence_bands.py:truncated, grid)
+    outcome: 'pass 9/9: T=67 -> n_fft 72, T=97 -> n_fft 100 (5-smooth rule) reproduced to <= 1.3e-15; the scipy.fft next_fast_len grid would differ by up to 0.032; pyspi''s own grid equals nonneg(fftfreq(n_fft)) exactly (512 bins at T=1024, 36 at T=67, 50 at T=97; DC included, top bin 0.49902 at T=1024)'
+  - run_ids:
+    - spectral.icoh|iid_gaussian|1024|kernel|const0:*
+    - spectral.icoh|iid_gaussian|1024|kernel|const3.7:*
+    reference: audit/checks/refs/spectral_coherence.py:do_const (probe audit/checks/probes/spectral_coherence_bands.py:constant_channel)
+    outcome: 'pass 4/4: a constant channel (0.0 or 3.7, zero power after the constant detrend) gives an all-NaN row and column, other pairs unchanged'
+  - run_ids:
+    - spectral.icoh|var2_bivariate|1024|kernel|mne:mean-full
+    - spectral.icoh|delayed_noise|1024|kernel|mne:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_mne (external package mne-connectivity==0.9.0, mne==1.13.2; eigenvalue-weighted tapers)
+    outcome: 'pass 2/2 (qualitative): pyspi vs band mean of |mne imcoh|: 7.1e-5 (var2) and 2.7e-5 (delayed_noise); vs signed mne imcoh: 0.700 and 1.258'
+  - run_ids:
+    - spectral.icoh|delayed_noise|1024|kernel|signed:mean-full
+    - spectral.icoh|delayed_noise|1024|kernel|signed:mean-low
+    reference: audit/checks/refs/spectral_coherence.py:do_signed (Nolte 2004 signed Im C, band mean)
+    outcome: 'fail 2/2 (expected; records the canonical signed form): full band max_abs 1.2575: A[0,1] = A[1,0] = 0.6293 vs signed +0.6283 / -0.6283; pair (0,3) 0.6315 vs signed band mean 0.1262 (abs before the mean); low band max_abs 1.2589'
+optimisation:
+  complexity_P_T: 'O(K*P*T log T) FFT + O(K*n_fft*P^2) two-sided taper-level CSM materialised as (1,1,5,n_fft,P,P) complex128 (connectivity.py:196-257) + O(n_fft*P^2) normalisation, K=5 tapers, n_fft=T; plus a P-independent DPSS cost (~17-20 ms, pure Python). Measured P exponent 1.00 (fit 8->32) and 2.39 between the 32x1024 and 118x1024 walls, T exponent 0.95: at P<=32 the fixed DPSS cost dominates (dpss_windows 77.8% of the 8x1024 profile), at 118x1024 the P^2 taper-level CSM term dominates (DPSS 2.1%) and the local exponent above 2 reflects GB-sized temporaries (memory-bound), not extra arithmetic.'
+  hotspot_1: .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:_expectation_cross_spectral_matrix (third-party:spectral_connectivity) 66.1% of the profiled SPI call at 118x1024 (of which _complex_inner_product 43.8%, taper-mean reduce 18.3%)
+  hotspot_2: '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:imaginary_coherence self time (normalisation, |Im|) 23.0% at 118x1024; at 8x1024 transforms.py:dpss_windows 77.8% (audit/profiles/spectral.icoh__8x1024.pstats) | opaque_share is the 8x1024 profile-JSON value (audit/profiles/spectral.icoh__8x1024__profile.json, builtin tottime over the whole profile); the 118x1024 pstats named in profile_file gives a builtin tottime share of 0.224 of the compute_spi frame (audit/profiles/micro/prof_spectral__index.json). Both are lower bounds: numpy ufunc work sits in the self time of the calling Python frame.'
+  hotspot_owner: third-party:spectral_connectivity
+  opaque_share: 0.107
+  profile_file: audit/profiles/micro/prof_spectral.icoh__118x1024.pstats
+  basis_scope_note: 'Cache key (measure,) (pyspi/statistics/spectral.py:46-50): the retained fmin-0_fmax-0-5 identifier pays the unit''s one build (2.42 s at 118x1024, family-warm) and the 10 untimed EEG bands read
+    that cached array as the 5 timed non-retained bands do (0.007-0.022 s each), so the configured sum (one build plus 5 band reads) stands in for one build plus 10 band reads'
+  opportunities:
+  - opportunity_id: spectral_csm-shared-csm
+    opportunity: Compute the multitaper Fourier coefficients once per Data and memoise the taper-averaged CSM, power and coherency on the Data under a key without measure or band (pyspi/statistics/spectral.py:46-50, 64-83; this also removes the first-insert string key at :81 that makes the first spectral SPI on a Data compute twice). Every undirected measure, every psi/gd band, the 2x2 blocks of the bivariate directed path and the sgc nonparametric pair loop read from it; the phase-sync measures take their per-taper products from the shared coefficients.
+    opp_type: cache-sharing
+    expected_speedup: 2.7-3x
+    speedup_basis: 'profile:audit/profiles/micro/prof_spectral.icoh__118x1024.pstats _expectation_cross_spectral_matrix 66.1% (as a later consumer that reads the shared taper-averaged CSM and power, Amdahl
+      1/(1 - 0.661) = 2.9x on the profiled call, and 1/(1 - 0.691) = 3.2x with the shared Fourier transform, from_multitaper 3.0%; against the configured sum, the ranking basis
+      (2.4905 s per window at 118x1024, family-warm: the 2.4153 s build of the profiled identifier plus 5 band reads, 0.075 s, that a later consumer still pays),
+      2.4905/(2.4905 - 0.661 x 2.4153) = 2.79x and 2.4905/(2.4905 - 0.691 x 2.4153) = 3.03x; about 1x only in a run where icoh builds them itself) + complexity:imaginary_coherence reads _expectation_cross_spectral_matrix() and _power directly (connectivity.py:347-373),
+      neither cached, and never calls coherency(), the only result the shared-csm candidate memoises, so that candidate as written would save icoh only its Multitaper build (from_multitaper
+      3.0% of this profile) and the gain needs the CSM and power memo this opportunity names; icoh was not in the shared-csm micro-benchmark, so this is not a microbench basis
+      (context, from audit/profiles/micro/opp_spectral_csm-shared-csm.json: 2.14x at 118x1024 on its 8-identifier set of cohmag,
+      phase, psi x3 and gd x3, bit-identical). In an EEG run icoh is a later consumer (CoherencePhase runs first, pyspi/workflow/retained185.yaml:218, ImaginaryCoherence at :278),
+      so the 2.7x lower bound is that EEG-order figure against the configured sum, rounded down, the one the ranking uses (README ''Optimisation columns'', rules 1 and 4)'
+    output_risk: unverified-bit-identical
+    risk_evidence: imaginary_coherence reads the same expectation CSM and power (connectivity.py:347-373); a memoised array feeds the same arithmetic; icoh was not in the shared-csm micro-benchmark
+    effort: M
+    depends_on: []
+  - opportunity_id: spectral_csm-1
+    opportunity: Form the taper-level products only on the (n_fft+1)//2 non-negative bins (slice the Fourier coefficients before connectivity.py:196-257 instead of dropping the negative bins afterwards), in frequency blocks so the per-taper temporaries stay small; for the linear measures (coherency, icoh, psi, gd) replace the (1,1,5,n_fft,N,N) complex128 tensor and its taper mean by one batched matmul over the taper axis.
+    opp_type: algorithmic
+    expected_speedup: 2-4x
+    speedup_basis: 'profile:audit/profiles/micro/prof_spectral.icoh__118x1024.pstats _expectation_cross_spectral_matrix 66.1% + complexity:imaginary_coherence reads the same expectation CSM as cohmag,
+      so the cohmag figure is carried over; icoh was not run in the spectral_csm-1 micro-benchmark, so this is not a microbench basis (context, cohmag only, from
+      audit/profiles/micro/opp_spectral_csm-1.json: coherency path at 118x1024, min of 3, sliced 1.95x, gemm 3.83x).
+      Ranked after spectral_csm-shared-csm (depends_on) with residual_speedup 1x: that avenue shares one coherency per Data among phase, cohmag, icoh, psi and gd
+      (audit/notes/spectral_csm.md:239), and CoherencePhase runs first both in an EEG run (pyspi/workflow/retained185.yaml:218, ImaginaryCoherence at :278) and in the family-warm run
+      (audit/profiles/spectral.icoh__118x1024__family-warm.json lists the phase and cohmag identifiers first), so icoh is a later consumer and this avenue saves nothing here; its saving on that one
+      build is credited on spectral.phase. On today''s single-build cost the figure is Amdahl 1/(0.092 + 0.908/s) = 2.1x sliced and 4.6x gemm (imaginary_coherence 90.8% of the profiled call, with the
+      coherency-only gains backed out of the cohmag micro-benchmark: coherency 85.8% of the cohmag call in audit/profiles/micro/prof_spectral.cohmag__118x1024.pstats; whole-call sliced 1.95x and gemm
+      3.83x give 2.31x and 7.2x on the coherency). Shared-csm here is ranked at its later-consumer lower bound (2.7x on the expectation share 66.1%, against the configured sum), so the build is
+      credited once on this unit, to shared-csm, and this avenue has none left to act on'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'not run separately. Expected within-tolerance from the cohmag measurement in audit/profiles/micro/opp_spectral_csm-1.json (sliced 1.1-1.4e-16, gemm 1.7-2.2e-16, NaN masks equal; 7x100 golden 2.2e-16): imaginary_coherence reads the same expectation CSM, and the sliced/gemm paths re-order its taper sum'
+    effort: M
+    depends_on:
+    - spectral_csm-shared-csm
+    residual_speedup: 1x

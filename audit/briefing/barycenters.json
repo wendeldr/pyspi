@@ -1,0 +1,226 @@
+{
+ "family": "barycenters",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/distance-similarity.md"
+ ],
+ "hypotheses": [
+  "bary_euclidean_mean is identically 0 on z-scored data ((x+y)/2 has zero mean); sq-mean = (1+r)(T-1)/(2T)",
+  "max_time statistic exists in code but not in config",
+  "sgddtw uses the global RNG; DBA max_iter 30 tol 1e-5; softdtw barycenter L-BFGS-B"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/distance.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    321,
+    335
+   ],
+   "section": "1.2.10",
+   "title": "Barycenter (bary)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/tslearn/barycenters/euclidean.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/tslearn/barycenters/softdtw.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [
+    "bary-sq_euclidean_max",
+    "bary-sq_euclidean_mean",
+    "bary_euclidean_max",
+    "bary_euclidean_mean"
+   ],
+   "hyperparameters": {
+    "mode": "euclidean"
+   },
+   "identifier_params": {
+    "bary-sq_euclidean_max": {
+     "mode": "euclidean",
+     "squared": true,
+     "statistic": "max"
+    },
+    "bary-sq_euclidean_mean": {
+     "mode": "euclidean",
+     "squared": true,
+     "statistic": "mean"
+    },
+    "bary_euclidean_max": {
+     "mode": "euclidean",
+     "statistic": "max"
+    },
+    "bary_euclidean_mean": {
+     "mode": "euclidean",
+     "statistic": "mean"
+    }
+   },
+   "identifiers": [
+    "bary_euclidean_mean",
+    "bary_euclidean_max",
+    "bary-sq_euclidean_mean",
+    "bary-sq_euclidean_max"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "method_or_estimator": "tslearn euclidean barycenter",
+   "module": "distance",
+   "pair_basis": "unordered",
+   "pyspi_class": "Barycenter",
+   "representative": "bary_euclidean_mean",
+   "source": "config",
+   "unit_id": "distance.bary.euclidean"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "mode": "dtw"
+   },
+   "identifier_params": {
+    "bary-sq_dtw_max": {
+     "mode": "dtw",
+     "squared": true,
+     "statistic": "max"
+    },
+    "bary-sq_dtw_mean": {
+     "mode": "dtw",
+     "squared": true,
+     "statistic": "mean"
+    },
+    "bary_dtw_max": {
+     "mode": "dtw",
+     "statistic": "max"
+    },
+    "bary_dtw_mean": {
+     "mode": "dtw",
+     "statistic": "mean"
+    }
+   },
+   "identifiers": [
+    "bary_dtw_mean",
+    "bary_dtw_max",
+    "bary-sq_dtw_mean",
+    "bary-sq_dtw_max"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "method_or_estimator": "tslearn dtw barycenter",
+   "module": "distance",
+   "pair_basis": "unordered",
+   "pyspi_class": "Barycenter",
+   "representative": "bary_dtw_mean",
+   "source": "config",
+   "unit_id": "distance.bary.dtw"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "mode": "sgddtw"
+   },
+   "identifier_params": {
+    "bary-sq_sgddtw_max": {
+     "mode": "sgddtw",
+     "squared": true,
+     "statistic": "max"
+    },
+    "bary-sq_sgddtw_mean": {
+     "mode": "sgddtw",
+     "squared": true,
+     "statistic": "mean"
+    },
+    "bary_sgddtw_max": {
+     "mode": "sgddtw",
+     "statistic": "max"
+    },
+    "bary_sgddtw_mean": {
+     "mode": "sgddtw",
+     "statistic": "mean"
+    }
+   },
+   "identifiers": [
+    "bary_sgddtw_mean",
+    "bary_sgddtw_max",
+    "bary-sq_sgddtw_mean",
+    "bary-sq_sgddtw_max"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "method_or_estimator": "tslearn sgddtw barycenter",
+   "module": "distance",
+   "pair_basis": "unordered",
+   "pyspi_class": "Barycenter",
+   "representative": "bary_sgddtw_mean",
+   "source": "config",
+   "unit_id": "distance.bary.sgddtw"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "mode": "softdtw"
+   },
+   "identifier_params": {
+    "bary-sq_softdtw_max": {
+     "mode": "softdtw",
+     "squared": true,
+     "statistic": "max"
+    },
+    "bary-sq_softdtw_mean": {
+     "mode": "softdtw",
+     "squared": true,
+     "statistic": "mean"
+    },
+    "bary_softdtw_max": {
+     "mode": "softdtw",
+     "statistic": "max"
+    },
+    "bary_softdtw_mean": {
+     "mode": "softdtw",
+     "statistic": "mean"
+    }
+   },
+   "identifiers": [
+    "bary_softdtw_mean",
+    "bary_softdtw_max",
+    "bary-sq_softdtw_mean",
+    "bary-sq_softdtw_max"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "method_or_estimator": "tslearn softdtw barycenter",
+   "module": "distance",
+   "pair_basis": "unordered",
+   "pyspi_class": "Barycenter",
+   "representative": "bary_softdtw_mean",
+   "source": "config",
+   "unit_id": "distance.bary.softdtw"
+  }
+ ]
+}

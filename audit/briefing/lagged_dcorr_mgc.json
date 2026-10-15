@@ -1,0 +1,157 @@
+{
+ "family": "lagged_dcorr_mgc",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/distance-similarity.md"
+ ],
+ "hypotheses": [
+  "for lag>=1 hyppo recomputes Euclidean distances of the sliced DISTANCE matrices (distance of distances) rather than of the series",
+  "output is the SUM over lags weighted by (n-j)/n, docs may say average",
+  "mgcx runs an extra discarded MGC test per pair"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/distance.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    237,
+    248
+   ],
+   "section": "1.2.2",
+   "title": "Cross distance correlation (dcorrx)"
+  },
+  {
+   "lines": [
+    260,
+    267
+   ],
+   "section": "1.2.4",
+   "title": "Cross multiscale graph correlation (mgcx)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/hyppo/time_series/_utils.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/hyppo/time_series/dcorrx.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/hyppo/time_series/mgcx.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "max_lag": 1
+   },
+   "identifier_params": {
+    "mgcx_maxlag-1": {
+     "max_lag": 1
+    }
+   },
+   "identifiers": [
+    "mgcx_maxlag-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "distance",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "hyppo max_lag=1",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "CrossMultiscaleGraphCorrelation",
+   "representative": "mgcx_maxlag-1",
+   "source": "config",
+   "unit_id": "distance.mgcx.maxlag-1"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "max_lag": 10
+   },
+   "identifier_params": {
+    "mgcx_maxlag-10": {
+     "max_lag": 10
+    }
+   },
+   "identifiers": [
+    "mgcx_maxlag-10"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "distance",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "hyppo max_lag=10",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "CrossMultiscaleGraphCorrelation",
+   "representative": "mgcx_maxlag-10",
+   "source": "config",
+   "unit_id": "distance.mgcx.maxlag-10"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "max_lag": 1
+   },
+   "identifier_params": {
+    "dcorrx_maxlag-1": {
+     "max_lag": 1
+    }
+   },
+   "identifiers": [
+    "dcorrx_maxlag-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "distance",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "hyppo max_lag=1",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "CrossDistanceCorrelation",
+   "representative": "dcorrx_maxlag-1",
+   "source": "config",
+   "unit_id": "distance.dcorrx.maxlag-1"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "max_lag": 10
+   },
+   "identifier_params": {
+    "dcorrx_maxlag-10": {
+     "max_lag": 10
+    }
+   },
+   "identifiers": [
+    "dcorrx_maxlag-10"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "distance",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "hyppo max_lag=10",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "CrossDistanceCorrelation",
+   "representative": "dcorrx_maxlag-10",
+   "source": "config",
+   "unit_id": "distance.dcorrx.maxlag-10"
+  }
+ ]
+}

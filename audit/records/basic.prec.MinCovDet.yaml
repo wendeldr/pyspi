@@ -1,0 +1,473 @@
+unit_id: basic.prec.MinCovDet
+status: profiled
+correctness:
+  metric_name_standard: Off-diagonal entry of the inverse of the reweighted MCD robust covariance (robust precision matrix); prec-sq_MinCovDet is its square
+  canonical_ref: 'Rousseeuw P.J. 1985, "Multivariate estimation with high breakdown point", in Mathematical Statistics and Applications Vol. B, 283-297 (MCD definition); Rousseeuw P.J. & Van Driessen K.
+    1999, Technometrics 41(3):212-223 (FAST-MCD: C-step theorem, raw consistency factor med(d^2)/chi2_{p,0.5}, reweighting with hard weights d^2 <= chi2_{p,0.975}); consistency factor c_alpha = alpha /
+    F_{chi2_{p+2}}(chi2_{p,alpha}): Croux C. & Haesbroeck G. 1999, J Multivar Anal 71:161-190; small-sample factors: Pison G., Van Aelst S., Willems G. 2002, Metrika 55:111-123; precision -> partial correlation:
+    Whittaker J. 1990, Graphical Models in Applied Multivariate Statistics, Wiley, ch. 5 (Prop. 5.7.1 scaled-inverse identity)'
+  canonical_definition: Omega = Sigma_MCD^{-1} (reweighted robust MCD scatter, see Covariance unit); the partial correlation is rho_ij|rest = -Omega_ij / sqrt(Omega_ii Omega_jj) (Whittaker 1990, Graphical
+    Models in Applied Multivariate Statistics, ch. 5; Lauritzen 1996, Graphical Models). Omega_ij itself is not bounded and has the opposite sign of the partial correlation.
+  documented_definition: 'supplement §1.1.2, p.4: "The precision matrix is the matrix inverse of the covariance matrix ... For normalized time-series data, the precision matrix is equivalent to the partial
+    correlation between each pairwise time series, conditioned on all other time series, and is within [-1, 1]. The precision matrix is computed via the same module as the covariance matrix (in scikit-learn
+    [2]), and has the same estimators." Items 10 prec_EllipticEnvelope, 11 prec_MinCovDet. GitBook basic-statistics.md:107 same text. The -sq variant is not described.'
+  delegate_lib: 'scikit-learn==1.9.1 (scipy==1.17.1 linalg.pinvh, numpy==2.5.4): sklearn.covariance.MinCovDet().fit -> MinCovDet.fit -> fast_mcd, correct_covariance, reweight_covariance; attribute precision_'
+  implemented_as: 'Data z-scored per channel over the full sample (ddof=1; optional detrend first). z (T x P) passed to sklearn MinCovDet() with all defaults and random_state=None (global numpy RNG). FAST-MCD
+    raw search: h = ceil((T+P+1)/2); T<=500: 30 random h-subsets x 2 C-steps, best 10 refined; T>500: random partition into T//300 subsets, 500 trials, merge on <=1500 samples. Raw distances divided by
+    the Croux-Haesbroeck factor c(P,h/T); rows with d2 < chi2_{P,0.975} kept; Sigma = c(P,0.975) * MLE covariance (divisor n_w) of kept rows; precision_ = scipy.linalg.pinvh(Sigma). pyspi returns the precision_
+    matrix as is (no normalisation to correlation / partial correlation, no sign flip), diagonal set to NaN in place on the cached fit; prec-sq_MinCovDet returns its elementwise square. One fit per Data
+    object per estimator name, shared by cov/prec and squared/unsquared identifiers.'
+  implementation_trace:
+  - 'pyspi/config.yaml:4-36 (Covariance) and :39-71 (Precision) list estimator EllipticEnvelope / MinCovDet with and without squared: True; pyspi/calculator.py:230-264 _load_yaml imports (:239 importlib.import_module,
+    :256 getattr(module, fcn)(**params)) the module and instantiates getattr(module, fcn)(**params)'
+  - 'pyspi/data.py:184-195 preprocessing before any SPI: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, ddof=1, nan_policy="omit") over the FULL sample (outliers included); :199-203
+    NaN after preprocessing raises ValueError'
+  - pyspi/calculator.py:329 S = self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan); :335 self._table[spi] = S (row i, column j)
+  - pyspi/statistics/basic.py:66-72 class Precision(Estimators) identifier "prec", kind="precision"
+  - 'pyspi/statistics/basic.py:9-29 class Estimators(Undirected, Signed): squared -> identifier "-sq" prefix, labels + ["unsigned"], issigned -> False; no estimator hyperparameters are forwarded'
+  - pyspi/statistics/basic.py:46-47 Estimators.multivariate overrides Undirected.multivariate (pyspi/base.py:132-138 mirror never runs; REVIEW M1); parse_multivariate pyspi/base.py:51-68
+  - 'pyspi/statistics/basic.py:31-44 _from_cache: cache key data.covariance["MinCovDet"] (estimator name only, shared by cov/prec and squared/unsquared); on miss z = data.to_numpy(squeeze=True).T (T x P,
+    columns = processes), warnings.simplefilter("ignore") (:37-38, silences sklearn rank / determinant warnings), getattr(cov, "MinCovDet")().fit(z) with ALL defaults (:39) -> random_state=None, support_fraction=None,
+    assume_centered=False, store_precision=True'
+  - pyspi/statistics/basic.py:49 matrix = getattr(mycov, "precision_") (the cached array itself, no copy); :50 np.fill_diagonal(matrix, np.nan) mutates the cached fitted attribute in place; :51-54 returns
+    np.square(matrix) if squared else matrix
+  - '.venv/lib/python3.12/site-packages/sklearn/covariance/_robust_covariance.py:770-822 MinCovDet.fit: :788 validate_data; :789 random_state = check_random_state(None) -> global np.random.mtrand._rand
+    (sklearn/utils/validation.py:1477-1478); :792-795 rank warning; :797-802 fast_mcd raw estimates; :818 correct_covariance(X) (return value discarded, only dist_ rescaled); :820 reweight_covariance(X)'
+  - '.venv/lib/python3.12/site-packages/sklearn/covariance/_robust_covariance.py:399-618 fast_mcd: :475-476 n_support = min(ceil(0.5*(n+p+1)), n) (ceil, not floor); :511-589 n>500 path (n//300 random subsets,
+    500 total trials, merge to <=1500 samples, permutations from random_state); :590-616 n<=500 path: 30 random starts x 2 C-steps, best 10 refined to convergence'
+  - '.venv/lib/python3.12/site-packages/sklearn/covariance/_robust_covariance.py:114-213 _c_step: :129 random initial support random_state.permutation(n)[:h]; :153-170 concentration steps on det(cov(H))
+    with dist via linalg.pinvh; :143 cov_computation_method = empirical_covariance (MLE, bias=1)'
+  - '.venv/lib/python3.12/site-packages/sklearn/covariance/_robust_covariance.py:253-396 select_candidates: keeps the `select` lowest-determinant C-step results'
+  - '.venv/lib/python3.12/site-packages/sklearn/covariance/_robust_covariance.py:824-861 correct_covariance: :858 consistency_factor = _consistency_factor(p, h/n); :860 dist_ /= factor; .venv/lib/python3.12/site-packages/sklearn/covariance/_robust_covariance.py:216-250
+    _consistency_factor: c = alpha / chi2.cdf(chi2.ppf(alpha, p), p+2) (Croux & Haesbroeck 1999)'
+  - '.venv/lib/python3.12/site-packages/sklearn/covariance/_robust_covariance.py:863-925 reweight_covariance: :906 mask = dist_ < chi2(p).isf(0.025); :910 location = mean(mask); :911-913 empirical_covariance(data[mask])
+    (MLE); :917-920 _set_covariance(cov * _consistency_factor(p, 0.975))'
+  - '.venv/lib/python3.12/site-packages/sklearn/covariance/_empirical_covariance.py:65-107 empirical_covariance: np.cov(X.T, bias=1); :196-215 _set_covariance stores covariance_ and precision_ = scipy.linalg.pinvh(covariance,
+    check_finite=False) (:213)'
+  - 'documented version for comparison: https://raw.githubusercontent.com/scikit-learn/scikit-learn/0.24.1/sklearn/covariance/_robust_covariance.py (sklearn 0.24.1) correct_covariance :707 correction =
+    np.median(self.dist_) / chi2(p).isf(0.5); reweight_covariance :747 mask, :756 self._set_covariance(covariance_reweighted) with NO consistency factor'
+  deviation_from_documented: 'Version: documented sklearn v0.24.1, executed 1.9.1; the MCD correction and reweighting changed (raw median factor -> Croux-Haesbroeck factor; reweighted covariance now multiplied
+    by c(P,0.975) = 1.055-1.104 for P=5..2), so values are not those of the documented version (probe p4.py, ratios 1.055-1.10). Definition: documented "equivalent to the partial correlation ... within
+    [-1,1]" is false: the raw precision entry is returned, Omega_ij = -rho_ij|rest * sqrt(Omega_ii Omega_jj), opposite in sign to the partial correlation and unbounded (probe -2.63 vs partial correlation
+    +0.81; up to 368 on narrowband). prec-sq_MinCovDet undocumented in the supplement. Stochastic output (global RNG) not documented in the supplement (documented in tests/README.md).'
+  deviation_from_canonical: 'Close variant of reweighted FAST-MCD: (1) the search is a stochastic approximation of the MCD optimum (inherent to FAST-MCD) but the random starts come from the global numpy
+    RNG, so the selected h-subset and hence values vary run to run (spread up to 0.34 at T=64); (2) h = ceil((n+p+1)/2) instead of floor; (3) reweighted covariance uses the MLE divisor n_w (robustbase:
+    n_w - 1) and no small-sample correction (Pison et al. 2002); (4) raw consistency factor is the asymptotic Croux-Haesbroeck factor rather than RVD 1999 median rescaling; (5) the input is z-scored with
+    non-robust mean/SD over the full sample before the robust fit, so the output is a robust covariance in units of the contaminated SD, not a robust correlation. (6) precision via pseudo-inverse pinvh:
+    for singular scatter (collinear channels) a Moore-Penrose inverse is returned silently instead of failing.'
+  units_and_range: 'prec: dimensionless (inverse z-score units), signed (sign opposite to partial correlation), symmetric up to round-off, unbounded (observed |value| up to 368 on narrowband_f0-0.25 T=64);
+    prec-sq >= 0. Diagonal NaN. Finite pseudo-inverse values for singular scatter.'
+  direction_convention: 'undirected: A[i,j] = A[j,i] = (i,j) entry of the robust precision matrix fitted on z (columns ordered as processes, basic.py:35); symmetry comes from the estimator (Undirected mirror
+    bypassed, REVIEW M1); pinvh output symmetric to round-off (probe max|P-P.T| = 8.9e-16); confirmed empirically in the check stage (perm and dir runs)'
+  symmetry_expected: sym
+  already_documented: 'tests/README.md line 145 (tolerance-policy row: "sklearn robust covariance draws from the global numpy RNG; reproducible only via seed_all()", marker stochastic), line 134 (CALC_E2E_SKIP
+    of cov*/prec*MinCovDet because a single seeded pass draws in a different order), line 135 (shared-cache test reseeding the 12 stochastic identifiers) and line 125 (FORCE_SLOW list names *MinCovDet*
+    and *EllipticEnvelope*; a timing marker, not a stochasticity note); REVIEW M1 (Undirected mirror bypassed by cov/prec classes); REVIEW M2 (precision last-bit reciprocal asymmetry from pinvh)'
+  new_finding_candidates:
+  - 'CANDIDATE (redundancy, confirms briefing hypothesis 1): EllipticEnvelope covariance_/precision_ are bit-identical to MinCovDet given the same global RNG state. p1.py: np.random.seed(0) before each
+    fit, np.array_equal(MCD.covariance_, EE.covariance_) and of precision_ -> True on iid_gaussian, sparse_precision, contaminated, delayed_noise at T=64,256,1024,4096 (16/16). Code reason: _elliptic_envelope.py:183
+    super().fit(X), :184 only sets offset_. In a Calculator pass the two are fitted at different points of the global RNG stream (separate cache keys, basic.py:33), so *_EllipticEnvelope vs *_MinCovDet
+    differ only by RNG noise. These are single unseeded draws that change from pass to pass: the first p3.py pass gave max|cov_EE - cov_MCD| = 0.0765 (sparse_precision T=64), 0.0519 (iid T=256), 0.0092-0.0142
+    (T=1024); four further fresh-process p3.py passes gave per-pass maxima of 0-0.146 at T=64, 0-0.0337 at T=256 (iid T=256: 0.0176, 0.0212, 0.017, 0.0337) and 0-0.0149 at T=1024, with exactly 0 whenever
+    both fits land on the same optimum. The EEG selection keeps prec_EllipticEnvelope and prec_MinCovDet (and -sq) as separate features of one estimator.'
+  - 'CANDIDATE (reproducibility MAGNITUDE only; the stochasticity itself and the need for seed_all() are already documented at tests/README.md:145 and are not claimed here): the seed-to-seed spread is large,
+    not last-bit. p1.py, 20 seeds of np.random.seed(s) then MinCovDet().fit on z-scored data: max spread of any covariance_ entry = 0.155 (iid_gaussian T=64), 0.341 (sparse_precision T=64), 0.070-0.163
+    (T=256), 0.015-0.029 (T=1024), 0.0035-0.0087 (T=4096). p3.py, two fresh-process Calculator runs (config with only the 8 robust SPIs, no misc import so no np.random.seed(1717)): sparse_precision T=64
+    cov_EllipticEnvelope[0,1] = 0.398263121046 then 0.321753737284; delayed_noise T=256 cov_MinCovDet[0,1] = -0.098336054359 then -0.088116611885. Full default config imports pyspi.statistics.misc -> pyspi/lib/ids/numpy_dependence.py:11-12
+    np.random.seed(1717) at import, which (hypothesis, not probed) makes a full-config run reproducible only for a fixed SPI order and set.'
+  - 'CANDIDATE (version drift from documented sklearn 0.24.1): sklearn 1.9.1 replaces the raw median correction (0.24.1 :707) by the Croux-Haesbroeck factor (_robust_covariance.py:858) and multiplies the
+    reweighted covariance by c(p,0.975) (:917-920; absent in 0.24.1 :756). c(p,0.975) = 1.10447 (p=2), 1.07848 (p=3), 1.06447 (p=4), 1.05553 (p=5) (p4.py). p4.py from-scratch emulation of the 0.24.1 steps
+    on the same raw fit: median off-diagonal ratio new/old = 1.0555 (iid_gaussian p=5), 1.0645 (bivariate_gaussian p=4), 1.0969-1.1045 (contaminated p=2); max abs entry change 0.0065-0.142; reweighted support
+    size can differ (sparse_precision T=64: 57 vs 53). The emulation is a reading of the 0.24.1 source, not a run of 0.24.1.'
+  - 'CANDIDATE (documented definition false; affects every prec_* estimator, not only robust ones): pyspi returns raw precision entries, not partial correlations. p2.py bivariate_gaussian T=256 seed 42:
+    prec_MinCovDet[2,3] = -2.6276 while -Omega_23/sqrt(Omega_22 Omega_33) = +0.8126 (opposite sign, |value| > 1). p2.py max |prec off-diag| over 20 seeds: 3.99 (bivariate_gaussian T=64), 32.7 (cointegrated
+    T=256), 368.3 (narrowband_f0-0.25 T=64).'
+  - 'CANDIDATE (silent degenerate output): basic.py:37-38 suppress all warnings, including sklearn "covariance matrix ... not full rank" (_robust_covariance.py:792-795) and "Determinant has increased" (:188-195).
+    For rank-deficient input the precision is a pseudo-inverse: p2.py shared_envelope T=64 (x2 == x0) gives prec[0,2] = +0.345 and prec[0,0] = 0.345 (pinvh of a singular scatter) with no warning reaching
+    the user.'
+  - 'CANDIDATE (side effect, value-neutral in Calculator): basic.py:49-50 return the cached fitted array and NaN its diagonal in place. p2.py: Covariance(MinCovDet).multivariate(d) is d.covariance["MinCovDet"].covariance_
+    -> True and the cached diag becomes [nan nan nan nan]; Precision then reads precision_ from the same fit (True), so cov and prec are mutually consistent within one Data object. A caller that edits the
+    returned unsquared matrix edits the cache.'
+  - 'CANDIDATE (minor variant): default h = ceil((n+p+1)/2) (_robust_covariance.py:476) vs the canonical floor((n+p+1)/2) (Rousseeuw & Leroy 1987; robustbase h.alpha.n(0.5,n,p)); they differ by 1 when n+p+1
+    is odd (p1.py raw support 34 for contaminated T=64, p=2: 67/2 -> 34 vs floor 33). Reweighted covariance uses the MLE divisor n_w (empirical_covariance bias=1) whereas robustbase cov.wt uses n_w - 1
+    (factor 47/46 ~ 1.02 at T=64).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - sparse_precision
+    - contaminated
+    - bivariate_gaussian
+    - delayed_noise
+    path: kernel
+    reference: 'PARTIALLY independent: from-scratch numpy/scipy re-implementation of the correction and reweighting arithmetic only (no sklearn import inside the reference), fed with the raw FAST-MCD search
+      result from sklearn, so it does not test the stochastic search (checks 2 and 3 cover that): given raw_location_/raw_covariance_/raw_support_ taken from the pyspi fit, d2 = Mahalanobis via np.linalg.solve,
+      c_raw = alpha/chi2.cdf(chi2.ppf(alpha,p),p+2) with alpha = h/n, mask = d2/c_raw < chi2.isf(0.025,p), Sigma = c(p,0.975) * MLE covariance of masked rows, Omega = np.linalg.inv(Sigma); compare to the
+      off-diagonal precision output'
+    reference_kind: same-lineage
+    criterion: tolerance
+    expected_outcome: off-diagonal precision entries agree to <= 1e-10 relative at every T (isolates sklearn correction/reweight from the stochastic raw search; input raw support is sklearn-derived and
+      is the only shared element). Labelled same-lineage because the compared output depends on that sklearn raw search; the arithmetic of c(p,h/n), c(p,0.975), the mask and the MLE covariance is independent
+  - datasets:
+    - iid_gaussian
+    - sparse_precision
+    - contaminated
+    - delayed_noise
+    path: kernel
+    reference: 'from-scratch C-step concentration in numpy (Rousseeuw & Van Driessen 1999 Theorem 1): 2000 random h-subsets, h = ceil((n+p+1)/2) as sklearn, iterate C-steps to convergence; record the minimum
+      log det(S_H) found'
+    reference_kind: independent-impl
+    criterion: optimality
+    expected_outcome: 'log det of sklearn raw_covariance_ (seeded fit) is <= the from-scratch best + 1e-9 on most datasets; report the gap per T. Hypothesis: gaps > 0 appear at T=64 and explain the seed
+      spread (0.155-0.341 at T=64)'
+  - datasets:
+    - bivariate_gaussian
+    - contaminated
+    - sparse_precision
+    - iid_gaussian
+    path: pipeline
+    reference: R robustbase::covMcd (robustbase 0.99.2, external package) on the same z-scored matrix, alpha chosen so h.alpha.n equals sklearn h, use.correction=FALSE, initHsets = sklearn raw support (1-based)
+      to remove search randomness; rescale robustbase cov by (n_w-1)/n_w to the MLE divisor; invert in R with solve()
+    reference_kind: external-pkg
+    criterion: tolerance
+    expected_outcome: 'agreement to <= 1e-8 relative after the divisor rescale; any residual difference is attributable to robustbase consistency-factor choices and is reported, not tuned away. Second run
+      with robustbase default nsamp (own random search): statistical agreement, |diff| within the 20-seed sklearn spread'
+  - datasets:
+    - iid_gaussian
+    - sparse_precision
+    - delayed_noise
+    - contaminated
+    path: kernel
+    reference: 'sklearn MinCovDet vs EllipticEnvelope under identical np.random.seed (same-lineage: both are sklearn; tests the redundancy claim, not correctness)'
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: precision_ of MinCovDet and EllipticEnvelope bit-identical at all T (probe already showed 16/16); in a seeded single Calculator pass the two identifiers differ only through RNG position
+  - datasets:
+    - iid_gaussian
+    - sparse_precision
+    - delayed_noise
+    path: pipeline
+    reference: 'reproducibility study: 20 fresh-process Calculator runs (config with the 8 robust SPIs) and 20 np.random.seed values for MinCovDet().fit; numpy only for the summary'
+    reference_kind: independent-impl
+    criterion: statistical
+    expected_outcome: report per-T max spread of each off-diagonal entry; expected (probe) ~0.1-0.35 at T=64 shrinking to <0.01 at T=4096; any run-to-run difference in an unseeded pass confirms non-determinism
+  - datasets:
+    - sparse_precision
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic: precision of the z-scored process Omega_z = S Omega S with S = diag(sqrt(diag(cov_true))) from precision_true / cov_true; partial correlation -Omega_ij/sqrt(Omega_ii Omega_jj)
+      (bivariate_gaussian pair (2,3): Omega_23 = -0.8/0.36 = -2.222, partial corr 0.8)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pyspi prec_* tracks Omega_z (e.g. ~ -2.2 for the rho=0.8 pair, ~ -0.4*s_i*s_j on the sparse_precision tridiagonal, ~0 elsewhere) within sampling error at T >= 1024; it does NOT equal
+      the partial correlation (sign flipped, magnitude > 1), refuting the documented definition
+  - datasets:
+    - bivariate_gaussian
+    - sparse_precision
+    path: kernel
+    reference: 'numpy: max |P - P.T| of the returned matrix; np.linalg.inv of the fitted covariance (reseeded) vs returned precision'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: asymmetry at round-off level (probe 8.9e-16; REVIEW M2) and inverse agreement <= 1e-10 relative for full-rank inputs
+  - datasets:
+    - shared_envelope
+    - narrowband_f0-0.25
+    path: pipeline
+    reference: 'numpy: smallest eigenvalue / condition number of the fitted scatter (reseeded fit) and the returned precision'
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: shared_envelope (x2 == x0) gives a singular scatter and a pseudo-inverse precision with no warning (probe prec[0,2] = +0.345); narrowband gives |prec| up to ~370
+  - datasets:
+    - bivariate_gaussian
+    - delayed_noise
+    path: pipeline
+    reference: 'direction/symmetry convention: numpy comparison of A with A.T and of A[i,j] with the (i,j) entry of a reseeded sklearn-free reference from check 1'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'undirected: A[i,j] = A[j,i] (exact for cov, round-off for prec), and A[i,j] is the (i,j) entry of the matrix fitted on columns ordered as processes; no lag or direction'
+  - datasets:
+    - trending
+    path: pipeline-detrend
+    reference: analytic cov_true_detrended (trending truth) via the same robust-correlation normalisation as above
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: with detrend=True the robust estimate tracks cov_true_detrended (scaled to z-units); without detrend the trend dominates (probe |cov| up to 1.008 at T=256)
+  check_method: external-pkg
+  check_reference: r/cov_prec_robust.R (robustbase==0.99.2 covMcd(nsamp='deterministic', initHsets = sklearn raw_support_); rrcov==1.7.5 CovMcd own FAST-MCD search, 20 R seeds; system R 4.6.1); refs/cov_prec_robust.py
+    (h_rdet, h_rrcov, h_state/h_base from-scratch Croux-Haesbroeck correction + reweighting, h_stat/h_rcorr/h_dir analytic targets with Monte-Carlo SE of a from-scratch reweighted FAST-MCD, h_opt 2000-start
+    C-step search); probes/cov_prec_robust_mcd.py (fit_state, seeds, determinism, fresh_process, robust_corr, aliasing)
+  check_data: iid_gaussian, sparse_precision, contaminated, bivariate_gaussian, delayed_noise (T=64-4096, kernel and pipeline), trending (pipeline-detrend 1024; range 256), cointegrated|256, shared_envelope|64,
+    narrowband_f0-0.25|64
+  agreement_criterion: 'state/base: rtol 1e-9 on the whole fitted state given sklearn''s raw estimates (same-lineage); rdet: rtol 1e-9, atol 1e-12 after mapping robustbase''s divisor n_w-1 to sklearn''s
+    n_w (external-pkg); rrcov: atol = sklearn 20-seed range + rrcov 20-seed range (two randomised searches for the same h-subset optimum can differ by at most their own run-to-run variability), rtol 0; wide by construction, so a pass is weak evidence and not value-level agreement (ref_within_sklearn_range_only records the stricter elementwise bound of the sklearn 20-seed range alone);
+    stat/rcorr: |pyspi - analytic target| <= 2 se with se = Monte-Carlo SD x Bonferroni factor over the P(P-1)/2 distinct entries; statc: same against the MLE estimate of the same draw; opt: sklearn raw
+    log det <= best found + 1e-8; eeqmcd/sq: exact; perm: rtol 1e-9; dir: sign agreement where |corr| or |partial corr| >= 0.2; qualitative runs: pass = the stated proposition holds'
+  closeness: 'state 18/18 (max_rel 1.54e-13, precision_ vs numpy.linalg.inv of the from-scratch scatter); base 10/10, max_abs 8.88e-15, max_rel 1.54e-13. rdet: 7/8, max_abs 2.45e-13, max_rel 2.97e-13; fail
+    bivariate_gaussian|256 (one raw-divisor-band point, max_abs 0.0244). rrcov own search 6/6 (contaminated|256: 0.106 vs atol 0.119; bivariate_gaussian|1024: 0.0119 vs 0.0761), also 6/6 with the sklearn 20-seed range alone as the elementwise bound; the combined atol is wide by construction (0.313 on bivariate_gaussian|256, 0.525 on contaminated|1024), so these passes are weak evidence, not value-level agreement. stat (analytic Omega_ij
+    s_i s_j): 10/11; bivariate_gaussian raw z 1.72/2.10/1.60 at T=256/1024/4096, sparse_precision 1.83/2.45/2.25, trending pipeline-detrend 2.00, contaminated kernel 0.38; fail iid_gaussian|1024 null (max_abs
+    0.134, raw z 3.82). statc 2/4: fail iid_gaussian|1024 (raw z 2.83) and |4096 (raw z 3.06). pcorr 0/2: pyspi prec(2,3) = -2.480 vs the documented partial correlation +0.8 (Omega_z target -2.191), sparse_precision
+    prec(0,1) = -0.611 vs +0.4 (target -0.542); max_z 18.0 and 14.3. range 0/5: max |off-diag| 32.7 (cointegrated|256), 12.3 (trending|256), 1.60 (iid|64), 2.28 (shared_envelope|64), 368.3 (narrowband_f0-0.25|64).
+    singular: shared_envelope|64 input rank 3 of 4, finite pseudo-inverse output, prec(0,2) = 0.446, no NaN. opt 3/12 (best found from a non-exhaustive search, so the gaps are lower bounds: >= 0.046 iid|64, >= 0.131 sparse|64, 0.012-0.023 at T=256, 4.6e-4 to
+    9.6e-4 at T=1024). seeds: 20-seed max spread 0.817/0.079/0.016/0.0028 (iid_gaussian T=64/256/1024/4096), 0.803/0.163/0.020/0.0055 (sparse_precision). breakdown 3/3: kernel contaminated prec(0,1) -2.573/-2.280/-2.045
+    vs clean -2.222 vs empirical +0.282/+0.279/+0.277 (error ratio 0.140/0.023/0.071). det 2/2; rngstream 0/2 (0.134 sparse_precision|64, 0.0177 bivariate_gaussian|1024). sq 2/2 bitwise; perm 1/1 (max_abs
+    3.11e-15); dir 2/2.'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: Deviates from canonical MCD (global-RNG starts with a 20-seed spread of 0.817 at T=64, ceil h, MLE divisor) and from the supplement (-2.480 vs
+    documented partial correlation +0.8). Given the raw subset, the arithmetic agrees to max_rel 1.54e-13 (state 18/18).
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Inverse (scipy pinvh) of the reweighted FAST-MCD scatter of the z-scored data, exactly as sklearn 1.9.1 defines it (external robustbase + numpy inverse agree to 3e-13 given the same raw
+    subset). Canonical deviations as for cov (FAST-MCD local optima drawn from the global RNG, ceil h, MLE divisor). Differs from the supplement: it is not the partial correlation (sign opposite, magnitude
+    unbounded: -2.48 where the partial correlation is +0.8, up to 368 on narrowband data), and on singular input a pseudo-inverse is returned silently (warnings suppressed).'
+  new_finding: true
+  definition_under_review: true
+  check_cost: 'cheap (pyspi time_s in out/pyspi/index/cov_prec_robust.json, single runs; one sklearn fit per Data object and estimator: probe-free single-SPI runs (P = 2-5) median 0.020 s at T = 64, 0.024 s at
+    T = 256, 0.325 s at T = 1024 and 0.718 s (max 0.755 s) at T = 4096; the slowest runs are the 20-fit seed studies, 12.6-14.5 s at T = 4096 (5 runs) and 6.4-7.0 s at T = 1024 (5 runs); the only
+    other runs at or above 1 s are the two determinism probes at T = 1024, 1.29-1.30 s; every other run < 0.8 s; 108 runs, 129.9 s in total (family: 323 runs, 403.2 s); an earlier run quoted per-call
+    medians 0.025 s at T = 64, 0.35 s at T = 1024 and 0.75 s (max 1.14 s) at T = 4096, seed studies up to 21 s and a 465 s family total (not stored in the index or results files); the references
+    (Monte-Carlo SE, 2000-start searches, R) took about 2 min (not stored in the index or results files))'
+  symmetry_observed: 'sym to round-off: max|A - A.T| = 2.66e-15 over 50 SPI-output runs (37 with a nonzero last-bit difference; pinvh, REVIEW M2)'
+  direction_observed: 'undirected and contemporaneous: A[i,j] = A[j,i] is the (i,j) entry of the robust scatter fitted on the processes in the given order (basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|perm:
+    reversing the processes permutes the output, max_abs 3.11e-15); signs follow the analytic precision (- on positively correlated pairs) (basic.prec.MinCovDet|*|dir 2/2, agreement 1.0); no lag sensitivity:
+    delayed_noise (x_k = x0 delayed by 1, 3, 5) gives off-diagonals at the null level (basic.prec.MinCovDet|delayed_noise|1024|pipeline|stat and |statc pass)'
+  candidate_resolutions:
+  - candidate: EllipticEnvelope covariance_/precision_ equal MinCovDet's for the same RNG state; the identifiers differ only by RNG position
+    outcome: confirmed
+    evidence: 'basic.prec.EllipticEnvelope|*|kernel|eeqmcd: 8/8 bitwise equal to basic.prec.MinCovDet|*|kernel|base (iid_gaussian, sparse_precision, delayed_noise, contaminated; T=64, 1024); basic.prec.*|*|pipeline|rngstream:
+      after the other robust SPI consumed the global RNG the output moves by up to 0.134 (sparse_precision|64)'
+  - candidate: seed-to-seed spread is large, not last-bit (stochasticity itself already documented, tests/README.md:145)
+    outcome: confirmed
+    evidence: 'basic.prec.MinCovDet|*|pipeline|seeds: 20-seed max spread 0.353-0.817 at T=64 falling to 0.0028-0.0055 at T=4096; basic.prec.MinCovDet|*|pipeline|opt: the spread comes from FAST-MCD local
+      optima (seeds at the best h-subset give spread 0.0; sklearn''s seed_all(42) subset is the best found in 3/12 runs); no fresh-process run exists for this
+      unit; the two cov-unit runs in the same robust-only configuration gave both outcomes (basic.cov.MinCovDet|sparse_precision|64|pipeline|freshbasic: different output, observed example
+      max_abs 0.0765 in its stored run; basic.cov.EllipticEnvelope|sparse_precision|64|pipeline|freshbasic: identical output, 0.0), and because each process seeds the global RNG from OS entropy,
+      whether and by how much two fresh processes differ can change between check runs'
+  - candidate: version drift from documented sklearn 0.24.1 (Croux-Haesbroeck raw factor and c(p,0.975) on the reweighted covariance)
+    outcome: inconclusive
+    evidence: 'basic.prec.MinCovDet|*|state: the executed 1.9.1 output is reproduced (max_rel <= 1.54e-13) only with c(p,h/n) on the raw distances and c(p,0.975) on the reweighted MLE covariance, so the
+      1.9.1 side is numerically confirmed; sklearn 0.24.1 was not executed (no install allowed), so the size of the drift rests on its source text only. Settle by running 0.24.1 MinCovDet on the same seed
+      and data'
+  - candidate: 'documented ''precision = partial correlation within [-1, 1]'' is false: raw precision entries, opposite sign, unbounded'
+    outcome: confirmed
+    evidence: 'basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|pcorr: -2.480 vs +0.8 (max_z 18.0); basic.prec.MinCovDet|sparse_precision|1024|pipeline|pcorr: -0.611 vs +0.4 (max_z 14.3); |stat runs
+      match Omega_z instead; range: 368.3 (narrowband_f0-0.25|64), 32.7 (cointegrated|256). Only the robust estimators were run here'
+  - candidate: silent pseudo-inverse and suppressed warnings on singular input
+    outcome: confirmed
+    evidence: 'basic.prec.MinCovDet|shared_envelope|64|pipeline|singular: input rank 3 of 4 (x2 == x0) yet the output is finite (prec(0,2) = 0.446, no NaN); the warning suppression is basic.py:37-38 (code)'
+  - candidate: returned unsquared matrix is the cached sklearn attribute with its diagonal NaN-ed in place (value-neutral in Calculator)
+    outcome: confirmed
+    evidence: 'basic.prec.MinCovDet|bivariate_gaussian|64|kernel|alias: returned_is_cached_attribute 1, cached diagonal all NaN 1, write_through_to_cache 1, next call returns the edited value 1, the other
+      attribute''s diagonal stays finite 1; Calculator copies into its DataFrame (calculator.py:335), and the sq/perm/base runs agree bitwise, so the effect is value-neutral there'
+  - candidate: 'minor variants: h = ceil((n+p+1)/2), MLE divisor n_w in the reweighted covariance'
+    outcome: confirmed
+    evidence: 'basic.prec.MinCovDet|*|pipeline|rdet: robustbase raw.cov = c(p,h/n) * MLE * h/(h-1) to floating point, not bit-exactly (ref_r_raw_cov_vs_sklearn_raw_conv_max_rel 1.1e-15 to 1.25e-13 over the 8 rdet runs) and the reweighted values agree to 3.5e-15 only
+      after the (n_w-1)/n_w divisor mapping; basic.prec.MinCovDet|*|pipeline|rrcov: rrcov default h (floor) 129 vs sklearn 130 (contaminated|256), default-convention difference 0.0102-0.0186 at T=256 and
+      4e-5 to 0.0028 (cov) at T>=1024'
+  checks_run:
+  - run_ids:
+    - basic.prec.MinCovDet|iid_gaussian|64|kernel|state
+    - basic.prec.MinCovDet|iid_gaussian|1024|kernel|state
+    - basic.prec.MinCovDet|sparse_precision|64|kernel|state
+    - basic.prec.MinCovDet|sparse_precision|1024|kernel|state
+    - basic.prec.MinCovDet|contaminated|64|kernel|state
+    - basic.prec.MinCovDet|contaminated|1024|kernel|state
+    - basic.prec.MinCovDet|bivariate_gaussian|64|kernel|state
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|kernel|state
+    - basic.prec.MinCovDet|delayed_noise|64|kernel|state
+    - basic.prec.MinCovDet|delayed_noise|1024|kernel|state
+    - basic.prec.MinCovDet|contaminated|256|pipeline|state
+    - basic.prec.MinCovDet|contaminated|1024|pipeline|state
+    - basic.prec.MinCovDet|contaminated|4096|pipeline|state
+    - basic.prec.MinCovDet|bivariate_gaussian|256|pipeline|state
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|state
+    - basic.prec.MinCovDet|bivariate_gaussian|4096|pipeline|state
+    - basic.prec.MinCovDet|sparse_precision|1024|pipeline|state
+    - basic.prec.MinCovDet|iid_gaussian|1024|pipeline|state
+    reference: refs/cov_prec_robust.py:h_state
+    outcome: 'pass 18/18: whole fitted state vs from-scratch reweighting, max_rel <= 1.54e-13'
+  - run_ids:
+    - basic.prec.MinCovDet|iid_gaussian|64|kernel|base
+    - basic.prec.MinCovDet|iid_gaussian|1024|kernel|base
+    - basic.prec.MinCovDet|sparse_precision|64|kernel|base
+    - basic.prec.MinCovDet|sparse_precision|1024|kernel|base
+    - basic.prec.MinCovDet|contaminated|64|kernel|base
+    - basic.prec.MinCovDet|contaminated|1024|kernel|base
+    - basic.prec.MinCovDet|bivariate_gaussian|64|kernel|base
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|kernel|base
+    - basic.prec.MinCovDet|delayed_noise|64|kernel|base
+    - basic.prec.MinCovDet|delayed_noise|1024|kernel|base
+    reference: refs/cov_prec_robust.py:h_base
+    outcome: 'pass 10/10: SPI output vs from-scratch reweighting of the same fit'
+  - run_ids:
+    - basic.prec.MinCovDet|contaminated|256|pipeline|rdet
+    - basic.prec.MinCovDet|contaminated|1024|pipeline|rdet
+    - basic.prec.MinCovDet|contaminated|4096|pipeline|rdet
+    - basic.prec.MinCovDet|bivariate_gaussian|256|pipeline|rdet
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|rdet
+    - basic.prec.MinCovDet|bivariate_gaussian|4096|pipeline|rdet
+    - basic.prec.MinCovDet|sparse_precision|1024|pipeline|rdet
+    - basic.prec.MinCovDet|iid_gaussian|1024|pipeline|rdet
+    reference: r/cov_prec_robust.R det via refs/cov_prec_robust.py:h_rdet
+    outcome: 'mixed 7/8: robustbase from sklearn''s raw support; one bivariate_gaussian|256 point in the raw-divisor band'
+  - run_ids:
+    - basic.prec.MinCovDet|contaminated|256|pipeline|rrcov
+    - basic.prec.MinCovDet|contaminated|1024|pipeline|rrcov
+    - basic.prec.MinCovDet|contaminated|4096|pipeline|rrcov
+    - basic.prec.MinCovDet|bivariate_gaussian|256|pipeline|rrcov
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|rrcov
+    - basic.prec.MinCovDet|bivariate_gaussian|4096|pipeline|rrcov
+    reference: r/cov_prec_robust.R own via refs/cov_prec_robust.py:h_rrcov
+    outcome: 'pass 6/6: rrcov own FAST-MCD search within the combined seed range except as noted in closeness; also 6/6 with the sklearn seed range alone; weak evidence (wide atol)'
+  - run_ids:
+    - basic.prec.MinCovDet|bivariate_gaussian|256|pipeline|stat
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|stat
+    - basic.prec.MinCovDet|bivariate_gaussian|4096|pipeline|stat
+    - basic.prec.MinCovDet|sparse_precision|256|pipeline|stat
+    - basic.prec.MinCovDet|sparse_precision|1024|pipeline|stat
+    - basic.prec.MinCovDet|sparse_precision|4096|pipeline|stat
+    - basic.prec.MinCovDet|iid_gaussian|1024|pipeline|stat
+    - basic.prec.MinCovDet|trending|1024|pipeline-detrend|stat
+    - basic.prec.MinCovDet|contaminated|1024|kernel|stat
+    - basic.prec.MinCovDet|iid_gaussian|256|pipeline|stat
+    - basic.prec.MinCovDet|iid_gaussian|4096|pipeline|stat
+    reference: refs/cov_prec_robust.py:h_stat
+    outcome: 'mixed 10/11: analytic targets in path units with Monte-Carlo SE (Bonferroni)'
+  - run_ids:
+    - basic.prec.MinCovDet|iid_gaussian|256|pipeline|statc
+    - basic.prec.MinCovDet|iid_gaussian|1024|pipeline|statc
+    - basic.prec.MinCovDet|iid_gaussian|4096|pipeline|statc
+    - basic.prec.MinCovDet|delayed_noise|1024|pipeline|statc
+    reference: refs/cov_prec_robust.py:h_statc
+    outcome: 'mixed 2/4: MCD vs MLE of the same draw on the null datasets'
+  - run_ids:
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|pcorr
+    - basic.prec.MinCovDet|sparse_precision|1024|pipeline|pcorr
+    reference: refs/cov_prec_robust.py:h_pcorr
+    outcome: 'fail 0/2: proposition prec = partial correlation (documented) does not hold'
+  - run_ids:
+    - basic.prec.MinCovDet|iid_gaussian|64|pipeline|opt
+    - basic.prec.MinCovDet|iid_gaussian|256|pipeline|opt
+    - basic.prec.MinCovDet|iid_gaussian|1024|pipeline|opt
+    - basic.prec.MinCovDet|sparse_precision|64|pipeline|opt
+    - basic.prec.MinCovDet|sparse_precision|256|pipeline|opt
+    - basic.prec.MinCovDet|sparse_precision|1024|pipeline|opt
+    - basic.prec.MinCovDet|contaminated|64|pipeline|opt
+    - basic.prec.MinCovDet|contaminated|256|pipeline|opt
+    - basic.prec.MinCovDet|contaminated|1024|pipeline|opt
+    - basic.prec.MinCovDet|delayed_noise|64|pipeline|opt
+    - basic.prec.MinCovDet|delayed_noise|256|pipeline|opt
+    - basic.prec.MinCovDet|delayed_noise|1024|pipeline|opt
+    reference: refs/cov_prec_robust.py:h_opt and r/cov_prec_robust.R own
+    outcome: 'mixed 3/12: sklearn raw log det vs best of 2000 from-scratch C-step runs and 20 rrcov seeds'
+  - run_ids:
+    - basic.prec.MinCovDet|contaminated|256|pipeline|seeds
+    - basic.prec.MinCovDet|contaminated|1024|pipeline|seeds
+    - basic.prec.MinCovDet|contaminated|4096|pipeline|seeds
+    - basic.prec.MinCovDet|bivariate_gaussian|256|pipeline|seeds
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|seeds
+    - basic.prec.MinCovDet|bivariate_gaussian|4096|pipeline|seeds
+    - basic.prec.MinCovDet|iid_gaussian|64|pipeline|seeds
+    - basic.prec.MinCovDet|iid_gaussian|256|pipeline|seeds
+    - basic.prec.MinCovDet|iid_gaussian|1024|pipeline|seeds
+    - basic.prec.MinCovDet|iid_gaussian|4096|pipeline|seeds
+    - basic.prec.MinCovDet|sparse_precision|64|pipeline|seeds
+    - basic.prec.MinCovDet|sparse_precision|256|pipeline|seeds
+    - basic.prec.MinCovDet|sparse_precision|1024|pipeline|seeds
+    - basic.prec.MinCovDet|sparse_precision|4096|pipeline|seeds
+    - basic.prec.MinCovDet|delayed_noise|64|pipeline|seeds
+    - basic.prec.MinCovDet|delayed_noise|256|pipeline|seeds
+    - basic.prec.MinCovDet|delayed_noise|1024|pipeline|seeds
+    - basic.prec.MinCovDet|delayed_noise|4096|pipeline|seeds
+    reference: refs/cov_prec_robust.py:h_seeds
+    outcome: 'fail 0/18: proposition ''no seed dependence'' does not hold; spreads quoted in closeness'
+  - run_ids:
+    - basic.prec.MinCovDet|cointegrated|256|pipeline|range
+    - basic.prec.MinCovDet|trending|256|pipeline|range
+    - basic.prec.MinCovDet|iid_gaussian|64|pipeline|range
+    - basic.prec.MinCovDet|shared_envelope|64|pipeline|range
+    - basic.prec.MinCovDet|narrowband_f0-0.25|64|pipeline|range
+    reference: refs/cov_prec_robust.py:h_seeds
+    outcome: 'fail 0/5: documented [-1, 1] range'
+  - run_ids:
+    - basic.prec.MinCovDet|contaminated|256|kernel|breakdown
+    - basic.prec.MinCovDet|contaminated|1024|kernel|breakdown
+    - basic.prec.MinCovDet|contaminated|4096|kernel|breakdown
+    reference: refs/cov_prec_robust.py:h_breakdown
+    outcome: 'pass 3/3: robust estimate closer to the clean truth than EmpiricalCovariance'
+  - run_ids:
+    - basic.prec.MinCovDet|shared_envelope|64|pipeline|singular
+    reference: refs/cov_prec_robust.py:h_singular
+    outcome: 'fail 0/1: proposition ''singular input is signalled'' does not hold'
+  - run_ids:
+    - basic.prec.MinCovDet|sparse_precision|64|pipeline|det
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|det
+    reference: refs/cov_prec_robust.py:h_det
+    outcome: 'pass 2/2: two seed_all(42) calls bit-identical'
+  - run_ids:
+    - basic.prec.MinCovDet|sparse_precision|64|pipeline|rngstream
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|rngstream
+    reference: refs/cov_prec_robust.py:h_det
+    outcome: 'fail 0/2: proposition ''unchanged after another RNG-consuming SPI'' does not hold'
+  - run_ids:
+    - basic.prec.MinCovDet|bivariate_gaussian|64|kernel|alias
+    reference: refs/cov_prec_robust.py:h_alias
+    outcome: 'fail 0/1: returned matrix aliases the cached sklearn attribute'
+  - run_ids:
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|sq
+    - basic.prec.MinCovDet|contaminated|1024|pipeline|sq
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|perm
+    - basic.prec.MinCovDet|bivariate_gaussian|1024|pipeline|dir
+    - basic.prec.MinCovDet|sparse_precision|1024|pipeline|dir
+    reference: refs/cov_prec_robust.py:h_sq, h_perm, h_dir
+    outcome: 'pass 5/5: -sq = square (bitwise), permutation equivariance, analytic sign'
+optimisation:
+  complexity_P_T: 'O(n_trials x iterations x (P^3 + T_sub P^2)): sklearn _robust_covariance.py:fast_mcd runs C-steps (_c_step) whose cost per iteration is one pinvh (eigh, P^3), one empirical covariance
+    (h P^2) and one Mahalanobis pass (T_sub P^2); the trial count is fixed by T, not by P: 30 starts for T<=500, but for T>500 T//300 subsets x 500/(T//300) starts plus a merged pass (528 C-steps at T=1024).
+    The measured T_exponent 1.90 (8x256 -> 8x1024) is this regime switch at T=500, not a T^2 law. Measured P_exponent 0.35 (8->32, sklearn validation still a large share at P=8); 32->118 implies ~1.46 (0.52
+    s -> 3.49 s). At 118x1024 the P^3 eigh dominates (57.4% of the call in the 118x1024 profile).'
+  hotspot_1: scipy/linalg/_decomp.py:eigh via scipy/linalg/_basic.py:pinvh in sklearn/covariance/_robust_covariance.py:_c_step (third-party:scipy) 57.4% of the profiled SPI call at 118x1024 (pinvh 62.5%,
+    1154 calls; audit/profiles/micro/prof_basic.cov.MinCovDet__118x1024.pstats); pinvh 18.1% at 8x1024
+  hotspot_2: sklearn/covariance/_empirical_covariance.py:empirical_covariance (third-party:sklearn) 13.5% at 118x1024 (np.cov 8.4%, check_array 4.9%); 46.1% at 8x1024 where sklearn input validation (check_array
+    27.3%) is a large share; _c_step self time 14.9% at 118x1024
+  hotspot_owner: third-party:scipy
+  opaque_share: 0.24
+  profile_file: audit/profiles/basic.prec.MinCovDet__8x1024.pstats; audit/profiles/micro/prof_basic.cov.MinCovDet__118x1024.pstats
+  eeg_basis: family-warm
+  basis_scope_note: 'The fit is cached by estimator name (pyspi/statistics/basic.py:31-43). The retained cov_MinCovDet fits it before this unit in the family-warm run (3.43 s at 118x1024) and in an
+    EEG run (Covariance precedes Precision in pyspi/workflow/retained185.yaml, MinCovDet at line 19), so the family-warm figure stands for this unit''s EEG cost; the
+    cov_EllipticEnvelope fit timed earlier in that run is a different cache entry'
+  opportunities:
+  - opportunity_id: cov_prec_robust-1
+    opportunity: Inside FAST-MCD's C-steps (sklearn _robust_covariance.py:_c_step) replace linalg.pinvh(covariance) + (X_c @ precision * X_c).sum(1) by a Cholesky factor and a triangular solve for the Mahalanobis
+      distances, taking log det from the same factor; needs a pyspi-side copy of fast_mcd/_c_step because sklearn exposes no hook for the inverse.
+    opp_type: algorithmic
+    expected_speedup: ~2x
+    speedup_basis: 'profile:audit/profiles/micro/prof_basic.cov.MinCovDet__118x1024.pstats scipy/linalg/_decomp.py:eigh 57.4% (pinvh 62.5%, 1154 calls) + complexity: Cholesky ~1/10 of eigh flops at P=118;
+      Amdahl bound 1/(1-0.574) = 2.3x'
+    output_risk: unverified-within-tolerance
+    risk_evidence: distances change at rounding level, but the support is chosen by np.argpartition(dist, h-1), so a near-tie at the h-th distance can select a different subset and move the whole fit (semantic
+      in rare cases)
+    effort: M
+    depends_on: []
+  - opportunity_id: cov_prec_robust-2
+    opportunity: Run FAST-MCD's independent C-step trials in parallel (3 subsets x 166 random starts, then 30 merged-set refinements at T=1024) with the random permutations pre-drawn from the global RNG
+      in the original loop order, so each worker gets exactly the starting subset the serial loop would have drawn; worker BLAS at 1 thread. This cuts per-window wall time only, not core-hours, and competes
+      for the same cores with window-level parallelism (xc-window-parallel), which already parallelises the 600 windows.
+    opp_type: parallel
+    speedup_kind: throughput
+    expected_speedup: 3-7x alone (at most ~4x inside a window worker)
+    speedup_basis: 'profile:audit/profiles/micro/prof_basic.cov.MinCovDet__118x1024.pstats sklearn/covariance/_robust_covariance.py:_c_step 99.1% (528 calls in 4 select_candidates passes) + complexity:
+      trials are independent within a pass; with 8 workers and two sequential passes Amdahl gives ~3x (subset pass only) to ~7x (both passes); per-window latency only, no core-hour saving; an alternative to xc-window-parallel for the same cores, not a factor on top of it, so only xc-blas-threads (worker BLAS at 1 thread) is in depends_on: inside one of the ~8 memory-bounded window workers about 4 physical cores remain, which caps this pool at about 4x'
+    output_risk: unverified-bit-identical
+    risk_evidence: each _c_step with initial_estimates=None consumes exactly one random_state.permutation at entry and nothing else; fast_mcd draws samples_shuffle and the merge selection outside the trial
+      loops. Pre-drawing in loop order keeps the stream; per-worker RNGs would make it rng-stream, and workers with multi-threaded BLAS (joblib's default cpu_count()//n_jobs) could round the pinvh/eigh
+      differently (within-tolerance)
+    effort: L
+    depends_on:
+    - xc-blas-threads

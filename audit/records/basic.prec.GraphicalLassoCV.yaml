@@ -1,0 +1,520 @@
+unit_id: basic.prec.GraphicalLassoCV
+status: profiled
+correctness:
+  metric_name_standard: graphical-lasso sparse precision (inverse covariance) estimate Theta_hat, raw off-diagonal entries (not partial correlations); alpha chosen by 5-fold CV; prec-sq is its square
+  canonical_ref: 'Friedman J, Hastie T, Tibshirani R 2008, ''Sparse inverse covariance estimation with the graphical lasso'', Biostatistics 9(3):432-441, eq. (1)/(2.1) (diagonal penalised); off-diagonal-only
+    penalty: Yuan M, Lin Y 2007, ''Model selection and estimation in the Gaussian graphical model'', Biometrika 94(1):19-35, eq. (4); Banerjee O, El Ghaoui L, d''Aspremont A 2008, JMLR 9:485-516 CV variant:
+    alpha chosen by K-fold cross-validated Gaussian log-likelihood (e.g. Friedman et al. 2008 §4; sklearn GraphicalLassoCV, iteratively refined log grid); there is no single canonical CV rule.'
+  canonical_definition: 'Theta_hat = argmin_{Theta > 0} -log det Theta + tr(S Theta) + alpha * sum_{i != j} |Theta_ij| (Friedman 2008 sums over all i,j incl. the diagonal; Yuan & Lin 2007 penalise off-diagonals
+    only); Sigma_hat = W = Theta_hat^{-1}; KKT: W_ii = S_ii (+alpha if diagonal penalised), W_ij = S_ij + alpha*sign(Theta_ij) if Theta_ij != 0, |W_ij - S_ij| <= alpha otherwise; partial correlation rho_ij|rest
+    = -Theta_ij / sqrt(Theta_ii Theta_jj)'
+  documented_definition: 'supplement §1.1.2, p.4: ''The precision matrix is the matrix inverse of the covariance matrix ... For normalized time-series data, the precision matrix is equivalent to the partial
+    correlation between each pairwise time series, conditioned on all other time series, and is within [-1, 1]. The precision matrix is computed via the same module as the covariance matrix (in scikit-learn
+    [2]), and has the same estimators.'' Estimator described in §1.1.1, p.3-4 (''Lasso technique, which uses an l1-regularization to sparsify the covariance matrix''; CV variant ''with five splits''); keywords
+    ''undirected, linear, signed, multivariate, contemporaneous''. GitBook basic-statistics.md (Precision) same text. The -sq identifiers are not described in the supplement. Identifiers: prec_GraphicalLassoCV,
+    prec-sq_GraphicalLassoCV.'
+  delegate_lib: scikit-learn==1.9.1 sklearn.covariance.GraphicalLassoCV().fit (solver sklearn.covariance._graph_lasso._graphical_lasso, inner sklearn.linear_model._cd_fast.enet_coordinate_descent_gram);
+    numpy==2.5.4, scipy==1.17.1 (zscore, pinvh)
+  implemented_as: 'Each channel z-scored (ddof=1, optional detrend); X = (T, P) array; sklearn.GraphicalLassoCV() with library defaults: S = biased empirical covariance (divide by T, so S_ii=(T-1)/T); alpha
+    selected by 5-fold contiguous KFold CV on Gaussian test log-likelihood over 16 alphas from 4 refinement rounds of a 4-point log grid starting at [0.01, 1]*max|S_offdiag|, training-fold fits capped at
+    10 iterations and warm-started; then a full-data fit at alpha_ (max_iter 100). Solver: sklearn block coordinate descent (Friedman 2008 glasso algorithm) with off-diagonal-only l1 penalty, start 0.95*S
+    off-diagonal, stop when |dual gap| < 1e-4 or after 100 sweeps (warning silenced). Returns precision_ (the solver''s Theta iterate, not inv(covariance_)) with diagonal set to NaN; -sq returns the elementwise
+    square. Fit shared through data.covariance[''GraphicalLassoCV''] by cov, cov-sq, prec, prec-sq; exactly symmetric because rows/columns are written together.'
+  implementation_trace:
+  - pyspi/config.yaml:3-36 Covariance configs (estimator GraphicalLasso / GraphicalLassoCV, squared False/True) and :38-70 Precision configs; pyspi/calculator.py:251-264 (HEAD a1f20c7) Calculator._load_yaml instantiates
+    getattr(module, fcn)(**params)
+  - 'pyspi/data.py:184-195 preprocessing before any SPI: optional scipy.signal.detrend(axis=1) (default detrend=False, data.py:63), then scipy.stats.zscore(axis=1, ddof=1, nan_policy=''omit'') (default
+    normalise=True, data.py:64)'
+  - pyspi/calculator.py:329 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan); :335 stores S in the table; :336-339 any exception -> the whole SPI entry set to NaN and the error recorded, warning issued at :354-355
+  - pyspi/base.py:51-67 parse_multivariate passes a Data object straight through (no copy when inplace=True)
+  - pyspi/statistics/basic.py:66-72 class Precision(Estimators), identifier 'prec', kind='precision'
+  - 'pyspi/statistics/basic.py:9-29 class Estimators(Undirected, Signed): identifier += ''_'' + estimator, ''-sq'' prefix and issigned->False when squared=True; labels = [''basic'',''unordered'',''linear'',''undirected'']
+    + [''signed''|''unsigned''] (new list, no class-level mutation)'
+  - 'pyspi/statistics/basic.py:31-44 _from_cache: cache key is the estimator name only (data.covariance[''GraphicalLassoCV'']), shared by cov, cov-sq, prec, prec-sq; z = data.to_numpy(squeeze=True).T ->
+    (T, P); all warnings suppressed (:37-38 warnings.simplefilter(''ignore'')); mycov = sklearn.covariance.GraphicalLassoCV().fit(z) with library defaults; an exception is not cached'
+  - 'pyspi/statistics/basic.py:46-54 multivariate: matrix = getattr(mycov, ''precision_'') (the cached estimator''s own array, no copy); np.fill_diagonal(matrix, np.nan) mutates the cached estimator in
+    place; returns matrix or np.square(matrix); overrides Undirected.multivariate (base.py:132-138), so no triangle mirroring (REVIEW M1)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:916-943 GraphicalLassoCV.__init__ defaults alphas=4, n_refinements=4, cv=None, tol=1e-4, enet_tol=1e-4,
+    max_iter=100, mode='cd', n_jobs=None
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:976-983 fit: location_ = X.mean(0); emp_cov = empirical_covariance(X); cv = check_cv(None) -> KFold(n_splits=5,
+    shuffle=False), i.e. 5 contiguous time blocks (probe printed KFold(n_splits=5, random_state=None, shuffle=False))'
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:1002-1006 initial grid: alpha_1 = alpha_max(emp_cov) (:209-225, max |off-diagonal S|), alpha_0 = 0.01*alpha_1,
+    4 log-spaced values, descending'
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:1014-1038 for each of n_refinements=4 rounds: graphical_lasso_path on each training fold with X_test
+    = test fold and max_iter=int(0.1*max_iter)=10, ConvergenceWarning suppressed'
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:592-717 graphical_lasso_path: emp_cov of the training fold, warm start across alphas (cov_init=covariance_),
+    test score = log_likelihood(empirical_covariance(X_test), precision_) (test fold centred on its own mean); FloatingPointError or non-finite -> score -inf'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_empirical_covariance.py:31-55 log_likelihood = (-sum(S_test * Theta) + logdet(Theta) - p log 2pi)/2
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:1047-1060 best_index = argmax of mean fold score with ties going to the smaller alpha (>=); scores >=
+    0.1/eps treated as NaN
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:1062-1083 grid refinement around best_index (extends downward by 0.01x when the smallest alpha wins);
+    4 rounds x 4 alphas = 16 alphas evaluated, the grid built after the last round is unused
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:1091-1105 alpha=0 appended with EmpiricalCovariance cross_val_score after selection, so alpha=0 is reported
+    in cv_results_ but can never be selected
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:1116-1129 alpha_ = alphas[best_index]; final _graphical_lasso(emp_cov, alpha_, max_iter=100) on all data
+    (a FloatingPointError here propagates to pyspi)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_empirical_covariance.py:104-107 empirical_covariance np.cov(X.T, bias=1)
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:69-88 _graphical_lasso; alpha == 0 early return with linalg.inv (not reached for these units: GraphicalLasso
+    alpha=0.01, CV never selects 0)'
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:90-103 initialisation: covariance_ = 0.95 * emp_cov off-diagonal, diagonal = emp_cov diagonal (never
+    changed afterwards: diagonal unpenalised); precision_ = pinvh(covariance_)'
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:119-177 block coordinate descent over columns: inner lasso via cd_fast.enet_coordinate_descent_gram warm-started
+    from -precision_[:,idx]/precision_[idx,idx] (:134-156, inner max_iter=max(20,max_iter), tol=enet_tol); precision_ column/row and covariance_ column/row are written symmetrically (:169-177)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/linear_model/_cd_fast.pyx:1092 enet_coordinate_descent_gram; :1173 tol *= ||y||^2; :1176-1182 returns before any coordinate update
+    (n_iter 0) when the warm-start duality gap is already 0 <= gap <= tol
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:178-201 after each sweep: FloatingPointError if precision_ not finite or cost not finite; d_gap = _dual_gap
+    (:56-65, off-diagonal |Theta| penalty, :43-53 objective likewise); stop when |d_gap| < tol; otherwise ConvergenceWarning after max_iter (silenced by pyspi)'
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py:206 returns (covariance_, precision_, costs, n_iter): both matrices are the solver''s running iterates;
+    neither is recomputed as the inverse of the other at exit'
+  deviation_from_documented: '(1) Documented as ''equivalent to the partial correlation ... within [-1, 1]'': the code returns raw precision entries Theta_ij, whose sign is opposite to the partial correlation
+    -Theta_ij/sqrt(Theta_ii Theta_jj) and whose magnitude is unbounded (probe: bivariate_gaussian T=256 prec[2,3] = -2.385 vs partial correlation +0.811; up to |Theta_ij| ~ 49 on shared_envelope and ~95
+    for the CV variant on narrowband). (2) ''the matrix inverse of the covariance matrix'': it is the l1-penalised estimate, and it is not the exact inverse of the reported cov_GraphicalLassoCV (solver
+    iterates, see candidates). (3) The supplement says the l1 penalty sparsifies the covariance; it sparsifies this precision matrix. (4) Documented scikit-learn v0.24.1, executed 1.9.1. (5) -sq variants
+    undocumented. (6) ''five splits'' confirmed: KFold(5), unshuffled contiguous blocks.'
+  deviation_from_canonical: 'Variant of Friedman et al. 2008: the diagonal is not penalised (sklearn docstring _graph_lasso.py:328-329; W_ii = S_ii exactly, probe), which matches Yuan & Lin 2007 / R glasso(penalize.diagonal=FALSE).
+    S uses divisor T on ddof=1 z-scored data. Optimisation is approximate: default tol=1e-4 on the absolute dual gap, 100 sweeps, and the result is returned even without convergence; on ill-conditioned
+    inputs the output can be measurably sub-optimal (candidate). CV rule is sklearn-specific (contiguous KFold, 10-iteration warm-started fold fits, ties to smaller alpha, alpha=0 never selectable). Reported
+    value is Theta_ij, a precision entry, not a partial correlation.'
+  units_and_range: dimensionless inverse-variance units on z-scored data; signed, unbounded (probe up to |Theta_ij| ~ 49 for GraphicalLasso, ~95 for CV, on rank-deficient inputs); sign opposite to the partial
+    correlation; exact zeros from the l1 penalty; -sq >= 0 unbounded; exactly symmetric; diagonal NaN; whole matrix NaN when the solver raises FloatingPointError
+  direction_convention: 'undirected: A[i,j] = A[j,i] (bit-exact in probes), i and j index processes in input row order; no lag; diagonal NaN'
+  symmetry_expected: sym
+  already_documented: REVIEW M1 (Estimators.multivariate overrides Undirected.multivariate, no mirroring; values are nevertheless exactly symmetric here). REVIEW M2 lists precision last-bit reciprocal asymmetry
+    via pinvh; for the graphical-lasso precision the probe found exact symmetry (rows and columns written together), consistent with REVIEW's count of twelve (not sixteen) precision variants with residuals.
+    Otherwise no.
+  new_finding_candidates:
+  - 'CANDIDATE (silent non-convergence): pyspi suppresses every warning around the fit (basic.py:37-38), so sklearn''s ConvergenceWarning (_graph_lasso.py:196-201) never reaches the user. Probe over the
+    76 audit dataset files (default pipeline preprocessing): 22 GraphicalLassoCV final refits (plus 3 FloatingPointError) emitted ConvergenceWarning: all narrowband files except narrowband_f0-0.1 T=64 (which
+    raised; gap up to 0.33), shared_envelope T=64/4096, cointegrated T=256/1024, trending T=256/1024/4096, logistic_maps and logistic_maps_bidir T=1024, var2_bivariate T=64/256. Against a tight refit (tol=1e-10,
+    enet_tol=1e-12) the default-tolerance precision differs by up to 0.27 absolute (shared_envelope T=256, rel 5.4e-3) and covariance by up to 1.3e-4 (8.7e-4 in the var2_bivariate T=4096 stall).'
+  - 'CANDIDATE (cov/prec mutual consistency): covariance_ and precision_ are the solver''s running iterates (_graph_lasso.py:169-177, 206), not exact inverses of each other. Probe max|inv(covariance_) -
+    precision_|: 5.9e-6 to 2.6e-4 on sparse_precision/bivariate_gaussian over T=64/256/1024/4096 (GraphicalLasso 9.5e-6 to 2.4e-4, GraphicalLassoCV 5.9e-6 to 2.6e-4; largest at bivariate_gaussian T=4096),
+    0.41 on shared_envelope T=1024, 0.51 for GraphicalLassoCV on narrowband_f0-0.25 T=4096. So cov_GraphicalLassoCV and prec_GraphicalLassoCV are not exactly inverse pairs. This refutes the briefing wording
+    ''covariance from its inverse'': both come from the solver.'
+  - 'CANDIDATE (side effect, value-neutral for these SPIs): multivariate() returns the cached estimator''s own array and np.fill_diagonal(matrix, np.nan) (basic.py:49-50) overwrites the diagonal of data.covariance[estimator].covariance_
+    / .precision_ in place. Probe: after Precision(...).multivariate(d), np.diag(d.covariance[''GraphicalLassoCV''].precision_) is all NaN and the returned array ''is'' the cached array. Anything that later
+    reads the cached estimator (e.g. its diagonal, score(), mahalanobis()) sees NaNs.'
+  - 'CANDIDATE (failure -> NaN, repeated refits): a FloatingPointError from the solver propagates out of _from_cache (not cached), Calculator.compute turns it into an all-NaN entry (calculator.py:336-339 at HEAD a1f20c7),
+    and each of the four identifiers sharing the estimator refits and fails again. Probe: GraphicalLassoCV raises in the final refit (_graph_lasso.py:1120 -> :193) on shared_envelope T=256 and T=1024 and
+    narrowband_f0-0.1 T=64; detrend=True does not fix shared_envelope T=256.'
+  - 'CANDIDATE (scale): pyspi z-scores with ddof=1 (data.py:195) but sklearn''s empirical_covariance divides by T (np.cov bias=1, _empirical_covariance.py:107), so S_ii = (T-1)/T (probe: diag 0.984375 at
+    T=64, 0.99902 at T=1024). The documented ''correlation and covariance matrices are equivalent'' holds only up to the factor (T-1)/T, and alpha acts on this scale.'
+  - 'CANDIDATE (CV behaviour): selected alpha_ spans 8 orders of magnitude across the audit data (probe: 1.3e-8 on delayed_noise T=256, 7.3e-8 on gauss_ar1_pair T=256, 0.207 = alpha_max on iid_gaussian
+    T=64), because the grid extends downward by 0.01x per round when the smallest alpha wins (_graph_lasso.py:1074-1076); CV mean scores are very flat near the optimum (sparse_precision T=1024: -6.52445
+    to -6.52465 over alpha 0.0070-0.0126). At alpha_ >= alpha_max all off-diagonals are 0 (iid_gaussian T=64: 20/20 zeros), giving a constant SPI matrix; entries that should be 0 can be ~3.5e-18 roundoff
+    (iid_gaussian T=4096), squared to ~1e-35 in -sq.'
+  - 'CANDIDATE (CV protocol details): KFold is unshuffled (contiguous blocks; autocorrelated neighbours sit only at block edges), training-fold fits use max_iter=int(0.1*100)=10 with ConvergenceWarning
+    suppressed (_graph_lasso.py:1015-1033), the test log-likelihood centres the test fold on its own mean (graphical_lasso_path :677 empirical_covariance(X_test)), and alpha=0 is scored but not selectable
+    (:1095-1116). These are sklearn design choices, documented only as ''five splits''.'
+  - 'CANDIDATE (alpha relative to GraphicalLasso): on well-behaved Gaussian data CV alpha_ is close to the fixed 0.01 (sparse_precision T=64: 0.00974, T=1024: 0.00848; bivariate_gaussian T=256: 0.0129),
+    so the CV and fixed variants are nearly redundant there; they diverge strongly on rank-deficient data (narrowband: alpha_ ~1e-5..5e-4, |prec| up to 95 vs 14.5).'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - logistic_maps
+    - logistic_maps_bidir
+    - contaminated
+    path: kernel
+    reference: 'analytic P=2 closed form: W as for cov (soft-threshold of S_12 by alpha, diagonal S_ii), Theta = np.linalg.inv(W), i.e. Theta_12 = -W_12/(S_11 S_22 - W_12^2); alpha_ read from data.covariance[''GraphicalLassoCV''].alpha_
+      after the pyspi call'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'prec[0,1] equals the closed form to <= 1e-10 on converged fits (probe: <= 4e-13 on 18 of 20 pairs for alpha=0.01); var2_bivariate T=4096 expected ~9.9e-4 off (stall), T=1024 ~1.4e-5;
+      sign of prec[0,1] opposite to sign of S_12; -sq variant equals the square exactly'
+  - datasets:
+    - sparse_precision
+    - bivariate_gaussian
+    - iid_gaussian
+    - delayed_noise
+    - nonlinear_dependence
+    - var2_chain
+    - scaled_offset
+    path: kernel
+    reference: from-scratch numpy ADMM graphical lasso (Boyd et al. 2011, Found. Trends Mach. Learn. 3(1), §6.5) with off-diagonal-only l1 penalty, run to primal/dual residual < 1e-10 on the same S (biased
+      covariance of the ddof=1 z-scored data), alpha_ read from data.covariance['GraphicalLassoCV'].alpha_ after the pyspi call; does not import sklearn
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: max |pyspi - reference| over off-diagonal precision entries <= 1e-3 * max|reference| (probe against a tight-tolerance sklearn refit suggests ~1e-5 to 1e-4 absolute at sklearn's default
+      tol=1e-4); identical zero pattern except entries within ~1e-4 of zero
+  - datasets:
+    - narrowband_f0-0.1
+    - narrowband_f0-0.25
+    - narrowband_f0-0.4
+    - shared_envelope
+    - cointegrated
+    - trending
+    - var2_bivariate
+    path: kernel
+    reference: 'optimality certificate computed from scratch: graphical-lasso objective -logdet(Theta) + tr(S Theta) + alpha*sum_{i!=j}|Theta_ij| and KKT residuals (W - S - alpha*sign(Theta) on the support;
+      |W - S| <= alpha off the support) evaluated for pyspi''s output (diagonal restored as S_ii for W, refit value for Theta) and for the ADMM reference; alpha_ read from data.covariance[''GraphicalLassoCV''].alpha_
+      after the pyspi call'
+    reference_kind: independent-impl
+    criterion: optimality
+    expected_outcome: 'on ill-conditioned inputs (rank-deficient or near-collinear) pyspi''s fit is expected to be measurably sub-optimal: probe saw ConvergenceWarning (silenced by pyspi) with |dual gap|
+      up to 0.27 and precision entries differing from a tight refit by up to 0.27 absolute (shared_envelope) / 0.1 (narrowband_f0-0.25 T=256); record objective excess and max KKT violation per dataset/T'
+  - datasets:
+    - sparse_precision
+    - iid_gaussian
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'numpy symmetry and permutation-equivariance test: A == A.T exactly; for a random process permutation p, A(x[p])[i,j] == A(x)[p[i],p[j]] (tolerance 1e-8, the coordinate-descent sweep order
+      changes with the permutation)'
+    reference_kind: same-lineage
+    criterion: direction
+    expected_outcome: 'A[i,j] == A[j,i] bit-exactly (probe: np.array_equal(A, A.T) True for both cov and prec, unlike other precision estimators in REVIEW M2) and A[i,j] refers to processes i and j in input
+      row order; diagonal NaN'
+  - datasets:
+    - trending
+    - shared_envelope
+    - narrowband_f0-0.1
+    path: pipeline-detrend
+    reference: 'qualitative failure-mode check: run Calculator-style compute with detrend False and True, record whether the SPI is a NaN matrix (FloatingPointError caught at calculator.py:336-339 at HEAD a1f20c7)'
+    reference_kind: same-lineage
+    criterion: qualitative
+    expected_outcome: 'GraphicalLassoCV: shared_envelope T=256 and T=1024 and narrowband_f0-0.1 T=64 raise FloatingPointError in the final refit (whole matrix NaN); shared_envelope T=256 still fails with
+      detrend=True'
+  - datasets:
+    - bivariate_gaussian
+    - sparse_precision
+    - delayed_noise
+    path: pipeline
+    reference: from-scratch partial correlation -Theta_ij/sqrt(Theta_ii Theta_jj) of the same Theta, and the documented claim 'equivalent to the partial correlation ... within [-1, 1]'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'documented definition not met: prec values are raw precision entries with the opposite sign to the partial correlation and magnitude outside [-1,1] (probe bivariate_gaussian T=256:
+      prec[2,3] = -2.385 while the partial correlation is +0.811)'
+  - datasets:
+    - sparse_precision
+    path: kernel
+    reference: ground-truth tridiagonal precision (precision_true in the dataset, off-diagonal -0.4) scaled to the z-scored data; support recovery and sign agreement
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'nearest-neighbour entries negative and largest in magnitude at all T; non-neighbour entries small, many exactly zero at T>=1024 (probe T=1024: 2 exact zeros out of 20 off-diagonals
+      at alpha=0.01)'
+  - datasets:
+    - sparse_precision
+    - bivariate_gaussian
+    - iid_gaussian
+    - delayed_noise
+    - var2_chain
+    path: kernel
+    reference: 'from-scratch re-implementation (numpy only) of the selection protocol: contiguous 5-fold split, ADMM fits on training folds, Gaussian test log-likelihood with the test fold centred on its
+      own mean, grid alpha_max*logspace(-2,0,4) refined 4 times as in _graph_lasso.py:1062-1083; select argmax mean score'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: selected alpha within one refined-grid step of sklearn's alpha_ on well-conditioned data; differences are expected where sklearn's 10-iteration warm-started training-fold fits stop
+      early; record both alphas and the mean CV score at each
+  - datasets:
+    - iid_gaussian
+    - nonlinear_dependence
+    - var2_chain
+    path: pipeline
+    reference: 'qualitative degenerate-output check: count off-diagonal entries that are exactly 0 or below 1e-15 in magnitude'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'when CV picks alpha >= alpha_max the whole off-diagonal is 0 (probe iid_gaussian T=64: alpha_=0.2069, 20/20 exact zeros; T=4096: 18 exact zeros plus 2 entries of 3.5e-18 roundoff);
+      such matrices are constant and carry no pairwise information'
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/cov_prec_glasso.py: ref_cf (analytic P=2 closed form W12 = soft(S12, alpha), Theta = inv(W)), admm_glasso (numpy ADMM, Boyd et al. 2011 §6.5, off-diagonal l1, stopped
+    at KKT residual <= 1e-12*max(1,max|S|)), ref_kkt (_kernels_basic_misc.glasso_kkt_residual, Friedman, Hastie & Tibshirani 2008 eq. 2 with unpenalised diagonal), ref_rglasso (R glasso==1.11, R 4.6.1,
+    glasso(S, rho=alpha, penalize.diagonal=FALSE, thr=1e-12) via audit/checks/r/cov_prec_glasso.R), ref_stat, ref_sym, ref_perm, ref_fail, ref_range/ref_pcorr, ref_side, ref_sq; probes audit/checks/probes/cov_prec_glasso_fit.py
+    (full_fit, calc_style, perm, side_effects); CV-specific: ref_cvsel (independent contiguous 5-fold re-scoring of sklearn''s own alpha grid with ADMM fits, Gaussian test log-likelihood with the test fold
+    centred on its own mean, ties to the smaller alpha), ref_degen, ref_fit; every reference uses the alpha_ exported by the full_fit probe on the same dataset/T/path (self-consistency at sklearn''s selected
+    alpha, family cap 7)'
+  check_data: 'kernel: var2_bivariate T64/256/1024/4096, gauss_ar1_pair T256/1024/4096, logistic_maps T1024, logistic_maps_bidir T1024, contaminated T256/1024, sparse_precision T64-4096, bivariate_gaussian
+    T64-4096, iid_gaussian, delayed_noise, nonlinear_dependence, var2_chain, scaled_offset T1024; pipeline: var2_bivariate T64-4096, gauss_ar1_pair T1024/4096, logistic_maps(_bidir, _chaotic) T1024, sparse_precision/bivariate_gaussian
+    T64-4096, narrowband_f0-0.1/0.25/0.4 T256/1024/4096, shared_envelope T64-4096, cointegrated/trending T256/1024/4096, iid_gaussian T64/1024, delayed_noise, var2_chain, scaled_offset, contaminated T64/1024;
+    pipeline-detrend: shared_envelope T256/1024, narrowband_f0-0.1 T64, trending T4096; CV-only: iid_gaussian T64-4096 and nonlinear_dependence/var2_chain T1024 (degenerate check), sparse_precision T256/1024,
+    bivariate_gaussian/iid_gaussian/delayed_noise/var2_chain T1024 (CV selection)'
+  agreement_criterion: 'cf: tolerance 1e-10 abs (P=2 closed form); admm, rglasso and perm: tolerance 1e-3*max|ref off-diagonal| abs; kkt: optimality, pass iff KKT residual <= 1e-4 (sklearn tol/enet_tol
+    = 1e-4 act on the dual gap; the actual residual and sklearn''s final dual gap are reported per run); stat: statistical, |pyspi - population glasso target| <= Bonferroni z (2.81 for 10 entries) * asymptotic
+    Gaussian-MLE sd; sym: bit-exact max|A - A.T| == 0; sq: exact square of the base identifier; fail/side: qualitative, observed outcome equals the trace-stage prediction; pcorr: tolerance 0.05 abs against
+    the documented partial correlation; cvsel/degen/fit as for basic.cov.GraphicalLassoCV'
+  closeness: 'Same alpha_ and CV-selection evidence as basic.cov.GraphicalLassoCV (|cvsel 6/6, |fit 33/33 bit-identical, alpha_ 3.05e-8 to 0.2069). P=2 closed form (|cf): 15/19 pass (<= 3.34e-13); fails
+    logistic_maps_bidir T1024 pipeline 2.28e-2 (stall at the starting point), var2_bivariate T64 pipeline 4.42e-3, T256 pipeline 5.91e-4, T256 kernel 6.2e-7. ADMM (|admm): 14/17, max abs 2.54e-4 on passing
+    runs; fails 1.1e-5 to 6.3e-5 abs against criteria of 2.8e-6 to 3.9e-5 (alpha_ near alpha_max). R glasso (|rglasso): 8/8, max abs 2.53e-4. KKT on Theta (|kkt): 16/37; bivariate_gaussian T4096 2.53e-4
+    with sklearn dual gap 1.0e-5; narrowband up to 0.232, shared_envelope T4096 0.103; max|Theta - Theta_ADMM| up to 0.336 (narrowband_f0-0.4 T1024, max|Theta_ij| 74.9); 17 non-converged final refits silent.
+    Statistical (|stat): 4/4 pass, max_z 0.81-1.54, nearest-neighbour entries negative at all T. Documented partial correlation (|pcorr): 0/4 within 0.05; sign opposite on 83-100% of nonzero entries; max
+    abs difference 3.16 (bivariate_gaussian T256). Degenerate 6/6 consistent (all-zero at alpha_ = alpha_max with roundoff <= 1.4e-17). Symmetry 0.0 on all 66 plain runs; permutation 3/3 (<= 4.5e-5); -sq
+    exact; failure modes 7/8 as for the cov unit.'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 7''s optimality clause fails: the KKT residual on Theta is <= 1e-4 in only 16/37 runs (narrowband up to 0.232). The raw precision entry
+    has the opposite sign to the documented partial correlation on 83-100% of nonzero entries.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Raw graphical-lasso precision entry (not the documented partial correlation: opposite sign, unbounded, |Theta_ij| up to 94.6 on cointegrated T1024, 91.1 shared_envelope T64, 74.9 narrowband_f0-0.4 T1024, |kkt runs) at sklearn''s CV-selected alpha_; the precision
+    iterate is not inv(W) and misses the optimum by up to 0.34 on ill-conditioned data without a warning; constant all-zero output when alpha_ = alpha_max; all-NaN output when the final refit raises FloatingPointError.'
+  new_finding: true
+  definition_under_review: true
+  check_cost: cheap (a GraphicalLassoCV fit takes 0.05-0.5 s at P <= 5, T <= 4096; whole family about 3.3 min)
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 (bit-exact) on all 66 plain runs; diagonal NaN'
+  direction_observed: 'undirected: A[i, j] = A[j, i] exactly on the directed datasets (var2_bivariate, logistic_maps_chaotic, var2_chain, delayed_noise); A[i, j] refers to processes i and j in input order
+    (permutation equivariance within 4.5e-5); a positive dependence gives a negative entry'
+  candidate_resolutions:
+  - candidate: silent non-convergence (ConvergenceWarning suppressed at basic.py:37-38)
+    outcome: confirmed
+    evidence: 'kkt runs: 17 of 35 final GraphicalLassoCV refits end with |dual gap| >= 1e-4 (narrowband all 9, shared_envelope T64/4096, cointegrated T1024, trending T256/1024/4096, logistic_maps and logistic_maps_bidir
+      T1024); ref_warnings_seen = 0 for all, ref_convergence_warnings_direct >= 1 for all; deviation from the ADMM optimum at alpha_: W up to 7.06e-3 (logistic_maps_bidir), Theta up to 0.336 (narrowband_f0-0.4
+      T1024)'
+  - candidate: covariance_ and precision_ are not exact inverses of each other
+    outcome: confirmed
+    evidence: 'kkt runs ref_inv_err: 5.9e-6 to 2.62e-4 on sparse_precision/bivariate_gaussian, 1.7e-13 on gauss_ar1_pair T1024, 1.2e-12 and 2.5e-8 on the non-converged logistic_maps / logistic_maps_bidir
+      T1024 fits, up to 0.509 on narrowband_f0-0.25 T4096'
+  - candidate: multivariate() writes NaN into the cached estimator's diagonal (value-neutral for these SPIs)
+    outcome: confirmed
+    evidence: 'basic.*.GraphicalLassoCV|sparse_precision|256|pipeline|side: diag_mutated 1, returned_is_cached 1, value_neutral 1'
+  - candidate: FloatingPointError in the final refit -> all-NaN SPI, four refits, detrending does not fix shared_envelope T256
+    outcome: confirmed
+    evidence: '|fail runs: shared_envelope T256 (pipeline and pipeline-detrend), shared_envelope T1024 (pipeline, and also pipeline-detrend, which the trace did not predict), narrowband_f0-0.1 T64 pipeline
+      raise FloatingPointError (all-NaN); narrowband_f0-0.1 T64 detrended and trending T4096 succeed; |shared_envelope|256|pipeline|side: n_fits 4, n_allnan 4'
+  - candidate: 'scale: ddof=1 z-scoring then divide-by-T covariance gives S_ii = (T-1)/T'
+    outcome: confirmed
+    evidence: 'kkt runs (pipeline): ref_W_diag_minus_Tm1_over_T <= 8.9e-16, ref_W_diag_minus_S_diag <= 4.4e-16'
+  - candidate: alpha_ spans many orders of magnitude; alpha_ >= alpha_max gives a constant all-zero matrix with roundoff entries
+    outcome: confirmed
+    evidence: '|fit and |kkt runs: alpha_ from 3.05e-8 (var2_bivariate T1024 pipeline) to 0.2069 (iid_gaussian T64); |degen runs: alpha_ = alpha_max on iid_gaussian T64/256/4096 and nonlinear_dependence
+      T1024, all off-diagonal entries 0 except 2 roundoff values of 1.4e-17 (T256), 3.5e-18 (T4096), 6.9e-18 (nonlinear_dependence)'
+  - candidate: 'CV protocol: unshuffled contiguous KFold(5), 10-iteration fold fits, test fold centred on its own mean, alpha=0 not selectable'
+    outcome: confirmed
+    evidence: '|cvsel runs: an independent numpy re-scoring with exactly these conventions (contiguous folds, exact ADMM fold fits, own-mean test centring, ties to the smaller alpha, alpha=0 excluded) selects
+      sklearn''s alpha_ on 6/6 datasets; sklearn''s 10-iteration fold scores differ from the exact-fit scores by <= 2.84e-4'
+  - candidate: CV alpha_ close to the fixed 0.01 on Gaussian data; strongly different on rank-deficient data
+    outcome: confirmed
+    evidence: '|kkt runs: sparse_precision alpha_ 0.0097 / 0.0239 / 0.0085 / 0.0049 (T64/256/1024/4096), bivariate_gaussian 0.0566 / 0.0129 / 0.0099 / 0.0055; GraphicalLasso vs GraphicalLassoCV on sparse_precision
+      T1024 pipeline (|sym runs) differ by at most 1.5e-3 (cov) and 6.6e-3 (prec); on narrowband alpha_ 1.1e-5 to 4.6e-4 and max|Theta_ij| 59-75 against 14.4-14.7 for GraphicalLasso'
+  checks_run:
+  - run_ids:
+    - basic.prec.GraphicalLassoCV|var2_bivariate|64|kernel|cf
+    - basic.prec.GraphicalLassoCV|var2_bivariate|256|kernel|cf
+    - basic.prec.GraphicalLassoCV|var2_bivariate|1024|kernel|cf
+    - basic.prec.GraphicalLassoCV|var2_bivariate|4096|kernel|cf
+    - basic.prec.GraphicalLassoCV|gauss_ar1_pair|256|kernel|cf
+    - basic.prec.GraphicalLassoCV|gauss_ar1_pair|1024|kernel|cf
+    - basic.prec.GraphicalLassoCV|gauss_ar1_pair|4096|kernel|cf
+    - basic.prec.GraphicalLassoCV|logistic_maps|1024|kernel|cf
+    - basic.prec.GraphicalLassoCV|logistic_maps_bidir|1024|kernel|cf
+    - basic.prec.GraphicalLassoCV|contaminated|256|kernel|cf
+    - basic.prec.GraphicalLassoCV|contaminated|1024|kernel|cf
+    - basic.prec.GraphicalLassoCV|var2_bivariate|64|pipeline|cf
+    - basic.prec.GraphicalLassoCV|var2_bivariate|256|pipeline|cf
+    - basic.prec.GraphicalLassoCV|var2_bivariate|1024|pipeline|cf
+    - basic.prec.GraphicalLassoCV|var2_bivariate|4096|pipeline|cf
+    - basic.prec.GraphicalLassoCV|gauss_ar1_pair|1024|pipeline|cf
+    - basic.prec.GraphicalLassoCV|gauss_ar1_pair|4096|pipeline|cf
+    - basic.prec.GraphicalLassoCV|logistic_maps_bidir|1024|pipeline|cf
+    - basic.prec.GraphicalLassoCV|logistic_maps_chaotic|1024|pipeline|cf
+    reference: audit/checks/refs/cov_prec_glasso.py:ref_cf
+    outcome: 15/19 pass; fails up to 2.28e-2 (logistic_maps_bidir T1024 stall)
+  - run_ids:
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|kernel|admm
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|1024|kernel|admm
+    - basic.prec.GraphicalLassoCV|iid_gaussian|1024|kernel|admm
+    - basic.prec.GraphicalLassoCV|delayed_noise|1024|kernel|admm
+    - basic.prec.GraphicalLassoCV|nonlinear_dependence|1024|kernel|admm
+    - basic.prec.GraphicalLassoCV|var2_chain|1024|kernel|admm
+    - basic.prec.GraphicalLassoCV|scaled_offset|1024|kernel|admm
+    - basic.prec.GraphicalLassoCV|sparse_precision|64|kernel|admm
+    - basic.prec.GraphicalLassoCV|sparse_precision|256|kernel|admm
+    - basic.prec.GraphicalLassoCV|sparse_precision|4096|kernel|admm
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|64|kernel|admm
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|256|kernel|admm
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|4096|kernel|admm
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|pipeline|admm
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|1024|pipeline|admm
+    - basic.prec.GraphicalLassoCV|scaled_offset|1024|pipeline|admm
+    - basic.prec.GraphicalLassoCV|var2_chain|1024|pipeline|admm
+    reference: audit/checks/refs/cov_prec_glasso.py:admm_glasso
+    outcome: 14/17 pass; fails 1.1e-5 to 6.3e-5 abs at alpha_ near alpha_max
+  - run_ids:
+    - basic.prec.GraphicalLassoCV|sparse_precision|256|pipeline|rglasso
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|pipeline|rglasso
+    - basic.prec.GraphicalLassoCV|sparse_precision|4096|pipeline|rglasso
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|256|pipeline|rglasso
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|1024|pipeline|rglasso
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|4096|pipeline|rglasso
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|kernel|rglasso
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|1024|kernel|rglasso
+    reference: audit/checks/r/cov_prec_glasso.R via audit/checks/refs/cov_prec_glasso.py:ref_rglasso (R glasso==1.11)
+    outcome: 8/8 pass, max abs 2.53e-4
+  - run_ids:
+    - basic.prec.GraphicalLassoCV|sparse_precision|64|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|sparse_precision|256|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|sparse_precision|4096|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|64|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|256|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|4096|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|kernel|kkt
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|1024|kernel|kkt
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.1|256|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.1|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.1|4096|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.25|256|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.25|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.25|4096|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.4|256|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.4|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.4|4096|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|shared_envelope|64|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|shared_envelope|256|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|shared_envelope|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|shared_envelope|4096|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|cointegrated|256|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|cointegrated|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|cointegrated|4096|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|trending|256|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|trending|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|trending|4096|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|var2_bivariate|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|var2_bivariate|4096|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|gauss_ar1_pair|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|logistic_maps|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|logistic_maps_bidir|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|delayed_noise|1024|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|iid_gaussian|64|pipeline|kkt
+    - basic.prec.GraphicalLassoCV|iid_gaussian|1024|pipeline|kkt
+    reference: audit/checks/refs/cov_prec_glasso.py:ref_kkt + _kernels_basic_misc.glasso_kkt_residual
+    outcome: 16/37 <= 1e-4; up to 0.232
+  - run_ids:
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|pipeline|sym
+    - basic.prec.GraphicalLassoCV|iid_gaussian|1024|pipeline|sym
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|1024|pipeline|sym
+    - basic.prec.GraphicalLassoCV|delayed_noise|1024|pipeline|sym
+    - basic.prec.GraphicalLassoCV|var2_chain|1024|pipeline|sym
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|pipeline|perm
+    - basic.prec.GraphicalLassoCV|iid_gaussian|1024|pipeline|perm
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|1024|pipeline|perm
+    reference: audit/checks/refs/cov_prec_glasso.py:ref_sym, ref_perm (probe perm); same-lineage (pyspi output against itself / its unpermuted run)
+    outcome: sym 5/5 (max|A - A.T| = 0.0), perm 3/3 (<= 4.5e-5)
+  - run_ids:
+    - basic.prec.GraphicalLassoCV|sparse_precision|64|kernel|stat
+    - basic.prec.GraphicalLassoCV|sparse_precision|256|kernel|stat
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|kernel|stat
+    - basic.prec.GraphicalLassoCV|sparse_precision|4096|kernel|stat
+    reference: audit/checks/refs/cov_prec_glasso.py:ref_stat
+    outcome: 4/4 pass, max_z <= 1.55
+  - run_ids:
+    - basic.prec.GraphicalLassoCV|shared_envelope|256|pipeline|fail
+    - basic.prec.GraphicalLassoCV|shared_envelope|256|pipeline-detrend|fail
+    - basic.prec.GraphicalLassoCV|shared_envelope|1024|pipeline|fail
+    - basic.prec.GraphicalLassoCV|shared_envelope|1024|pipeline-detrend|fail
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.1|64|pipeline|fail
+    - basic.prec.GraphicalLassoCV|narrowband_f0-0.1|64|pipeline-detrend|fail
+    - basic.prec.GraphicalLassoCV|trending|4096|pipeline|fail
+    - basic.prec.GraphicalLassoCV|trending|4096|pipeline-detrend|fail
+    - basic.prec.GraphicalLassoCV|sparse_precision|256|pipeline|side
+    - basic.prec.GraphicalLassoCV|shared_envelope|256|pipeline|side
+    reference: audit/checks/refs/cov_prec_glasso.py:ref_fail, ref_side (probes calc_style, side_effects); same-lineage (pyspi behaviour against the trace prediction)
+    outcome: fail 7/8 (shared_envelope T1024 pipeline-detrend also raises), side 2/2
+  - run_ids:
+    - basic.prec.GraphicalLassoCV|gauss_ar1_pair|1024|pipeline|cf-sq
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|pipeline|sym-sq
+    reference: audit/checks/refs/cov_prec_glasso.py:ref_sq; same-lineage (np.square of the pyspi output of the base identifier)
+    outcome: 2/2 exact (max abs 0.0)
+  - run_ids:
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|256|pipeline|pcorr
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|1024|pipeline|pcorr
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|pipeline|pcorr
+    - basic.prec.GraphicalLassoCV|delayed_noise|1024|pipeline|pcorr
+    reference: audit/checks/refs/cov_prec_glasso.py:ref_pcorr
+    outcome: 0/4 within 0.05 of the documented partial correlation; sign opposite, max abs diff 3.2
+  - run_ids:
+    - basic.prec.GraphicalLassoCV|sparse_precision|256|pipeline|cvsel
+    - basic.prec.GraphicalLassoCV|sparse_precision|1024|pipeline|cvsel
+    - basic.prec.GraphicalLassoCV|bivariate_gaussian|1024|pipeline|cvsel
+    - basic.prec.GraphicalLassoCV|iid_gaussian|1024|pipeline|cvsel
+    - basic.prec.GraphicalLassoCV|delayed_noise|1024|pipeline|cvsel
+    - basic.prec.GraphicalLassoCV|var2_chain|1024|pipeline|cvsel
+    - basic.prec.GraphicalLassoCV|iid_gaussian|64|pipeline|degen
+    - basic.prec.GraphicalLassoCV|iid_gaussian|256|pipeline|degen
+    - basic.prec.GraphicalLassoCV|iid_gaussian|1024|pipeline|degen
+    - basic.prec.GraphicalLassoCV|iid_gaussian|4096|pipeline|degen
+    - basic.prec.GraphicalLassoCV|nonlinear_dependence|1024|pipeline|degen
+    - basic.prec.GraphicalLassoCV|var2_chain|1024|pipeline|degen
+    - basic.cov.GraphicalLassoCV|bivariate_gaussian|64|kernel|fit
+    - basic.cov.GraphicalLassoCV|bivariate_gaussian|256|kernel|fit
+    - basic.cov.GraphicalLassoCV|bivariate_gaussian|4096|kernel|fit
+    - basic.cov.GraphicalLassoCV|contaminated|64|pipeline|fit
+    - basic.cov.GraphicalLassoCV|contaminated|256|kernel|fit
+    - basic.cov.GraphicalLassoCV|contaminated|1024|kernel|fit
+    - basic.cov.GraphicalLassoCV|contaminated|1024|pipeline|fit
+    - basic.cov.GraphicalLassoCV|delayed_noise|64|pipeline|fit
+    - basic.cov.GraphicalLassoCV|delayed_noise|1024|kernel|fit
+    - basic.cov.GraphicalLassoCV|gauss_ar1_pair|256|kernel|fit
+    - basic.cov.GraphicalLassoCV|gauss_ar1_pair|1024|kernel|fit
+    - basic.cov.GraphicalLassoCV|gauss_ar1_pair|4096|kernel|fit
+    - basic.cov.GraphicalLassoCV|gauss_ar1_pair|4096|pipeline|fit
+    - basic.cov.GraphicalLassoCV|iid_gaussian|256|pipeline|fit
+    - basic.cov.GraphicalLassoCV|iid_gaussian|1024|kernel|fit
+    - basic.cov.GraphicalLassoCV|iid_gaussian|4096|pipeline|fit
+    - basic.cov.GraphicalLassoCV|logistic_maps|1024|kernel|fit
+    - basic.cov.GraphicalLassoCV|logistic_maps_bidir|1024|kernel|fit
+    - basic.cov.GraphicalLassoCV|logistic_maps_chaotic|1024|pipeline|fit
+    - basic.cov.GraphicalLassoCV|nonlinear_dependence|1024|kernel|fit
+    - basic.cov.GraphicalLassoCV|nonlinear_dependence|1024|pipeline|fit
+    - basic.cov.GraphicalLassoCV|scaled_offset|1024|kernel|fit
+    - basic.cov.GraphicalLassoCV|scaled_offset|1024|pipeline|fit
+    - basic.cov.GraphicalLassoCV|sparse_precision|64|kernel|fit
+    - basic.cov.GraphicalLassoCV|sparse_precision|256|kernel|fit
+    - basic.cov.GraphicalLassoCV|sparse_precision|4096|kernel|fit
+    - basic.cov.GraphicalLassoCV|var2_bivariate|64|kernel|fit
+    - basic.cov.GraphicalLassoCV|var2_bivariate|64|pipeline|fit
+    - basic.cov.GraphicalLassoCV|var2_bivariate|256|kernel|fit
+    - basic.cov.GraphicalLassoCV|var2_bivariate|256|pipeline|fit
+    - basic.cov.GraphicalLassoCV|var2_bivariate|1024|kernel|fit
+    - basic.cov.GraphicalLassoCV|var2_bivariate|4096|kernel|fit
+    - basic.cov.GraphicalLassoCV|var2_chain|1024|kernel|fit
+    reference: audit/checks/refs/cov_prec_glasso.py:ref_cvsel (independent-impl), ref_degen (analytic alpha_max condition on the recomputed S), ref_fit (probe full_fit; same-lineage)
+    outcome: cvsel 6/6 same alpha_, degen 6/6 consistent, fit 33/33 bit-identical
+optimisation:
+  complexity_P_T: O(cv x n_refinements x n_alphas x glasso(P)) + one final glasso refit, glasso(P) = sweeps x P column lassos on (P-1)x(P-1) Gram matrices (~P^3 per sweep); sklearn _graph_lasso.py:GraphicalLassoCV.fit
+    with 5 folds x 4 refinements x 4 alphas via graphical_lasso_path (warm-started along each path); T enters only through the fold covariances. Measured fresh P_exponent 1.22 (8->32), T_exponent ~0.01;
+    32->118 implies ~1.8 (0.49 s -> 5.2 s). At 118x1024 the fold paths dominate (86.4% of the call), the final refit ran to max_iter=100 without converging on the profiler's synthetic data.
+  hotspot_1: sklearn/covariance/_graph_lasso.py:_graphical_lasso (third-party:sklearn; self time includes the hidden Cython cd_fast solver) 89.1% self / 98.8% cumulative of the profiled SPI call at 118x1024
+    (81 calls, 81066 column subproblems; audit/profiles/micro/prof_basic.cov.GraphicalLassoCV__118x1024.pstats); 61.9% self / 81.3% cumulative at 8x1024
+  hotspot_2: sklearn/covariance/_graph_lasso.py:graphical_lasso_path under joblib's sequential CV loop (third-party:sklearn) 86.4% cumulative at 118x1024, 87.7% at 8x1024 (20 calls = 5 folds x 4 refinements)
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.103
+  profile_file: audit/profiles/basic.prec.GraphicalLassoCV__8x1024.pstats; audit/profiles/micro/prof_basic.cov.GraphicalLassoCV__118x1024.pstats
+  eeg_basis: family-warm
+  basis_scope_note: 'The fit is cached by estimator name (pyspi/statistics/basic.py:31-43). The retained cov_GraphicalLassoCV fits it before this unit in the family-warm run (5.28 s at 118x1024) and
+    in an EEG run (pyspi/workflow/retained185.yaml:17, Covariance before Precision), so the family-warm figure stands for this unit''s EEG cost; cov_GraphicalLasso, timed first in
+    that run and outside the EEG selection, is a different cache entry'
+  opportunities:
+  - opportunity_id: cov_prec_glasso-1
+    opportunity: Pass n_jobs (up to the 5 CV folds) to GraphicalLassoCV in basic.py:Estimators._from_cache (pyspi forwards no estimator arguments today) so the per-fold graphical_lasso_path calls of each
+      refinement run in parallel, with worker BLAS pinned to 1 thread (joblib inner_max_num_threads=1 or OPENBLAS_NUM_THREADS=1 exported by the parent). This cuts per-window wall time, not core-hours, and
+      competes for the same cores with window-level parallelism (xc-window-parallel).
+    opp_type: parallel
+    speedup_kind: throughput
+    expected_speedup: ~3x alone (2.8x inside a window worker)
+    speedup_basis: 'profile:audit/profiles/micro/prof_basic.cov.GraphicalLassoCV__118x1024.pstats sklearn/covariance/_graph_lasso.py:graphical_lasso_path 86.4% (20 calls = 5 folds x 4 refinements, run by
+      joblib sequentially) + complexity: 5 workers on the fold share, refinements and the final refit stay serial; Amdahl 1/(0.136 + 0.864/5) = 3.2x; an alternative to xc-window-parallel for the same cores, not a factor on top of it, so only xc-blas-threads (worker BLAS at 1 thread) is in depends_on: inside one of the ~8 memory-bounded window workers about 4 physical cores remain, Amdahl 1/(0.136 + 0.864/4) = 2.8x'
+    output_risk: unverified-bit-identical
+    risk_evidence: 'KFold(5) without shuffling and no RNG in the coordinate-descent path; each fold''s path is the same deterministic computation and joblib returns results in submission order. Bit-identical
+      only with worker BLAS at 1 thread: joblib _parallel_backends.py:_prepare_worker_env sets each unset *_NUM_THREADS variable to cpu_count()//n_jobs, so with only OMP_NUM_THREADS=1 exported the loky
+      workers get OPENBLAS_NUM_THREADS=64//5=12 and threaded BLAS calls (eigh in pinvh, the Gram updates) may round differently (within-tolerance)'
+    effort: S
+    depends_on:
+    - xc-blas-threads
+  - opportunity_id: cov_prec_glasso-2
+    opportunity: Replace sklearn's per-column Python loop in _graph_lasso.py:_graphical_lasso (fancy-indexed sub_covariance copy, np.errstate context, check_random_state and a Cython lasso call for each
+      of P columns per sweep) by one compiled glasso sweep (numba/C), or a compiled solver such as QUIC/skggm.
+    opp_type: rewrite-numba-rust-cpp
+    expected_speedup: 1-3x
+    speedup_basis: 'profile:audit/profiles/micro/prof_basic.cov.GraphicalLassoCV__118x1024.pstats sklearn/covariance/_graph_lasso.py:_graphical_lasso 89.1% self time over 81066 column subproblems (~62 us
+      each) + complexity: cProfile cannot split that self time between the Python per-column work and the hidden Cython cd_fast solver, so the share removed is unknown (visible helper calls alone are ~4%)'
+    output_risk: unverified-within-tolerance
+    risk_evidence: a re-implemented coordinate descent reorders float operations and stops on the same tolerance at a slightly different iterate; fits that end at max_iter (the 118x1024 final refit did)
+      can move by more than rounding
+    effort: L
+    depends_on: []

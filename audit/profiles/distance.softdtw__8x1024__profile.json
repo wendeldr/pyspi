@@ -1,0 +1,229 @@
+{
+ "P": 8,
+ "T": 1024,
+ "baseline_rss_mb": 496.5,
+ "budget_s": 120.0,
+ "data_kind": "synthetic",
+ "data_sha256": "8e7e5fadc565fde86c145bcd58801cc90799abd9427b553b966b0df36ab32ada",
+ "edf": null,
+ "entry_sources": {
+  "softdtw": "config"
+ },
+ "env": {
+  "java": null,
+  "omp_num_threads": "1",
+  "packages": {
+   "cdt": "0.6.0",
+   "hyppo": "0.5.2",
+   "jpype1": "1.7.1",
+   "mne": "1.13.2",
+   "nitime": "0.12.1",
+   "numpy": "2.5.4",
+   "pandas": "3.0.6",
+   "pyEDM": "1.15.2.0",
+   "pyyaml": "6.0.3",
+   "scikit-learn": "1.9.1",
+   "scipy": "1.17.1",
+   "sktime": "1.2.0",
+   "spectral-connectivity": "1.1.2",
+   "statsmodels": "0.15.0",
+   "torch": "2.14.1+cpu",
+   "tslearn": "0.9.0"
+  },
+  "platform": "linux",
+  "pyspi_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+  "pyspi_version": "2.0.2",
+  "python": "3.12.3"
+ },
+ "error": null,
+ "family": "dtw_family",
+ "finished_at": "2026-10-15T04:39:56+00:00",
+ "fit": null,
+ "git_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+ "hwm_reset": true,
+ "identifiers": [
+  "softdtw"
+ ],
+ "jvm_requested": false,
+ "jvm_started": false,
+ "measure_mode": "measured",
+ "mode": "profile",
+ "n_pairs": 56,
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)",
+ "opaque_share": 0.1156577606908651,
+ "opaque_share_by_owner": {
+  "builtin": 8.965343243019385e-06,
+  "pyspi": 6.942403618888277e-06,
+  "python": 0.0009940479871310263,
+  "third-party:narwhals": 6.595580469264253e-05,
+  "third-party:numpy": 0.00335133700875251,
+  "third-party:scipy": 0.0005345364698482755,
+  "third-party:sklearn": 0.002095252524409197,
+  "third-party:tslearn": 0.10860072314916953
+ },
+ "pair_basis": "ordered",
+ "peak_rss_delta_mb": 18.5,
+ "peak_rss_mb": 515.0,
+ "process_peak_rss_mb": 515.0,
+ "pstats": "audit/profiles/distance.softdtw__8x1024.pstats",
+ "pyspi_dirty": false,
+ "reason": null,
+ "repeats": 1,
+ "repeats_extended": null,
+ "repeats_planned": null,
+ "representative": "softdtw",
+ "result_status": "ok",
+ "ru_maxrss_mb": 515.0,
+ "schema": 1,
+ "self_time_share_by_owner": {
+  "builtin": 8.965343243019385e-06,
+  "harness": 9.723398439109937e-06,
+  "pyspi": 0.0010265371166230319,
+  "python": 0.0048156437316671016,
+  "third-party:narwhals": 0.0018779617632941332,
+  "third-party:numpy": 0.0090854559866974,
+  "third-party:scipy": 0.0006341154383477185,
+  "third-party:sklearn": 0.29839703178727617,
+  "third-party:tslearn": 0.6841445654344113
+ },
+ "shape": "8x1024",
+ "spi_seed": 42,
+ "started_at": "2026-10-15T04:39:49+00:00",
+ "status": "ok",
+ "synth_seed": 20261014,
+ "t_cold_s": 5.583011734001047,
+ "t_per_pair_ms": null,
+ "threads": {
+  "affinity_cpus": 64,
+  "jvm_running": false,
+  "numba_threads": 64,
+  "omp_num_threads": "1",
+  "os_threads": 1,
+  "threadpools": [
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   }
+  ],
+  "torch_threads": 1
+ },
+ "timeout_s": 360.0,
+ "top10_cumulative": [
+  {
+   "cumtime_s": 6.3965744870000005,
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "harness",
+   "tottime_s": 4.5298000000000006e-05
+  },
+  {
+   "cumtime_s": 6.396450941,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 2,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 2.807e-05
+  },
+  {
+   "cumtime_s": 6.396427312,
+   "function": "pyspi/base.py:multivariate",
+   "line": 132,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 9.170700000000001e-05
+  },
+  {
+   "cumtime_s": 6.395852992,
+   "function": "pyspi/base.py:multivariate",
+   "line": 84,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.0015752090000000002
+  },
+  {
+   "cumtime_s": 6.394233375000001,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 28,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.0006144970000000001
+  },
+  {
+   "cumtime_s": 6.393422689,
+   "function": "pyspi/statistics/distance.py:bivariate",
+   "line": 205,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.002889473
+  },
+  {
+   "cumtime_s": 6.388248126000001,
+   "function": "tslearn/metrics/softdtw_variants.py:soft_dtw",
+   "line": 530,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "third-party:tslearn",
+   "tottime_s": 0.09453151
+  },
+  {
+   "cumtime_s": 3.3219782650000003,
+   "function": "tslearn/metrics/softdtw_variants.py:compute",
+   "line": 1111,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "third-party:tslearn",
+   "tottime_s": 3.321649814
+  },
+  {
+   "cumtime_s": 2.906624454,
+   "function": "tslearn/metrics/softdtw_variants.py:__init__",
+   "line": 1070,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "third-party:tslearn",
+   "tottime_s": 0.006608902000000001
+  },
+  {
+   "cumtime_s": 2.20531141,
+   "function": "tslearn/metrics/softdtw_variants.py:compute",
+   "line": 1208,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "third-party:tslearn",
+   "tottime_s": 0.246639194
+  }
+ ],
+ "total_tt_s": 6.396631835000007,
+ "traceback_tail": null,
+ "unit_id": "distance.softdtw",
+ "wall_cv": null,
+ "wall_median_s": null,
+ "wall_profiled_s": 6.3967718000058085,
+ "wall_s": null,
+ "walls_s": null,
+ "warmup_error": null,
+ "warmup_shape": "8x1024"
+}

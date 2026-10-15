@@ -1,0 +1,305 @@
+unit_id: infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4
+status: profiled
+correctness:
+  metric_name_standard: transfer entropy T_{X→Y} in nats, KSG1 conditional-MI estimator (k=4 neighbours), target and source embeddings (k, kt), (l, lt) selected per pair by maximum KSG active information
+    storage (k <= 10, tau <= 4), source-target delay u = 1
+  canonical_ref: 'Schreiber 2000, Phys. Rev. Lett. 85, 461, Eq. (4) (supplement [35]); embedding delays and source-target delay u: Wibral et al. 2013, PLoS ONE 8, e55809; estimator: Frenzel & Pompe 2007,
+    Phys. Rev. Lett. 99, 204101 (KSG-type conditional MI) with Kraskov et al. 2004 algorithm 1; JIDT: Lizier 2014, Front. Robot. AI 1:11 (supplement [32]). Equation numbers from memory. Embedding selection:
+    Garland, James & Bradley 2016, Phys. Rev. E 93, 022221 (cited by JIDT for MAX_CORR_AIS).'
+  canonical_definition: 'T_{X→Y} = I(Y_{t+1}; X_t^{(l,lt)} | Y_t^{(k,kt)}) = E[log p(y_{t+1} | y_t^{(k)}, x_t^{(l)}) / p(y_{t+1} | y_t^{(k)})], with y_t^{(k,kt)} = (y_t, y_{t−kt}, ..., y_{t−(k−1)kt}) and
+    source embedding ending at t+1−u (u = 1). KSG CMI (algorithm 1): Î = ψ(K) + ⟨ψ(n_z+1) − ψ(n_xz+1) − ψ(n_yz+1)⟩, ε from the K-th neighbour (max-norm) in the joint (x, y, z) space. Embedding selection
+    (MAX_CORR_AIS, Garland, James & Bradley 2016, Phys. Rev. E 93, 022221, as cited by JIDT): for each series choose (k, τ), k <= k_max, τ <= τ_max, maximising the (bias-corrected) active information storage
+    A = I(Y_t^{(k,τ)}; Y_{t+1}); target embedding from the target''s AIS, source embedding from the source''s AIS.'
+  documented_definition: 'supplement §1.4.5, p.10-11 (pack lines 486-510): ''Transfer entropy [35] is a measure of information transfer from a source time series x to a target time series y, based on the
+    Takens time-delay embedding ... The embedding lengths are denoted by modifier''s l and k for the source, x, and target, y, respectively; the time delay is denoted lt and kt ... The fixed parameters
+    are minimal values, i.e., typically with a fixed target embedding length of 1 (denoted by k-1) or 2 (denoted by k-2). The optimized parameters are inferred by choosing the embedding parameters (up to
+    a maximum embedding length of 10, denoted by k-max-10, and maximum time delay of 2, tau-max-2) that maximize a univariate information-theoretic measure known as active information storage (see the MAX_CORR_AIS
+    method of [32] for details).'' Same text GitBook information-theory.md:206-226 (also ''tau-max-2''), which lists the five te_kraskov identifiers.'
+  delegate_lib: JIDT jar pyspi/lib/jidt/infodynamics.jar (labelled 1.6.1; contents match post-1.6.1 master a9b6b3e, see infotheory.est.ksg1) infodynamics.measures.continuous.kraskov.TransferEntropyCalculatorKraskov
+    (KSG algorithm 1 conditional MI ConditionalMutualInfoCalculatorMultiVariateKraskov1) .setObservations/.computeAverageLocalOfObservations, via jpype 1.7.1 on OpenJDK 21.0.12
+  implemented_as: 'For each ordered pair (i, j), with src = x_i, targ = x_j (z-scored): JIDT searches k_candidate = 1..10, tau = 1..4 (tau only 1 for k = 1) maximising the KSG1 AIS I(y_t^{(k,tau)}; y_{t+1})
+    of the target (no extra bias correction for KSG), then the same for the source to set (l, lt); then computes the KSG1 conditional MI I(x_t^{(l,lt)}; y_{t+1} | y_t^{(k,kt)}) with u = 1 on N = T − 1 −
+    max((k−1)kt, (l−1)lt) samples, each embedding column standardised, 1e-8 jitter (seed 42), max-norm, ψ(4) + ⟨ψ(n_z+1) − ψ(n_xz+1) − ψ(n_yz+1)⟩, nats. Embedding search repeated for every ordered pair.
+    No Theiler window.'
+  implementation_trace:
+  - 'pyspi/config.yaml:550-556 TransferEntropy config: estimator kraskov, prop_k 4, auto_embed_method MAX_CORR_AIS, k_search_max 10, tau_search_max 4 (the comment at :551 says ''and DCE'' but this entry
+    has no dyn_corr_excl)'
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, ddof=1) when normalise=True (Calculator default normalise=True, detrend=False)'
+  - 'pyspi/calculator.py:295-355 Calculator.compute: S = spi.multivariate(dataset); any exception escaping multivariate turns the whole SPI matrix NaN (per-pair JIDT exceptions are caught earlier inside
+    bivariate and give a NaN entry)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: outer loop j, inner loop i != j, A[i, j] = self.bivariate(data, i=i, j=j) (no mirroring)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: identifier += ''_kraskov_NN-{prop_k}'', labels += [''nonlinear''], ''_DCE'' appended when dyn_corr_excl is truthy'
+  - 'pyspi/statistics/infotheory.py:84-93 JIDTBase._setup: setProperty(''k'', ''4''); setProperty(''BIAS_CORRECTION'', ''false'') (not a property of the Kraskov calculators: probe getProperty(''BIAS_CORRECTION'')
+    -> None, i.e. ignored); setProperty(''NOISE_SEED'', ''42'')'
+  - pyspi/statistics/infotheory.py:103-134 _getcalc('TransferEntropy') -> infodynamics.measures.continuous.kraskov.TransferEntropyCalculatorKraskov (:127-128), then _setup
+  - 'pyspi/statistics/infotheory.py:326-355 TransferEntropy.__init__ with auto_embed_method: setProperty(''AUTO_EMBED_METHOD'', ''MAX_CORR_AIS''), (''AUTO_EMBED_K_SEARCH_MAX'', ''10''), (''AUTO_EMBED_TAU_SEARCH_MAX'',
+    ''4''); identifier += ''_k-max-10_tau-max-4'''
+  - 'pyspi/statistics/infotheory.py:376-391 TransferEntropy.bivariate (docstring ''Compute transfer entropy from i->j''): _set_theiler_window, calc.initialise(), src, targ = data.to_numpy(squeeze=True)[[i,
+    j]], setObservations(src, targ), computeAverageLocalOfObservations; exception -> NaN with a warning'
+  - 'pyspi/statistics/infotheory.py:60-82 and :369-374, the two copy paths, which differ. Pickle: JIDTBase.__getstate__ (:60-69) drops _calc and _entropy_calc; TransferEntropy.__setstate__ (:369-374) rebuilds
+    _calc with self._getcalc(''TransferEntropy''), which applies only _setup (:84-93: k = prop_k, BIAS_CORRECTION, NOISE_SEED 42), so the AUTO_EMBED_METHOD, k_SEARCH_MAX, TAU_SEARCH_MAX, k_HISTORY, k_TAU,
+    l_HISTORY and l_TAU properties set in __init__ (:344-367) are lost but k and NOISE_SEED are kept. Deepcopy: JIDTBase.__deepcopy__ (:77-82) builds type(self)() and then sets every attribute to copy.deepcopy
+    of the original''s; copy.deepcopy of the JPype calculator returns a new Java object with JIDT constructor defaults and none of the properties pyspi set, so every pyspi property is lost: NOISE_SEED ''NONE''
+    (jitter unseeded), k = JIDT default 4 whatever prop_k is, AUTO_EMBED_METHOD ''NONE'', k_HISTORY 1 (probe scratchpad it_kraskov_fix/p_te_copy.py reads these back). _setup is not involved on this path.
+    CalculatorFrame.init_from_list deep-copies the base Calculator (pyspi/calculator.py:556-563, copy.deepcopy at :559). See new_finding_candidates.'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/TransferEntropyCalculatorKraskov.java#L118-L121 constructor:
+    super(COND_MI_CALCULATOR_KRASKOV1) -> ConditionalMutualInfoCalculatorMultiVariateKraskov1 (ALG_NUM=1, probe getProperty(''ALG_NUM'') = 1); :213-233 setProperty passes unknown names (k, BIAS_CORRECTION,
+    NOISE_SEED, DYN_CORR_EXCL) to TransferEntropyCalculatorViaCondMutualInfo.setProperty'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L435-L470 setProperty:
+    k_HISTORY, k_TAU, l_HISTORY, l_TAU, DELAY (default 1), AUTO_EMBED_METHOD, AUTO_EMBED_K_SEARCH_MAX, AUTO_EMBED_TAU_SEARCH_MAX handled here; everything else is forwarded to the CMI calculator and stored
+    in props (:462-465)'
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L323-L363 initialise()
+    re-uses the current k, k_tau, l, l_tau, delay fields
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L375-L385 computeStartTimeForFirstDestEmbedding
+    = max((k-1)*k_tau, (l-1)*l_tau + delay - 1)
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L505-L509 setObservations
+    -> startAddObservations/addObservations/finaliseAddObservations; :865-875 finaliseAddObservations runs preFinaliseAddObservations (auto-embedding, :701-855) then prepareCMICalculator
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L585-L619 addObservationsWithGivenParams:
+    destPast = delay embedding of dest (k, k_tau) ending at time n; destNext = dest[n+1]; sourcePast = embedding of source (l, l_tau) ending at n+1-delay; CMI var1 = sourcePast, var2 = destNext, cond =
+    destPast; N = T - start - 1 samples'
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L1067-L1068 computeAverageLocalOfObservations
+    returns condMiCalc.computeAverageLocalOfObservations()
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/ConditionalMutualInfoMultiVariateCommon.java#L705-L787 finaliseAddObservations:
+    per-column normalisation (NORMALISE default true, :158) and 1e-8 Gaussian jitter from java.util.Random seeded with NOISE_SEED, row by row over var1, var2, cond columns (:766-785)'
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/ConditionalMutualInfoCalculatorMultiVariateKraskov.java#L214-L219
+    constructor addNoise=true, noiseLevel=1e-8; :96 k=4 default; :101 NORM_MAX_NORM; :155 numThreads = availableProcessors(); :265-285 setProperty (k, NORM_TYPE, DYN_CORR_EXCL, NUM_THREADS); :312-325 finaliseAddObservations
+    throws if N <= k + 2*DYN_CORR_EXCL; :539-546 algorithm-1 result digamma(k) + averageDiGammas
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/ConditionalMutualInfoCalculatorMultiVariateKraskov1.java#L75-L270
+    partialComputeFromObservations: eps_t = k-th NN max-norm distance in the joint (x, y, z) space with the exclusion window (:102-108); n_xz, n_yz, n_z counted strictly within eps_t (option B/C code paths
+    :140-240); sum digamma(n_z+1) - digamma(n_xz+1) - digamma(n_yz+1) (:252-255)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L701-L855 preFinaliseAddObservations
+    (AUTO_EMBED_METHOD=MAX_CORR_AIS): builds ActiveInfoStorageCalculatorKraskov(1) (:740), copies every stored property (k, BIAS_CORRECTION, NOISE_SEED and DYN_CORR_EXCL when set) into it (:752-754), sets
+    its AUTO_EMBED_METHOD=MAX_CORR_AIS, K_SEARCH_MAX, TAU_SEARCH_MAX (:765-773), embeds the destination (k, k_tau from the AIS calculator, :779-783) and then the source (l, l_tau, :788-797); re-run on every
+    setObservations call, i.e. for every ordered pair'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/ActiveInfoStorageCalculatorViaMutualInfo.java#L579-L614 MAX_CORR_AIS
+    search: for k_candidate = 1..k_search_max, tau_candidate = 1..tau_search_max (tau loop broken after tau=1 when k_candidate=1), thisAIS = KSG MI between the (k, tau) past embedding and the next value
+    minus computeAdditionalBiasToRemove() (= 0, :636-639, not overridden by the Kraskov class); keeps the strict maximum; any exception aborts the whole search (''Exception encountered in attempting auto-embedding'')'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/ActiveInfoStorageCalculatorViaMutualInfo.java#L669-L694 prepareMICalculator:
+    initialise(k_candidate, 1) and add all (past, next) pairs for this candidate; N varies with the candidate (T - (k-1)*tau - 1)'
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/ActiveInfoStorageCalculatorKraskov.java#L148-L154 constructor
+    ActiveInfoStorageCalculatorKraskov(1) -> MutualInfoCalculatorMultiVariateKraskov1
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/utils/KdTree.java#L751-L753 and utils/UnivariateNearestNeighbourSearcher.java#L497-L530:
+    exclusion of |dt| <= DYN_CORR_EXCL in k-NN search and counts (W=0 excludes only the sample itself)'
+  deviation_from_documented: '(1) Maximum embedding delay: the prose says ''maximum time delay of 2, tau-max-2'' (supplement §1.4.5 line 489, GitBook :216), but the SPI lists printed with it say tau-max-4
+    (supplement lines 495-496, GitBook :222-223); the code uses tau_search_max = 4 (config.yaml:556), matching the identifiers (check-stage correction: a slip inside the documentation, not a code deviation).
+    (2) The documentation says the parameters maximise AIS; the code does this for target and source separately (both from their own AIS), which the text implies only for the target. (3) Values can be negative
+    though labelled ''unsigned''; nats; jitter/seed undocumented; JIDT version as in infotheory.est.ksg1. (4) config.yaml:551 comment mentions DCE for this non-DCE entry.'
+  deviation_from_canonical: Schreiber TE with KSG1 CMI as implemented in JIDT; a from-scratch KSG1 CMI + MAX_CORR_AIS search reproduces the chosen embedding and the value to 12 decimals on var2_bivariate,
+    gauss_ar1_pair and logistic_maps (T=256, probe p6). The AIS-maximisation criterion (Garland et al. 2016) differs from Ragwitz's prediction-error criterion and from selecting the source embedding to
+    maximise TE (JIDT's MAX_CORR_AIS_AND_TE); AIS values for different (k, tau) use different N and are compared without bias correction, so the choice can drift to large k (var2_bivariate T=256 target
+    k=10). Only u = 1 is considered.
+  units_and_range: nats; real, can be negative (probe p13 T=64 min -0.095); asymmetric; NaN when JIDT raises (caught per pair)
+  direction_convention: 'A[i, j] = TE(x_i -> x_j): row = source, column = target (infotheory.py:383-388, bivariate docstring "from i->j"; probe p4 var2_bivariate T=1024: A[0,1] 0.132, A[1,0] 0.015, truth
+    x0 -> x1). To be confirmed in the check stage.'
+  symmetry_expected: asym
+  already_documented: 'tests/README.md worth knowing: ''auto-embedding TE kraskov equals fixed k=1 on cml7'' (confirmed here: cml7 first 3 channels give k,kt,l,lt = 1,1,1,1 and te value equal to te_k1,
+    probe p11)'
+  new_finding_candidates:
+  - 'CANDIDATE (new, confirmed by probe): copying a TransferEntropy SPI silently changes its configuration while keeping the identifier, and pickle and deepcopy lose different things. Pickle (TransferEntropy.__setstate__,
+    infotheory.py:369-374) rebuilds the calculator through _getcalc/_setup, keeping k = prop_k and NOISE_SEED 42 but dropping AUTO_EMBED_METHOD and k_HISTORY/l_HISTORY (probe p9: k_HISTORY ''1'', AUTO_EMBED_METHOD
+    ''NONE''). Deepcopy (JIDTBase.__deepcopy__, :77-82) deep-copies the JPype object, which yields a fresh Java calculator with JIDT constructor defaults: in addition to the embedding it loses NOISE_SEED
+    (''NONE'', so the 1e-8 jitter is unseeded) and prop_k (JIDT default 4; harmless for these NN-4 units, not for NN-k with k != 4). CalculatorFrame.init_from_list deep-copies the base Calculator (calculator.py:556-563,
+    deepcopy at :559), so a CalculatorFrame computes unseeded fixed k=1 TE under these identifiers. Probe p10 (repeated in scratchpad it_kraskov_fix/p_te_copy.py), var2_bivariate T=256, A[0,1]: te_kraskov_NN-4_k-max-10_tau-max-4
+    Calculator 0.060599 vs CalculatorFrame/deepcopy/pickle 0.133643 (= te_k1 0.133643); te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1 Calculator 0.159244 vs deepcopy/pickle 0.134372. On tied input the deepcopy
+    is also not reproducible: logistic_maps T=256 pair 1->0 te_auto original 0.101410 on every run, pickle 0.115063, three deep copies 0.114476/0.109197/0.111046 (scratchpad it_kraskov_fix/p_tied_dce.py).
+    MI, TLMI and k=l=1 TE keep their values under pickle; under deepcopy they keep them only on tie-free data, because the lost NOISE_SEED then does not move any neighbour count (var2_bivariate diff 0.0).
+    Cross-family: the same deepcopy path resets KERNEL_WIDTH to 0.25 for kernel SPIs (probe scratchpad it_kraskov_fix/r4_deepcopy.py: je_kernel_W-0.5 3.982283 -> 3.748712), for it_kernel to record.'
+  - 'CANDIDATE (pack hypothesis confirmed beyond cml7): the embedding is selected per ordered pair and differs between pairs and T; probe p4: var2_bivariate 0->1 (k,kt,l,lt) = (3,3,1,1) at T=64, (10,1,1,1)
+    at T=256, (3,1,2,1) at T=1024; gauss_ar1_pair 1->0 (2,4,1,1)/(2,3,5,1)/(2,4,2,3). Equal to fixed k=1 on cml7 (documented).'
+  - 'CANDIDATE (documentation): tau_search_max = 4 in config and identifier, documented as tau-max-2 in the supplement and GitBook.'
+  - 'CANDIDATE (efficiency, correctness-neutral): without DCE the AIS search for a channel''s embedding does not depend on the partner, yet it is repeated for each of the P−1 pairs where the channel is
+    target and P−1 where it is source (TransferEntropyCalculatorViaCondMutualInfo.java:779-797 at JIDT a9b6b3e runs on every setObservations).'
+  - 'CANDIDATE: the value depends on the machine''s core count at the 1e-14 level, because NUM_THREADS defaults to availableProcessors() (64 here) and per-thread digamma partial sums are added in thread
+    order. Probe p2 (bivariate_gaussian T=1024): max |A(default) - A(NUM_THREADS=1)| = 7.1e-15 mi, 1.1e-14 mi_DCE, 1.6e-14 tlmi, 2.4e-15 te_k1, 4.2e-15 te_auto; repeat runs on the same machine are bit-identical.'
+  - 'CANDIDATE: on tied or discrete-valued inputs the estimate is set by the 1e-8 jitter and its seed. Probe p12, logistic_maps T=256 (series 1 is the period-4 r=3.5 map, 4 distinct values): pair 1->0 for
+    NOISE_SEED 42/43/44 gives mi 0.226622/0.226587/0.230899, tlmi 0.278902/0.276961/0.281417, te_k1 0.115063/0.113329/0.107266, te_auto 0.101410 (l,lt=7,2) / 0.089128 (10,2) / 0.044229 (6,1); bivariate_gaussian
+    is identical for all seeds.'
+  - 'CANDIDATE (estimator property, not a pyspi bug): labelled ''unsigned'' but KSG estimates are negative on independent data. Probe p13 minima at T=64: mi -0.167 (nonlinear_dependence), tlmi -0.143 (iid_gaussian),
+    te_k1 -0.134 (logistic_maps), te_auto_DCE -0.178 (cointegrated); at T=256 iid_gaussian mi min -0.055.'
+  - 'CANDIDATE (no-op setting): pyspi sets BIAS_CORRECTION=false (infotheory.py:90) but neither Kraskov calculator defines that property; probe p1 getProperty(''BIAS_CORRECTION'') returns None for all nine
+    units, so the call has no effect and no bias correction exists for KSG here.'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - delayed_noise
+    - bivariate_gaussian
+    - logistic_maps
+    path: kernel
+    reference: 'from-scratch brute-force KSG1 conditional MI (Frenzel-Pompe form, ψ(K) + ⟨ψ(n_z+1) − ψ(n_xz+1) − ψ(n_yz+1)⟩) in numpy (max-norm pairwise distance matrices, k-th neighbour by sort, strict
+      counts, |dt| <= W exclusion) + scipy.special.digamma, columns standardised with ddof=1 and the 1e-8 jitter regenerated by a pure-Python java.util.Random LCG (nextGaussian polar method, seed 42; matches
+      java.util.Random to 2e-16); does not import JIDT/jpype. Prototype: scratchpad it_kraskov/probes/ksg_ref.py on the JIDT sample layout (dest past ending at t, dest next t+1, source past ending at t,
+      start = max((k−1)kt, (l−1)lt)), the (k, kt, l, lt) chosen by a from-scratch MAX_CORR_AIS search (k <= 10, tau <= 4, tau skipped for k = 1, strict maximum of KSG1 AIS)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'agreement to <= 1e-12 on every ordered pair and identical selected embedding (prototype probe p6: var2_bivariate, gauss_ar1_pair, logistic_maps T=256 reproduce both the embedding
+      and the value to 12 decimals)'
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    - gauss_ar1_pair
+    - logistic_maps
+    path: pipeline
+    reference: 'known coupling: delayed_noise x0 -> x1 (lag 1), x2 (lag 3), x3 (lag 5); var2_bivariate x0 -> x1 only; gauss_ar1_pair analytic Gaussian TE (k=l=1) 1->0 = 0.0524, 0->1 = 0.0271; logistic_maps
+      index 1 (y) -> index 0 (x) only'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A[i, j] = TE(x_i -> x_j): row = source, column = target. Expected A[0,1] > A[1,0] on var2_bivariate and delayed_noise (probe p5 te_k1 T=256: delayed_noise 1.616 vs -0.016; var2 0.134
+      vs -0.023), A[1,0] > A[0,1] on gauss_ar1_pair and logistic_maps'
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: analytic null TE = 0 for independent white processes
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: values centred near 0 with negative values present (probe p13 T=64 minimum -0.046)
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - narrowband_f0-0.1
+    - logistic_maps
+    path: pipeline
+    reference: read back k_HISTORY, k_TAU, l_HISTORY, l_TAU from the JIDT calculator after each pair and compare with the from-scratch MAX_CORR_AIS choice and with fixed k=1 TE
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: 'embedding varies by pair and T (probe p4: var2_bivariate 0->1 T=256 (10,1,1,1), T=1024 (3,1,2,1); narrowband_f0-0.1 DCE T=256 (10,4,10,4)); equals (1,1,1,1) on cml7 (documented)'
+  - datasets:
+    - var2_bivariate
+    path: pipeline
+    reference: CalculatorFrame (deepcopy, calculator.py:559) vs Calculator on the same data and config, plus getProperty read-back of NOISE_SEED, k, k_HISTORY and AUTO_EMBED_METHOD on the copied calculator
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: 'differs: CalculatorFrame returns the fixed k=1 TE (probe p10 A[0,1] 0.133643 vs Calculator 0.060599) and its calculator reads NOISE_SEED ''NONE'', AUTO_EMBED_METHOD ''NONE''; documents
+      the copy bug'
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/it_kraskov.py:mi_jidt/cmi_jidt/te_jidt/te_auto_jidt (N-1 column z-score, pure-Python java.util.Random(42) jitter port in JIDT row/column order, then audit/checks/refs/_kernels_infotheory.py:mi_ksg1/cmi_ksg1
+    with normalise=False: cKDTree max norm, k=4, strict counts, Theiler |s-t|<=W, guard N<=k+2W -> NaN); DCE window audit/checks/refs/it_kraskov.py:window_raw (explicit lag-loop ACF); no JIDT/jpype; numpy
+    2.5.4, scipy 1.18.1; audit/checks/refs/it_kraskov.py:select_embedding (from-scratch MAX_CORR_AIS: k 1..10, tau 1..4, tau loop broken at k=1, strict maximum of KSG1 AIS, no bias correction) (audit/checks/refs/it_kraskov.py:chk_ksg,
+    chk_embed with audit/checks/probes/it_kraskov_probes.py:auto_embedding, chk_fixed with audit/checks/probes/it_kraskov_probes.py:auto_fixed_repro, chk_seeds, chk_copy, chk_copyprops); audit/checks/refs/it_kraskov.py:chk_null
+    (mean over pairs vs Monte Carlo distribution on iid N(0,1) data); audit/checks/refs/it_kraskov.py:chk_direction (ground-truth coupling); selection criterion vs canonical: literature-only (Ragwitz &
+    Kantz 2002, Phys. Rev. E 65, 056201, prediction-error criterion; Garland, James & Bradley 2016 for max-AIS)'
+  check_data: 'var2_bivariate T64/T256, gauss_ar1_pair T256, logistic_maps T256, narrowband_f0-0.1 rows 0-1 T256, delayed_noise rows 0-2 T256, bivariate_gaussian rows 2-3 T256, iid_gaussian rows 0-2 T256,
+    logistic_maps_chaotic T256 (budget: T <= 256, P <= 3)'
+  agreement_criterion: tolerance rtol 1e-10 / atol 1e-12 on the TE values and the read-back (k, kt, l, lt); null and direction qualitative
+  closeness: 'from-scratch auto-embedding TE: 5/5 ksg runs max_abs <= 1.1e-15; embeddings (k,kt,l,lt) read back per ordered pair and reproduced by the from-scratch MAX_CORR_AIS search (embedding_identical
+    1 on 5/5 runs): var2_bivariate 0->1 (3,3,1,1) at T=64, (10,1,1,1) at T=256; gauss_ar1_pair T=256 0->1 (5,1,2,3), 1->0 (2,3,5,1); narrowband_f0-0.1 T=256 0->1 (2,1,4,1); logistic_maps T=256 1->0 (1,1,7,2).
+    Fixed-embedding pyspi TE with the chosen (k,kt,l,lt) equals the auto value exactly (fixed_minus_auto 0.0 on 4/4 runs). Null iid T=256 P=3: mean -0.0067 (MC 0.0001 +- 0.0098, z -0.69), min -0.057. Direction
+    4/4 (delayed_noise 1.616 vs -0.016; var2 0.061 vs -0.026; gauss_ar1 -0.003 vs 0.045; logistic_maps_chaotic 0.302 vs -0.032). threads 1.8e-15. Seeds (tied logistic_maps 1->0): 0.1014 / 0.0891 / 0.0442
+    with different source embeddings, each reproduced to 4.4e-16. Copy paths: Calculator 0.0606 vs CalculatorFrame/deepcopy/pickle 0.1336 (= te_k1).'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: anchor
+  score_rubric_note: 'Matches the supplement''s MAX_CORR_AIS variant: embeddings and values were reproduced on 5/5 runs (<= 1.1e-15). Max-AIS selection differs from
+    a canonical TE embedding criterion (var2_bivariate target k=10 at T=256). The tau-max-2 prose against the tau-max-4 identifier list is a slip inside the documentation.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: Schreiber TE by KSG1 CMI with target and source embeddings chosen separately per ordered pair by maximum (uncorrected) KSG1 AIS, k <= 10, tau <= 4; fp-exact including the selection. The
+    supplement and GitBook prose say tau-max-2, but their identifier lists say tau-max-4, which the code matches (a slip inside the documentation, not a code deviation). Max-AIS selection follows the supplement
+    but differs from a canonical TE embedding criterion (Ragwitz-Kantz prediction error or TE-optimal source embedding) and, comparing AIS across candidates with different N and no bias correction, drifts
+    to large k (var2_bivariate target k=10 at T=256). Every copy (CalculatorFrame, deepcopy, pickle) silently computes fixed k=1 TE.
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'moderate: pyspi 1.5-23 s per run at T=256 with P <= 3 (64 cores under load); reference search <= 1 s'
+  symmetry_observed: 'asym: max|A - A.T| = 1.633 (delayed_noise rows 0-2), 0.087 (var2_bivariate), 0.048 (gauss_ar1_pair), 0.115 (logistic_maps)'
+  direction_observed: 'A[i,j] = TE(x_i -> x_j), row = source: delayed_noise A[0,1] 1.616 vs A[1,0] -0.016; var2_bivariate 0.061 vs -0.026; gauss_ar1_pair -0.003 vs 0.045 (stronger 1->0 coupling); logistic_maps_chaotic
+    (x -> y) 0.302 vs -0.032'
+  candidate_resolutions:
+  - candidate: copying silently changes the configuration (pickle drops AUTO_EMBED_METHOD; deepcopy also drops NOISE_SEED and prop_k)
+    outcome: confirmed
+    evidence: 'var2_bivariate T=256 A[0,1] (Calculator / CalculatorFrame / deepcopy / pickle): te_auto 0.0606 / 0.1336 / 0.1336 / 0.1336 (= te_k1 0.1336), te_DCE_k2 0.1592 / 0.1344 / 0.1344 / 0.1344, te_k1
+      0.1336 on all four paths; getProperty read-back (te_auto): original (k 4, NOISE_SEED 42, AUTO_EMBED_METHOD MAX_CORR_AIS), deepcopy (4, NONE, NONE), pickle (4, 42, NONE); te_k1: deepcopy NOISE_SEED
+      NONE, pickle keeps 42 (*|var2_bivariate|256|pipeline|copy, *|copyprops)'
+  - candidate: embedding selected per ordered pair, varies with pair and T
+    outcome: confirmed
+    evidence: 'embeddings (k,kt,l,lt) read back per ordered pair and reproduced by the from-scratch MAX_CORR_AIS search (embedding_identical 1 on 5/5 runs): var2_bivariate 0->1 (3,3,1,1) at T=64, (10,1,1,1)
+      at T=256; gauss_ar1_pair T=256 0->1 (5,1,2,3), 1->0 (2,3,5,1); narrowband_f0-0.1 T=256 0->1 (2,1,4,1); logistic_maps T=256 1->0 (1,1,7,2) (*|embed)'
+  - candidate: 'documentation: tau-max-2 documented, 4 implemented'
+    outcome: refuted
+    evidence: 'refuted as a code-vs-documentation deviation: the documentation contradicts itself. The supplement prose (§1.4.5, supplement.txt:489) and GitBook prose (information-theory.md:216) say ''tau-max-2'',
+      but the SPI lists printed with them name te_kraskov_NN-4_k-max-10_tau-max-4 and te_kraskov_NN-4_DCE_k-max-10_tau-max-4 (supplement.txt:495-496, information-theory.md:222-223), which config.yaml:556/562
+      (tau_search_max 4) and the identifier match. tau-max-2 is the gc_gaussian setting (config.yaml:601-602); the prose slip is a documentation-internal inconsistency. tau > 2 is actually selected (*|embed:
+      k_tau/l_tau 3 on gauss_ar1_pair, 4 with DCE on narrowband_f0-0.1)'
+  - candidate: 'efficiency: per-channel embedding recomputed for every pair although partner-independent without DCE'
+    outcome: confirmed
+    evidence: '*|embed: without DCE a channel gets the same embedding as target and as source (var2_bivariate T=256: channel 1 (10,1) as target of 0->1 and as source of 1->0, channel 0 (1,1) in both roles;
+      gauss_ar1_pair channel 0 (2,3), channel 1 (5,1)), matching the from-scratch per-series cache; JIDT still reruns the 37-candidate search for every ordered pair'
+  - candidate: core-count dependence at 1e-14
+    outcome: confirmed
+    evidence: 'infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|bivariate_gaussian-p23|256|pipeline|threads: 1.8e-15, repeat 0.0'
+  - candidate: 'tied inputs: value set by jitter seed'
+    outcome: confirmed
+    evidence: 'infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|logistic_maps|256|pipeline|seeds: 0.1014/0.0891/0.0442 (spread 0.057), reproduced to 4.4e-16'
+  - candidate: negative values despite 'unsigned'
+    outcome: confirmed
+    evidence: 'infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|iid_gaussian-p012|256|pipeline|null: min -0.057, 50% negative'
+  - candidate: BIAS_CORRECTION no-op
+    outcome: confirmed
+    evidence: infotheory.est.ksg1|iid_gaussian|64|kernel|props
+  checks_run:
+  - run_ids:
+    - infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|*|ksg
+    reference: audit/checks/refs/it_kraskov.py:chk_ksg
+    outcome: pass 5/5; max_abs <= 1.1e-15
+  - run_ids:
+    - infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|*|embed
+    reference: audit/checks/refs/it_kraskov.py:chk_embed
+    outcome: pass 5/5; embeddings identical
+  - run_ids:
+    - infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|*|fixed
+    reference: audit/checks/refs/it_kraskov.py:chk_fixed
+    outcome: pass 4/4; fixed - auto = 0.0
+  - run_ids:
+    - infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|iid_gaussian-p012|256|pipeline|null
+    reference: audit/checks/refs/it_kraskov.py:chk_null
+    outcome: pass; z -0.69
+  - run_ids:
+    - infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|*|256|pipeline|direction
+    reference: audit/checks/refs/it_kraskov.py:chk_direction
+    outcome: pass 4/4
+  - run_ids:
+    - infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|bivariate_gaussian-p23|256|pipeline|threads
+    - infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|logistic_maps|256|pipeline|seeds
+    reference: audit/checks/refs/it_kraskov.py:chk_threads (same-lineage), chk_seeds
+    outcome: pass 2/2
+  - run_ids:
+    - infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|var2_bivariate|256|pipeline|copy
+    - infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4|var2_bivariate|256|pipeline|copyprops
+    reference: audit/checks/refs/it_kraskov.py:chk_copy, chk_copyprops (same-lineage)
+    outcome: 'fail 2/2 (finding): copies give 0.1336 (k=1) vs 0.0606; AUTO_EMBED_METHOD lost by pickle and deepcopy, NOISE_SEED by deepcopy'
+optimisation:
+  complexity_P_T: 'O(P^2 * 2 * 37 * N log N): every TransferEntropy.bivariate call (infotheory.py:376-389) runs JIDT''s MAX_CORR_AIS search over 37 KSG AIS candidates (k 1..10, tau 1..4, tau fixed at k=1)
+    for the target and again for the source (TransferEntropyCalculatorViaCondMutualInfo.preFinaliseAddObservations), then one KSG TE. Measured T exponent 0.09 (8x256 34.2 s, 8x1024 38.8 s): 692 ms per ordered
+    pair, dominated by ~75 threaded KSG calls. 9550 s projected at 118 (extrapolated-pairs-from-8).'
+  hotspot_1: 'pyspi/statistics/infotheory.py:TransferEntropy.bivariate (third-party:jidt: AIS search + KSG TE in one Java call, self time) 100.0% cum / 100.0% self of the profiled SPI call at 8x1024'
+  hotspot_2: 'none visible: search and TE are inside one Java call. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self time
+    of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0001
+  profile_file: audit/profiles/infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4__8x1024.pstats
+  # it_kraskov-1 (NUM_THREADS=1 per JIDT KSG calculator) is refuted as a per-window avenue for this unit and is not listed: audit/profiles/micro/opp_it_kraskov-1.json at 3x1024 (this identifier, 6 ordered
+  # pairs; merged_runs entry, load 0.7-2.3) gives single-thread 7.11 s (three calls 7.11-7.17 s) against 4.83 s with the default threads in the same run = 0.68x, and 0.58x against the quiet default of 4.15 s
+  # (summary.json 8x1024 fresh 38.75 s / 56 pairs x 6 pairs), so single-threading makes the unit slower at T=1024. The 3.3-4.6x at the labelled 3x256 shape (single-thread 1.17 s against same-run defaults
+  # 3.83-5.43 s, three runs) does not carry to T=1024: the default wall is overhead-bound (measured T exponent 0.09) while the single-thread cost grows with T. The lower CPU per call (7.6 s single-thread vs
+  # 18.8 s default at 3x1024; 1.1-1.3 s vs 10.7-11.2 s at 3x256) matters only for throughput with windows in separate processes (xc-window-parallel). Output max_abs_diff 2.0e-15 at 3x1024 and 1.1e-15 at 3x256,
+  # NaN masks equal. See audit/notes/it_kraskov.md, Refuted or narrowed seed items.
+  opportunities:
+  - opportunity_id: it_kraskov-2
+    opportunity: Run JIDT's MAX_CORR_AIS embedding search (k = 1..10, tau = 1..4, 37 KSG AIS candidates) once per channel instead of twice per ordered pair (target and source search inside every TransferEntropy.bivariate
+      call), then compute each pair's TE through the fixed-embedding properties (k_HISTORY, k_TAU, l_HISTORY, l_TAU) with the cached values.
+    opp_type: cache-sharing
+    expected_speedup: 10-40x
+    speedup_basis: 'profile:audit/profiles/infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4__8x1024.pstats pyspi/statistics/infotheory.py:376 TransferEntropy.bivariate 100.0% (search + TE) + complexity:
+      2 x 37 AIS evaluations per ordered pair -> 37 per channel (13806 x 74 -> 118 x 37 at P=118); what remains is one KSG TE per pair with the selected embedding (16 ms at k = l = 1, summary t_per_pair;
+      more for larger k, l) against 692 ms per pair now'
+    output_risk: unverified-bit-identical
+    risk_evidence: 'check stage: pyspi''s fixed-embedding TE with the read-back (k, kt, l, lt) equals the auto value exactly (ref_fixed_minus_auto_pyspi = 0.0 on all 4
+      fixed-embedding runs of this unit at T=256 on the pipeline path, datasets delayed_noise-p012, gauss_ar1_pair, logistic_maps and var2_bivariate,
+      audit/checks/out/results/it_kraskov.json);
+      without DCE the AIS search sees only the channel''s series, k and NOISE_SEED 42'
+    effort: M
+    depends_on: []

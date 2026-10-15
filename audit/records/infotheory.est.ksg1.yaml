@@ -1,0 +1,208 @@
+unit_id: infotheory.est.ksg1
+status: profiled
+correctness:
+  metric_name_standard: Kraskov-Stögbauer-Grassberger nearest-neighbour estimator, algorithm 1, for mutual information and (Frenzel-Pompe form) conditional mutual information, as used by all mi/tlmi/te
+    kraskov SPIs
+  canonical_ref: Kraskov, Stögbauer & Grassberger 2004, Phys. Rev. E 69, 066138 (algorithm 1); Frenzel & Pompe 2007, Phys. Rev. Lett. 99, 204101 (conditional MI); Lizier 2014, Front. Robot. AI 1:11 (JIDT,
+    supplement [32]).
+  canonical_definition: 'MI: ψ(k) − ⟨ψ(n_x+1) + ψ(n_y+1)⟩ + ψ(N); CMI: ψ(k) − ⟨ψ(n_xz+1) + ψ(n_yz+1) − ψ(n_z+1)⟩; ε(i) = max-norm distance to the k-th neighbour in the joint space, marginal counts strictly
+    within ε(i), j ≠ i; optional Theiler window excluding |t_j − t_i| <= W.'
+  documented_definition: 'supplement §1.4, p.9 (pack lines 414-453): ''The Kraskov–Stögbauer-Grassberger (KSG) technique (ksg) combines nearest-neighbor estimators for mutual information based measures
+    (default of four nearest neighbors, indicated by modifier NN-4). The KSG estimator is effectively a combination of multiple Kozachenko estimators that includes techniques to remove a bias ...''; ''We
+    primarily use v1.5 of the Java Information Dynamics Toolkit [32]''. GitBook information-theory.md:11-16 (v1.6.1, same KSG text).'
+  delegate_lib: 'JIDT jar pyspi/lib/jidt/infodynamics.jar (labelled 1.6.1; classes contain NOISE_SEED, matching master a9b6b3e of 2024-04-20 rather than the v1.6.1 tag of 2023-08-22): MutualInfoCalculatorMultiVariateKraskov1
+    and ConditionalMutualInfoCalculatorMultiVariateKraskov1 (via TransferEntropyCalculatorKraskov), jpype 1.7.1, OpenJDK 21.0.12'
+  implemented_as: 'Properties as probed on all nine SPIs (probe p1): k = 4, NORM_TYPE = MAX_NORM, NORMALISE = true (per-column z-score, std divisor N−1), NOISE_LEVEL_TO_ADD = 1e-8 (added after normalisation,
+    row by row source/dest[/cond] from java.util.Random(42)), NOISE_SEED = 42, NUM_THREADS = 64 (= availableProcessors), ALG_NUM = 1 for TE, DYN_CORR_EXCL = 0 unless the DCE heuristic sets it, BIAS_CORRECTION
+    unrecognised (None). Average = ψ(k) − ⟨digammas⟩ + ψ(N) (MI) or ψ(k) + ⟨digammas⟩ (CMI) over all N samples; time points split across threads and the partial sums added; results in nats. JIDT exceptions
+    (e.g. N <= k + 2W) are caught by pyspi and return NaN.'
+  implementation_trace:
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: identifier += ''_kraskov_NN-{prop_k}'', labels += [''nonlinear''], ''_DCE'' appended when dyn_corr_excl is truthy'
+  - 'pyspi/statistics/infotheory.py:84-93 JIDTBase._setup: setProperty(''k'', ''4''); setProperty(''BIAS_CORRECTION'', ''false'') (not a property of the Kraskov calculators: probe getProperty(''BIAS_CORRECTION'')
+    -> None, i.e. ignored); setProperty(''NOISE_SEED'', ''42'')'
+  - 'pyspi/statistics/infotheory.py:103-134 JIDTBase._getcalc: kraskov -> MutualInfoCalculatorMultiVariateKraskov1 (:116-119) or TransferEntropyCalculatorKraskov (:127-128)'
+  - 'pyspi/utils.py:112-125 is_jpype_jvm_available: starts the JVM with -Djava.class.path=pyspi/lib/jidt/infodynamics.jar'
+  - pyspi/lib/jidt/version-1.6.1.txt:8-10 'Version 1.6.1  22/08/2023' (label); jar META-INF entries dated 2024-04-21; all 337 jar entries dated 2024-04-21 (unzip -l), including infodynamics/measures/continuous/EntropyCalculatorMultiVariateCommon.class
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/MutualInfoMultiVariateCommon.java#L574-L643 MutualInfoMultiVariateCommon.finaliseAddObservations:
+    copies data, computes means and std (MatrixUtils.stdDevs, divisor N-1, MatrixUtils.java#L2490-L2502), normalises each column when NORMALISE=true (default true, :164; MatrixUtils.normalise :2663-2672),
+    then adds random.nextGaussian()*noiseLevel to every source then destination entry row by row from java.util.Random seeded with NOISE_SEED (:626-642; NOISE_SEED parsed at :265-271)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L180-L185 constructor:
+    addNoise=true, noiseLevel=1e-8; :74 k default 4; :79 normType = NORM_MAX_NORM; :133 numThreads = availableProcessors() (probe: 64 here)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L225-L250 setProperty:
+    k, NORM_TYPE, DYN_CORR_EXCL (dynCorrExcl = W > 0), NUM_THREADS; unknown names go to MutualInfoMultiVariateCommon.setProperty (unknown ignored)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L294-L308 finaliseAddObservations:
+    throws if totalObservations <= k + 2*DYN_CORR_EXCL; digammaK = digamma(k), digammaN = digamma(totalObservations) (N not reduced for the exclusion window)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L315-L330 computeAverageLocalOfObservations
+    -> computeFromObservations :427-526: splits time points over numThreads threads, sums per-thread partial digamma sums, returns digammaK - averageDiGammas + digammaN for algorithm 1 (:518-522)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L715-L738 ensureKdTreesConstructed:
+    joint KdTree over (source, dest) and per-marginal NearestNeighbourSearcher (UnivariateNearestNeighbourSearcher for 1-D), all max-norm, carrying observationTimePoints for the exclusion window'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov1.java#L60-L123 partialComputeFromObservations:
+    eps_t = distance of the k-th nearest neighbour in the joint space (kdTreeJoint.findKNearestNeighbours(k, t, dynCorrExclTime), :79-83); n_x, n_y = countPointsStrictlyWithinR(t, eps_t, dynCorrExclTime)
+    in each marginal (:88-91); sum digamma(n_x+1) + digamma(n_y+1) (:97-99)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/utils/KdTree.java#L751-L753 findKNearestNeighbours: a candidate is admissible only if it
+    comes from another observation set or |timePoint(candidate) - timePoint(sample)| > dynCorrExclTime (so W=0 excludes only the sample itself); https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/utils/UnivariateNearestNeighbourSearcher.java#L497-L530
+    countPointsWithinR skips |dt| <= dynCorrExclTime and counts norm < r strictly (allowEqualToR=false)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/ConditionalMutualInfoMultiVariateCommon.java#L705-L787 finaliseAddObservations:
+    per-column normalisation (NORMALISE default true, :158) and 1e-8 Gaussian jitter from java.util.Random seeded with NOISE_SEED, row by row over var1, var2, cond columns (:766-785)'
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/ConditionalMutualInfoCalculatorMultiVariateKraskov.java#L214-L219
+    constructor addNoise=true, noiseLevel=1e-8; :96 k=4 default; :101 NORM_MAX_NORM; :155 numThreads = availableProcessors(); :265-285 setProperty (k, NORM_TYPE, DYN_CORR_EXCL, NUM_THREADS); :312-325 finaliseAddObservations
+    throws if N <= k + 2*DYN_CORR_EXCL; :539-546 algorithm-1 result digamma(k) + averageDiGammas
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/ConditionalMutualInfoCalculatorMultiVariateKraskov1.java#L75-L270
+    partialComputeFromObservations: eps_t = k-th NN max-norm distance in the joint (x, y, z) space with the exclusion window (:102-108); n_xz, n_yz, n_z counted strictly within eps_t (option B/C code paths
+    :140-240); sum digamma(n_z+1) - digamma(n_xz+1) - digamma(n_yz+1) (:252-255)'
+  - 'JIDT v1.6.1 tag for comparison: https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/measures/continuous/MutualInfoMultiVariateCommon.java#L519-L529 ''Random random = new Random();''
+    without seed; setProperty :201-229 lacks NOISE_SEED (the jar has it)'
+  deviation_from_documented: 'Estimator matches ''KSG, NN-4''. Version: documented v1.5 (supplement) / v1.6.1 (GitBook); the jar is a post-1.6.1 master build. Undocumented: max-norm, 1e-8 jitter with seed
+    42, no bias correction (pyspi''s BIAS_CORRECTION=false is a no-op), multi-threading over all cores, nats.'
+  deviation_from_canonical: 'Algorithm 1 exactly as published (from-scratch brute-force MI/CMI reproduce pyspi to <= 3e-15 for MI and 12 decimals for CMI on five datasets, probes p5-p7, including the jitter
+    regenerated with a Python java.util.Random). Additions: standardisation, 1e-8 jitter (tie-breaking; changes values on tied data), ψ(N) not adjusted when a Theiler window is used.'
+  units_and_range: nats; real-valued and can be negative (finite-sample bias); invariant to per-variable affine transforms up to the jitter scale
+  direction_convention: n/a (estimator); MI symmetric in its two arguments up to the jitter assignment (probe p2 exact equality), CMI asymmetric only through which variable is conditioned
+  symmetry_expected: n/a
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'CANDIDATE (provenance): the bundled jar is not the v1.6.1 release. Evidence: `strings` on the jar''s MutualInfoMultiVariateCommon.class lists NOISE_SEED, noiseSeedSet, setSeed; the v1.6.1 tag source
+    https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/measures/continuous/MutualInfoMultiVariateCommon.java#L519-L529 uses ''Random random = new Random();'' with no seed and its setProperty
+    (:201-229) has no NOISE_SEED; the jar contains EntropyCalculatorMultiVariateCommon.class (entry dated 2024-04-21 06:42, like all 337 entries, unzip -l). That content is the primary evidence: NOISE_SEED
+    for MI/CMI arrives in master commit 2a18cd0 (''Adding property to allow used to set random seed for noise addition to data in MI, CMI and wrapped estimators'', closes issue #99), EntropyCalculatorMultiVariateCommon
+    in 3d1f3fe (''Gathering common functionality of EntropyMultiVariate estimators into a Common class''), and NOISE_SEED for the entropy estimators in a9b6b3e. Commit dates come from the GitHub REST API
+    (https://api.github.com/repos/jlizier/jidt/commits/<sha>, commit.author.date = committer date): 2a18cd0 2024-04-16T04:08:04Z, 3d1f3fe 2024-04-20T07:57:38Z, a9b6b3e 2024-04-20T08:52:10Z; the master listing
+    for 2024-04-15 to 2024-05-31 contains only these three commits, so a9b6b3e is the last master commit before the jar''s entry date. The commit HTML pages show hashes and messages but not dates. With
+    the real v1.6.1 the NOISE_SEED=42 that pyspi sets would be silently ignored and the jitter unseeded. The documented versions are v1.5 (supplement §1.4) and v1.6.1 (GitBook).'
+  - 'CANDIDATE: the value depends on the machine''s core count at the 1e-14 level, because NUM_THREADS defaults to availableProcessors() (64 here) and per-thread digamma partial sums are added in thread
+    order. Probe p2 (bivariate_gaussian T=1024): max |A(default) - A(NUM_THREADS=1)| = 7.1e-15 mi, 1.1e-14 mi_DCE, 1.6e-14 tlmi, 2.4e-15 te_k1, 4.2e-15 te_auto; repeat runs on the same machine are bit-identical.'
+  - 'CANDIDATE: on tied or discrete-valued inputs the estimate is set by the 1e-8 jitter and its seed. Probe p12, logistic_maps T=256 (series 1 is the period-4 r=3.5 map, 4 distinct values): pair 1->0 for
+    NOISE_SEED 42/43/44 gives mi 0.226622/0.226587/0.230899, tlmi 0.278902/0.276961/0.281417, te_k1 0.115063/0.113329/0.107266, te_auto 0.101410 (l,lt=7,2) / 0.089128 (10,2) / 0.044229 (6,1); bivariate_gaussian
+    is identical for all seeds.'
+  - 'CANDIDATE (no-op setting): pyspi sets BIAS_CORRECTION=false (infotheory.py:90) but neither Kraskov calculator defines that property; probe p1 getProperty(''BIAS_CORRECTION'') returns None for all nine
+    units, so the call has no effect and no bias correction exists for KSG here.'
+  - 'CANDIDATE (estimator property, not a pyspi bug): labelled ''unsigned'' but KSG estimates are negative on independent data. Probe p13 minima at T=64: mi -0.167 (nonlinear_dependence), tlmi -0.143 (iid_gaussian),
+    te_k1 -0.134 (logistic_maps), te_auto_DCE -0.178 (cointegrated); at T=256 iid_gaussian mi min -0.055.'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - delayed_noise
+    - var2_bivariate
+    - gauss_ar1_pair
+    - logistic_maps
+    path: kernel
+    reference: 'from-scratch brute-force KSG1 MI and CMI in numpy (max-norm pairwise distance matrices, k-th neighbour by sort, strict counts, |dt| <= W exclusion) + scipy.special.digamma, columns standardised
+      with ddof=1 and the 1e-8 jitter regenerated by a pure-Python java.util.Random LCG (nextGaussian polar method, seed 42; matches java.util.Random to 2e-16); does not import JIDT/jpype. Prototype: scratchpad
+      it_kraskov/probes/ksg_ref.py; for CMI the Frenzel-Pompe counts n_xz, n_yz, n_z'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: '<= 1e-12 absolute on MI and CMI for W in {0, 2, 5, 85}, including logistic_maps where the jitter matters (prototype: AIS on the period-4 series matched JIDT to 4e-15, probe p7)'
+  - datasets:
+    - bivariate_gaussian
+    path: kernel
+    reference: analytic Gaussian MI −½ log(1 − ρ²) (truth true_mi_nats)
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: bias and variance of the estimator vs T in {64, 256, 1024, 4096}; |Î − I| decreasing with T
+  - datasets:
+    - bivariate_gaussian
+    - logistic_maps
+    path: kernel
+    reference: self-consistency under NUM_THREADS = 1 and NOISE_SEED in {42, 43, 44} (no external reference)
+    reference_kind: same-lineage
+    criterion: tolerance
+    expected_outcome: thread count changes values by <= 1e-13; seed changes continuous-data values by 0 and tied-data values by up to ~0.05 nats (probe p12)
+  - datasets:
+    - bivariate_gaussian
+    path: kernel
+    reference: sklearn.feature_selection.mutual_info_regression(n_neighbors=4) (independent KSG implementation)
+    reference_kind: external-pkg
+    criterion: tolerance
+    expected_outcome: '|Δ| < 0.01 nats where both are positive (sklearn clips at 0 and uses its own noise)'
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/it_kraskov.py:mi_jidt/cmi_jidt/te_jidt/te_auto_jidt (N-1 column z-score, pure-Python java.util.Random(42) jitter port in JIDT row/column order, then audit/checks/refs/_kernels_infotheory.py:mi_ksg1/cmi_ksg1
+    with normalise=False: cKDTree max norm, k=4, strict counts, Theiler |s-t|<=W, guard N<=k+2W -> NaN); DCE window audit/checks/refs/it_kraskov.py:window_raw (explicit lag-loop ACF); no JIDT/jpype; numpy
+    2.5.4, scipy 1.18.1; audit/checks/refs/it_kraskov.py:chk_direct (JIDT MI/CMI calculators driven directly by audit/checks/probes/it_kraskov_probes.py:direct_jidt), audit/checks/refs/it_kraskov.py:chk_semantics
+    (analytic DYN_CORR_EXCL expectations, audit/checks/probes/it_kraskov_probes.py:dce_semantics), audit/checks/refs/it_kraskov.py:chk_props (literature: JIDT source a9b6b3e)'
+  check_data: var2_chain T1024 and delayed_noise rows 0-2 T256 (direct, W in 0,1,2,5,20,85); 40-point deterministic pair and 32-point ramps (semantics); plus every *|ksg run of the nine SPI units (11 datasets,
+    T 64-1024, tied logistic_maps included)
+  agreement_criterion: tolerance rtol 1e-10, atol 1e-12 (MI and CMI values, every W); semantics matrix exact; props qualitative
+  closeness: 'direct MI(x0;x1) and CMI(x0;x1|x2) for W = 0, 1, 2, 5, 20, 85: max_abs 3.6e-15 (var2_chain) and 5.3e-15 (delayed_noise); semantics: univariate and KdTree counts 31-2W for W=0..6, nearest admissible
+    |s-t| = W+1, raise at N=4+2W and compute at N=5+2W, MI column max_abs 1.3e-15 (the alternative |s-t|<W rule gives different MI, e.g. W=1 -0.0559 vs -0.0075); props: availableProcessors 64 = NUM_THREADS
+    of the MI and CMI calculators, BIAS_CORRECTION getProperty None for MI and TE, fresh NOISE_SEED unset, 42 after pyspi _setup. Across the 64 *|ksg runs of the nine SPIs the from-scratch estimator agrees
+    to <= 7.1e-15, including logistic_maps (tied, 4 distinct values) where the seeded jitter decides neighbour order.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: Anchor 10's canonical-match clause fails on two conventions that no anchor-9 clause names. On tied data the seeded 1e-8 jitter decides the value
+    (logistic_maps T=256 mi 0.2301/0.2270/0.2305 for seeds 42/43/44). Under a Theiler window psi(N) is not adjusted for the excluded points (JIDT TODO). The unit sits
+    at 9, the highest anchor it clears; the from-scratch KSG1 reference agrees to <= 7.1e-15 over 64 runs.
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'KSG algorithm 1 MI and Frenzel-Pompe CMI exactly as published; conventions on top: N-1 column z-scoring, N(0,1e-8^2) jitter from java.util.Random(NOISE_SEED=42) that decides the value on
+    tied data, max norm, nats, psi(N) left unadjusted under a Theiler window (JIDT TODO, MutualInfoCalculatorMultiVariateKraskov1.java a9b6b3e:102-104), partial sums over 64 threads (last-bit dependence on
+    core count). Score 9 not 10 for the tie/jitter and psi(N) conventions.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: from-scratch estimator <= 0.2 s per matrix at T=1024; JIDT probes < 1 s'
+  symmetry_observed: 'n/a (estimator); MI symmetric in its arguments: ordered matrices max|O - O.T| = 0.0 (mi.kraskov|*|ordered)'
+  direction_observed: 'n/a (estimator); exclusion semantics: neighbour s of t excluded iff |s - t| <= DYN_CORR_EXCL (W=0 excludes only t)'
+  candidate_resolutions:
+  - candidate: bundled jar is not the v1.6.1 release (NOISE_SEED honoured)
+    outcome: confirmed
+    evidence: 'the seeded stream is honoured: from-scratch java.util.Random port reproduces pyspi for NOISE_SEED 42/43/44 on tied data (*|logistic_maps|256|pipeline|seeds, <= 2.7e-15; spreads up to 0.057
+      nats), which the v1.6.1 tag (unseeded new Random()) could not; the exact master commit (a9b6b3e by date) is not confirmed byte-for-byte'
+  - candidate: value depends on core count at ~1e-14 (NUM_THREADS = availableProcessors)
+    outcome: confirmed
+    evidence: 'infotheory.est.ksg1|iid_gaussian|64|kernel|props (NUM_THREADS 64 = availableProcessors); threads: max|A(default NUM_THREADS=64) - A(NUM_THREADS=1)| = 7.1e-15 mi, 1.07e-14 mi_DCE, 1.6e-14 tlmi,
+      2.4e-15 te_k1, 1.8e-15 te_auto (bivariate_gaussian, *|threads); repeat runs bit-identical'
+  - candidate: on tied/discrete inputs the estimate is set by the jitter and its seed
+    outcome: confirmed
+    evidence: 'seeds (logistic_maps T=256, NOISE_SEED 42/43/44, each seed reproduced by the from-scratch jitter port to <= 2.7e-15): pair 1->0 mi 0.2301/0.2270/0.2305, tlmi 0.2789/0.2770/0.2814, te_k1 0.1151/0.1133/0.1073,
+      te_DCE_k1 0.0783/0.0802/0.0749, te_auto 0.1014/0.0891/0.0442; bivariate_gaussian T=1024 spread 0.0 (*|seeds)'
+  - candidate: BIAS_CORRECTION=false is a no-op for the Kraskov calculators
+    outcome: confirmed
+    evidence: 'infotheory.est.ksg1|iid_gaussian|64|kernel|props: getProperty(''BIAS_CORRECTION'') is None for the MI and TE calculators'
+  - candidate: estimates negative on independent data despite 'unsigned' (estimator property)
+    outcome: confirmed
+    evidence: '*|iid_gaussian|256|pipeline|null: minima mi -0.055, mi_DCE -0.036, tlmi -0.067, te_k1 -0.061, te_DCE_k1 -0.070, te_DCE_k2 -0.058, te_auto -0.057; means consistent with the Monte Carlo null
+      (|z| <= 1.6). Estimator property, not a defect'
+  checks_run:
+  - run_ids:
+    - infotheory.est.ksg1|var2_chain|1024|kernel|direct
+    - infotheory.est.ksg1|delayed_noise-p012|256|kernel|direct
+    reference: audit/checks/refs/it_kraskov.py:chk_direct
+    outcome: pass 2/2; max_abs 5.3e-15
+  - run_ids:
+    - infotheory.est.ksg1|iid_gaussian|64|kernel|semantics
+    reference: audit/checks/refs/it_kraskov.py:chk_semantics
+    outcome: pass; max_abs 1.3e-15
+  - run_ids:
+    - infotheory.est.ksg1|iid_gaussian|64|kernel|props
+    reference: audit/checks/refs/it_kraskov.py:chk_props
+    outcome: pass (qualitative)
+optimisation:
+  complexity_P_T: 'Per call O(N log N d) kd-tree KSG1 (MutualInfoCalculatorMultiVariateKraskov1 / ConditionalMutualInfoCalculatorMultiVariateKraskov1), split over NUM_THREADS = availableProcessors() = 64
+    threads because pyspi never sets the property. At T <= 1024 the per-call thread fan-out dominates: the consumer units show T exponents -0.13 to 0.23 between 8x256 and 8x1024.'
+  hotspot_1: 'pyspi/statistics/infotheory.py:MutualInfo.bivariate (third-party:jidt KSG, self time) 100.0% cum of the profiled mi_kraskov call at 8x1024 (infrastructure unit: mi.kraskov pstats)'
+  hotspot_2: 'none visible inside Java. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0004
+  profile_file: audit/profiles/infotheory.mi.kraskov__8x1024.pstats (mi.kraskov; infrastructure unit)
+  opportunities:
+  - opportunity_id: it_kraskov-1
+    opportunity: Set NUM_THREADS=1 on every JIDT KSG calculator (pyspi never sets it, so JIDT splits each call over availableProcessors() = 64 threads) and take throughput from running windows or pair blocks
+      in separate processes with one JVM each.
+    opp_type: parallel
+    expected_speedup: 1-8x
+    speedup_basis: microbench:audit/profiles/micro/opp_it_kraskov-1.json (mi_kraskov_NN-4 at 8x1024, single-thread 0.136 / 0.270 / 0.723 s in three runs against the quiet default wall of 1.02 s in summary.json
+      = 7.5x / 3.8x / 1.4x; same-run defaults 3.06 / 2.93 / 3.42 s; process CPU per call 0.17-0.90 s single-thread vs 3.2-5.9 s default); three runs of the script on the shared machine (top level + earlier_runs)
+      give single-thread walls that vary ~5x at 8x1024 with JVM background CPU, so the low end is the contended case and the high end the least contended (CPU ~ wall) + profile:audit/profiles/infotheory.mi.kraskov__8x1024.pstats
+      pyspi/statistics/infotheory.py:267 MutualInfo.bivariate 100.0% (the JIDT call; cProfile cannot split thread start-up from the KSG search). No ranking basis on this row. This infrastructure unit has no SPI identifiers of its own, so profiles/summary.json holds no 118x1024 projection for it and rank_basis_s and projected_patient_s_after stay blank; its cost sits inside the timings of the units that call it. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README 'Optimisation columns', rule 5).
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_it_kraskov-1.json: max_abs_diff 1.6e-14 in all three runs, NaN masks equal (per-thread digamma partial sums are added in a different order); check stage threads
+      runs <= 1.6e-14'
+    effort: S
+    depends_on:
+    - xc-window-parallel

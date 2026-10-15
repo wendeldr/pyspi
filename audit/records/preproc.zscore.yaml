@@ -1,0 +1,144 @@
+unit_id: preproc.zscore
+status: profiled
+correctness:
+  metric_name_standard: Standard score (z-score) per channel along time with the sample (n-1) standard deviation
+  canonical_ref: Textbook standard score z = (x - mean)/sd (e.g. Freedman, Pisani & Purves, Statistics, 4th ed., Norton 2007, ch. 5 'standard units'); the sd convention (population n vs sample n-1) varies by source; maximum |z| with the n-1 sd is (n-1)/sqrt(n) (Shiffler 1988, The American Statistician 42(1):79-80)
+  canonical_definition: z_t = (x_t - xbar)/s, xbar = (1/T) sum x_t, s = sqrt(sum (x_t - xbar)^2/(T - ddof)); pyspi uses ddof = 1, so sum z_t = 0, sum z_t^2/(T-1) = 1 and the population (1/T) variance of z is (T-1)/T
+  documented_definition: 'supplement §1 (heading line 95), p.3: ''Prior to evaluating each statistic, we standardize (z-score) the MTS along the time axis.'' Supplement §1.1.1 (line 136-139), p.3: ''Due to the z-scoring of the time series, the correlation and covariance matrices are equivalent''. GitBook api-reference/pyspi.calculator.calculator.md:19 and pyspi.data.data.md:29: ''Z-score normalise the dataset along the time axis before computing SPIs, default=True.'' No page states ddof.'
+  delegate_lib: scipy==1.17.1 scipy.stats.zscore(data, axis=1, nan_policy='omit', ddof=1) -> zmap(a, a)
+  implemented_as: 'Data.set_data, after reorder, truncation and optional detrend, calls zscore(data, axis=1, nan_policy=''omit'', ddof=1): per (process, replication) row, subtract the time mean and divide by the ddof=1 std. scipy sets a row to NaN when std <= |eps * mean| (zero-variance guard), and pyspi then raises ValueError(''Dataset ... contains non-numerics (NaNs) in processes: [...]''). nan_policy=''omit'' has no lasting effect because any NaN in the output is rejected by the subsequent check. Calculator default normalise=True; a Data object passed to Calculator keeps its own flags. Probe p1_data.py: n1d0 output matches (x - mean)/std(ddof=1) to 4.4e-16, row variance (ddof=1) exactly 1; int input becomes float64, float32 stays float32.'
+  implementation_trace:
+  - pyspi/calculator.py:48-56 Calculator(normalise=True) stores self._normalise
+  - pyspi/calculator.py:269-277 load_dataset forwards normalise/detrend to Data only for non-Data input
+  - pyspi/data.py:59-80 Data.__init__(normalise=True) stores self.normalise and calls set_data
+  - pyspi/data.py:179-191 truncation and optional detrend precede z-scoring
+  - pyspi/data.py:193-197 data = zscore(data, axis=1, nan_policy='omit', ddof=1)
+  - pyspi/data.py:199-203 any NaN in the result raises ValueError ('contains non-numerics (NaNs)')
+  - scipy/stats/_stats_py.py:2678 zscore(a, axis=0, ddof=0, nan_policy='propagate') signature (pyspi overrides axis, ddof, nan_policy)
+  - scipy/stats/_stats_py.py:2760 return zmap(a, a, axis=axis, ddof=ddof, nan_policy=nan_policy)
+  - scipy/stats/_stats_py.py:2913-2915 like_zscore = (scores is compare); promote to floating
+  - scipy/stats/_stats_py.py:2921-2923 mn = _xp_mean(...); std = _xp_var(..., correction=ddof)**0.5
+  - scipy/stats/_stats_py.py:2925-2926 z = (scores - mn) / std
+  - 'scipy/stats/_stats_py.py:2930-2934 zero-variance guard: zero = std <= |eps * mn| -> NaN'
+  - 'scipy/stats/_stats_py.py:10720-10755 _xp_var: divides by n - correction'
+  deviation_from_documented: 'Standardisation along time per channel as documented; ddof=1 is not documented. The supplement p.3 claim that covariance and correlation matrices are ''equivalent'' after z-scoring does not hold exactly for estimators that use the 1/T MLE (sklearn EmpiricalCovariance): with ddof=1 z-scores the empirical covariance equals (T-1)/T times the Pearson correlation (probe p7_sanity.py: ratio 0.98437500 at T=64, 0.99902344 at T=1024, equal to (T-1)/T). This is a cross-family effect to be assessed in the cov_prec_simple family.'
+  deviation_from_canonical: 'none for non-degenerate rows (sample-sd z-score). Convention choice: ddof=1 (sample sd) rather than the population sd; z has (1/T) variance (T-1)/T. Degenerate rows: zero-variance rows are rejected with a message about NaNs rather than zero variance; near-zero-variance rows created by detrending are not rejected (see preproc.detrend).'
+  units_and_range: 'Dimensionless; per row mean 0, ddof=1 variance 1; |z| <= (T-1)/sqrt(T) (Shiffler 1988). Not a pairwise statistic: symmetry n/a.'
+  direction_convention: n/a (per-channel transform; no pair index).
+  symmetry_expected: n/a
+  already_documented: tests/unit/test_data.py:27-53 lock truncation-before-normalisation and detrend-then-zscore order; tests/unit/test_data.py:56-72 lock NaN/inf -> ValueError. EEG_OPTIMIZATION_NOTES.md lines 42-43 for the order. The ddof/covariance and message items below are not in KNOWN_ISSUES.md.
+  new_finding_candidates:
+  - 'CANDIDATE (supplement claim ''covariance and correlation equivalent'' is off by (T-1)/T): ddof=1 z-scoring (pyspi/data.py:195) combined with sklearn EmpiricalCovariance (1/T MLE) gives cov = (T-1)/T * Pearson r; probe p7_sanity.py on bivariate_gaussian: ''T=64 cov_Empirical[0,1] / pearson r = 0.9843750000000006 (T-1)/T = 0.984375''. Also makes the cov diagonal (T-1)/T, not 1. Cross-family; confirm in cov_prec_simple.'
+  - 'CANDIDATE (misleading error for zero-variance channel): a constant channel without detrend raises ''Dataset None contains non-numerics (NaNs) in processes: [1].'' (probe p1_data.py) although the input has no NaN; the NaN is produced by scipy''s zero-variance guard (scipy/stats/_stats_py.py:2932-2934).'
+  - 'CANDIDATE (dead option): nan_policy=''omit'' at pyspi/data.py:195 cannot take effect because pyspi/data.py:199-203 rejects any NaN afterwards (probe p1_data.py: NaN input with detrend=True -> ''ValueError Dataset None contains non-numerics (NaNs) in processes: [2]'').'
+  proposed_checks:
+  - datasets:
+    - scaled_offset
+    - iid_gaussian
+    - contaminated
+    path: kernel
+    reference: 'from-scratch numpy: (x - x.mean(1))/sqrt(((x - x.mean(1))**2).sum(1)/(T-1)), compared with Data(X).to_numpy(squeeze=True)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: max abs difference <= 1e-13 at every T; row means <= 1e-14; ddof=1 variance 1 to 1e-13; max|z| <= (T-1)/sqrt(T) on contaminated
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic: scaled_offset = scale*bivariate_gaussian + offset with positive scales, and z-scoring is invariant to positive affine maps'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'Data(scaled_offset) equals Data(bivariate_gaussian) to <= 1e-12 (probe: 8.9e-16 at T=64 and 1024); every deterministic SPI identifier computed through Calculator(normalise=True) agrees between the two datasets to rtol 1e-9 (stochastic SPIs seeded identically)'
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic: with ddof=1 z-scores, the 1/T MLE covariance equals (T-1)/T * numpy.corrcoef'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: cov_EmpiricalCovariance[i,j] / corrcoef[i,j] = (T-1)/T to <= 1e-12 for all off-diagonal pairs and all T (probe confirms at T=64, 1024); documents the deviation from the supplement's 'equivalent' claim
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic: a constant channel has zero variance, z undefined; replace row 1 of iid_gaussian by a constant'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'Data(normalise=True, detrend=False) raises ValueError; record the message text (candidate: it mentions NaNs, not zero variance)'
+  check_method: independent-impl
+  check_reference: refs/preprocessing_base.py:zs ((x - mean)/std ddof=1, numpy) via r_zs; analytic invariance r_inv_data and r_inv_spi (kernels spearman, empirical_cov, gaussian_mi, dtw_dp); analytic r_cov_ratio ((T-1)/T * numpy corrcoef, and the supplement's plain corrcoef); qualitative r_errmsg, r_nanpolicy; pyspi side probes/preprocessing_base_probes.py:data_array, error_paths
+  check_data: scaled_offset, iid_gaussian, contaminated at T = 64, 256, 1024, 4096; scaled_offset vs the same bivariate_gaussian draw at 64, 1024, 4096 (array) and 256 (SPIs); bivariate_gaussian at 64, 1024, 4096 (cov); iid_gaussian 256 with a constant row / NaN sample
+  agreement_criterion: 'z-score: exact rtol 1e-12, atol 1e-13; invariance: atol 1e-12 (array), rtol 1e-9 (SPIs); cov ratio: exact rtol 1e-12, atol 1e-14 against (T-1)/T r, exact (1e-10 / 1e-12) against the supplement''s r; error paths: qualitative'
+  closeness: 'zs 12/12 pass, max abs 4.4e-16 (T=64; 0 elsewhere); pyspi row means <= 1.0e-16, |var_ddof1 - 1| <= 4.4e-16, max|z| 2.34 to 4.99, far inside the Shiffler bound (T-1)/sqrt(T) (7.9 to 64.0). inv-data 3/3 pass, max abs 1.33e-15; inv-{cov,spearmanr,mi_gaussian,dtw} 4/4 pass, max rel 1.14e-12. cov-ratio 3/3 pass (max rel 5.5e-15; pyspi/corrcoef = 0.984375, 0.99902344, 0.99975586 = (T-1)/T at T = 64, 1024, 4096); cov-supp-claim 3/3 fail with max rel 0.015625, 9.77e-4, 2.44e-4 = 1/T. Constant row: ValueError(''Dataset None contains non-numerics (NaNs) in processes: [1].''); NaN sample: rejected although zscore(nan_policy=''omit'') alone leaves the other rows finite.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor-9 ddof clause: a sample-sd (ddof=1) z-score, which agrees with numpy to 4.4e-16.'
+  documentation_status: described
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Sample-sd (ddof=1) z-score, a convention the supplement does not state. Its consequence: with the 1/T MLE covariance the covariance SPI equals (T-1)/T times Pearson r, not r as the supplement''s ''equivalent'' claim says (also confirmed by the cov_prec_simple family). The zero-variance guard is a floating-point test and some constant rows pass it (preproc.detrend record).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: every run under 1 s; T up to 4096. Scope: the trace stage proposed the invariance check for every deterministic SPI identifier through Calculator(normalise=True); it was run for 4 (cov_EmpiricalCovariance, spearmanr, mi_gaussian, dtw; inv-* runs). Invariance of the other identifiers follows from the inv-data runs (the stored array is the same to 1.33e-15) for any SPI that reads only the stored array, but their values were not compared (not done).'
+  symmetry_observed: n/a (per-channel transform)
+  direction_observed: n/a (per-channel transform)
+  candidate_resolutions:
+  - candidate: supplement claim 'covariance and correlation equivalent' is off by (T-1)/T
+    outcome: confirmed
+    evidence: preproc.zscore|bivariate_gaussian|{64,1024,4096}|pipeline|cov-ratio pass (max rel 5.5e-15 vs (T-1)/T r); ...|cov-supp-claim fail with max rel exactly 1/T (0.015625 at T=64). The cov_prec_simple family records the same factor for the SPI (basic.cov.EmpiricalCovariance).
+  - candidate: misleading error message for a zero-variance channel
+    outcome: confirmed
+    evidence: 'preproc.zscore|iid_gaussian|256|pipeline|errmsg: ValueError(''Dataset None contains non-numerics (NaNs) in processes: [1].'') for a constant row with no NaN in the input (message_mentions_variance 0)'
+  - candidate: nan_policy='omit' is a dead option
+    outcome: confirmed
+    evidence: 'preproc.zscore|iid_gaussian|256|pipeline|nanpolicy: a single NaN sample raises (''contains non-numerics (NaNs) in processes: [2]'') although scipy zscore(nan_policy=''omit'') leaves the other rows finite (omit_alone_leaves_other_rows_finite 1)'
+  checks_run:
+  - run_ids:
+    - preproc.zscore|{scaled_offset,iid_gaussian,contaminated}|{64,256,1024,4096}|pipeline|zs
+    reference: refs/preprocessing_base.py:r_zs
+    outcome: pass 12/12, max abs 4.4e-16
+  - run_ids:
+    - preproc.zscore|scaled_offset|{64,1024,4096}|pipeline|inv-data
+    - preproc.zscore|scaled_offset|256|pipeline|inv-{cov_EmpiricalCovariance,spearmanr,mi_gaussian,dtw}
+    reference: refs/preprocessing_base.py:r_inv_data, r_inv_spi
+    outcome: pass 7/7, max abs 1.33e-15 (array), max rel 1.14e-12 (SPIs)
+  - run_ids:
+    - preproc.zscore|bivariate_gaussian|{64,1024,4096}|pipeline|cov-ratio
+    reference: refs/preprocessing_base.py:r_cov_ratio
+    outcome: pass 3/3, ratio (T-1)/T to 5.5e-15
+  - run_ids:
+    - preproc.zscore|bivariate_gaussian|{64,1024,4096}|pipeline|cov-supp-claim
+    reference: refs/preprocessing_base.py:r_cov_ratio (supplement claim)
+    outcome: fail 3/3, max rel = 1/T
+  - run_ids:
+    - preproc.zscore|iid_gaussian|256|pipeline|errmsg
+    - preproc.zscore|iid_gaussian|256|pipeline|nanpolicy
+    reference: refs/preprocessing_base.py:r_errmsg, r_nanpolicy
+    outcome: fail 2/2 (candidates confirmed)
+optimisation:
+  complexity_P_T: 'O(P T): scipy.stats.zscore(data, axis=1, nan_policy=''omit'', ddof=1) after detrend (pyspi/data.py:195); once per window. Measured with detrend inside the 3.0 ms Data
+    construction at 118x1024'
+  hotspot_1: 'pyspi/data.py:Data.set_data -> scipy/stats/_stats_py.py:zscore (third-party:scipy): no cProfile frame: profile_units.py builds the Data before prof.runcall (profile_units.py:712-718),
+    so detrend/zscore never appear in a unit pstats (the only zscore frames are the per-pair re-normalisation inside the kraskov_DCE units, 0.3-0.5%); whole Data construction 3.0 ms
+    per 118x1024 window (audit/profiles/micro/opp_xc-blas-threads.json)'
+  hotspot_2: scipy zscore's nan_policy='omit' handling (pyspi/data.py:195) has no effect because any NaN in the output raises afterwards; its cost is not separated from the 3.0 ms
+  hotspot_owner: third-party:scipy
+  opaque_share: 'n/a: no cProfile frame exists for this path (the profiling pass builds the Data before prof.runcall, profile_units.py:712-718, and no unit profile calls the two-array API), so there is no profile to take a builtin-time share from'
+  profile_file: audit/profiles/micro/opp_xc-blas-threads.json (data_construction_118x1024; no pstats frame exists)
+  opportunities:
+  - opportunity_id: preprocessing_base-2
+    opportunity: Replace scipy.signal.detrend + scipy.stats.zscore(nan_policy='omit') in pyspi/data.py:Data.set_data (lines 184-195) by one numpy pass per window (closed-form OLS slope
+      and intercept per row, then mean and ddof=1 std).
+    opp_type: algorithmic
+    expected_speedup: 1-3x
+    speedup_basis: 'complexity:both steps are already O(P T); a closed-form numpy pass removes only scipy''s lstsq set-up and the nan_policy=''omit'' handling, so 1-3x on a cost that
+      is 3.0 ms per 118x1024 window for the whole Data construction (baseline timing only, no candidate: audit/profiles/micro/opp_xc-blas-threads.json data_construction_118x1024); an
+      absolute saving below 3 ms of a ~229 s window. No ranking basis on this row. This infrastructure unit has no SPI identifiers of its own, so profiles/summary.json holds no 118x1024 projection for it and rank_basis_s and projected_patient_s_after stay blank; its cost sits inside the timings of the units that call it. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README ''Optimisation columns'', rule 5).'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'the same OLS detrend and ddof=1 z-score, re-associated: ordinary channels change at rounding level. Degenerate-input caveat: flat or exactly linear channels are accepted
+      or rejected by scipy''s zero-variance guard on last-bit residuals (preproc.detrend record, probe p2_flat.py), so a re-associated detrend could flip that outcome for such channels'
+    effort: S
+    depends_on: []

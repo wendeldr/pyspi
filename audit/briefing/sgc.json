@@ -1,0 +1,324 @@
+{
+ "family": "sgc",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/spectral.md"
+ ],
+ "hypotheses": [
+  "nonparametric: Dhamala 2008 pairwise Geweke from Wilson factors, ln(S_yy/(S_yy - (Sigma_xx - Sigma_xy^2/Sigma_yy)|H_yx|^2)), values <= 0 set to NaN; fmin forced to 1e-5",
+  "parametric: nitime BIC loop range(1, max_order) (max 49) with early break at first BIC increase, LWR recursion, 513-point grid; pyspi assembles F from causality_xy/yx; ValueError -> all-NaN matrix",
+  "NaN threshold 50% per cell"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/spectral.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    582,
+    613
+   ],
+   "section": "1.5",
+   "title": "Spectral (126 SPIs)"
+  },
+  {
+   "lines": [
+    826,
+    867
+   ],
+   "section": "1.5.12",
+   "title": "Spectral Granger causality (sgc)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py (pairwise_spectral_granger_prediction, _estimate_predictive_power, _remove_instantaneous_causality)",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/nitime/analysis/granger.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/nitime/algorithms/autoregressive.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/nitime/algorithms/spectral.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/nitime/utils.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "method": "nonparametric"
+   },
+   "identifier_params": {
+    "sgc_nonparametric_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "method": "nonparametric",
+     "statistic": "max"
+    },
+    "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "method": "nonparametric",
+     "statistic": "max"
+    },
+    "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "method": "nonparametric",
+     "statistic": "max"
+    },
+    "sgc_nonparametric_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "method": "nonparametric",
+     "statistic": "mean"
+    },
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "method": "nonparametric",
+     "statistic": "mean"
+    },
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "method": "nonparametric",
+     "statistic": "mean"
+    }
+   },
+   "identifiers": [
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5",
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-25",
+    "sgc_nonparametric_mean_fs-1_fmin-0-25_fmax-0-5",
+    "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-5",
+    "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-25",
+    "sgc_nonparametric_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "method_or_estimator": "spectral_connectivity pairwise_spectral_granger_prediction",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "SpectralGrangerCausality",
+   "representative": "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.sgc.nonparametric"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "max_order": 50,
+    "method": "parametric",
+    "order": null
+   },
+   "identifier_params": {
+    "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "method": "parametric",
+     "statistic": "max"
+    },
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "method": "parametric",
+     "statistic": "max"
+    },
+    "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None": {
+     "fs": 1,
+     "method": "parametric",
+     "statistic": "max"
+    },
+    "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "method": "parametric",
+     "statistic": "mean"
+    },
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "method": "parametric",
+     "statistic": "mean"
+    },
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "method": "parametric",
+     "statistic": "mean"
+    }
+   },
+   "identifiers": [
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None",
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None",
+    "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None",
+    "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None",
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None",
+    "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "method_or_estimator": "nitime GrangerAnalyzer order=None",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "SpectralGrangerCausality",
+   "representative": "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None",
+   "source": "config",
+   "unit_id": "spectral.sgc.parametric_order-None"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "max_order": 50,
+    "method": "parametric",
+    "order": 1
+   },
+   "identifier_params": {
+    "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "method": "parametric",
+     "order": 1,
+     "statistic": "max"
+    },
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "method": "parametric",
+     "order": 1,
+     "statistic": "max"
+    },
+    "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1": {
+     "fs": 1,
+     "method": "parametric",
+     "order": 1,
+     "statistic": "max"
+    },
+    "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "method": "parametric",
+     "order": 1,
+     "statistic": "mean"
+    },
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "method": "parametric",
+     "order": 1,
+     "statistic": "mean"
+    },
+    "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1": {
+     "fs": 1,
+     "method": "parametric",
+     "order": 1,
+     "statistic": "mean"
+    }
+   },
+   "identifiers": [
+    "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1",
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1",
+    "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1",
+    "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1",
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1",
+    "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "method_or_estimator": "nitime GrangerAnalyzer order=1",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "SpectralGrangerCausality",
+   "representative": "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1",
+   "source": "config",
+   "unit_id": "spectral.sgc.parametric_order-1"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "max_order": 50,
+    "method": "parametric",
+    "order": 20
+   },
+   "identifier_params": {
+    "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "method": "parametric",
+     "order": 20,
+     "statistic": "max"
+    },
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "method": "parametric",
+     "order": 20,
+     "statistic": "max"
+    },
+    "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20": {
+     "fs": 1,
+     "method": "parametric",
+     "order": 20,
+     "statistic": "max"
+    },
+    "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "method": "parametric",
+     "order": 20,
+     "statistic": "mean"
+    },
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "method": "parametric",
+     "order": 20,
+     "statistic": "mean"
+    },
+    "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20": {
+     "fs": 1,
+     "method": "parametric",
+     "order": 20,
+     "statistic": "mean"
+    }
+   },
+   "identifiers": [
+    "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20",
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20",
+    "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20",
+    "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20",
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20",
+    "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "method_or_estimator": "nitime GrangerAnalyzer order=20",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "SpectralGrangerCausality",
+   "representative": "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20",
+   "source": "config",
+   "unit_id": "spectral.sgc.parametric_order-20"
+  }
+ ]
+}

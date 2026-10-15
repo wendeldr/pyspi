@@ -1,0 +1,317 @@
+unit_id: wavelet.phase
+status: profiled
+correctness:
+  metric_name_standard: coherency phase (phase of the complex coherency) from Morlet-wavelet cross-spectra, summarised by mean/max over band and time
+  canonical_ref: 'Nolte et al. 2004, Clin Neurophysiol 115:2292 (coherency C_ij = S_ij/sqrt(S_ii S_jj), phase = arg C_ij); Bastos & Schoffelen 2016, Front Syst Neurosci 9:175 (supplement ref [59]); time-frequency
+    version: Lachaux et al. 2002, Neurophysiol Clin 32:157. For a pure delay d the coherency phase is linear in f (phase = -2 pi f d up to sign convention).'
+  canonical_definition: 'phi_xy(f) = arg(<W_x(f,t) W_y*(f,t)>) with <.> over trials or a time window; antisymmetric: phi_yx = -phi_xy; circular quantity (a summary over frequencies needs a circular mean
+    or a slope, cf. group delay).'
+  documented_definition: 'Not documented as such: the nine wavelet classes are absent from pyspi/config.yaml (tests/README.md:155 ''run today but are absent from pyspi/config.yaml''), from the supplement
+    SPI list and from the GitBook page. Supplement §1.5.4, p.14 (supplement.txt heading line 644) states the opposite: PSI ''is the only spectral measure that is computed in the time-frequency domain (denoted by
+    modifier wavelet)''; same on GitBook spectral.md:330. The closest documented text is the multitaper version: supplement §1.5.2, p.13 (supplement.txt heading line 616) / GitBook spectral.md:49-60: ''By omitting
+    the magnitude operator of the coherence ... we obtain the complex-valued coherency, where the phase-difference angle (which we refer to as the coherence phase) has been used to infer a time-delayed
+    dependence between two signals ... two summary statistics and three frequency ranges''. Shared band rule, supplement §1.5 preamble, p.13 (supplement.txt heading line 570, text lines 589-599; GitBook spectral.md:14-20):
+    ''We use 125 uniformly sampled bins across the entire frequency range, f in [f0, fs/2] ... f0 = 4/T ... the mean (mean) and the maximum (max) values of each measure over three ranges ... fmin-0_fmax-0-5
+    ... [0, fs/2]; fmin-0_fmax-0-25 ... [0, fs/4]; fmin-0-25_fmax-0-5 ... [fs/4, fs/2]''.'
+  delegate_lib: mne-connectivity==0.9.0 mne_connectivity.spectral_connectivity_epochs(mode='cwt_morlet', method='cohy') -> mne==1.13.2 mne.time_frequency.tfr.morlet + cwt (scipy 1.17.1 scipy.fft, numpy
+    2.5.4); band mask, mean/max over (freq, time), lower->upper mirror and NaN diagonal are native pyspi (pyspi/statistics/wavelet.py)
+  implemented_as: 'Input z-scored per channel (ddof=1, Data default; optional detrend first). pyspi hands mne-connectivity ONE epoch (z = moveaxis(data (P,T,1), 2, 0) -> (1,P,T)) with cwt_freqs = linspace(0.2,
+    0.5, 125) and cwt_n_cycles = cwt_freqs/7 (0.029..0.071 cycles). mne.morlet sets sigma_t = n_cycles/(2 pi f) = 1/(14 pi) = 0.0227 samples for every f, so the time grid arange(0, 5 sigma_t, 1) = [0] and
+    every wavelet is the single sample W = sqrt(2)+0j (probe: 125 wavelets, length 1, value 1.41421356). The ''CWT'' is X(f,t) = sqrt(2) x(t) for all 125 f up to FFT round-off (probe: max|Re X - sqrt2 x|
+    2.7e-15, max|Im X| 7.2e-16, ~2-5% of Im exactly 0). csd(f,t) = X_hi(f,t) conj(X_lo(f,t)) = 2 x_hi(t) x_lo(t) + i*roundoff (hi = higher channel index, lower-triangular connections), psd = |X|^2 = 2 x^2.
+    n_epochs = 1, so every across-epoch average in the estimator is a single term. pyspi then keeps the frequencies with fmin <= f <= fmax on the 0.2..0.5 grid (21 bins for fmin-0_fmax-0-25: 0.2..0.2476;
+    104 for fmin-0-25_fmax-0-5; all 125 for 0..0.5), applies np.nanmean or np.nanmax over (freq, time) jointly, mirrors the lower triangle to the upper, sets the diagonal NaN. Estimator cohy (epochs_bivariate.py:60-68
+    accumulate, :84-94 compute_con): the csd accumulator is np.zeros (+0.0) and csd is added to it (:64, :68), so an exact-zero imaginary part is stored as +0.0 whatever its sign (IEEE (+0.0) + (-0.0) =
+    +0.0; probe narrowband_f0-0.25 T=256 pair (1,0): the raw csd has 515 exact-zero imaginary parts, 265 of them -0.0; the mne cohy tensor has the same 515 exact zeros and none is -0.0). The coherency is
+    csd/sqrt(psd psd) = sign(x_hi x_lo) + i*eps. pyspi applies np.angle before the statistic (wavelet.py:119-120 modify_stats): angle = atan2(eps, Re), which lies within round-off (4.6e-14 at T=256, up
+    to 2.41e-12 at T=1024, check stage) of 0 where x_hi x_lo > 0 and within 4.6e-14 of +pi or -pi where x_hi x_lo < 0. The sign of pi is set by the sign of the FFT round-off imaginary part, and every exact-zero
+    imaginary part with negative real part gives +pi because of the +0.0 accumulator. The angles are only approximately in {0, +pi, -pi} (probe iid T=256 pair (1,0), 32000 (f,t) points: exactly 0: 416,
+    exactly +pi: 6169, exactly -pi: 4672, none of the three: 20743; near -pi 6533, near 0 16500, near +pi 8967). mean = pi (n_{+pi} - n_{-pi}) / N up to round-off, counting angles near +-pi (probe: mean
+    0.23895739121367354 vs pi*(frac(+pi) - frac(-pi)) = 0.23895739121367365, difference -1.1e-16). max = pi or 1 ulp below pi whenever at least one near-+pi point exists (sweep over the 19 datasets: exactly
+    pi for 83 of 85 pairs at T=64 and 84 of 85 at T=1024; anm T=64 gives 3.14159265358979 = pi - 1 ulp), and about 1e-31, not exactly 0, for the bit-identical pair shared_envelope (0,2) (1.0e-31 at T=64,
+    2.0e-31 at T=1024). The value depends on the round-off pattern, not only on the data: re-z-scoring an already z-scored input (sample changes <= 4.4e-16) moves A[0,1] from 0.2372 to 0.2682 on narrowband_f0-0.25
+    T=256 and from 0.1367 to -0.0383 on delayed_noise T=256 (probe wl_fix/fx1.py).'
+  implementation_trace:
+  - 'pyspi/statistics/wavelet.py:15-39 mne.__init__: fmax default fs/2; statistic ''mean'' -> np.nanmean, ''max'' -> np.nanmax; identifier suffix _wavelet_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}
+    with ''.''->''-'''
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, ddof=1) when normalise=True (default); pyspi/data.py:108-118 to_numpy returns
+    the (P, T, R) array'
+  - 'pyspi/statistics/wavelet.py:48-53 _get_cache: cache lookup data.mne[self.measure] (keyed by measure only); on miss z = np.moveaxis(data.to_numpy(), 2, 0) -> (R=1, P, T): a single epoch for an ordinary
+    Data'
+  - pyspi/statistics/wavelet.py:54-55 cwt_freqs = np.linspace(0.2, 0.5, 125); cwt_n_cycles = cwt_freqs / 7.0
+  - pyspi/statistics/wavelet.py:56-67 mnec.spectral_connectivity_epochs(data=z, method=self.measure, mode='cwt_morlet', sfreq=fs, mt_adaptive=True, fmin=5/n_observations, fmax=fs/2, cwt_freqs, cwt_n_cycles)
+  - pyspi/statistics/wavelet.py:68-74 conn = connectivity.get_data(output='dense') (shape P x P x 125 x T), freq = connectivity.freqs; stored in data.mne[measure]
+  - pyspi/statistics/wavelet.py:76 freq_id = np.where((freq >= fmin) * (freq <= fmax)) (inclusive both ends)
+  - 'pyspi/statistics/wavelet.py:93-97 modify_stats(statfn, modifier) -> statfn(modifier(stats)); :110-120 CoherencePhase: identifier ''phase'', _measure ''cohy'', _statfn = modify_stats(statfn, np.angle)
+    (angle per (f,t) point, then arithmetic nanmean/nanmax)'
+  - 'pyspi/statistics/wavelet.py:80-90 multivariate: adj = statfn(adj_freq[..., freq_id, :], axis=(2, 3)) (frequency AND time); ui = triu_indices(P, 1); adj[ui] = adj.T[ui] (lower -> upper); fill_diagonal
+    NaN. The class MRO puts mne.multivariate before Undirected.multivariate (pyspi/base.py:132-138), so pyspi''s own mirror in wavelet.py:87-88 is the one that runs'
+  - mne_connectivity/spectral/epochs.py:770 spectral_connectivity_epochs; :1143-1154 fmin/fmax to arrays (fmin = 5/T, fmax = 0.5)
+  - 'mne_connectivity/spectral/epochs.py:216 -> :97-113 _check_freqs: fmin = 5/T only warns if below 5 cycles; :219 -> :116-138 _compute_freqs cwt branch (124-135): freqs_all = cwt_freqs, raises if any
+    > sfreq/2'
+  - 'mne_connectivity/spectral/epochs.py:222 -> :141-153 _compute_freq_mask: (freqs >= fmin) & (freqs <= fmax); for T >= 25 all 125 cwt freqs are kept (probe: T=16 keeps 78, T=24 keeps 121)'
+  - 'mne_connectivity/spectral/epochs.py:262-276 indices=None and bivariate method -> np.tril_indices(n_signals, -1): connections (row i > col j) only; :1373 idx_map = searchsorted(sig_idx, indices)'
+  - 'mne_connectivity/spectral/epochs.py:1332-1344 -> :320-367 _assemble_spectral_params cwt branch (345-365): cwt_n_cycles[freq_mask] (357); wavelets = morlet(sfreq, freqs, n_cycles=cwt_n_cycles, zero_mean=True)
+    (361); mt_adaptive is only used in the multitaper branch (337-341) and is returned unchanged'
+  - mne/time_frequency/tfr.py:65 morlet; :159 sigma_t = n_cycles/(2 pi f) = 1/(14 pi) = 0.0227; :165-166 t = arange(0, 5 sigma_t, 1/sfreq) = [0] -> single sample; :167-172 oscillation = 1 - exp(-2 (pi f
+    sigma_t)^2) (zero_mean offset, 4.1e-4..2.5e-3); :173-174 envelope 1; :178 W /= sqrt(0.5) * norm(W) -> W = [sqrt(2)]
+  - 'mne_connectivity/spectral/epochs.py:443-457 _compute_spectra cwt branch: this_x_t = cwt(x, wavelets, use_fft=True, mode=''same'') (451); psd = (X * conj X).real (457)'
+  - 'mne/time_frequency/tfr.py:766-794 cwt -> :303-319 _get_nfft (next_fast_len(T), called at 793) -> :797-806 _cwt_array (called at 794; calls _cwt_gen at 799) -> :322-401 _cwt_gen: fft_Ws (366), ret = ifft(fft_x * fft_Ws[ii]) (377), _centered(ret, n_times) (400): real input times
+    real constant, imaginary part is FFT round-off'
+  - 'mne_connectivity/spectral/epochs.py:647-656 cwt accumulation: csd = x_t[idx_map[0]] * conj(x_t[idx_map[1]]) (652) = X_hi conj(X_lo); this_method.accumulate(con_idx, csd)'
+  - mne_connectivity/spectral/epochs.py:1472-1474 n_epochs = epoch_idx = 1; psd /= 1; :1477-1493 compute_con(con_idx, n_epochs[, psd_xx, psd_yy])
+  - 'mne_connectivity/spectral/epochs.py:1555-1567 dense assembly: zeros (P,P,...) then this_con[indices_use] = values (lower triangle only; upper and diagonal 0); :1621 SpectroTemporalConnectivity; mne_connectivity/base.py:721-790
+    get_data(output=''dense'') reshape to (P, P, n_freqs, n_times)'
+  - 'mne_connectivity/spectral/epochs_bivariate.py:55-68 _CohEstBase: _acc = np.zeros(csd_shape, complex128) (64); accumulate: _acc[con_idx] += csd_xy (68); adding to +0.0 stores a -0.0 imaginary part as
+    +0.0'
+  - mne_connectivity/spectral/epochs_bivariate.py:84-94 _CohyEst.compute_con con = csd_mean / sqrt(psd_xx psd_yy) (complex); :353 'cohy' -> _CohyEst
+  deviation_from_documented: '(a) Frequency grid: documented 125 bins over [4/T, fs/2]; implemented 125 bins over [0.2, 0.5] for every T (wavelet.py:54), so the ''low'' band [0, 0.25] contains only 21 bins
+    in [0.2, 0.248] and frequencies below 0.2 are never analysed; the mne fmin argument is 5/T, not 4/T (it only masks cwt freqs when T < 25). (b) No time-frequency decomposition: n_cycles = f/7 makes every
+    Morlet wavelet one sample long (W = sqrt(2)), so X(f,t) = sqrt(2) x(t) at all 125 frequencies; the band choice changes nothing except which round-off pattern is averaged. (c) Aggregation runs over frequency
+    AND time (axis=(2,3)) of per-(f,t) single-epoch values; the documentation for the multitaper versions describes a summary over frequency only. (d) Not in the documented SPI set at all (extra classes).
+    (e) No delay information survives: phases lie within 5e-14 of 0 or +-pi (sign of the lag-0 product; sign of pi from round-off, +pi at every exact-zero imaginary part); the documented use ''to infer
+    a time-delayed dependence'' is impossible (probe narrowband_f0-0.25, true shift pi/4 between x0 and x1: A[0,1] = 0.237, and -0.185 after reversing the channel order).'
+  deviation_from_canonical: 'Canonical: arg of the averaged cross-spectrum per frequency (antisymmetric, circular). Implemented: arithmetic mean (or max) of principal angles of per-(f,t) single-epoch, single-sample
+    cross-products over frequency and time, which with the 1-sample wavelet is pi*(n_{+pi} - n_{-pi})/N; the split between +pi and -pi depends on floating-point round-off of the FFT convolution, so the
+    value is not a function of the data to round-off precision (re-z-scoring an already z-scored input, sample changes <= 4.4e-16, moves narrowband_f0-0.25 T=256 A[0,1] from 0.2372 to 0.2682 and delayed_noise
+    T=256 A[0,1] from 0.1367 to -0.0383). Under channel reversal the points with a nonzero imaginary part negate, but the exact-zero imaginary parts are +0.0 in both orders (zero-initialised accumulator,
+    epochs_bivariate.py:64, :68), so their negative-real points stay at +pi: A_rev = -A + 2 pi n(Im csd == 0 and Re csd < 0)/N (probe: narrowband_f0-0.25 T=256 0.2372 + (-0.1852) = 0.05203 = 2 pi 265/32000;
+    delayed_noise T=256 0.1367 + (-0.0736) = 0.06303 = 2 pi 321/32000; agreement within 3e-16). Arithmetic mean of angles is not a circular mean (same aggregation issue as M4 for the multitaper version).
+    Forced symmetric by the mirror although canonical phase is antisymmetric.'
+  units_and_range: 'Radians, signed, in [-pi, pi]; ''max'' variant pi or 1 ulp below pi for every non-identical pair probed (about 1e-31 for a bit-identical pair; near 0 only if no negative lag-0 product);
+    the mean variant is fixed by the FFT round-off pattern and is not stable to input changes at round-off level (re-z-scoring an already z-scored input, sample changes <= 4.4e-16: narrowband_f0-0.25 T=256
+    A[0,1] 0.2372 -> 0.2682 and reversed-order value -0.1852 -> -0.2109; delayed_noise T=256 0.1367 -> -0.0383), so the snapshot value depends on the FFT implementation (a numpy.fft replay gives a different
+    exact-zero pattern); between scipy.fft 1.17.1 (project venv, pyspi) and 1.18.1 (comparison venv, rep replay) no difference was observed on this machine (rep runs bitwise), while other CPUs and SIMD
+    paths are untested; class labels say ''unsigned'' (wavelet.py:112) though the quantity is signed; symmetric by mirror; diagonal NaN.'
+  direction_convention: 'A[i,j] = A[j,i] = statistic of angle(conn[max(i,j), min(i,j)]) with conn from csd = X_hi conj(X_lo) (epochs.py:652, tril indices epochs.py:276; mirror wavelet.py:87-88). Canonical
+    sign: positive arg(S_hi,lo) would mean a phase lead of the higher-index channel under MNE''s convolution convention (unverified; with the 1-sample wavelet no lead/lag is encoded). Empirical confirmation
+    is a check-stage task.'
+  symmetry_expected: sym
+  already_documented: 'tests/README.md ''Degenerate outputs in the extra wavelet set'' (tests/README.md:217: ''Only phase, pli and wspli vary with the input and the band'') - documented as non-degenerate
+    there; REVIEW M4 (arithmetic mean of principal angles) for the multitaper phase, which applies to the same aggregation choice here; M4 (docs/storage_comparison/REVIEW.md:155-157) also documents that an unsigned label is inappropriate for coherence phase and that +pi at the branch cut represents both directions, producing an apparent antisymmetry offset.'
+  new_finding_candidates:
+  - 'CANDIDATE (contradicts tests/README''s ''non-trivial values''): the varying values are a round-off artefact. With the 1-sample wavelet (see wavelet.morlet_cwt) coherency = sign(x_hi x_lo) + i*eps,
+    so every angle lies within 4.6e-14 of 0 or +-pi, though most are not exactly equal to them (probe iid T=256 pair (1,0): 20743 of 32000 angles are none of 0, +pi, -pi), and mean = pi*(frac(near +pi)
+    - frac(near -pi)) up to round-off (probe: 0.23895739121367354 vs 0.23895739121367365). Which negative-product points get +pi and which get -pi is decided by the sign of the FFT round-off in the imaginary
+    part; exact-zero imaginary parts always give +pi because of the +0.0 accumulator (epochs_bivariate.py:64, :68). The value is not stable to input changes at round-off level: re-z-scoring an already z-scored
+    input moves narrowband_f0-0.25 T=256 A[0,1] from 0.2372 to 0.2682 and delayed_noise T=256 from 0.1367 to -0.0383 (probe wl_fix/fx1.py; reviewer probe fable_wl/wav3.py).'
+  - 'CANDIDATE: phase_wavelet_max_* is pi, or 1 ulp below pi, for every non-identical pair (sweep over the 19 datasets: exactly pi for 83 of 85 pairs at T=64 and 84 of 85 at T=1024; anm T=64 gives 3.14159265358979
+    = pi - 1 ulp); for the bit-identical pair shared_envelope (0,2) it is about 1e-31 (1.0e-31 at T=64, 2.0e-31 at T=1024), not exactly 0.'
+  - 'CANDIDATE: channel-order dependence not explained by antisymmetry: narrowband_f0-0.25 T=256 A[0,1] 0.2372 in the given order vs -0.1852 after reversing; delayed_noise 0.1367 vs -0.0736 (probe p6_order.py).
+    Mechanism: the mne coherency accumulator is zero-initialised and summed (epochs_bivariate.py:64, :68), and (+0.0) + (-0.0) = +0.0, so every exact-zero imaginary part is stored as +0.0 in both channel
+    orders. Points with a nonzero imaginary part negate under reversal, while exact-zero-imaginary points with negative real part stay at +pi. Hence A_rev = -A + 2 pi n(Im csd == 0 and Re csd < 0)/N: 0.2372
+    + (-0.1852) = 0.05203 = 2 pi 265/32000 and 0.1367 + (-0.0736) = 0.06303 = 2 pi 321/32000, agreeing within 3e-16 (reviewer probe fable_wl/wav2.py, rerun).'
+  - 'CANDIDATE (minor): class label ''unsigned'' (wavelet.py:112) for a signed angle.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    - var2_bivariate
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic: with W = sqrt(2) and one epoch, angle(conn) lies within round-off of {0, +pi, -pi} (not exactly in the set); mean = pi*(frac(angle > pi/2) - frac(angle < -pi/2)) up to round-off;
+      |mean| <= pi * frac(x_hi(t) x_lo(t) < 0); max near pi, or near 0 for identical pairs'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'every per-(f,t) angle within 1e-12 of one of {0, +pi, -pi} (from the cached cohy tensor; probe iid T=256: max deviation 4.6e-14, 20743 of 32000 angles not exactly in the set); every
+      mean output equal to pi*(frac(angle > pi/2) - frac(angle < -pi/2)) within 1e-12 and bounded by pi*frac(negative lag-0 products); max within 1e-12 of pi for non-identical pairs (probe: pi or pi - 1
+      ulp) and |max| < 1e-12 for bit-identical pairs (probe: about 1e-31)'
+  - datasets:
+    - iid_gaussian
+    - narrowband_f0-0.25
+    - delayed_noise
+    path: kernel
+    reference: 'from-scratch numpy implementation of the literal pyspi pipeline without mne/mne_connectivity: Morlet built from the Tallon-Baudry/MNE formula (sigma_t = n/(2 pi f), t = arange(0, 5 sigma_t,
+      1) mirrored, zero-mean offset exp(-2 (pi f sigma_t)^2), scale 1/(sqrt(0.5)||W||)) with n = f/7 on linspace(0.2,0.5,125); CWT by direct numpy.convolve(mode=''same'') (no FFT); csd = X_hi conj(X_lo),
+      psd = |X|^2, single-epoch estimator formula; band mask fmin<=f<=fmax; np.nanmean/np.nanmax over (f,t); mirror lower->upper; np.angle of the exactly-real csd (Im = +0.0) gives +pi for every negative
+      product'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'disagree beyond round-off: from-scratch mean = pi*frac(negative products) (e.g. narrowband_f0-0.25 T=256 pair (0,1): 0.859) while pyspi gives 0.237 (rerun: pi*frac(z0 z1 < 0) = 0.859029);
+      demonstrates the round-off dependence of the pyspi value'
+  - datasets:
+    - bivariate_gaussian
+    - narrowband_f0-0.1
+    - narrowband_f0-0.25
+    - narrowband_f0-0.4
+    - delayed_noise
+    - iid_gaussian
+    - var2_bivariate
+    path: pipeline
+    reference: 'canonical coherency phase in numpy: Morlet n_cycles = 7, cross-spectrum averaged over time before arg; per-frequency phase and a circular mean over the band'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'disagree: canonical phase is +-pi/4 / -+pi/2 at f0=0.25 for narrowband pairs, linear in f with slope -2 pi d for delayed_noise (d = 1,3,5), ~0 for bivariate_gaussian (lag-0 coupling);
+      pyspi values bear no relation'
+  - datasets:
+    - narrowband_f0-0.25
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: 'self-consistency under channel permutation: A(X[::-1])[::-1, ::-1] vs A(X); plus orientation: compare the raw cached conn[hi, lo] with the from-scratch csd X_hi conj(X_lo) and confirm A[i,j]
+      = A[j,i] = statistic of conn[max(i,j), min(i,j)]'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A symmetric by construction; under channel reversal values change and are NOT the negatives of the forward values (probe: 0.237 vs -0.185), i.e. no consistent direction convention;
+      establishes that A[i,j] is computed from conn[hi, lo]; the reversal relation expected from the +0.0 accumulator is A_rev = -A + 2 pi n(Im csd == 0 and Re csd < 0)/N within 1e-12 (probe: within 3e-16
+      on narrowband_f0-0.25 and delayed_noise T=256)'
+  - datasets:
+    - iid_gaussian
+    - narrowband_f0-0.1
+    - narrowband_f0-0.4
+    path: pipeline
+    reference: 'analytic band rule: freq grid linspace(0.2,0.5,125); bins in [0,0.25] = 21 (0.2..0.2476), in [0.25,0.5] = 104; documented grid would be 125 bins over [4/T, 0.5]; compare the six band/statistic
+      identifiers of the unit against each other'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'the three band variants differ only through round-off patterns (probe iid T=256 pair (0,1): 0.2390, 0.2267, 0.2414); max variants all pi'
+  - datasets:
+    - narrowband_f0-0.25
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: 'round-off stability: the same pipeline on the input x and on zscore(x, ddof=1) of the already z-scored input (sample changes <= 4.4e-16); a quantity that is a function of the data would
+      change by O(1e-15)'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'disagree beyond round-off (probe wl_fix/fx1.py: narrowband_f0-0.25 T=256 A[0,1] 0.2372 vs 0.2682; delayed_noise T=256 0.1367 vs -0.0383); quantifies the dependence on the FFT round-off
+      pattern behind open question 3 of notes/wavelet_measures.md'
+  check_method: independent-impl
+  check_reference: audit/checks/refs/wavelet_measures.py:h_ident (analytic identity on the library CWT from audit/checks/probes/wavelet_measures_probes.py:ident), audit/checks/refs/wavelet_measures.py:h_rep
+    (port_cwt same-lineage replay, scipy.fft and numpy.fft), audit/checks/refs/wavelet_measures.py:direct_cwt + pipeline_value (closed-form Morlet n_cycles f/7, np.convolve, no FFT, no mne), audit/checks/refs/wavelet_measures.py:canonical
+    (Morlet n_cycles 7 via _kernels_spectral.cwt_morlet; time-averaged single trial or K=8 epochs), audit/checks/refs/wavelet_measures.py:h_perm, audit/checks/refs/wavelet_measures.py:h_roundoff. check_method independent-impl names the from-scratch pipeline (direct_cwt + pipeline_value), the strongest
+    independent reference run (SCHEMA rule); it disagrees by design, and the degeneracy itself rests mainly on the identity, reversal and re-z-scoring runs, which are same-lineage. The same-lineage cap is moot at score 0.
+  check_data: six identifiers on iid_gaussian, bivariate_gaussian, delayed_noise, narrowband_f0-0.25, var2_bivariate, shared_envelope, trending, logistic_maps at T 64 and 1024 (identity); iid_gaussian T256
+    pipeline, trending T256 pipeline-detrend, scaled_offset T256 kernel (replay); iid_gaussian, delayed_noise, narrowband_f0-0.25 T256 kernel (from-scratch), pipeline (reversal, re-z-scoring); bivariate_gaussian,
+    delayed_noise, iid_gaussian, narrowband_f0-0.1, narrowband_f0-0.25, narrowband_f0-0.4, var2_bivariate T1024 (canonical)
+  agreement_criterion: identity tolerance atol 1e-12; replay exact (rtol 1e-10, atol 1e-12); from-scratch exact (expected to disagree); reversal tolerance 1e-12 against -A + 2 pi n(Im=0, Re<0)/N; re-z-scoring
+    tolerance 1e-12 against the unperturbed value (expected to disagree); canonical atol 0.05 (illustration)
+  closeness: 'identity: 16/16 pass, max_abs <= 3.6e-15 (mean = pi (n_+pi - n_-pi)/N; max identifiers exactly pi); every per-point angle within 2.41e-12 of {0, +pi, -pi} (T=1024; 1.7e-13 at T=64), 22-73
+    % of angles not exactly in the set; coherency negative zeros 0 (the +0.0 accumulator); replay: iid_gaussian port max_abs 0, numpy.fft replay max diff 0.317 (Im-zero pattern mismatch 0.047); scaled_offset
+    port max_abs 0, numpy.fft replay max diff 0.167 (Im-zero pattern mismatch 0.0537); trending port max_abs 0, numpy.fft replay max diff 0.156 (Im-zero pattern mismatch 0.0549); from-scratch (Im exactly
+    0, mean = pi frac(negative products)) disagrees: delayed_noise 1.706 vs pyspi 0.1629; iid_gaussian 1.534 vs pyspi 0.1342; narrowband_f0-0.25 0.8468 vs pyspi 0.1815; reversal: 3/3 pass the relation A_rev
+    = -A + 2 pi n/N within 6.1e-16 (offset 0.0520 narrowband, 0.0630 delayed_noise, 0.0491 iid), max|A_rev + A| 0.104..0.163; re-z-scoring: 0/3 pass, delayed_noise 0.1367 -> -0.03829 (input change 4.4e-16);
+    iid_gaussian 0.239 -> 0.1665 (input change 4.4e-16); narrowband_f0-0.25 0.2372 -> 0.2682 (input change 2.2e-16); canonical: bivariate_gaussian: max_abs 1.846; delayed_noise: max_abs 2.229; iid_gaussian:
+    max_abs 2.017; narrowband_f0-0.1: max_abs 1.7; narrowband_f0-0.25: max_abs 2.205; narrowband_f0-0.4: max_abs 1.121; var2_bivariate: max_abs 2.25'
+  verdict: degenerate
+  score_0_10: 0
+  score_rubric: 0
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 0''s constant clause holds only for the max identifiers (pi on every non-identical pair); the mean representative is FFT round-off, and
+    a 4.4e-16 input change moves delayed_noise T=256 from 0.1367 to -0.0383. Anchor 1 fails because nothing data-driven is estimated: over 30 draws per rho at T=256
+    the mean phase stays between -0.007 and +0.064, while pi*frac(negative products) moves from 2.717 to 0.456.'
+  documentation_status: silent
+  verdict_adjusted: degenerate
+  score_adjusted: 0
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Degenerate (rubric anchor 0, constant: the max identifiers are the constant pi on every non-identical pair; the mean identifiers are not literally constant but are FFT round-off noise with no reproducible dependence on the input). With the one-sample wavelet coherency = sign(x_hi x_lo) + i*round-off, so every angle is within 2.4e-12
+    of 0 or +-pi and the mean is pi times the imbalance between round-off imaginary parts of either sign (identity exact to 3.6e-15); the max identifiers are pi on every non-identical pair. Changing the
+    input by 4.4e-16 moves the value by up to 0.175, a numpy.fft replay of the same arithmetic gives values differing by up to 0.32, and channel reversal is not antisymmetric (A_rev = -A + 2 pi n(Im=0,
+    Re<0)/N). tests/README.md:157 lists phase as carrying non-trivial values; new and counted for new_finding are candidate 1 (the values are round-off, contradicting tests/README.md:157/:217) and candidate 2 (the max identifiers are pi on every non-identical pair); candidate 3 (reversal offset) is the REVIEW M4 branch-cut mechanism, reached here through mne''s +0.0 accumulator rather than the DC bin, and candidate 4 (unsigned label) is REVIEW M4, so both are documented. Score re-checked in Workflow 4b: the mean identifier does not track the only data feature it could encode, the fraction of negative lag-0 products; over 30 draws per correlation at T = 256 the pyspi mean phase of pair (1,0) is -0.007, +0.064, +0.025, +0.004, -0.004 (SD 0.085-0.147) at rho -0.9, -0.5, 0, +0.5, +0.9, while pi*frac(negative products) moves 2.717, 2.103, 1.579, 1.082, 0.456 (probe wf4b_low-wavelet/p1_morlet_phase.py), so no anchor above 0 fits. Canonical coherence phase (n_cycles 7) recovers +pi/4 at f0 for narrowband pair (1,0)
+    (0.7844) and -pi/2 for delayed_noise at f = 0.25 (-1.567). Trace correction: the 4.6e-14 angle bound is the T = 256 figure; at T = 1024 the deviation reaches 2.41e-12. definition_under_review is true (set at the Workflow 4c close, matching spectral.phase): the band summary is an arithmetic mean of wrapped angles, REVIEW M4 leaves arithmetic against circular aggregation as a decision, and both forms are recorded here (the arithmetic mean in the impl runs, the circular canonical form in the canon runs); the unit is degenerate on top of that, so its open decision also includes fixing or removing the wavelet path.'
+  new_finding: true
+  definition_under_review: true
+  check_cost: 'cheap: <= 1.5 s per pyspi run at T = 1024 (T <= 1024 only, extra-config unit; no convergence runs; canonical illustrations on all 7 proposed datasets at T = 1024)'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on every (P,P) run of the unit (six/ident, rep, scratch, canon, perm; ref key sym_maxabs), from pyspis lower -> upper mirror'
+  direction_observed: 'no consistent direction: A symmetric by the mirror (max|A - A.T| = 0); under channel reversal A_rev = -A + 2 pi n(Im csd = 0, Re csd < 0)/N (wavelet.phase|*|256|pipeline|perm:mean-full,
+    within 6.1e-16), e.g. narrowband_f0-0.25 0.2372 -> -0.1852; the sign carries no lead/lag information (canonical phase of the same pair is +0.784 at f0)'
+  candidate_resolutions:
+  - candidate: varying values are a round-off artefact (angles near 0/+-pi, mean = pi (n_+ - n_-)/N)
+    outcome: confirmed
+    evidence: wavelet.phase|*|pipeline|ident (16/16, max_abs <= 3.6e-15, max angle deviation 2.41e-12); wavelet.phase|*|256|pipeline|roundoff:mean-full (0/3 stable, change up to 0.175); wavelet.phase|*|256|pipeline|rep:mean-full
+      (numpy.fft replay differs by up to 0.32). Counted as new; the cause (one-sample wavelet) is counted on wavelet.morlet_cwt, but the observable fact that the values depend on round-off and not on the data
+      contradicts tests/README.md:157/:217 ('Only phase, pli and wspli vary with the input') and is not in KNOWN_ISSUES.
+  - candidate: phase max identifiers are pi (or 1 ulp below) for every non-identical pair; ~0 for an identical pair
+    outcome: confirmed
+    evidence: 'wavelet.phase|*|pipeline|ident: max identifiers exactly 3.141592653589793 on all pairs except the identical shared_envelope pair (0,2), which gives 1.0e-31 (T64) and 2.0e-31 (T1024); the
+      max is exactly 3.141592653589793 on every other pair of the 16 runs; the pi - 1 ulp case (anm T64) was not in this stages dataset list. Not in KNOWN_ISSUES or tests/README.md, so counted as new.'
+  - candidate: 'channel-order dependence not explained by antisymmetry: A_rev = -A + 2 pi n(Im=0, Re<0)/N from the +0.0 accumulator'
+    outcome: confirmed
+    evidence: 'wavelet.phase|narrowband_f0-0.25|256|pipeline|perm:mean-full (0.2372 vs -0.1852, offset 0.0520), |delayed_noise| (offset 0.0630), |iid_gaussian| (offset 0.0491): relation holds within 6.1e-16;
+      ident aux: raw csd has negative zeros (0.13-4.7 %), the coherency has none; the same branch-cut mechanism (+pi in both directions, apparent antisymmetry offset) is documented for the multitaper phase in REVIEW M4, docs/storage_comparison/REVIEW.md:155-157'
+  - candidate: label unsigned for a signed angle (wavelet.py:112)
+    outcome: confirmed
+    evidence: signed values of both signs in wavelet.phase|*|256|pipeline|perm:mean-full (e.g. -0.1852) and canonical phases -2.32 .. 1.88; labels list at pyspi/statistics/wavelet.py:112 (trace cited :111); already documented for the multitaper phase in REVIEW M4 (docs/storage_comparison/REVIEW.md:155, unsigned label inappropriate for a signed angle)
+  checks_run:
+  - run_ids:
+    - wavelet.phase|bivariate_gaussian|1024|pipeline|ident
+    - wavelet.phase|bivariate_gaussian|64|pipeline|ident
+    - wavelet.phase|delayed_noise|1024|pipeline|ident
+    - wavelet.phase|delayed_noise|64|pipeline|ident
+    - wavelet.phase|iid_gaussian|1024|pipeline|ident
+    - wavelet.phase|iid_gaussian|64|pipeline|ident
+    - wavelet.phase|logistic_maps|1024|pipeline|ident
+    - wavelet.phase|logistic_maps|64|pipeline|ident
+    - wavelet.phase|narrowband_f0-0.25|1024|pipeline|ident
+    - wavelet.phase|narrowband_f0-0.25|64|pipeline|ident
+    - wavelet.phase|shared_envelope|1024|pipeline|ident
+    - wavelet.phase|shared_envelope|64|pipeline|ident
+    - wavelet.phase|trending|1024|pipeline|ident
+    - wavelet.phase|trending|64|pipeline|ident
+    - wavelet.phase|var2_bivariate|1024|pipeline|ident
+    - wavelet.phase|var2_bivariate|64|pipeline|ident
+    reference: 'audit/checks/refs/wavelet_measures.py:h_ident (same-lineage self-consistency: the identity slice is computed by the project-venv probe from mnes own CWT and csd; the reference copies it)'
+    outcome: 16/16 pass; identity within 3.6e-15
+  - run_ids:
+    - wavelet.phase|iid_gaussian|256|pipeline|rep:mean-full
+    - wavelet.phase|scaled_offset|256|kernel|rep:mean-full
+    - wavelet.phase|trending|256|pipeline-detrend|rep:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:h_rep (same-lineage replay)
+    outcome: 3/3 pass; scipy.fft replay bitwise equal; numpy.fft replay differs
+  - run_ids:
+    - wavelet.phase|delayed_noise|256|kernel|scratch:mean-full
+    - wavelet.phase|iid_gaussian|256|kernel|scratch:mean-full
+    - wavelet.phase|narrowband_f0-0.25|256|kernel|scratch:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:direct_cwt + pipeline_value (closed-form Morlet n_cycles f/7, np.convolve, no FFT, no mne)
+    outcome: '0/3 pass; expected disagreement: from-scratch pi frac(negative products)'
+  - run_ids:
+    - wavelet.phase|bivariate_gaussian|1024|pipeline|canon:mean-full
+    - wavelet.phase|delayed_noise|1024|pipeline|canon:mean-full
+    - wavelet.phase|iid_gaussian|1024|pipeline|canon:mean-full
+    - wavelet.phase|narrowband_f0-0.1|1024|pipeline|canon:mean-full
+    - wavelet.phase|narrowband_f0-0.25|1024|pipeline|canon:mean-full
+    - wavelet.phase|narrowband_f0-0.4|1024|pipeline|canon:mean-full
+    - wavelet.phase|var2_bivariate|1024|pipeline|canon:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:canonical (Morlet n_cycles 7 via _kernels_spectral.cwt_morlet; time-averaged single trial or K=8 epochs)
+    outcome: 0/7 pass; illustration, expected to disagree; bivariate_gaussian pyspi 0.004074 vs canonical -0.1189; delayed_noise pyspi 0.03046 vs canonical -2.199; iid_gaussian pyspi 0.04273 vs canonical
+      -0.5667; narrowband_f0-0.1 pyspi -0.2994 vs canonical 0.4014; narrowband_f0-0.25 pyspi 0.08313 vs canonical 0.5047; narrowband_f0-0.4 pyspi 0.2951 vs canonical 0.5429; var2_bivariate pyspi 0.06347
+      vs canonical -2.186 (pair (1,0))
+  - run_ids:
+    - wavelet.phase|delayed_noise|256|pipeline|perm:mean-full
+    - wavelet.phase|iid_gaussian|256|pipeline|perm:mean-full
+    - wavelet.phase|narrowband_f0-0.25|256|pipeline|perm:mean-full
+    reference: 'audit/checks/refs/wavelet_measures.py:h_perm (same-lineage: pyspi vs pyspi in reversed channel order)'
+    outcome: 3/3 pass; A_rev = -A + 2 pi n/N within 6.1e-16
+  - run_ids:
+    - wavelet.phase|delayed_noise|256|pipeline|roundoff:mean-full
+    - wavelet.phase|iid_gaussian|256|pipeline|roundoff:mean-full
+    - wavelet.phase|narrowband_f0-0.25|256|pipeline|roundoff:mean-full
+    reference: 'audit/checks/refs/wavelet_measures.py:h_roundoff (same-lineage: pyspi vs pyspi on re-z-scored input)'
+    outcome: 0/3 pass; value moves by up to 0.175 for a 4.4e-16 input change
+optimisation:
+  complexity_P_T: 'O(P F T log T) Morlet CWT (mne/time_frequency/tfr.py:cwt, F = 125) + O(P^2/2 F T) per-connection _CohyEst.accumulate/compute_con (mne_connectivity/spectral/epochs_bivariate.py)
+    + O(P^2 F T) dense (P, P, 125, T) output and pyspi''s nan-statistic over (freq, time) (pyspi/statistics/wavelet.py:mne._get_cache / multivariate). The P^2 F T terms dominate at 118x1024,
+    where the dense complex tensor alone is 28.5 GB. summary.json gives P_exponent 3.72 fresh / 3.47 family-warm (8 -> 32) and T_exponent 0.86 / 1.00, from 32x1024 walls of 56.31 s fresh
+    / 85.76 s family-warm (all nine fresh units and the family-warm pass ran in one subprocess per (family, shape) at P <= 32, profile_units.py:136 and 1060-1063, a probable but unconfirmed
+    cause; repeats 1-3, peak RSS 5685 MB fresh). Those 32x1024 walls do not reproduce: isolated re-times of the representative identifier at 32x1024 gave 32.24 s (this stage) and 35.06
+    s (reviewer) (audit/profiles/micro/prof_wavelet__index.json), 1.6-1.7x lower, while the 8x1024 walls the reviewer re-timed (cohmag 0.27 s vs 0.21 s, pli 0.168 s vs 0.163 s) roughly
+    reproduce. With the re-times the 8 -> 32 exponent is about 3.32-3.38. Still above P^2: at 32x1024 the time sits in mne''s _CohyEst.compute_con (46.5% self) and in pyspi''s np.angle
+    + nanmean over the complex (P, P, 125, T) tensor (39.6%), all elementwise passes over arrays of 1-2 GB; attributing the excess to memory effects is an inference. The fresh 8x1024
+    wall_cv 0.31 comes from two slow first passes (walls_s 0.624 s and 0.542 s, then 0.322-0.323 s); wall_s is the minimum over passes
+    (0.322 s, profile_units.py:69-71), so the cv does not enter the summary.json exponent, which is log4(56.31/0.322) = 3.72 and is set by the non-reproducing
+    32x1024 fresh wall. The summary.json 118x1024 projections (7265 s fresh / 7988 s family-warm, extrapolated-power-from-32, 118 skipped-budget)
+    are therefore inflated and should not be used; scaling the re-timed 32x1024 wall by (118/32)^2 to (118/32)^3.38 gives about 440-2900 s per identifier build (order of magnitude only,
+    not measured). A 118x1024 run would probably not fit in 31 GB (the dense tensor plus mne''s per-connection complex accumulators of about 14 GB; inference from array sizes, not run).'
+  hotspot_1: mne_connectivity/spectral/epochs_bivariate.py:_CohyEst.compute_con (third-party:mne_connectivity) 46.5% self of the profiled SPI call at 32x1024 (audit/profiles/micro/prof_wavelet.phase__32x1024.pstats);
+    18.3% at 8x1024
+  hotspot_2: 'pyspi/statistics/wavelet.py:parsed_stats (modify_stats) 39.6%: numpy/lib/_function_base_impl.py:angle 19.3% self and nanmean 19.6% (_replace_nan 17.9%) over the complex
+    (P, P, 125, T) tensor; tfr.py:cwt 0.4%, all at 32x1024. At 8x1024 angle was 25.2% and cwt 8.4% (audit/profiles/wavelet.phase__8x1024.pstats)'
+  hotspot_owner: third-party:mne_connectivity
+  opaque_share: 0.189
+  profile_file: 'audit/profiles/micro/prof_wavelet.phase__32x1024.pstats (32x1024; 8x1024: audit/profiles/wavelet.phase__8x1024.pstats, opaque_share 0.147)'
+  no_opportunity_reason: 'No opportunity, by the user''s decision: the wavelet family is not used (''i don''t think we use this though so its not a priority'', HANDOFF.md standing rules), and its definition is under review (cwt_n_cycles = freqs/7 makes every Morlet wavelet one sample long, wavelet.morlet_cwt; psi_wavelet aggregates over time indices). The optimisation block holds hotspot fields only (notes/wavelet_measures.md and notes/wavelet_psi.md, Optimisation).'
+  opportunities: []

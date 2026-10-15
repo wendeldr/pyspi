@@ -1,0 +1,573 @@
+{
+ "family": "wavelet_measures",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/spectral.md"
+ ],
+ "hypotheses": [
+  "cwt_n_cycles = freqs/7 makes sigma_t = 1/(14 pi) ~ 0.023 samples so every Morlet wavelet is one sample long (constant 1.414): the 'CWT' is the raw signal; with a single epoch coh = plv = 1, ppc and pli2_unbiased divide by zero, wpli2_debiased = 0 (tests/README flagged)",
+  "statistic over frequency AND time; pyspi mirrors lower->upper triangle",
+  "mt_adaptive is unused in cwt mode"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/wavelet.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    582,
+    613
+   ],
+   "section": "1.5",
+   "title": "Spectral (126 SPIs)"
+  },
+  {
+   "lines": [
+    614,
+    628
+   ],
+   "section": "1.5.1",
+   "title": "Coherence magnitude (cohmag)"
+  },
+  {
+   "lines": [
+    629,
+    642
+   ],
+   "section": "1.5.2",
+   "title": "Coherence phase (phase)"
+  },
+  {
+   "lines": [
+    684,
+    700
+   ],
+   "section": "1.5.5",
+   "title": "Imaginary coherence (icoh)"
+  },
+  {
+   "lines": [
+    701,
+    715
+   ],
+   "section": "1.5.6",
+   "title": "Phase locking value (plv)"
+  },
+  {
+   "lines": [
+    716,
+    729
+   ],
+   "section": "1.5.7",
+   "title": "Pairwise phase consistency"
+  },
+  {
+   "lines": [
+    730,
+    767
+   ],
+   "section": "1.5.8",
+   "title": "Phase lag index (pli)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs_bivariate.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne/time_frequency/tfr.py (morlet, cwt, _cwt_gen)"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "cohmag_wavelet_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "cohmag_wavelet_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "cohmag_wavelet_max_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "cohmag_wavelet_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+    "cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-25",
+    "cohmag_wavelet_mean_fs-1_fmin-0-25_fmax-0-5",
+    "cohmag_wavelet_max_fs-1_fmin-0_fmax-0-5",
+    "cohmag_wavelet_max_fs-1_fmin-0_fmax-0-25",
+    "cohmag_wavelet_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "method_or_estimator": "CoherenceMagnitude",
+   "module": "wavelet",
+   "pair_basis": "multivariate",
+   "pyspi_class": "CoherenceMagnitude",
+   "representative": "cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "extra",
+   "unit_id": "wavelet.cohmag"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "phase_wavelet_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "phase_wavelet_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "phase_wavelet_max_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "phase_wavelet_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "phase_wavelet_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "phase_wavelet_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "phase_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+    "phase_wavelet_mean_fs-1_fmin-0_fmax-0-25",
+    "phase_wavelet_mean_fs-1_fmin-0-25_fmax-0-5",
+    "phase_wavelet_max_fs-1_fmin-0_fmax-0-5",
+    "phase_wavelet_max_fs-1_fmin-0_fmax-0-25",
+    "phase_wavelet_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "method_or_estimator": "CoherencePhase",
+   "module": "wavelet",
+   "pair_basis": "multivariate",
+   "pyspi_class": "CoherencePhase",
+   "representative": "phase_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "extra",
+   "unit_id": "wavelet.phase"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "icoh_wavelet_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "icoh_wavelet_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "icoh_wavelet_max_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "icoh_wavelet_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "icoh_wavelet_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "icoh_wavelet_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "icoh_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+    "icoh_wavelet_mean_fs-1_fmin-0_fmax-0-25",
+    "icoh_wavelet_mean_fs-1_fmin-0-25_fmax-0-5",
+    "icoh_wavelet_max_fs-1_fmin-0_fmax-0-5",
+    "icoh_wavelet_max_fs-1_fmin-0_fmax-0-25",
+    "icoh_wavelet_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "method_or_estimator": "ImaginaryCoherence",
+   "module": "wavelet",
+   "pair_basis": "multivariate",
+   "pyspi_class": "ImaginaryCoherence",
+   "representative": "icoh_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "extra",
+   "unit_id": "wavelet.icoh"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "plv_wavelet_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "plv_wavelet_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "plv_wavelet_max_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "plv_wavelet_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "plv_wavelet_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "plv_wavelet_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "plv_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+    "plv_wavelet_mean_fs-1_fmin-0_fmax-0-25",
+    "plv_wavelet_mean_fs-1_fmin-0-25_fmax-0-5",
+    "plv_wavelet_max_fs-1_fmin-0_fmax-0-5",
+    "plv_wavelet_max_fs-1_fmin-0_fmax-0-25",
+    "plv_wavelet_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "method_or_estimator": "PhaseLockingValue",
+   "module": "wavelet",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PhaseLockingValue",
+   "representative": "plv_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "extra",
+   "unit_id": "wavelet.plv"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "ppc_wavelet_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "ppc_wavelet_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "ppc_wavelet_max_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "ppc_wavelet_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "ppc_wavelet_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "ppc_wavelet_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "ppc_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+    "ppc_wavelet_mean_fs-1_fmin-0_fmax-0-25",
+    "ppc_wavelet_mean_fs-1_fmin-0-25_fmax-0-5",
+    "ppc_wavelet_max_fs-1_fmin-0_fmax-0-5",
+    "ppc_wavelet_max_fs-1_fmin-0_fmax-0-25",
+    "ppc_wavelet_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "method_or_estimator": "PairwisePhaseConsistency",
+   "module": "wavelet",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PairwisePhaseConsistency",
+   "representative": "ppc_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "extra",
+   "unit_id": "wavelet.ppc"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "pli_wavelet_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "pli_wavelet_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "pli_wavelet_max_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "pli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "pli_wavelet_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "pli_wavelet_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "pli_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+    "pli_wavelet_mean_fs-1_fmin-0_fmax-0-25",
+    "pli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5",
+    "pli_wavelet_max_fs-1_fmin-0_fmax-0-5",
+    "pli_wavelet_max_fs-1_fmin-0_fmax-0-25",
+    "pli_wavelet_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "method_or_estimator": "PhaseLagIndex",
+   "module": "wavelet",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PhaseLagIndex",
+   "representative": "pli_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "extra",
+   "unit_id": "wavelet.pli"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "dspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "dspli_wavelet_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "dspli_wavelet_max_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "dspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "dspli_wavelet_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+    "dspli_wavelet_mean_fs-1_fmin-0_fmax-0-25",
+    "dspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dspli_wavelet_max_fs-1_fmin-0_fmax-0-5",
+    "dspli_wavelet_max_fs-1_fmin-0_fmax-0-25",
+    "dspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "method_or_estimator": "DebiasedSquaredWeightedPhaseLagIndex",
+   "module": "wavelet",
+   "pair_basis": "multivariate",
+   "pyspi_class": "DebiasedSquaredWeightedPhaseLagIndex",
+   "representative": "dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "extra",
+   "unit_id": "wavelet.dswpli"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "wspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "wspli_wavelet_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "wspli_wavelet_max_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "wspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "wspli_wavelet_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "wspli_wavelet_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "wspli_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+    "wspli_wavelet_mean_fs-1_fmin-0_fmax-0-25",
+    "wspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5",
+    "wspli_wavelet_max_fs-1_fmin-0_fmax-0-5",
+    "wspli_wavelet_max_fs-1_fmin-0_fmax-0-25",
+    "wspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "method_or_estimator": "weighted_PhaseLagIndex",
+   "module": "wavelet",
+   "pair_basis": "multivariate",
+   "pyspi_class": "weighted_PhaseLagIndex",
+   "representative": "wspli_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "extra",
+   "unit_id": "wavelet.wspli"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "dwspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "dwspli_wavelet_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "dwspli_wavelet_max_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "dwspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+    "dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-25",
+    "dwspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dwspli_wavelet_max_fs-1_fmin-0_fmax-0-5",
+    "dwspli_wavelet_max_fs-1_fmin-0_fmax-0-25",
+    "dwspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "method_or_estimator": "debiased_weighted_squared_PhaseLagIndex",
+   "module": "wavelet",
+   "pair_basis": "multivariate",
+   "pyspi_class": "debiased_weighted_squared_PhaseLagIndex",
+   "representative": "dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "extra",
+   "unit_id": "wavelet.dwspli"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "mne_connectivity cwt_morlet with cwt_freqs=linspace(0.2,0.5,125), n_cycles=freqs/7",
+   "module": "wavelet",
+   "pair_basis": "n/a",
+   "pyspi_class": "mne",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "wavelet.morlet_cwt"
+  }
+ ]
+}

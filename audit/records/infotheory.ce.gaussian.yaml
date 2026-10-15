@@ -1,0 +1,172 @@
+unit_id: infotheory.ce.gaussian
+status: profiled
+correctness:
+  metric_name_standard: Conditional differential entropy H(Y|X) under a bivariate Gaussian model
+  canonical_ref: Cover T.M. & Thomas J.A. 2006, Elements of Information Theory, 2nd ed., Wiley, §8.6 (conditional differential entropy h(Y|X) = h(X,Y) - h(X)); supplement cites MacKay 2003
+  canonical_definition: H(Y|X) = H(X,Y) - H(X) = 0.5*ln(2*pi*e*sy^2*(1-rho^2)) nats
+  documented_definition: 'supplement §1.4.2, p.10 (supplement.txt:451-457): ''Conditional entropy [33] quantifies the uncertainty over the observations in y in the context of simultaneously observing x'';
+    keywords ''undirected, nonlinear, unsigned, bivariate, contemporaneous''. GitBook information-theory.md:46-64 same text.'
+  delegate_lib: JIDT infodynamics.jar bundled at pyspi/lib/jidt (labelled 1.6.1 by version-1.6.1.txt, but its class inventory includes EntropyCalculatorMultiVariateCommon, added upstream in commit 3d1f3fe
+    on 2024-04-20; between tag v1.6.1 and commit a9b6b3e the Gaussian MI/CMI/TE/AIS leaf classes, MatrixUtils, MathsUtils and ChiSquareMeasurementDistribution are byte-identical, their MultiVariateCommon/Via
+    parents differ only in observation-ID/noise-seed bookkeeping, and EntropyCalculatorMultiVariateGaussian was refactored onto EntropyCalculatorMultiVariateCommon with its value path unchanged; details
+    in infotheory.est.gaussian) via JPype1==1.7.1 on OpenJDK 21; gaussian.EntropyCalculatorMultiVariateGaussian (joint entropy of (x_i,x_j) and univariate entropy of x_i)
+  implemented_as: A[i,j] = H(x_i, x_j) - H(x_i) = H(x_j | x_i), both from the JIDT Gaussian entropy calculator on z-scored (ddof=1) data, reusing the je cache and the univariate cache. With z-scoring H(x_i)
+    = 1.4189385332 exactly, so A[i,j] = 1.4189385332 + 0.5*ln(1-r^2) = 1.4189385332 - mi_gaussian, which is symmetric in (i,j) despite the Directed class.
+  implementation_trace:
+  - pyspi/calculator.py:329 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 fill_diagonal NaN; :336-339 any exception from any pair -> the whole SPI entry becomes NaN (:337) and the error is recorded, warning issued at :354-355
+  - 'pyspi/data.py:184-195 preprocessing in Data.set_data: optional scipy.signal.detrend(axis=1), then (default normalise=True) scipy.stats.zscore(axis=1, ddof=1)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for every ordered pair i != j, A[i,j] = self.bivariate(data, i=i, j=j)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: _entropy_calc = _getcalc(''entropy'') (:36); identifier += ''_gaussian'' (:38); estimator ''gaussian'' -> labels += [''linear''], _dyn_corr_excl
+    = None (:53-55)'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: every calculator gets setProperty(''BIAS_CORRECTION'',''false'') and setProperty(''NOISE_SEED'',''42''); no NORMALISE property is set'
+  - 'pyspi/statistics/infotheory.py:103-134 _getcalc: ''gaussian'' (and any unrecognised estimator) falls to the else branches -> gaussian.EntropyCalculatorMultiVariateGaussian (:111-112), gaussian.MutualInfoCalculatorMultiVariateGaussian
+    (:120-123), gaussian.TransferEntropyCalculatorGaussian (:129-130)'
+  - pyspi/statistics/infotheory.py:237-250 ConditionalEntropy(JIDTBase, Directed); bivariate returns _compute_joint_entropy(i,j) - _compute_entropy(i) (conditioning variable = i)
+  - pyspi/statistics/infotheory.py:137-156 _compute_entropy (univariate, cached); :159-177 _compute_joint_entropy (cached, shared with je)
+  - 'pyspi/config.yaml:411-423 ConditionalEntropy configs: estimator gaussian'
+  - 'https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/gaussian/EntropyCalculatorMultiVariateGaussian.java EntropyCalculatorMultiVariateGaussian
+    (extends EntropyCalculatorMultiVariateCommon, :53-54): finaliseAddObservations :87-96 computes means and MatrixUtils.covarianceMatrix(observations, means); setCovariance :110-123 takes MatrixUtils.CholeskyDecomposition
+    (throws on non-PD); computeAverageLocalOfObservations :162-175 returns 0.5*(d*(1+ln 2pi) + ln det(Sigma)) in nats'
+  - https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/EntropyCalculatorMultiVariateCommon.java :66 normalise = true by default, but
+    finaliseAddObservations :178-212 only stacks observations and adds noise if addNoise (default false, :70); no normalisation is applied for the Gaussian estimator; NOISE_SEED handled :133-139 (no effect
+    without addNoise)
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] covarianceMatrix(double[][], double[]) :3426-3439 -> covarianceTwoColumns :3370-3377 divides by (n-1) (ddof=1);
+    CholeskyDecomposition :4496-4498 (tol 10e-10 = 1e-9) / :4528-4560 throws NonPositiveDefiniteMatrixException when a pivot <= tol; determinantViaCholeskyResult :4673-4680
+  deviation_from_documented: Quantity matches 'uncertainty in y given x' with x = process i, y = process j. Keywords say 'undirected' while the class is Directed (REVIEW M8 already notes the conditioning
+    order). Under the default pipeline the output is exactly symmetric, so 'directed' has no effect on values (candidate below).
+  deviation_from_canonical: none for H(x_j|x_i) under the Gaussian model; plug-in estimator, ddof=1. Under z-scoring the marginal-scale term vanishes and the value is 1.4189385 - mi_gaussian.
+  units_and_range: nats; real, <= 1.4189385332 under z-scoring, -> -inf as |r| -> 1, raises on exact collinearity; with normalise=False shifts by ln(sample SD of x_j) and is asymmetric (A[i,j]-A[j,i] =
+    ln(sd_j/sd_i))
+  direction_convention: 'A[i,j] = H(x_j | x_i): row i is the conditioning (observed) process, column j the process whose uncertainty is measured (infotheory.py:248-250). Probe scaled_offset_T1024 with normalise=False:
+    A[0,1]=2.0787 vs A[1,0]=-0.2373 (x1 has scale 2, x0 scale 0.2). symmetry_expected is sym because the check stage and Calculator use the default pipeline (normalise=True), where H(x_i) is the same constant
+    for every channel and A = A.T exactly (probe scaled_offset_T1024 z-scored max |A - A.T| = 2.2e-16; var2_bivariate_T1024 A[0,1] = A[1,0] = 1.400065239580088); under Data(normalise=False) the matrix is
+    asym, with A[i,j]-A[j,i] = ln(sd_j/sd_i)'
+  symmetry_expected: sym
+  already_documented: REVIEW M8 (Gaussian conditional entropy can be negative; ce is H(i,j)-H(i), conditioning order)
+  new_finding_candidates:
+  - 'CANDIDATE (degenerate direction): under default normalise=True ce_gaussian is exactly symmetric, A[i,j] = A[j,i] = 1.4189385332 - mi_gaussian. Probe var2_bivariate_T1024: A[0,1] = A[1,0] = 1.40006524
+    and 1.41893853 - 0.01887329 = 1.40006524; scaled_offset_T1024 z-scored matrix symmetric to max |A - A.T| = 2.2e-16, while normalise=False gives an asymmetric matrix (A[0,1]=2.0787, A[1,0]=-0.2373).
+    The ''directed'' label therefore carries no information in the default pipeline.'
+  - 'CANDIDATE (redundancy): ce_gaussian = 1.4189385332 - mi_gaussian exactly under z-scoring (same probe), so ce, je and mi Gaussian are mutually affine.'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - var2_bivariate
+    - contaminated
+    path: pipeline
+    reference: from-scratch numpy H(x_i,x_j) - H(x_i) with ddof=1 sample covariances on z-scored rows
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: abs difference <= 1e-12 for every ordered pair
+  - datasets:
+    - scaled_offset
+    path: kernel
+    reference: from-scratch numpy H(x_j|x_i) on Data(normalise=False) (raw scaled data) to fix the conditioning order
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: A[i,j] equals the reference for H(x_j | x_i) (not H(x_i | x_j)) to 1e-12; A[i,j]-A[j,i] = H(x_j) - H(x_i) = ln(sd_j/sd_i) with sd the ddof=1 sample SDs of the scaled rows, to 1e-12
+      (probe 2.3159931410300874 vs 2.315993141030088 for (0,1)). This is ln 10 + ln(sd(u1)/sd(u0)) with u the bivariate_gaussian rows, not ln 10 itself (2.302585), because the scaled rows are different
+      base rows
+  - datasets:
+    - bivariate_gaussian
+    - var2_bivariate
+    - iid_gaussian
+    path: pipeline
+    reference: analytic identity ce = 1.4189385332046727 - mi_gaussian and symmetry A = A.T
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: identity and symmetry hold to 1e-12 under normalise=True
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic population H(y|x) for unit variance: 0.5*ln(2*pi*e*(1-rho^2)): rho=0.3 -> 1.3717832, rho=0.8 -> 0.9081129'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: within 3 sampling SDs at T=4096
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/it_gaussian.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:gaussian_conditional_entropy(x_j, x_i) (H(x_i,x_j) - H(x_i), slogdet, ddof=1); audit/checks/refs/it_gaussian.py:chk_order
+    (raw scaled_offset: A[i,j]-A[j,i] = ln(sd_j/sd_i)); audit/checks/refs/it_gaussian.py:chk_identity_mi (same-lineage ce = H1 - mi_gaussian); audit/checks/refs/it_gaussian.py:chk_truth_pair (analytic 0.5
+    ln(2 pi e (1-rho^2)), Monte Carlo SE)'
+  check_data: bivariate_gaussian T1024 and T4096 pairs; var2_bivariate T1024; iid_gaussian T256; contaminated T1024; delayed_noise T64; scaled_offset T1024 kernel (raw, Data normalise=False)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12; statistical: |pyspi - Monte Carlo mean| <= 2 Monte Carlo SD; qualitative order check: antisymmetric part equals ln(sd_j/sd_i) to 1e-10 and the reversed
+    orientation H(x_i|x_j) is rejected'
+  closeness: 'Numpy closed form: 6/6 exact runs pass, max_abs <= 3.6e-15 (ce|scaled_offset|1024|kernel|numpy on raw data 3.6e-15). Conditioning order (ce|scaled_offset|1024|kernel|order): A[0,1] = 2.07866
+    = H(x1|x0), A[1,0] = -0.23733, A[0,1]-A[1,0] = 2.3159931 = ln(sd_1/sd_0) (error 1.3e-15; ln 10 = 2.3025851); the reversed orientation differs by up to 3.91. Identity ce = 1.4189385332 - mi_gaussian:
+    3.3e-16 (bivariate_gaussian), 0.0 (var2_bivariate). Analytic T=4096: rho=0.3 population 1.37178, |pyspi - population| 0.0029 (max_z 0.72); rho=0.8 population 0.90811, 0.0116 (max_z 1.01).'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 9 ddof clause: ddof=1 plug-in covariance. The numpy reference agrees on 6/6 exact runs, max_abs 3.6e-15.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Formula is H(x_j | x_i) exactly (ddof=1 plug-in, nats). Under the default z-scoring H(x_i) is the same constant 1.4189385332 for every channel, so A[i,j] = A[j,i] = 1.4189385332 - mi_gaussian:
+    the Directed class has no effect on values and the SPI carries the same information as mi_gaussian and je_gaussian. With Data(normalise=False) the matrix is asymmetric by ln(sd_j/sd_i).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap (pyspi time_s in out/pyspi/index/it_gaussian.json, single runs of the review-stage forced re-run, made under machine load: every run <= 0.01 s, slowest bivariate_gaussian|1024|pipeline|numpy
+    0.0093 s; 11 runs, 0.06 s in total)'
+  symmetry_observed: 'sym under the default pipeline: max|A - A.T| <= 2.0e-15 on the 5 z-scored numpy runs (0.0 on var2_bivariate); asym on raw data: max|A - A.T| = 3.91 on scaled_offset kernel'
+  direction_observed: 'A[i,j] = H(x_j | x_i): row i is the conditioning process, column j the process whose uncertainty is measured (raw scaled_offset: A[0,1] = 2.0787 = H(x1|x0), A[1,0] = -0.2373; ce|scaled_offset|1024|kernel|order).
+    On var2_bivariate (z-scored) A[0,1] = A[1,0] = 1.40007, so no direction information survives the default pipeline.'
+  candidate_resolutions:
+  - candidate: ce_gaussian is exactly symmetric under default z-scoring, so 'directed' carries no information
+    outcome: confirmed
+    evidence: 'infotheory.ce.gaussian|*|pipeline|numpy: max|A - A.T| <= 2.0e-15 on 5 datasets; infotheory.ce.gaussian|scaled_offset|1024|kernel|order: asymmetric (3.91) only without normalisation'
+  - candidate: ce_gaussian = 1.4189385332 - mi_gaussian exactly under z-scoring (ce, je, mi mutually affine)
+    outcome: confirmed
+    evidence: infotheory.ce.gaussian|bivariate_gaussian|1024|pipeline|identity-mi (3.3e-16) and infotheory.ce.gaussian|var2_bivariate|1024|pipeline|identity-mi (0.0)
+  checks_run:
+  - run_ids:
+    - infotheory.ce.gaussian|bivariate_gaussian|1024|pipeline|numpy
+    - infotheory.ce.gaussian|var2_bivariate|1024|pipeline|numpy
+    - infotheory.ce.gaussian|iid_gaussian|256|pipeline|numpy
+    - infotheory.ce.gaussian|contaminated|1024|pipeline|numpy
+    - infotheory.ce.gaussian|delayed_noise|64|pipeline|numpy
+    - infotheory.ce.gaussian|scaled_offset|1024|kernel|numpy
+    reference: audit/checks/refs/it_gaussian.py:chk_numpy (audit/checks/refs/_kernels_infotheory.py:gaussian_conditional_entropy)
+    outcome: 6/6 pass; max_abs <= 3.6e-15
+  - run_ids:
+    - infotheory.ce.gaussian|scaled_offset|1024|kernel|order
+    reference: audit/checks/refs/it_gaussian.py:chk_order
+    outcome: 1/1 pass; antisymmetry error 1.3e-15; reversed orientation off by 3.91
+  - run_ids:
+    - infotheory.ce.gaussian|bivariate_gaussian|1024|pipeline|identity-mi
+    - infotheory.ce.gaussian|var2_bivariate|1024|pipeline|identity-mi
+    reference: audit/checks/refs/it_gaussian.py:chk_identity_mi (same-lineage)
+    outcome: 2/2 pass; max_abs <= 3.3e-16
+  - run_ids:
+    - infotheory.ce.gaussian|bivariate_gaussian|4096|pipeline|truth-p01
+    - infotheory.ce.gaussian|bivariate_gaussian|4096|pipeline|truth-p23
+    reference: audit/checks/refs/it_gaussian.py:chk_truth_pair (analytic + Monte Carlo SE)
+    outcome: 2/2 pass; max_z 0.72 / 1.01
+optimisation:
+  complexity_P_T: 'O(P^2 T): ConditionalEntropy.bivariate (infotheory.py:246-249) = cached joint entropy (P(P-1)/2 JIDT calls, shared with je through data.joint_entropy) minus a cached marginal (P calls,
+    data.entropy). Measured fresh P exponent 2.07, T exponent 0.95; family-warm after je only the P marginals remain (P exponent 1.12, 0.8 ms at 8x1024). At 118x1024 fresh the joint-entropy pairs dominate
+    (11.6 s measured); family-warm 0.044 s projected.'
+  hotspot_1: pyspi/statistics/infotheory.py:JIDTBase._compute_joint_entropy (third-party:jidt + jpype, self time) 93.5% cum / 92.8% self of the profiled SPI call at 8x1024
+  hotspot_2: 'pyspi/statistics/infotheory.py:JIDTBase._compute_entropy (third-party:jidt, self time) 5.6% cum. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the
+    JIDT (Java) time is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jpype
+  opaque_share: 0.0094
+  profile_file: audit/profiles/infotheory.ce.gaussian__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_gaussian-1
+    opportunity: Compute the pairwise Gaussian SPIs for all pairs at once in numpy from one ddof=1 covariance of the z-scored rows (lag blocks x(t-m) and x(t+1) for tlmi and TE), with a batched slogdet
+      over the pair sub-matrices, instead of one JIDT calculator call per pair through JPype (infotheory.py:JIDTBase._compute_joint_entropy, MutualInfo.bivariate, TimeLaggedMutualInfo.bivariate, TransferEntropy.bivariate).
+    opp_type: replace-library
+    expected_speedup: ~10x family-warm after je (fresh ~3000x)
+    speedup_basis: 'microbench:audit/profiles/micro/opp_it_gaussian-1.json (ce_gaussian: candidate alone at 118x1024 3.6 ms including Data construction (2.9 ms), against the quiet summary.json 118x1024
+      walls 11.63 s fresh (measured) and 0.0444 s family-warm (extrapolated-pairs-from-32) = 3189x / 12x; same-run speedups against the pyspi baseline on the shared machine 28x at 8x1024 and 271x at 32x1024
+      in the latest run (29x / 446x in the first; the 32x1024 same-run baselines are noisy)) + profile:audit/profiles/infotheory.ce.gaussian__8x1024.pstats pyspi/statistics/infotheory.py:159 _compute_joint_entropy
+      93.5% (the candidate replaces the whole multivariate call; its own cost is one (k+1)P-square covariance plus O(P^2) small slogdets, milliseconds at 118x1024); family-warm after je, ce is already a
+      cache read (0.044 s projected)'
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_it_gaussian-1.json: max_abs_diff 1.1e-15 (8x1024) and 2.0e-15 (32x1024), NaN masks equal, not bit-identical (np.cov + slogdet instead of JIDT''s covariance +
+      Cholesky)'
+    effort: M
+    depends_on: []

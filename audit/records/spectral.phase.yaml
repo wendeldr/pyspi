@@ -1,0 +1,277 @@
+unit_id: spectral.phase
+status: profiled
+correctness:
+  metric_name_standard: band arithmetic mean / band max of the principal-value multitaper coherence phase (cross-spectral phase) arg C_ij(f) in (-pi, pi]
+  canonical_ref: 'Cross-spectral phase phi_xy(f) = arg S_xy(f): Priestley 1981, Spectral Analysis and Time Series, ch. 9 (phase spectrum); Carter 1987, Proc. IEEE 75(2):236-255 (phase and time-delay); Bastos & Schoffelen 2016, Front. Syst. Neurosci. 9:175 (supplement [59], coherency phase; quotations checked in the spectral.cohmag record). Averaging angles: circular mean direction, Mardia & Jupp 2000, Directional Statistics, §2.2. The Priestley chapter, the Carter 1987 sections and the Mardia & Jupp section number are from memory, not re-checked.'
+  canonical_definition: phi_ij(f) = arg C_ij(f) = arg S_ij(f) with S_ij = E[X_i(f) conj(X_j(f))]; for x_i(t) = x_j(t - tau) (i lags j) phi_ij(f) = -2 pi f tau (mod 2 pi); antisymmetric phi_ji = -phi_ij (mod 2 pi). A band summary of an angle is canonically the circular mean arg(sum_f e^{i phi(f)}) (or arg of the band-averaged coherency); a time delay is the slope of the unwrapped phase (group delay).
+  documented_definition: 'supplement §1.5.2, p.13 (supplement.txt:616-628): "By omitting the magnitude operator of the coherence (Sec. 1.5.1), we obtain the complex-valued coherency, where the phase-difference angle (which we refer to as the coherence phase) has been used to infer a time-delayed dependence between two signals [59]. We compute the coherence phase for the two summary statistics and three frequency ranges". Keywords "undirected, linear, unsigned, bivariate, frequency-dependent". Same text GitBook spectral.md:49-70. Common section: supplement §1.5, p.12 (heading at supplement.txt:570): "Each measure is based on the cross- and power-spectral densities at a given frequency and sampling rate, which is estimated via the multitaper technique ... we assume a sampling frequency fs = 1 throughout ... We use 125 uniformly sampled bins across the entire frequency range, f ∈ [f0, fs/2], where fs/2 is the Nyquist frequency and f0 = 4/T ... we take the mean (mean) and the maximum (max) values of each measure over three ranges ... fmin-0_fmax-0-5: f ∈ [0, fs/2]; fmin-0_fmax-0-25: f ∈ [0, fs/4]; fmin-0-25_fmax-0-5: f ∈ [fs/4, fs/2]" (supplement.txt:570-599; same text GitBook spectral.md:14-20). The briefing pack line ranges (582-613, 614-628, 629-642, 684-700) are offset by 12-14 lines from the headings in this copy of supplement.txt; the line numbers cited here are the ones opened.'
+  delegate_lib: spectral-connectivity==1.1.2 Connectivity.coherence_phase (connectivity.py:315-324) = numpy.angle(coherency()); spectra from Multitaper.fft (scipy.fftpack.fft); band selection and nanmean/nanmax in pyspi (numpy 2.5.4)
+  implemented_as: 'Input z-scored per channel (ddof=1; optional linear detrend first; Data defaults). The whole (P, T) record is one window: spectral_connectivity 1.1.2 Multitaper with defaults NW=3, n_tapers=floor(2*NW-1)=5, low-bias filter (DPSS concentration > 0.9; all 5 kept for T >= 8 in the probe), per-window constant (mean) detrend, tapers scaled by sqrt(fs), scipy.fftpack.fft with n_fft = next_fast_len(T) (zero padding when T is not 5-smooth, e.g. T=67 -> 72), divided by fs. Connectivity expectation "trials_tapers" = unweighted mean over the 5 tapers: S_ij(f) = (1/K) sum_k X_ik(f) conj(X_jk(f)). Coherency C_ij = S_ij / sqrt(S_ii S_jj). Only the first (n_fft+1)//2 FFT bins are kept: DC included, Nyquist dropped for even n_fft (T=256: 128 bins k/256, k=0..127). pyspi selects bins with fmin <= f <= fmax (closed at both ends) and applies np.nanmean or np.nanmax over that axis, then sets the diagonal to NaN; no Undirected mirroring. The cached spectral result (keyed by (measure,)) is shared by all six band/statistic identifiers of the unit. Measure: numpy.angle(C_ij(f)), principal value in [-pi, pi] (+pi for a negative real value with +0 imaginary part). At DC the cross-spectrum of real input is exactly real (probe max|Im C(DC)| = 0.0), so the DC angle is exactly 0 or pi. Band summary is the ARITHMETIC np.nanmean or np.nanmax of these principal angles. Probe: equals the from-scratch reference to <= 2.0e-12.'
+  implementation_trace:
+  - 'pyspi/config.yaml:635-720 .statistics.spectral CoherencePhase (637-663), CoherenceMagnitude (665-691), ImaginaryCoherence (694-720): six configs each (fs:1 | fmin 0/fmax 0.25 | fmin 0.25/fmax 0.5) x (mean | statistic: max)'
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then zscore(axis=1, nan_policy="omit", ddof=1) when normalise=True (default)'
+  - 'pyspi/calculator.py:295-345 Calculator.compute (HEAD a1f20c7): S = self._spis[spi].multivariate(self.dataset) (329); np.fill_diagonal(S, np.nan) (332); any exception -> self._table[spi] = NaN and a failed MetricReport (336-339) (trace-stage probe: Calculator output equals direct multivariate, max|diff| 0.0)'
+  - pyspi/statistics/spectral.py:4 imports spectral_connectivity via pyspi/_spectral_compat.py:10-28 (adapter only replaces np.in1d in the connectivity module namespace; not used by these three measures)
+  - 'pyspi/statistics/spectral.py:20-43 NonparametricSpectral.__init__: fmax default fs/2 (21-22); statistic mean -> np.nanmean, max -> np.nanmax (29-32); identifier suffix _multitaper_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g} with "." -> "-" (38-43)'
+  - pyspi/statistics/spectral.py:45-50 key = (self.measure,) for these classes, so all band/statistic configs share one cached spectrum
+  - 'pyspi/statistics/spectral.py:64-83 NonparametricSpectralMultivariate._get_cache: z = data.to_numpy(squeeze=True).T (T, P) (69); sc.Multitaper(z, sampling_frequency=self._fs) with all other defaults (70); Connectivity.from_multitaper(m) (71); res = getattr(conn, self.measure)() (73); freq = conn.frequencies (77); cache insert (78-81; first insert keyed by measure string, see tests/README.md "worth knowing")'
+  - 'pyspi/statistics/spectral.py:85-102 multivariate: freq_id = where((freq >= fmin) * (freq <= fmax)) (88, closed band); adj = statfn(adj_freq[0, freq_id, :, :], axis=0) (91); fill_diagonal NaN (101)'
+  - 'pyspi/base.py:121-138 Undirected.multivariate (mirror of the upper triangle) is NOT reached: MRO is [cls, NonparametricSpectralMultivariate, NonparametricSpectral, Unsigned, Undirected, Directed] (probe), so spectral.py:85-102 wins'
+  - 'pyspi/statistics/spectral.py:147-154 CoherencePhase(NonparametricSpectralMultivariate, Undirected): identifier "phase", _measure "coherence_phase", labels unsigned/undirected'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:74-102 Multitaper.__init__ defaults: time_halfbandwidth_product=3 (78), detrend_type="constant" (79), n_tapers=None, n_fft_samples=None, is_low_bias=True (88)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:154-164 n_tapers = floor(2*NW - 1) = 5
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:166-178 n_time_samples_per_window = full series length (single window); 192-205 step = window
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:180-190 n_fft_samples = next_fast_len(window) (scipy.fftpack, imported at :29); frequencies = fftfreq(n_fft, 1/fs)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:238-260 fft(): _add_axes (263-271), _sliding_window (274-332, one window), detrend(type="constant") (253-254 -> 747-748 subtracts the mean), _multitaper_fft, swapaxes -> (windows, trials, tapers, n_fft, signals)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:335-354 _multitaper_fft: fft(time_series * tapers, n=n_fft, axis=-2) / sampling_frequency'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:357-387 _make_tapers -> dpss_windows (469-543: tridiagonal Slepian eigenproblem 575-629, sign fix 632-657, eigenvalues 676-698, low-bias filter eigenvalue > 0.9 at 668-673); tapers.T * sqrt(fs). Probe: tapers equal scipy.signal.windows.dpss(T, 3, Kmax=5) to 3.7e-15'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:156-172 Connectivity.from_multitaper: fourier_coefficients = m.fft(), expectation_type="trials_tapers"'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:45-53 EXPECTATION["trials_tapers"] = mean over axes (1, 2) (trials, tapers): unweighted taper average; 276-278 _expectation'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:73-89 _non_negative_frequencies: keeps indices 0..(n+1)//2 - 1 (DC kept, Nyquist dropped for even n_fft); applied to frequencies at 174-180'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:189-193 _power = E[X * conj(X)].real
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:195-208 _cross_spectral_matrix = _complex_inner_product(X[..., None], X[..., None]); 1187-1190 matmul(a, _conjugate_transpose(b)); 1485-1487 swapaxes(-1,-2).conjugate() => S_ij = X_i conj(X_j)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:210-220 _expectation_cross_spectral_matrix (blocks=None): expectation of the full CSM'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:295-313 coherency(): norm = sqrt(P_i P_j), norm==0 -> NaN (308), C = E[S] / norm (309), diagonal set to NaN (310-312), decorated with _non_negative_frequencies(axis=-3) (295)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:315-324 coherence_phase(): return xp.angle(self.coherency())'
+  deviation_from_documented: '(1) Labels: documented and labelled "undirected, unsigned", but the value is a signed relative phase whose sign encodes lead/lag; the matrix is (nearly) antisymmetric for mean and asymmetric for max, and it is not mirrored (REVIEW M4, M1). (2) Frequency grid: documented 125 bins on [f0 = 4/T, fs/2]; implemented FFT grid with DC included (angle exactly 0 or pi there) and Nyquist excluded for even n_fft; low/high bands share the 0.25 bin. (3) The documentation does not say how phases are summarised over a band; the code uses an arithmetic mean / max of wrapped angles.'
+  deviation_from_canonical: 'Per bin the angle is the standard cross-spectral phase. The band summary is an arithmetic mean of principal angles, not a circular mean (REVIEW M4): where phase wraps across +-pi the result is not an angle estimate (probe delayed_noise T=1024 pair (3,0), delay 5: arithmetic mean -0.3202 vs circular mean -1.5609; var2_bivariate T=4096 high band 1.1765 vs population arithmetic mean of arg C 2.4658). DC bins with negative real cross-spectrum add pi in both directions, giving A[i,j] + A[j,i] = pi * (number of bins at exactly pi, counted over ij and ji) / n_bins (probe iid_gaussian T=64 low band: 0.369599 = 2 pi / 17 for two pairs, 0 for the others) (M4). The max statistic of a wrapped angle saturates near pi for broadband pairs (probe iid_gaussian T=256: all entries in [2.960, 3.142], A + A^T up to 6.283), so it carries little pair-specific information.'
+  units_and_range: 'Radians, signed, in [-pi, pi]. Mean: antisymmetric up to the DC/branch offset above; max: asymmetric (A[j,i] = -min_f phi_ij). Exactly 0 for identical series (shared_envelope x0 == x2: mean 0.0, max 0.0). NaN on the diagonal; empty band -> all-NaN (mean) or ValueError (max).'
+  direction_convention: 'A[i,j] = band statistic of arg S_ij(f), S_ij = mean_k X_i,k conj(X_j,k) (connectivity.py:205-207, 1187-1190, 1485-1487). Positive (unwrapped, small-lag) A[i,j] means channel i LEADS channel j. Probe: delayed_noise T=1024 (x1 = x0 delayed 1 sample) low band A[0,1] = +0.7768, A[1,0] = -0.7768 (analytic mean of -2 pi f over the bins -0.7854 for [1,0]); narrowband_f0-0.1 T=1024 band [0.095, 0.105]: A[1,0] = +0.8044 (x1 phase +pi/4 leads x0), A[0,2] = +1.5609 (x0 leads x2 by pi/2).'
+  symmetry_expected: antisym
+  already_documented: docs/storage_comparison/REVIEW.md M4 (arithmetic mean of principal angles; DC included and Nyquist excluded; antisymmetry offset 2 pi / n_bins from a negative real DC cross-spectrum; unsigned label inappropriate); REVIEW M1 (no Undirected mirroring; tests/README.md bug 5 before b2f6d7e); EEG_OPTIMIZATION_NOTES.md §review (phase aggregation/endpoints); DEPENDENCY_COMPATIBILITY_REVIEW.md:74-82 (Nyquist bin in 2.x); tests/README.md dependency constraints (pinned 1.1.2); tests/README.md worth knowing (line 224, the spectral cache's first insert is keyed by self.measure, one redundant recompute, which spectral.phase pays in an EEG run as the first spectral class; its implementation_trace and the spectral_coherence-1 avenue concern this item).
+  new_finding_candidates:
+  - 'CANDIDATE: the max statistic of a wrapped angle is close to pi for any broadband pair, so phase_*_max is almost constant. Probe (CoherencePhase(statistic="max"), full band, T=256): iid_gaussian entries in [2.960, 3.142]; var2_bivariate [3.005, 3.117]; max|A + A^T| = 6.283 (iid), 6.122 (var2). Only pairs whose phase stays on one side over the band (delayed_noise lag 1: A[1,0] near 0.002) differ.'
+  - 'CANDIDATE (elaborates M4 with exact accounting, not a new mechanism): A[i,j] + A[j,i] = pi * n_pi / n_bins where n_pi counts bins with angle exactly pi in either direction; probe iid_gaussian T=64 low band (17 bins): pairs (2,3) and (2,4) give 0.369599 = 2 pi/17 with n_pi = 2, all other pairs 0.0.'
+  - 'CANDIDATE: arithmetic averaging of wrapped phases is not a consistent band phase estimate when the phase approaches +-pi: var2_bivariate high band at T = 256 / 1024 / 4096 gives -0.0262 / 1.4338 / 1.1765 while the population arithmetic mean of arg C over the same bins is 2.4549 / 2.4636 / 2.4658 (estimation noise near the branch cut flips bins between +pi and -pi). (Mechanism in M4; the size of the effect on these datasets is new evidence.)'
+  - 'CANDIDATE: documented grid ("125 uniformly sampled bins", f0 = 4/T) differs from the FFT grid used (T=256: 128 bins, 0 .. 0.49609); low/high bands share the 0.25 bin; empty bands give NaN (mean) or ValueError (max) (probe T=64, band [1/2048, 4/2048]).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - var2_bivariate
+    - delayed_noise
+    - narrowband_f0-0.1
+    - shared_envelope
+    - gauss_ar1_pair
+    path: kernel
+    reference: 'from-scratch numpy: subtract per-channel mean; tapers = scipy.signal.windows.dpss(T, 3, Kmax=5, return_ratios=True) filtered by ratio > 0.9; X = numpy.fft.fft(taper * x, n=scipy.fftpack.next_fast_len(T)) (the library grid rule, spectral_connectivity transforms.py:29,184; scipy.fft.next_fast_len differs for non-5-smooth T: 63 -> 63 vs 64, 67 -> 70 vs 72, 77 -> 77 vs 80, and probe7 shows the scipy.fft rule misses the library by up to 0.24 (cohmag) at T=67 while the fftpack rule agrees to <= 1.4e-14 at T in {63, 67, 77}); S_ij = mean_k X_i conj(X_j); C = S_ij/sqrt(S_ii S_jj); keep first (n_fft+1)//2 bins; band fmin <= f <= fmax; np.nanmean / np.nanmax (no spectral_connectivity import; scratchpad prototype spectral_coherence/ref.py); measure numpy.angle(C)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: agreement to <= 1e-10 absolute for every pair and identifier except bins whose angle is within 1e-12 of +-pi, where a +-2 pi flip is reported separately (probe max 2.0e-12 with no flips)
+  - datasets:
+    - delayed_noise
+    - narrowband_f0-0.1
+    path: kernel
+    reference: 'analytic phase: x_k(t) = x0(t - d_k) gives arg C_k0(f) = -2 pi f d_k; narrowband phase shifts (0, +pi/4, -pi/2) give arg C_10(f0) = +pi/4, arg C_02(f0) = +pi/2; evaluate pyspi CoherencePhase on a narrow custom band around f0 and on the low band for d=1'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'sign convention confirmed: positive A[i,j] means i leads j (probe delayed_noise T=1024 low band A[0,1] = +0.7768 vs analytic +0.7854; narrowband A[1,0] = +0.8044, A[0,2] = +1.5609)'
+  - datasets:
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic: x2 is bit-identical to x0, C_02 = 1 (angle 0) at every bin'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: A[0,2] = A[2,0] = 0.0 exactly for mean and max (probe 0.0)
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    - delayed_noise
+    path: kernel
+    reference: 'analytic accounting from the from-scratch coherency: A[i,j] + A[j,i] = pi * (#bins with angle == pi in C_ij plus in C_ji) / n_bins for the mean statistic'
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: 'identity holds to 1e-12 for every pair and band (probe iid T=64 low band: 0.369599 = 2 pi/17 for pairs with a negative real DC cross-spectrum, 0 otherwise)'
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    path: kernel
+    reference: circular band mean arg(sum_f C(f)/|C(f)|) and arg(mean_f C(f)) from the from-scratch reference; population phase from var2 S_true
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: pyspi arithmetic mean departs from the circular/population band phase where phase wraps (probe var2 T=4096 high band 1.1765 vs population 2.4658; delayed_noise (3,0) -0.3202 vs circular -1.5609); documents M4 magnitude
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    path: kernel
+    reference: 'analytic: maximum of n wrapped angles with a spread distribution concentrates near pi; Monte Carlo of the from-scratch reference on fresh iid draws'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: phase_*_max entries cluster in [2.9, pi] under the null at T >= 256 (probe iid T=256 [2.960, 3.142]); A + A^T close to 2 pi
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'invariance to per-channel scale/offset: Data(scaled_offset, normalise=False) vs Data(bivariate_gaussian)'
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: equal to 1e-12 (probe 1.7e-16)
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: band-rule enumeration from the FFT grid, including DC handling and empty EEG bands
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: DC bin included with angle exactly 0 or pi; Nyquist absent; empty band -> NaN (mean) / ValueError (max)
+  check_method: analytic
+  check_reference: audit/checks/refs/spectral_coherence.py:do_impl (independent re-implementation, numpy.angle per bin + arithmetic nanmean/nanmax), do_delay / do_f0bin / do_identical (analytic phase of delayed copies, sinusoid phase shifts, identical pair), do_dcpi / do_invariance / do_perm (same-lineage pyspi-vs-pyspi identities for DC accounting, invariance and permutation), do_circular (canonical circular band mean), do_pop_or_mcexp (VAR(2) population phase; Monte Carlo of the estimator), do_null, do_mne (mne-connectivity==0.9.0); probes audit/checks/probes/spectral_coherence_bands.py
+  check_data: iid_gaussian, bivariate_gaussian, scaled_offset, trending, var2_bivariate, delayed_noise, narrowband_f0-0.1, narrowband_f0-0.25, shared_envelope, gauss_ar1_pair; T in {64, 256, 1024, 4096} plus truncations to 67 and 97
+  agreement_criterion: 'independent re-implementation: rtol = atol = 1e-10; analytic identities exact; single f0 bin atol = 4 x MC RMS; delay and null/expectation checks |pyspi - value| <= 2 se, se = MC sd x z(1-0.05/(2m))/2; direction: sign agreement on non-wrapping entries'
+  closeness: 'Arithmetic mean/max of principal angles reproduced exactly: 120/120 impl runs, max_abs 1.3e-11 (kernel), 1.8e-12 (pipeline); DC identity exact (<= 1.1e-16). Analytic: identical pair 0.0; f0 bin within 1.7e-3 of phi_i - phi_j; delayed copy low band +0.7768 vs +0.7854. Against the canonical circular mean: delayed_noise full band max_abs 2.879 (A[3,0] -0.320 vs -1.565); var2 T=4096 high band 1.1765 vs circular 2.3255 and population 2.4658 (max_z 10.88); low band (no wrapping) matches the population (0.5984 vs 0.642, max_z 0.91). Max statistic saturates at pi: null pair-mean 3.1188 (T=256) to 3.1413 (T=4096).'
+  verdict: related-quantity
+  score_0_10: 4
+  score_rubric: 4
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 4 names the arithmetic mean of wrapped phases: delayed_noise lag 5 gives -0.320 vs circular mean -1.565.'
+  documentation_status: misdescribed
+  verdict_adjusted: related-quantity
+  score_adjusted: 4
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Per bin the cross-spectral phase angle(C_ij) is canonical and its sign convention (positive A[i,j] = i leads j) is confirmed. The band summary is an arithmetic nanmean / nanmax of principal angles in (-pi, pi] (REVIEW M4), not a circular mean or the phase of the band-averaged coherency: wherever the phase crosses the branch cut inside the band the mean is not an angle estimate (delayed_noise lag 5: -0.320 vs circular -1.565; var2 high band 1.18 vs 2.47 and the error does not shrink with T), and the max statistic of wrapped angles saturates at pi for broadband pairs (null 3.14 at T=4096, |A + A.T| up to 2 pi). DC is included (angle exactly 0 or pi), which offsets the antisymmetry by exactly 2 pi / n_bins per pair with a negative real DC cross-spectrum; the label ''unsigned/undirected'' does not describe a signed, (near-)antisymmetric output. Rubric anchor 4 (arithmetic mean of wrapped phases). definition_under_review is true (set in Workflow 4b-2, was false): REVIEW M4 ends with ''Decision needed: preserve the historical arithmetic band summary, define a branch/endpoint convention, or introduce a circular/complex phase summary with a new identifier'', EEG_OPTIMIZATION_NOTES.md:169 lists phase aggregation/endpoints as outstanding, and both forms are recorded here (arithmetic in the impl runs, circular in the circular runs), the same situation for which cohmag and icoh carry true. new_finding rests on the max-saturation candidate alone; the 125-bin / f0 = 4/T part of the grid candidate is new to this audit but is counted on spectral.band_selection (notes/spectral_coherence.md, grid bullet), not as a new finding of this unit; the DC-accounting and wrap-size candidates elaborate REVIEW M4 and are not counted.'
+  new_finding: true
+  definition_under_review: true
+  check_cost: 'cheap: 201 pyspi runs of this unit at T <= 4096 (largest 0.7 s, family total 32 s for 582 runs); references including 400-draw Monte Carlo about 70 s for the family'
+  symmetry_observed: 'mean: antisym up to the DC term; max|A + A.T| = 0.0 on delayed_noise and var2_bivariate, otherwise exactly 2 pi k / n_bins (largest 0.3696 = 2 pi/17, iid_gaussian T=64 low band; every one of the 60 mean impl runs is an exact multiple); max statistic: asym, |A + A.T| up to 6.283 (A[j,i] = -min_f angle C_ij); max|A - A.T| up to 4.69'
+  direction_observed: 'A[i,j] > 0 means channel i leads channel j (x_j is a delayed copy of x_i) wherever the phase does not wrap inside the band: delayed_noise T=1024 low band A[0,1] = +0.7768, A[1,0] = -0.7768 (direction agreement 1.0 on 6 entries); narrowband_f0-0.25 single bin A[1,0] = +pi/4 (x1 leads x0), A[0,2] = +pi/2; with wrapping (lag 5 in the full band) the sign is not informative (A[3,0] = -0.320 vs circular -1.565, both negative here but not by construction)'
+  candidate_resolutions:
+  - candidate: phase_*_max of a wrapped angle is close to pi for any broadband pair (almost constant)
+    outcome: confirmed
+    evidence: spectral.phase|iid_gaussian|{64,256,1024,4096}|kernel|null:max-full (pyspi 2.9035/3.1188/3.1340/3.1413, MC 2.9715/3.1142/3.1351/3.1400); impl max-full ranges iid T=256 [2.960, 3.142], var2 [3.005, 3.117], delayed_noise T=1024 [3.093, 3.140]; |A + A.T| up to 6.283. Not in KNOWN_ISSUES (REVIEW M4 covers the arithmetic mean, not the max statistic), so new; new_finding rests on this candidate alone (the 125-bin part of the grid candidate below is counted on spectral.band_selection)
+  - candidate: exact accounting A[i,j] + A[j,i] = pi n_pi / n_bins (elaborates M4)
+    outcome: confirmed
+    evidence: spectral.phase|*|kernel|dcpi:* (5 runs, max_abs <= 1.1e-16; iid T=64 low band 2 pi/17 for 2 pairs); all 60 mean impl runs give |A + A.T| = 2 pi k / n_bins exactly; already documented in REVIEW M4 (mechanism), so not new
+  - candidate: arithmetic averaging of wrapped phases is not a consistent band phase estimate (size of the M4 effect)
+    outcome: confirmed
+    evidence: spectral.phase|var2_bivariate|{256,1024,4096}|kernel|pop:mean-{full,high} (max_z up to 10.88; T=4096 high 1.1765 vs 2.4658) vs mcexp (pass at T=1024/4096); spectral.phase|*|circular:* (max_abs 2.879, 2.088, 1.149); mechanism already in REVIEW M4
+  - candidate: documented grid (125 bins, f0 = 4/T) differs; shared 0.25 bin; empty band NaN/ValueError
+    outcome: confirmed
+    evidence: spectral.phase|delayed_noise|1024|kernel|grid{67,97,1024}:mean-full (exact); impl ref_alt_strict_band_maxabs min 4.3e-4 over mean runs; spectral.phase|iid_gaussian|256|kernel|emptymax:max-delta; spectral.phase|delayed_noise|256|pipeline-detrend|eeg:mean-eeg11. The 125-bin / f0 = 4/T discrepancy is not in KNOWN_ISSUES; it is new to this audit but counted on spectral.band_selection (notes/spectral_coherence.md grid bullet), not as a new finding of this unit; the DC/Nyquist part is REVIEW M4 and DEPENDENCY_COMPATIBILITY_REVIEW.md, the endpoint part EEG_OPTIMIZATION_NOTES.md review item phase aggregation/endpoints
+  checks_run:
+  - run_ids:
+    - spectral.phase|*|*|kernel|impl:*
+    - spectral.phase|*|1024|pipeline|impl:*
+    - spectral.phase|trending|1024|pipeline-detrend|impl:*
+    reference: audit/checks/refs/spectral_coherence.py:do_impl (independent numpy/scipy re-implementation)
+    outcome: pass 120/120 (6 identifiers x 7 datasets at T=1024, x 3 datasets at T=64/256/4096, pipeline and detrend paths); max_abs 1.3e-11 (kernel), 1.8e-12 (pipeline), 1.4e-12 (pipeline-detrend); no +-pi flips between pyspi and the reference
+  - run_ids:
+    - spectral.phase|scaled_offset|1024|kernel|invariance:*
+    - spectral.phase|delayed_noise|1024|kernel|perm:*
+    - spectral.phase|shared_envelope|1024|pipeline|identical:*
+    reference: 'audit/checks/refs/spectral_coherence.py:do_invariance, do_perm (same-lineage: pyspi-vs-pyspi self-consistency), do_identical (analytic)'
+    outcome: 'pass 18/18: scale/offset invariance max_abs <= 1.8e-15, permutation equivariance max_abs 0.0, identical pair x2 == x0 phase A[0,2] = A[2,0] = 0.0 exactly'
+  - run_ids:
+    - spectral.phase|narrowband_f0-0.25|1024|kernel|f0bin:mean-f0
+    - spectral.phase|narrowband_f0-0.25|4096|kernel|f0bin:mean-f0
+    reference: audit/checks/refs/spectral_coherence.py:do_f0bin (analytic C(f0) = exp(i dphi); probe audit/checks/probes/spectral_coherence_bands.py:custom_band fmin = fmax = 0.25)
+    outcome: 'pass 2/2: angle C_ij(f0) = phi_i - phi_j (A[1,0] = +pi/4, A[0,2] = +pi/2, A[1,2] = +3pi/4) within max_abs 1.7e-3 (T=1024, atol 1.4e-2 = 4 x MC RMS) and 1.4e-3 (T=4096, atol 6.7e-3)'
+  - run_ids:
+    - spectral.phase|iid_gaussian|*|kernel|null:*
+    reference: audit/checks/refs/spectral_coherence.py:do_null (Monte Carlo of the independent estimator, 400 fresh draws)
+    outcome: 'pass 7/8: max statistic pyspi pair-mean 2.9035 / 3.1188 / 3.1340 / 3.1413 at T=64/256/1024/4096 vs MC 2.9715 / 3.1142 / 3.1351 / 3.1400 (saturates at pi); mean statistic within MC except iid T=1024 mean-full (max_z 2.02, per-entry z 2.83; pair-average z -1.26): a chance-level miss of the familywise 5 % rule on a statistic the impl run reproduces to 1e-12'
+  - run_ids:
+    - spectral.phase|var2_bivariate|*|kernel|pop:*
+    - spectral.phase|bivariate_gaussian|*|kernel|pop:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_pop_or_mcexp population branch (analytic S = H Sigma H^H; C = rho)
+    outcome: 'fail 6/11 (expected; documents REVIEW M4 wrap error): var2 full band pyspi 0.3377 / 1.0176 / 0.8866 at T=256/1024/4096 vs population arithmetic band phase 1.54-1.55 (max_z 4.39 / 3.93 / 10.41); high band -0.0262 / 1.4338 / 1.1765 vs 2.455-2.466 (max_z 4.77 / 4.08 / 10.88); low band (no wrapping) passes at every T (T=4096 0.5984 vs 0.642, max_z 0.91); bivariate_gaussian (population phase 0) passes'
+  - run_ids:
+    - spectral.phase|var2_bivariate|*|kernel|mcexp:*
+    - spectral.phase|bivariate_gaussian|*|kernel|mcexp:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_pop_or_mcexp Monte Carlo branch (expectation of the estimator as coded)
+    outcome: 'pass 9/11: the estimator''s own expectation is far from the population in the wrapping bands (var2 T=4096 high band MC 1.1807 vs population 2.4658) and pyspi matches it (max_z 0.04); var2 T=256 full and high fail (max_z 2.09 / 2.36): this draw sits at the 0.75 % / 0.5 % quantile of the 400-draw Monte Carlo (ref_mc_quantile_of_pyspi_offdiag; 1.2 % / 0.55 % with 2000 draws), while the impl run reproduces it exactly'
+  - run_ids:
+    - spectral.phase|delayed_noise|1024|pipeline-detrend|eeg:mean-eeg11
+    - spectral.phase|delayed_noise|256|pipeline-detrend|eeg:mean-eeg11
+    - spectral.phase|iid_gaussian|1024|pipeline-detrend|eeg:mean-eeg11
+    - spectral.phase|iid_gaussian|256|kernel|emptymax:max-delta
+    reference: audit/checks/refs/spectral_coherence.py:do_eeg, do_emptymax (probe audit/checks/probes/spectral_coherence_bands.py:eeg_bands, empty_max)
+    outcome: 'pass 4/4: the 11 retained EEG identifiers match the independent reference to max_abs 1.5e-12; at T=1024 the inclusive bands hold [2, 35, 125, 3, 3, 10, 21, 41, 91, 51] bins (strict would be [1, 34, 124, 1, 1, 8, 19, 39, 89, 49]); at T=256 the 1-4 Hz band is empty and all-NaN on both sides; statistic=max on the empty band raises ValueError zero-size array'
+  - run_ids:
+    - spectral.phase|delayed_noise|1024|kernel|nfft67:*
+    - spectral.phase|delayed_noise|1024|kernel|nfft97:*
+    - spectral.phase|delayed_noise|1024|kernel|grid67:mean-full
+    - spectral.phase|delayed_noise|1024|kernel|grid97:mean-full
+    - spectral.phase|delayed_noise|1024|kernel|grid1024:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_nfft, do_grid (probe audit/checks/probes/spectral_coherence_bands.py:truncated, grid)
+    outcome: 'pass 9/9: T=67 -> n_fft 72, T=97 -> n_fft 100 (5-smooth rule) reproduced to <= 1.3e-15; the scipy.fft next_fast_len grid would differ by up to 0.60; pyspi''s own grid equals nonneg(fftfreq(n_fft)) exactly (512 bins at T=1024, 36 at T=67, 50 at T=97; DC included, top bin 0.49902 at T=1024)'
+  - run_ids:
+    - spectral.phase|iid_gaussian|1024|kernel|const0:*
+    - spectral.phase|iid_gaussian|1024|kernel|const3.7:*
+    reference: audit/checks/refs/spectral_coherence.py:do_const (probe audit/checks/probes/spectral_coherence_bands.py:constant_channel)
+    outcome: 'pass 4/4: a constant channel (0.0 or 3.7, zero power after the constant detrend) gives an all-NaN row and column, other pairs unchanged'
+  - run_ids:
+    - spectral.phase|var2_bivariate|1024|kernel|mne:mean-full
+    - spectral.phase|delayed_noise|1024|kernel|mne:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_mne (external package mne-connectivity==0.9.0, mne==1.13.2; eigenvalue-weighted tapers)
+    outcome: 'pass 2/2 (qualitative): pyspi vs arithmetic band mean of angle(mne cohy): 7.8e-5 (delayed_noise) and 0.025 (var2; eigenvalue weighting moves bins across the branch cut); vs the circular mean: 2.888 and 0.459'
+  - run_ids:
+    - spectral.phase|*|kernel|dcpi:mean-*
+    reference: 'audit/checks/refs/spectral_coherence.py:do_dcpi (same-lineage: value = -A.T of the same pyspi run plus the analytic DC term)'
+    outcome: 'pass 5/5, max_abs <= 1.1e-16: A[i,j] + A[j,i] = 2 pi [Re S_ij(0) < 0] / n_bins exactly (iid T=64 low band 2 pi/17 = 0.3696 for 2 pairs; T=1024 3 pairs; 0 on delayed_noise and var2)'
+  - run_ids:
+    - spectral.phase|delayed_noise|1024|kernel|delay:mean-low
+    - spectral.phase|delayed_noise|1024|kernel|delay:mean-full
+    - spectral.phase|delayed_noise|1024|kernel|direction:mean-low
+    - spectral.phase|delayed_noise|1024|kernel|direction:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_delay (analytic 2 pi f (d_j - d_i), wrapped, arithmetic band mean)
+    outcome: 'pass 4/4: low band A[0,1] = +0.7768 vs analytic +0.7854, full band +1.5169 vs +1.5677 (max_z 1.37 / 1.38); direction agreement 1.0 on the 6 (low) and 2 (full) non-wrapping entries'
+  - run_ids:
+    - spectral.phase|delayed_noise|1024|kernel|circular:mean-full
+    - spectral.phase|delayed_noise|1024|kernel|circular:mean-low
+    - spectral.phase|var2_bivariate|4096|kernel|circular:mean-high
+    reference: audit/checks/refs/spectral_coherence.py:do_circular (circular band mean arg sum exp(i angle C))
+    outcome: 'fail 3/3 (expected; REVIEW M4): delayed_noise full band max_abs 2.879 (A[3,0] -0.320 vs circular -1.565; A[2,0] -0.518 vs -1.558), low band 2.088; var2 T=4096 high band 1.1765 vs circular 2.3255 (population circular 2.4684)'
+optimisation:
+  complexity_P_T: 'O(K*P*T log T) FFT + O(K*n_fft*P^2) two-sided taper-level CSM materialised as (1,1,5,n_fft,P,P) complex128 (connectivity.py:196-257) + O(n_fft*P^2) normalisation, K=5 tapers, n_fft=T; plus a P-independent DPSS cost (~17-20 ms, pure Python). Measured P exponent 1.06 (fit 8->32) and 2.71 between the 32x1024 and 118x1024 walls, T exponent 0.92: at P<=32 the fixed DPSS cost dominates (dpss_windows 71.3% of the 8x1024 profile), at 118x1024 the P^2 taper-level CSM term dominates (DPSS 1.6%) and the local exponent above 2 reflects GB-sized temporaries (memory-bound), not extra arithmetic.'
+  hotspot_1: .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:coherency (third-party:spectral_connectivity) 74.1% of the profiled SPI call at 118x1024
+  hotspot_2: '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:_complex_inner_product 33.4% at 118x1024; numpy angle (numpy/lib/_function_base_impl.py:angle) 17.0%; at 8x1024 transforms.py:dpss_windows 71.3% (audit/profiles/spectral.phase__8x1024.pstats) | opaque_share is the 8x1024 profile-JSON value (audit/profiles/spectral.phase__8x1024__profile.json, builtin tottime over the whole profile); the 118x1024 pstats named in profile_file gives a builtin tottime share of 0.203 of the compute_spi frame (audit/profiles/micro/prof_spectral__index.json). Both are lower bounds: numpy ufunc work sits in the self time of the calling Python frame.'
+  hotspot_owner: third-party:spectral_connectivity
+  opaque_share: 0.098
+  profile_file: audit/profiles/micro/prof_spectral.phase__118x1024.pstats
+  basis_scope_note: 'Cache key (measure,) (pyspi/statistics/spectral.py:46-50): the untimed EEG bands read the cached array as the timed non-retained bands do (0.007-0.024 s each), apart from the second phase
+    identifier, which rebuilds it through the first-insert string key (spectral.py:81; 2.63 s against the first build''s 2.29 s). CoherencePhase is the first spectral class in
+    pyspi/workflow/retained185.yaml:218, so an EEG run pays that duplicate on phase too, and the configured sum stands in for one build, the duplicate and the band reads'
+  opportunities:
+  - opportunity_id: spectral_coherence-1
+    opportunity: 'Store the first cache insert under self.key instead of the measure string (pyspi/statistics/spectral.py:81, data.spectral_mv = {"freq": freq, self.measure: res}), so the second identifier of the first spectral measure computed on a Data reads the cached array instead of rebuilding it (the redundant recompute listed in tests/README.md ''worth knowing''). A one-line change; spectral_csm-shared-csm, whose new cache key also removes it, builds on it here.'
+    opp_type: 'cache-sharing'
+    expected_speedup: '2-2.4x'
+    speedup_basis: 'microbench:audit/profiles/micro/opp_spectral_csm-shared-csm.json key paired (Workflow 4c, 3 repeats, same run; candidate = phase''s 3 config bands through pyspi with the first insert also stored under the tuple key the later identifiers look up): phase_first_insert_fixed 1.88x, 2.46x and 2.13x at 118x1024 (pyspi 9.66, 9.81 and 6.70 s against 5.15, 3.99 and 3.14 s), 1.93-1.94x at 32x1024 and 1.94-2.01x at 8x1024 + family-warm 118x1024 increments in audit/profiles/summary.json: first build 2.285 s, first-insert duplicate 2.629 s, configured sum 4.970 s, so removing the duplicate gives 4.970/2.341 = 2.12x on the ranking basis, the 2x lower bound rounded down. In an EEG run phase pays the duplicate: CoherencePhase is the first spectral class in pyspi/workflow/retained185.yaml (:218). In a configured family-warm run it falls on whichever spectral unit runs first on the Data (spectral.plv in the phase-sync family run, whose ranking basis leaves it out), so this avenue is recorded on spectral.phase only'
+    output_risk: 'bit-identical'
+    risk_evidence: 'audit/profiles/micro/opp_spectral_csm-shared-csm.json key paired: phase x3 with the first insert under the tuple key bit-identical with equal NaN masks to pyspi at 8x1024, 32x1024 and 118x1024 (diffs *__first_insert_fixed)'
+    effort: 'S'
+    depends_on: []
+  - opportunity_id: spectral_csm-shared-csm
+    opportunity: Compute the multitaper Fourier coefficients once per Data and memoise the taper-averaged CSM, power and coherency on the Data under a key without measure or band (pyspi/statistics/spectral.py:46-50, 64-83; this also removes the first-insert string key at :81 that makes the first spectral SPI on a Data compute twice). Every undirected measure, every psi/gd band, the 2x2 blocks of the bivariate directed path and the sgc nonparametric pair loop read from it; the phase-sync measures take their per-taper products from the shared coefficients.
+    opp_type: cache-sharing
+    expected_speedup: '2-2.2x'
+    speedup_basis: 'microbench:audit/profiles/micro/opp_spectral_csm-shared-csm.json key paired (Workflow 4c, 3 repeats, same run): phase''s 3 config bands through pyspi (first build, first-insert duplicate, read) against one shared Multitaper + coherency plus coherence_phase and the 3 band reductions, 1.92-2.19x at 118x1024, 1.93-1.97x at 32x1024 and 1.97-2.04x at 8x1024 (phase_shared_first_consumer) + profile:audit/profiles/micro/prof_spectral.phase__118x1024.pstats coherency 74.1% + family-warm 118x1024 increments 2.29 s and 2.63 s for the first two phase identifiers. In an EEG run phase is the first consumer (CoherencePhase is the first spectral class in pyspi/workflow/retained185.yaml, :218): it builds the shared coherency and keeps that build, so on phase the whole gain of this avenue is the first-insert duplicate it also removes (4.97 -> 2.34 s, 2.12x on the ranking basis), which is spectral_coherence-1, the one-line S-effort key fix. This avenue is therefore ranked after spectral_coherence-1 (depends_on) with residual_speedup 1x on phase; its own saving is on the later consumers (cohmag, icoh, psi, gd), whose records credit only the builds they drop. Later-consumer case, not reachable in the EEG order: phase would drop its coherency share, Amdahl 1/(1-0.741) = 3.9x (25-38x same-run from the shared coherency, phase_shared_later_consumer, because the band reductions cost almost nothing)'
+    output_risk: bit-identical
+    risk_evidence: 'audit/profiles/micro/opp_spectral_csm-shared-csm.json: cohmag, phase, psi x3, gd x3 bit-identical with equal NaN masks at 32x1024 and 118x1024 (same library methods fed one memoised coherency); the paired run repeats it for phase x3 at 8x1024, 32x1024 and 118x1024'
+    effort: M
+    depends_on:
+    - spectral_coherence-1
+    residual_speedup: '1x'
+  - opportunity_id: spectral_csm-1
+    opportunity: Form the taper-level products only on the (n_fft+1)//2 non-negative bins (slice the Fourier coefficients before connectivity.py:196-257 instead of dropping the negative bins afterwards), in frequency blocks so the per-taper temporaries stay small; for the linear measures (coherency, icoh, psi, gd) replace the (1,1,5,n_fft,N,N) complex128 tensor and its taper mean by one batched matmul over the taper axis.
+    opp_type: algorithmic
+    expected_speedup: 1.7-2.7x
+    speedup_basis: 'profile:audit/profiles/micro/prof_spectral.phase__118x1024.pstats coherency 74.1% + complexity:phase is angle() of the same coherency as cohmag,
+      so the cohmag figure is carried over; phase was not run in the spectral_csm-1 micro-benchmark, so this is not a microbench basis (context, cohmag only, from
+      audit/profiles/micro/opp_spectral_csm-1.json: coherency path at 118x1024, min of 3, sliced 1.95x, gemm 3.83x).
+      Ranked on the residual after spectral_csm-shared-csm (depends_on), itself stacked after spectral_coherence-1, with residual_speedup 1.6-2.6x. The residual here is the first-consumer case (spectral_coherence-1 drops the first-insert
+      duplicate at its 2x lower bound, shared-csm adds 1x on phase, and phase keeps one coherency build), whose composition is today''s single build (coherency 74.1%, angle 17.0% of the profiled call), so this avenue acts on 74.1% of the residual, Amdahl
+      1/(0.259 + 0.741/s) = 1.72x (sliced) and 2.76x (gemm) with the coherency-only gains backed out of the cohmag micro-benchmark (coherency 85.8% of the cohmag call in
+      audit/profiles/micro/prof_spectral.cohmag__118x1024.pstats; whole-call sliced 1.95x and gemm 3.83x give 2.31x and 7.2x on the coherency). Those are figures on the profiled
+      call. Against the family-warm 118x1024 increments (first build 2.285 s, first-insert duplicate 2.629 s, configured sum 4.970 s with 4 band reads) this avenue removes
+      0.741 x 2.285 x (1 - 1/2.31) = 0.96 s per build (1.46 s gemm). On today''s two-build cost that is 4.970 -> 2.91 s, 1.71x (2.71x gemm), the expected_speedup 1.7-2.7x. On the residual
+      after the duplicate is dropped (2.34 s), it is 1.70x (2.65x gemm), and on the residual the ranking stacks on, the configured sum divided by spectral_coherence-1''s lower bound 2x and shared-csm''s residual 1x
+      (2.485 s), it is 1.63x (2.42x gemm), so residual_speedup is 1.6-2.6x, its lower bound that ranking-residual figure rounded down.
+      In the later-consumer case the coherency is gone and this avenue saves nothing here'
+    output_risk: unverified-within-tolerance
+    risk_evidence: not run separately. Expected within-tolerance from the cohmag measurement in audit/profiles/micro/opp_spectral_csm-1.json (sliced 1.1-1.4e-16, gemm 1.7-2.2e-16, NaN masks equal; 7x100 golden 2.2e-16), because phase is angle() of the same coherency; angle() is discontinuous at +-pi, so a 1-ulp change of a coherency with Im near 0 and Re < 0 can flip a bin by 2*pi before the band mean, which a diff would have to rule out
+    effort: M
+    depends_on:
+    - spectral_csm-shared-csm
+    residual_speedup: 1.6-2.6x

@@ -1,0 +1,280 @@
+unit_id: spectral.cohmag
+status: profiled
+correctness:
+  metric_name_standard: band mean / band max of the multitaper magnitude-squared coherence (MSC) |C_xy(f)|^2 (fixed NW=3, K=5 tapers, single window)
+  canonical_ref: Carter 1987, Proc. IEEE 75(2):236-255 "Coherence and time delay estimation" (MSC definition gamma^2 = |S_xy|^2/(S_xx S_yy) and estimator bias/variance); Thomson 1982, Proc. IEEE 70(9):1055-1096, section III Eigenestimates pp.1060-1061 (unit-weight average of the first K eigenspectra, eq. 3.7-3.8), section V Adaptive Weighting p.1065 (not used here), section XIV Estimation of Coherence and Polyspectra p.1087 (locations as checked in the spectral.multitaper_csm record); Percival & Walden 1993, Spectral Analysis for Physical Applications, ch. 7 Multitaper Spectral Estimation, pp.331-377 (chapter title and pages from the authors' table of contents, as in spectral.multitaper_csm; section contents not checked); Bastos & Schoffelen 2016, Front. Syst. Neurosci. 9:175 (supplement ref [59]; quotations below checked against the paper). Carter 1987 equation/section numbers and the bias formula are from memory, not re-checked against the paper.
+  canonical_definition: gamma^2_xy(f) = |S_xy(f)|^2 / (S_xx(f) S_yy(f)) in [0, 1]; multitaper estimate S_hat_xy(f) = (1/K) sum_k X_k(f) conj(Y_k(f)) with K DPSS tapers. Bastos & Schoffelen 2016 (supplement [59]) define the "coherence coefficient" as the unsquared normalised magnitude |C| ("a normalized quantity bounded by 0 and 1"; numerator "the length of the vector average of the individual trial cross-spectral densities", denominator "the square root of the product of the average of the individual trial power estimates"), say "Mathematically, the coherence is the frequency domain equivalent to the time domain cross-correlation function" (not squared), and refer to the square only as "Its squared value" / "the squared coherence coefficient"; the phrase "coherence magnitude" does not occur in that paper (the supplement attributes it to [60], Schlögl & Supp 2006, not opened). The squared form is MSC. For independent Gaussian white series with K effectively independent tapers MSC_hat ~ Beta(1, K-1), mean 1/K; Carter 1987 gives bias approx (1 - gamma^2)^2 / K. Band summary (mean/max over frequency) is a pyspi construction.
+  documented_definition: 'supplement §1.5.1, p.13 (supplement.txt:601-614): "The coherence (also known as coherence magnitude and ordinary coherence [60] or coherence coefficient [59]) is an undirected frequency-dependent measure of linear association between time series x and y. Mathematically, it is the frequency domain equivalent of the squared time-domain cross correlation [59]. We compute mean (denoted by mean) and maximum (max) summary statistics of the coherence for the three frequency ranges". Same text GitBook spectral.md:24-45 (keywords undirected, linear, unsigned, bivariate, frequency-dependent). Common section: supplement §1.5, p.12 (heading at supplement.txt:570): "Each measure is based on the cross- and power-spectral densities at a given frequency and sampling rate, which is estimated via the multitaper technique ... we assume a sampling frequency fs = 1 throughout ... We use 125 uniformly sampled bins across the entire frequency range, f ∈ [f0, fs/2], where fs/2 is the Nyquist frequency and f0 = 4/T ... we take the mean (mean) and the maximum (max) values of each measure over three ranges ... fmin-0_fmax-0-5: f ∈ [0, fs/2]; fmin-0_fmax-0-25: f ∈ [0, fs/4]; fmin-0-25_fmax-0-5: f ∈ [fs/4, fs/2]" (supplement.txt:570-599; same text GitBook spectral.md:14-20). The briefing pack line ranges (582-613, 614-628, 629-642, 684-700) are offset by 12-14 lines from the headings in this copy of supplement.txt; the line numbers cited here are the ones opened.'
+  delegate_lib: spectral-connectivity==1.1.2 Connectivity.coherence_magnitude (connectivity.py:326-343) = _squared_magnitude(coherency()); spectra from Multitaper.fft (spectral_connectivity/transforms.py:238-260) using scipy.fftpack.fft; band selection and nanmean/nanmax in pyspi (numpy 2.5.4)
+  implemented_as: 'Input z-scored per channel (ddof=1; optional linear detrend first; Data defaults). The whole (P, T) record is one window: spectral_connectivity 1.1.2 Multitaper with defaults NW=3, n_tapers=floor(2*NW-1)=5, low-bias filter (DPSS concentration > 0.9; all 5 kept for T >= 8 in the probe), per-window constant (mean) detrend, tapers scaled by sqrt(fs), scipy.fftpack.fft with n_fft = next_fast_len(T) (zero padding when T is not 5-smooth, e.g. T=67 -> 72), divided by fs. Connectivity expectation "trials_tapers" = unweighted mean over the 5 tapers: S_ij(f) = (1/K) sum_k X_ik(f) conj(X_jk(f)). Coherency C_ij = S_ij / sqrt(S_ii S_jj). Only the first (n_fft+1)//2 FFT bins are kept: DC included, Nyquist dropped for even n_fft (T=256: 128 bins k/256, k=0..127). pyspi selects bins with fmin <= f <= fmax (closed at both ends) and applies np.nanmean or np.nanmax over that axis, then sets the diagonal to NaN; no Undirected mirroring. The cached spectral result (keyed by (measure,)) is shared by all six band/statistic identifiers of the unit. Measure: |C_ij(f)|^2 (connectivity.py:1183-1184 abs(x)**2), i.e. MSC, per bin, then band nanmean / nanmax. Probe: equals the from-scratch numpy/scipy-dpss reference to <= 2.2e-13 on 5 datasets x T in {64,256,1024} x 6 configs.'
+  implementation_trace:
+  - 'pyspi/config.yaml:635-720 .statistics.spectral CoherencePhase (637-663), CoherenceMagnitude (665-691), ImaginaryCoherence (694-720): six configs each (fs:1 | fmin 0/fmax 0.25 | fmin 0.25/fmax 0.5) x (mean | statistic: max)'
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then zscore(axis=1, nan_policy="omit", ddof=1) when normalise=True (default)'
+  - 'pyspi/calculator.py:295-345 Calculator.compute (HEAD a1f20c7): S = self._spis[spi].multivariate(self.dataset) (329); np.fill_diagonal(S, np.nan) (332); any exception -> self._table[spi] = NaN and a failed MetricReport (336-339) (trace-stage probe: Calculator output equals direct multivariate, max|diff| 0.0)'
+  - pyspi/statistics/spectral.py:4 imports spectral_connectivity via pyspi/_spectral_compat.py:10-28 (adapter only replaces np.in1d in the connectivity module namespace; not used by these three measures)
+  - 'pyspi/statistics/spectral.py:20-43 NonparametricSpectral.__init__: fmax default fs/2 (21-22); statistic mean -> np.nanmean, max -> np.nanmax (29-32); identifier suffix _multitaper_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g} with "." -> "-" (38-43)'
+  - pyspi/statistics/spectral.py:45-50 key = (self.measure,) for these classes, so all band/statistic configs share one cached spectrum
+  - 'pyspi/statistics/spectral.py:64-83 NonparametricSpectralMultivariate._get_cache: z = data.to_numpy(squeeze=True).T (T, P) (69); sc.Multitaper(z, sampling_frequency=self._fs) with all other defaults (70); Connectivity.from_multitaper(m) (71); res = getattr(conn, self.measure)() (73); freq = conn.frequencies (77); cache insert (78-81; first insert keyed by measure string, see tests/README.md "worth knowing")'
+  - 'pyspi/statistics/spectral.py:85-102 multivariate: freq_id = where((freq >= fmin) * (freq <= fmax)) (88, closed band); adj = statfn(adj_freq[0, freq_id, :, :], axis=0) (91); fill_diagonal NaN (101)'
+  - 'pyspi/base.py:121-138 Undirected.multivariate (mirror of the upper triangle) is NOT reached: MRO is [cls, NonparametricSpectralMultivariate, NonparametricSpectral, Unsigned, Undirected, Directed] (probe), so spectral.py:85-102 wins'
+  - 'pyspi/statistics/spectral.py:137-144 CoherenceMagnitude(NonparametricSpectralMultivariate, Undirected): identifier "cohmag", _measure "coherence_magnitude"'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:74-102 Multitaper.__init__ defaults: time_halfbandwidth_product=3 (78), detrend_type="constant" (79), n_tapers=None, n_fft_samples=None, is_low_bias=True (88)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:154-164 n_tapers = floor(2*NW - 1) = 5
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:166-178 n_time_samples_per_window = full series length (single window); 192-205 step = window
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:180-190 n_fft_samples = next_fast_len(window) (scipy.fftpack, imported at :29); frequencies = fftfreq(n_fft, 1/fs)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:238-260 fft(): _add_axes (263-271), _sliding_window (274-332, one window), detrend(type="constant") (253-254 -> 747-748 subtracts the mean), _multitaper_fft, swapaxes -> (windows, trials, tapers, n_fft, signals)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:335-354 _multitaper_fft: fft(time_series * tapers, n=n_fft, axis=-2) / sampling_frequency'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:357-387 _make_tapers -> dpss_windows (469-543: tridiagonal Slepian eigenproblem 575-629, sign fix 632-657, eigenvalues 676-698, low-bias filter eigenvalue > 0.9 at 668-673); tapers.T * sqrt(fs). Probe: tapers equal scipy.signal.windows.dpss(T, 3, Kmax=5) to 3.7e-15'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:156-172 Connectivity.from_multitaper: fourier_coefficients = m.fft(), expectation_type="trials_tapers"'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:45-53 EXPECTATION["trials_tapers"] = mean over axes (1, 2) (trials, tapers): unweighted taper average; 276-278 _expectation'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:73-89 _non_negative_frequencies: keeps indices 0..(n+1)//2 - 1 (DC kept, Nyquist dropped for even n_fft); applied to frequencies at 174-180'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:189-193 _power = E[X * conj(X)].real
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:195-208 _cross_spectral_matrix = _complex_inner_product(X[..., None], X[..., None]); 1187-1190 matmul(a, _conjugate_transpose(b)); 1485-1487 swapaxes(-1,-2).conjugate() => S_ij = X_i conj(X_j)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:210-220 _expectation_cross_spectral_matrix (blocks=None): expectation of the full CSM'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:295-313 coherency(): norm = sqrt(P_i P_j), norm==0 -> NaN (308), C = E[S] / norm (309), diagonal set to NaN (310-312), decorated with _non_negative_frequencies(axis=-3) (295)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:326-343 coherence_magnitude(): return _squared_magnitude(self.coherency()) (docstring: "The magnitude squared of the complex coherency ... bounded by 0 and 1")'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:1183-1184 _squared_magnitude(x) = xp.abs(x) ** 2
+  deviation_from_documented: '(1) Squaring: the code returns |C|^2; the supplement calls the SPI "coherence magnitude" but its text ("frequency domain equivalent of the squared time-domain cross correlation") describes the squared quantity, so the code agrees with the text and not with the plain reading of the name; that supplement sentence itself departs from its cited source [59], which calls the unsquared |C| the coherence coefficient and relates coherence to the (unsquared) cross-correlation function (pack hypothesis refined, see candidates). (2) Frequency grid: documented "125 uniformly sampled bins ... f ∈ [f0, fs/2], f0 = 4/T"; implemented the FFT grid k/n_fft, k = 0..(n_fft+1)//2 - 1 (T=64: 32 bins; T=256: 128 bins, 0..0.49609; T=67: zero-padded n_fft=72, 36 bins), DC (f=0) included in the [0, ...] bands, f0 = 4/T not applied, Nyquist (fs/2) never included for even n_fft. (3) Band edges closed at both ends: the f=0.25 bin (n_fft divisible by 4) belongs to both the low and the high band (probe T=256: low band last bin 0.25, high band first bin 0.25). (4) "undirected" with no mirroring (REVIEW M1; this was the earlier wording of tests/README.md bug 5, whose current item 5 is PLI signed antisymmetry, tests/README.md:206) has no numeric effect here: probe |A - A^T| = 0.0 exactly on every dataset tried. Items (2) and (3) are the shared band-selection rules owned and scored by the spectral.band_selection unit (its deviations (3) and (4)); they are listed here only with this unit''s numbers.'
+  deviation_from_canonical: 'Per bin the quantity is the standard multitaper MSC estimator (unweighted average over K=5 DPSS tapers, NW=3, no adaptive weights). Because NW is fixed at 3 for every T, K and hence the estimator degrees of freedom are fixed: the bias does not shrink as T grows (only the bandwidth 2W = 6/T narrows). Probe: iid_gaussian null mean of cohmag_mean_full 0.2295 / 0.1983 / 0.1964 / 0.1994 at T = 64 / 256 / 1024 / 4096 (theory 1/K = 0.2); var2_bivariate full band 0.3648 at T=4096 vs population band mean 0.2465 (Carter bias approx (1-0.2465)^2/5 = 0.114 accounts for it); bivariate_gaussian rho=0.3 pair 0.2647 vs rho^2 = 0.09 at T=4096. The max statistic is the maximum of n_fft/2 noisy estimates and increases with T under the null (0.666 / 0.765 / 0.791 / 0.878). No bias correction. The supplement cites [59] for "coherence coefficient", which Bastos & Schoffelen define as |C| (unsquared); pyspi returns |C|^2.'
+  units_and_range: 'Dimensionless, non-negative, nominally [0, 1] (max can exceed 1 by rounding: shared_envelope x0==x2 gives max 1.0000000000000009, mean 1.0). Symmetric exactly (|S_ij| = |S_ji|). NaN on the diagonal; an empty band gives an all-NaN matrix for mean (np.nanmean of an empty axis) and ValueError for max (whole Calculator table NaN).'
+  direction_convention: Undirected. A[i,j] = band statistic of |C_ij(f)|^2 with C_ij = S_ij/sqrt(S_ii S_jj), S_ij = mean_k X_i,k(f) conj(X_j,k(f)) (connectivity.py:205-207, 1187-1190, 1485-1487); A[i,j] == A[j,i] exactly in the probe (no mirror needed).
+  symmetry_expected: sym
+  already_documented: docs/storage_comparison/REVIEW.md M1 (spectral classes bypass Undirected.multivariate; no numeric effect for cohmag; this was the earlier wording of tests/README.md bug 5, whose current item 5 at tests/README.md:206 is PLI signed antisymmetry, see briefing/KNOWN_ISSUES.md item 5); DEPENDENCY_COMPATIBILITY_REVIEW.md:74-82 and tests/README.md dependency constraints (1.1.2 drops the Nyquist bin, 2.x includes it; pinned at 1.1.2); REVIEW M4 notes DC included / Nyquist excluded (for phase); tests/README.md "worth knowing" (first cache insert keyed by measure string -> one redundant recompute).
+  new_finding_candidates:
+  - 'CANDIDATE (pack hypothesis, refined): "coherence magnitude" is the magnitude SQUARED. connectivity.py:343 "return _squared_magnitude(self.coherency())" and :1184 "xp.abs(x) ** 2"; probe bivariate_gaussian T=4096: pyspi 0.2647 / 0.6715 equals mean|C|^2 0.2647 / 0.6715, while mean|C| is 0.4766 / 0.8109. The supplement sentence "the frequency domain equivalent of the squared time-domain cross correlation [59]" describes the squared quantity, but its cited source does not: Bastos & Schoffelen 2016 write "the coherence is the frequency domain equivalent to the time domain cross-correlation function" (no "squared") and define the coherence coefficient, which the supplement equates with this SPI, as the unsquared |C|. So the code agrees with the supplement sentence but not with the definition in [59] or with the plain reading of the name "magnitude".'
+  - 'CANDIDATE: documented frequency grid ("125 uniformly sampled bins", "f0 = 4/T") is not what runs: probe T=256 -> 128 bins from 0.0 to 0.49609375; T=64 -> 32 bins; T=67 -> n_fft 72 (zero padding), 36 bins; DC included whenever fmin=0. (The DC/Nyquist part is already in REVIEW M4 and DEPENDENCY_COMPATIBILITY_REVIEW.md; the 125-bin / f0 = 4/T mismatch is not listed in KNOWN_ISSUES.)'
+  - 'CANDIDATE: fixed NW=3 (K=5) makes the band-mean MSC a biased, non-consistent estimator whose null level is about 1/K = 0.2 for every T (probe 0.2295, 0.1983, 0.1964, 0.1994 at T=64..4096) and whose max-statistic null level grows with T (0.666 -> 0.878); var2_bivariate T=4096 0.3648 vs population 0.2465.'
+  - 'CANDIDATE: low and high bands share the f = fs/4 bin (closed interval at spectral.py:88; probe T=256 low band [0.0 .. 0.25], high band [0.25 .. 0.49609]); the high band never reaches fs/2.'
+  - 'CANDIDATE: empty band behaviour. Probe T=64 with the EEG band fmin=1/2048, fmax=4/2048: statistic mean returns an all-NaN matrix (RuntimeWarning only), statistic max raises "ValueError: zero-size array to reduction operation fmax which has no identity" (Calculator turns it into an all-NaN table).'
+  - 'CANDIDATE (hypothesis about the EEG identifiers, assuming fmin/fmax = Hz/2048 as the .3g strings suggest: 0.000488 = 1/2048, 0.00195 = 4/2048, ...): with n_fft = 512 the 1-4 Hz band holds 1 bin and 4-8 / 8-12 Hz hold 2 bins each, while the multitaper half-bandwidth W = 3/n_fft = 0.00586 (12 Hz at 2048 Hz) is wider than these bands, so the narrow-band values are not band-limited; with n_fft = 1024 the counts are 2 / 3 / 3 bins and W = 0.00293.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - var2_bivariate
+    - delayed_noise
+    - narrowband_f0-0.1
+    - shared_envelope
+    - gauss_ar1_pair
+    path: kernel
+    reference: 'from-scratch numpy: subtract per-channel mean; tapers = scipy.signal.windows.dpss(T, 3, Kmax=5, return_ratios=True) filtered by ratio > 0.9; X = numpy.fft.fft(taper * x, n=scipy.fftpack.next_fast_len(T)) (the library grid rule, spectral_connectivity transforms.py:29,184; scipy.fft.next_fast_len differs for non-5-smooth T: 63 -> 63 vs 64, 67 -> 70 vs 72, 77 -> 77 vs 80, and probe7 shows the scipy.fft rule misses the library by up to 0.24 (cohmag) at T=67 while the fftpack rule agrees to <= 1.4e-14 at T in {63, 67, 77}); S_ij = mean_k X_i conj(X_j); C = S_ij/sqrt(S_ii S_jj); keep first (n_fft+1)//2 bins; band fmin <= f <= fmax; np.nanmean / np.nanmax (no spectral_connectivity import; scratchpad prototype spectral_coherence/ref.py); measure |C|^2'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'agreement to <= 1e-10 absolute for every pair and all six identifiers at T in {64,256,1024,4096} (probe: max 2.2e-13); confirms trace, grid, band rule and squaring'
+  - datasets:
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic: x2 is bit-identical to x0 after preprocessing, so C_02(f) = 1 at every bin'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'A[0,2] = 1 to 1e-12 for all six identifiers (probe: mean 1.0, max 1.0000000000000009)'
+  - datasets:
+    - bivariate_gaussian
+    path: kernel
+    reference: 'analytic population: white bivariate Gaussian with correlation rho has gamma^2(f) = rho^2 at every f (0.09, 0.64); Carter 1987 bias approx (1-rho^2)^2/K with K=5; distinguishes |C|^2 from |C|'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'pyspi value close to rho^2 + (1-rho^2)^2/5 (0.256, 0.665) and far from rho (0.3, 0.8) or the mean of |C| (probe T=4096: 0.2647, 0.6715 vs mean|C| 0.4766, 0.8109); documents squaring and fixed-K bias'
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic null: per-bin MSC_hat ~ Beta(1, K-1) with K=5 (mean 0.2) for independent white Gaussian series; Monte Carlo of the from-scratch reference on fresh iid draws for the max statistic'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: band-mean cohmag about 0.2 at every T, not decreasing with T (probe 0.2295, 0.1983, 0.1964, 0.1994); band-max null level increases with T (probe 0.666, 0.765, 0.791, 0.878)
+  - datasets:
+    - var2_bivariate
+    path: kernel
+    reference: analytic population spectrum S_true(f) = H Sigma H^H stored with the dataset (513 freqs), gamma^2(f) interpolated to the FFT grid and averaged over the same bins; compare also to gamma^2 + (1-gamma^2)^2/K
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pyspi exceeds the population band mean by roughly (1-gamma^2)^2/K and does not converge as T grows (probe full band 0.3591 / 0.3850 / 0.3648 at T=256/1024/4096 vs population 0.2465)
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'invariance: coherence is invariant to per-channel scale and offset (offset removed by the constant detrend); compare Data(scaled_offset, normalise=False) with Data(bivariate_gaussian) (same draw)'
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: equal to 1e-12 (probe max|diff| 2.2e-16)
+  - datasets:
+    - trending
+    - bivariate_gaussian
+    path: pipeline-detrend
+    reference: pyspi with detrend=True vs detrend=False against the untrended bivariate_gaussian draw (constant per-window detrend does not remove a linear trend)
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'without detrend the low band is inflated for trending pairs (probe T=1024 pair (1,3): 0.5055 vs untrended 0.2148); with detrend it is close to the untrended value (0.2163)'
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - var2_bivariate
+    - delayed_noise
+    - narrowband_f0-0.1
+    - shared_envelope
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'self-consistency: A == A.T and channel permutation equivariance A(X[perm]) == A(X)[perm][:, perm]'
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: both hold exactly (probe |A - A^T| = 0.0); confirms that the missing Undirected mirror has no numeric effect for this unit
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'band-rule enumeration from the FFT grid: count bins in each configured band and in the EEG bands (assumed Hz/2048) for n_fft in {64,256,512,1024}'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: full band has (n_fft+1)//2 bins starting at 0 and ending below 0.5; low and high bands share the 0.25 bin; empty bands give NaN (mean) or ValueError (max)
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    path: kernel
+    reference: 'nitime.algorithms.multi_taper_csd / multi_taper coherence with NW=3, K=5, adaptive=False (nitime is the ancestor of spectral_connectivity dpss_windows: "Copied from NiTime and MNE")'
+    reference_kind: same-lineage
+    criterion: tolerance
+    expected_outcome: per-bin MSC agrees to round-off on the shared grid after matching normalisation (same-lineage cross-check only)
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/spectral_coherence.py:do_impl (independent numpy.fft + scipy.signal.windows.dpss re-implementation via _kernels_spectral), do_identical / do_f0bin / do_pop_or_mcexp (analytic: identical pair, single-bin sinusoid coherency, VAR(2) population S = H Sigma H^H), do_null / mcexp (Monte Carlo of the independent estimator), do_mne (mne-connectivity==0.9.0 external form check), do_invariance / do_perm (same-lineage pyspi-vs-pyspi self-consistency, no verdict rests on them); probes audit/checks/probes/spectral_coherence_bands.py'
+  check_data: iid_gaussian, bivariate_gaussian, scaled_offset, trending, var2_bivariate, delayed_noise, narrowband_f0-0.1, narrowband_f0-0.25, shared_envelope, gauss_ar1_pair; T in {64, 256, 1024, 4096} plus truncations to 67 and 97
+  agreement_criterion: 'independent re-implementation: rtol = atol = 1e-10 on every entry of every identifier; analytic identities exact (rtol 1e-10, atol 1e-12); single f0 bin: atol = 4 x Monte Carlo RMS; null and expectation checks: |pyspi - MC mean| <= 2 se with se = MC sd x z(1-0.05/(2m))/2 (familywise over m entries)'
+  closeness: 'Independent re-implementation: 120/120 runs pass, max_abs 7.6e-13 (kernel), 8.9e-14 (pipeline), 1.3e-13 (detrend); EEG bands 1.0e-13; T=67/97 zero padding <= 1.3e-15. Identical pair exact (max 1 + 8.9e-16). Single bin at f0=0.25: 1.1e-4 from 1 (T=1024). Squared vs unsquared: the unsquared |C| differs by up to 0.250 (impl alt key) and by 0.212 on bivariate_gaussian T=4096 (0.2647 vs 0.4766); mne coh^2 agrees to 7.9e-5 while mne coh differs by 0.204. Null level 0.1964-0.2295 for T=64..4096 (MC 0.2001-0.2040); population var2 0.2465 vs pyspi 0.3648 at T=4096 (max_z 12.53), within MC spread of the estimator (max_z 0.60).'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 9 squared-vs-not: pyspi returns |C|^2 under the name coherence magnitude, while ref [59] calls |C| the coherence coefficient (difference
+    up to 0.25); the independent re-implementation agrees to max_abs 7.6e-13 (120/120 runs).'
+  documentation_status: misdescribed
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Per bin the value is the canonical magnitude-squared coherence |S_xy|^2/(S_xx S_yy) (Carter 1987) of a K=5, NW=3 unweighted multitaper estimate, reproduced to 7.6e-13 by the independent re-implementation (120/120 impl runs); the score rests on those runs, because the identical-pair and f0-bin analytic runs equal 1 under |C|^2 and |C| alike and do not separate the forms (hence check_method independent-impl). (1) The one unit-level convention: the squared form under the name ''coherence magnitude''; the supplement text says "squared time-domain cross correlation" (supplement.txt:605), while Bastos & Schoffelen 2016 [59] call the unsquared |C| the coherence coefficient (difference up to 0.25 here); this is the anchor-9 squared-vs-not convention. Band-level deviations, not conventions, that also change these values: (2) the band summary runs over the FFT grid k/n_fft with DC included and fs/2 excluded, not the documented 125 bins on [4/T, fs/2] (excluding DC changes band means by up to 0.036 and band maxima by up to 0.092, impl runs ref_alt_no_dc_maxabs); (3) closed band edges, so the 0.25 bin is in both the low and the high band (a strict band moves band means by up to 0.031 in the impl runs and 0.16 on the narrow EEG bands of the eeg:mean-eeg11 run, and band maxima by up to 0.273; only the high band isolates the closed edge, because on fmin = 0 bands the strict alternative also drops DC); the empty-band NaN/ValueError behaviour belongs here too. Items (2) and (3) are owned and scored by spectral.band_selection (variant 6, its deviations (3) and (4)); they are recorded here with this unit''s numbers and are not scored again in this unit or counted as new findings of it. (4) fixed NW=3 keeps the estimator bias constant in T (null level about 1/K = 0.2 at every T; var2 0.365 vs population 0.2465 at T=4096) and the max statistic grows with T. Finite-sample bias is reported separately (pop runs), not as a formula error.'
+  new_finding: true
+  definition_under_review: true
+  check_cost: 'cheap: 190 pyspi runs of this unit at T <= 4096 (largest 0.7 s, family total 32 s for 582 runs); references including 400-draw Monte Carlo about 70 s for the family'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 exactly in all 120 impl runs (all datasets, paths, identifiers); the missing Undirected mirror (REVIEW M1) has no numeric effect'
+  direction_observed: 'none: A[i,j] == A[j,i] exactly; no lead/lag information (delayed_noise, var2_bivariate, narrowband give symmetric matrices)'
+  candidate_resolutions:
+  - candidate: '''coherence magnitude'' is the magnitude squared |C|^2 (agrees with the supplement sentence, not with [59] or the plain name)'
+    outcome: confirmed
+    evidence: spectral.cohmag|*|impl:* (reference |C|^2 passes 120/120; ref_alt_unsquared_maxabs up to 0.250); spectral.cohmag|bivariate_gaussian|4096|kernel|unsquared:mean-full (0.2647 vs mean|C| 0.4766); spectral.cohmag|var2_bivariate|1024|kernel|mne:mean-full (mne coh^2 7.9e-5, mne coh 0.204)
+  - candidate: documented grid (125 bins, f0 = 4/T) is not what runs; DC included
+    outcome: confirmed
+    evidence: spectral.cohmag|delayed_noise|1024|kernel|grid1024/grid67/grid97:mean-full (512 / 36 / 50 bins, DC included, exact); impl runs ref_alt_no_dc_maxabs up to 0.036 over the mean runs (iid_gaussian|64|impl:mean-low) and 0.092 over the max runs (impl:max-low); DC/Nyquist part already in REVIEW M4 and DEPENDENCY_COMPATIBILITY_REVIEW.md, the 125-bin / f0 = 4/T mismatch is not; the same finding is spectral.band_selection deviation (4), counted there and not as a new finding of this unit
+  - candidate: 'fixed NW=3 (K=5): band-mean null level about 1/K at every T, max null grows with T, var2 bias does not shrink'
+    outcome: confirmed
+    evidence: spectral.cohmag|iid_gaussian|{64,256,1024,4096}|kernel|null:* (mean 0.2295/0.1983/0.1964/0.1994, max 0.6658/0.7652/0.7905/0.8782, all within MC); spectral.cohmag|var2_bivariate|{256,1024,4096}|kernel|pop:mean-full (max_z 2.83/7.28/12.53) vs mcexp (pass)
+  - candidate: low and high bands share the f = fs/4 bin; the high band never reaches fs/2
+    outcome: confirmed
+    evidence: 'impl runs: strict-band alternative differs in every mean run (ref_alt_strict_band_maxabs 1.6e-5 to 0.031 over the impl mean runs, up to 0.16 on the EEG bands of eeg:mean-eeg11; the 0.273 is a max run, iid_gaussian|256|impl:max-high); on the low and full bands the strict alternative (band_mask inclusive=False, audit/checks/refs/_kernels_spectral.py:73) also drops DC, so only the high band (mean runs up to 0.020) isolates the closed-edge effect; band sizes at T=1024 low 257 bins (0..0.25), high 256 bins (0.25..0.49902) (spectral.phase|*|dcpi n_bins 257 / 256); grid1024 top bin 0.49902; the same finding is spectral.band_selection deviation (3), counted there and not as a new finding of this unit'
+  - candidate: 'empty band: mean -> all-NaN, max -> ValueError (Calculator turns it into NaN)'
+    outcome: confirmed
+    evidence: spectral.cohmag|iid_gaussian|256|kernel|emptymax:max-delta (ValueError zero-size array, 0 bins); spectral.cohmag|delayed_noise|256|pipeline-detrend|eeg:mean-eeg11 (1-4 Hz slice all-NaN on both sides, ref_empty_bands [0]); the same empty-selection behaviour is recorded on spectral.band_selection (units_and_range and its NaN-aggregation candidate), counted there and not as a new finding of this unit
+  - candidate: EEG identifiers are Hz/2048 bands holding 1-3 FFT bins, narrower than the multitaper half-bandwidth
+    outcome: confirmed
+    evidence: 'pyspi/workflow/retained185.yaml:257-277 (fmin 0.00048828125 = 1/2048 ... fmax 0.1220703125 = 250/2048); spectral.cohmag|delayed_noise|1024|pipeline-detrend|eeg:mean-eeg11 (0.5 s windows at 2048 Hz: 1-4 / 4-8 / 8-12 Hz hold 2 / 3 / 3 bins inclusive, 1 / 1 / 1 strict; bin spacing 2 Hz, half-bandwidth W = 6 Hz); the narrow-band bin counts are also spectral.band_selection''s narrow-EEG-band candidate, counted there'
+  checks_run:
+  - run_ids:
+    - spectral.cohmag|*|*|kernel|impl:*
+    - spectral.cohmag|*|1024|pipeline|impl:*
+    - spectral.cohmag|trending|1024|pipeline-detrend|impl:*
+    reference: audit/checks/refs/spectral_coherence.py:do_impl (independent numpy/scipy re-implementation)
+    outcome: pass 120/120 (6 identifiers x 7 datasets at T=1024, x 3 datasets at T=64/256/4096, pipeline and detrend paths); max_abs 7.6e-13 (kernel), 8.9e-14 (pipeline), 1.3e-13 (pipeline-detrend); pyspi's preprocessed input equals the reference z-score/detrend exactly (0.0)
+  - run_ids:
+    - spectral.cohmag|scaled_offset|1024|kernel|invariance:*
+    - spectral.cohmag|delayed_noise|1024|kernel|perm:*
+    - spectral.cohmag|shared_envelope|1024|pipeline|identical:*
+    reference: 'audit/checks/refs/spectral_coherence.py:do_invariance, do_perm (same-lineage: pyspi-vs-pyspi self-consistency), do_identical (analytic)'
+    outcome: 'pass 18/18: scale/offset invariance max_abs <= 1.8e-15, permutation equivariance max_abs 0.0, identical pair x2 == x0 cohmag A[0,2] = 1 (mean exact, max 1 + 8.9e-16)'
+  - run_ids:
+    - spectral.cohmag|narrowband_f0-0.25|1024|kernel|f0bin:mean-f0
+    - spectral.cohmag|narrowband_f0-0.25|4096|kernel|f0bin:mean-f0
+    reference: audit/checks/refs/spectral_coherence.py:do_f0bin (analytic C(f0) = exp(i dphi); probe audit/checks/probes/spectral_coherence_bands.py:custom_band fmin = fmax = 0.25)
+    outcome: 'pass 2/2: cohmag(f0) = 1 within max_abs 1.1e-4 (T=1024, atol 3.8e-4 = 4 x MC RMS) and 9.2e-6 (T=4096, atol 9.1e-5)'
+  - run_ids:
+    - spectral.cohmag|iid_gaussian|*|kernel|null:*
+    reference: audit/checks/refs/spectral_coherence.py:do_null (Monte Carlo of the independent estimator, 400 fresh draws)
+    outcome: 'pass 8/8: band-mean null level pyspi 0.2295 / 0.1983 / 0.1964 / 0.1994 at T=64/256/1024/4096 vs Monte Carlo 0.2040 / 0.2011 / 0.2005 / 0.2001 (per-bin theory 1/K = 0.2); band-max null pyspi 0.6658 / 0.7652 / 0.7905 / 0.8782 vs MC 0.6055 / 0.7200 / 0.8025 / 0.8610 (grows with T)'
+  - run_ids:
+    - spectral.cohmag|var2_bivariate|*|kernel|pop:*
+    - spectral.cohmag|bivariate_gaussian|*|kernel|pop:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_pop_or_mcexp population branch (analytic S = H Sigma H^H; C = rho)
+    outcome: 'fail 10/11 (expected; documents the fixed-K bias): var2 full band pyspi 0.3591 / 0.3850 / 0.3648 at T=256/1024/4096 vs population MSC 0.2465 (max_z 2.83 / 7.28 / 12.53; Carter prediction 0.2465 + (1-0.2465)^2/5 = 0.3600); bivariate_gaussian T=4096 pair (0,1) 0.2647 vs rho^2 = 0.09 (max_z 25.56); only var2 T=256 high band passes (max_z 1.36)'
+  - run_ids:
+    - spectral.cohmag|var2_bivariate|*|kernel|mcexp:*
+    - spectral.cohmag|bivariate_gaussian|*|kernel|mcexp:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_pop_or_mcexp Monte Carlo branch (expectation of the estimator as coded)
+    outcome: 'pass 11/11: pyspi within the Monte Carlo spread of the estimator''s expectation (var2 T=4096 full band 0.3648 vs MC mean 0.3705, max_z 0.60; bivariate T=4096 max_z 1.05)'
+  - run_ids:
+    - spectral.cohmag|delayed_noise|1024|pipeline-detrend|eeg:mean-eeg11
+    - spectral.cohmag|delayed_noise|256|pipeline-detrend|eeg:mean-eeg11
+    - spectral.cohmag|iid_gaussian|1024|pipeline-detrend|eeg:mean-eeg11
+    - spectral.cohmag|iid_gaussian|256|kernel|emptymax:max-delta
+    reference: audit/checks/refs/spectral_coherence.py:do_eeg, do_emptymax (probe audit/checks/probes/spectral_coherence_bands.py:eeg_bands, empty_max)
+    outcome: 'pass 4/4: the 11 retained EEG identifiers match the independent reference to max_abs 1.0e-13; at T=1024 the inclusive bands hold [2, 35, 125, 3, 3, 10, 21, 41, 91, 51] bins (strict would be [1, 34, 124, 1, 1, 8, 19, 39, 89, 49]); at T=256 the 1-4 Hz band is empty and all-NaN on both sides; statistic=max on the empty band raises ValueError zero-size array'
+  - run_ids:
+    - spectral.cohmag|delayed_noise|1024|kernel|nfft67:*
+    - spectral.cohmag|delayed_noise|1024|kernel|nfft97:*
+    - spectral.cohmag|delayed_noise|1024|kernel|grid67:mean-full
+    - spectral.cohmag|delayed_noise|1024|kernel|grid97:mean-full
+    - spectral.cohmag|delayed_noise|1024|kernel|grid1024:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_nfft, do_grid (probe audit/checks/probes/spectral_coherence_bands.py:truncated, grid)
+    outcome: 'pass 9/9: T=67 -> n_fft 72, T=97 -> n_fft 100 (5-smooth rule) reproduced to <= 1.3e-15; the scipy.fft next_fast_len grid would differ by up to 0.022; pyspi''s own grid equals nonneg(fftfreq(n_fft)) exactly (512 bins at T=1024, 36 at T=67, 50 at T=97; DC included, top bin 0.49902 at T=1024)'
+  - run_ids:
+    - spectral.cohmag|iid_gaussian|1024|kernel|const0:*
+    - spectral.cohmag|iid_gaussian|1024|kernel|const3.7:*
+    reference: audit/checks/refs/spectral_coherence.py:do_const (probe audit/checks/probes/spectral_coherence_bands.py:constant_channel)
+    outcome: 'pass 4/4: a constant channel (0.0 or 3.7, zero power after the constant detrend) gives an all-NaN row and column, other pairs unchanged'
+  - run_ids:
+    - spectral.cohmag|var2_bivariate|1024|kernel|mne:mean-full
+    - spectral.cohmag|delayed_noise|1024|kernel|mne:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_mne (external package mne-connectivity==0.9.0, mne==1.13.2; eigenvalue-weighted tapers)
+    outcome: 'pass 2/2 (qualitative): pyspi vs band mean of mne coh^2: max_abs 7.9e-5 (var2) and 1.7e-5 (delayed_noise); vs mne coh (unsquared): 0.204 and 0.011'
+  - run_ids:
+    - spectral.cohmag|bivariate_gaussian|4096|kernel|unsquared:mean-full
+    reference: audit/checks/refs/spectral_coherence.py:do_unsquared (band mean of |C|)
+    outcome: 'fail (expected; records the canonical unsquared form): max_abs 0.212; pair (0,1) pyspi 0.2647 vs mean|C| 0.4766, pair (2,3) 0.6715 vs 0.8109; the squared reference gives 0.2647'
+optimisation:
+  complexity_P_T: 'O(K*P*T log T) FFT + O(K*n_fft*P^2) two-sided taper-level CSM materialised as (1,1,5,n_fft,P,P) complex128 (connectivity.py:196-257) + O(n_fft*P^2) normalisation, K=5 tapers, n_fft=T; plus a P-independent DPSS cost (~17-20 ms, pure Python). Measured P exponent 1.00 (fit 8->32) and 2.64 between the 32x1024 and 118x1024 walls, T exponent 0.92: at P<=32 the fixed DPSS cost dominates (dpss_windows 74.0% of the 8x1024 profile), at 118x1024 the P^2 taper-level CSM term dominates (DPSS 1.9%) and the local exponent above 2 reflects GB-sized temporaries (memory-bound), not extra arithmetic.'
+  hotspot_1: .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:coherency (third-party:spectral_connectivity) 85.8% of the profiled SPI call at 118x1024 (two _power passes and one taper-level CSM; self time 24.8% is the normalisation and division)
+  hotspot_2: '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:_complex_inner_product (third-party:spectral_connectivity, numpy matmul outer products) 38.5% at 118x1024, plus the taper mean (numpy ufunc reduce) 17.2%; at 8x1024 transforms.py:tridisolve (DPSS) is 65.6% (audit/profiles/spectral.cohmag__8x1024.pstats) | opaque_share is the 8x1024 profile-JSON value (audit/profiles/spectral.cohmag__8x1024__profile.json, builtin tottime over the whole profile); the 118x1024 pstats named in profile_file gives a builtin tottime share of 0.232 of the compute_spi frame (audit/profiles/micro/prof_spectral__index.json). Both are lower bounds: numpy ufunc work sits in the self time of the calling Python frame.'
+  hotspot_owner: third-party:spectral_connectivity
+  opaque_share: 0.111
+  profile_file: audit/profiles/micro/prof_spectral.cohmag__118x1024.pstats
+  basis_scope_note: 'Cache key (measure,) (pyspi/statistics/spectral.py:46-50): the retained fmin-0_fmax-0-5 identifier pays the unit''s one build (2.66 s at 118x1024, family-warm) and the 10 untimed EEG bands read
+    that cached array as the 5 timed non-retained bands do (0.007-0.024 s each), so the configured sum (one build plus 5 band reads) stands in for one build plus 10 band reads'
+  opportunities:
+  - opportunity_id: spectral_csm-shared-csm
+    opportunity: Compute the multitaper Fourier coefficients once per Data and memoise the taper-averaged CSM, power and coherency on the Data under a key without measure or band (pyspi/statistics/spectral.py:46-50, 64-83; this also removes the first-insert string key at :81 that makes the first spectral SPI on a Data compute twice). Every undirected measure, every psi/gd band, the 2x2 blocks of the bivariate directed path and the sgc nonparametric pair loop read from it; the phase-sync measures take their per-taper products from the shared coefficients.
+    opp_type: cache-sharing
+    expected_speedup: 6-7.2x
+    speedup_basis: 'profile:audit/profiles/micro/prof_spectral.cohmag__118x1024.pstats coherency 85.8%, from_multitaper (Fourier transform with DPSS) 2.8% of the profiled call.
+      In an EEG run cohmag is a later consumer of the shared coherency: CoherencePhase runs first (pyspi/workflow/retained185.yaml:218, CoherenceMagnitude at :248) and builds it, so
+      cohmag drops its own coherency build, Amdahl 1/(1 - 0.858) = 7.0x on the profiled call, and 1/(1 - 0.886) = 8.8x with the shared Fourier transform. The ranking basis is
+      the configured sum (2.739 s per window at 118x1024, family-warm: the 2.663 s build of the profiled identifier plus 5 band reads, 0.076 s, that a later consumer still pays), so
+      against it the figures are 2.739/(2.739 - 0.858 x 2.663) = 6.03x and 2.739/(2.739 - 0.886 x 2.663) = 7.2x; the 6x lower bound is that EEG-order figure rounded down,
+      the one the ranking uses (README ''Optimisation columns'', rules 1 and 4). A run in which cohmag builds the shared coherency itself gains about 1x. Context, not a cohmag
+      speedup: audit/profiles/micro/opp_spectral_csm-shared-csm.json gives 2.14x at 118x1024 on its 8-identifier set (cohmag, phase, psi x3, gd x3) with cohmag bit-identical;
+      cohmag was not timed alone there'
+    output_risk: bit-identical
+    risk_evidence: 'audit/profiles/micro/opp_spectral_csm-shared-csm.json: cohmag, phase, psi x3, gd x3 bit-identical with equal NaN masks at 32x1024 and 118x1024 (same library methods fed one memoised coherency)'
+    effort: M
+    depends_on: []
+  - opportunity_id: spectral_csm-1
+    opportunity: Form the taper-level products only on the (n_fft+1)//2 non-negative bins (slice the Fourier coefficients before connectivity.py:196-257 instead of dropping the negative bins afterwards), in frequency blocks so the per-taper temporaries stay small; for the linear measures (coherency, icoh, psi, gd) replace the (1,1,5,n_fft,N,N) complex128 tensor and its taper mean by one batched matmul over the taper axis.
+    opp_type: algorithmic
+    expected_speedup: 2-4x
+    speedup_basis: 'microbench:audit/profiles/micro/opp_spectral_csm-1.json cohmag at 118x1024 (min of 3): sliced 1.95x, gemm 3.83x (earlier single-repeat run 2.27x / 4.31x); 32x1024 1.68x / 2.19x + profile:audit/profiles/micro/prof_spectral.cohmag__118x1024.pstats coherency 85.8%.
+      Ranked after spectral_csm-shared-csm (depends_on) with residual_speedup 1x: that avenue shares one coherency per Data among phase, cohmag, icoh, psi and gd
+      (audit/notes/spectral_csm.md:239), and CoherencePhase runs first both in an EEG run (pyspi/workflow/retained185.yaml:218, CoherenceMagnitude at :248) and in the family-warm run
+      (audit/profiles/spectral.cohmag__118x1024__family-warm.json lists the phase identifiers first), so cohmag is a later consumer of a shared coherency and this avenue saves nothing here; its
+      saving on that one build is credited on spectral.phase. The range above, measured on the cohmag call, is the figure on today''s single-build cost. Shared-csm here is ranked at its
+      later-consumer lower bound (6x on the coherency share 85.8%, against the configured sum), so the coherency build is credited once on this unit, to shared-csm, and this avenue has none left to act on'
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_spectral_csm-1.json: cohmag sliced max_abs_diff 1.1e-16 (32x1024) and 1.4e-16 (118x1024), gemm 2.2e-16 / 1.7e-16, NaN masks equal; 7x100 golden max_abs 2.2e-16'
+    effort: M
+    depends_on:
+    - spectral_csm-shared-csm
+    residual_speedup: 1x

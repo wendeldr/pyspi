@@ -1,0 +1,433 @@
+{
+ "earlier_runs": [
+  {
+   "label": "run1 (analyst)",
+   "shapes": {
+    "3x256": {
+     "te_kraskov_NN-4_k-max-10_tau-max-4": {
+      "baseline_cpu_call_wall_s": 4.255704732990125,
+      "baseline_cpu_s": 10.728916638000015,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 3.831778394000139,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 1.1650786430109292,
+      "candidate_cpu_s": 1.2959146479999788,
+      "candidate_num_threads": 1,
+      "candidate_s": 1.173994661992765,
+      "max_abs_diff": 1.1102230246251565e-15,
+      "max_rel_diff": 7.957592121867108e-14,
+      "n_entries": 9,
+      "nan_mask_equal": true,
+      "speedup": 3.2638805933716872,
+      "unit_id": "infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4"
+     }
+    },
+    "8x1024": {
+     "mi_kraskov_NN-4": {
+      "baseline_cpu_call_wall_s": 5.229118906005169,
+      "baseline_cpu_s": 5.863597065,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 3.0622900699963793,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 0.16884422600560356,
+      "candidate_cpu_s": 0.1703666319999968,
+      "candidate_num_threads": 1,
+      "candidate_s": 0.13633284700335935,
+      "max_abs_diff": 1.5987211554602254e-14,
+      "max_rel_diff": 1.6543014380270657e-12,
+      "n_entries": 64,
+      "nan_mask_equal": true,
+      "speedup": 22.461865480744507,
+      "unit_id": "infotheory.mi.kraskov"
+     },
+     "mi_kraskov_NN-4_DCE": {
+      "baseline_cpu_call_wall_s": 5.564491169003304,
+      "baseline_cpu_s": 6.278717495999999,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 4.338425063993782,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 0.3597036930004833,
+      "candidate_cpu_s": 0.36640970199999856,
+      "candidate_num_threads": 1,
+      "candidate_s": 0.1553814110084204,
+      "max_abs_diff": 1.5987211554602254e-14,
+      "max_rel_diff": 3.3723088404184345e-11,
+      "n_entries": 64,
+      "nan_mask_equal": true,
+      "speedup": 27.921133138369264,
+      "unit_id": "infotheory.mi.kraskov_DCE"
+     },
+     "te_kraskov_NN-4_k-1_kt-1_l-1_lt-1": {
+      "baseline_cpu_call_wall_s": 2.509023259000969,
+      "baseline_cpu_s": 3.2254889539999994,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 1.569727939000586,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 0.4647771759919124,
+      "candidate_cpu_s": 0.4700885130000074,
+      "candidate_num_threads": 1,
+      "candidate_s": 0.5065974199969787,
+      "max_abs_diff": 2.886579864025407e-15,
+      "max_rel_diff": 8.352904194874885e-13,
+      "n_entries": 64,
+      "nan_mask_equal": true,
+      "speedup": 3.098570732969678,
+      "unit_id": "infotheory.te.kraskov_k-1_kt-1_l-1_lt-1"
+     },
+     "tlmi_kraskov_NN-4": {
+      "baseline_cpu_call_wall_s": 4.6073901769996155,
+      "baseline_cpu_s": 5.286847882999993,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 2.9012811230059015,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 0.13945504000002984,
+      "candidate_cpu_s": 0.13946377800000676,
+      "candidate_num_threads": 1,
+      "candidate_s": 0.1347386100096628,
+      "max_abs_diff": 2.3092638912203256e-14,
+      "max_rel_diff": 3.171722452022335e-11,
+      "n_entries": 64,
+      "nan_mask_equal": true,
+      "speedup": 21.532663301171322,
+      "unit_id": "infotheory.tlmi.kraskov"
+     }
+    },
+    "8x256": {
+     "mi_kraskov_NN-4": {
+      "baseline_cpu_call_wall_s": 0.963780815989594,
+      "baseline_cpu_s": 1.3047388929999997,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 1.0064100989984581,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 0.055335989003651775,
+      "candidate_cpu_s": 0.05535084899999987,
+      "candidate_num_threads": 1,
+      "candidate_s": 0.036439994000829756,
+      "max_abs_diff": 1.0658141036401503e-14,
+      "max_rel_diff": 1.2668925851939906e-12,
+      "n_entries": 64,
+      "nan_mask_equal": true,
+      "speedup": 27.618283882690587,
+      "unit_id": "infotheory.mi.kraskov"
+     }
+    }
+   },
+   "written_at": "2026-10-15T09:56:36-0400"
+  },
+  {
+   "label": "run2 (adversarial reviewer rerun of the same script, output redirected; ~10:15)",
+   "shapes": {
+    "3x256": {
+     "te_kraskov_NN-4_k-max-10_tau-max-4": {
+      "baseline_cpu_call_wall_s": 4.500022603999241,
+      "baseline_cpu_s": 11.234715590000008,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 4.799093530993559,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 1.082804395002313,
+      "candidate_cpu_s": 1.099639795999991,
+      "candidate_num_threads": 1,
+      "candidate_s": 1.1763977709924802,
+      "max_abs_diff": 1.1102230246251565e-15,
+      "max_rel_diff": 7.957592121867108e-14,
+      "n_entries": 9,
+      "nan_mask_equal": true,
+      "speedup": 4.07948199948114,
+      "unit_id": "infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4"
+     }
+    },
+    "8x1024": {
+     "mi_kraskov_NN-4": {
+      "baseline_cpu_call_wall_s": 2.5824762749980437,
+      "baseline_cpu_s": 3.1628603969999958,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 2.931122220994439,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 0.4763439300004393,
+      "candidate_cpu_s": 0.48589379599999916,
+      "candidate_num_threads": 1,
+      "candidate_s": 0.2702011920046061,
+      "max_abs_diff": 1.5987211554602254e-14,
+      "max_rel_diff": 1.6543014380270657e-12,
+      "n_entries": 64,
+      "nan_mask_equal": true,
+      "speedup": 10.847924834263766,
+      "unit_id": "infotheory.mi.kraskov"
+     },
+     "mi_kraskov_NN-4_DCE": {
+      "baseline_cpu_call_wall_s": 5.116570641999715,
+      "baseline_cpu_s": 5.8409140710000145,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 2.81166016899806,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 0.7055143699981272,
+      "candidate_cpu_s": 0.7155164559999889,
+      "candidate_num_threads": 1,
+      "candidate_s": 0.4265266019938281,
+      "max_abs_diff": 1.5987211554602254e-14,
+      "max_rel_diff": 3.3723088404184345e-11,
+      "n_entries": 64,
+      "nan_mask_equal": true,
+      "speedup": 6.591992517828337,
+      "unit_id": "infotheory.mi.kraskov_DCE"
+     },
+     "te_kraskov_NN-4_k-1_kt-1_l-1_lt-1": {
+      "baseline_cpu_call_wall_s": 3.0465869049949106,
+      "baseline_cpu_s": 3.880768068000009,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 2.1095888749987353,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 0.9310515359975398,
+      "candidate_cpu_s": 0.9511859619999967,
+      "candidate_num_threads": 1,
+      "candidate_s": 0.8882147330004955,
+      "max_abs_diff": 2.886579864025407e-15,
+      "max_rel_diff": 8.352904194874885e-13,
+      "n_entries": 64,
+      "nan_mask_equal": true,
+      "speedup": 2.375088811995149,
+      "unit_id": "infotheory.te.kraskov_k-1_kt-1_l-1_lt-1"
+     },
+     "tlmi_kraskov_NN-4": {
+      "baseline_cpu_call_wall_s": 4.26678658099263,
+      "baseline_cpu_s": 4.919280082,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 2.7070226579962764,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 0.5247925840085372,
+      "candidate_cpu_s": 0.5295965549999977,
+      "candidate_num_threads": 1,
+      "candidate_s": 0.3444502929924056,
+      "max_abs_diff": 2.3092638912203256e-14,
+      "max_rel_diff": 3.171722452022335e-11,
+      "n_entries": 64,
+      "nan_mask_equal": true,
+      "speedup": 7.858964596833601,
+      "unit_id": "infotheory.tlmi.kraskov"
+     }
+    },
+    "8x256": {
+     "mi_kraskov_NN-4": {
+      "baseline_cpu_call_wall_s": 3.764771654998185,
+      "baseline_cpu_s": 4.254038377999997,
+      "baseline_num_threads": "default (availableProcessors = 64)",
+      "baseline_s": 1.4983692269888707,
+      "bit_identical": false,
+      "candidate_cpu_call_wall_s": 0.05950012199173216,
+      "candidate_cpu_s": 0.059553055999998605,
+      "candidate_num_threads": 1,
+      "candidate_s": 0.028529039002023637,
+      "max_abs_diff": 1.0658141036401503e-14,
+      "max_rel_diff": 1.2668925851939906e-12,
+      "n_entries": 64,
+      "nan_mask_equal": true,
+      "speedup": 52.52084470432346,
+      "unit_id": "infotheory.mi.kraskov"
+     }
+    }
+   },
+   "written_at": "2026-10-15T10:15 (approx., from the reviewer scratch file time)"
+  }
+ ],
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "merged_runs": [
+  {
+   "argv": [
+    "--only",
+    "3x1024"
+   ],
+   "jidt_available_processors": 64,
+   "loadavg_end": [
+    2.26904296875,
+    3.2548828125,
+    3.47119140625
+   ],
+   "loadavg_start": [
+    0.6787109375,
+    3.568359375,
+    3.587890625
+   ],
+   "note": "3x1024 = 3 channels x T=1024 (6 ordered pairs), the T=1024 shape for the two auto-embedding units (infeasible above 8x1024); same protocol as the other shapes (baseline = min of 3 default-thread calls after a warm-up, candidate = min of 3 NUM_THREADS=1 calls, candidate_walls_s = all three). Compare with the quiet default from summary.json (8x1024 fresh wall / 56 pairs x 6).",
+   "numba_num_threads": "1",
+   "omp_num_threads": "1",
+   "shapes": [
+    "3x1024"
+   ],
+   "written_at": "2026-10-15T11:28:48-0400"
+  }
+ ],
+ "notes": "Baseline = harness.compute_spi with JIDT's default NUM_THREADS; candidate = same SPI with NUM_THREADS=1 set on its calculator. Both include Data construction. Run while other audit groups shared the 64-core machine. The 3x256 auto-embedding case is a small labelled shape (the unit is infeasible above 8x1024). baseline_cpu_s / candidate_cpu_s = process CPU time (all threads, JVM included) of one extra call each, i.e. the cores a call occupies.",
+ "opportunity_id": "it_kraskov-1",
+ "run_variation_note": "Top-level shapes = run3 (fix agent, 10:22-10:25, load average 1.7-5.0). Three runs of the unchanged script: max_abs_diff and nan_mask_equal identical in every case; the single-thread candidate is stable at 8x256 (0.029-0.036 s) and for te auto at 3x256 (1.173-1.176 s) but varies ~5x at 8x1024 (mi 0.136/0.270/0.723 s, tlmi 0.135/0.344/0.634 s, mi_DCE 0.155/0.427/1.491 s, te k-1 0.507/0.888/2.088 s), with process CPU above the wall in the slow runs (JVM background threads); the default-thread baseline was 2.3-5.4 s in all runs against ~1 s quiet walls in summary.json. Same-run speedups are therefore load-dependent and not reproducible to 30%.",
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_it_kraskov-1.py",
+ "shapes": {
+  "3x1024": {
+   "te_kraskov_NN-4_DCE_k-max-10_tau-max-4": {
+    "baseline_cpu_call_wall_s": 5.41222368599847,
+    "baseline_cpu_s": 19.87682528299996,
+    "baseline_num_threads": "default (availableProcessors = 64)",
+    "baseline_s": 4.6862668249959825,
+    "bit_identical": false,
+    "candidate_cpu_call_wall_s": 7.739504933997523,
+    "candidate_cpu_s": 8.037862691000043,
+    "candidate_num_threads": 1,
+    "candidate_s": 7.456812648000778,
+    "candidate_walls_s": [
+     7.547600304998923,
+     7.456812648000778,
+     7.525143634004053
+    ],
+    "max_abs_diff": 1.9984014443252818e-15,
+    "max_rel_diff": 3.103913539739102e-13,
+    "n_entries": 9,
+    "nan_mask_equal": true,
+    "speedup": 0.6284544142667179,
+    "unit_id": "infotheory.te.kraskov_DCE_auto-MAX_CORR_AIS_kmax-10_taumax-4"
+   },
+   "te_kraskov_NN-4_k-max-10_tau-max-4": {
+    "baseline_cpu_call_wall_s": 4.768451543000992,
+    "baseline_cpu_s": 18.813264908000008,
+    "baseline_num_threads": "default (availableProcessors = 64)",
+    "baseline_s": 4.834456746000797,
+    "bit_identical": false,
+    "candidate_cpu_call_wall_s": 7.262380076004774,
+    "candidate_cpu_s": 7.614590607999986,
+    "candidate_num_threads": 1,
+    "candidate_s": 7.113160563996644,
+    "candidate_walls_s": [
+     7.113160563996644,
+     7.170036714000162,
+     7.1451462780096335
+    ],
+    "max_abs_diff": 1.9984014443252818e-15,
+    "max_rel_diff": 8.424299669872635e-13,
+    "n_entries": 9,
+    "nan_mask_equal": true,
+    "speedup": 0.6796496019604089,
+    "unit_id": "infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4"
+   }
+  },
+  "3x256": {
+   "te_kraskov_NN-4_k-max-10_tau-max-4": {
+    "baseline_cpu_call_wall_s": 4.595535189000657,
+    "baseline_cpu_s": 11.06124042799999,
+    "baseline_num_threads": "default (availableProcessors = 64)",
+    "baseline_s": 5.427777756995056,
+    "bit_identical": false,
+    "candidate_cpu_call_wall_s": 1.0875919859972782,
+    "candidate_cpu_s": 1.1102081420000047,
+    "candidate_num_threads": 1,
+    "candidate_s": 1.1729436189925764,
+    "max_abs_diff": 1.1102230246251565e-15,
+    "max_rel_diff": 7.957592121867108e-14,
+    "n_entries": 9,
+    "nan_mask_equal": true,
+    "speedup": 4.627483937938034,
+    "unit_id": "infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4"
+   }
+  },
+  "8x1024": {
+   "mi_kraskov_NN-4": {
+    "baseline_cpu_call_wall_s": 3.0814196959981928,
+    "baseline_cpu_s": 3.718706702999995,
+    "baseline_num_threads": "default (availableProcessors = 64)",
+    "baseline_s": 3.4183770699892193,
+    "bit_identical": false,
+    "candidate_cpu_call_wall_s": 0.8785912280000048,
+    "candidate_cpu_s": 0.9015635980000027,
+    "candidate_num_threads": 1,
+    "candidate_s": 0.7228547720005736,
+    "max_abs_diff": 1.5987211554602254e-14,
+    "max_rel_diff": 1.6543014380270657e-12,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 4.728995646703024,
+    "unit_id": "infotheory.mi.kraskov"
+   },
+   "mi_kraskov_NN-4_DCE": {
+    "baseline_cpu_call_wall_s": 4.786794927000301,
+    "baseline_cpu_s": 5.387536706999981,
+    "baseline_num_threads": "default (availableProcessors = 64)",
+    "baseline_s": 4.284889743008534,
+    "bit_identical": false,
+    "candidate_cpu_call_wall_s": 1.2617870020039845,
+    "candidate_cpu_s": 1.2782966169999952,
+    "candidate_num_threads": 1,
+    "candidate_s": 1.4912961430090945,
+    "max_abs_diff": 1.5987211554602254e-14,
+    "max_rel_diff": 3.3723088404184345e-11,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 2.873265489953328,
+    "unit_id": "infotheory.mi.kraskov_DCE"
+   },
+   "te_kraskov_NN-4_k-1_kt-1_l-1_lt-1": {
+    "baseline_cpu_call_wall_s": 6.901688494996051,
+    "baseline_cpu_s": 7.82839367199999,
+    "baseline_num_threads": "default (availableProcessors = 64)",
+    "baseline_s": 4.023126193002099,
+    "bit_identical": false,
+    "candidate_cpu_call_wall_s": 3.4727657459879993,
+    "candidate_cpu_s": 3.4729925050000077,
+    "candidate_num_threads": 1,
+    "candidate_s": 2.088197284989292,
+    "max_abs_diff": 2.886579864025407e-15,
+    "max_rel_diff": 8.352904194874885e-13,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 1.9266025398662128,
+    "unit_id": "infotheory.te.kraskov_k-1_kt-1_l-1_lt-1"
+   },
+   "tlmi_kraskov_NN-4": {
+    "baseline_cpu_call_wall_s": 3.0592769350041635,
+    "baseline_cpu_s": 3.6238841629999996,
+    "baseline_num_threads": "default (availableProcessors = 64)",
+    "baseline_s": 2.298853364001843,
+    "bit_identical": false,
+    "candidate_cpu_call_wall_s": 1.305526951997308,
+    "candidate_cpu_s": 1.3156096780000013,
+    "candidate_num_threads": 1,
+    "candidate_s": 0.6336296460067388,
+    "max_abs_diff": 2.3092638912203256e-14,
+    "max_rel_diff": 3.171722452022335e-11,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 3.628071032486688,
+    "unit_id": "infotheory.tlmi.kraskov"
+   }
+  },
+  "8x256": {
+   "mi_kraskov_NN-4": {
+    "baseline_cpu_call_wall_s": 3.9254857649939368,
+    "baseline_cpu_s": 4.407645694999999,
+    "baseline_num_threads": "default (availableProcessors = 64)",
+    "baseline_s": 3.3000065210071625,
+    "bit_identical": false,
+    "candidate_cpu_call_wall_s": 0.23766736200195737,
+    "candidate_cpu_s": 0.24155121900000154,
+    "candidate_num_threads": 1,
+    "candidate_s": 0.02951696899253875,
+    "max_abs_diff": 1.0658141036401503e-14,
+    "max_rel_diff": 1.2668925851939906e-12,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 111.80031804218558,
+    "unit_id": "infotheory.mi.kraskov"
+   }
+  }
+ },
+ "threads": {
+  "NUMBA_NUM_THREADS": "1",
+  "OMP_NUM_THREADS": "1",
+  "jidt_available_processors": 64,
+  "jidt_num_threads_baseline": "default (unset by pyspi)",
+  "jidt_num_threads_candidate": 1
+ },
+ "written_at": "2026-10-15T10:25:28-0400"
+}

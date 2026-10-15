@@ -1,0 +1,241 @@
+unit_id: causal.cds
+status: profiled
+correctness:
+  metric_name_standard: 'conditional distribution similarity (CDS) statistic: spread across x-bins of the mean-centred, discretised conditional
+    distributions p(y | x) (Fonollosa 2016/2019)'
+  canonical_ref: 'Fonollosa 2016, arXiv:1601.06680 (book version: Cause Effect Pairs in Machine Learning, Springer 2019, pp. 339-347), §2.1
+    (discretisation into 2*maxdev*sfactor+1 segments of sigma/sfactor, truncation at maxdev*sigma; sfactor=3, maxdev=3 for "almost all measures")
+    and §2.3 (CDS formula)'
+  canonical_definition: CDS(X, Y) = sqrt( (1/M) * sum_{y=0}^{M-1} var_x( p_n(y | x) ) ), where p_n(y | x) is the conditional distribution
+    of Y given each (discretised) value x, normalised to zero mean and then quantised as in §2.1; var_x is the sample variance over x. Lower
+    CDS(X, Y) is taken as evidence for X -> Y (used as a classifier feature in both directions).
+  documented_definition: 'supplement §1.3.3, p.8: ''The conditional distribution similarity fit [27] is the standard deviation of the conditional
+    probability distribution of y given x, where the distributions are estimated by discretizing the values.'' keywords ''directed, nonlinear,
+    unsigned''. GitBook causal-inference.md ''Conditional Distribution Similarity Fit'' repeats the text.'
+  delegate_lib: cdt==0.6.0 cdt.causality.pairwise.CDS().cds_score(x, y) with defaults ffactor=2, maxdev=3, minc=12 (numpy/pandas only)
+  implemented_as: 'A[i, j] = CDS().cds_score(x = z[i], y = z[j]) on z-scored data, one direction only. x is standardised (ddof=0), re-standardised
+    on the samples with |x| < 3, multiplied by 2, rounded and clipped to [-6, 6] (13 bins of width 0.5 SD). For each x-bin with MORE than
+    12 samples: y values in the bin are centred on the bin mean and divided by the global std(y) (ddof=0), rounded*2 and clipped to [-6,
+    6], histogrammed over the 13 values -6..6 and normalised to a pmf. With P the (n_bins x 13) matrix of pmfs, columns are centred over
+    bins and the result is np.std of all entries = sqrt( (1/13) sum_k var_x,ddof0(P[:, k]) ). Returns exactly 0 if no bin has > 12 samples
+    (CDS.py:190-191), and exactly 0.0 when exactly one bin has > 12 samples (P is then 1 x 13, CDS.py:194 centring gives all zeros, np.std
+    = 0.0 at CDS.py:195). When several qualifying bins have identical pmfs the result is 0 only up to rounding of the column mean: exactly
+    0.0 for 2 identical bins, but up to ~2e-17 for 3 or 7 identical bins with non-dyadic pmf entries (probe cleanup/cdt_pairwise/ident_bins.py).
+    Probe: from-scratch numpy version matches to <= 1.4e-17 on 6 dataset/T combinations.'
+  implementation_trace:
+  - 'pyspi/data.py:184-195 Data.set_data: detrend only if detrend=True (default False), then scipy.stats.zscore(axis=1, ddof=1) if normalise=True
+    (default); stored as (M, T, 1)'
+  - 'pyspi/calculator.py:251-267 Calculator._load_yaml: configs is empty for the four causal classes, so iterating None raises TypeError
+    and the class is instantiated with no arguments (261-267); labels come from the class attribute'
+  - 'pyspi/calculator.py:327-339 Calculator.compute: S = spi.multivariate(dataset) (329); fill_diagonal(S, nan) (332); any exception -> whole
+    matrix NaN (336-339) with a warning (354-355)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A[i, j] = self.bivariate(data, i=i, j=j) for every ordered pair i != j (no mirroring)'
+  - 'pyspi/base.py:27-49 parse_bivariate: two raw arrays are wrapped into a new Data object (base.py:33-36) and i, j = 0, 1 is set (base.py:41-43);
+    Data.add_process z-scores only the first array (data.py:238 set_data, normalise=True) and appends the second raw (data.py:230-234); the
+    Calculator/multivariate path passes the already z-scored Data through unchanged. Owned by unit preproc.two_array_api'
+  - pyspi/data.py:108-118 Data.to_numpy returns the (M, T, 1) array, so z[i] is a (T, 1) column
+  - 'pyspi/config.yaml:337-345 ConditionalDistributionSimilarity: configs empty'
+  - 'pyspi/statistics/causal.py:32-41 ConditionalDistributionSimilarity.bivariate: z = data.to_numpy(); return CDS().cds_score(z[i], z[j])'
+  - .venv/lib/python3.12/site-packages/cdt/causality/pairwise/CDS.py:125-129 __init__(ffactor=2, maxdev=3, minc=12)
+  - '.venv/lib/python3.12/site-packages/cdt/causality/pairwise/CDS.py:143-155 cds_score: ndarray inputs reshaped to 1-D pandas Series (153-154);
+    xd, yd = discretized_sequences(x, y, self.ffactor, self.maxdev) (155)'
+  - '.venv/lib/python3.12/site-packages/cdt/causality/pairwise/CDS.py:69-85 discretized_sequence: if > 13 unique values: standardise, trim
+    |x| < maxdev, re-standardise with trimmed mean/std (71-74), round(x*ffactor) (75), clip to +-ffactor*maxdev (76-79)'
+  - '.venv/lib/python3.12/site-packages/cdt/causality/pairwise/CDS.py:56-66 discretized_values: range(-6, 7) for numerical data with > 13
+    unique values'
+  - '.venv/lib/python3.12/site-packages/cdt/causality/pairwise/CDS.py:156-188 per x-bin a with cx[a] > minc (164): yx = y[xd == a] (165);
+    continuous branch (170-176): yx = (yx - mean(yx)) / std(y) (172), discretised without renormalisation (173), counted on range(-6, 7)
+    (174-176); discrete-y branch with cross-correlation alignment (178-184) not reached for continuous data; pmf normalisation (186)'
+  - .venv/lib/python3.12/site-packages/cdt/causality/pairwise/CDS.py:190-195 return 0 if no bin qualified (190-191); pyx - pyx.mean(axis=0);
+    return np.std(pyx) (193-195); with exactly one qualifying bin the centred matrix is all zeros and np.std returns 0.0; with several identical
+    pmfs it is 0 only up to rounding of the column mean (exactly 0.0 for 2 bins, <= ~2e-17 for 3 or 7 bins)
+  deviation_from_documented: (a) The supplement's 'standard deviation of the conditional probability distribution of y given x' reads as
+    the SD of Y | X; the code returns the variability ACROSS x-bins of the shapes of the mean-centred conditional pmfs (a pooled SD of probabilities),
+    as in Fonollosa §2.3. (b) Parameters (0.5-SD bins, 13 levels, truncation at 3 SD, minimum 13 samples per x-bin) and the exact 0 returned
+    when at most one bin qualifies (or the 0 up to rounding when all qualifying pmfs coincide) are undocumented. (c) Direction meaning (lower
+    = more consistent with i -> j) is undocumented; cdt's two-direction difference (CDS.py:131-141) is not used. (d) Documented cdt v0.5.23
+    vs installed 0.6.0 (already documented).
+  deviation_from_canonical: '(1) ffactor=2 (13 levels) rather than the sfactor=3 (19 levels) that Fonollosa §2.1 states for ''almost all
+    measures'' (whether CDS was one of the exceptions in the original jarfo code is an open question). (2) var_x uses ddof=0 (np.std) whereas
+    the paper says ''sample variance'' (ambiguous). (3) Implementation details not in the paper: x is re-standardised on |x| < 3 before binning;
+    x-bins with <= 12 samples are dropped; exact 0 is returned when no bin qualifies (CDS.py:190-191) and, through the centring, when exactly
+    one bin qualifies, or up to rounding when all qualifying pmfs are identical (CDS.py:193-195); the paper does not define CDS for fewer
+    than two x-values. (4) Only one direction is returned (the paper uses both directions as classifier features).'
+  units_and_range: 'dimensionless (SD of probabilities); >= 0, bounded above by 0.5; exactly 0 when at most one x-bin has > 12 samples (no-bin
+    branch CDS.py:190-191, possible only for T <= 156 = 13 x 12; single-bin branch CDS.py:193-195, possible at any T when one bin holds all
+    but <= 144 samples); 0 up to rounding (exactly 0.0 for two bins, <= ~2e-17 for 3 or 7) when all qualifying bins have identical conditional
+    pmfs. Observed: anm_T64 all 12 entries (process 0 has no qualifying bin, max count 12; processes 1-3 have exactly one, max counts 16,
+    16, 18); iid_gaussian_T64 8 of 20 entries (rows 0 and 2, exactly one qualifying bin each, max counts 16 and 13). Invariant to positive
+    affine rescaling of either input (internal standardisation); asymmetric.'
+  direction_convention: 'A[i, j] = CDS(x = process i, y = process j): variability of p(z_j | z_i-bin); LOWER means more consistent with i
+    -> j (cdt docstring CDS.py:92-93). Code-derived; to be confirmed empirically on the anm dataset.'
+  symmetry_expected: asym
+  already_documented: 'partly: installed cdt 0.6.0 vs documented 0.5.23 (DEPENDENCY_MIGRATION.md CDT row; DEPENDENCY_COMPATIBILITY_REVIEW.md:43, :88-92);
+    the zero-output degeneracy and parameter choices are not documented'
+  new_finding_candidates:
+  - 'Candidate (degenerate exact zero when at most one x-bin qualifies): CDS.py:164 keeps only x-bins with count > 12; with no qualifying
+    bin CDS.py:190-191 returns 0, and with exactly one qualifying bin the 1 x 13 pmf matrix minus its own column mean is all zeros so np.std
+    returns 0.0 (CDS.py:193-195); when several qualifying bins have identical pmfs the result is 0 up to rounding of the column mean (exactly
+    0.0 for two bins; up to ~2e-17 for 3 or 7 bins with non-dyadic pmf entries, probe cleanup/cdt_pairwise/ident_bins.py). Probe fix_cdt/cds_zero.py
+    over all 76 check files (19 datasets x T in {64, 256, 1024, 4096}): 91 exact-zero entries, all at T=64; 90 have row process i with <=
+    1 qualifying bin (anm_T64: 3 entries from process 0 with no qualifying bin, 9 from processes 1-3 with one; iid_gaussian_T64: 8 entries
+    from rows 0 and 2 with one), and 1 (narrowband_f0-0.25_T64 A[1,0]) has two qualifying bins of 32 samples with identical y-level counts
+    {-2: 4, -1: 12, 1: 11, 2: 5}; every process with <= 1 qualifying bin gave an all-zero row. The no-bin branch cannot occur for T > 156,
+    but the single-bin branch is not tied to short T: probe fix_cdt/cds_zero3.py built a spike-heavy x at T = 458 (406 samples in bin 0,
+    every other bin <= 11) and cds_score returned 0.0. A 0 reads as the most causal possible value rather than "not computable".'
+  - 'Candidate (documentation ambiguity): the supplement wording ''standard deviation of the conditional probability distribution of y given
+    x'' does not describe the implemented across-bin variability of mean-centred conditional pmfs (CDS.py:172-195).'
+  - 'Candidate (parameter difference from the paper''s stated default): CDS.py:125 ffactor=2 vs Fonollosa §2.1 ''we selected sfactor = 3
+    and maxdev = 3'' for almost all measures; to be checked against the original jarfo code before calling it a deviation.'
+  proposed_checks:
+  - datasets:
+    - anm
+    - nonlinear_dependence
+    - iid_gaussian
+    - contaminated
+    - bivariate_gaussian
+    path: kernel
+    reference: from-scratch numpy CDS from Fonollosa 2016 §2.1/§2.3 with the cdt parameters (ffactor=2, maxdev=3, minc=12, trimmed re-standardisation,
+      ddof=0), written without importing cdt or pandas
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: 'agreement <= 1e-14 absolute on all T (probe: max 1.4e-17 on 6 combinations)'
+  - datasets:
+    - anm
+    - nonlinear_dependence
+    path: kernel
+    reference: 'paper formula variant: Fonollosa''s sqrt(mean_y var_x) with sample variance (ddof=1) and sfactor=3 (19 levels)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: quantify the effect of ffactor 2 vs 3 and ddof 0 vs 1 (expected same ordering of A[i,j] vs A[j,i], values differ by
+      O(10-50%))
+  - datasets:
+    - anm
+    path: pipeline
+    reference: ground truth of the dataset (x0 -> x1 cubic, x2 -> x3 tanh) plus the from-scratch CDS
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'establishes the empirical convention: A[0,1] < A[1,0] at T >= 256 (probe T=1024: 0.0232 vs 0.1097); pair (2,3) reported
+      as observed (probe T=1024: 0.0143 vs 0.0411)'
+  - datasets:
+    - iid_gaussian
+    - anm
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'predicate computed from scratch per ordered pair (i, j): after cdt binning of z_i (trimmed re-standardisation, ffactor=2,
+      maxdev=3), the set of x-bins with count > 12 has at most one member, or all their discretised conditional pmfs of z_j are identical;
+      the count part (number of x-bins with count > 12 is <= 1) depends on process i only and is a sufficient condition'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'A[i, j] == 0.0 exactly whenever the count part holds (at most one qualifying bin); |A[i, j]| < 1e-15 iff the full
+      predicate holds (2 identical bins give exactly 0.0, but >= 3 identical bins with non-dyadic pmf entries can leave ~1e-17 from rounding
+      of the column mean, probe cleanup/cdt_pairwise/ident_bins.py); every process with <= 1 qualifying bin gives an all-zero row (probe:
+      90 of 91 zero entries on the check files, all at T=64; the remaining one, narrowband_f0-0.25_T64 A[1,0], is the identical-pmf case);
+      include an inline spike-heavy input at T >= 256 with one qualifying bin (probe T=458 gives 0.0) to show the zero is not confined to
+      short T'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    path: pipeline
+    reference: 'invariance: CDS on bivariate_gaussian vs scaled_offset (same draw, positive scale + offset) with normalise=False'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: equal up to rounding-boundary effects (<= 1e-12 unless a value lands exactly on a bin edge)
+  check_method: independent-impl
+  check_reference: refs/cdt_pairwise.py:run_cds -> _kernels_distance.cds_ref (numpy, no cdt/pandas); cds_variant (Fonollosa 2016 Sec. 2.1/2.3
+    with sfactor 3 and ddof 1); cds_bins/cds_pmfs for the zero predicate; probes/cdt_pairwise_probes.py (pairdiff, cds_spike)
+  check_data: 'kernel path: anm, nonlinear_dependence, iid_gaussian, contaminated, bivariate_gaussian at T64/256/1024/4096; pipeline: anm
+    T1024, iid_gaussian T64; pipeline-detrend anm T1024; direction anm T256/1024/4096; orientation var2_bivariate and logistic_maps_chaotic
+    T1024; zero predicate iid_gaussian, anm, gauss_ar1_pair, narrowband_f0-0.25 at T64; inline spike-heavy pair at T256/1024; scaled_offset
+    (kernel) and trending (pipeline-detrend) at T256/1024'
+  agreement_criterion: 'exact (rtol 1e-10, atol 1e-12) for the replica, invariance and detrend runs; direction: sign of A.T - A vs ground
+    truth (anm) or the same-estimator reference (lagged); zero predicate: A == 0.0 wherever process i has <= 1 qualifying x-bin, |A| < 1e-15
+    iff the full predicate holds; paper variant: no ordering flips (qualitative)'
+  closeness: 'exact 23/23 runs, max abs 2.8e-17 (pipeline input identical to pyspi''s, max abs 0.0); direction anm 3/3 agreement 1.0 (D01
+    = 0.0215/0.0865/0.0963 and D23 = 0.0020/0.0268/0.0264 at T256/1024/4096); orientation 2/2 (truth also recovered); zero predicate 6/6:
+    anm_T64 12 exact zeros = 12 count-part entries (qualifying bins per process [0, 1, 1, 1]), iid_gaussian_T64 8/8, gauss_ar1_pair_T64 2/2,
+    narrowband_f0-0.25_T64 1 exact zero with no count-part entry (identical pmfs), spike input T256 and T1024 A[0,1] = 0.0 with one qualifying
+    bin; invariance (scaled_offset raw vs reference on the unscaled draw) 2/2 max abs 1.4e-17; detrend 2/2 exact (detrending moves values
+    by <= 0.011). Paper variant (sfactor 3, ddof 1): max rel 0.36-0.58 (sfactor alone 0.39-0.50, ddof alone 0.08-0.12); orderings flip on
+    2-3 of 6 pairs in 3 of 4 runs, all on independent pairs or the symmetric circle pair; the causal anm pairs keep their ordering.'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 6: 23/23 exact runs reproduce cdt''s formula (max abs 2.8e-17). That formula departs from Fonollosa''s stated parameters (max rel 0.36-0.58)
+    and from the supplement''s ''SD of y given x'' wording.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'cdt''s CDS = Fonollosa''s sqrt(mean_k var_x P[:, k]) with ffactor 2 (13 levels of 0.5 SD) instead of the sfactor 3 the paper
+    states for most measures, population variance (ddof 0), minimum 13 samples per x-bin; one direction only; returns 0.0 whenever at most
+    one x-bin qualifies (any T: spike input at T1024), which reads as maximal causal evidence. The supplement''s ''standard deviation of
+    the conditional distribution of y given x'' does not describe the across-bin variability computed. Score 6 (rubric: library formula
+    deviates from both the supplement and canonical in an interpretable way): cdt''s formula departs from Fonollosa''s stated parameters
+    (max rel 0.36-0.58, orderings flip on 2-3 of 6 non-causal pairs in 3 of 4 paper-variant runs) and the supplement wording does not describe
+    it, so the anchor-7 condition (matches the supplement variant) is not met.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: 0.5 s for a P=4 matrix at T=4096'
+  symmetry_observed: 'asym: max|A - A.T| = 0.160 (narrowband_f0-0.25_T64); whole rows are exactly 0.0 when process i has <= 1 qualifying
+    x-bin (67 exact zeros of 412 entries across the runs, all at T64 or on the spike input); no NaN'
+  direction_observed: 'A[i, j] = CDS(x = process i, y = process j), lower = more consistent with i -> j: A[1,0] > A[0,1] and A[3,2] > A[2,3]
+    on anm at T256/1024/4096 (truth agreement 1.0); var2_bivariate and logistic_maps_chaotic also give A[1,0] > A[0,1] for x -> y (D01 =
+    0.0062, 0.0347)'
+  candidate_resolutions:
+  - candidate: degenerate exact zero when at most one x-bin qualifies (or identical pmfs)
+    outcome: confirmed
+    evidence: causal.cds|{iid_gaussian,anm,gauss_ar1_pair,narrowband_f0-0.25}|64|pipeline|zero-predicate (6/6 predicate holds) and causal.cds|iid_gaussian|{256,1024}|pipeline|spike-zero
+      (A[0,1] = 0.0 at T1024 with one qualifying bin)
+  - candidate: supplement wording does not describe the computed quantity
+    outcome: confirmed
+    evidence: causal.cds|*|kernel|exact (pyspi equals cds_ref, the std of the column-centred pmf matrix across x-bins, to 2.8e-17)
+  - candidate: ffactor=2 vs the paper's sfactor=3
+    outcome: inconclusive
+    evidence: causal.cds|{anm,nonlinear_dependence}|{256,1024}|kernel|paper-variant quantify the effect (max rel 0.39-0.50 from sfactor alone,
+      ordering flips only on independent or symmetric pairs); whether the original jarfo code used 2 for CDS was not established (needs the
+      original features.py)
+  checks_run:
+  - run_ids:
+    - causal.cds|*|exact
+    reference: refs/cdt_pairwise.py:run_cds -> _kernels_distance.cds_ref
+    outcome: pass 23/23 (max abs 2.8e-17)
+  - run_ids:
+    - causal.cds|anm|{256,1024,4096}|pipeline|direction
+    - causal.cds|{var2_bivariate,logistic_maps_chaotic}|1024|pipeline|orientation
+    reference: refs/cdt_pairwise.py:run_cds
+    outcome: pass 5/5 (agreement 1.0)
+  - run_ids:
+    - causal.cds|*|zero-predicate
+    - causal.cds|*|spike-zero
+    reference: refs/cdt_pairwise.py:run_cds (cds_bins, cds_pmfs)
+    outcome: pass 6/6
+  - run_ids:
+    - causal.cds|*|invariance
+    - causal.cds|*|detrend
+    reference: refs/cdt_pairwise.py:run_cds (invariance = independent cds_ref on the unscaled draw, independent-impl)
+    outcome: pass 4/4 (exact)
+  - run_ids:
+    - causal.cds|*|paper-variant
+    reference: refs/cdt_pairwise.py:cds_variant
+    outcome: 1/4 pass; 3 runs flip the ordering of 2-3 non-causal pairs (max rel 0.36-0.58)
+optimisation:
+  complexity_P_T: 'O(P^2 T) with a large per-pair constant: cdt CDS.cds_score per ordered pair (pyspi/statistics/causal.py:38-41) discretises x and y with pandas, then loops over the qualifying x-bins (up to 13) with pandas Series operations each. Measured P_exponent 2.09 (pairs model, t_fixed pinned 0), T_exponent 0.31 (per-call pandas overhead hides the O(T) term up to T=1024). Pair term dominates; projected 231.5 s per window at 118x1024 (extrapolated-pairs-from-32; skipped-budget at 118).'
+  hotspot_1: cdt/causality/pairwise/CDS.py:discretized_sequence (third-party:cdt) 69.8% of the profiled SPI call at 8x1024, of which pandas/core/series.py:__setitem__ 53.2% (boolean-mask clipping x[x > vmax] = vmax on a Series; pandas/core/series.py:__repr__ 29.0% is called from indexes/base.py:get_loc to build a KeyError message before the mask fallback)
+  hotspot_2: 'cdt/causality/pairwise/CDS.py:count_unique (third-party:cdt) 12.2% of the profiled SPI call at 8x1024 (11.9% self: Python set() over a pandas Series, 1,757 calls, recomputed for y in every qualifying x-bin)'
+  hotspot_owner: third-party:cdt
+  opaque_share: 0.191
+  profile_file: audit/profiles/causal.cds__8x1024.pstats
+  opportunities:
+  - opportunity_id: cdt_pairwise-2
+    opportunity: 'Re-implement cdt CDS.cds_score on numpy arrays: discretise each channel once per Data (x-bins, global std and unique count of y are per-channel quantities), then per ordered pair build the conditional y-histograms of the qualifying x-bins in one compiled (numba) or vectorised pass, instead of ~1e3 pandas Series operations per pair.'
+    opp_type: rewrite-numba-rust-cpp
+    expected_speedup: 100-1000x
+    speedup_basis: 'profile:audit/profiles/causal.cds__8x1024.pstats CDS.py:cds_score 100.0% (discretized_sequence 69.8%, pandas Series.__setitem__ 53.2% of which Series.__repr__ 29.0% builds a KeyError message in get_loc before the boolean-mask fallback; count_unique 12.2%) + complexity: per-pair work stays O(T) but drops from ~20 pandas calls per qualifying x-bin to one compiled pass, and the x/y discretisation moves from 2P(P-1) to P evaluations'
+    output_risk: unverified-within-tolerance
+    risk_evidence: pandas Series mean/std (CDS.py:76-78, 165) become numpy reductions with a different summation order; a last-bit change at an np.round half-way point (CDS.py:79) would move one sample to a neighbouring bin, a discrete change
+    effort: M
+    depends_on: []

@@ -1,0 +1,221 @@
+unit_id: infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2
+status: profiled
+correctness:
+  metric_name_standard: Gaussian transfer entropy (half Geweke GC) with target and source embeddings selected by JIDT's MAX_CORR_AIS rule
+  canonical_ref: 'Geweke J. 1982, J Am Stat Assoc 77:304-313, eq. (2.3)-(2.4) F_{X->Y} = ln(var(e_restricted)/var(e_full)); Barnett L., Barrett A.B. & Seth A.K. 2009, Phys Rev Lett 103:238701 (F_{X->Y}
+    = 2 TE_{X->Y} for Gaussian variables); Schreiber T. 2000, Phys Rev Lett 85:461, eq. (4); embedding selection: Lizier J.T. 2014, Front Robot AI 1:11 (JIDT) and JIDT javadoc ActiveInfoStorageCalculatorViaMutualInfo.AUTO_EMBED_METHOD_MAX_CORR_AIS
+    (''maximise bias-corrected AIS'')'
+  canonical_definition: TE_{X->Y} = I(X^{(l,lt)}_t; Y_{t+1} | Y^{(k,kt)}_t) = 0.5*ln(RSS_r/RSS_f) with (k,kt) = argmax over k<=10, kt<=2 of [I(Y^{(k,kt)}_t; Y_{t+1}) - k/(2N_{k,kt})], where N_{k,kt} = T
+    - (k-1)*kt - 1 is that candidate's own sample count (ActiveInfoStorageCalculatorViaMutualInfo.java a9b6b3e :440-451; the chi-square mean uses the MI calculator's observation count), so candidates with
+    different k are penalised on different N, on the target and (l,lt) chosen the same way on the source's own AIS
+  documented_definition: 'supplement §1.4.6, p.11 (supplement.txt:500-511): ''Granger causality [40] is obtained by assessing directed dependence of x -> y as the predictive power of a bivariate autoregressive
+    model (comprising x and y) over the univariate autoregressive model (with y only). The statistic included in our framework is the log-ratio of residual variance for the two models, which is a variant
+    of Granger causality popularized by Geweke [41] later found to be equivalent to transfer entropy with a Gaussian estimator [38]''; keywords ''directed, linear, unsigned, bivariate, time-dependent''.
+    GitBook information-theory.md:90-107 same text. Supplement §1.4.5, p.10-11 (supplement.txt:476-493) defines k, kt (target) and l, lt (source). For the optimised variant: supplement §1.4.5, p.11 (supplement.txt:487-491):
+    ''The optimized parameters are inferred by choosing the embedding parameters (up to a maximum embedding length of 10, denoted by k-max-10, and maximum time delay of 2, tau-max-2) that maximize a univariate
+    information-theoretic measure known as active information storage (see the MAX_CORR_AIS method of [32] for details)''.'
+  delegate_lib: JIDT infodynamics.jar bundled at pyspi/lib/jidt (labelled 1.6.1 by version-1.6.1.txt, but its class inventory includes EntropyCalculatorMultiVariateCommon, added upstream in commit 3d1f3fe
+    on 2024-04-20; between tag v1.6.1 and commit a9b6b3e the Gaussian MI/CMI/TE/AIS leaf classes, MatrixUtils, MathsUtils and ChiSquareMeasurementDistribution are byte-identical, their MultiVariateCommon/Via
+    parents differ only in observation-ID/noise-seed bookkeeping, and EntropyCalculatorMultiVariateGaussian was refactored onto EntropyCalculatorMultiVariateCommon with its value path unchanged; details
+    in infotheory.est.gaussian) via JPype1==1.7.1 on OpenJDK 21; gaussian.TransferEntropyCalculatorGaussian with AUTO_EMBED_METHOD=MAX_CORR_AIS (auto-embedding via gaussian.ActiveInfoStorageCalculatorGaussian)
+  implemented_as: 'For each ordered pair (i=source, j=target) on z-scored data, JIDT first runs MAX_CORR_AIS on the target alone: for k = 1..10 and tau = 1..2 (tau skipped when k = 1) it computes the Gaussian
+    MI between the k-dim delay vector (spacing tau) and the next sample, N = T-(k-1)tau-1, subtracts the analytic chi-square null mean k/(2N), and keeps the argmax -> (k, k_tau); the same search on the
+    source alone gives (l, l_tau). It then computes Gaussian TE with those embeddings and delay 1 (start = max((k-1)k_tau, (l-1)l_tau)). The search is repeated for every ordered pair. No bias correction
+    of the final TE. Probe var2_bivariate_T1024: selected k=2, k_tau=1 for target x1 and l=9, l_tau=1 for source x0.'
+  implementation_trace:
+  - pyspi/calculator.py:329 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 fill_diagonal NaN; :336-339 any exception from any pair -> the whole SPI entry becomes NaN (:337) and the error is recorded, warning issued at :354-355
+  - 'pyspi/data.py:184-195 preprocessing in Data.set_data: optional scipy.signal.detrend(axis=1), then (default normalise=True) scipy.stats.zscore(axis=1, ddof=1)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for every ordered pair i != j, A[i,j] = self.bivariate(data, i=i, j=j)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: _entropy_calc = _getcalc(''entropy'') (:36); identifier += ''_gaussian'' (:38); estimator ''gaussian'' -> labels += [''linear''], _dyn_corr_excl
+    = None (:53-55)'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: every calculator gets setProperty(''BIAS_CORRECTION'',''false'') and setProperty(''NOISE_SEED'',''42''); no NORMALISE property is set'
+  - 'pyspi/statistics/infotheory.py:103-134 _getcalc: ''gaussian'' (and any unrecognised estimator) falls to the else branches -> gaussian.EntropyCalculatorMultiVariateGaussian (:111-112), gaussian.MutualInfoCalculatorMultiVariateGaussian
+    (:120-123), gaussian.TransferEntropyCalculatorGaussian (:129-130)'
+  - 'pyspi/statistics/infotheory.py:320-341 TransferEntropy(JIDTBase, Directed).__init__: estimator absent or ''gaussian'' -> identifier ''gc'' (:338-339); _calc = _getcalc(''TransferEntropy'') (:341)'
+  - 'pyspi/statistics/infotheory.py:376-391 bivariate(i,j): _set_theiler_window (no-op); _calc.initialise(); src, targ = data.to_numpy(squeeze=True)[[i, j]]; setObservations(src, targ); computeAverageLocalOfObservations();
+    exception -> warning + NaN'
+  - 'pyspi/statistics/infotheory.py:343-355 auto_embed_method given: setProperty AUTO_EMBED_METHOD=''MAX_CORR_AIS'', AUTO_EMBED_K_SEARCH_MAX=''10'', AUTO_EMBED_TAU_SEARCH_MAX=''2''; identifier += ''_k-max-10_tau-max-2'''
+  - 'pyspi/config.yaml:599-602 TransferEntropy config: estimator gaussian, auto_embed_method MAX_CORR_AIS, k_search_max 10, tau_search_max 2'
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/measures/continuous/gaussian/TransferEntropyCalculatorGaussian.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] constructor :117-119 builds TransferEntropyCalculatorViaCondMutualInfo
+    around ConditionalMutualInfoCalculatorMultiVariateGaussian; setProperty :165-180 forwards to parent
+  - https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java defaults k=1 (:98), delay=1
+    (:116); setProperty :435-471 (k_HISTORY, k_TAU, l_HISTORY, l_TAU, AUTO_EMBED_*; anything else forwarded to the CMI calculator and remembered in props :463-464); computeStartTimeForFirstDestEmbedding
+    :375-384 = max((k-1)*k_tau, (l-1)*l_tau + delay - 1); finaliseAddObservations :865-869 -> prepareCMICalculator :923-929 initialise(l, 1, k)
+  - 'https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java addObservationsWithGivenParams
+    :586-621: dest past = makeDelayEmbeddingVector(dest, k, k_tau, start, N) (:606), dest next = dest[start+1 ...] (:610), source past = makeDelayEmbeddingVector(source, l, l_tau, start+1-delay, N) (:614),
+    N = T - start - 1'
+  - 'https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] makeDelayEmbeddingVector(double[], k, tau, startKthPoint, n) :2212-2230: row r = [x[t], x[t-tau], ..., x[t-(k-1)tau]]
+    with t = startKthPoint + r'
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/measures/continuous/gaussian/ConditionalMutualInfoCalculatorMultiVariateGaussian.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] constructor :143-147 normalise = false; finaliseAddObservations
+    :236-253 covariance of (var1=source past, var2=dest next, cond=dest past) with ddof=1; computeAverageLocalOfObservations :427-482 returns 0.5*ln(det(S_c1)*det(S_c2)/(det(S_all)*det(S_cc))) (0 if var1
+    or var2 fully redundant given cond; +Infinity if L==null); no bias correction (pyspi BIAS_CORRECTION=false)
+  - 'https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java preFinaliseAddObservations
+    :701-850: AIS Gaussian calculator for a Gaussian CMI (:732), props (BIAS_CORRECTION=false, NOISE_SEED=42) copied (:752), target embedded first (:779 -> k, k_tau), then the source with the same AIS rule
+    for MAX_CORR_AIS (:794 -> l, l_tau); start time recomputed :847-849'
+  - https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/ActiveInfoStorageCalculatorViaMutualInfo.java MAX_CORR_AIS loop :579-615 (k
+    = 1..k_search_max, tau = 1..tau_search_max, thisAIS -= computeAdditionalBiasToRemove() :594, tau loop broken for k == 1 :605); addObservationsWithGivenParams :438-454 (past = makeDelayEmbeddingVector(x,
+    k, tau, (k-1)tau, N), next = x[(k-1)tau+1 ...]); prepareMICalculator :669-673
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/measures/continuous/gaussian/ActiveInfoStorageCalculatorGaussian.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] :73/:97 Gaussian MI calculator; computeAdditionalBiasToRemove
+    :152-170 returns ChiSquareMeasurementDistribution mean (Boolean.getBoolean(...) at :154 reads a JVM system property, so biasCorrected is always false and the analytic correction is always subtracted,
+    which is also the intended outcome with BIAS_CORRECTION=false)
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/ChiSquareMeasurementDistribution.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] :100-102 meanOfUncorrectedDistribution = df/(2N) with df = k*1; getMeanOfDistribution
+    :150-156
+  deviation_from_documented: 'Embedding search matches the documented MAX_CORR_AIS description (k-max-10, tau-max-2). Same factor-1/2 issue as the fixed-lag unit (value is TE = F/2, not the log-ratio F).
+    Not stated in the docs: the source embedding (l, lt) is chosen from the source''s own AIS, not from TE, and the search is repeated per ordered pair so different pairs use different model orders.'
+  deviation_from_canonical: 'As Gaussian TE given the chosen embeddings: none (probe: from-scratch numpy re-implementation of the AIS search and TE reproduced the selected parameters for every ordered pair
+    and the values to <= 6e-14 on var2_bivariate T=64/1024 and delayed_noise T=256). The selection rule is JIDT-specific (AIC-like penalty k/(2N)), not a standard Geweke model-order criterion; source order
+    chosen by source predictability rather than by the bivariate model.'
+  units_and_range: nats; [0, +inf); asymmetric; scale invariant
+  direction_convention: 'A[i,j] = TE(x_i -> x_j) with embeddings selected per pair. Probe var2_bivariate_T1024: A[0,1]=0.1631 > A[1,0]=0.0011'
+  symmetry_expected: asym
+  already_documented: tests/README.md worth knowing ('auto-embedding TE kraskov equals fixed k=1 on cml7' concerns the kraskov variant, not this one); REVIEW.md GC metadata note
+  new_finding_candidates:
+  - 'CANDIDATE (documented-value mismatch): value is Gaussian TE = Geweke F/2, not the documented log-ratio F (same mechanism as the fixed-lag unit).'
+  - 'CANDIDATE (estimator behaviour): MAX_CORR_AIS selection is unstable because penalised AIS curves are nearly flat. Probe var2_bivariate_T1024 source x0 (a true AR(2)): penalised AIS for k=2..10 (tau=1)
+    ranged 0.11649..0.11801 and k=9 was selected; delayed_noise_T256: white-noise x0 was given k=7, and x1/x2 (white noise copies) k=10. Different pairs therefore mix very different model orders.'
+  - 'CANDIDATE (efficiency, value-neutral): the target and source AIS searches (19 MI fits each) are recomputed inside every bivariate call (TransferEntropyCalculatorViaCondMutualInfo.java:865-869 at JIDT a9b6b3e, via finaliseAddObservations),
+    i.e. 2*P*(P-1) searches where P are sufficient; results are deterministic, so caching per process would be bit-identical.'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    - gauss_ar1_pair
+    - logistic_maps
+    path: pipeline
+    reference: 'from-scratch numpy re-implementation: penalised AIS(k,tau) = Gaussian MI(delay vector, next sample) - k/(2N) with the per-candidate N = T-(k-1)*tau-1 over k=1..10, tau=1..2 (tau skipped
+      at k=1), argmax with strict ''>'' tie rule; then TE = 0.5*ln(RSS_r/RSS_f) with the selected (k,kt,l,lt) and delay 1'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: selected (k,kt,l,lt) identical to calc.getProperty for every ordered pair; values agree to 1e-10
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    path: pipeline
+    reference: known ground truth (x0 -> x1)
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A[0,1] > A[1,0] for T >= 256
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    path: pipeline
+    reference: 'statistical stability of the selected order: compare selected k against the true AR order (0 for white noise, 2 for var2_bivariate) across T = 64..4096'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: report the selected (k,kt) per process and T; the hypothesis is that over-long orders are frequent even at T=4096
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/it_gaussian.py:ais_select (from-scratch MAX_CORR_AIS: Gaussian AIS minus k/(2N) with the candidate''s own N, k <= 10, tau <= 2, tau loop skipped at k = 1, strict ''>'')
+    + audit/checks/refs/_kernels_infotheory.py:gaussian_te; audit/checks/probes/it_gaussian_probes.py:te_auto_params (JIDT getProperty k_HISTORY/k_TAU/l_HISTORY/l_TAU after each bivariate call); audit/checks/refs/it_gaussian.py:chk_direction'
+  check_data: var2_bivariate T64/T256/T1024/T4096; iid_gaussian T256/T1024/T4096; delayed_noise T256/T1024; gauss_ar1_pair T1024; logistic_maps_chaotic T1024
+  agreement_criterion: 'exact: values rtol 1e-10, atol 1e-12; selected embeddings bitwise equal (rtol = atol = 0); direction: A[0,1] > A[1,0]'
+  closeness: 'Values: 5/5 exact runs pass, max_abs <= 5.3e-14. Selected (k, k_tau, l, l_tau) identical for every ordered pair on 9/9 probe runs (max_abs 0). Selected orders (ref_sel_k_x*): var2_bivariate
+    x0 (a true AR(2)) k = 3, 10, 9, 8 at T = 64, 256, 1024, 4096 and x1 k = 4, 5, 2, 5; iid_gaussian white channels at T=4096 k = 6, 1, 7, 8, 10 (tau 2 for x4), at T=1024 k = 8, 1, 5, 6, 10; delayed_noise
+    T256 white x0 k = 7, its delayed copies k = 10, 10, 7. Direction: var2_bivariate A[0,1] = 0.1631 vs A[1,0] = 0.0011; delayed_noise T1024 A[0,1] = 2.2669, A[0,2] = 2.2821, A[0,3] = 2.2957 vs reverse
+    <= 0.0032.'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: Anchor 8 fails because the per-pair AIS embedding search is not a monotone transform of canonical Gaussian TE (var2_bivariate x0 gets k = 3, 10,
+    9, 8 at T = 64 to 4096). Anchor 7 holds for the MAX_CORR_AIS search (selections reproduced on 9/9 probe runs, values to 5.3e-14), but only up to a factor of 1/2.
+    pyspi returns TE = F/2, while the supplement names the log-ratio F.
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Value is Gaussian TE = F/2 (as the fixed-lag unit) with JIDT-specific embeddings: target and source orders are each chosen from that process''s own penalised AIS (k/(2N) penalty, N per
+    candidate), searched again for every ordered pair. The selection is reproduced exactly but is unstable: over-long orders (k = 7-10) for white noise and k = 3-10 for a true AR(2) across T. It matches
+    the supplement''s MAX_CORR_AIS description but not the documented log-ratio F, and differs from a Geweke GC with an information-criterion model order.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'moderate (pyspi time_s in out/pyspi/index/it_gaussian.json, single runs of the review-stage forced re-run, made under machine load: the P = 5, T = 4096 params probe (20 ordered pairs x 2 searches
+    x 19 Gaussian MI fits) took 6.90 s; at P = 5, T = 1024 the params probe took 1.90 s against 0.0070 s for the fixed-lag gc_gaussian_k-1 null run on the same dataset (iid_gaussian), about 270x, from
+    the per-pair AIS searches; the next slowest are iid_gaussian T = 256 params 0.95 s and delayed_noise|1024|pipeline|direction 0.94 s; every other run 0.02-0.85 s; 16 runs, 14.4 s in total; three
+    earlier forced runs took 11.1 s, 3.6 s and 5.7 s for the T = 4096 params probe, and the earlier record quoted 1.4 s for the auto unit at P = 5, T = 1024 against 0.0065 s for gc_gaussian_k-1 (about
+    200x) and 11.7 s for the unit in the last of those runs (not stored in the index or results files))'
+  symmetry_observed: 'asym: max|A - A.T| = 0.162 (var2_bivariate T1024), 0.203 (T64), 2.28 (delayed_noise T256), 0.056 (gauss_ar1_pair), 0.251 (logistic_maps_chaotic)'
+  direction_observed: 'A[i,j] = TE(x_i -> x_j) with per-pair embeddings. var2_bivariate T1024: A[0,1] = 0.1631 vs A[1,0] = 0.0011. delayed_noise T1024: A[0,k] = 2.267, 2.282, 2.296 for k = 1, 2, 3 vs A[k,0]
+    <= 0.0032; the large source order chosen for white x0 reaches the lag-3 and lag-5 couplings that fixed k=l=1 misses.'
+  candidate_resolutions:
+  - candidate: value is Gaussian TE = Geweke F/2, not the documented log-ratio F
+    outcome: confirmed
+    evidence: infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|*|numpy reproduce pyspi with the covariance TE (= 0.5 ln(RSS_r/RSS_f), cov vs OLS 1e-15 in infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|var2_bivariate|1024|pipeline|ols)
+  - candidate: MAX_CORR_AIS selection is unstable (nearly flat penalised AIS curves)
+    outcome: confirmed
+    evidence: infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|var2_bivariate|{64,256,1024,4096}|pipeline|params (x0 k = 3, 10, 9, 8) and |iid_gaussian|{256,1024,4096}|pipeline|params (white channels
+      k from 1 to 10, tau 1 or 2)
+  - candidate: target/source AIS searches are recomputed in every bivariate call although P searches suffice (value-neutral efficiency)
+    outcome: confirmed
+    evidence: 'params runs: the JIDT selection for every ordered pair equals a per-process selection computed once (refs/it_gaussian.py:chk_params), so caching per process is bit-identical; the search runs
+      inside TransferEntropyCalculatorViaCondMutualInfo.preFinaliseAddObservations (a9b6b3e :701-850) on every setObservations'
+  checks_run:
+  - run_ids:
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|var2_bivariate|64|pipeline|numpy
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|var2_bivariate|1024|pipeline|numpy
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|delayed_noise|256|pipeline|numpy
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|gauss_ar1_pair|1024|pipeline|numpy
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|logistic_maps_chaotic|1024|pipeline|numpy
+    reference: audit/checks/refs/it_gaussian.py:chk_numpy (ais_select + audit/checks/refs/_kernels_infotheory.py:gaussian_te)
+    outcome: 5/5 pass; max_abs <= 5.3e-14
+  - run_ids:
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|var2_bivariate|64|pipeline|params
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|var2_bivariate|256|pipeline|params
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|var2_bivariate|1024|pipeline|params
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|var2_bivariate|4096|pipeline|params
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|iid_gaussian|256|pipeline|params
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|iid_gaussian|1024|pipeline|params
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|iid_gaussian|4096|pipeline|params
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|delayed_noise|256|pipeline|params
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|gauss_ar1_pair|1024|pipeline|params
+    reference: audit/checks/refs/it_gaussian.py:chk_params vs audit/checks/probes/it_gaussian_probes.py:te_auto_params
+    outcome: 9/9 pass; selections bitwise equal
+  - run_ids:
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|var2_bivariate|1024|pipeline|direction
+    - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2|delayed_noise|1024|pipeline|direction
+    reference: audit/checks/refs/it_gaussian.py:chk_direction
+    outcome: 2/2 pass; A[0,1] > A[1,0] on both
+optimisation:
+  complexity_P_T: 'O(P^2 * 2 * 19 * (T k^2 + k^3)): inside every TransferEntropy.bivariate call (infotheory.py:376-389) JIDT''s MAX_CORR_AIS searches 19 (k, tau) candidates (k 1..10, tau 1..2, tau skipped
+    at k=1) for the target and again for the source, then computes the TE. Measured fresh P exponent 2.21, T exponent 0.80; 12.5 ms per ordered pair at 8x1024 against 0.26 ms for the fixed k=1 TE. At 118x1024
+    the pair term dominates: 209 s projected (extrapolated-pairs-from-32).'
+  hotspot_1: 'pyspi/statistics/infotheory.py:TransferEntropy.bivariate (third-party:jidt: AIS search + TE in one Java call, self time) 99.9% cum / 99.6% self of the profiled SPI call at 8x1024'
+  hotspot_2: 'no other frame above 0.1%; the split between search and TE is inside Java and invisible to cProfile. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries,
+    so the JIDT (Java) time is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.002
+  profile_file: audit/profiles/infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_gaussian-3
+    opportunity: Run JIDT's MAX_CORR_AIS search once per channel (P searches) instead of twice per ordered pair (2P(P-1)), then compute each pair's Gaussian TE through the fixed-embedding properties with
+      the cached (k, k_tau, l, l_tau).
+    opp_type: cache-sharing
+    expected_speedup: 10-25x
+    speedup_basis: 'profile:audit/profiles/infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2__8x1024.pstats pyspi/statistics/infotheory.py:376 TransferEntropy.bivariate 99.9% (search + TE) + complexity:
+      2 x 19 Gaussian AIS evaluations per ordered pair -> 19 per channel (13806 x 38 -> 118 x 19 at P=118); what remains is one TE per pair with the selected embeddings, a few times the 0.26 ms k=1 TE (summary
+      t_per_pair) against 12.5 ms now.
+      Subsumed_by it_gaussian-2 on this unit, whose closed form runs the MAX_CORR_AIS search once per channel itself (Gaussian AIS of every (k, tau) candidate) and computes the TE without JIDT, so the
+      redundant searches this avenue removes are gone there; build_csv credits it no saving on top of it, and the 10-25x applies only if this S-effort change lands alone'
+    output_risk: unverified-bit-identical
+    risk_evidence: 'the Gaussian AIS adds no jitter and sees only the channel''s own series, so the selection depends only on the channel (check stage: selections identical for every ordered pair on 9/9
+      probe runs; note ''Redundant searches''); the TE then runs the same JIDT code with the same embedding'
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - it_gaussian-2
+  - opportunity_id: it_gaussian-2
+    opportunity: 'Closed-form numpy for the composite Gaussian SPIs, batched over pairs: si from one lag-1 covariance (three conditional entropies as log-det ratios), xme from the source-lag block with
+      and without the target sample, cce/di from one lagged covariance per term m = 1..5 (each term has its own sample window), and the gc auto MAX_CORR_AIS search from Gaussian AIS of every (k, tau) candidate
+      per channel; replaces 2-10 JIDT entropy calls per pair, each with a 2-D JArray conversion.'
+    opp_type: replace-library
+    expected_speedup: 20-100x
+    speedup_basis: 'profile:audit/profiles/infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2__8x1024.pstats pyspi/statistics/infotheory.py:376 TransferEntropy.bivariate 99.9% + complexity: per pair
+      the JIDT path costs ~1 ms per 2-D entropy call (component timings in audit/profiles/micro/opp_it_gaussian-1.json: a 1023x4 JArray(JDouble, 2) conversion 1.01 ms of a 1.05 ms 4-D JIDT entropy call;
+      the entropy itself on a prebuilt array 0.043 ms) while a batched slogdet of a <= 11x11 sub-matrix costs microseconds; the measured closed forms of it_gaussian-1 ran 271-643x faster than the same-run
+      pyspi baseline at 32x1024 in the latest run (te_symbolic_k-10 224x; 399-454x and 174x in the first)'
+    output_risk: unverified-within-tolerance
+    risk_evidence: same Gaussian log-det quantities on the same samples with different float operations; the check stage's numpy closed forms reproduce pyspi to <= 5.3e-14 with identical selections (refs/it_gaussian.py:ais_select,
+      5 runs)
+    effort: M
+    depends_on: []

@@ -1,0 +1,270 @@
+unit_id: misc.lmfit.SGDRegressor
+status: profiled
+correctness:
+  metric_name_standard: 'in-sample mean squared error of a linear least-squares fit of y = x_j on x = x_i obtained by stochastic gradient descent (sklearn SGDRegressor
+    defaults: squared loss, l2 penalty alpha = 1e-4, invscaling learning rate); an approximation to the OLS residual variance (T-1)/T (1 - r^2)'
+  canonical_ref: 'Target quantity: ordinary least squares residual mean square (Legendre 1805 / Gauss 1809; any regression text, e.g. Seber & Lee 2003, Linear Regression
+    Analysis, ch. 3); optimiser: Robbins & Monro 1951, Ann. Math. Stat. 22(3):400-407; Bottou 2010, Proc. COMPSTAT, "Large-scale machine learning with stochastic
+    gradient descent" (sklearn user guide reference)'
+  canonical_definition: 'OLS: w = sum(xc*yc)/sum(xc^2), b = ybar - w xbar, MSE = (1/T) sum (y - b - w x)^2 = ((T-1)/T)(1 - r^2) for z-scored inputs; SGD minimises
+    (1/T) sum 0.5 (y_t - w x_t - b)^2 + 0.5 alpha w^2 (alpha = 1e-4) by per-sample updates and only approximates this minimiser'
+  documented_definition: 'supplement §1.6.1, p.18 (supplement.txt lines 856-868; the briefing pack gives 874-887, which is off by 18 lines): "we use a number of linear
+    models and record the mean squared error (MSE) of a regression of y on x. The following models (with the default parameters) from scikit-learn [2] are included:
+    stochastic gradient descent regression with a squared loss (ordinary least squares fit) function (denoted by modifier SGDRegressor); Ridge regression, which uses l2-norm regularization
+    (Ride); the Elastic-Net model [76, 77], which uses both l1 and l2-norm regularization (ElasticNet); and the Bayesian Ridge regressor uses a gamma distribution
+    prior (with lambda1 = lambda2 = 1e-6) for the l2-norm regularizor in Ridge regression (BayesianRidge). This yields four SPIs: 215. lmfit_SGDRegressor 216. lmfit_Ridge
+    217. lmfit_ElasticNet 218. lmfit_BayesianRidge"; keywords "directed, linear, unsigned, bivariate, contemporaneous"; rationale "Linear regression is commonly used
+    for establishing independence through model fits (e.g., see additive noise models in Sec. 1.3.1)". GitBook spi-descriptions/miscellaneous.md "Linear Model Fit"
+    repeats the text verbatim (including the typo "Ride") and lists the same four identifiers.'
+  delegate_lib: scikit-learn==1.9.1 sklearn.linear_model.SGDRegressor(random_state=42).fit -> BaseSGDRegressor._fit -> _partial_fit -> _fit_regressor -> _sgd_fast._plain_sgd
+    (Cython, CyHalfSquaredError loss); sklearn.metrics.mean_squared_error; numpy==2.5.4
+  implemented_as: 'A[i, j] = in-sample MSE of SGDRegressor(loss="squared_error", penalty="l2", alpha=1e-4, fit_intercept=True, max_iter=1000, tol=1e-3, shuffle=True,
+    learning_rate="invscaling", eta0=0.01, power_t=0.25, n_iter_no_change=5, early_stopping=False, average=False, random_state=42) fitted to z_j on z_i. Each epoch
+    shuffles the samples (seeded), updates w and b per sample with eta_t = 0.01 / t^0.25 (t counts samples across epochs, starting at 1), and stops when the epoch-average
+    running objective has not improved by more than 1e-3 for 5 consecutive epochs (probe n_iter_ = 15-20 at T=64, 7 at T=1024/4096; no ConvergenceWarning). The final
+    iterate is not the OLS solution: probe bivariate_gaussian T=64 pair (0,1) coef 0.376 vs OLS 0.420, T=4096 intercept 0.017 vs 0; MSE excess over OLS up to 2.93e-3
+    (T=64) and up to 1.98e-3 (T=4096, sparse_precision) in the check-stage ols runs; the MSE exceeds (T-1)/T, i.e. is worse than predicting the mean, in 0/2/11/30 of 120 entries
+    at T = 64/256/1024/4096 (check-stage optimality runs; the trace probe saw 49 of 552 ordered pairs). Output is deterministic run to run (fixed seed) but changes with the seed by up to
+    1.78e-3 (check-stage seed sweep, random_state 0-19, iid_gaussian T=4096; the trace probe over seeds 0-9 saw ~4.6e-4) and is not exactly symmetric (max |A - A.T| 1.43e-3
+    on sparse_precision T=4096 over 14 datasets x 4 T, lmfit_fix/fix1.py; other dataset/T maxima <= 4.7e-4).'
+  implementation_trace:
+  - 'pyspi/config.yaml:1264-1278 .statistics.misc LinearModel: labels directed/linear/unsigned/bivariate/contemporaneous; configs model: Ridge, Lasso, SGDRegressor,
+    ElasticNet, BayesianRidge (Lasso is the fifth, undocumented config)'
+  - 'pyspi/calculator.py:230-267 Calculator._load_yaml (HEAD a1f20c7): for params in configs (252): spi = getattr(module, fcn)(**params) (256), i.e. LinearModel(model=...);
+    self._spis[spi.identifier] = spi (257); the class attribute labels (misc.py:109) are what the calculator reports'
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend(axis=1) only if detrend=True (default False) (187), then scipy.stats.zscore(axis=1, nan_policy="omit",
+    ddof=1) if normalise=True (default) (195); stored as (M, T, 1)'
+  - 'pyspi/calculator.py:329-339 Calculator.compute (HEAD a1f20c7): S = self._spis[spi].multivariate(self.dataset) (329); np.fill_diagonal(S, np.nan) (332); any exception
+    -> self._table[spi] = np.nan (336-337), so one failing pair makes the whole matrix NaN'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for j (outer), for i != j (inner): A[i, j] = self.bivariate(data, i=i, j=j); no mirroring'
+  - 'pyspi/base.py:27-49 parse_bivariate: Data passed through unchanged (two raw arrays would be wrapped into a new z-scored Data with i, j = 0, 1)'
+  - 'pyspi/data.py:108-118 Data.to_numpy(): returns the (M, T, 1) array, so z[i] is a (T, 1) design matrix with one feature'
+  - pyspi/statistics/misc.py:106-109 class LinearModel(Directed, Unsigned); labels ["misc", "unsigned", "unordered", "normal", "linear", "directed"]
+  - 'pyspi/statistics/misc.py:111-113 __init__: identifier "lmfit_<model>", self._model = getattr(sklearn.linear_model, model)'
+  - 'pyspi/statistics/misc.py:117-124 bivariate: z = data.to_numpy(); warnings suppressed; if "random_state" in inspect.signature(model).parameters: model(random_state=42).fit(z[i],
+    ravel(z[j])) else model().fit(z[i], ravel(z[j])) -> predictor = process i, target = process j'
+  - pyspi/statistics/misc.py:125-126 y_predict = mdl.predict(z[i]); return mean_squared_error(y_predict, ravel(z[j])) -> in-sample (training) MSE on the same T samples
+    used for fitting (argument order swapped, harmless because MSE is symmetric)
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_stochastic_gradient.py:1802 class SGDRegressor; defaults loss="squared_error", penalty="l2", alpha=1e-4,
+    max_iter=1000, tol=1e-3, shuffle=True, learning_rate="invscaling", eta0=0.01, power_t=0.25, n_iter_no_change=5, random_state=None (probe inspect.signature)
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_stochastic_gradient.py:1432 loss_functions "squared_error" -> CyHalfSquaredError (0.5 (y - p)^2, sklearn/_loss/_loss.pxd:30)
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_stochastic_gradient.py:1640-1676 fit -> self._fit(alpha=self.alpha, loss, learning_rate)
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_stochastic_gradient.py:1580-1638 _fit: t_ = 1.0 (1601); _partial_fit(max_iter) (1603-1613); ConvergenceWarning
+    only if n_iter_ == max_iter (1615-1626)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_stochastic_gradient.py:1712-1794 _fit_regressor: random_state = check_random_state(42) (1725); seed
+    = random_state.randint (1728); make_dataset (1730-1732, intercept_decay 1.0 for dense, _base.py:108); _plain_sgd(..., shuffle, seed, eta0, power_t, t_, ...) (1747-1779)'
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_sgd_fast.pyx.tp:274 _plain_sgd; 467-474 epoch loop with dataset.shuffle(seed); 487-488 invscaling eta
+    = eta0 / t^power_t; 523-530 dloss = loss.cy_gradient, update = -eta*dloss; 542-548 l2 shrink w *= (1 - eta*alpha), w += update*x; 549-554 intercept += update*intercept_decay;
+    570 t += 1; 606-626 stop when objective_sum/train_count > best_objective - tol for n_iter_no_change epochs
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_stochastic_gradient.py:1697-1710 BaseSGDRegressor.predict -> _decision_function (1678-1695): safe_sparse_dot(X, coef_.T) + intercept_ (BaseSGDRegressor(RegressorMixin, BaseSGD), :1430, does not inherit LinearModel)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_stochastic_gradient.py:1794 intercept_ = np.atleast_1d(intercept): the intercept is learned by the SGD updates (_sgd_fast.pyx.tp:549-554); no _preprocess_data centring and no _set_intercept call'
+  - '.venv/lib/python3.12/site-packages/sklearn/metrics/_regression.py:524-600 mean_squared_error: _average((y_true - y_pred) ** 2, axis=0) (586-588), divisor T'
+  deviation_from_documented: '(a) Documented as "stochastic gradient descent regression with a squared loss (ordinary least squares fit)": the default penalty is
+    l2 with alpha = 1e-4 (a small ridge term, negligible here), and, more importantly, the SGD iterate is not converged to the OLS fit, so the reported MSE is not
+    the OLS MSE (excess up to 2.9e-3, and above the trivial (T-1)/T in 49/552 probed pairs). (b) "With the default parameters": pyspi sets random_state=42 (non-default),
+    which fixes the value; the value changes with the seed. (c) "directed": near-symmetric on z-scored data, the residual asymmetry (max 1.43e-3) is optimiser noise,
+    not direction.'
+  deviation_from_canonical: 'The canonical quantity behind the documented description is the OLS residual mean square ((T-1)/T)(1 - r^2) on z-scored data; the code
+    returns the in-sample MSE of a stopped SGD iterate, which is >= the OLS value by an optimiser-dependent excess (probe: up to 2.93e-3 at T=64 on cointegrated,
+    5.8e-4 at T=4096) that does not vanish with T because the stopping rule (tol = 1e-3 on the running epoch objective, 5 epochs) stops after ~7 epochs at large T
+    with a step size eta0/t^0.25 still around 0.01/(7T)^0.25 ~ 1e-3. At T >= 1024 this excess is comparable to or larger than the null-pair spread of the OLS MSE
+    (r^2 ~ 1/T), so weak dependencies are masked by optimiser noise.'
+  units_and_range: units of the target variance; unsigned, >= OLS MSE >= 0; on z-scored data approximately ((T-1)/T)(1 - r^2) + excess, excess in [0, ~3e-3]; can
+    exceed (T-1)/T (probe maximum 1.0003 at T=4096); approximately but not exactly symmetric (max |A - A.T| 1.43e-3, sparse_precision T=4096); deterministic for fixed
+    seed and input order, seed sensitive.
+  direction_convention: 'A[i, j] = in-sample MSE of the linear prediction of process j (target, column) from process i (predictor, row), per misc.py:122-126; LOWER
+    = j better linearly predicted from i. Code-derived; with the default z-scoring the matrix is symmetric (see units_and_range), so the direction is only empirically
+    identifiable with normalise=False, where column j scales with var(x_j) (probe on scaled_offset_T1024: column means of A track std_j^2 = 0.0395, 4.058, 24.78,
+    97.89).'
+  symmetry_expected: asym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (non-converged SGD, worse than the mean predictor): in 49 of 552 ordered pairs over 14 datasets x 4 T (34 at T=4096) A[i, j] > (T-1)/T = MSE of predicting
+    the target mean; probe1.py "SGDRe ... rng=[0.9989,1.0002]" on iid_gaussian_T4096 and "[0.3685,1.0003]" on bivariate_gaussian_T4096; probe2.py T=4096 pair 0->1
+    "coef=0.31505 wols=0.30861 icpt=1.74e-02".'
+  - 'Candidate (not the documented OLS fit): excess MSE over the exact OLS value up to 2.93e-3 (probe3.py, cointegrated T=64), with coefficients shrunk at small T
+    (probe2.py T=64 pair 0->1 coef 0.376 vs OLS 0.420); n_iter_ only 7 epochs at T >= 1024 with no ConvergenceWarning, because the stopping rule is relative to tol=1e-3.'
+  - 'Candidate (seed dependence and spurious asymmetry): MSE minus OLS over seeds 0-9 spans e.g. 2.5e-05..3.9e-04 (T=4096 pair 0->1); |A - A.T| up to 1.43e-3 (sparse_precision
+    T=4096; lmfit_fix/fix1.py over the same 14 datasets x 4 T as probe3.py, which printed only its top-8 rows by OLS excess and so missed this maximum) although the
+    OLS target is symmetric; random_state=42 is a pyspi override of the documented "default parameters".'
+  - 'Candidate (direction label is nominal under default preprocessing): after ddof=1 z-scoring every process has sum x^2 = T-1 and mean ~0, so the fit and its in-sample
+    MSE are functions of (r_ij, T) only and the OLS target is symmetric; the remaining asymmetry (|A - A.T| up to 1.43e-3) is optimiser noise although the class is
+    Directed (misc.py:106) and labelled "directed". Asymmetry appears only with normalise=False, where A[i, j] is in units of var(x_j).'
+  - 'Candidate (documented rationale vs quantity): the supplement motivates lmfit by independence testing "through model fits (e.g., see additive noise models)",
+    but the SPI is the raw in-sample MSE of a contemporaneous linear fit, which measures linear predictability (a transform of r^2 for the closed-form models), not
+    residual independence; no residual-independence test is computed (misc.py:125-126).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - anm
+    - cointegrated
+    - sparse_precision
+    path: kernel
+    reference: 'from-scratch numpy OLS: MSE_ols = mean((yc - (xc@yc/xc@xc) xc)^2) on the z-scored arrays (no sklearn import)'
+    reference_kind: independent-impl
+    criterion: optimality
+    expected_outcome: 'A[i, j] >= MSE_ols - 1e-12 for every pair (OLS is the in-sample minimiser); report the excess distribution per T: expected max <= 3e-3 at T=64
+      and >= 1e-4 at T=4096 (probe), i.e. the SGD value is a related, not equal, quantity'
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - nonlinear_dependence
+    - anm
+    - cointegrated
+    - trending
+    - logistic_maps
+    path: pipeline
+    reference: analytic trivial-predictor bound (T-1)/T (MSE of the target mean on z-scored data)
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'count of entries above (T-1)/T per T (probe: 0 at T=64, 2 at 256, 13 at 1024, 34 at 4096 of 552); any count > 0 confirms the non-convergence
+      candidate'
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    path: kernel
+    reference: 'sklearn SGDRegressor refit with random_state 0..19 (same-lineage: same library; used only to measure seed sensitivity, not correctness)'
+    reference_kind: same-lineage
+    criterion: statistical
+    expected_outcome: spread of the MSE across seeds of order 1e-4 (probe up to 4.6e-4), comparable to the null-pair spread of r^2 at T >= 1024
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - anm
+    - sparse_precision
+    path: pipeline
+    reference: 'analytic: OLS target is symmetric; measure max |A - A.T|'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'max |A - A.T| > 1e-12 and <= 2e-3 (probe fix3.py per dataset over T=64..4096: iid_gaussian <= 1.9e-4, bivariate_gaussian <= 4.1e-4, anm <=
+      2.7e-4, sparse_precision <= 1.43e-3 at T=4096); asymmetry attributable to optimisation noise, not direction'
+  - datasets:
+    - trending
+    - cointegrated
+    path: pipeline-detrend
+    reference: from-scratch OLS MSE on detrend + zscore(ddof=1) data
+    reference_kind: independent-impl
+    criterion: optimality
+    expected_outcome: A >= OLS - 1e-12, excess <= 3e-3
+  - datasets:
+    - scaled_offset
+    - var2_bivariate
+    - anm
+    path: kernel
+    reference: 'analytic direction test: run LinearModel.multivariate on Data(x, normalise=False); compare A[i, j] with var0(x_j) * (1 - r_ij^2) (target-variance
+      scaling) and with var0(x_i) * (1 - r_ij^2) (predictor-variance scaling), numpy only'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A[i, j] tracks var0(x_j) (column = target) and not var0(x_i); establishes the empirical convention A[i, j] = MSE of predicting j from i. For
+      SGD use tolerance on the ratio A[i, j]/var0(x_j) vs 1 - r^2 (relative error <= 1e-2), since SGD on unscaled data converges less well.
+  check_method: independent-impl
+  check_reference: 'refs/_kernels_basic_misc.py:ols_mse (numpy OLS, the documented "ordinary least squares fit") via refs/lmfit.py:h_sgd_ols (tolerance) and h_sgd_opt
+    (lower bound A >= OLS, named optimality in the run ids; every linear fit satisfies it); refs/lmfit.py:h_determinism (probes/lmfit_sgd.py:determinism: same-lineage pyspi vs pyspi self-consistency across global seeds); refs/lmfit.py:h_seedsweep (probes/lmfit_sgd.py:seed_sweep, sklearn SGDRegressor random_state
+    0..19: same-lineage, sensitivity only); refs/lmfit.py:h_direction'
+  check_data: 'pipeline: iid_gaussian, bivariate_gaussian, delayed_noise, nonlinear_dependence, anm, cointegrated, trending, logistic_maps, sparse_precision, var2_bivariate,
+    logistic_maps_chaotic, gauss_ar1_pair x T in {64, 256, 1024, 4096} (ols and optimality); pipeline-detrend: trending, cointegrated x {64, 1024, 4096}; determinism:
+    bivariate_gaussian 1024, iid_gaussian 4096; seed sweep: bivariate_gaussian 64 and 1024, iid_gaussian 1024 and 4096; direction (raw) T=1024'
+  agreement_criterion: 'tolerance |A - OLS| <= 1/(10T) (one tenth of the null-pair mean of r^2, fixed before running); lower bound A >= OLS - 1e-12 (named optimality in the run ids; OLS with an intercept minimises the in-sample MSE over all linear predictors, so every linear fit, any SGD iterate included, satisfies it: a sanity bound, not a closeness-to-optimum test, which is the 1/(10T) tolerance); determinism: identical
+    output after global seeds 42, 0, 12345; seed sweep and trivial-bound counts reported'
+  closeness: 'ols 24/48 pass: excess over OLS max 2.93e-3 at T=64 (cointegrated), 1.56e-4 at 256, 4.13e-4 at 1024, 1.98e-3 at 4096 (sparse_precision); fails 8/12,
+    0/12, 5/12, 11/12 by T; lower bound (optimality runs) 54/54 pass (A >= OLS everywhere, including detrend; a bound every linear fit satisfies, not evidence of optimality); entries above the trivial bound (T-1)/T: 0/120, 2/120, 11/120, 30/120
+    at T = 64, 256, 1024, 4096 (max value 1.00032, logistic_maps_chaotic|4096); determinism (same-lineage self-consistency) 2/2 (max_abs_between_global_seeds 0.0); seed sweep (same-lineage) spread
+    up to 1.78e-3 (iid_gaussian|4096); asym_max up to 1.43e-3 (sparse_precision|4096); raw direction 3/4 (cointegrated|1024: agreement 0.917, max_rel to OLS 2.66)'
+  verdict: variant
+  score_0_10: 5
+  score_rubric: 5
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 5: no reference reproduces the SGD iterate. The checks only bound it: A >= OLS in 54/54 runs, and within 1/(10T) of OLS in only 24/48 runs
+    (excess up to 2.93e-3).'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 5
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: The documented quantity is the OLS fit; the code returns the in-sample MSE of a stopped SGD iterate (invscaling step, l2 alpha 1e-4, stop after 5
+    epochs without a 1e-3 improvement). It is never below the OLS value but exceeds it by up to 2.9e-3 at T=64 and 2.0e-3 at T=4096. At T=4096 the excess (up to 1.98e-3) is about
+    8x the null-pair mean of r^2 (1/T = 2.4e-4); at T=1024 it stays below 1/T at pyspi's random_state=42 (ols runs, max 4.13e-4 vs 9.8e-4) but not at every seed (seedsweep iid_gaussian|1024, random_state 0-19, ref_excess_max 1.10e-3). 11 of 120 entries at T=1024 and 30 of 120 at T=4096 are worse than predicting the mean. The value is deterministic given pyspi's random_state=42
+    but changes with the seed by up to 1.8e-3, and its asymmetry (up to 1.4e-3) is optimiser noise. On raw unscaled data SGD can be far from OLS (2.66x on cointegrated
+    raw).
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.82 s per pyspi run (T=4096, P=5); seed-sweep probes 20 refits; all 115 SGD runs about 3 s of pyspi time'
+  symmetry_observed: 'asym (near-symmetric) on the default path: max|A - A.T| 1.43e-3 (sparse_precision|4096|pipeline|ols), between 5.3e-6 and 4.5e-4 on the other
+    dataset/T combinations; the OLS target is symmetric, so the asymmetry is optimiser noise; pipeline-detrend <= 5.4e-4; raw data strongly asymmetric (165 on cointegrated|1024|kernel|direction)
+    because A[i, j] scales with var0(x_j)'
+  direction_observed: 'A[i, j] = in-sample MSE of the SGD fit predicting process j (target) from process i (predictor); lower = more predictable. Raw-scale direction
+    runs: scaled_offset, var2_bivariate and anm agree with the oriented OLS on every diagnostic pair (agreement 1.0); cointegrated|1024|kernel|direction agrees on
+    11 of 12 pairs because SGD on unscaled random walks (variance up to 458) is far from converged (max_rel to OLS 2.66). On the default path the residual asymmetry
+    (<= 1.43e-3) is noise, not direction: on var2_bivariate, logistic_maps_chaotic and delayed_noise the asym_max is <= 1.8e-4.'
+  candidate_resolutions:
+  - candidate: Non-converged SGD can be worse than the mean predictor (A > (T-1)/T)
+    outcome: confirmed
+    evidence: 'misc.lmfit.SGDRegressor|*|*|pipeline|optimality n_above_trivial: 0/120 (T=64), 2/120 (256), 11/120 (1024), 30/120 (4096); max_value 1.00032 (logistic_maps_chaotic|4096)'
+  - candidate: Not the documented OLS fit (excess MSE over OLS, shrunk coefficients)
+    outcome: confirmed
+    evidence: 'misc.lmfit.SGDRegressor|*|*|pipeline|ols: 24/48 fail atol 1/(10T); excess_max 2.93e-3 (cointegrated|64), 1.98e-3 (sparse_precision|4096); optimality
+      54/54 (A >= OLS)'
+  - candidate: Seed dependence and spurious asymmetry
+    outcome: confirmed
+    evidence: 'misc.lmfit.SGDRegressor|*|pipeline|seedsweep seed_spread_max 5.3e-4 (bivariate|64), 3.4e-4 (bivariate|1024), 1.10e-3 (iid|1024), 1.78e-3 (iid|4096);
+      asym_max 1.43e-3 (sparse_precision|4096|pipeline|ols); determinism runs: 0.0 change across global seeds (random_state=42 fixes the stream)'
+  - candidate: Direction label nominal under default preprocessing (A symmetric although the class is Directed)
+    outcome: confirmed
+    evidence: 'ols/optimality runs: OLS reference symmetric, pyspi asym_max <= 1.43e-3 and of the size of the seed spread; direction datasets var2_bivariate/logistic_maps_chaotic
+      asym_max <= 1.8e-4'
+  - candidate: Documented rationale (independence via model fits / ANM) vs quantity (in-sample MSE of a contemporaneous linear fit)
+    outcome: confirmed
+    evidence: 'ols runs: value is OLS MSE plus optimiser excess; misc.py:125-126 returns mean_squared_error only'
+  checks_run:
+  - run_ids:
+    - misc.lmfit.SGDRegressor|*|*|pipeline|ols
+    reference: refs/_kernels_basic_misc.py:ols_mse via refs/lmfit.py:h_sgd_ols
+    outcome: fail 24/48 at atol 1/(10T); excess max 2.93e-3
+  - run_ids:
+    - misc.lmfit.SGDRegressor|*|*|pipeline|optimality
+    - misc.lmfit.SGDRegressor|*|*|pipeline-detrend|optimality
+    reference: refs/lmfit.py:h_sgd_opt
+    outcome: pass 54/54 (A >= OLS - 1e-12; a lower bound every linear fit satisfies, not an optimality test)
+  - run_ids:
+    - misc.lmfit.SGDRegressor|*|*|pipeline|determinism
+    reference: 'refs/lmfit.py:h_determinism (same-lineage: pyspi vs pyspi self-consistency, probes/lmfit_sgd.py:determinism)'
+    outcome: pass 2/2, max diff 0.0
+  - run_ids:
+    - misc.lmfit.SGDRegressor|*|*|pipeline|seedsweep
+    reference: refs/lmfit.py:h_seedsweep (same-lineage, probes/lmfit_sgd.py:seed_sweep)
+    outcome: pass 4/4 (every seed >= OLS); spread up to 1.78e-3
+  - run_ids:
+    - misc.lmfit.SGDRegressor|*|1024|kernel|direction
+    reference: refs/lmfit.py:h_direction (OLS orientation)
+    outcome: pass 3/4; cointegrated raw fails (agreement 0.917)
+optimisation:
+  complexity_P_T: 'O(P^2 T) for the arithmetic, but a T-independent per-call overhead dominates: one sklearn SGDRegressor fit + predict + mean_squared_error per ordered pair (pyspi/statistics/misc.py:115-126, inspect.signature per pair at line 120). Measured P_exponent 2.06, T_exponent 0.19. Pair term dominates; measured 15.0 s per window at 118x1024 (family-warm, measured).'
+  hotspot_1: 'sklearn/linear_model/_stochastic_gradient.py:_fit_regressor (third-party:sklearn) 25.9% of the profiled SPI call at 8x1024 (17.2% self: the plain-SGD Cython loop, opaque to cProfile)'
+  hotspot_2: 'sklearn/utils/validation.py:check_array (third-party:sklearn) 23.9% of the profiled SPI call at 8x1024; mean_squared_error 15.5%, sklearn/base.py:_validate_params 14.2%, inspect.signature 13.5% in all (6.1% called per pair from pyspi/statistics/misc.py:bivariate, line 120; 5.8% inside _validate_params via get_params -> _get_param_names; 1.6% inside the validate_params wrapper of mean_squared_error)'
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.192
+  profile_file: audit/profiles/misc.lmfit.SGDRegressor__8x1024.pstats
+  opportunities:
+  - opportunity_id: lmfit-4
+    opportunity: 'Strip per-call overhead around the unchanged sklearn fit: hoist inspect.signature(self._model) to __init__ (misc.py:120 runs it per pair), run fit/predict under sklearn.config_context(skip_parameter_validation=True, assume_finite=True), and compute the in-sample MSE with numpy instead of sklearn.metrics.mean_squared_error.'
+    opp_type: replace-library
+    expected_speedup: 1.5-1.6x
+    speedup_basis: 'profile:audit/profiles/misc.lmfit.SGDRegressor__8x1024.pstats inspect.signature 13.5% (6.1% called from misc.py:120, the part the hoist removes; the other 7.4% sits inside _validate_params and the mean_squared_error validation wrapper, so it is already in those shares), mean_squared_error 15.5%, sklearn base._validate_params 14.2% (containing validate_parameter_constraints 8.3%), _assert_all_finite 6.9% (overlapping cProfile shares, inflated by profiling) + complexity: per-call constant overhead, T-independent (T_exponent 0.19); an unprofiled throwaway check at 8x1024 (56 ordered pairs, same arrays, OMP_NUM_THREADS=1) gave 1.57x per pair with max_abs_diff 0.0 (not saved as a micro-benchmark); Workflow 4c re-ran an equivalent throwaway check (scratchpad/wf4c_b2_lmfit_rank_corr/lmfit4_check.py, which prints its timings and saves no output file; the probe archive keeps the script, and the figures are quoted here: hoisted signature, the same config_context, numpy MSE): 1.134 -> 0.716 ms per pair (1.58x) and 1.133 -> 0.711 ms (1.59x) in two runs at 8x1024, 1.125 -> 0.715 ms = 1.57x at 32x1024 (992 pairs), bit-identical to the unmodified loop on these finite arrays; these unsaved checks are the only timings behind this figure, so the lower bound is 1.5x, below them'
+    output_risk: unverified-bit-identical
+    risk_evidence: the same sklearn solver code runs on the same arrays; validation and signature inspection do not modify the data; for one output mean_squared_error is numpy mean((y_true - y_pred)**2), the same operations as an explicit numpy mean; assume_finite=True skips the finite-value check, so on input with NaN or inf sklearn raises today while the stripped call would proceed, and the bit-identical claim covers finite input only
+    effort: S
+    depends_on: []
+  - opportunity_id: lmfit-5
+    opportunity: Run the ordered-pair SGDRegressor fits (Directed.multivariate loop, pyspi/base.py:84-94) in a process pool.
+    opp_type: parallel
+    speedup_kind: throughput
+    expected_speedup: 10-30x alone (at most ~4x inside a window worker)
+    speedup_basis: 'profile:audit/profiles/misc.lmfit.SGDRegressor__8x1024.pstats base.py:multivariate 99.98% is the pair loop + complexity: 13,806 independent ~1.1 ms fits per window at P=118 (chunked per worker); the speedup is at most the number of physical cores (32 on the Threadripper 3970X, 64 logical CPUs), per-window latency only with no core-hour saving; window-level parallelism (xc-window-parallel) competes for the same cores. Relation to xc-window-parallel: the two are alternatives for those cores, not factors that multiply, so xc-window-parallel is not in depends_on; with the ~8 memory-bounded window workers running, about 4 physical cores per worker remain, so inside a window worker this pool can lower this unit''s latency by at most about 4x, and patient throughput stays bounded by the core count. Ranked as speedup_kind throughput, after every per-window row (README ''Optimisation columns'', ranking rule 3)'
+    output_risk: unverified-bit-identical
+    risk_evidence: each fit constructs its own RandomState from random_state=42 (misc.py:122), so the shuffle order of a pair does not depend on scheduling and no global RNG is consumed
+    effort: S
+    depends_on: []

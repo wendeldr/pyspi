@@ -1,0 +1,456 @@
+{
+ "components": {
+  "conversion_2d_by_shape": {
+   "1014x10": {
+    "jarray_2d_s": 0.0009965320059563965,
+    "jarray_of_s": 0.00018977299623657018
+   },
+   "1014x9": {
+    "jarray_2d_s": 0.0010116609919350594,
+    "jarray_of_s": 0.00018522300524637103
+   },
+   "1023x1": {
+    "jarray_2d_s": 0.0010093610035255551,
+    "jarray_of_s": 0.0002190209925174713
+   },
+   "1023x4": {
+    "jarray_2d_s": 0.001005181999062188,
+    "jarray_of_s": 0.00017315300647169352
+   },
+   "1024x2": {
+    "jarray_2d_s": 0.0010138809884665534,
+    "jarray_of_s": 0.00017699399904813617
+   }
+  },
+  "jarray_1d_T1024_s": 5.428999429568648e-06,
+  "jarray_2d_1023x4_s": 0.0010094909957842901,
+  "jarray_of_2d_1023x4_s": 0.00017646299966145307,
+  "jarray_of_entropy_bit_identical": true,
+  "jidt_gaussian_entropy_4d_call_incl_conversion_s": 0.0010470999986864626,
+  "jidt_gaussian_entropy_4d_call_jarray_of_s": 0.0002155819965992123,
+  "jidt_gaussian_entropy_4d_call_prebuilt_array_s": 4.279900167603046e-05,
+  "jidt_gaussian_mi_call_1d_T1024_s": 0.0001284159952774644,
+  "numpy_cov_1023x4_s": 4.232799983583391e-05
+ },
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "merged_runs": [
+  {
+   "argv": [
+    "--split118"
+   ],
+   "loadavg_end": [
+    2.27490234375,
+    1.92529296875,
+    2.716796875
+   ],
+   "loadavg_start": [
+    1.53173828125,
+    1.63623046875,
+    2.73583984375
+   ],
+   "note": "Workflow 4c: candidate math alone (one prebuilt Data, min of 5) and Data construction alone (min of 5); candidate_incl_data_s = their sum. The summary.json basis times compute_spi on a prebuilt Data, so candidate_math_s is the like-for-like cost. Baseline = one fresh one-shot call per identifier (shared machine, noisy); diff = baseline vs math-only candidate.",
+   "omp_num_threads": "1",
+   "shapes": [
+    "118x1024_split"
+   ],
+   "written_at": "2026-10-15T15:13:15-0400"
+  }
+ ],
+ "notes": "Candidate = numpy closed forms from one ddof=1 (lagged) covariance per Data (np.cov + batched slogdet); baseline = harness.compute_spi on the same Data. Both timings include Data construction (detrend + z-score). te_symbolic_k-10 is computed as Gaussian TE with 10 target lags (what pyspi runs today, known bug 1). Agreement means the candidate reproduces today's output, nothing more.",
+ "opportunity_id": "it_gaussian-1",
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_it_gaussian-1.py",
+ "shapes": {
+  "118x1024_candidate_only": {
+   "ce_gaussian": {
+    "candidate_s": 0.003648640005849302,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 0.04444641643169592
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 11.633974641008535
+     }
+    },
+    "unit_id": "infotheory.ce.gaussian"
+   },
+   "data_construction_s": 0.002940788006526418,
+   "gc_gaussian_k-1_kt-1_l-1_lt-1": {
+    "candidate_s": 0.011773221005569212,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 6.22589271846925
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 6.048606786003802
+     }
+    },
+    "unit_id": "infotheory.te.gaussian_k-1_kt-1_l-1_lt-1"
+   },
+   "je_gaussian": {
+    "candidate_s": 0.003761675994610414,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 7.181631852942662
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 11.038648383007967
+     }
+    },
+    "unit_id": "infotheory.je.gaussian"
+   },
+   "mi_gaussian": {
+    "candidate_s": 0.0038233540108194575,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 3.2555450956127263
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 4.593841555004474
+     }
+    },
+    "unit_id": "infotheory.mi.gaussian"
+   },
+   "te_symbolic_k-10_kt-1_l-1_lt-1": {
+    "candidate_s": 0.14594746600778308,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 15.858377664465626
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 6.252250584991998
+     }
+    },
+    "unit_id": "infotheory.te.symbolic"
+   },
+   "tlmi_gaussian": {
+    "candidate_s": 0.004708651002147235,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 1.9956479205759072
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 17.213134742996772
+     }
+    },
+    "unit_id": "infotheory.tlmi.gaussian"
+   }
+  },
+  "118x1024_split": {
+   "ce_gaussian": {
+    "baseline_oneshot_s": 9.695068075001473,
+    "bit_identical": false,
+    "candidate_incl_data_s": 0.004219847003696486,
+    "candidate_math_s": 0.0009023290040204301,
+    "max_abs_diff": 1.5543122344752192e-15,
+    "max_rel_diff": 1.1267320222367328e-15,
+    "n_entries": 13924,
+    "nan_mask_equal": true,
+    "speedup_math": 10744.493451727682,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 0.04444641643169592
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 11.633974641008535
+     }
+    },
+    "unit_id": "infotheory.ce.gaussian"
+   },
+   "data_construction_s": 0.003317517999676056,
+   "gc_gaussian_k-1_kt-1_l-1_lt-1": {
+    "baseline_oneshot_s": 16.410683936002897,
+    "bit_identical": false,
+    "candidate_incl_data_s": 0.012618274995475076,
+    "candidate_math_s": 0.00930075699579902,
+    "max_abs_diff": 1.020884765612351e-15,
+    "max_rel_diff": 1.8639890175008893e-05,
+    "n_entries": 13924,
+    "nan_mask_equal": true,
+    "speedup_math": 1764.4460492210794,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 6.22589271846925
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 6.048606786003802
+     }
+    },
+    "unit_id": "infotheory.te.gaussian_k-1_kt-1_l-1_lt-1"
+   },
+   "je_gaussian": {
+    "baseline_oneshot_s": 9.475640277989442,
+    "bit_identical": false,
+    "candidate_incl_data_s": 0.004203137999866158,
+    "candidate_math_s": 0.0008856200001901016,
+    "max_abs_diff": 2.220446049250313e-15,
+    "max_rel_diff": 8.071532746572933e-16,
+    "n_entries": 13924,
+    "nan_mask_equal": true,
+    "speedup_math": 10699.442510281453,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 7.181631852942662
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 11.038648383007967
+     }
+    },
+    "unit_id": "infotheory.je.gaussian"
+   },
+   "mi_gaussian": {
+    "baseline_oneshot_s": 10.205951213996741,
+    "bit_identical": false,
+    "candidate_incl_data_s": 0.004246076990966685,
+    "candidate_math_s": 0.0009285589912906289,
+    "max_abs_diff": 3.3046482217358175e-16,
+    "max_rel_diff": 1.1523392486523746e-05,
+    "n_entries": 13924,
+    "nan_mask_equal": true,
+    "speedup_math": 10991.17159999842,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 3.2555450956127263
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 4.593841555004474
+     }
+    },
+    "unit_id": "infotheory.mi.gaussian"
+   },
+   "te_symbolic_k-10_kt-1_l-1_lt-1": {
+    "baseline_oneshot_s": 28.00882292399183,
+    "bit_identical": false,
+    "candidate_incl_data_s": 0.1229220380046172,
+    "candidate_math_s": 0.11960452000494115,
+    "max_abs_diff": 5.310903355548041e-15,
+    "max_rel_diff": 0.0005809107758513883,
+    "n_entries": 13924,
+    "nan_mask_equal": true,
+    "speedup_math": 234.17863240314594,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 15.858377664465626
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 6.252250584991998
+     }
+    },
+    "unit_id": "infotheory.te.symbolic"
+   },
+   "te_symbolic_k-1_kt-1_l-1_lt-1": {
+    "baseline_oneshot_s": 13.333635019997018,
+    "bit_identical": false,
+    "candidate_incl_data_s": 0.012703062006039545,
+    "candidate_math_s": 0.009385544006363489,
+    "max_abs_diff": 1.020884765612351e-15,
+    "max_rel_diff": 1.8639890175008893e-05,
+    "n_entries": 13924,
+    "nan_mask_equal": true,
+    "speedup_math": 1420.6565981638023,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 15.858377664465626
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 6.252250584991998
+     }
+    },
+    "unit_id": "infotheory.te.symbolic"
+   },
+   "tlmi_gaussian": {
+    "baseline_oneshot_s": 11.210393695000676,
+    "bit_identical": false,
+    "candidate_incl_data_s": 0.005572641995968297,
+    "candidate_math_s": 0.002255123996292241,
+    "max_abs_diff": 4.4403499974143834e-16,
+    "max_rel_diff": 1.2876310164482892e-05,
+    "n_entries": 13924,
+    "nan_mask_equal": true,
+    "speedup_math": 4971.076407963477,
+    "summary_118": {
+     "family-warm": {
+      "measure_mode": "extrapolated-pairs-from-32",
+      "window_s": 1.9956479205759072
+     },
+     "fresh": {
+      "measure_mode": "measured",
+      "window_s": 17.213134742996772
+     }
+    },
+    "unit_id": "infotheory.tlmi.gaussian"
+   }
+  },
+  "32x1024": {
+   "ce_gaussian": {
+    "baseline_s": 0.544566827986273,
+    "bit_identical": false,
+    "candidate_s": 0.0020111319900024682,
+    "max_abs_diff": 1.9984014443252818e-15,
+    "max_rel_diff": 1.4380568762395881e-15,
+    "n_entries": 1024,
+    "nan_mask_equal": true,
+    "speedup": 270.7762746022476,
+    "unit_id": "infotheory.ce.gaussian"
+   },
+   "gc_gaussian_k-1_kt-1_l-1_lt-1": {
+    "baseline_s": 1.5027107560017612,
+    "bit_identical": false,
+    "candidate_s": 0.0023367210087599233,
+    "max_abs_diff": 9.081277396738585e-16,
+    "max_rel_diff": 2.235553705366474e-06,
+    "n_entries": 1024,
+    "nan_mask_equal": true,
+    "speedup": 643.08522513744,
+    "unit_id": "infotheory.te.gaussian_k-1_kt-1_l-1_lt-1"
+   },
+   "je_gaussian": {
+    "baseline_s": 0.7589730780018726,
+    "bit_identical": false,
+    "candidate_s": 0.0015281509986380115,
+    "max_abs_diff": 2.6645352591003757e-15,
+    "max_rel_diff": 9.487083861133291e-16,
+    "n_entries": 1024,
+    "nan_mask_equal": true,
+    "speedup": 496.6610489920952,
+    "unit_id": "infotheory.je.gaussian"
+   },
+   "mi_gaussian": {
+    "baseline_s": 0.846886841012747,
+    "bit_identical": false,
+    "candidate_s": 0.0017159940034616739,
+    "max_abs_diff": 4.0939474033052647e-16,
+    "max_rel_diff": 7.472715094501885e-10,
+    "n_entries": 1024,
+    "nan_mask_equal": true,
+    "speedup": 493.52552474211603,
+    "unit_id": "infotheory.mi.gaussian"
+   },
+   "te_symbolic_k-10_kt-1_l-1_lt-1": {
+    "baseline_s": 2.340779495003517,
+    "bit_identical": false,
+    "candidate_s": 0.010438761004479602,
+    "max_abs_diff": 6.811825409291927e-15,
+    "max_rel_diff": 7.973495176110625e-07,
+    "n_entries": 1024,
+    "nan_mask_equal": true,
+    "speedup": 224.2392075073866,
+    "unit_id": "infotheory.te.symbolic"
+   },
+   "tlmi_gaussian": {
+    "baseline_s": 0.9075313840003219,
+    "bit_identical": false,
+    "candidate_s": 0.0017674119881121442,
+    "max_abs_diff": 3.330398023332348e-16,
+    "max_rel_diff": 3.813514765439688e-09,
+    "n_entries": 1024,
+    "nan_mask_equal": true,
+    "speedup": 513.4803826750654,
+    "unit_id": "infotheory.tlmi.gaussian"
+   }
+  },
+  "8x1024": {
+   "ce_gaussian": {
+    "baseline_s": 0.03356372700363863,
+    "bit_identical": false,
+    "candidate_s": 0.0012098029983462766,
+    "max_abs_diff": 1.1102230246251565e-15,
+    "max_rel_diff": 8.15813914480792e-16,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 27.743134253690975,
+    "unit_id": "infotheory.ce.gaussian"
+   },
+   "gc_gaussian_k-1_kt-1_l-1_lt-1": {
+    "baseline_s": 0.021140400000149384,
+    "bit_identical": false,
+    "candidate_s": 0.0013469279947457835,
+    "max_abs_diff": 9.246076126956382e-16,
+    "max_rel_diff": 6.950134120314816e-11,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 15.695271078050004,
+    "unit_id": "infotheory.te.gaussian_k-1_kt-1_l-1_lt-1"
+   },
+   "je_gaussian": {
+    "baseline_s": 0.032033085997682065,
+    "bit_identical": false,
+    "candidate_s": 0.0012133929994888604,
+    "max_abs_diff": 1.3322676295501878e-15,
+    "max_rel_diff": 4.700013300125567e-16,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 26.399596842223374,
+    "unit_id": "infotheory.je.gaussian"
+   },
+   "mi_gaussian": {
+    "baseline_s": 0.014375832004589029,
+    "bit_identical": false,
+    "candidate_s": 0.0011692550033330917,
+    "max_abs_diff": 3.7470027081099033e-16,
+    "max_rel_diff": 2.8794995517461437e-12,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 12.29486464766806,
+    "unit_id": "infotheory.mi.gaussian"
+   },
+   "te_symbolic_k-10_kt-1_l-1_lt-1": {
+    "baseline_s": 0.033069978991989046,
+    "bit_identical": false,
+    "candidate_s": 0.0020399310014909133,
+    "max_abs_diff": 1.2419319045386956e-14,
+    "max_rel_diff": 2.2075944099120105e-09,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 16.21132232797059,
+    "unit_id": "infotheory.te.symbolic"
+   },
+   "tlmi_gaussian": {
+    "baseline_s": 0.010085788002470508,
+    "bit_identical": false,
+    "candidate_s": 0.001124066999182105,
+    "max_abs_diff": 3.2873009869760494e-16,
+    "max_rel_diff": 8.207130762866826e-11,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 8.972586162398809,
+    "unit_id": "infotheory.tlmi.gaussian"
+   }
+  }
+ },
+ "threads": {
+  "NUMBA_NUM_THREADS": "1",
+  "OMP_NUM_THREADS": "1",
+  "jidt_num_threads": "n/a (Gaussian calculators are single-threaded)"
+ },
+ "written_at": "2026-10-15T10:26:45-0400"
+}

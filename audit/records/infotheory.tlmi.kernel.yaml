@@ -1,0 +1,193 @@
+unit_id: infotheory.tlmi.kernel
+status: profiled
+correctness:
+  metric_name_standard: Lag-1 time-delayed mutual information I(X_{t-1}; Y_t), box-kernel plug-in, bits
+  canonical_ref: Schreiber T (2000) Phys Rev Lett 85:461 (time-delayed MI as the symmetric-in-information precursor of TE); Kaiser A, Schreiber T (2002) Physica D 166:43-62; Fraser AM, Swinney HL (1986)
+    Phys Rev A 33:1134 (lagged MI); estimator Kantz & Schreiber (1997)
+  canonical_definition: I(X_{t-1}; Y_t) = E[log2 p(x_{t-1}, y_t)/(p(x_{t-1}) p(y_t))]; box-kernel plug-in mean log2(N C_xy/(C_x C_y)) over the N = T-1 aligned pairs
+  documented_definition: 'supplement §1.4.4, p.10 (supplement.txt:467-475; pack lines 477-485): ''Time-lagged mutual information [35] is an undirected measure of the dependence between time series x and a time-lagged instance
+    of the series y. We include statistics for only lag-one mutual information''; keywords undirected, ..., time-dependent; identifier 71 tlmi_kernel_W-0.25. GitBook information-theory.md:235-254 calls
+    it ''a directed measure'' with keyword directed.'
+  delegate_lib: 'JIDT jar pyspi/lib/jidt/infodynamics.jar (labelled 1.6.1 by pyspi/lib/jidt/version-1.6.1.txt; contents match post-1.6.1 master a9b6b3e, see infotheory.est.kernel): MutualInfoCalculatorMultiVariateKernel.computeAverageLocalOfObservations'
+  implemented_as: 'config.yaml:537-538 width 0.25. For (i,j): src = z_i[:-1] (x_{t-1}), targ = z_j[1:] (y_t), T-1 pairs; same kernel MI as mi (half-widths 0.25*sampleSD of each lagged sub-series, closed
+    box, self-included). A[i,j] = I(X_i,t-1 ; X_j,t). Any exception -> NaN.'
+  implementation_trace:
+  - pyspi/calculator.py:48-51 Calculator `__init__` defaults detrend=False, normalise=True
+  - pyspi/calculator.py:277 Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend)
+  - 'pyspi/data.py:193-195 scipy.stats.zscore(data, axis=1, nan_policy=''omit'', ddof=1) (each series: mean 0, sample SD 1)'
+  - pyspi/calculator.py:329 S = self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan)
+  - 'pyspi/base.py:85-94 Directed.multivariate: A[i,j] = self.bivariate(data, i=i, j=j) for every i != j'
+  - pyspi/base.py:27-47 parse_bivariate (Data objects pass through; raw arrays are wrapped by Data()/add_process)
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: estimator=''kernel'' -> identifier += ''_W-{kernel_width}'', labels += [''nonlinear'']; JIDTBase default kernel_width=0.5; _entropy_calc built
+    at :36'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: calc.setProperty(''KERNEL_WIDTH'', str(kernel_width)); also BIAS_CORRECTION=''false'' and NOISE_SEED=''42''. BIAS_CORRECTION is not a property of any kernel
+    class and is ignored; NOISE_SEED is stored by EntropyCalculatorMultiVariateKernel and MutualInfoCalculatorMultiVariateKernel but has no numerical effect because NOISE_LEVEL_TO_ADD stays 0, and TransferEntropyCalculatorKernel
+    ignores it (see infotheory.est.kernel)'
+  - pyspi/statistics/infotheory.py:113-115,134 _getcalc('MutualInfo') -> kernel.MutualInfoCalculatorMultiVariateKernel; pyspi/config.yaml:537-538 kernel_width 0.25
+  - 'pyspi/statistics/infotheory.py:286-317 TimeLaggedMutualInfo(JIDTBase, Directed).bivariate: initialise(1,1); src, targ = data.to_numpy(squeeze=True)[[i, j]]; src = src[:-1]; targ = targ[1:]; setObservations;
+    computeAverageLocalOfObservations; bare except -> NaN'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/measures/continuous/kernel/MutualInfoCalculatorMultiVariateKernel.java (byte-identical to master a9b6b3e,
+    the shipped build; line numbers valid for both): initialise L112-137, finaliseAddObservations L139-164, computeAverageLocalOfObservations L178-200'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/measures/continuous/kernel/KernelEstimatorMultiVariate.java (byte-identical to master a9b6b3e, the shipped
+    build; line numbers valid for both): setObservations L189-242 kernelWidthsInUse[d] = width * MatrixUtils.stdDev(data, d) (normalise=true by default, L72), kernelVolumeInUse = prod_d 2*kernelWidthsInUse[d]
+    (L215-219); getProbability L388-394 -> getProbabilityFromBins L732-738 or getProbabilityComparingToAll L811-817 = count / N / kernelVolume; getCountFromBins L589-719 counts the query''s own bin (self
+    included) plus +-1 neighbour bins; stepKernel L959-967 returns 0 only when |dx_d| > w_d in some dimension (closed max-norm box)'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java (byte-identical to master a9b6b3e, the shipped build; line numbers valid for both):
+    stdDev(double[][], int) L2384-2393 -> stdDev(double[][], int, double) L2436-2447 divides by (n-1) (sample SD)'
+  deviation_from_documented: Keyword 'undirected' (supplement §1.4.4) vs Directed class and asymmetric output; GitBook says directed (already documented, M8). Otherwise matches (lag one, width 0.25 in identifier).
+  deviation_from_canonical: None beyond the shared estimator properties (resubstitution box kernel, self-inclusion, no bias correction; positive null bias, probe iid_gaussian means 0.775/0.290/0.097/0.028
+    bits at T=64/256/1024/4096).
+  units_and_range: bits; typically >= 0 (not guaranteed); <= log2(T-1); asymmetric; NaN only on exception.
+  direction_convention: 'A[i,j] = I(X_i at t-1 ; X_j at t): row i is the lagged (source) series, column j the present (target). Probe delayed_noise T=1024 (x1 = x0 delayed by 1): A[0,1] = 2.647, A[1,0]
+    = 0.064.'
+  symmetry_expected: asym
+  already_documented: docs/storage_comparison/REVIEW.md M8 (tlmi is asymmetric by construction)
+  new_finding_candidates:
+  - 'Candidate (documentation inconsistency, partially covered by M8): supplement §1.4.4 keyword ''undirected'' vs GitBook ''directed'' vs code Directed; M8 records the asymmetry but not the supplement/GitBook
+    disagreement.'
+  - 'Candidate (error handling): bare except at infotheory.py:313-317 returns NaN with an irrelevant ''Cholesky factorisation'' message.'
+  - 'Candidate (scope note, copy path): JIDTBase.__deepcopy__ (infotheory.py:77-82) resets the copied JIDT calculators to their defaults (see infotheory.est.kernel), but tlmi_kernel_W-0.25 is unchanged
+    in a CalculatorFrame only because its configured width 0.25 equals JIDT''s default kernel width. Probe it_kernel_fix/p1_frame_all.py: Calculator and CalculatorFrame A[0,1] and A[1,0] identical on bivariate_gaussian
+    and var2_bivariate T=256; the copied calculator reads KERNEL_WIDTH 0.25.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - var2_bivariate
+    - gauss_ar1_pair
+    - logistic_maps
+    path: pipeline
+    reference: from-scratch numpy box-kernel MI (eps=0.25, ddof=1 SDs of the lagged sub-series, closed box incl. self) on (z_i[:-1], z_j[1:])
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: All off-diagonal entries agree to abs <= 1e-12 (probe 1.1e-16).
+  - datasets:
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic: x1(t) = x0(t-1) + 0.1 noise; x0 white'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'Direction convention A[i,j] = I(X_i,t-1; X_j,t): A[0,1] >> A[1,0] (probe T=1024 2.647 vs 0.064); A[0,2], A[0,3] (delays 3, 5) near the null level.'
+  - datasets:
+    - gauss_ar1_pair
+    - var2_bivariate
+    path: pipeline
+    reference: 'analytic Gaussian lag-1 MI from the stationary covariance: -0.5*log2(1 - c^2), c = Cov(x_i,t-1, x_j,t)/sqrt(var_i var_j) (gauss_ar1_pair: Sigma_XY = A Sigma_X; var2_bivariate: lag-1 autocovariance
+      from Gamma0, A1, A2)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: At T=4096 within 0.05 bits above the Gaussian value for both directions; ordering of A[0,1] vs A[1,0] matches the analytic ordering.
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: analytic null 0
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: Positive null bias decreasing with T (probe means 0.775, 0.290, 0.097, 0.028).
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_kernel.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:mi_box_kernel(z_i[:-1], z_j[1:], 0.25) (bits); audit/checks/refs/it_kernel.py:chk_direction (ground
+    truth; var2_bivariate against the Gaussian population ordering); audit/checks/refs/it_kernel.py:chk_truth_model (Monte Carlo; Gaussian lag-1 MI from Gamma(1) or 0.5 log2(101) for delayed_noise); audit/checks/refs/it_kernel.py:chk_null;
+    audit/checks/refs/it_kernel.py:chk_frame
+  check_data: iid_gaussian T256 and processes 0-2 at T64/T256/T1024; var2_bivariate, delayed_noise, gauss_ar1_pair, logistic_maps, logistic_maps_chaotic T1024; delayed_noise (0,1) and gauss_ar1_pair at
+    T256/T1024; scaled_offset T1024 (kernel); trending T1024 (pipeline-detrend); bivariate_gaussian T256 (frame)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 (bits); statistical: |pyspi - Monte Carlo mean of the same box estimator under the generating model| <= 2 Monte Carlo SD, population values reported
+    as convergence information only; qualitative: stated rule; null: |mean over pairs - Monte Carlo mean| <= 2 Monte Carlo SD'
+  closeness: 'Numpy: 8/8 exact runs pass, max_abs <= 2.2e-15. Direction: delayed_noise A[0,1] = 2.647 vs A[1,0] = 0.064; var2_bivariate 0.305 vs 0.101 (population 0.222 vs 0.0017); logistic_maps_chaotic
+    0.144 vs 0.032. Convergence (bits): delayed_noise pair population 3.329 (0.5 log2 101) vs pyspi 2.606 / 2.647 at T = 256 / 1024 (Monte Carlo 2.648 / 2.665: the 0.25-SD box saturates for this near-deterministic
+    pair); gauss_ar1_pair population 0.183 / 0.251 vs pyspi 0.375 / 0.398 (T256) and 0.228 / 0.363 (T1024). Null (iid): 0.715 / 0.270 / 0.094 vs Monte Carlo 0.771 / 0.280 / 0.091. Statistical: 3/4 pass;
+    delayed_noise T1024 fails at max_z 2.16 (pyspi 2.647 vs Monte Carlo 2.665; family calibration 8/130 entries beyond 2 SD vs 5.92 expected, ref_calib_* on infotheory.est.kernel|iid_gaussian|1024|pipeline|entropy-1d-truth). CalculatorFrame identical to Calculator.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 9 ddof and log-base clauses: widths are 0.25 x each column''s N-1 SD, output in bits; 8/8 exact runs agree with the numpy box kernel to
+    <= 2.2e-15.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Lag-one box-kernel MI I(x_i(t-1); x_j(t)) in bits on T-1 aligned samples, width 0.25 SD; conventions only (anchor 9). The asymmetry is REVIEW M8. Large small-sample bias; for near-deterministic
+    pairs the 0.25-SD box caps the estimate well below the Gaussian value (2.65 vs 3.33 bits). new_finding false: the supplement/GitBook keyword conflict elaborates M8, the bare except is message-only,
+    the copy path does not change this SPI.'
+  new_finding: false
+  definition_under_review: false
+  check_cost: 'cheap: pyspi <= 5.5 s per SPI run and <= 12 s for the CalculatorFrame probe (P <= 5, T <= 1024); numpy references O(T^2) all-pairs counting, T <= 1024 (the box estimator is O(T^2) on both
+    sides; no T = 4096 runs)'
+  symmetry_observed: 'asym: max|A - A.T| = 2.58 (delayed_noise), 0.204 (var2_bivariate), 0.134 (gauss_ar1_pair), 0.112 (logistic_maps_chaotic), 0.093 (iid T256)'
+  direction_observed: 'A[i,j] = I(x_i(t-1); x_j(t)): row i lagged source, column j present target. delayed_noise A[0,1] = 2.647 >> A[1,0] = 0.064 (A[0,2], A[0,3] 0.086 / 0.076 at the null level: lags 3,
+    5 invisible); var2_bivariate 0.305 > 0.101; logistic_maps_chaotic 0.144 > 0.032'
+  candidate_resolutions:
+  - candidate: supplement 'undirected' vs GitBook 'directed' vs Directed code
+    outcome: confirmed
+    evidence: infotheory.tlmi.kernel|*|direction (asymmetric, max|A - A.T| up to 2.58); documentation reading supplement 1.4.4 vs GitBook information-theory.md:243; the asymmetry is REVIEW M8, so recorded
+      as an elaboration, not a new finding
+  - candidate: bare except returns NaN with an irrelevant 'Cholesky' message
+    outcome: confirmed
+    evidence: 'code reading at HEAD a42ebc1: pyspi/statistics/infotheory.py:313-317; no exception occurred in any check run; no value impact'
+  - candidate: copy path leaves tlmi unchanged only because 0.25 is JIDT's default width
+    outcome: confirmed
+    evidence: infotheory.tlmi.kernel|bivariate_gaussian|256|pipeline|frame (frame - Calculator 0.0) and infotheory.est.kernel|bivariate_gaussian|256|pipeline|copy-props
+  checks_run:
+  - run_ids:
+    - infotheory.tlmi.kernel|iid_gaussian|256|pipeline|numpy
+    - infotheory.tlmi.kernel|var2_bivariate|1024|pipeline|numpy
+    - infotheory.tlmi.kernel|delayed_noise|1024|pipeline|numpy
+    - infotheory.tlmi.kernel|gauss_ar1_pair|1024|pipeline|numpy
+    - infotheory.tlmi.kernel|logistic_maps|1024|pipeline|numpy
+    - infotheory.tlmi.kernel|logistic_maps_chaotic|1024|pipeline|numpy
+    - infotheory.tlmi.kernel|scaled_offset|1024|kernel|numpy
+    - infotheory.tlmi.kernel|trending|1024|pipeline-detrend|numpy
+    reference: audit/checks/refs/it_kernel.py:chk_numpy
+    outcome: 8/8 pass (exact); max_abs <= 2.2e-15
+  - run_ids:
+    - infotheory.tlmi.kernel|iid_gaussian|64|pipeline|null
+    - infotheory.tlmi.kernel|iid_gaussian|256|pipeline|null
+    - infotheory.tlmi.kernel|iid_gaussian|1024|pipeline|null
+    reference: audit/checks/refs/it_kernel.py:chk_null
+    outcome: 3/3 pass (qualitative)
+  - run_ids:
+    - infotheory.tlmi.kernel|delayed_noise|256|pipeline|truth-p01
+    - infotheory.tlmi.kernel|delayed_noise|1024|pipeline|truth-p01
+    reference: audit/checks/refs/it_kernel.py:chk_truth_pair / chk_truth_model
+    outcome: 1/2 pass (statistical); max_z 1.79, 2.16
+  - run_ids:
+    - infotheory.tlmi.kernel|gauss_ar1_pair|256|pipeline|truth
+    - infotheory.tlmi.kernel|gauss_ar1_pair|1024|pipeline|truth
+    reference: audit/checks/refs/it_kernel.py:chk_truth_model
+    outcome: 2/2 pass (statistical); max_z 1.13, 1.1
+  - run_ids:
+    - infotheory.tlmi.kernel|var2_bivariate|1024|pipeline|direction
+    - infotheory.tlmi.kernel|delayed_noise|1024|pipeline|direction
+    - infotheory.tlmi.kernel|logistic_maps_chaotic|1024|pipeline|direction
+    reference: audit/checks/refs/it_kernel.py:chk_direction
+    outcome: 3/3 pass (qualitative)
+  - run_ids:
+    - infotheory.tlmi.kernel|bivariate_gaussian|256|pipeline|frame
+    reference: audit/checks/refs/it_kernel.py:chk_frame (audit/checks/probes/it_kernel_probes.py:frame)
+    outcome: 1/1 pass (exact); max_abs <= 3.9e-16
+optimisation:
+  complexity_P_T: 'O(P^2 T^1.81): TimeLaggedMutualInfo.bivariate (pyspi/statistics/infotheory.py:301), one JIDT box-kernel call per ordered pair with 1-D inputs (no cache). Measured fresh T exponent 1.81,
+    P exponent ~2.1. At 118x1024 the pair term is everything: 139 s measured fresh.'
+  hotspot_1: pyspi/statistics/infotheory.py:TimeLaggedMutualInfo.bivariate (third-party:jidt box kernel via JPype, self time) 99.9% cum of the profiled SPI call at 8x1024
+  hotspot_2: 'none visible inside Java (1-D conversions are negligible). opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self
+    time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0009
+  profile_file: audit/profiles/infotheory.tlmi.kernel__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_kernel-2
+    opportunity: 'Replace JIDT''s box-kernel counting with per-(channel, width, lag window) neighbourhood bitsets: one T x T bit matrix marks |x(t) - x(s)| <= w_d (w_d = width x the column''s ddof=1 SD,
+      as KernelEstimatorMultiVariate sets it) and every joint count of je/ce/mi/tlmi/te/si/xme/cce/di is a popcount of ANDed rows, so the neighbourhood search is shared by all P-1 partners and all composed
+      terms.'
+    opp_type: algorithmic
+    expected_speedup: 10-50x
+    speedup_basis: 'profile:audit/profiles/infotheory.tlmi.kernel__8x1024.pstats pyspi/statistics/infotheory.py:301 TimeLaggedMutualInfo.bivariate 99.9% (JIDT Java time booked as pyspi self time) + complexity:
+      one joint count over all t is T x T/64 = 16k word AND+popcount operations at T=1024 (~10-50 us) against the measured 6.5 ms per ordered pair (8x1024 fresh; T exponent 1.81); bitsets are built once
+      per channel and lag window (lag-shifted 1-D marginals + 2-D joint)'
+    output_risk: unverified-within-tolerance
+    risk_evidence: max-norm box counts are products of per-dimension indicators, so integer counts are exact if the closed-box test and the per-column widths match JIDT; the log-sum order changes. The check
+      stage's all-pairs numpy counts (audit/checks/refs/_kernels_infotheory.py:entropy_box_kernel / mi_box_kernel / te_box_kernel) reproduce JIDT to <= 2.6e-13 (infotheory.est.kernel closeness)
+    effort: L
+    depends_on: []

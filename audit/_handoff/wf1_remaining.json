@@ -1,0 +1,428 @@
+[
+ {
+  "group": "cov_prec_simple+cov_prec_robust+cov_prec_glasso",
+  "unit_id": "basic.prec.LedoitWolf",
+  "field": "deviation_from_documented",
+  "problem": "Still carries EmpiricalCovariance's copied numbers: '(probe bivariate_gaussian T=1024 pair (2,3): prec = -2.193 vs partial correlation +0.797)'. The fix only corrected units_and_range and proposed_checks. Verified per-estimator values (my sweep, /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/fable_cpr_recheck/sweep_prec.py): prec_LedoitWolf[2,3] = -2.0610, partial correlation +0.7859. Replace with this estimator's pair, as already done in new_finding_candidates[1] and proposed_checks[1]."
+ },
+ {
+  "group": "cov_prec_simple+cov_prec_robust+cov_prec_glasso",
+  "unit_id": "basic.prec.OAS",
+  "field": "deviation_from_documented",
+  "problem": "Same copied EmpiricalCovariance pair '-2.193 vs +0.797' remains; this estimator's values are prec_OAS[2,3] = -2.0573, partial correlation +0.7856 (already correct elsewhere in the record)."
+ },
+ {
+  "group": "cov_prec_simple+cov_prec_robust+cov_prec_glasso",
+  "unit_id": "basic.prec.ShrunkCovariance",
+  "field": "deviation_from_documented",
+  "problem": "Same copied EmpiricalCovariance pair '-2.193 vs +0.797' remains; this estimator's values are prec_ShrunkCovariance[2,3] = -1.4817, partial correlation +0.7174 (already correct elsewhere in the record)."
+ },
+ {
+  "group": "cov_prec_simple+cov_prec_robust+cov_prec_glasso",
+  "unit_id": "basic.cov.GraphicalLassoCV",
+  "field": "new_finding_candidates",
+  "problem": "Minor identifier mismatch copied from the GraphicalLasso record: the inverse-consistency candidate ends 'So cov_GraphicalLasso and prec_GraphicalLasso are not exactly inverse pairs' and the side-effect candidate cites np.diag(d.covariance['GraphicalLasso'].precision_). In this record they should name cov_GraphicalLassoCV / prec_GraphicalLassoCV and data.covariance['GraphicalLassoCV'] (the per-estimator numbers themselves are correct)."
+ },
+ {
+  "group": "cov_prec_simple+cov_prec_robust+cov_prec_glasso",
+  "unit_id": "basic.prec.GraphicalLassoCV",
+  "field": "new_finding_candidates",
+  "problem": "Same copied identifier mismatch as basic.cov.GraphicalLassoCV ('cov_GraphicalLasso and prec_GraphicalLasso', d.covariance['GraphicalLasso']) in candidates [1] and [2]."
+ },
+ {
+  "group": "cov_prec_simple+cov_prec_robust+cov_prec_glasso",
+  "unit_id": "basic.cov.GraphicalLasso",
+  "field": "notes/cov_prec_glasso.md",
+  "problem": "Minor imprecision in the inverse-consistency bullet: 'down to ~1e-13 or less on gauss_ar1_pair/logistic_maps'. probe2.out line 30 gives logistic_maps_T1024 GraphicalLassoCV invErr = 1.2e-12 (a non-converged it=100 fit) and line 30/33 give 1.9e-13 / 1.8e-13 for GraphicalLasso. Say '~1e-13 (up to 1.2e-12 for the non-converged GraphicalLassoCV fit on logistic_maps T=1024)' or restrict the claim to GraphicalLasso."
+ },
+ {
+  "group": "cov_prec_simple+cov_prec_robust+cov_prec_glasso",
+  "unit_id": "basic.cov.OAS",
+  "field": "deviation_from_canonical",
+  "problem": "Trivial line-range imprecision in '0.24.1 sklearn/covariance/_shrunk_covariance.py:486-491': in the hash-verified 0.24.1 file lines 486 and 491 are blank; the comment is at 487, alpha/num/den at 488-490 and the min(num/den, 1) at 492. The same range appears in new_finding_candidates[4], in basic.prec.OAS (deviation_from_canonical and candidate [3]) and in notes/cov_prec_simple.md. A consistent citation would be 487-492."
+ },
+ {
+  "group": "cov_prec_simple+cov_prec_robust+cov_prec_glasso",
+  "unit_id": "basic.cov.EmpiricalCovariance",
+  "field": "notes/cov_prec_simple.md",
+  "problem": "Trivial: the header still says the numbers come from 'scratchpad cov_prec_simple/probe1-5.py', but probe6.py (per-file argmax and the D*Theta*D check) exists and supplied the trending_T4096 / shared_envelope_T64 file attributions and the -0.5392 figure."
+ },
+ {
+  "group": "rank_corr+xcorr+preprocessing_base",
+  "unit_id": "base.pair_handling",
+  "field": "already_documented / new_finding_candidates[0] (double work) / notes/preprocessing_base.md 'Candidate: double work'",
+  "problem": "The EEG_OPTIMIZATION_NOTES.md:132 citation that the rank_corr fixer routed to this family was not applied: the record contains no reference to EEG_OPTIMIZATION_NOTES.md (grep count 0), and the double-work item is still presented as a new candidate rather than as a quantification of an already documented optimisation candidate, inconsistent with basic.spearmanr/basic.kendalltau which cite it in already_documented."
+ },
+ {
+  "group": "rank_corr+xcorr+preprocessing_base",
+  "unit_id": "base.pair_handling",
+  "field": "already_documented (KNOWN_ISSUES.md 'bug 5')",
+  "problem": "Escalation, not a record defect: audit/briefing/KNOWN_ISSUES.md:12 describes bug 5 as 'Undirected spectral SPIs are not symmetrised (MRO bypass)' while tests/README.md:187 item 5 and tests/unit/test_known_bugs.py:169-183 (test_undirected_spectral_symmetry_current) describe PLI signed antisymmetry. The record notes the mismatch, but KNOWN_ISSUES.md is outside both families' remit and still needs an orchestrator decision on which text bug 5 refers to."
+ },
+ {
+  "group": "rank_corr+xcorr+preprocessing_base",
+  "unit_id": "basic.spearmanr",
+  "field": "implementation_trace[0] and new_finding_candidates[0] (same text in basic.kendalltau)",
+  "problem": "Line citations slightly off: 'pyspi/config.yaml:74-96' should be 74-97 (KendallTau's last config '- squared: False' is at line 97); ':87-92' for the KendallTau labels block should be :88-93 (line 87 is the 'KendallTau:' key; labels run 88-93, 'nonlinear' at 90). Minor."
+ },
+ {
+  "group": "rank_corr+xcorr+preprocessing_base",
+  "unit_id": "basic.xcorr.max_sig-True",
+  "field": "canonical_ref (same text in mean_sig-True, mean_sig-False, max_sig-False)",
+  "problem": "'Brockwell & Davis, Time Series: Theory and Methods (Springer, 2nd ed.)' adds an edition that the supplement's [8] (supplement.txt:1987-1988, 'Springer Science & Business Media (2009)') does not give; unlike the section/theorem numbers, this recollection is not marked UNVERIFIED. Minor."
+ },
+ {
+  "group": "rank_corr+xcorr+preprocessing_base",
+  "unit_id": "basic.xcorr.mean_sig-False",
+  "field": "new_finding_candidates (interpretation item) and notes/xcorr.md probe listing",
+  "problem": "The data-dependent magnitude figures (cointegrated 0.458/0.468, trending 0.612/0.632, random-walk 0.6176) reproduce, but neither the record nor the notes name the probe that produced them (scratchpad xcorr_fix/p1.py); the notes still state that the probe scripts are only xcorr/probe1.py to probe5.py. Minor traceability gap."
+ },
+ {
+  "group": "pdist+dcorr_hsic+hhg_mgc",
+  "unit_id": "distance.mgc",
+  "field": "new_finding_candidates (sign label) and deviation_from_documented (2)",
+  "problem": "The 'unsigned'-label candidate still cites only the config/supplement keywords and KNOWN_ISSUES M7/M8; it does not cite GitBook glossary-of-terms.md:21 ('Other SPIs, such as distance correlation (defined in the range [0,1]) are unsigned'), which is the strongest documentary basis for the sign deviation and which the distance.dcorr.biased-False and distance.hsic.biased-False records now cite in documented_definition, deviation and candidate. The dcorr_hsic fix agent explicitly deferred this to the hhg_mgc owner, and the pdist agent edited distance.mgc (already_documented) in the same pass without adding it (grep 'glossary' on audit/records/distance.mgc.yaml returns nothing). The glossary file is /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/glossary-of-terms.md, line 21 (verified). Validator does not catch this; it is a consistency/citation gap, not a validator failure."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.bary.dtw",
+  "field": "new_finding_candidates[1] (line 46) / units_and_range (line 40); notes/barycenters.md:47",
+  "problem": "Unaddressed (routed to a barycenters fix pass that has not run; record mtime still 15:26:57) and wrong on the merits: the stated bound 'probe2 |mean| <= 0.034 across bivariate_gaussian/delayed_noise/narrowband at T=64..1024' does not hold for the SPI matrix. Probe fable_recheck3/p2.py (Barycenter(mode='dtw', statistic='mean').multivariate on audit/checks/data) gives max|bary_dtw_mean| = 0.0508 (bivariate_gaussian T64), 0.0503 (T256), 0.0757 (delayed_noise T64), 0.0519 (narrowband_f0-0.25 T64), 0.0901/0.0629/0.0712 (logistic_maps T64/256/1024), 0.0707 (iid_gaussian T64). The record's numbers are single-pair values (0.0334, -0.0052, 0.0199), not a bound over pairs. 'Near-degenerate' needs restating with the real range (up to ~0.09 at T=64, shrinking to ~0.005-0.012 at T=1024 except logistic_maps) relative to bary_dtw_max of 1.2-3.2."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.dcorrx.maxlag-10",
+  "field": "units_and_range (line 53)",
+  "problem": "States 'raises for n <= 3 (Dcorr unbiased needs n > 3)', copied from maxlag-1. Probe (fable_recheck3/p1.py, p2.py, 4 seeds): DcorrX(max_lag=10).statistic raises ZeroDivisionError for T = 10, 11, 12 and returns a value at T = 13. The real condition is T >= max_lag + 3 = 13, because the lag-j slice has T-j samples and the unbiased _center_distmat (hyppo dcorr.py:273-276) divides by (n-2), which is 0 on a 2-sample slice. The mgcx fix corrected this field for mgcx (T >= max_lag + 5) but left the dcorrx sibling inconsistent."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.dcorrx.maxlag-1",
+  "field": "units_and_range (line 53)",
+  "problem": "Minor: 'raises for n <= 3' is numerically right for max_lag=1 (T=2,3 raise, T=4 works), but the parenthetical mechanism 'Dcorr unbiased needs n > 3' is imprecise: the failure is a ZeroDivisionError from the numba U-centring (dcorr.py:273-276, divisor n-2) on the (T-1)-sample lag-1 slice, i.e. the general rule is T >= max_lag + 3, and it is not a hyppo/scipy validation error. Should be stated as in the mgcx records so the two families' small-n text is parallel."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.bary.euclidean",
+  "field": "proposed_checks[5] reference_kind (line 92); proposed_checks[3] (lines 75-78)",
+  "problem": "Unaddressed (no barycenters fix pass). Check [5] compares pyspi A with A.T and cold-cache bivariate(0,1) vs bivariate(1,0), i.e. pyspi vs pyspi, but is labelled reference_kind analytic; by the principle the lagged fixer applied (self-consistency -> same-lineage, 'can establish invariance/symmetry only, not what A[i,j] means') it should be same-lineage. Check [3] is labelled independent-impl (from-scratch detrend+zscore) but its expected_outcome also asserts the pyspi-vs-pyspi comparison 'scaled_offset gives the same values as bivariate_gaussian'; that half is self-consistency and should either be split out as same-lineage or dropped from the expected_outcome."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.bary.dtw",
+  "field": "proposed_checks[4] reference_kind (line 90)",
+  "problem": "Unaddressed: the direction check (A vs A.T, cold-cache swapped bivariate calls) is pyspi-vs-pyspi self-consistency labelled analytic; relabel same-lineage with the SELF-CONSISTENCY wording used in the lagged records."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.bary.sgddtw",
+  "field": "proposed_checks[4] reference_kind (line 89)",
+  "problem": "Unaddressed: same pyspi-vs-pyspi direction/symmetry check labelled analytic; relabel same-lineage."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.bary.softdtw",
+  "field": "proposed_checks[4] reference_kind (line 89)",
+  "problem": "Unaddressed: same pyspi-vs-pyspi direction/symmetry check labelled analytic; relabel same-lineage."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.bary.sgddtw",
+  "field": "new_finding_candidates[1] (line 46)",
+  "problem": "Unaddressed (no barycenters fix pass): the candidate still opens with 'value depends on the global RNG state consumed by SPIs computed earlier', which tests/README.md:115/127 already documents (the record itself concedes this in its closing parenthesis). The genuinely new part is the cache/ordering effect (which sgddtw identifier runs first fixes the barycenter for the others, and the Directed loop computes pair {a<b} from z[[b,a]]); the candidate should lead with that and cite the RNG dependence as already documented, or the unit's already_documented field should be reconciled."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.dtw.constraint-None",
+  "field": "proposed_checks[5] reference_kind (line 112)",
+  "problem": "Not applied by the dtw_family fix pass: the scaled_offset vs bivariate_gaussian invariance check ('reference: pyspi output on bivariate_gaussian') compares pyspi with pyspi but is labelled analytic. Same pattern the lagged fixer relabelled to same-lineage in all four lagged records; the dtw_family pass reported no action on it."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.lcss.constraint-None",
+  "field": "proposed_checks (scaled_offset check, lines 92-97) reference_kind",
+  "problem": "Not applied: 'reference: pyspi output on bivariate_gaussian (z-scoring invariance)' is pyspi-vs-pyspi self-consistency labelled analytic; relabel same-lineage (record untouched since 15:26:31)."
+ },
+ {
+  "group": "lagged_dcorr_mgc+dtw_family+barycenters",
+  "unit_id": "distance.mgcx.maxlag-1",
+  "field": "deviation_from_canonical, 'Upstream status' sentence (lines 61-65; same text in mgcx-10:61-65, dcorrx-1:48-51, dcorrx-10:48); notes/lagged_dcorr_mgc.md:121",
+  "problem": "Minor wording: 'only compute_scale_at_lag switches to \"precomputed\"' reads as an upstream difference, but the identical 'if not compute_distance: compute_distance = \"precomputed\"' branch is in the installed 0.5.2 (_utils.py:114-115) and never triggers on the pyspi path (compute_distance=\"euclidean\" is truthy). Say that the precomputed branch exists in both versions and is unreachable for pyspi, so it cannot rescue the lag terms from the distance-of-distances construction."
+ },
+ {
+  "group": "gwtau+cdt_pairwise+ccm",
+  "unit_id": "causal.ccm.E-None",
+  "field": "implemented_as; implementation_trace (Simplex.cc and EDM_Neighbors.cc FindNeighbors entries); deviation_from_canonical (5); proposed_checks[0].reference and expected_outcome; proposed_checks[3].expected_outcome (second caveat)",
+  "problem": "The tie-expansion mechanism added by the fix is wrong for CCM. cppEDM tie detection runs only when parameters.method == Method::Simplex (EDM_Neighbors.cc:282, local v1.15.2 copy scratchpad/ccm/cppEDM_src); CCM parameters are built with Method::CCM (API.cc:659) and reused unchanged by CCMClass colToTarget/targetToCol (CCM.cc:21-26) and by the per-sample local SimplexClass (CCM.cc:342), so ties[]/anyTies stay false and Simplex.cc:93-157 never executes in CCM; knn stays E+1. Probe fable_recheck_cdt_ccm_gwtau/ccm_tie_probe.py (logistic_maps_T256, full library, random=False): pyEDM.Simplex(lib=pred=all, Tp=0) equals a numpy tie-expanded reference to 0.0 (E=10) and 1.7e-16 (E=1), proving the reference implements cppEDM's rule, but pyEDM.CCM proc1:proc0 gives 0.258036085716451 at E=1 vs 0.449407364219300 tie-expanded (plain-stable 0.016209343992146) and 0.412996812927705 at E=10 vs 0.438997955936925 tie-expanded (plain 0.408547833137669); tie-free columns match both references to <=3.3e-16. So on tied columns CCM uses the first E+1 entries of std::sort by distance only (Common.cc:10-13 DistanceCompare; EDM_Neighbors.cc:226), whose order among equal distances is implementation-defined; a tie-expanded reference will NOT reproduce A[1,0], and no order-independent reference can. Rewrite: implemented_as ('more with ties' and 'whole ccmf[1,0] curve comes from the tie-expansion path' are false); the Simplex.cc trace entry should say the expansion code is gated off for CCM; deviation_from_canonical (5) should say cppEDM CCM breaks ties by sort order with no expansion; proposed_checks[0] should expect tied columns to be irreproducible (report separately, criterion on tie-free columns only) rather than 'match only with tie handling'; proposed_checks[3] caveat should say the A[1,0] curve depends on std::sort tie order; the reproducibility candidate (RNG) gains a second implementation-defined element (equal-distance ordering)."
+ },
+ {
+  "group": "gwtau+cdt_pairwise+ccm",
+  "unit_id": "causal.ccm.E-1",
+  "field": "implemented_as; implementation_trace (Simplex.cc entry); deviation_from_canonical (4); proposed_checks[0].reference and expected_outcome; proposed_checks[3].expected_outcome",
+  "problem": "Same error as causal.ccm.E-None: the record states knn = 2 'more with ties' and that tied columns need cppEDM tie expansion in the reference; CCM never runs the tie-expansion path (EDM_Neighbors.cc:282 gate on Method::Simplex). Probe at E=1: pyEDM.CCM 0.258036085716451 vs tie-expanded reference 0.449407364219300 (which pyEDM.Simplex reproduces to 1.7e-16) vs plain-stable 0.016209343992146. The E=1 numbers quoted in expected_outcome are right but the stated explanation and the 'matches only if the reference implements the cppEDM tie handling' expectation are wrong."
+ },
+ {
+  "group": "gwtau+cdt_pairwise+ccm",
+  "unit_id": "causal.ccm.E-10",
+  "field": "implemented_as; implementation_trace (Simplex.cc entry); deviation_from_canonical (5); proposed_checks[0].reference and expected_outcome; proposed_checks[3].expected_outcome",
+  "problem": "Same error as causal.ccm.E-None: knn = 11 'more with ties' and the tie-expansion explanation are false for CCM. Probe at E=10: pyEDM.CCM 0.412996812927705 vs tie-expanded reference 0.438997955936925 (pyEDM.Simplex reproduces the latter to 0.0) vs plain-stable 0.408547833137669; the check as written would fail for a correctly implemented tie-expanded reference."
+ },
+ {
+  "group": "gwtau+cdt_pairwise+ccm",
+  "unit_id": "causal.ccm.E-None",
+  "field": "audit/notes/ccm.md lines 44, 53-57, 69, 127 (family note)",
+  "problem": "Note repeats the wrong mechanism: bullet at line 44 ('The neighbour set can therefore exceed E+1'), the conclusion at line 57 ('the whole ccmf[1,0] curve comes from cppEDM's tie-expansion path'), the direction caveat at line 69 ('produced entirely by cppEDM's tie expansion') and check-table row 1 at line 127 ('matches only with tie expansion') must be rewritten to: tie expansion is gated off for CCM (EDM_Neighbors.cc:282), CCM keeps exactly E+1 neighbours chosen by std::sort order among equal distances, so tied columns are sort-order dependent and not reproducible by an order-independent reference; add this to open question 5 (cross-platform reproducibility)."
+ },
+ {
+  "group": "gwtau+cdt_pairwise+ccm",
+  "unit_id": "causal.cds",
+  "field": "implemented_as; implementation_trace (CDS.py:190-195 entry); units_and_range; new_finding_candidates[0]; proposed_checks[3].expected_outcome ('A[i, j] == 0 exactly iff the predicate holds', criterion exact)",
+  "problem": "Minor floating-point imprecision in the accepted fix: 'exactly 0 whenever all qualifying bins have identical pmfs' holds for <=1 qualifying bin and for 2 identical bins ((v+v)/2 == v), but with >=3 identical bins and non-dyadic pmf entries np.mean of identical values is not exactly the value, so np.std(P - P.mean(0)) is ~1e-17, not 0.0 (probe fable_recheck_cdt_ccm_gwtau: counts 13-21 with 3 or 7 identical bins give std 5e-18..1.2e-17). The observed narrowband_f0-0.25_T64 case (2 bins of 32, dyadic counts) is exact. Soften the iff to 'A[i,j] == 0 exactly when at most one bin qualifies or two identical bins; <= 1e-16 for >=3 identical bins' or change the check criterion to |A[i,j]| < 1e-15. Dispute on proposed_checks[3] judged in favour of the fix agent: cds_zero.py re-run confirms the only predicate mismatch is narrowband_f0-0.25_T64 (1,0) with 2 qualifying bins and identical y-level counts, so the count-only predicate is sufficient but not necessary."
+ },
+ {
+  "group": "gwtau+cdt_pairwise+ccm",
+  "unit_id": "causal.cds",
+  "field": "implementation_trace (pyspi/calculator.py:236-250 and :292-302 entries; identical entries in causal.anm, causal.igci, causal.reci; calculator.py:293-303/:296-297/:301-303 in the three causal.ccm records; calculator.py:48/:264/:294 in distance.gwtau; notes/cdt_pairwise.md:13,21 and notes/ccm.md:76)",
+  "problem": "Pre-existing, cross-family: every calculator.py line citation refers to the file before commit a1f20c7 (2026-10-14 17:09, after the records were written at 16:0x). In the current file the configs loop/TypeError fallback is at 252-267 (except TypeError at 261), load_dataset's Data(...) is at 277, compute's S = multivariate at 329, fill_diagonal at 332, the except branch at 336-339, and the normalise/detrend defaults at 50. Not introduced by the fix agents; needs a sweep of all records (likely every family), not only these eight. The anm candidate 'calculator.py:246-253 reports the class labels' is stale in the same way."
+ },
+ {
+  "group": "gwtau+cdt_pairwise+ccm",
+  "unit_id": "causal.cds",
+  "field": "implementation_trace (pyspi/base.py:27-49 parse_bivariate entry; same wording in causal.anm, causal.igci, causal.reci)",
+  "problem": "Nit: the entry cites base.py:33-36 for 'wrapped into a new Data object with i, j = 0, 1'; the wrapping is at 33-36 but the i, j = 0, 1 assignment is at base.py:41-43. The substantive content (first array z-scored at data.py:238, second appended raw at data.py:230-234, owned by preproc.two_array_api, locked by tests/unit/test_data.py:74-88) is verified correct and igci_raw.py reproduces the 7.6e-9 gap exactly."
+ },
+ {
+  "group": "it_gaussian+it_kozachenko",
+  "unit_id": "infotheory.est.gaussian",
+  "field": "notes (audit/notes/it_gaussian.md line 3)",
+  "problem": "Minor provenance gap: the intro still says all quoted probe results come from `it_gaussian/probes/probe1-4.py`, but the new figures added by the fix (P(P-1)=20 vs P(P-1)/2=10 JIDT calls, z-scored max|A-A.T|=2.2e-16, A[0,1]-A[1,0]=2.3159931 vs ln10) come from `itg_fix/ce_probe.py` and `itg_fix/mi_calls.py`, which the notes do not name. Content is correct (I reproduced every number); only the script attribution is incomplete."
+ },
+ {
+  "group": "it_gaussian+it_kozachenko",
+  "unit_id": "infotheory.est.kozachenko",
+  "field": "notes (audit/notes/it_kozachenko.md lines 7-17 probe table)",
+  "problem": "Minor provenance gap: the probe table lists only probe1-7 under `it_kozachenko/probes/`, while the text now cites probe8 (DI seed spread), probe9 (je near-tie values) and probe10 (naive-NN rho>1 argument), which live in `it_kozachenko_fix/` and are absent from the table. Content verified; add the three rows and their location."
+ },
+ {
+  "group": "it_gaussian+it_kozachenko",
+  "unit_id": "infotheory.est.kozachenko",
+  "field": "correctness.deviation_from_canonical (a)",
+  "problem": "Low priority consistency note, not an error: the noise effect is stated as ~4e-8 (d=2) to ~5e-6 (d=1) nat at T=256, but the di.kozachenko record now relies on the same 1e-8 noise to explain a residual of up to 2.7e-4 nat at T=1024. My probe confirms that residual is entirely the d=1 (k=1) term with noise on (noise off gives <=1.8e-14), so the T=256 figure understates the d=1 effect at larger T by ~50x. A one-line addition ('at T=1024 the d=1 term reaches ~2e-4 nat, probe8') would make the two records consistent."
+ },
+ {
+  "group": "it_kernel+it_kraskov",
+  "unit_id": "infotheory.je.kernel",
+  "field": "new_finding_candidates (copy path) - also infotheory.ce.kernel",
+  "problem": "Minor wording: the parenthetical '(the frame value equals a direct JointEntropy(kernel_width=0.25) call, 3.7487119189)' is placed after the var2_bivariate numbers but quotes the bivariate_gaussian value; the var2_bivariate direct W-0.25 values are 3.6838644230 (je) and 1.6579346797 (ce), which I verified equal the frame values. Same misplacement in ce.kernel with 1.7266038499. The claim is true for both datasets; only the cited number belongs to the other dataset."
+ },
+ {
+  "group": "it_kernel+it_kraskov",
+  "unit_id": "infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4",
+  "field": "proposed_checks (CalculatorFrame vs Calculator) reference_kind - also infotheory.te.kraskov_DCE_auto-MAX_CORR_AIS_kmax-10_taumax-4 and infotheory.te.kraskov_DCE_k-2_kt-1_l-1_lt-1",
+  "problem": "Classification inconsistency (pre-existing, not part of the fix report): the CalculatorFrame-vs-Calculator check is labelled reference_kind 'analytic' in the three kraskov TE records, while the identical check in all eight it_kernel records is 'same-lineage'. Comparing two pyspi code paths is same-lineage; the label matters because same-lineage caps the check-stage score at 6."
+ },
+ {
+  "group": "phi+spectral_csm+spectral_coherence",
+  "unit_id": "infotheory.phi.star_norm-0",
+  "field": "new_finding_candidates[0] (also star_norm-1 new_finding_candidates[0] and notes/phi.md lines 126-127)",
+  "problem": "The provenance sentence 'the earlier figure 9.55e-09 was the max over a smaller T=1024 subset and equals the iid_gaussian T1024 (2,3) gap' is wrong. The earlier figure came from probe2 (gen_records.py:283: 'probe2 differences ... (max 9.55e-09)'), which ran 14 pairs at T in {64, 1024} and included narrowband_f0-0.25 (0,1) at T=1024; re-running probe2 prints d=3.35e-08 for that pair, and a probe2-style bounded (-5,50) maximiser and gap.py's grid maximiser both give 3.348e-08 for it (scratchpad fable_recheck_phi_spec/ref_scope.py, probe2_rerun.txt). So 9.55e-9 was never the maximum of that subset; it is the iid_gaussian T1024 (2,3) gap (the largest relative gap) and the pre-fix 'max' was a misreading of probe2's output, not a subset effect. The headline numbers (~5e-8 absolute, 6.4e-4 relative) are correct; only this explanatory sentence should be corrected."
+ },
+ {
+  "group": "phi+spectral_csm+spectral_coherence",
+  "unit_id": "infotheory.phi.star_norm-0",
+  "field": "notes/phi.md proposed-checks list (lines 167-185)",
+  "problem": "The inserted published-algorithm check is numbered 11 and sits between items 8 and 9, so the list reads 1-8, 11, 9, 10. Renumber or move it to the end."
+ },
+ {
+  "group": "phi+spectral_csm+spectral_coherence",
+  "unit_id": "infotheory.phi.star_norm-1",
+  "field": "notes/phi.md 'Extra checks' section (lines 212-222)",
+  "problem": "The new 'Already documented (partial)' paragraph was inserted inside the 'Extra checks' bullet list, leaving the bullet '- A qualitative check of the sign flip on unnormalised scaled_offset.' (line 222) orphaned after the paragraph. Move the paragraph below the list."
+ },
+ {
+  "group": "phi+spectral_csm+spectral_coherence",
+  "unit_id": "spectral.cohmag",
+  "field": "proposed_checks YAML anchors (cohmag lines 51 and 108; spectral.icoh line 49 and its *id001 alias)",
+  "problem": "The &id001 / *id001 anchor-alias pair from yaml.dump is still present in spectral.cohmag.yaml and spectral.icoh.yaml. The phi fix pass explicitly deferred this to the spectral fix pass, which did not address it. yaml.safe_load resolves it and the validator passes, but the eighth check's dataset list is unreadable to a human reader; re-dump the two records with an anchor-free Dumper (ignore_aliases) or inline the list."
+ },
+ {
+  "group": "phi+spectral_csm+spectral_coherence",
+  "unit_id": "spectral.cohmag",
+  "field": "canonical_ref (also spectral.phase and spectral.icoh canonical_ref; notes/spectral_coherence.md lines 48, 96, 123)",
+  "problem": "The three coherence records still say their section/equation numbers are 'from memory, not re-checked' (Carter 1987, Thomson 1982, Percival & Walden ch. 7, Priestley ch. 9, Mardia & Jupp \u00a72.2, Nolte 2004). This is an honest disclaimer and notes open question 6 lists it, but the spectral_csm pass has since verified Thomson sections III/V/XIV (pp.1060-1061, 1065, 1087) and P&W ch. 7 pp.331-377 from the authors' TOC, which cohmag could cite instead; and the cohmag disclaimer now sits next to Bastos & Schoffelen quotes that were verified, so it overstates what is unverified. Low priority: narrow the disclaimer to Carter/Priestley/Mardia & Jupp/Nolte 2004 and reuse the csm-verified Thomson and P&W locations."
+ },
+ {
+  "group": "spectral_phase_sync+spectral_directed",
+  "unit_id": "spectral.ddtf",
+  "field": "proposed_checks[3].expected_outcome (sqrt(T/2) scaling check, pipeline part b and exact part a)",
+  "problem": "Part (b) states pipeline log-log slopes are expected in [-0.70, -0.40] for datasets var2_bivariate and iid_gaussian, but a probe (fable_recheck_spectral2/ddtf_slope_iid.py, pyspi DirectDirectedTransferFunction(statistic='mean'), single realisation per T) gives iid_gaussian (3 channels) off-diagonal mean slope -0.78 for T=64->256 (per-entry slopes -0.07 to -1.10) and var2_bivariate null entry [0,1] slope -0.24 for T=256->1024; only var2_bivariate [1,0] (-0.44, -0.62, -0.52) and the var2 off-diagonal mean (-0.50, -0.52, -0.53) lie inside. The outcome should name the entry and T range the band applies to (var2_bivariate [1,0], or seed-averaged means) and make iid_gaussian report-only, or widen the band. Part (a) 'constant within 1%' has only 0.02% margin: pT_ddtf_exact.py gives 0.21680 (n=64) vs 0.21466 (n=4096), a 0.98% spread; state 1.5% or exclude n=64."
+ },
+ {
+  "group": "spectral_phase_sync+spectral_directed",
+  "unit_id": "spectral.pli",
+  "field": "proposed_checks[0].expected_outcome (tie rule sentence); same sentence in spectral.wpli, spectral.dspli, spectral.dswpli and notes/spectral_phase_sync.md line 37 ('Sign ties in a reference')",
+  "problem": "Claims the elementwise reference X[:, None] * conj(X[None, :]) returns rounding noise of order 1e-18 to 1e-15 'at DC, on the diagonal and for bit-identical channels'. At DC it does not: the DC Fourier coefficient of real input is exactly real, so elementwise Im S is exactly 0.0 there (the fix agent's own tie2.py prints 'DC Im broadcast offdiag 0.0'; fable_recheck_spectral2/dc_tie.py confirms 0.0 on iid_gaussian, delayed_noise, var2_chain, narrowband_f0-0.1, shared_envelope at T=64/256/1024, while diagonal noise is 2e-16 to 6.5e-15). The tie rule is harmless at DC, but the justification should list only the diagonal and bit-identical channels."
+ },
+ {
+  "group": "spectral_phase_sync+spectral_directed",
+  "unit_id": "spectral.wpli",
+  "field": "proposed_checks[0].expected_outcome (tie rule sentence)",
+  "problem": "Same inaccuracy as spectral.pli: the elementwise reference has no rounding noise at DC (exactly 0.0); noise occurs only on the diagonal and for bit-identical channels."
+ },
+ {
+  "group": "spectral_phase_sync+spectral_directed",
+  "unit_id": "spectral.dspli",
+  "field": "proposed_checks[0].expected_outcome (tie rule sentence)",
+  "problem": "Same inaccuracy as spectral.pli: the elementwise reference has no rounding noise at DC (exactly 0.0); noise occurs only on the diagonal and for bit-identical channels."
+ },
+ {
+  "group": "spectral_phase_sync+spectral_directed",
+  "unit_id": "spectral.dswpli",
+  "field": "proposed_checks[0].expected_outcome (tie rule sentence); deviation_from_documented (dangling fragment)",
+  "problem": "Tie-rule sentence has the same DC inaccuracy as spectral.pli. In addition deviation_from_documented item (3) ends with a leftover fragment after the inserted grid/taper sentence: '... assumes T >= 10. (the DC bin is NaN and therefore effectively excluded).' which should be folded into the sentence or deleted."
+ },
+ {
+  "group": "spectral_phase_sync+spectral_directed",
+  "unit_id": "spectral.plv",
+  "field": "new_finding_candidates (EEG hypothesis) citation; same citation in notes/spectral_phase_sync.md line 44",
+  "problem": "Cites 'EEG_OPTIMIZATION_NOTES.md:245-246' for the 72-EDF sampling-rate inventory (67 at 2048 Hz, two at 1024 Hz, three at 512 Hz); that sentence is at lines 246-247 in this checkout (grep -n '72 EDFs' -> 246; '1024 Hz' -> 247). REVIEW.md:164, REVIEW.md:16 and EEG_OPTIMIZATION_NOTES.md:40 are cited correctly."
+ },
+ {
+  "group": "spectral_psi_gd+sgc",
+  "unit_id": "spectral.psi",
+  "field": "already_documented; new_finding_candidates[0]; notes/spectral_psi_gd.md step 3",
+  "problem": "Cites DEPENDENCY_COMPATIBILITY_REVIEW.md:70 for the heading 'Spectral-connectivity 2.0.1'; that heading is at line 71 (line 70 is blank). Off by one in three places. The :81 band-forwarding citation is correct."
+ },
+ {
+  "group": "spectral_psi_gd+sgc",
+  "unit_id": "spectral.sgc.parametric_order-None",
+  "field": "notes/sgc.md Open questions",
+  "problem": "The new open question 7 (report the spectral.py:439 warnings.warn(err) defect upstream) was inserted between items 4 and 5, so the list reads 1, 2, 3, 4, 7, 5, 6. Renumber or move it to the end."
+ },
+ {
+  "group": "spectral_psi_gd+sgc",
+  "unit_id": "spectral.sgc.parametric_order-None",
+  "field": "documented_definition ('pack lines 826-867', also in order-1, order-20, nonparametric)",
+  "problem": "The 'pack lines 826-867' range does not contain the quoted \u00a71.5.12 text in the current supplement.txt: the quoted sentence starts at line 811 (heading 809) and line 826 is already the identifier list. The briefing pack's line ranges are offset from the file (same for \u00a71.5 582-613 vs heading 570, though that range happens to still contain the 125-bins quote at line 589). The 'heading at supplement.txt line 809/570' pointers added by the fix are correct; the stale pack ranges could be dropped or marked as briefing-pack numbering."
+ },
+ {
+  "group": "spectral_psi_gd+sgc",
+  "unit_id": "spectral.psi",
+  "field": "documented_definition ('pack lines 658-683')",
+  "problem": "The 'pack lines 658-683' range does not contain the quoted \u00a71.5.4 text: the PSI sentence is at supplement.txt line 647 (heading 644) and line 658 reads 'total:'. The 'heading at supplement.txt line 644' pointer is correct; the pack range is a stale pointer from the briefing pack's offset numbering."
+ },
+ {
+  "group": "wavelet_measures+wavelet_psi+lmfit",
+  "unit_id": "wavelet.ppc",
+  "field": "new_finding_candidates[0] / units_and_range / deviation_from_canonical (and notes/wavelet_measures.md ppc 'Candidate' paragraph, line 136, and open question 4, line 216)",
+  "problem": "Dispute ruling: the fixer is right to keep the caveat (+inf is reachable through the exact epochs_bivariate.py:328-345 arithmetic), but the record's stated sufficient condition '+inf is excluded wherever |csd| equals |Re csd| bitwise' is false, and the fixer's own p1.py evidence contradicts the sentence it is cited in. The argument bounds only Re(acc)^2 = (c*fl(1/c))^2 <= 1 and ignores Im(acc)^2; the residue |acc|^2 - 1 is fl(fl(Re^2)+fl(Im^2)) - 1 and turns positive once Im(acc)^2 >= 2^-53 (|Im csd| >~ 1.06e-8 |Re csd| when Re acc = 1, ~1.5e-8 when Re acc = 1-2^-53), whereas |csd| == |Re csd| bitwise holds up to |Im csd| ~ 1.49e-8 |Re csd|. Probe fable_recheck/pinf.py: with Re = 1.0, 0.37 and 2.9e-7 every ratio in 1.06e-8..1.6e-8 gives |csd| == |Re csd| bitwise AND a positive residue; the pipeline expression at Re=1, Im=1.2e-8 returns +inf with the bitwise test True; at ratio 1e-8 (p1.py's setup) 193,029 of 10^6 points satisfy both conditions, so most of p1.py's 216,800 positive residues occur at bitwise-equal points. The 14,280,000-point census (fx1.py rerun: 0 positive) remains valid, but the reason is that the audit data never approach the threshold: probe fable_recheck/ratio.py gives max |Im csd|/|Re csd| = 2.41e-12 (bivariate_gaussian T=1024 pair (2,1); min |Re csd| = 7.46e-7; 0 points above 1e-10). Replace the bitwise condition in the record and both notes passages with the Im(acc)^2 / ~1e-8-ratio condition and cite the measured maximum ratio; the 'wherever |csd| equals |Re csd| bitwise' phrase also appears in deviation_from_canonical and units_and_range."
+ },
+ {
+  "group": "wavelet_measures+wavelet_psi+lmfit",
+  "unit_id": "wavelet.ppc",
+  "field": "already_documented (tests/README.md:138, :198, :136 citations); same in wavelet.icoh already_documented and in every other wavelet record and notes/wavelet_measures.md (29 occurrences)",
+  "problem": "The tests/README.md line numbers are stale and the 19:12 ppc fix re-cited ':138' without re-checking: line 138 of the current tests/README.md is blank. tests/README.md was rewritten in commits de5300f (16:09), 45981a4 (16:30) and a1f20c7 (17:09), after the wavelet records were first written (~16:05). The quoted text now sits at :155 ('run today but are absent from pyspi/config.yaml'), :157 ('with mne 0.23.0', 'status `ok` counts only NaN', 'below 2e-14, inside the 1e-8 `atol`', 'Only `phase`, `pli` and `wspli` carry non-trivial values') and :217 (heading '**Degenerate outputs in the extra wavelet set**': '`ppc` and `dspli` are `-inf` everywhere', '`icoh` is rounding noise (about 1e-16)', 'pairwise phase consistency divides by `n(n-1) = 0`'). Affected: wavelet.ppc (2), wavelet.icoh (2), wavelet.phase (2), wavelet.pli (3), wavelet.wspli (2), wavelet.plv (2), wavelet.cohmag (2), wavelet.dswpli (2), wavelet.dwspli (2), wavelet.morlet_cwt (1), wavelet.psi ('(line 198)'), notes/wavelet_measures.md (7, including open question 2 'tests/README.md:138 says ... mne 0.23.0'). The records also label the passage 'tests/README.md flagged: wavelet degenerate', which is not the README's heading."
+ },
+ {
+  "group": "wavelet_measures+wavelet_psi+lmfit",
+  "unit_id": "wavelet.psi",
+  "field": "documented_definition (and notes/wavelet_psi.md line 12)",
+  "problem": "Minor citation inaccuracy introduced by the fix: 'the pack numbered these 582-602' is not what the briefing pack says. audit/briefing/wavelet_psi.json gives section 1.5 as lines [582, 613] (and 1.5.4 as [658, 683]); 602 appears nowhere in the pack. The file-line numbers the fix substituted (heading 570, bullets 595-599, 1.5.4 heading 644 on p.14 after the page-13 marker at 635) are correct."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.ids",
+  "field": "implementation_trace, new_finding_candidates, already_documented",
+  "problem": "Every fix-report claim re-verified at HEAD (AssertionError at P=6 for pnorm 3 and \"2\", ValueError at P=4, all-NaN block; record and notes/ids.md item 5 updated as stated). What is still wrong is citation drift: the record was written 16:03 and commits de5300f (16:09), 45981a4 (16:30) and a1f20c7 (17:09) moved the cited lines, so the record no longer cites THIS checkout. calculator.py (a1f20c7, +13 lines before _load_yaml, compute rewritten): :224-247 -> 237-260; :226 import_module -> 239; :243 InterDependenceScore(**params) -> 256; :244 -> 257; :292-303 compute -> def at 295, try/except 327-339; :297 fill_diagonal -> 332; :300 self._table[spi] = S -> 335; :301-303 except -> 336-337 (and the 'only issues a warning' claim is now incomplete: the except also records MetricReport(status='failed') at 338-346 and the warning is emitted at 355 after the callback). tests/README.md: :115-116 -> 134, :126-127 -> 145-146 (the stochastic marker row is now 113). Content of all claims is unchanged; only the numbers need remapping (cross-family drift, not a fix-agent error)."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.coint.johansen_order-0_ardiff-10",
+  "field": "implementation_trace, new_finding_candidates, units_and_range, already_documented",
+  "problem": "Fix verified: input-dependent collinearity wording, the 'non-degenerate pairs' qualification, and the examples (iid_gaussian T256 ch0 'Singular matrix'; shared_envelope T256 ch0 eig [0.9998, 0.5372] trace 2222.44; iid_gaussian T1024 ch0 eig [0.0465, -0.0319] trace 16.41) all match coint_fix/out.txt; I recounted 29/64 raise, 35/64 return. Remaining: stale citations after commits made at 16:09-17:09 (record written 16:04). calculator.py:239-246 -> 252-259; :291-302 compute -> 295 (def) and 327-339 (try/except); :300-302 'warning and whole matrix NaN' -> except at 336, NaN at 337, warning built 339 and emitted 355 (after a MetricReport status='failed' is recorded). tests/README.md:111 (preprocessing-variant list naming coint_johansen_max_eig_stat_order-1_ardiff-1) -> 130; :492-499 (run status/timing rows) -> 521-528. Text of the claims still holds at HEAD."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.coint.johansen_order-0_ardiff-1",
+  "field": "implementation_trace, new_finding_candidates, units_and_range, already_documented",
+  "problem": "Fix verified: examples (cointegrated T256 ch0 'Singular matrix'; shared_envelope T256 ch1 eig [2.1258, -30.6182] trace -907.34; trending T1024 ch0 eig [10.8869, 0.0441] trace -2295.55) match coint_fix/out.txt and the range qualification is present. Remaining: same stale citations as the k=10 record: calculator.py:239-246 -> 252-259; :291-302 -> 295 and 327-339; :300-302 -> 336-337 (warning at 339/355, MetricReport failed also recorded); tests/README.md:111 -> 130; :492-499 -> 521-528."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.coint.johansen_order-1_ardiff-10",
+  "field": "implementation_trace, new_finding_candidates, units_and_range, already_documented",
+  "problem": "Fix verified: examples (iid_gaussian T256 ch0 'Matrix is not positive definite'; cointegrated T256 ch0 eig [0.0074, -0.395] trace -79.73; iid_gaussian T256 ch1 eig [0.088, -0.9491] trace -140.94) match coint_fix/out.txt; range qualification present. Remaining: stale citations: calculator.py:239-246 -> 252-259; :291-302 -> 295 and 327-339; :300-302 -> 336-337 (warning 339/355); tests/README.md:111 -> 130; :492-499 -> 521-528."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.coint.johansen_order-1_ardiff-1",
+  "field": "implementation_trace, new_finding_candidates, units_and_range, already_documented",
+  "problem": "Fix verified: examples (iid_gaussian T256 ch0 'Matrix is not positive definite'; shared_envelope T1024 ch0 eig [-0.4847, -5.6898] trace -2346.31; cointegrated T256 ch1 eig [0.0096, -0.2992] trace -64.06) match coint_fix/out.txt; range qualification present. Remaining: stale citations: calculator.py:239-246 -> 252-259; :291-302 -> 295 and 327-339; :300-302 -> 336-337 (warning 339/355); tests/README.md:111 -> 130; :492-499 -> 521-528."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.coint.aeg",
+  "field": "implementation_trace, already_documented",
+  "problem": "Wording fix verified: 'pack hypothesis confirmed' is gone from the record (now 'pack hypothesis; the probes below are consistent with it, confirmation is for the check stage') and from the notes heading; the only remaining 'confirmed' in the family is 'confirmed by the from-scratch match' about the y_(t-k)/y_(t-1) span identity in the two order-0 records, which is an algebraic identity and acceptable. Remaining: stale citations: calculator.py:239-246 -> 252-259; :291-302 -> 295 and 327-339 (:300-302 -> 336-337, warning 339/355); tests/README.md:500-502 (aeg run-status rows) -> 529-531."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.gpfit.RBF",
+  "field": "implementation_trace",
+  "problem": "Fixes verified by re-running gpfit_fix/q.py and a 15-restart refit: closed form (w'/(1+w'))^2 (T-1)/T with w' = w + 1e-10 gives 9.960937498e-11 vs restart MSE 9.960937608e-11 on delayed_noise_T256 0->1 (rel 1.0997e-8, so '1.1e-8 relative' is right; no-jitter 9.960738e-11, rel 2.0e-5); max |dMSE| 1.887e-15 and max |f_own - f_sklearn| 4.263e-13 (RBF, nonlinear_dependence_T256 0->1) over 24 RBF pairs; 'exactly' removed; notes heading and summary paragraph updated. Remaining: stale calculator.py citations after a1f20c7: :238-247 Calculator._load_yaml -> 251-260; :292-303 Calculator.compute -> def at 295, try/except 327-339 (fill_diagonal 332, except 336, NaN 337, warning 339/355). notes/gpfit.md:70-71 cite the same stale numbers."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.gpfit.DotProduct",
+  "field": "implementation_trace",
+  "problem": "Fix verified: deviation_from_canonical now says the MSE agrees to <= 1.9e-15 and f_bar elementwise to <= 1.1e-13 (24 DotProduct pairs); q.py re-run gives DotProduct max |f_own - f_sklearn| = 1.1e-13. Remaining: stale calculator.py citations after a1f20c7: :238-247 -> 251-260; :292-303 -> 295 and 327-339."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.pec.orth-False_log-False",
+  "field": "implementation_trace, new_finding_candidates (metadata candidate), already_documented",
+  "problem": "All fix-report items verified by re-running pec_fix2/probe.py: CVs 1.50e-7/1.79e-7, 1.50e-10/1.79e-10, 1.50e-13/1.79e-13, 1.93e-16/5.20e-15 (record's 1.5e-7/1.8e-7 ... 1.9e-16/5.2e-15 correct for both channels); pec 0.06184, -1071.21, -5.35e9, +1.31e14; pec_log +296.6, 1.25e8, -1.41e13; kernel path +1431.6, -1.65e9, 0.160 with pec_log 0.0631/0.0628/0; pec_orth -0.2822, pec_orth_log -0.2808; padding 7.138e-3, 2.168e-3, 5.53e-16, N=1080; M2 elaboration only under already_documented; notes table has both channels. Remaining: this record was re-edited at 19:12 (after all three commits) but still carries pre-commit line numbers: calculator.py:239-246 (does not read YAML labels) -> 252-259; :294 (multivariate call) -> 329; DEPENDENCY_COMPATIBILITY_REVIEW.md:66 (envelope-correlation ~1e-15 agreement) -> 69; DEPENDENCY_MIGRATION.md:73-74 (dense conversion, combine('mean')) -> 78-79 (de5300f added lines above both). The cited text itself is unchanged."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.pec.orth-False_log-True",
+  "field": "implementation_trace, new_finding_candidates (metadata candidate), already_documented",
+  "problem": "Fix verified (same probe): both-channel CVs and the bounded orthogonalised-variant note are in new_finding_candidates[0] and proposed_checks[3]; the kernel-path pec_log caveat (mean log|z|^2 -3.14e-11 at m=1e-9; z-scored mean log-power 0.689) reproduces. Remaining: stale citations after de5300f/a1f20c7: calculator.py:239-246 -> 252-259; :294 -> 329; DEPENDENCY_COMPATIBILITY_REVIEW.md:66 -> 69; DEPENDENCY_MIGRATION.md:73-74 -> 78-79."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.pec.orth-True_log-False",
+  "field": "implementation_trace, new_finding_candidates (metadata candidate), already_documented",
+  "problem": "No-edit claims verified: draw specification present ([a, 2a, a+0.3b, b], default_rng(0), pipeline z-scoring, pair (0,1)); probe reproduces 0.38662 and 0.46451 and shared_envelope 0.218/0.360/0.326/0.314; kernel-path -0.280 matches. Remaining: stale citations after de5300f/a1f20c7: calculator.py:239-246 -> 252-259; :294 -> 329; DEPENDENCY_COMPATIBILITY_REVIEW.md:66 -> 69; DEPENDENCY_MIGRATION.md:73-74 -> 78-79."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "misc.pec.orth-True_log-True",
+  "field": "implementation_trace, new_finding_candidates (metadata candidate), already_documented",
+  "problem": "No-edit claims verified: probe reproduces 0.44321, 0.39229 and shared_envelope 0.181/0.339/0.294/0.241. Remaining: stale citations after de5300f/a1f20c7: calculator.py:239-246 -> 252-259; :294 -> 329; DEPENDENCY_COMPATIBILITY_REVIEW.md:66 -> 69; DEPENDENCY_MIGRATION.md:73-74 -> 78-79."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "notes/ids.md",
+  "field": "trace items 1 and 'Code-level candidates' item 5",
+  "problem": "Content of item 5 is correct (verified at HEAD), but line 28 cites calculator.py:226 and :243 (now 239 and 256) and line 54 cites calculator.py:297, :300 and :301-303 (now 332, 335 and 336-337, with the warning emitted at 355) after commit a1f20c7."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "notes/coint.md",
+  "field": "Shared plumbing items 1 and 5",
+  "problem": "Robustness bullet and aeg heading verified. Line 24 cites calculator.py:239-246 (now 252-259) and line 28 cites calculator.py:300-302 (now except 336, NaN 337, warning 339/355) after commit a1f20c7."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "notes/gpfit.md",
+  "field": "Shared trace item 2",
+  "problem": "Mechanism item 2 and the summary paragraph verified. Lines 70-71 cite calculator.py:238-247 (now 251-260) and :292-303 (now 295 and 327-339) after commit a1f20c7."
+ },
+ {
+  "group": "gpfit+coint+pec+ids",
+  "unit_id": "notes/pec.md",
+  "field": "What is implemented, item 1",
+  "problem": "Table and bounded-orth sentence verified. Line 30 cites calculator.py:239-246 (now 252-259) after commit a1f20c7."
+ }
+]

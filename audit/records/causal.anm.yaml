@@ -1,0 +1,340 @@
+unit_id: causal.anm
+status: profiled
+correctness:
+  metric_name_standard: 'additive-noise-model (ANM) residual-independence score for the hypothesis x -> y: HSIC between the GP-regression
+    residual of y on x and x (Hoyer et al. 2008); here a single-direction HSIC statistic'
+  canonical_ref: 'Hoyer, Janzing, Mooij, Peters & Scholkopf 2008, NIPS 21:689-696, sections 4-5 (procedure; GP regression "using a Gaussian
+    kernel and independent Gaussian noise, optimizing the hyperparameters", HSIC test with gamma approximation of the null, accept/reject
+    both directions); HSIC_b: Gretton, Bousquet, Smola & Scholkopf 2005, ALT, LNCS 3734:63-77; gamma-approximation test statistic m*HSIC_b:
+    Gretton et al. 2008, NIPS 20 (hsicTestGamma)'
+  canonical_definition: Fit y = f(x) + n by GP regression with RBF kernel plus a white-noise term (hyperparameters by marginal likelihood);
+    residual n_hat = y - f_hat(x); test n_hat independent of x with HSIC (p-value); accept x -> y if independence is not rejected and y ->
+    x is rejected. A score version uses the HSIC statistic HSIC_b(n_hat, x) = (1/m^2) tr(K H L H) (lower = more consistent with x -> y).
+  documented_definition: 'supplement §1.3.1, p.8: ''we use the statistic from cdt as our SPI, which is computed by first predicting y from
+    x via a Gaussian process (with a radial basis function kernel), and then computing the normalized HSIC test statistic from the residuals
+    (see Sec. 1.2.5 above)''; keywords ''directed, nonlinear, unsigned''; cdt stated as v0.5.23 (supplement p.7). GitBook causal-inference.md
+    ''Additive Noise Model'' repeats the text.'
+  delegate_lib: cdt==0.6.0 cdt.causality.pairwise.ANM.normalized_hsic -> FastHsicTestGamma; scikit-learn==1.9.1 GaussianProcessRegressor
+    (default kernel, fmin_l_bfgs_b via scipy==1.17.1 scipy.optimize.minimize L-BFGS-B); the GP+residual step is pyspi's own monkeypatch AdditiveNoiseModel.corrected_anm_score
+    (replaces cdt ANM.anm_score)
+  implemented_as: 'A[i, j] = corrected_anm_score(x = z[i], y = z[j]) on z-scored (ddof=1) data, single direction only (cdt predict_proba,
+    which differences both directions and applies sklearn.scale, is NOT used). GP: GaussianProcessRegressor(random_state=42) with default
+    kernel ConstantKernel(1.0, bounds 1e-5..1e5) * RBF(1.0, bounds 1e-5..1e5), alpha = 1e-10 jitter and NO noise kernel, hyperparameters
+    by one L-BFGS-B run from theta = (0, 0). Residual r = gp.predict(x).reshape(-1, 1) - y. Score = normalized_hsic(r, x): both standardised
+    (ddof=0), stride-subsampled to 200 points when T > 200 (indices floor(0 : m : (m-1)/199)), Gaussian kernels with sigma = sqrt(0.5 * median
+    of positive squared pairwise distances) per variable, statistic = (1/m) * sum(Kc * Lc) = m * HSIC_b with m = min(T, 200); non-finite
+    -> 0. Probe: on every tested pair the optimiser drives the RBF length scale to ~1e-5..8.3e-4 (max on anm_T64 pair 2 -> 3: 8.33e-4) (lower
+    bound 1e-5, sklearn ConvergenceWarning), R^2 = 1.0 and residual std ~1e-10 with r ~= -(alpha / c^2) * y (median ratio 1.000001), so the
+    score is essentially m*HSIC_b(y, x) of the raw pair. Exactly, r = K(K + alpha I)^-1 y - y = -alpha (K + alpha I)^-1 y, so the score is
+    m*HSIC_b(x, standardised (K + alpha I)^-1 y); it equals m*HSIC_b(x, y) when K ~ c I (no x-spacings below the fitted length scale) and
+    departs from it where near-coincident x values are smoothed together (check stage: contaminated, nonlinear_dependence_T64).'
+  implementation_trace:
+  - 'pyspi/data.py:184-195 Data.set_data: detrend only if detrend=True (default False), then scipy.stats.zscore(axis=1, ddof=1) if normalise=True
+    (default); stored as (M, T, 1)'
+  - 'pyspi/calculator.py:251-267 Calculator._load_yaml: configs is empty for the four causal classes, so iterating None raises TypeError
+    and the class is instantiated with no arguments (261-267); labels come from the class attribute'
+  - 'pyspi/calculator.py:327-339 Calculator.compute: S = spi.multivariate(dataset) (329); fill_diagonal(S, nan) (332); any exception -> whole
+    matrix NaN (336-339) with a warning (354-355)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A[i, j] = self.bivariate(data, i=i, j=j) for every ordered pair i != j (no mirroring)'
+  - 'pyspi/base.py:27-49 parse_bivariate: two raw arrays are wrapped into a new Data object (base.py:33-36) and i, j = 0, 1 is set (base.py:41-43);
+    Data.add_process z-scores only the first array (data.py:238 set_data, normalise=True) and appends the second raw (data.py:230-234); the
+    Calculator/multivariate path passes the already z-scored Data through unchanged. Owned by unit preproc.two_array_api'
+  - pyspi/data.py:108-118 Data.to_numpy returns the (M, T, 1) array, so z[i] is a (T, 1) column
+  - 'pyspi/config.yaml:326-334 AdditiveNoiseModel: labels directed/nonlinear/unsigned/bivariate/contemporaneous, configs empty'
+  - pyspi/statistics/causal.py:3-6 imports ANM from cdt.causality.pairwise, sklearn GaussianProcessRegressor and cdt normalized_hsic
+  - pyspi/statistics/causal.py:15 class labels ['unsigned', 'causal', 'unordered', 'linear', 'directed'] (says 'linear')
+  - 'pyspi/statistics/causal.py:17-24 corrected_anm_score: gp = GaussianProcessRegressor(random_state=42).fit(x, y); y_predict = gp.predict(x).reshape(-1,
+    1); return normalized_hsic(y_predict - y, x); line 24 ANM.anm_score = corrected_anm_score executed in the class body (patches cdt''s
+    ANM class globally at import, comment cites cdt PR #155)'
+  - 'pyspi/statistics/causal.py:26-29 bivariate: z = data.to_numpy(); return ANM().anm_score(z[i], z[j])'
+  - '.venv/lib/python3.12/site-packages/cdt/causality/pairwise/ANM.py:178-192 original anm_score (bypassed): gp.predict(x) is (T,) and y
+    is (T, 1), so y_predict - y would broadcast to (T, T); this is what the pyspi patch fixes'
+  - '.venv/lib/python3.12/site-packages/cdt/causality/pairwise/ANM.py:106-111 normalized_hsic: x and y standardised with np.mean/np.std (ddof=0),
+    then FastHsicTestGamma(x, y)'
+  - '.venv/lib/python3.12/site-packages/cdt/causality/pairwise/ANM.py:69-103 FastHsicTestGamma(sig=[-1, -1], maxpnt=200): stride subsample
+    when m > 200 (81-86), H = I - 11''/m (91), K = rbf_dot(X, -1), L = rbf_dot(Y, -1) (93-94), centring (96-97), testStat = (1/m) * (Kc.T
+    * Lc).sum() (99), non-finite -> 0 (100-101); no gamma p-value despite the name'
+  - '.venv/lib/python3.12/site-packages/cdt/causality/pairwise/ANM.py:53-66 rbf_dot: squared distances H; deg = sqrt(0.5 * median(positive
+    upper-triangle squared distances)) (61-63); K = exp(-H / (2 deg^2)) (64)'
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:211-230 __init__ defaults: kernel=None, alpha=1e-10, optimizer=''fmin_l_bfgs_b'',
+    n_restarts_optimizer=0, normalize_y=False'
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:249 kernel_ = C() * RBF() when kernel is None
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/kernels.py:1236 ConstantKernel(constant_value=1.0, constant_value_bounds=(1e-5,
+    1e5)); :1511 RBF(length_scale=1.0, length_scale_bounds=(1e-5, 1e5)) (bounds not fixed, so 2 hyperparameters are optimised)
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:299-341 hyperparameter optimisation by maximising log marginal likelihood;
+    restarts (322-333) only when n_restarts_optimizer > 0, the only use of self._rng (251), so random_state=42 has no effect
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:658-674 _constrained_optimization: scipy.optimize.minimize(method=''L-BFGS-B'',
+    jac=True, bounds)'
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:346-368 K + alpha*I Cholesky (LinAlgError re-raised -> pyspi NaN
+    matrix), alpha_ = cho_solve(L, y)
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:445-454 predict: y_mean = K_trans @ alpha_, squeezed to (T,) for
+    a single target'
+  deviation_from_documented: (a) 'see Sec. 1.2.5' points to pyspi's hsic SPI (hyppo, normalised and square-rooted HSIC with x-only bandwidth);
+    anm uses cdt's own statistic m*HSIC_b (m = min(T, 200), stride subsample to 200 points, per-variable median-heuristic bandwidth on squared
+    distances), which is neither normalised nor bounded and scales with m up to 200. (b) 'Gaussian process (with a radial basis function
+    kernel)' is accurate, but the GP has no noise term and its fitted length scale collapses to the 1e-5 bound, so the 'residuals' are ~1e-10*y
+    roundoff-level quantities, not noise estimates (candidate below). (c) Class label 'linear' (causal.py:15) contradicts the documented
+    keyword 'nonlinear' and config.yaml:329. (d) Documented cdt v0.5.23; installed cdt 0.6.0 (already documented). (e) Only one direction
+    is returned; the documentation does not say that cdt's ANM decision (score(b,a) - score(a,b)) is not used, nor that lower values mean
+    'more consistent with i -> j'.
+  deviation_from_canonical: '(1) Regression lacks the independent Gaussian noise term that Hoyer et al. 2008 §5 use; with alpha = 1e-10 the
+    marginal-likelihood optimum interpolates the data (length scale -> 1e-5 bound, R^2 = 1.0), which is exactly the overfitting Hoyer et
+    al. §4 warn ''may lead one to falsely accept models''; the resulting score tracks HSIC(x, y) of the raw pair rather than residual independence
+    (probe: anm_T64 9/12 entries equal the plain m*HSIC_b(y, x) to 4 decimals, the exceptions being (2,0), (2,1), (2,3); max relative difference
+    0.09-0.24 across 5 datasets). (2) Returns the test statistic m*HSIC_b, not a p-value or a two-direction comparison. (3) HSIC computed
+    on a deterministic 200-point stride subsample for T > 200. (4) Time-series samples treated as iid (as in the original method).'
+  units_and_range: 'dimensionless; >= 0 (centred Gaussian Gram matrices are PSD); scales with m = min(T, 200) (statistic is m*HSIC_b), so
+    values are not comparable across T < 200; set to 0 if non-finite; observed 0.078-0.35 on independent pairs (check stage) and 2-23 on
+    strongly dependent pairs; not symmetric by construction but nearly symmetric in practice because of the collapse (anm_T256: A[0,1] =
+    8.017, A[1,0] = 8.201; A[2,3] = 22.16, A[3,2] = 20.03); NaN matrix if the Cholesky fails.'
+  direction_convention: A[i, j] = score for the hypothesis i -> j (x = process i regressed onto, y = process j predicted); under the ANM
+    principle LOWER means more consistent with i -> j. Code-derived; to be confirmed empirically on the anm dataset (x0 -> x1, x2 -> x3).
+  symmetry_expected: asym
+  already_documented: 'partly: installed cdt 0.6.0 vs documented 0.5.23 and SciPy 1.18 changing anm beyond tolerances are in DEPENDENCY_MIGRATION.md
+    (SciPy 1.17.1 row, CDT 0.6.0 row) and EEG_OPTIMIZATION_NOTES.md §review (''SciPy 1.18 / ANM drift''); the GP collapse, the HSIC-of-raw-pair
+    behaviour and the label mismatch are not documented (label structure generally: docs/storage_comparison/REVIEW.md M9)'
+  new_finding_candidates:
+  - 'Candidate (GP collapse makes anm a near-symmetric HSIC(x, y) dependence score): probe with sklearn defaults gives kernel_ ''1**2 * RBF(length_scale=5.29e-05)''
+    (anm_T256 0->1), ''0.992**2 * RBF(length_scale=1e-05)'' (anm_T64), ''1**2 * RBF(length_scale=1e-05)'' (anm_T1024, bivariate_gaussian_T1024)
+    with ConvergenceWarning ''k2__length_scale is close to the specified lower bound 1e-05''; residual std 1.0e-10 vs y std 0.998, R^2 =
+    1.0; median of r / (-1e-10 * y / c^2) = 1.0000; anm_T64 matrix equals m*HSIC_b(z_j, z_i) for 9 of 12 entries to 4 decimals (exceptions
+    (2,0) 0.6091 vs 0.6409, (2,1) 0.5530 vs 0.5896, (2,3) 6.314 vs 7.417; anm_T256 0 of 12 at 4 decimals, max relative 0.124; probe fix_cdt/anm_count.py),
+    fitted length scales 1e-5..8.33e-4 on anm_T64, max relative difference 0.15 (anm_T64), 0.18 (anm_T1024), 0.14 (iid_gaussian_T256), 0.24
+    (nonlinear_dependence_T256), 0.09 (bivariate_gaussian_T1024).'
+  - 'Candidate (wrong causal ranking as a consequence): anm_T256 true pair x2 -> x3 gives A[2,3] = 22.16 > A[3,2] = 20.03 and anm_T1024 x0
+    -> x1 gives A[0,1] = 7.976 > A[1,0] = 7.677 (lower should be causal); a GP with C*RBF + WhiteKernel ranks the true direction lower (anm_T64
+    0.352 vs 0.475; anm_T1024 0.410 vs 2.377; nonlinear_dependence_T256 0.314 vs 11.03).'
+  - 'Candidate (mechanism for documented SciPy drift): because the residual is r ~= -(1e-10/c^2) y plus roundoff of the near-singular solve
+    (corr(r, y) ranges -0.21 to -1.0 across probes), the score depends on optimiser end points at the bound and on last-bit linear algebra;
+    this may explain the SciPy 1.18 sensitivity recorded in DEPENDENCY_MIGRATION.md (hypothesis, not tested).'
+  - 'Candidate (random_state=42 is a no-op): _gpr.py:322 uses the RNG only for restarts and n_restarts_optimizer=0; probe max |predict(rs=42)
+    - predict(rs=7)| = 0.0.'
+  - 'Candidate (label metadata): AdditiveNoiseModel.labels contains ''linear'' (causal.py:15) while config.yaml:329 and supplement §1.3.1
+    say ''nonlinear''; calculator.py:258-260 and 265-267 report the class labels.'
+  - 'Candidate (global side effect): causal.py:24 replaces cdt.causality.pairwise.ANM.anm_score for the whole process at import (probe: ANM.anm_score
+    is AdditiveNoiseModel.corrected_anm_score -> True), so any cdt ANM use in the same interpreter silently gets pyspi''s version.'
+  - 'Candidate (T-dependent scale): statistic = (1/m) sum(Kc*Lc) = m*HSIC_b (ANM.py:99) with m = min(T, 200), so for T < 200 values grow
+    with T even at fixed dependence; HSIC is computed on a 200-point stride subsample for T > 200 (ANM.py:81-86).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - anm
+    - nonlinear_dependence
+    path: kernel
+    reference: 'from-scratch numpy m*HSIC_b (Gretton et al. 2005/2008): standardise (ddof=0), stride subsample floor(arange(0, m, (m-1)/199))
+      for m > 200, Gaussian kernels with sigma^2 = 0.5*median(positive squared distances), (1/m) tr(HKH HLH); applied to the same (residual,
+      x) inputs pyspi passes to normalized_hsic'
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: 'agreement to <= 1e-12 relative for every T (probe on anm_T256 pair 0->1: 8.016951686623885 both; the check run reproduces
+      this pyspi value; a check-stage scratch script that imported numpy/sklearn before pyspi, so that BLAS ran multi-threaded, got 8.016948001378065,
+      4.6e-7 relative away, see notes/cdt_pairwise.md Checks)'
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - anm
+    - nonlinear_dependence
+    path: kernel
+    reference: 'from-scratch numpy/scipy GP: log marginal likelihood of C*RBF with alpha=1e-10 and analytic gradient, scipy.optimize.minimize
+      L-BFGS-B on log-theta in [log 1e-5, log 1e5] from theta=(0,0); report fitted length scale, residual std and r/y ratio (no sklearn import)'
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: fitted length scale at or within a factor ~60 of the 1e-5 bound, residual std / y std < 1e-8, r ~= -(1e-10/c^2) y;
+      confirms the collapse is a property of the model specification, not of sklearn
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - anm
+    - nonlinear_dependence
+    - contaminated
+    path: pipeline
+    reference: symmetric matrix H[i,j] = m*HSIC_b(z_i, z_j) from the from-scratch HSIC above on the pyspi-preprocessed data (no regression
+      at all)
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'at T in {64, 256, 1024}: median |A - H| / H < 0.1 and max < 0.3 (probe max 0.09-0.24); a pass supports the candidate
+      that anm reduces to plain HSIC(x, y); T=4096 optional (about 5 s per pair at T=1024, expected ~60x slower at 4096)'
+  - datasets:
+    - anm
+    path: pipeline
+    reference: 'canonical ANM after Hoyer et al. 2008 §5: from-scratch GP with RBF + white-noise kernel (marginal-likelihood hyperparameters,
+      numpy/scipy), residual HSIC with the from-scratch statistic and a gamma-approximation p-value; ground truth x0 -> x1, x2 -> x3'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'establishes the empirical convention (A[i, j] = score for i -> j, lower = causal): the reference gives score(0->1)
+      < score(1->0) and score(2->3) < score(3->2) at T >= 256; pyspi is expected NOT to agree reliably (probe anm_T256: A[2,3] = 22.16 >
+      A[3,2] = 20.03)'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    - trending
+    path: pipeline-detrend
+    reference: pyspi anm on bivariate_gaussian (normalise=True) versus scaled_offset and trending with normalise=False / detrend=True, compared
+      with the from-scratch HSIC reference
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: document how much anm moves when the input scale changes (alpha and kernel bounds are absolute); tests/README.md notes
+      anm changes with normalise
+  check_method: independent-impl
+  check_reference: 'refs/cdt_pairwise.py:run_anm -> _kernels_distance.anm_replica, gp_fit_hyperparameters, gp_posterior_mean, cdt_fast_hsic_gamma
+    (numpy/scipy; no sklearn, no cdt) and anm_canonical (Hoyer et al. 2009: GP C*RBF + White by type-II ML, full-sample m*HSIC_b, gamma p-value);
+    probes/cdt_pairwise_probes.py (anm_theta, anm_collapse, pairdiff, anm_random_state, anm_patch_global, anm_labels, anm_replica_projectenv);
+    the scipy118-drift run uses sklearn==1.9.1 under scipy==1.18.1 (same-lineage, mechanism only); the random-state run (pyspi-vs-pyspi
+    determinism) and the patch-global and labels runs (static code-property probes: pyspi introspection vs a hard-coded expected flag vector)
+    are labelled same-lineage. The gamma-approximation p-value in hsic_gamma_test was written from recollection of hsicTestGamma.m and
+    not re-checked against that file or Gretton et al. 2008, so the reported p-values are unverified; the direction runs decide on the
+    canonical statistic m*HSIC_b (lower = causal), not on the p-value, and anm_canonical as a whole is a recollected reading of Hoyer et
+    al. (GP C*RBF + White, full-sample HSIC) that was not re-checked against the paper'
+  check_data: anm T64/256 (P=4) and T1024 (process pairs 0-1, 2-3); iid_gaussian T64/256; bivariate_gaussian T64/256 and T1024 (pair 2-3);
+    nonlinear_dependence T64/256; contaminated T64/256; var2_bivariate T1024; logistic_maps_chaotic T1024; scaled_offset T256 (kernel path,
+    raw scale); trending T256 (pipeline-detrend)
+  agreement_criterion: 'replica at sklearn''s fitted theta: exact (rtol 1e-10, atol 1e-12); replica with the reference''s own L-BFGS-B fit:
+    rtol 1e-5 (one-ulp sensitivity of the score is ~2e-6); theta: atol 1e-3 in log theta; collapse: std(r)/std(y) < 1e-8 in sklearn''s and
+    the independent fit; raw-pair HSIC: median |A - H|/H < 0.1 and max < 0.3; direction: sign of A.T - A against ground truth (anm) or against
+    the same-estimator reference (lagged datasets); random_state: exactly 0'
+  closeness: 'replica at sklearn''s theta: max rel <= 1.6e-15 on 8 of 9 runs (anm T64/T256 pipeline and kernel, anm T1024 both pairs 0.0,
+    iid_gaussian, bivariate_gaussian, contaminated T256); nonlinear_dependence_T256 7.5e-8 (one pair) in the comparison venv but 6.6e-16
+    when the same replica runs in the project venv (|replica-projectenv), i.e. scipy 1.18.1 vs 1.17.1 LAPACK roundoff. Own fit: anm_T64 9.9e-7,
+    anm_T256 9.5e-7, nonlinear_dependence_T256 4.7e-6, bivariate_gaussian_T256 1.05e-5 (fails rtol 1e-5; lml gap 3.5e-6, flat optimum), iid_gaussian_T256
+    1.17e-2 (fails; pair (1,2): sklearn''s L-BFGS-B stops at lml -362.672, the independent fit from the same start reaches -362.457, lml_ref_minus_sklearn_max
+    0.215; theta run |dlog l| 0.498). Theta: 8 of 9 runs within 1e-3 in log (max 2.6e-4). Collapse 7/7: std(r)/std(y) <= 1.3e-9 in both fits,
+    max length scale 8.3e-4 (anm_T64), 1e-5 bound on anm_T1024 0-1, median r/(-(alpha/c) y) within 1 +- 3e-6. Raw-pair HSIC 10/13 pass (|rawhsic 7/10, |p01-rawhsic 1/1, |p23-rawhsic 2/2;
+    median rel 2.5e-7..0.084); fails contaminated_T64 (median 0.30, max 0.52), contaminated_T256 (0.12, 0.21), nonlinear_dependence_T64 (median
+    1.2e-6, max 0.85). Direction vs ground truth: anm_T256 0.5 (D23 = -2.13), anm_T1024 pair 0-1 0.0 (D01 = -0.299), pair 2-3 1.0 (D23 =
+    1.22); canonical Hoyer reference 1.0 on all three (T1024 0->1 0.265 p 0.60 vs 1->0 8.88 p 4e-65). Subsample: 200-point replica reproduces
+    pyspi to 3.9e-7; full-sample statistic 4.66-4.97x larger, pyspi decisions unchanged. random_state 0.0. SciPy 1.18.1 sklearn fit: max
+    rel 1.95e-6 (dlog theta 4.1e-6); one-ulp change of c: 2.2e-6. scaled_offset raw: own fit 4.5e-4 (fails), pyspi moves 15% vs normalised
+    bivariate_gaussian; trending detrend 3.0e-6 (pass), 17% vs trend-free.'
+  verdict: related-quantity
+  score_0_10: 4
+  score_rubric: 4
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 4: the GP has no noise term and interpolates (std(r)/std(y) <= 1.3e-9 in 7/7 collapse runs), so the score is m*HSIC_b of x and (K + alpha
+    I)^-1 y, a near-symmetric dependence score. It is within the raw-pair tolerance (median rel < 0.1, max < 0.3) of plain m*HSIC_b(x, y) in 10 of 13 runs. The replica
+    at sklearn''s theta agrees to <= 1.6e-15 on 8 of 9 runs.'
+  documentation_status: misdescribed
+  verdict_adjusted: related-quantity
+  score_adjusted: 4
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: The GP has no noise term, so the marginal-likelihood fit interpolates (length scale at or near the 1e-5 bound) and the 'residual'
+    is r = -alpha (K + alpha I)^-1 y ~ -(alpha/c) y. The score is therefore m*HSIC_b(x, (K + alpha I)^-1 y), a near-symmetric dependence
+    score between x and y, not the residual-independence statistic of Hoyer et al.; it ranks the cubic anm pair wrongly at T=1024 and the
+    tanh pair at T=256 where a canonical ANM (noise kernel) recovers both. The statistic is m*HSIC_b with m = min(T, 200) on a stride subsample.
+    The value is defined only to ~1e-6 relative (one ulp of the fitted constant, BLAS thread count, SciPy build) and to the optimiser's end
+    point (1.2% on iid_gaussian_T256).
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'expensive (pyspi time_s in out/pyspi/index/cdt_pairwise.json, single runs): O(T^3) per likelihood evaluation; the slowest runs are the 14 two-process runs at T = 1024 (2 ordered pairs each),
+    9.7-12.3 s (anm p01-collapse 12.3 s, p01-subsample 12.2 s, p01-theta 12.1 s; 155.5 s together); P = 4 runs at T = 256 took 1.28-4.83 s (23 runs, median 1.73 s), P = 5 runs at T = 256 2.38-5.58 s
+    (5 runs) and P = 2 runs at T = 256 0.23-0.30 s (4 runs); every run at T = 64 < 0.5 s (12 runs); 58 runs, 218.2 s in total; an earlier run took up to 17 s per two-process T = 1024 run and 243 s in
+    total (not stored in the index or results files); T = 4096 not run (about 64x T = 1024 per pair)'
+  symmetry_observed: 'asym by construction but near-symmetric in practice: max|A - A.T| = 2.24 (contaminated_T256, 10.6 vs 12.9); relative
+    asymmetry max|A - A.T|/A per run 0.014 (bivariate_gaussian_T1024 pair 2-3) to 0.85 (nonlinear_dependence_T64); never antisymmetric (max|A
+    + A.T| = 45.1); no off-diagonal NaN or zero'
+  direction_observed: 'A[i, j] = score for the hypothesis i -> j (x = process i regressed on, y = process j), lower = more consistent with
+    i -> j: the orientation runs (A.T - A vs the independent replica) agree 1.0 on var2_bivariate and logistic_maps_chaotic. Against ground
+    truth the decision A[j, i] - A[i, j] > 0 is unreliable: anm_T256 recovers x0 -> x1 but not x2 -> x3, anm_T1024 recovers x2 -> x3 but
+    not x0 -> x1; logistic_maps_chaotic x -> y recovered, var2_bivariate x -> y not.'
+  candidate_resolutions:
+  - candidate: GP collapse makes anm a near-symmetric HSIC(x, y) dependence score
+    outcome: confirmed
+    evidence: 'causal.anm|*|collapse (7/7: std(r)/std(y) <= 1.3e-9 in sklearn''s and the independent fit); causal.anm|*|rawhsic (10/13 within
+      median 0.1 / max 0.3 of plain m*HSIC_b; the 3 exceptions are where the fitted length scale exceeds some x-spacings, explained exactly
+      by r = -alpha (K + alpha I)^-1 y)'
+  - candidate: wrong causal ranking as a consequence
+    outcome: confirmed
+    evidence: causal.anm|anm|256|pipeline|direction (agreement 0.5, D23 = -2.13), causal.anm|anm|1024|pipeline|p01-direction (0.0, D01 =
+      -0.299); canonical C*RBF + White reference agreement 1.0 in both
+  - candidate: mechanism for the documented SciPy 1.18 drift
+    outcome: confirmed
+    evidence: 'causal.anm|anm|256|pipeline|scipy118-drift (sklearn under scipy 1.18.1: max rel 1.95e-6 vs documented 1.25e-6; one-ulp change
+      of the fitted constant 2.2e-6; replica at pyspi''s theta under scipy 1.18.1 6.6e-16); causal.anm|nonlinear_dependence|256|pipeline|replica-theta
+      vs |replica-projectenv (7.5e-8 vs 6.6e-16); scratch probe cdt_pairwise_check/inv4.py: the default multi-threaded OpenBLAS changes sklearn''s
+      theta by up to 5.6e-7 (log) relative to the check run''s pyspi fit, which OPENBLAS_NUM_THREADS=1 reproduces bit for bit (pyspi/__init__.py:4
+      sets OMP_NUM_THREADS=1 for BLAS libraries loaded after pyspi)'
+  - candidate: random_state=42 is a no-op
+    outcome: confirmed
+    evidence: causal.anm|anm|64|pipeline|random-state (max |score(7 or None) - score(42)| = 0.0 on 12 pairs)
+  - candidate: label metadata says linear
+    outcome: confirmed
+    evidence: 'causal.anm|anm|64|pipeline|labels (flags [1, 0, 1]: ''linear'' in class labels, ''nonlinear'' only in config.yaml)'
+  - candidate: global side effect of the class-body monkeypatch
+    outcome: confirmed
+    evidence: causal.anm|anm|64|pipeline|patch-global (flags [1, 1, 1])
+  - candidate: T-dependent scale (m*HSIC_b, m = min(T, 200), stride subsample)
+    outcome: confirmed
+    evidence: causal.anm|bivariate_gaussian|{64,256,1024}|pipeline|*rawhsic (rho 0.8 pair 3.24 at T64, 8.81 at T256, 8.45 at T1024); causal.anm|anm|1024|pipeline|p01/p23-subsample
+      (full-sample/200-point ratio 4.66-4.97); replica-theta runs exact with the 1/m form
+  checks_run:
+  - run_ids:
+    - causal.anm|*|theta
+    - causal.anm|*|replica-theta
+    - causal.anm|*|replica-projectenv
+    reference: refs/cdt_pairwise.py:run_anm -> _kernels_distance.anm_replica / gp_fit_hyperparameters
+    outcome: replica-theta 8/9 pass (<= 1.6e-15), nonlinear_dependence_T256 fail 7.5e-8 (comparison-venv LAPACK; project-venv replica 6.6e-16
+      pass); theta 8/9 pass, iid_gaussian_T256 fail (0.498 in log l, sklearn end point 0.215 nats below)
+  - run_ids:
+    - causal.anm|*|replica-ownfit
+    reference: refs/cdt_pairwise.py:run_anm -> anm_replica with gp_fit_hyperparameters
+    outcome: 3/5 pass (<= 4.7e-6); bivariate_gaussian_T256 1.05e-5 and iid_gaussian_T256 1.17e-2 fail (optimiser end points)
+  - run_ids:
+    - causal.anm|*|collapse
+    reference: refs/cdt_pairwise.py:run_anm[collapse]
+    outcome: pass 7/7 (std(r)/std(y) <= 1.3e-9)
+  - run_ids:
+    - causal.anm|*|rawhsic
+    reference: refs/cdt_pairwise.py:run_anm[rawhsic] -> cdt_fast_hsic_gamma
+    outcome: '10/13 pass (|rawhsic 7/10, |p01-rawhsic 1/1, |p23-rawhsic 2/2); contaminated T64/T256 and nonlinear_dependence_T64 fail
+      (max rel 0.52, 0.21, 0.85)'
+  - run_ids:
+    - causal.anm|anm|256|pipeline|direction
+    - causal.anm|anm|1024|pipeline|p01-direction
+    - causal.anm|anm|1024|pipeline|p23-direction
+    reference: refs/cdt_pairwise.py:anm_canonical (recollected Hoyer et al. form; its p-values are unverified and not used for the decision)
+    outcome: 1 of 3 pass (agreement 0.5, 0.0, 1.0); canonical reference recovers the truth in all three
+  - run_ids:
+    - causal.anm|anm|1024|pipeline|p01-subsample
+    - causal.anm|anm|1024|pipeline|p23-subsample
+    reference: refs/cdt_pairwise.py:run_anm[subsample]
+    outcome: pass 2/2 (200-point replica within 3.9e-7)
+  - run_ids:
+    - causal.anm|var2_bivariate|1024|pipeline|orientation
+    - causal.anm|logistic_maps_chaotic|1024|pipeline|orientation
+    reference: refs/cdt_pairwise.py:run_anm[orientation]
+    outcome: pass 2/2 (agreement 1.0)
+  - run_ids:
+    - causal.anm|anm|64|pipeline|random-state
+    - causal.anm|anm|64|pipeline|patch-global
+    - causal.anm|anm|64|pipeline|labels
+    reference: 'refs/cdt_pairwise.py:run_anm (same-lineage: pyspi-vs-pyspi determinism for random-state; static code-property probes
+      of pyspi for patch-global and labels)'
+    outcome: pass 3/3 (0.0; [1, 1, 1]; [1, 0, 1])
+  - run_ids:
+    - causal.anm|anm|256|pipeline|scipy118-drift
+    reference: refs/cdt_pairwise.py:run_anm[scipy118-drift] (same-lineage sklearn)
+    outcome: pass (max rel 1.95e-6 at rtol 1e-5)
+  - run_ids:
+    - causal.anm|scaled_offset|256|kernel|scale
+    - causal.anm|trending|256|pipeline-detrend|detrend
+    reference: refs/cdt_pairwise.py:run_anm[scale/detrend]
+    outcome: detrend pass (3.0e-6); scale fail (4.5e-4, optimiser end point on raw-scale data)
+optimisation:
+  complexity_P_T: 'O(P^2 n_eval T^3) + O(P^2 m^2), m = min(T, 200): one sklearn GaussianProcessRegressor fit per ordered pair (pyspi/statistics/causal.py:18-29 corrected_anm_score; Cholesky plus cho_solve(L, eye) per log-marginal-likelihood evaluation, ~33 evaluations per pair at 8x256) plus an HSIC on a 200-point subsample. Measured T_exponent 2.67 (8x256 -> 8x1024, 6.23 s -> 252.1 s fresh); P_exponent not measured (infeasible above 8x1024). The O(T^3) GP term dominates; projected 62,142 s per window at 118x1024 (extrapolated-pairs-from-8, no fixed cost).'
+  hotspot_1: scipy/linalg/_decomp_cholesky.py:_cho_solve (third-party:scipy, called from sklearn gaussian_process/_gpr.py:log_marginal_likelihood) 27.5% of the profiled SPI call at 8x256 (3,778 calls; log_marginal_likelihood is 91.8% cumulative over 1,861 evaluations for 56 pairs)
+  hotspot_2: sklearn/gaussian_process/kernels.py:__call__ (RBF, line 1530; third-party:sklearn) 22.8% of the profiled SPI call at 8x256, inside the Product kernel call 33.2%; scipy _cholesky 12.6%, c_einsum 8.4%; cdt normalized_hsic only 1.9%
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.241
+  profile_file: audit/profiles/causal.anm__8x256.pstats
+  opportunities:
+  - opportunity_id: gpfit-2
+    opportunity: Run the ordered-pair sklearn GaussianProcessRegressor fits (anm, gpfit) in a process pool with one BLAS thread per worker.
+    opp_type: parallel
+    speedup_kind: throughput
+    expected_speedup: 10-30x alone (at most ~4x inside a window worker)
+    speedup_basis: 'profile:audit/profiles/causal.anm__8x256.pstats base.py:multivariate 100.0% is the pair loop (sklearn _gpr.py:fit 96.8%) + complexity: 13,806 independent O(T^3) fits per window at P=118; the speedup is at most the number of physical cores (32 on the Threadripper 3970X, 64 logical CPUs; SMT adds little to Cholesky/BLAS-bound fits, and 32 concurrent 8 MB kernel matrices exceed the shared L3), per-window latency only with no core-hour saving; window-level parallelism (xc-window-parallel) competes for the same cores; the two are alternatives for those cores, not factors that multiply, so xc-window-parallel is not in depends_on: with the ~8 memory-bounded window workers running, about 4 physical cores per worker remain, so inside a window worker this pool lowers the unit''s latency by at most about 4x'
+    output_risk: unverified-bit-identical
+    risk_evidence: each pair is an independent deterministic fit (n_restarts_optimizer=0, random_state fixed or unused); keeping one BLAS thread per worker keeps the ~1e-6 thread sensitivity recorded for anm unchanged
+    effort: S
+    depends_on: []

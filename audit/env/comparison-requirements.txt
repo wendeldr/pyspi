@@ -1,0 +1,15 @@
+# Scratch comparison venv for the calculation audit (independent references only).
+# Build:  uv venv --python 3.12 <dir>/audit-venv && uv pip install --python <dir>/audit-venv/bin/python -r audit/env/comparison-requirements.txt
+# Must NOT contain pyspi or jpype: pyspi outputs are produced by the project .venv (audit/checks/pyspi_outputs.py).
+numpy
+scipy
+scikit-learn
+statsmodels
+mne
+mne-connectivity
+dcor
+dtaidistance
+PyWavelets
+POT
+pandas
+pyyaml

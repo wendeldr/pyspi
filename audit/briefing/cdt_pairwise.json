@@ -1,0 +1,162 @@
+{
+ "family": "cdt_pairwise",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/causal-inference.md"
+ ],
+ "hypotheses": [
+  "ANM monkeypatch: GP with sklearn default kernel C*RBF (hyperparameters optimised by fmin_l_bfgs_b), random_state=42 has no effect with zero restarts; HSIC subsampled to 200 points with 1/m scaling",
+  "RECI = OLS of y on [1, x^3] after min-max scaling (PolynomialFeatures columns 1,2 zeroed)",
+  "IGCI entropy estimator with gaussian reference measure: antisymmetric, sign convention",
+  "CDS ffactor=2 maxdev=3 minc=12 discretisation"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/causal.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    346,
+    356
+   ],
+   "section": "1.3.1",
+   "title": "Additive noise model (anm)"
+  },
+  {
+   "lines": [
+    357,
+    364
+   ],
+   "section": "1.3.2",
+   "title": "Information-geometric causal inference (igci)"
+  },
+  {
+   "lines": [
+    365,
+    371
+   ],
+   "section": "1.3.3",
+   "title": "Conditional distribution similarity fit (cds)"
+  },
+  {
+   "lines": [
+    372,
+    380
+   ],
+   "section": "1.3.4",
+   "title": "Regression error-based causal inference (reci)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/cdt/causality/pairwise/ANM.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/cdt/causality/pairwise/CDS.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/cdt/causality/pairwise/RECI.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/cdt/causality/pairwise/IGCI.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "anm": null
+   },
+   "identifiers": [
+    "anm"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "causal",
+    "directed",
+    "linear",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "AdditiveNoiseModel",
+   "module": "causal",
+   "pair_basis": "ordered",
+   "pyspi_class": "AdditiveNoiseModel",
+   "representative": "anm",
+   "source": "config",
+   "unit_id": "causal.anm"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "cds": null
+   },
+   "identifiers": [
+    "cds"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "ConditionalDistributionSimilarity",
+   "module": "causal",
+   "pair_basis": "ordered",
+   "pyspi_class": "ConditionalDistributionSimilarity",
+   "representative": "cds",
+   "source": "config",
+   "unit_id": "causal.cds"
+  },
+  {
+   "eeg_identifiers": [
+    "reci"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "reci": null
+   },
+   "identifiers": [
+    "reci"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "RegressionErrorCausalInference",
+   "module": "causal",
+   "pair_basis": "ordered",
+   "pyspi_class": "RegressionErrorCausalInference",
+   "representative": "reci",
+   "source": "config",
+   "unit_id": "causal.reci"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "igci": null
+   },
+   "identifiers": [
+    "igci"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "causal",
+    "directed",
+    "nonlinear",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "InformationGeometricConditionalIndependence",
+   "module": "causal",
+   "pair_basis": "ordered",
+   "pyspi_class": "InformationGeometricConditionalIndependence",
+   "representative": "igci",
+   "source": "config",
+   "unit_id": "causal.igci"
+  }
+ ]
+}

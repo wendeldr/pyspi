@@ -1,0 +1,395 @@
+unit_id: misc.gpfit.DotProduct
+status: profiled
+correctness:
+  metric_name_standard: in-sample mean squared residual of the posterior mean of a Gaussian-process regression of y on x with a dot-product (linear)
+    covariance, constant and white-noise terms, hyperparameters chosen by type-II maximum likelihood; equivalently the training MSE of a Bayesian
+    linear regression of y on x with an N(0, 1) slope prior
+  canonical_ref: "Williams & Rasmussen 1996, NIPS 8:514-520 (supplement ref [78], cited as 1995); Rasmussen & Williams 2006, Gaussian Processes\
+    \ for Machine Learning, MIT Press: Alg. 2.1 (p.19, posterior mean f_bar = K_*^T (K + sigma_n^2 I)^-1 y), \xA72.1 eqs. 2.8-2.11 (weight-space\
+    \ Bayesian linear regression, posterior mean w_bar = sigma_n^-2 A^-1 X y with A = sigma_n^-2 X X^T + Sigma_p^-1), \xA74.2.2 (dot-product covariance\
+    \ k = sigma_0^2 + x.x'), \xA75.4.1 eqs. 5.8-5.9 (log marginal likelihood and its gradient, ML-II). There is no canonical pairwise \"GP fit\
+    \ MSE\" statistic; the canonical object is the GP posterior mean and its residual."
+  canonical_definition: 'With k(x, x'') = c + sigma_0^2 + x x'' and noise variance s chosen by maximising log p(y | x, theta), the posterior mean
+    is f_bar = K_f (K_f + s I)^-1 y; the score would be (1/T) sum_t (y_t - f_bar_t)^2. For one input this is Bayesian linear regression: slope
+    posterior mean b = x''y / (x''x + s) (unit slope prior), intercept prior variance c + sigma_0^2.'
+  documented_definition: "supplement \xA71.6.2, p.18: 'we also use Gaussian process [78] model fits as a nonparametric measure of influence of\
+    \ x on y. Here, we use a combination of kernels (with parameters chosen from default settings) from the scikit-learn package [2] and compute\
+    \ the MSE of their fit. The fits are computed for the dot-product kernel with inhomogenity parameter sigma_0 = 1 (DotProduct) ... Each of\
+    \ these kernels are separately combined with the constant kernel (with a constant of 1.0) and the white kernel (with a noise level of 1)';\
+    \ keywords 'directed, nonlinear, unsigned, bivariate, contemporaneous'. GitBook spi-descriptions/miscellaneous.md lines 46-63 repeat the text\
+    \ verbatim and cite Williams & Rasmussen (WilRas96.pdf)."
+  delegate_lib: scikit-learn==1.9.1 sklearn.gaussian_process.GaussianProcessRegressor.fit/predict with kernel ConstantKernel() + WhiteKernel()
+    + DotProduct(); hyperparameters by scipy==1.17.1 scipy.optimize.minimize(method='L-BFGS-B'); score by sklearn.metrics.mean_squared_error
+  implemented_as: 'A[i, j] = mean((f_bar - z_j)^2) where f_bar is the GP posterior mean at the training inputs z_i (in-sample, not held out),
+    on z-scored (ddof=1) data. Kernel = ConstantKernel(1.0) + WhiteKernel(1.0) + DotProduct(sigma_0=1.0), each with bounds (1e-5, 1e5); the documented
+    values 1.0 are only the L-BFGS-B starting point theta = (0, 0, 0) in log space. One optimiser run, n_restarts_optimizer=0, alpha = 1e-10 jitter,
+    normalize_y=False, random_state=None (unused). The white term enters K(X, X) for the likelihood and the solve but not K(X_test, X_train) (kernels.py:1419
+    returns zeros), so the prediction is the de-noised posterior mean, not an interpolant. Because z-scored inputs and targets have zero mean
+    and x''x = y''y = T - 1, the constant and sigma_0 terms do not affect the prediction and are driven to their 1e-5 lower bounds (probe: fitted
+    ''0.00316**2 + WhiteKernel(noise_level=0.91) + DotProduct(sigma_0=1e-05)'' on bivariate_gaussian_T256 0->1), leaving one effective hyperparameter
+    s. The result equals the closed form mean((z_j - b z_i)^2) with b = z_i''z_j / (z_i''z_i + s) to <= 3e-14 relative (4 probes), i.e. approximately
+    ((T-1)/T)(1 - r_ij^2) (max relative difference 6.2e-5 at T=64, 3.8e-6 at T=256 over 18 datasets). Fit warnings (bound ConvergenceWarnings)
+    are suppressed by pyspi.'
+  implementation_trace:
+  - 'pyspi/data.py:184-197 Data.set_data: detrend only if detrend=True (default False), then scipy.stats.zscore(axis=1, nan_policy=''omit'', ddof=1)
+    if normalise=True (default)'
+  - pyspi/data.py:108-118 Data.to_numpy returns the (M, T, 1) array, so z[i] is a (T, 1) column (the 2-D X sklearn requires)
+  - 'pyspi/config.yaml:1280-1290 GPModel: labels directed/nonlinear/unsigned/bivariate/contemporaneous; configs kernel: DotProduct, kernel: RBF'
+  - 'pyspi/calculator.py:230,251-267 Calculator._load_yaml (def at 230; config loop 251-267): spi = GPModel(**params) for each config (256); the
+    class attribute labels (misc.py:132) are reported'
+  - 'pyspi/calculator.py:295,327-339,354-355 Calculator.compute (def at 295): S = spi.multivariate(dataset) (329); np.fill_diagonal(S, nan) (332);
+    table store (335); any exception -> whole matrix NaN (except 336-339, NaN at 337, message at 339) with a warning raised at 354-355 (lines
+    confirmed at HEAD a42ebc1; calculator.py is unchanged since a1f20c7)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A[i, j] = self.bivariate(data, i=i, j=j) for every ordered pair i != j (no mirroring)'
+  - pyspi/base.py:27-49 parse_bivariate passes the Data object through (two raw arrays would be wrapped into a new, z-scored Data)
+  - pyspi/statistics/misc.py:7-8 imports sklearn.gaussian_process.kernels, GaussianProcessRegressor and sklearn.metrics.mean_squared_error
+  - pyspi/statistics/misc.py:129-132 class GPModel(Directed, Unsigned), identifier 'gpfit', labels ['misc', 'unsigned', 'unordered', 'normal',
+    'nonlinear', 'directed']
+  - 'pyspi/statistics/misc.py:134-137 __init__: identifier ''gpfit_DotProduct''; self._kernel = kernels.ConstantKernel() + kernels.WhiteKernel(),
+    then += kernels.DotProduct() (sum, not product)'
+  - 'pyspi/statistics/misc.py:139-147 bivariate: z = data.to_numpy(); warnings suppressed only around fit; gp = GaussianProcessRegressor(kernel=self._kernel).fit(z[i],
+    np.ravel(z[j])); y_predict = gp.predict(z[i]); return mean_squared_error(y_predict, np.ravel(z[j])) (arguments in (y_pred, y_true) order,
+    harmless for MSE)'
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/kernels.py:364-367 Kernel.__add__ returns Sum(self, b); :838-871 Sum.__call__
+    = k1(X, Y) + k2(X, Y), gradients stacked
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/kernels.py:1236 ConstantKernel(constant_value=1.0, bounds (1e-5, 1e5)); :1278
+    K = full(constant_value)
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/kernels.py:1366 WhiteKernel(noise_level=1.0, bounds (1e-5, 1e5)); :1405-1407 K
+    = noise_level * I when Y is None; :1418-1419 zeros when Y is given (so excluded from the predictive cross-covariance)
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/kernels.py:2159 DotProduct(sigma_0=1.0, bounds (1e-5, 1e5)); :2196-2201 K = inner(X,
+    Y) + sigma_0^2; :2206 gradient 2 sigma_0^2
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:211-231 __init__ defaults: alpha=1e-10, optimizer=''fmin_l_bfgs_b'',
+    n_restarts_optimizer=0, normalize_y=False, random_state=None'
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:249 kernel_ = clone(self.kernel) (pyspi's template kernel is never mutated;
+    probe shows it unchanged after multivariate); :251 RNG created but used only for restarts (:322-333)
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:275-285 normalize_y False -> y used as given (zero-mean/unit-std bookkeeping
+    only)
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:299-340 ML-II: one _constrained_optimization from kernel_.theta (log
+    of the 1.0 initial values) within kernel_.bounds (312-320); restarts skipped (322); best theta assigned (337); _check_bounds_params warns
+    at bounds (338, sklearn/gaussian_process/kernels.py:436)'
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:541-656 log_marginal_likelihood: K + alpha I (589), Cholesky (failure
+    -> -inf, 590-593), -0.5 y''alpha - sum log diag L - T/2 log 2 pi (613-615), gradient 0.5 tr((alpha alpha^T - K^-1) dK) (R&W eq. 5.9)'
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:658-674 _constrained_optimization: scipy.optimize.minimize(method=''L-BFGS-B'',
+    jac=True, bounds); _check_optimize_result (667)'
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:346-368 final K + alpha I, Cholesky L_ (352, LinAlgError re-raised ->
+    pyspi NaN matrix), alpha_ = cho_solve(L_, y) (363)
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:444-454 predict: K_trans = kernel_(X, X_train_) (446, white term = 0),
+    y_mean = K_trans @ alpha_ (447), squeezed to (T,)'
+  - .venv/lib/python3.12/site-packages/sklearn/metrics/_regression.py:524 mean_squared_error; :586-588 average of (y_true - y_pred)^2
+  deviation_from_documented: "(a) The documented values (sigma_0 = 1, constant 1.0, noise level 1) are only the starting point; all three hyperparameters\
+    \ are re-estimated per pair by maximising the log marginal likelihood within [1e-5, 1e5]. Fitted values differ from the documented ones: constant\
+    \ and sigma_0 sit at the 1e-5 lower bound in every probe and the noise level is about 1 - r^2 (e.g. 0.91, 0.326, 0.093). (b) Documented as\
+    \ 'nonparametric' and keyword 'nonlinear' (also class label, misc.py:132): the dot-product kernel GP is Bayesian linear regression (R&W \xA7\
+    2.1), so the fit is linear and the value is a function of Pearson r and T only (candidate below). (c) Documented as 'directed': the value\
+    \ is symmetric to <= 8.1e-15 absolute on every probed dataset, so the direction is nominal under default preprocessing. (d) 'MSE of their\
+    \ fit' is the in-sample (training) MSE of the posterior mean, which the text implies but does not state."
+  deviation_from_canonical: "(1) The constant and sigma_0 terms are redundant (both add a constant to the covariance), so the model has two non-identifiable\
+    \ hyperparameters. Under z-scoring both are irrelevant and go to the lower bound. (2) The slope prior variance is fixed at 1 (no amplitude\
+    \ hyperparameter), so the slope is ridge-shrunk by (T-1)/(T-1+s); the shrinkage is O(1/T) and invisible at T >= 64. (3) The score is the training\
+    \ MSE of the posterior mean, not a held-out or leave-one-out predictive error (R&W \xA75.4.2) and not a likelihood. Within the GP framework\
+    \ the computation is otherwise standard: the MSE of an own posterior mean at the fitted hyperparameters reproduces sklearn's MSE to <= 1.9e-15\
+    \ absolute (the posterior-mean vectors themselves agree elementwise to <= 1.1e-13; 24 DotProduct pairs)."
+  units_and_range: 'squared units of the target (SD^2 after z-scoring); >= 0; under default z-scoring about ((T-1)/T)(1 - r^2), so in [0, (T-1)/T]
+    (observed 1.5e-15 for the bit-identical copy pair in shared_envelope to 0.996 for independent pairs at T=256); scale-dependent when normalise=False
+    (scaled_offset_T256 raw: 0.036 to 97.3); symmetric in practice (|A - A^T| <= 8.1e-15); NaN matrix if the Cholesky fails.'
+  direction_convention: 'A[i, j] = MSE of predicting process j (target, np.ravel(z[j])) from process i (input, z[i]), from misc.py:145-147 and
+    base.py:91-93. Lower means i linearly predicts j better. For this kernel A[i, j] = A[j, i] to rounding under default preprocessing, so the
+    convention is not observable from the values under z-scoring; confirmed in the check stage on raw data (misc.gpfit.DotProduct|scaled_offset|256|kernel|direction:
+    A[i, j] scales with var(x_j)).'
+  symmetry_expected: sym
+  already_documented: 'no (label structure in general: docs/storage_comparison/REVIEW.md M9)'
+  new_finding_candidates:
+  - 'Candidate (DotProduct is a linear, symmetric statistic, a function of Pearson r): the score equals mean((y - b x)^2) with b = x''y/(x''x
+    + s) to <= 3e-14 relative (probe: bivariate_gaussian_T64 0->1 0.8107422442473634 vs closed form 0.8107422442473563; anm_T256 0.333256243521899
+    vs 0.333256243521898) and ((T-1)/T)(1 - r^2) to <= 6.2e-5 relative at T=64 and <= 3.8e-6 at T=256 across 18 datasets; max |A - A^T| <= 8.1e-15
+    everywhere. On nonlinear_dependence_T256 (x1 = x0^2 + noise) all entries are 0.994-0.996, the same as for independent pairs. The labels ''nonlinear''
+    and ''directed'' and the word ''nonparametric'' are therefore not borne out; the unit carries the same information as 1 - r^2 (and as lmfit,
+    see misc.lmfit.* records).'
+  - 'Candidate (hyperparameters at bounds, warnings hidden): in every probed fit the optimiser drives constant_value and sigma_0 to the 1e-5 lower
+    bound (sklearn emits two ''The optimal value found for dimension 0 of parameter ... is close to the specified lower bound'' warnings per fit;
+    misc.py:143-145 suppresses them). Harmless for the value under z-scoring (the intercept direction is orthogonal to y), but the documented
+    ''constant of 1.0'' and ''sigma_0 = 1'' never apply.'
+  - 'Candidate (random_state is a no-op and the result is deterministic): n_restarts_optimizer=0, so the RNG at _gpr.py:251 is never drawn (only
+    used at :322-333); probe with 15 restarts reaches the same LML and MSE as the single start for every DotProduct pair tested (the objective
+    has a single effective hyperparameter).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - anm
+    - nonlinear_dependence
+    - cointegrated
+    path: kernel
+    reference: 'from-scratch numpy/scipy Bayesian linear regression on the z-scored pair: maximise the closed-form log marginal likelihood of
+      y ~ N(0, s I + x x^T + c 1 1^T) over s (scipy.optimize.minimize_scalar on log s, c at its 1e-5 bound), then b = x''y/(x''x + s) and MSE
+      = mean((y - b x)^2); no sklearn import'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: relative difference <= 1e-8 for every off-diagonal entry and T in {64, 256, 1024} (probe agreement 3e-14 with sklearn's
+      own s)
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - sparse_precision
+    - contaminated
+    - trending
+    path: pipeline
+    reference: analytic ((T-1)/T)(1 - r_ij^2) with r_ij = numpy Pearson correlation of the pyspi-preprocessed rows
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: relative difference <= 1e-4 at T=64 and <= 1e-5 at T >= 256; |A - A^T| <= 1e-12; establishes that the unit is a deterministic
+      transform of r^2
+  - datasets:
+    - nonlinear_dependence
+    - anm
+    path: pipeline
+    reference: 'direction test: compare A[i, j] with A[j, i] on known asymmetric pairs (x0 -> x1 = x0^2 + noise; anm x0 -> x1 cubic, x2 -> x3
+      tanh); reference expectation from the closed form (symmetric)'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: no direction information (|A[i,j] - A[j,i]| <= 1e-12); nonlinear_dependence pair (0,1) indistinguishable from independence
+      (both about (T-1)/T); establishes empirically that the A[i, j] direction convention is unobservable for this kernel under z-scoring
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'normalise=False on scaled_offset: from-scratch Bayesian linear regression with the full ML-II over (c, s, sigma_0) on the raw
+      rows (target j, input i), to expose the A[i, j] = predict j from i convention when values are no longer symmetric'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'A[i, j] scales with var(x_j) (probe scaled_offset_T256 raw: A[0,1] = 3.64, A[1,0] = 0.036, scale 0.2 vs 2.0), confirming
+      that column j is the target; values on normalise=True equal bivariate_gaussian exactly (affine invariance after z-scoring)'
+  - datasets:
+    - trending
+    path: pipeline-detrend
+    reference: analytic ((T-1)/T)(1 - r^2) on the detrended, z-scored rows
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: with detrend=True the values match the analytic reference to <= 1e-5 relative at T >= 256 and approach the bivariate_gaussian
+      values; without detrending shared trends reduce the MSE (probe trending_T256 min 0.0905 vs bivariate_gaussian_T256 min 0.3245)
+  check_method: independent-impl
+  check_reference: audit/checks/refs/gpfit.py:h_ridgecf -> ridge_cf (closed-form Bayesian linear regression posterior mean = penalised least squares
+    with slope penalty w' and intercept penalty w'/(c + sigma_0^2), at sklearn's fitted theta from probes/gpfit_probes.py:params); audit/checks/refs/gpfit.py:h_posterior
+    and h_postmean -> audit/checks/refs/_kernels_basic_misc.py:gp_posterior_mean + gp_log_marginal_likelihood (Cholesky, R&W Alg. 2.1 and eqs.
+    5.8-5.9, no sklearn) at sklearn's theta; audit/checks/refs/gpfit.py:h_scratch -> blr_ml2 (weight-space BLR, global type-II ML over (c + sigma_0^2,
+    w) by grid + L-BFGS-B + Nelder-Mead); audit/checks/refs/gpfit.py:h_single -> _kernels_basic_misc.gp_fit (own single L-BFGS-B start from theta
+    = 0); audit/checks/refs/gpfit.py:h_closedform (analytic ((T-1)/T)(1 - r^2)); h_params (projected gradient and tight L-BFGS-B polish of sklearn's
+    theta under the independent LML); h_multistart (theta = 0 plus 20 log-uniform starts, 21 per pair); h_direction; h_affine, h_determinism, h_warnings, h_scipy118
+    (same-lineage); audit/checks/refs/gpfit.py:h_fixedhp (_kernels_basic_misc.gp_posterior_mean at theta = 0, i.e. the documented values held
+    fixed, against sklearn with optimizer=None, probes/gpfit_probes.py:fixedhp)
+  check_data: 'pipeline: iid_gaussian T64/T256/T1024 (P=3), bivariate_gaussian T64/T256/T1024 (P=3), anm T64/T256, nonlinear_dependence T64/T256,
+    sparse_precision T64/T256, contaminated T64/T256, trending T64/T256, scaled_offset T256; pipeline-detrend: trending T256/T1024 (P=3); kernel
+    (raw rows): iid_gaussian, bivariate_gaussian, anm, nonlinear_dependence, cointegrated at T64/T256, iid_gaussian/anm/cointegrated T1024 (P=3),
+    scaled_offset T256; direction: anm T256 and T1024 (P=2), nonlinear_dependence T256, scaled_offset T256 (kernel); fixedhp: bivariate_gaussian
+    T64 and T256 (pipeline)'
+  agreement_criterion: 'exact rtol 1e-8, atol 1e-12 (posterior, ridgecf; postmean elementwise atol 1e-10) at sklearn''s fitted theta; tolerance
+    rtol 1e-8 vs the global ML-II optimum (scratch) and rtol 1e-6 vs an own single start from theta = 0 (single); analytic ((T-1)/T)(1 - r^2)
+    with the a-priori bound rtol 1e-4 at T=64 and 1e-5 at T>=256 (closedform); optimality: LML gain of a tight polish <= 1e-3 (params) and no
+    multi-start optimum higher by > 1e-3 (multistart); qualitative: max|A - A^T| <= 1e-12 under z-scoring, orientation on raw scaled_offset, bit-identical
+    recomputation, warning counts; fixedhp: exact rtol 1e-8 (own posterior mean at the documented, fixed hyperparameters vs sklearn optimizer=None)'
+  closeness: 'Posterior arithmetic (reference BLAS pinned to one thread): ridgecf 5/5 pass, max_rel <= 7.4e-15 on z-scored data (anm, bivariate_gaussian,
+    iid_gaussian, nonlinear_dependence T256) and 2.0e-13 on raw cointegrated T256 where c and sigma_0 matter; posterior 5/5, max_rel 0 (bit-identical
+    in this run); postmean 2/2, f_bar, LML and MSE differences 0 (bivariate_gaussian T256, cointegrated T256 raw). ML-II on z-scored data: scratch
+    (global BLR optimum) 8/8 pass, max_rel 2.4e-9; params 4/4, polish gain <= 1.8e-12, projected gradient <= 9.7e-6, every fit stopped on PGTOL;
+    multistart (21 starts) 2/2, max LML gain 3.2e-12. Raw data (kernel path): scratch 4/13 pass, 9 fail with max_rel 1.35e-4 (anm T256), 1.2e-6
+    (cointegrated T256), <= 8.6e-7 elsewhere; single 5/5 pass with max_rel <= 2.4e-9, and the single start''s gap to the global optimum equals
+    pyspi''s (anm T256: LML 7.5e-5 below, MSE 1.35e-4 relative; cointegrated T256: 6.0e-6, 1.2e-6); params anm T256 kernel polish gain 7.5e-5,
+    MSE change 1.35e-4 relative; cointegrated T256 kernel 8/12 fits stopped on the factr test (theta moves up to 1.13 under the polish). Closed
+    form: closedform 14/14, max relative difference to ((T-1)/T)(1 - r^2) 5.4e-5 to 6.1e-5 at T=64, <= 3.8e-6 at T=256, <= 6.9e-8 at T=1024 (trending
+    detrended 6.8e-8). Documented values held fixed (fixedhp, 2/2 pass, own vs sklearn optimizer=None max_rel 0): the fixed-hyperparameter value
+    differs from pyspi''s fitted value by <= 9.2e-6 absolute (2.8e-5 relative) at T=256 and <= 1.5e-4 (4.7e-4 relative) at T=64 on bivariate_gaussian,
+    and equals the ridge (alpha = 1) closed form to <= 3.3e-14. Other: affine scaled_offset vs bivariate_gaussian 1.0e-15; scipy118 max_rel 1.7e-15.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 10''s second clause fails. The supplement gives fixed hyperparameters (sigma_0 = 1, constant 1, noise 1) and calls the fit nonparametric.
+    The code fits all three by ML-II, and the model is Bayesian linear regression. Holding the hyperparameters fixed changes the value by up to 1.5e-4 at T=64. The
+    numeric half holds: 2.4e-9 relative against the independent blr_ml2 optimum (8/8 pipeline runs). No anchor-9 clause names this deviation.'
+  documentation_status: misdescribed
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The estimator matches canonical GP regression with ML-II hyperparameters. With Constant + White + DotProduct, the GP is Bayesian linear regression,
+    and pyspi''s value is the in-sample MSE of the posterior mean at the type-II ML hyperparameters. The deciding reference is independent: on the default
+    (z-scored) path pyspi equals an independent global ML-II optimum (blr_ml2, numpy/scipy only, no sklearn) to <= 2.4e-9 relative (8/8 pipeline scratch runs).
+    The analytic ridge form (ridgecf) and the own Cholesky posterior (posterior, postmean) reproduce pyspi to <= 2.0e-13, but they take sklearn''s fitted
+    theta, so they check the posterior algebra and not the hyperparameter fit; the analytic closed form ((T-1)/T)(1 - r^2) agrees only to <= 6.1e-5 (T=64).
+    Score mapping: on the default path the numeric half of anchor 10 is met (2.4e-9 <= 1e-8 relative against an independent reference) and its second half,
+    ''matches the pyspi supplement description'', fails, because the supplement misdescribes the computation (§1.6.2; (a) and (b) below). None of the anchor-9
+    clauses names this case literally: it is not a trivial value convention (squared vs not, ddof, log base, sign), not a tolerance set by estimator variance,
+    and not a MATLAB/author reference. The README has no anchor for ''canonical computation reproduced, supplement wrong''; 9 is the nearest-anchor reading (README "Score columns: original, rubric reading, adjusted") for that
+    case (the highest score below the one anchor-10 condition that fails), applied the same way to misc.coint.johansen_order-0_* and distance.hhg. (a) The
+    documented values sigma_0 = 1, constant 1 and noise 1 are only starting points and are fitted. Holding them fixed changes the value by <= 9.2e-6 at T=256
+    and <= 1.5e-4 at T=64 on bivariate_gaussian (fixedhp runs); the fixed version is the ridge (alpha = 1) fit. The two versions separate only on correlated
+    pairs: the fitted noise level is about 1 - r^2, which is close to the documented 1 when r is near 0. On near-independent pairs the fixed version agrees
+    with pyspi to 1.5e-10 relative (nonlinear_dependence T256, all |r| <= 0.05), inside rtol 1e-8; correlated pairs separate it by 4.7e-4 (bivariate_gaussian
+    T64), 1.5e-4 (anm T256) and 7.4e-6 (EEG 001_Baseline, 3 channels, T256) (scratch probe wf4b2_high-optimiser-other/p_gpfit.py). The fixedhp runs use bivariate_gaussian,
+    whose pair correlations run from 0.06 to 0.83 at T64 (|r| 0.058-0.827) and from 0.02 to 0.82 at T256 (|r| 0.018-0.821); both datasets contain strongly correlated pairs, so they do separate the two versions. (b) The labels nonlinear and directed, and the word ''nonparametric'',
+    do not describe the computation. The value is ((T-1)/T)(1 - r^2) to <= 6.1e-5 relative, symmetric to <= 8.1e-15, and blind to x1 = x0^2 (0.995776 both
+    ways). Other recorded deviations: (1) On raw (normalise=False) data, sklearn''s single L-BFGS-B start stops on the factr test along the flat c + sigma_0^2
+    direction, up to 7.5e-5 below the ML-II maximum, which moves the value by <= 1.35e-4 relative. This is an optimiser tolerance on a non-default path; it
+    does not arise under the default z-scoring, where c and sigma_0 do not affect the prediction. (2) The score is an in-sample error, not a predictive error.
+    The earlier score of 7 rested on reading anchor 7 as a cap for optimiser units; the README has no such cap. Rubric reading is nearest-anchor 9 here and for
+    misc.coint.johansen_order-0_*, but anchor 9 for distance.hhg, whose tie rounding sits under anchor 9''s estimator-variance clause (distance.hhg score_rubric_note); the
+    nearest-anchor wording above does not extend to distance.hhg.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'moderate: one sklearn fit takes 0.19 s at T=256 and 2.8 s at T=1024 (O(T^3) per LML evaluation, 7-28 L-BFGS-B iterations). pyspi
+    matrices took 17-31 s for P=3 at T=1024 (out/pyspi/index/gpfit.json, under concurrent load). This check used T <= 1024 with P <= 3 at T=1024;
+    T=4096 was not run (about 60x the T=1024 cost).'
+  symmetry_observed: 'sym under z-scoring: max|A - A^T| <= 8.1e-15 on every pipeline run (8.1e-15 nonlinear_dependence T256, 4.3e-15 trending
+    T1024 detrended). asym on raw data: max|A - A^T| = 97.26 (scaled_offset T256), 101.58 (cointegrated T256), because A[i, j] is in units of
+    var(x_j).'
+  direction_observed: 'A[i, j] = MSE of predicting x_j (target) from x_i (input). On raw scaled_offset T256, A[i, j] scales with var(x_j): A[0,3]
+    = 97.30, A[3,0] = 0.0392, A[0,1] = 3.640, A[1,0] = 0.0357, and the own oriented BLR fits agree on 12/12 pairs. Under z-scoring there is no
+    direction information: anm T256 gives A[0,1] = A[1,0] = 0.333256 and A[2,3] = A[3,2] = 0.0926507; anm T1024 gives 0.374282 both ways; nonlinear_dependence
+    T256 gives 0.995776 both ways.'
+  candidate_resolutions:
+  - candidate: DotProduct is a deterministic, symmetric (linear) transform of r^2; the nonlinear/directed labels are nominal
+    outcome: confirmed
+    evidence: 'misc.gpfit.DotProduct|*|pipeline|closedform (12 runs) and |trending|*|pipeline-detrend|closedform (2): max_rel_vs_r2 <= 6.1e-5
+      (T64), <= 3.8e-6 (T256), <= 6.9e-8 (T1024); |*|pipeline|ridgecf max_rel <= 7.4e-15; direction runs anm T256/T1024 and nonlinear_dependence
+      T256 symmetric to <= 8.1e-15 with x1 = x0^2 at 0.995776 both ways. Not in KNOWN_ISSUES.md (REVIEW M9 discusses label structure in general).'
+  - candidate: bound warnings hidden; documented constant 1.0 and sigma_0 = 1 never apply
+    outcome: confirmed
+    evidence: 'misc.gpfit.DotProduct|anm|256|pipeline|warnings: 24 bound warnings on 12/12 pairs, 0 escape GPModel.bivariate. params runs on z-scored
+      data: c and sigma_0 at the 1e-5 bound in 12/12 (anm, bivariate_gaussian, nonlinear_dependence) and 6/6 (iid_gaussian) pairs. Refinement:
+      on raw data they are not always at the bound (|cointegrated|256|kernel|params: c at the bound 1/12, sigma_0 3/12; |anm|256|kernel|params:
+      5/12, 6/12).'
+  - candidate: random_state is a no-op and the fit is deterministic (single effective hyperparameter)
+    outcome: confirmed
+    evidence: 'misc.gpfit.DotProduct|iid_gaussian|256|pipeline|determinism: bit-identical within one process over two multivariate calls, random_state
+      0 and 12345, and after reseeding numpy/random (cross-process reproducibility was tested on RBF only, misc.gpfit.RBF|*|crossproc); params
+      runs: n_restarts_optimizer 0, 0 draws from gp._rng; |multistart runs (21 starts): no start beats pyspi (max LML gain 3.2e-12 anm T256, 4.5e-13
+      iid_gaussian T256).'
+  checks_run:
+  - run_ids:
+    - misc.gpfit.DotProduct|anm|256|pipeline|ridgecf
+    - misc.gpfit.DotProduct|bivariate_gaussian|256|pipeline|ridgecf
+    - misc.gpfit.DotProduct|nonlinear_dependence|256|pipeline|ridgecf
+    - misc.gpfit.DotProduct|iid_gaussian|256|pipeline|ridgecf
+    - misc.gpfit.DotProduct|cointegrated|256|kernel|ridgecf
+    reference: audit/checks/refs/gpfit.py:h_ridgecf (ridge_cf, analytic)
+    outcome: 5/5 pass; max_rel 2.0e-13
+  - run_ids:
+    - misc.gpfit.DotProduct|anm|256|pipeline|posterior
+    - misc.gpfit.DotProduct|bivariate_gaussian|256|pipeline|posterior
+    - misc.gpfit.DotProduct|nonlinear_dependence|256|pipeline|posterior
+    - misc.gpfit.DotProduct|iid_gaussian|256|pipeline|posterior
+    - misc.gpfit.DotProduct|cointegrated|256|kernel|posterior
+    - misc.gpfit.DotProduct|bivariate_gaussian|256|pipeline|postmean
+    - misc.gpfit.DotProduct|cointegrated|256|kernel|postmean
+    reference: audit/checks/refs/gpfit.py:h_posterior, h_postmean (_kernels_basic_misc.gp_posterior_mean, gp_log_marginal_likelihood)
+    outcome: 7/7 pass; max_rel 0 (bit-identical in this run, reference BLAS on one thread); f_bar, LML and MSE differences 0
+  - run_ids:
+    - misc.gpfit.DotProduct|iid_gaussian|64|pipeline|scratch
+    - misc.gpfit.DotProduct|iid_gaussian|256|pipeline|scratch
+    - misc.gpfit.DotProduct|bivariate_gaussian|64|pipeline|scratch
+    - misc.gpfit.DotProduct|bivariate_gaussian|256|pipeline|scratch
+    - misc.gpfit.DotProduct|anm|64|pipeline|scratch
+    - misc.gpfit.DotProduct|anm|256|pipeline|scratch
+    - misc.gpfit.DotProduct|nonlinear_dependence|64|pipeline|scratch
+    - misc.gpfit.DotProduct|nonlinear_dependence|256|pipeline|scratch
+    reference: audit/checks/refs/gpfit.py:h_scratch (blr_ml2)
+    outcome: 8/8 pass; max_rel 2.4e-9
+  - run_ids:
+    - misc.gpfit.DotProduct|iid_gaussian|64|kernel|scratch
+    - misc.gpfit.DotProduct|iid_gaussian|256|kernel|scratch
+    - misc.gpfit.DotProduct|bivariate_gaussian|64|kernel|scratch
+    - misc.gpfit.DotProduct|bivariate_gaussian|256|kernel|scratch
+    - misc.gpfit.DotProduct|anm|64|kernel|scratch
+    - misc.gpfit.DotProduct|anm|256|kernel|scratch
+    - misc.gpfit.DotProduct|nonlinear_dependence|64|kernel|scratch
+    - misc.gpfit.DotProduct|nonlinear_dependence|256|kernel|scratch
+    - misc.gpfit.DotProduct|cointegrated|64|kernel|scratch
+    - misc.gpfit.DotProduct|cointegrated|256|kernel|scratch
+    - misc.gpfit.DotProduct|iid_gaussian|1024|kernel|scratch
+    - misc.gpfit.DotProduct|anm|1024|kernel|scratch
+    - misc.gpfit.DotProduct|cointegrated|1024|kernel|scratch
+    reference: audit/checks/refs/gpfit.py:h_scratch (blr_ml2, global ML-II on raw rows)
+    outcome: '4/13 pass; 9 fail at max_rel 3.6e-8 (cointegrated T1024) to 1.35e-4 (anm T256): sklearn stops short of the global optimum on raw data'
+  - run_ids:
+    - misc.gpfit.DotProduct|iid_gaussian|64|kernel|single
+    - misc.gpfit.DotProduct|bivariate_gaussian|64|kernel|single
+    - misc.gpfit.DotProduct|anm|256|kernel|single
+    - misc.gpfit.DotProduct|cointegrated|256|kernel|single
+    - misc.gpfit.DotProduct|nonlinear_dependence|256|kernel|single
+    reference: audit/checks/refs/gpfit.py:h_single (_kernels_basic_misc.gp_fit single start)
+    outcome: 5/5 pass; max_rel 2.4e-9; gap to the global optimum identical to pyspi's
+  - run_ids:
+    - misc.gpfit.DotProduct|iid_gaussian|64|pipeline|closedform
+    - misc.gpfit.DotProduct|iid_gaussian|256|pipeline|closedform
+    - misc.gpfit.DotProduct|bivariate_gaussian|64|pipeline|closedform
+    - misc.gpfit.DotProduct|bivariate_gaussian|256|pipeline|closedform
+    - misc.gpfit.DotProduct|sparse_precision|64|pipeline|closedform
+    - misc.gpfit.DotProduct|sparse_precision|256|pipeline|closedform
+    - misc.gpfit.DotProduct|contaminated|64|pipeline|closedform
+    - misc.gpfit.DotProduct|contaminated|256|pipeline|closedform
+    - misc.gpfit.DotProduct|trending|64|pipeline|closedform
+    - misc.gpfit.DotProduct|trending|256|pipeline|closedform
+    - misc.gpfit.DotProduct|iid_gaussian|1024|pipeline|closedform
+    - misc.gpfit.DotProduct|bivariate_gaussian|1024|pipeline|closedform
+    - misc.gpfit.DotProduct|trending|256|pipeline-detrend|closedform
+    - misc.gpfit.DotProduct|trending|1024|pipeline-detrend|closedform
+    reference: audit/checks/refs/gpfit.py:h_closedform (analytic ((T-1)/T)(1 - r^2))
+    outcome: 14/14 pass; max_rel 6.1e-5 (T64), 3.8e-6 (T256), 6.9e-8 (T1024)
+  - run_ids:
+    - misc.gpfit.DotProduct|anm|256|kernel|params
+    - misc.gpfit.DotProduct|anm|256|pipeline|params
+    - misc.gpfit.DotProduct|bivariate_gaussian|256|pipeline|params
+    - misc.gpfit.DotProduct|nonlinear_dependence|256|pipeline|params
+    - misc.gpfit.DotProduct|iid_gaussian|256|pipeline|params
+    - misc.gpfit.DotProduct|cointegrated|256|kernel|params
+    - misc.gpfit.DotProduct|iid_gaussian|256|pipeline|multistart
+    - misc.gpfit.DotProduct|anm|256|pipeline|multistart
+    reference: audit/checks/refs/gpfit.py:h_params, h_multistart
+    outcome: 8/8 pass; polish gain <= 1.8e-12 on z-scored data, 7.5e-5 on raw anm; multi-start (21 starts) gain <= 3.2e-12
+  - run_ids:
+    - misc.gpfit.DotProduct|anm|256|pipeline|direction
+    - misc.gpfit.DotProduct|nonlinear_dependence|256|pipeline|direction
+    - misc.gpfit.DotProduct|anm|1024|pipeline|direction
+    - misc.gpfit.DotProduct|scaled_offset|256|kernel|direction
+    - misc.gpfit.DotProduct|scaled_offset|256|pipeline|affine
+    reference: audit/checks/refs/gpfit.py:h_direction (blr_ml2 oriented fits), h_affine (same-lineage)
+    outcome: 5/5 pass; z-scored max|A - A^T| <= 8.1e-15; raw scaled_offset orientation agreement 12/12; affine 1.0e-15
+  - run_ids:
+    - misc.gpfit.DotProduct|iid_gaussian|256|pipeline|determinism
+    - misc.gpfit.DotProduct|anm|256|pipeline|warnings
+    - misc.gpfit.DotProduct|iid_gaussian|256|pipeline|scipy118
+    reference: audit/checks/refs/gpfit.py:h_determinism, h_warnings, h_scipy118 (same-lineage)
+    outcome: 3/3 pass; bit-identical within the process; 24 bound warnings, 0 escape; SciPy 1.18.1 max_rel 1.7e-15
+  - run_ids:
+    - misc.gpfit.DotProduct|bivariate_gaussian|256|pipeline|fixedhp
+    - misc.gpfit.DotProduct|bivariate_gaussian|64|pipeline|fixedhp
+    reference: audit/checks/refs/gpfit.py:h_fixedhp (_kernels_basic_misc.gp_posterior_mean at theta = 0; probes/gpfit_probes.py:fixedhp)
+    outcome: 2/2 pass (max_rel 0); fixed minus fitted <= 9.2e-6 (T256), <= 1.5e-4 (T64); fixed = ridge alpha 1 to <= 3.3e-14
+optimisation:
+  complexity_P_T: 'O(P^2 n_eval T^3): one sklearn GaussianProcessRegressor fit per ordered pair (pyspi/statistics/misc.py:139-147), each L-BFGS-B evaluation a Cholesky plus cho_solve(L, eye) on T x T (898 evaluations for 56 pairs at 8x256). Measured T_exponent 2.81 (8x256 -> 8x1024: 2.66 s -> 131.7 s); P not measured (infeasible above 8x1024). The O(T^3) term dominates; projected 32,461 s per window at 118x1024 (extrapolated-pairs-from-8).'
+  hotspot_1: scipy/linalg/_decomp_cholesky.py:_cho_solve (third-party:scipy, from sklearn _gpr.py:log_marginal_likelihood) 33.5% of the profiled SPI call at 8x256 (1,852 calls; log_marginal_likelihood 91.2% cumulative over 898 evaluations)
+  hotspot_2: scipy/linalg/_decomp_cholesky.py:_cholesky (third-party:scipy) 17.0% of the profiled SPI call at 8x256; numpy dstack (gradient tensor) 10.7%, c_einsum 9.3%
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.172
+  profile_file: audit/profiles/misc.gpfit.DotProduct__8x256.pstats
+  opportunities:
+  - opportunity_id: gpfit-1
+    opportunity: 'Constant + White + DotProduct is Bayesian linear regression: K = (c + sigma_0^2) 11^T + x x^T + w I is rank two plus a diagonal, so the ML-II objective, its gradient, the posterior-mean prediction (linear in x) and the in-sample MSE all follow from six per-pair sufficient statistics (T, sums of x, x^2, y, xy, y^2, from one Gram product per window). Replace the whole per-pair fit/predict/mean_squared_error loop (pyspi/statistics/misc.py:139-147) by one vectorised optimiser over all 13,806 two-parameter objectives.'
+    opp_type: algorithmic
+    expected_speedup: 1000-10000x
+    speedup_basis: 'profile:audit/profiles/misc.gpfit.DotProduct__8x256.pstats base.py:multivariate 99.998% (the pair loop, replaced as a whole: _gpr.py:fit 98.2% with log_marginal_likelihood 91.2% over 898 evaluations for 56 pairs, _cho_solve 33.5%, _cholesky 17.0%; predict 0.55%, mean_squared_error 0.68%) -> Amdahl bound ~5e4x at 8x256, higher at 118x1024 + complexity: O(T^3) per evaluation (T_exponent 2.81; 32,461 s / 13,806 = 2.35 s per ordered pair at 118x1024) becomes O(T) moments per pair plus O(1) per evaluation; the 1000-10000x range assumes the batched optimiser (about 3-30 s per window); a per-pair scipy L-BFGS-B over the O(1) objective (about 10 ms per pair, estimate) would give only about 200x'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'same ML-II objective, different optimiser path; c and sigma_0^2 enter only as their sum, so only (c + sigma_0^2, w) matter; check stage: pyspi equals an independent global ML-II optimum (blr_ml2, no sklearn) to <= 2.4e-9 on the default path'
+    effort: M
+    depends_on: []
+  - opportunity_id: gpfit-2
+    opportunity: Run the ordered-pair sklearn GaussianProcessRegressor fits (anm, gpfit) in a process pool with one BLAS thread per worker.
+    opp_type: parallel
+    speedup_kind: throughput
+    expected_speedup: 10-30x alone (at most ~4x inside a window worker)
+    speedup_basis: 'profile:audit/profiles/misc.gpfit.DotProduct__8x256.pstats base.py:multivariate 100.0% is the pair loop (sklearn _gpr.py:fit 98.2%) + complexity: 13,806 independent O(T^3) fits per window at P=118; the speedup is at most the number of physical cores (32 on the Threadripper 3970X, 64 logical CPUs; SMT adds little to Cholesky/BLAS-bound fits, and 32 concurrent 8 MB kernel matrices exceed the shared L3), per-window latency only with no core-hour saving; window-level parallelism (xc-window-parallel) competes for the same cores; the two are alternatives for those cores, not factors that multiply, so xc-window-parallel is not in depends_on: with the ~8 memory-bounded window workers running, about 4 physical cores per worker remain, so inside a window worker this pool lowers the unit''s latency by at most about 4x'
+    output_risk: unverified-bit-identical
+    risk_evidence: each pair is an independent deterministic fit (n_restarts_optimizer=0, random_state fixed or unused); keeping one BLAS thread per worker keeps the ~1e-6 thread sensitivity recorded for anm unchanged
+    effort: S
+    depends_on: []

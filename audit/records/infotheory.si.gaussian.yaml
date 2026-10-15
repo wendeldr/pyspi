@@ -1,0 +1,183 @@
+unit_id: infotheory.si.gaussian
+status: profiled
+correctness:
+  metric_name_standard: Stochastic interaction (Ay) of a bivariate first-order Markov process, Gaussian model
+  canonical_ref: Ay N. 2015, Entropy 17:2432-2458 'Information geometry on complexity and stochastic interaction' (SI as KL divergence to the split Markov kernel); Ay N. & Wennekers T. 2003, Neurocomputing
+    52-54:461-466
+  canonical_definition: 'SI = sum_v H(X_{v,t+1} | X_{v,t}) - H(X_{t+1} | X_t) for the joint process X = (X_1, X_2); Gaussian: 0.5*ln(sigma^2(x_{t+1}|x_t) sigma^2(y_{t+1}|y_t) / det Sigma((x,y)_{t+1} | (x,y)_t))'
+  documented_definition: 'supplement §1.4.9, p.12 (supplement.txt:539-548): ''Stochastic interaction [47, 48] is a measure of integrated information between two processes in the context of their own past.
+    It is quantified by the difference between the joint entropy of the bivariate process and the individual entropies of each univariate process. Both entropies are measured in context of (conditioned
+    on) the history of the processes; we restrict this history to be only one-step, assuming a first-order Markov process.'' Keywords ''undirected, nonlinear, unsigned, bivariate, time-dependent''. GitBook
+    information-theory.md:184-202 same.'
+  delegate_lib: JIDT infodynamics.jar bundled at pyspi/lib/jidt (labelled 1.6.1 by version-1.6.1.txt, but its class inventory includes EntropyCalculatorMultiVariateCommon, added upstream in commit 3d1f3fe
+    on 2024-04-20; between tag v1.6.1 and commit a9b6b3e the Gaussian MI/CMI/TE/AIS leaf classes, MatrixUtils, MathsUtils and ChiSquareMeasurementDistribution are byte-identical, their MultiVariateCommon/Via
+    parents differ only in observation-ID/noise-seed bookkeeping, and EntropyCalculatorMultiVariateGaussian was refactored onto EntropyCalculatorMultiVariateCommon with its value path unchanged; details
+    in infotheory.est.gaussian) via JPype1==1.7.1 on OpenJDK 21; gaussian.EntropyCalculatorMultiVariateGaussian (three conditional entropies = six entropy calls)
+  implemented_as: 'With tau = delay = 1: H_joint = H(xy(t) | xy(t-1)), H_src = H(x(t) | x(t-1)), H_targ = H(y(t) | y(t-1)), each via _compute_conditional_entropy (H(A,B) - H(B)) on T-1 aligned samples of
+    z-scored data; returns H_src + H_targ - H_joint. Gaussian constants and the ddof scaling cancel, giving 0.5*ln(s_x|x * s_y|y / det S_xy|xy) from residual covariances of AR(1)/VAR(1) fits on the same
+    samples. Undirected (upper triangle mirrored).'
+  implementation_trace:
+  - pyspi/calculator.py:329 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 fill_diagonal NaN; :336-339 any exception from any pair -> the whole SPI entry becomes NaN (:337) and the error is recorded, warning issued at :354-355
+  - 'pyspi/data.py:184-195 preprocessing in Data.set_data: optional scipy.signal.detrend(axis=1), then (default normalise=True) scipy.stats.zscore(axis=1, ddof=1)'
+  - 'pyspi/base.py:132-138 Undirected.multivariate: Directed loop then A[li] = A.T[li] with li = tril_indices(P,-1) (lower triangle overwritten from the upper, i<j)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: _entropy_calc = _getcalc(''entropy'') (:36); identifier += ''_gaussian'' (:38); estimator ''gaussian'' -> labels += [''linear''], _dyn_corr_excl
+    = None (:53-55)'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: every calculator gets setProperty(''BIAS_CORRECTION'',''false'') and setProperty(''NOISE_SEED'',''42''); no NORMALISE property is set'
+  - 'pyspi/statistics/infotheory.py:103-134 _getcalc: ''gaussian'' (and any unrecognised estimator) falls to the else branches -> gaussian.EntropyCalculatorMultiVariateGaussian (:111-112), gaussian.MutualInfoCalculatorMultiVariateGaussian
+    (:120-123), gaussian.TransferEntropyCalculatorGaussian (:129-130)'
+  - 'pyspi/statistics/infotheory.py:513-522 StochasticInteraction(JIDTBase, Undirected).__init__(delay=1): identifier += ''_k-1'' (k denotes the delay)'
+  - 'pyspi/statistics/infotheory.py:524-534 bivariate: x, y = data.to_numpy()[[i, j]] (each (T,1)); xy = concat; H_joint = _compute_conditional_entropy(xy[tau:], xy[:-tau]); H_src, H_targ likewise; return
+    H_src + H_targ - H_joint'
+  - pyspi/statistics/infotheory.py:180-193 _compute_conditional_entropy(X, Y) = H(X,Y) - H(Y)
+  - 'pyspi/config.yaml:480-492 StochasticInteraction configs: estimator gaussian (delay default 1)'
+  - 'https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/gaussian/EntropyCalculatorMultiVariateGaussian.java EntropyCalculatorMultiVariateGaussian
+    (extends EntropyCalculatorMultiVariateCommon, :53-54): finaliseAddObservations :87-96 computes means and MatrixUtils.covarianceMatrix(observations, means); setCovariance :110-123 takes MatrixUtils.CholeskyDecomposition
+    (throws on non-PD); computeAverageLocalOfObservations :162-175 returns 0.5*(d*(1+ln 2pi) + ln det(Sigma)) in nats'
+  - https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/EntropyCalculatorMultiVariateCommon.java :66 normalise = true by default, but
+    finaliseAddObservations :178-212 only stacks observations and adds noise if addNoise (default false, :70); no normalisation is applied for the Gaussian estimator; NOISE_SEED handled :133-139 (no effect
+    without addNoise)
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] covarianceMatrix(double[][], double[]) :3426-3439 -> covarianceTwoColumns :3370-3377 divides by (n-1) (ddof=1);
+    CholeskyDecomposition :4496-4498 (tol 10e-10 = 1e-9) / :4528-4560 throws NonPositiveDefiniteMatrixException when a pivot <= tol; determinantViaCholeskyResult :4673-4680
+  deviation_from_documented: none in substance (one-step history, individual minus joint conditional entropies). The prose says 'difference between the joint entropy ... and the individual entropies' (order
+    reversed); the code returns individual minus joint, which is the non-negative orientation of Ay's definition.
+  deviation_from_canonical: 'none for Ay''s SI with one-step Markov kernels under a Gaussian model (probe var2_bivariate_T1024: 0.16167711 equals numpy 0.1616771067541367). Plug-in estimator, no bias correction;
+    for a VAR(2) process the one-step Markov assumption is misspecified (documented choice).'
+  units_and_range: nats; >= 0 in population (sample values from three separately estimated conditional entropies on the same samples are non-negative up to rounding, by the determinant inequality); symmetric;
+    scale invariant; raises on singular covariance
+  direction_convention: 'undirected: A[i,j] = A[j,i] = SI(x_i, x_j) (formula symmetric in x and y; upper triangle mirrored)'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'CANDIDATE (robustness): for exactly redundant channels the joint conditional covariance is singular and JIDT raises NonPositiveDefiniteMatrixException (probe shared_envelope rows 0/2), which Calculator
+    turns into an all-NaN si matrix (calculator.py:336-339 at HEAD a1f20c7).'
+  - 'CANDIDATE (interpretation): under the Gaussian model SI includes both lagged cross-coupling and contemporaneous innovation correlation (det Sigma_E term), so it is non-zero for two independent-dynamics
+    processes with correlated innovations; consistent with Ay''s definition but worth stating in the docs.'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: 'from-scratch numpy: SI = H(x1|x0) + H(y1|y0) - H(x1,y1 | x0,y0) with ddof=1 slogdet Gaussian entropies on t = 1..T-1'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: abs difference <= 1e-12 on every pair and T
+  - datasets:
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'analytic population SI from dataset truth: Sigma_X, Sigma_XY = A Sigma_X, Sigma_E; sigma^2(x_v(t+1)|x_v(t)) = Sigma_X[v,v] - Sigma_XY[v,v]^2/Sigma_X[v,v]; SI = 0.5*ln(prod_v sigma^2_v /
+      det Sigma_E)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: within 3 sampling SDs at T=4096, converging over T
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: analytic null SI = 0 for independent white processes
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: small positive values of order (number of extra parameters)/(2N); symmetric matrix exactly
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/it_gaussian.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:gaussian_si (H(x1|x0) + H(y1|y0) - H(xy1|xy0)); audit/checks/refs/it_gaussian.py:chk_si_truth (analytic
+    0.5 ln(prod_v var(x_v(t+1)|x_v(t)) / det Sigma_E), Monte Carlo SE); audit/checks/refs/it_gaussian.py:chk_truth_pair (white pairs: SI = contemporaneous MI); audit/checks/refs/it_gaussian.py:chk_null'
+  check_data: var2_bivariate T1024; gauss_ar1_pair T1024/T4096; delayed_noise T256; iid_gaussian T256/T1024; bivariate_gaussian pairs T4096; shared_envelope T256 (degenerate, under infotheory.est.gaussian)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12; statistical: |pyspi - Monte Carlo mean| <= 2 Monte Carlo SD; null: mean over 10 pairs within 2 Monte Carlo SD'
+  closeness: 'Numpy: 4/4 exact runs pass, max_abs <= 8.9e-16. gauss_ar1_pair T=4096: population 0.09992, |pyspi - population| 0.0021 (max_z 0.45). White pairs T=4096: SI equals the contemporaneous MI 0.04716
+    / 0.51083 within 0.0029 / 0.0118 (max_z 0.50 / 0.98). Null iid_gaussian T1024: mean 0.00132 vs analytic chi-square(3)/(2N) = 0.00147 (Monte Carlo 0.00145 +- 0.00038, z -0.35), minimum 1.8e-4.'
+  verdict: matches
+  score_0_10: 10
+  score_rubric: 10
+  score_rubric_basis: anchor
+  score_rubric_note: The numpy reference agrees on 4/4 exact runs, max_abs 8.9e-16. The supplement's reversed term order is a prose-order difference only.
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 10
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'None: Ay''s stochastic interaction with one-step Markov kernels under the Gaussian model, fp-exact (ddof cancels) and converging to the analytic value. The code returns individual minus
+    joint conditional entropies (the non-negative orientation); the supplement prose names the terms in the opposite order. new_finding is false: the duplicate-channel raise is one estimator-level mechanism
+    shared by je, ce, cce, di and si and is counted once, under infotheory.est.gaussian; the innovation-correlation candidate is confirmed as a property of Ay''s definition (a documentation note, not a
+    defect).'
+  new_finding: false
+  definition_under_review: false
+  check_cost: 'cheap (pyspi time_s in out/pyspi/index/it_gaussian.json, single runs of the review-stage forced re-run, made under machine load: slowest iid_gaussian|1024|pipeline|null (P = 5) 0.41 s; every other
+    run <= 0.16 s; 8 runs, 1.1 s in total)'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on all 4 numpy runs (lower triangle mirrored)'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = SI(x_i, x_j)'
+  candidate_resolutions:
+  - candidate: exactly redundant channels make the joint conditional covariance singular; JIDT raises and Calculator blanks the si matrix
+    outcome: confirmed
+    evidence: 'infotheory.est.gaussian|shared_envelope|256|pipeline|degenerate: si_gaussian_k-1 raises NonPositiveDefiniteMatrixException (raised_si = 1); Calculator turns a raising SPI into an all-NaN
+      table (calculator_je_all_nan = 1 for the same mechanism; pyspi/calculator.py:336-338); counted as a finding under infotheory.est.gaussian, not again on this unit'
+  - candidate: SI includes contemporaneous innovation correlation, so it is non-zero for independent dynamics with correlated innovations
+    outcome: confirmed
+    evidence: 'infotheory.si.gaussian|bivariate_gaussian|4096|pipeline|truth-p01/p23: for serially white pairs SI equals the contemporaneous MI (0.0472 / 0.5108). This follows Ay''s definition; it is a
+      documentation point, not a deviation. Not counted as a finding.'
+  checks_run:
+  - run_ids:
+    - infotheory.si.gaussian|var2_bivariate|1024|pipeline|numpy
+    - infotheory.si.gaussian|gauss_ar1_pair|1024|pipeline|numpy
+    - infotheory.si.gaussian|delayed_noise|256|pipeline|numpy
+    - infotheory.si.gaussian|iid_gaussian|256|pipeline|numpy
+    reference: audit/checks/refs/it_gaussian.py:chk_numpy (audit/checks/refs/_kernels_infotheory.py:gaussian_si)
+    outcome: 4/4 pass; max_abs <= 8.9e-16
+  - run_ids:
+    - infotheory.si.gaussian|gauss_ar1_pair|4096|pipeline|truth
+    - infotheory.si.gaussian|bivariate_gaussian|4096|pipeline|truth-p01
+    - infotheory.si.gaussian|bivariate_gaussian|4096|pipeline|truth-p23
+    reference: audit/checks/refs/it_gaussian.py:chk_si_truth / chk_truth_pair (analytic + Monte Carlo SE)
+    outcome: 3/3 pass; max_z <= 0.98
+  - run_ids:
+    - infotheory.si.gaussian|iid_gaussian|1024|pipeline|null
+    reference: audit/checks/refs/it_gaussian.py:chk_null
+    outcome: 1/1 pass; z -0.35
+  - run_ids:
+    - infotheory.est.gaussian|shared_envelope|256|pipeline|degenerate
+    reference: audit/checks/refs/it_gaussian.py:chk_degenerate (audit/checks/probes/it_gaussian_probes.py:degenerate_contract)
+    outcome: pass; si raises on the duplicate pair
+optimisation:
+  complexity_P_T: 'O(P^2 T): StochasticInteraction.bivariate (infotheory.py:524-534) makes three conditional entropies (6 JIDT entropy calls, 2-D conversions of T x 4/2/1 arrays) for every ordered pair;
+    Undirected computes both orders and mirrors. Measured fresh P exponent 2.12, T exponent 0.97. At 118x1024 the pair term is everything: 132 s measured fresh.'
+  hotspot_1: pyspi/statistics/infotheory.py:JIDTBase._compute_conditional_entropy (third-party:jpype 2-D conversion + jidt, self time) 99.7% cum / 99.4% self of the profiled SPI call at 8x1024 (168 calls)
+  hotspot_2: 'jpype/_jarray.py:JArray.__new__ (third-party:jpype) 0.3%. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self time
+    of the calling pyspi frame'
+  hotspot_owner: third-party:jpype
+  opaque_share: 0.0022
+  profile_file: audit/profiles/infotheory.si.gaussian__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_gaussian-2
+    opportunity: 'Closed-form numpy for the composite Gaussian SPIs, batched over pairs: si from one lag-1 covariance (three conditional entropies as log-det ratios), xme from the source-lag block with
+      and without the target sample, cce/di from one lagged covariance per term m = 1..5 (each term has its own sample window), and the gc auto MAX_CORR_AIS search from Gaussian AIS of every (k, tau) candidate
+      per channel; replaces 2-10 JIDT entropy calls per pair, each with a 2-D JArray conversion.'
+    opp_type: replace-library
+    expected_speedup: 50-300x
+    speedup_basis: 'profile:audit/profiles/infotheory.si.gaussian__8x1024.pstats pyspi/statistics/infotheory.py:180 _compute_conditional_entropy 99.7% + complexity: per pair the JIDT path costs ~1 ms per
+      2-D entropy call (component timings in audit/profiles/micro/opp_it_gaussian-1.json: a 1023x4 JArray(JDouble, 2) conversion 1.01 ms of a 1.05 ms 4-D JIDT entropy call; the entropy itself on a prebuilt
+      array 0.043 ms) while a batched slogdet of a <= 11x11 sub-matrix costs microseconds; the measured closed forms of it_gaussian-1 ran 271-643x faster than the same-run pyspi baseline at 32x1024
+      in the latest run (te_symbolic_k-10 224x; 399-454x and 174x in the first)'
+    output_risk: unverified-within-tolerance
+    risk_evidence: same Gaussian log-det quantities on the same samples with different float operations; the check stage's numpy closed forms reproduce pyspi to <= 8.9e-16 (4/4 numpy runs)
+    effort: M
+    depends_on: []
+  - opportunity_id: it_gaussian-4
+    opportunity: 'Cut JPype marshalling of the 2-D observations in the JIDT entropy paths (Gaussian and box-kernel estimators alike): pass them with jpype.JArray.of(ndarray) (one buffer copy) instead
+      of JArray(JDouble, 2)(ndarray) (row-by-row conversion, ~1 ms per call at T=1024 whatever the column count) in JIDTBase._compute_joint_entropy, JIDTBase._compute_conditional_entropy and
+      CrossmapEntropy.bivariate, and build the cce/di delay embeddings in numpy instead of MatrixUtils.makeDelayEmbeddingVector followed by np.concatenate over the returned Java double[][]
+      (CausalEntropy._compute_causal_entropy). Which of these calls a unit makes is named in its speedup_basis.'
+    opp_type: vectorise-batch
+    expected_speedup: ~3x
+    speedup_basis: profile:audit/profiles/infotheory.si.gaussian__8x1024.pstats pyspi/statistics/infotheory.py:180 _compute_conditional_entropy (self) 99.4%
+      + component timings in audit/profiles/micro/opp_it_gaussian-1.json, components block (1023x4 conversion 1.01 ms -> 0.17 ms with JArray.of, conversion_2d_by_shape;
+      4-D Gaussian entropy call including the conversion 1.05 ms -> 0.22 ms; written by the it_gaussian-1 script, and no it_gaussian-4 candidate was run on this unit, so this is not a microbench basis);
+      scope here = the 2-D conversions in JIDTBase._compute_conditional_entropy (three conditional entropies per ordered pair).
+      Subsumed_by it_gaussian-2 on this unit, whose closed-form numpy replaces every JIDT entropy call and with it every 2-D JArray conversion and Java delay embedding, so build_csv credits this
+      avenue no saving on top of it
+    output_risk: unverified-bit-identical
+    risk_evidence: 'the same doubles reach JIDT: the component check in audit/profiles/micro/opp_it_gaussian-1.json gives a bitwise-equal 4-D entropy with JArray.of; numpy delay embeddings are copies of
+      the same samples in the same column order'
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - it_gaussian-2

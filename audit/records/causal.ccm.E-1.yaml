@@ -1,0 +1,483 @@
+unit_id: causal.ccm.E-1
+status: profiled
+correctness:
+  metric_name_standard: Convergent cross mapping (CCM) cross-map skill rho(L) = corr(X_j, Xhat_j | M_{X_i}) summarised over
+    library sizes L (mean, max) and the directional skill difference (diff)
+  canonical_ref: 'Sugihara G, May R, Ye H, Hsieh C-h, Deyle E, Fogarty M, Munch S (2012) Detecting causality in complex ecosystems.
+    Science 338(6106):496-500, main text and Supplementary Materials (cross-map estimate, simplex weights, convergence criterion);
+    simplex projection: Sugihara G & May RM (1990) Nature 344:734-741; E selection by simplex forecast skill: Sugihara & May
+    1990 and Chang, Ushio & Hsieh (2017) Ecol Res 32:785-796.'
+  canonical_definition: Shadow manifold M_X = {x(t) = (X(t), X(t-tau), ..., X(t-(E-1)tau))}. For each t take the E+1 nearest
+    library neighbours x(t_1..t_{E+1}) of x(t) (t itself excluded), u_i = exp(-d(x(t),x(t_i))/d(x(t),x(t_1))), w_i = u_i/sum
+    u; cross-map estimate Yhat(t)|M_X = sum_i w_i Y(t_i); skill rho(L) = Pearson corr(Y, Yhat|M_X) for random libraries of
+    length L. Y causes X ("X <- Y") is inferred when rho(Y|M_X) increases with L and converges; the two directions are compared.
+    Convergence, not a summary of the curve, is the causal criterion.
+  documented_definition: 'supplement §1.3.5, p.8-9 (pack lines 381-413): "there is a causal influence from time series x →
+    y if the Takens time-delay embedding of y can be used to predict the observations of x"; E-None: "we infer the embedding
+    dimension to be the maximum of the two univariate delay embeddings that best predicted each time series"; "we use 21 uniformly
+    sampled library sizes between this minimum and maximum"; "summary statistics of the mean (modifier mean) and the maximum
+    (max) across the curves"; keywords list "unsigned". The supplement lists six ccm SPIs (no diff). GitBook spi-descriptions/causal-inference.md
+    (Convergent Cross-Mapping) repeats this text and adds "mean (mean), maximum (max) and difference (diff) across the curves"
+    without defining diff; it lists all nine identifiers.'
+  delegate_lib: 'pyEDM==1.15.2.0 (cppEDM 1.15.2, 2023-11-27, compiled in pyBindEDM): pyEDM.CCM(dataFrame, E=1, columns=proc_i,
+    target=proc_j, libSizes="lowerE upperE inc", sample=100, seed=42) with defaults Tp=0, knn=0 -> E+1, tau=-1, exclusionRadius=0,
+    random=True, replacement=False'
+  implemented_as: 'Default pipeline z-scores each process. E=1 for both directions: the "embedding" is the scalar x_i(t) (no
+    delay coordinates), knn = 2 (exactly E+1: CCM does not expand ties, see below), Tp = 0, no exclusion radius (self excluded).
+    For each unordered pair one pyEDM.CCM call; library sizes lowerE = 10 to upperE = floor((T-2)/10)*10 in steps floor((upperE-10)/21),
+    first 22 sizes kept; 100 random libraries per size without replacement (seed 42); per size the mean over libraries of
+    Pearson rho between x_j(t) and its 2-nearest-neighbour exponentially weighted estimate from x_i over all T rows. ccmf[i,j,:]
+    = rho(x_j | x_i)(L); mean / max / diff over the 22 sizes as for every ccm unit. With E=1 this is a nonparametric contemporaneous
+    regression skill of x_j on x_i, not a state-space (Takens) reconstruction. Neighbour ties: cppEDM tie detection runs only
+    when parameters.method == Method::Simplex (EDM_Neighbors.cc L282); CCM builds its Parameters with Method::CCM (API.cc
+    L659) and reuses them unchanged in colToTarget/targetToCol (CCM.cc L21-26) and in the per-sample local SimplexClass (CCM.cc
+    L342), so ties/anyTies stay false, the tie expansion in Simplex.cc L93-157 never runs, and exactly knn = E+1 neighbours
+    are used: the first E+1 entries of std::sort by distance only (DistanceCompare, Common.cc L10-13; EDM_Neighbors.cc L226),
+    whose order among equal distances is unspecified (std::sort is not stable). Exactly-zero distances still get weight 1
+    with all others at the 1e-6 floor (Simplex.cc L57-70). On logistic_maps the embedded process 1 (period-4 driver, 4 distinct
+    values) has a tie at the (E+1)-th neighbour distance at every prediction row (probe fable_dt3/fm2.py, T=256, full library:
+    256 of 256 rows at E=1, 247 of 247 at E=10), so the whole ccmf[1,0] curve on that dataset depends on which equal-distance
+    rows std::sort places first. Probe fable_recheck_cdt_ccm_gwtau/ccm_tie_probe.py (T=256, full library, random=False), proc1:proc0:
+    pyEDM.CCM 0.258036085716451 (E=1) and 0.412996812927705 (E=10) vs a tie-expanded reference 0.449407364219300 / 0.438997955936925
+    (which pyEDM.Simplex(lib=pred=all, Tp=0) reproduces to <= 1.7e-16) and a plain stable-argsort E+1 reference 0.016209343992146
+    / 0.408547833137669; the tie-free column proc0:proc1 matches both references to <= 3.3e-16.'
+  implementation_trace:
+  - pyspi/statistics/causal.py:68-78 ConvergentCrossMapping(Directed, Signed); identifier ccm_E-{E}_{statistic}; __init__(statistic="mean",
+    embedding_dimension=None)
+  - pyspi/statistics/causal.py:80-82 cache key = self._E (shared by mean/max/diff of one E on the same Data object)
+  - 'pyspi/statistics/causal.py:84-96 on cache miss: z = data.to_numpy(squeeze=True) (data.py:108-118), DataFrame with float
+    "index" time column + proc0..proc{M-1}'
+  - pyspi/data.py:193-195 default pipeline z-scores each process (zscore ddof=1); detrend default False (data.py:63, 184-191)
+  - 'pyspi/statistics/causal.py:112-113 fixed E: embedding = np.array([E] * M), so E = 1 for every pair and both directions'
+  - pyspi/statistics/causal.py:116-117 nlibs = 21; ccmf = zeros((M, M, 22)) (diagonal stays 0)
+  - pyspi/statistics/causal.py:118-125 loop over unordered pairs i<j; E = int(max(embedding[[i, j]])) (same E both directions);
+    except NameError branch is dead
+  - pyspi/statistics/causal.py:127-131 upperE = floor((N-E-1)/10)*10; lowerE = ceil(2E/10)*10; inc = int((upperE-lowerE)/21);
+    libSizes string "lowerE upperE inc"
+  - pyspi/statistics/causal.py:134-142 pyEDM.CCM(dataFrame=df, E=E, columns=proc_i, target=proc_j, libSizes=lib_sizes, sample=100,
+    seed=42); all other args default
+  - pyspi/statistics/causal.py:143-144 ccmf[i, j] = column 1 ("proc_i:proc_j") first 22 rows; ccmf[j, i] = column 2 ("proc_j:proc_i")
+    first 22 rows
+  - pyspi/statistics/causal.py:146-150 cache ccmf in data.ccm[E]
+  - pyspi/statistics/causal.py:152-163 mean = nanmean(ccmf, axis=2); max = nanmax(ccmf, axis=2); diff = nanmean(ccmf - ccmf^T,
+    axis=2)
+  - 'pyspi/calculator.py:327-339 Calculator.compute (HEAD a42ebc1; file unchanged since a1f20c7): multivariate call 329, np.fill_diagonal(S,
+    nan) 332, table store 335; any exception -> whole matrix NaN (except 336-339) with a warning (354-355)'
+  - pyspi/base.py:84-94 generic Directed.multivariate convention A[i,j] = bivariate(i, j) (e.g. TE i->j, statistics/infotheory.py:377-383);
+    ccm overrides multivariate
+  - '.venv/lib/python3.12/site-packages/pyEDM/CoreEDM.py:363-385 CCM signature defaults: Tp=0, knn=0, tau=-1, exclusionRadius=0,
+    random=True, replacement=False, embedded=False'
+  - .venv/lib/python3.12/site-packages/pyEDM/CoreEDM.py:389-426 GetDF (AuxFunc.py:137-166 -> PandasDataFrametoDF AuxFunc.py:176-228,
+    first column = time) then pyBindEDM.CCM(...)
+  - '.venv/lib/python3.12/site-packages/pyEDM/CoreEDM.py:428-454 returns LibMeans DataFrame: columns LibSize, "col:target",
+    "target:col"'
+  - pyBindEDM.cpython-312-x86_64-linux-gnu.so = cppEDM 1.15.2 (parameterList reports version "1.15.2 2023-11-27"); source
+    https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/API.cc#L635-L708 CCM(DataFrame): lib = pred = "1 N" (all rows),
+    Parameters(Method::CCM, ...), CCMClass.Project()'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/Parameter.cc#L198-L291 libSizes "start stop increment": sequence
+    if increment < stop; increment < 1 throws "CCM librarySizes increment ... is invalid"; N_lib = (stop-start)/increment
+    + 1'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/Parameter.cc#L297-L316 Simplex/CCM: knn < 1 -> knn = E+1'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/Parameter.cc#L643-L721 AdjustLibPred: drop the first |tau|(E-1)
+    rows (partial embedding vectors) from lib and pred'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/CCM.cc#L34-L51 Project: SetupParameters, PrepareEmbedding + Distances
+    for both mappings, CCM(), FormatOutput'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/CCM.cc#L426-L434 SetupParameters: targetToCol swaps columns and
+    target (reverse mapping)'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/CCM.cc#L139-L203 CrossMap: N_row = rows - (E-1); RNG std::default_random_engine(seed)
+    created per direction with the same seed (42)'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/CCM.cc#L213-L286 per libSize: 100 samples; lib rows drawn uniformly
+    without replacement (std::uniform_int_distribution + unordered_set rejection)'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/CCM.cc#L342-L380 per sample: subset allDistances to lib_i, FindNeighbors,
+    Simplex, ComputeError(Observations, Predictions) over ALL prediction rows'
+  - https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/CCM.cc#L403-L409 LibStats row = (libSize, mean rho over samples,
+    mean RMSE, mean MAE)
+  - https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/CCM.cc#L475-L491 FormatOutput names "LibSize col:target target:col";
+    col:target = colToTarget = embed columns, predict target
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/EDM_Neighbors.cc#L388-L448 Distances: Euclidean between delay
+    vectors (pred row == lib row left at DistanceMax)'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/EDM_Neighbors.cc#L74-L365 FindNeighbors: skip libRow == predictionRow
+    (L153-155), exclusionRadius only if nonzero (L173-178, here 0), sort (std::sort L226 with DistanceCompare, Common.cc L10-13:
+    distance only, order among equal distances unspecified), take the first knn; tie bookkeeping (L276-345) is gated on parameters.method
+    == Method::Simplex (L282) and is skipped for CCM (Method::CCM, API.cc L659)'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/Simplex.cc#L34-L167 weights exp(-d/d_min); minWeight 1e-6 (L44)
+    applied as a floor (L76-80); all-zero-distance special case (L57-70: weight 1 for zero distance, minWeight otherwise);
+    tie expansion (L93-157, entered only if anyTies) is never reached in CCM: tie detection (EDM_Neighbors.cc L282) runs only
+    for Method::Simplex, and CCM''s colToTarget/targetToCol (CCM.cc L21-26) and per-sample SimplexClass (CCM.cc L342) keep
+    Method::CCM, so exactly knn = E+1 neighbours are used; prediction = sum(w*target[nn+Tp])/sum(w), Tp = 0'
+  - 'https://github.com/SugiharaLab/cppEDM/blob/v1.15.2/src/Common.cc#L100-L219 ComputeError: NaN-trimmed slice, Pearson rho;
+    denom 0 or NaN -> rho = 0'
+  deviation_from_documented: '(1) 22 library sizes, not 21; truncated at T=64 (10..52 of 10..60). (2) diff undefined in the
+    supplement (GitBook names it only); code: mean - mean^T. (3) Keywords unsigned vs Signed class. (4) Orientation candidate:
+    A[i,j] is evidence for j -> i. (5) The documented description of CCM as using "the Takens time-delay embedding" does not
+    hold for E=1, where no delay coordinate is used.'
+  deviation_from_canonical: '(1) E=1 is not a delay embedding: Takens'' theorem needs E > 2d, so the cross map is a 2-nearest-neighbour
+    regression of x_j(t) on x_i(t); it responds to static (instantaneous) functional dependence without any dynamics (from-scratch
+    probe on iid x1 = x0^2 + noise: rho(x1|x0) = 0.972, rho(x0|x1) = -0.032). (2) Convergence criterion replaced by mean/max
+    of rho over L (documented). (3) diff is pyspi-specific. (4) Per-library cross-map algorithm otherwise matches Sugihara
+    2012 (E+1 neighbours, exp(-d/d_min) weights, Pearson rho) (Sugihara 2012 does not specify a tie rule; when the (E+1)-th
+    neighbour distance is tied, cppEDM CCM keeps the first E+1 entries of std::sort by distance with no tie expansion (the
+    expansion in Simplex.cc L93-157 is gated to Method::Simplex, EDM_Neighbors.cc L282), so the neighbours chosen among equal
+    distances depend on the implementation-defined sort order; this affects values only when neighbour distances tie, e.g.
+    the period-4 process of logistic_maps).'
+  units_and_range: 'Dimensionless Pearson correlations. mean and max in [-1, 1] (negative values occur; cppEDM returns rho
+    = 0, not NaN, when either vector has zero variance, Common.cc L205-207); diff in [-2, 2] and antisymmetric (diff = mean
+    - mean^T). Diagonal: 0 from a direct .multivariate call (ccmf initialised to zeros), NaN after Calculator.compute. Whole
+    matrix NaN when cppEDM throws (short series). Not symmetric for mean/max.'
+  direction_convention: 'A[i,j] = summary over L of rho(x_j | M_{x_i}): skill of predicting process j from the delay embedding
+    of process i (pyEDM column "proc_i:proc_j", causal.py:143). By Sugihara''s criterion a large A[i,j] is evidence that j
+    causes i (j -> i), the transpose of pyspi''s generic Directed orientation A[i,j] = i -> j (base.py:91-93; TE infotheory.py:377-383).
+    diff[i,j] = mean_L[rho(x_j|M_i) - rho(x_i|M_j)] > 0 means j -> i dominates. Probe (logistic_maps T=256, process 1 drives
+    process 0, E=2): A_mean[0,1] = 0.7415 > A_mean[1,0] = 0.3226, diff[0,1] = +0.4188. Confirmed in the check stage (the probe
+    quoted above ran on the old period-4 logistic_maps fixture): on logistic_maps_chaotic (x = process 0 drives y = process
+    1 only) ccm_E-1_diff gives diff[1,0] = +0.0360 (dir-diff, pass) and the swapped input (processes [1, 0]) gives diff[0,1]
+    = +0.0360 (dir-diff-swap, pass); ccm_E-10 at T=1024 gives mean A[1,0] = 0.5921 vs A[0,1] = -0.0512, diff[1,0] = +0.6432
+    (stats3-E10, T=1024); the delegate kernel at E=2 (full library) gives ''y xmap x'' = A[1,0] = 0.8824 vs A[0,1] = 0.2909.
+    So A[i,j] = rho(x_j | M_{x_i}) and a large A[i,j] is evidence that j -> i (row = target), the transpose of the glossary
+    convention (glossary-of-terms.md:25-27, rows = sources) and of TE/GC (base.pair_handling|var2_bivariate|1024|pipeline|calls-gc_gaussian:
+    row = source).'
+  symmetry_expected: asym
+  already_documented: 'no (family-level references: EEG_OPTIMIZATION_NOTES.md:169 and DEPENDENCY_MIGRATION.md:51 / DEPENDENCY_COMPATIBILITY_REVIEW.md:88-90
+    record that pyEDM 2.x changes CCM values; tests/README.md bug 2 concerns only E=None)'
+  new_finding_candidates:
+  - 'CANDIDATE orientation: pyspi stores ccmf[i,j] = pyEDM column "proc_i:proc_j" = rho(x_j | M_{x_i}) (causal.py:134-144;
+    cppEDM CCM.cc L475-491 names col:target for the colToTarget mapping, which embeds columns and predicts target). Under
+    the documented reading "x -> y if the embedding of y predicts x", A[i,j] large means j -> i, the opposite of pyspi''s
+    Directed convention A[i,j] = i -> j (base.py:91-93, TE infotheory.py:377-383). Evidence: probe on logistic_maps T=256
+    (process 1 drives process 0), E=1 mean [[0, 0.5484], [0.2913, 0]], E=2 mean [[0, 0.7415], [0.3226, 0]]; from-scratch probe:
+    "proc0:proc1" reproduced exactly by embedding x0 and predicting x1 (0.972222487974537 vs 0.9722224879745365).'
+  - 'CANDIDATE library schedule: the curve has 22 points, not the documented 21 (nlibs + 1, causal.py:116-117, 143), and at
+    short T it is truncated: cppEDM expands "lo up inc" to (up-lo)//inc + 1 sizes (Parameter.cc L271-279), pyspi keeps the
+    first 22. Probe: libSizes "20 50 1" (T=64, E=10) -> "LibSize rows 31 first22 last 41.0 last 50.0"; analytic: T=64 E=1
+    keeps 10..52 of 10..60, T=256 E=10 keeps 20..230 of 20..240. The maximum library used is below the documented upper bound.'
+  - 'CANDIDATE short-series failure: inc = int((upperE-lowerE)/21) is 0 when upperE-lowerE < 21 and cppEDM throws. Probe:
+    T=50 and T=55 with E=10 -> "RuntimeError Parameters::Validate(): CCM librarySizes increment 0 is invalid."; analytic threshold
+    T <= 60 for E=10 (and E=None) and T <= 41 for E=1. Calculator.compute turns this into an all-NaN matrix with a warning
+    (calculator.py:336-339, warning 354-355).'
+  - 'CANDIDATE no temporal exclusion: exclusionRadius=0 (CoreEDM.py:372 default, not overridden) so only the prediction row
+    itself is excluded (EDM_Neighbors.cc L153-155); temporally adjacent library vectors can be nearest neighbours, which may
+    inflate rho for autocorrelated or oversampled signals (e.g. EEG). tau is fixed at 1 sample. Hypothesis to quantify with
+    a from-scratch cross-map with a Theiler window.'
+  - 'CANDIDATE reproducibility: random libraries come from std::default_random_engine and std::uniform_int_distribution (CCM.cc
+    L203, L220), both implementation-defined in C++, so values with seed=42 may differ between builds/platforms (libstdc++
+    vs libc++); the same seed is used for both directions and every pair, so both directions share library subsets. A second
+    implementation-defined element: when the (E+1)-th neighbour distance is tied, CCM keeps the first E+1 rows of std::sort
+    (not stable; DistanceCompare compares distance only, Common.cc L10-13, EDM_Neighbors.cc L226) with no tie expansion (gated
+    to Method::Simplex, EDM_Neighbors.cc L282), so tied columns (e.g. logistic_maps proc1:proc0) may also differ between standard-library
+    implementations.'
+  - 'CANDIDATE diagonal: ccmf is created with np.zeros and only i != j are filled (causal.py:117-144), so a direct ConvergentCrossMapping.multivariate
+    call returns 0 on the diagonal (probe: "diag ccmf[0,0] all zero: True"); only Calculator.compute sets NaN (calculator.py:332).'
+  - 'CANDIDATE labels: supplement keywords and config.yaml:371-376 say "unsigned", the class is Signed (causal.py:68, 72);
+    the code label is the consistent one because rho and diff are negative in practice (probe diff [[0, 0.2571], [-0.2571,
+    0]]). Documentation-only inconsistency.'
+  - 'CANDIDATE static dependence read as causality: with E=1 the measure is a contemporaneous kNN regression skill, so a static
+    asymmetric function produces a large asymmetric "causal" score. Evidence: from-scratch probe reproducing pyEDM exactly
+    on iid x0 ~ U(-1,1), x1 = x0^2 + 0.05 noise, N=300: "proc0:proc1" = 0.9722, "proc1:proc0" = -0.0315, although the data
+    have no temporal structure.'
+  proposed_checks:
+  - datasets:
+    - logistic_maps
+    - nonlinear_dependence
+    - var2_bivariate
+    path: kernel
+    reference: 'from-scratch numpy simplex cross-map (Sugihara 2012 SOM: E+1 nearest neighbours by Euclidean distance on tau=1
+      delay vectors, self excluded, weights exp(-d/d_min) floored at 1e-6, Tp=0, Pearson rho over prediction rows E-1..N-1)
+      with the full deterministic library; compared with pyEDM.CCM(random=False, libSizes=str(N-E+1)) at E=1; T in {256, 1024}.
+      The reference must implement the zero-distance weight rule (Simplex.cc L57-70) and must not implement tie expansion
+      (gated to Method::Simplex, EDM_Neighbors.cc L282, so CCM never expands ties). Where the (E+1)-th neighbour distance
+      is tied, CCM keeps the first E+1 entries of an unstable std::sort, so no order-independent reference can reproduce those
+      columns; the exact comparison is restricted to tie-free columns'
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: 'max |rho_scratch - rho_pyEDM| < 1e-12 for every tie-free column: both columns of nonlinear_dependence
+      and var2_bivariate and logistic_maps proc0:proc1 (probe fable_dt3/fm2.py, T=256: |diff| <= 3.3e-16, 0 tied rows; the
+      earlier trace probe matched to ~1e-16 for E=1 and E=3 on a tie-free toy x1=x0^2 pair). logistic_maps proc1:proc0 (embedding
+      of the period-4 process 1, ties at every prediction row) is not expected to match any order-independent reference (probe
+      fable_recheck_cdt_ccm_gwtau/ccm_tie_probe.py at E=1: pyEDM.CCM 0.258036085716451 vs plain stable-argsort E+1 reference
+      0.016209343992146, diff 0.24, and vs tie-expanded reference 0.449407364219300, diff -0.19, although pyEDM.Simplex reproduces
+      the tie-expanded value to 1.7e-16). Report the tied column separately as irreproducible (it depends on std::sort order
+      among equal distances); the pass criterion applies to the tie-free columns only. Establishes that "col:target" = predict
+      target from the embedding of col'
+  - datasets:
+    - logistic_maps
+    - iid_gaussian
+    path: kernel
+    reference: 'same from-scratch cross-map with random libraries drawn with numpy (100 libraries per L, without replacement,
+      from rows E-1..N-1) on the pyspi library-size schedule; optional exact variant: re-implement libstdc++ std::minstd_rand0
+      + std::uniform_int_distribution with seed 42 to reproduce cppEDM library draws'
+    reference_kind: independent-impl
+    criterion: statistical
+    expected_outcome: for every L, |mean_rho_scratch(L) - LibMeans_pyEDM(L)| <= 4*sqrt(2)*SE(L) with SE from the per-library
+      spread; the optional RNG replica should match to 1e-12
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    path: pipeline
+    reference: numpy on pyspi's own cached curve data.ccm[E] plus analytic library schedule (lowerE = ceil(2E/10)*10, upperE
+      = floor((T-E-1)/10)*10, inc = floor((upperE-lowerE)/21), cppEDM sequence start..stop step inc, first 22 kept)
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'mean == nanmean(ccmf, 2), max == nanmax(ccmf, 2), diff == mean - mean^T (|diff| < 1e-15) and diff antisymmetric;
+      ccmf shape (M, M, 22); at T=64 the curve covers only the first 22 of the cppEDM sizes (E=1: 10..52 of 10..60; E=10:
+      20..41 of 20..50)'
+  - datasets:
+    - logistic_maps
+    - logistic_maps_bidir
+    - var2_bivariate
+    path: pipeline
+    reference: 'Sugihara 2012 criterion on a system with known coupling (logistic_maps: process 1 (y) drives process 0 (x));
+      pyspi direction convention established from TransferEntropy/Granger (A[i,j] = i->j, infotheory.py:377-383) on var2_bivariate
+      (0 -> 1)'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A_mean[0,1] > A_mean[1,0] and diff[0,1] > 0 on logistic_maps at T in {1024, 4096} (probe at T=256,
+      E=1: 0.5484 vs 0.2913; E=2: 0.7415 vs 0.3226), i.e. a large A[i,j] means j -> i, the transpose of pyspi''s TE/GC orientation.
+      Caveat: in logistic_maps the uncoupled driver y (r=3.5) is periodic; repeat on a check-generated chaotic-driver Sugihara
+      system before relying on it. Second caveat: on logistic_maps the A[1,0] curve (embedding of the period-4 process 1)
+      has a tie at the (E+1)-th neighbour distance at every prediction row and depends on std::sort order among equal distances
+      (CCM does not expand ties, EDM_Neighbors.cc L282), so no order-independent reference reproduces that column (probes
+      fable_dt3/fm2.py, fable_recheck_cdt_ccm_gwtau/ccm_tie_probe.py); this further favours the chaotic-driver dataset for
+      the direction check'
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic null: independent processes have no cross-map skill (rho -> 0)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: at T in {1024, 4096} all off-diagonal |A_mean| and |A_max| small (expected < 0.1, the bias of small-library
+      rho is the open part), diff off-diagonal centred on 0
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    path: kernel
+    reference: 'analytic invariance: kNN sets and exp(-d/d_min) weights are invariant to positive rescaling of the embedded
+      series; Pearson rho is invariant to affine maps of the target; so pyEDM.CCM on raw scaled_offset equals pyEDM.CCM on
+      the same-draw bivariate_gaussian'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: LibMeans equal within 1e-10 (positive scales only; a negative scale of the target flips sign of rho)
+  - datasets:
+    - nonlinear_dependence
+    path: pipeline
+    reference: 'analytic: process 1 = process 0^2 + noise with iid samples (no dynamics); x1 is a function of x0 but x0 is
+      not a function of x1'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: ccm_E-1_mean A[0,1] close to 1 and A[1,0] near 0 at T in {1024, 4096} (diff[0,1] strongly positive),
+      showing E=1 scores static functional dependence; by the code orientation this would be read as process 1 -> process
+      0
+  check_method: independent-impl
+  check_reference: audit/checks/refs/_kernels_distance.py:simplex_crossmap (own contiguous-library simplex projection, no
+    pyEDM) for the delegate kernel; audit/checks/refs/ccm.py:run_stat / run_curve / run_seeds (own random libraries on pyspi's
+    grid with XMap, the kernel arithmetic, validated against simplex_crossmap to 0.0); run_affine (analytic invariance); run_tied;
+    run_sched; run_short; run_diag; run_dir; run_static; run_agg (exact numpy re-aggregation nanmean / nanmax / nanmean(c
+    - c^T) of pyspi's own cached curve data.ccm[E])
+  check_data: logistic_maps_chaotic T64/T256 (kernel, pipeline), logistic_maps_sugihara T256 (kernel, pipeline, pipeline-detrend),
+    logistic_maps_bidir T256, var2_bivariate T256, nonlinear_dependence T256/T1024, iid_gaussian T64 (5 processes, aggregation)
+    / T256, logistic_maps T256 (tied fixture, kernel and pipeline), scaled_offset T256 (kernel)
+  agreement_criterion: 'exact (rtol 1e-10, atol 1e-12) for pyEDM.CCM(random=False, one libSize) vs the kernel and for the
+    schedule and the re-aggregation of the cached curve; tolerance 1e-10 for affine invariance; statistical |pyspi - bootstrap
+    mean| <= 2 se for mean/max/diff (seed 42) and for the 16-seed bias test; direction: sign of diff[effect, cause]; qualitative
+    (pre-declared rules) for curves, ties, short series, diagonal and static dependence'
+  closeness: 'Kernel: all 12 exact xmap runs pass, max_abs 1.65e-14 (sugihara E1 Lfull; e.g. chaotic E2 Lfull pyEDM A[1,0]
+    0.8824 / A[0,1] 0.2909), no tied rows; affine-E1 max_abs 6.7e-16. Wrapper (seed 42, pyspi''s grid 10..241 step 11 at T=256):
+    10 of 13 statistical runs within 2 se; the excursions are stat-mean on iid_gaussian (pyspi -0.0235 / -0.0306 vs -0.0245
+    / -0.0340, |z| 2.99), stat-mean on chaotic (0.1820 vs 0.1791, |z| 2.16) and stat-max on sugihara (0.3720 vs 0.3686, |z|
+    2.04). The bias test with 16 other seeds (1600 libraries per size) agrees: seeds-E1-S16 iid -0.02414 / -0.03339 vs -0.02417
+    / -0.03292 (|z| 0.08, 1.34), chaotic 0.17971 / 0.21851 vs 0.17944 / 0.21787 (|z| 0.70, 1.55), so no systematic bias; over
+    all 58 statistical cells of the family 4 exceed 2 se (z mean 0.10, sd 0.98 with ddof 1). Curves (curve-E1, 2 x 22 entries):
+    chaotic max|z| 2.29, chi2 p 0.53; sugihara max|z| 2.50, p 0.49. Static dependence: static-mean A[0,1] 0.9672, A[1,0] -0.0027
+    (pass). Aggregation (agg-E1, exact, analytic): on iid_gaussian T=64 (5 processes) and var2_bivariate T=256 the mean, max
+    and diff matrices equal nanmean / nanmax / nanmean(c - c^T) of pyspi''s own 22-entry cached curve to max_abs 0.0 (both
+    pass); max|diff - (mean - mean^T)| <= 5.6e-17.'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 6: the kernel agrees with an independent simplex cross-map to max_abs 1.65e-14. The curve has 22 library sizes, not the supplement''s 21,
+    and stops at 52 of 60 at T=64. Mean/max replace the convergence test, and rows are targets.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The cross-map kernel is the canonical Sugihara simplex cross-map (fp-exact against an independent implementation),
+    the random-library curve agrees with an independent reference within sampling error and the mean / max / diff aggregation
+    of the cached curve is exact. The output deviates from both the supplement and canonical CCM in interpretable ways (README
+    anchor 6): (1) mean / max of rho over the curve (canonical CCM tests convergence of rho(L); the supplement''s own variant),
+    and diff = mean - mean^T is a pyspi construct; (2) the curve has 22 library sizes, not the supplement''s ''21 uniformly
+    sampled library sizes between this minimum and maximum'' (1.3.5), and stops short of the maximum when cppEDM expands to
+    more than 22 sizes (T=64: 10..52 of 10..60); (3) A[i,j] is row = target (confirmed), the transpose of the documented directed-matrix
+    convention (glossary-of-terms.md:25-27, rows are sources) and of TE / gc_gaussian, so a matrix read as documented gives
+    the direction backwards (not in KNOWN_ISSUES). With E = 1 there is no delay embedding: the measure is a 2-nearest-neighbour
+    contemporaneous regression skill and scores static functional dependence (nonlinear_dependence 0.967 vs -0.003). Score
+    6 (was 7 before the check review) because of (2) and (3).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'moderate: about 3.4 s per pyspi run at T=256 (each identifier recomputes the 100-library curve); the 16-seed
+    bias probe took 56 s; no E=1 run at T=1024 through pyspi (the T=1024 nonlinear_dependence run is a single pyEDM call)'
+  symmetry_observed: 'asym for mean/max. mean: max|A - A.T| from 0.0071 (iid_gaussian T=256 stat-mean) to 0.9699 (nonlinear_dependence
+    static-mean); max: from 0.0009 (iid_gaussian T=256 stat-max) to 0.2801 (chaotic T=64 stats3-E1). diff exactly antisymmetric,
+    max|A + A.T| = 0.0 on every diff run (stat-diff, dir-diff, stats3, agg)'
+  direction_observed: 'A[i,j] = rho(x_j | M_{x_i}): large A[i,j] means j -> i (row = target). logistic_maps_chaotic (x ->
+    y) diff[1,0] = +0.0360 and with processes swapped diff[0,1] = +0.0360 (both pass); logistic_maps_sugihara diff[1,0] =
+    +0.2566 (pass); logistic_maps_bidir (y -> x stronger) diff[0,1] = -0.0997 (fail) and var2_bivariate (0 -> 1) diff[1,0]
+    = -0.0369 (fail): with E = 1 the direction reading is not reliable on these two datasets.'
+  candidate_resolutions:
+  - candidate: 'orientation: A[i,j] = rho(x_j | M_{x_i}), large A[i,j] = evidence for j -> i (row = target), opposite to pyspi''s
+      Directed / glossary convention (rows = sources)'
+    outcome: confirmed
+    evidence: causal.ccm.E-1|logistic_maps_chaotic|256|kernel|xmap-E2-Lfull (pyEDM column 'proc1:proc0' = A[1,0] = 0.8824
+      = kernel simplex_crossmap(x1 -> predict x0), exact 1.5e-14); causal.ccm.E-1|logistic_maps_chaotic|256|pipeline|dir-diff
+      and dir-diff-swap (diff[effect, cause] = +0.0360 in both input orders, pass); causal.ccm.E-10|logistic_maps_chaotic|1024|pipeline|stats3-E10
+      (A[1,0] 0.5921 vs A[0,1] -0.0512); glossary-of-terms.md:25-27 states rows = sources; TE row = source in base.pair_handling|var2_bivariate|1024|pipeline|calls-gc_gaussian.
+      Not in KNOWN_ISSUES.md
+  - candidate: 'library schedule: 22 library sizes (not the documented 21); truncated to the first 22 cppEDM sizes at short
+      T'
+    outcome: confirmed
+    evidence: 'sched-E1/E10/ENone runs at T = 64, 256, 1024 (exact, max_abs 0.0 vs the analytic schedule): libSizes strings
+      ''10 60 2'' (E=1, T=64: cppEDM 26 sizes, kept 10..52), ''20 50 1'' (E=10, T=64: 31 sizes, kept 20..41), ''20 240 10''
+      (E=10, T=256: 23 sizes, kept 20..230), ''10 250 11'' (E=1, T=256: 22 sizes, all kept), T=1024: 22 sizes, all kept (E=10:
+      20..1007 step 47; E=1: 10..1018 step 48). The count is always 22 because inc = floor((upperE-lowerE)/21) gives >= 22
+      sizes'
+  - candidate: 'short-series failure: inc = 0 makes cppEDM throw; Calculator stores an all-NaN matrix'
+    outcome: confirmed
+    evidence: 'short-E1-T41 and short-E10-T60 / short-ENone-T60 (qualitative, pass): RuntimeError ''increment 0 is invalid''
+      at T = 41 (E=1) and T = 60 (E=10, E=None); T = 42 / 61 compute with all off-diagonal entries finite. Calculator.compute
+      catches it (calculator.py:336-339) and warns (354-355). The comment at tests/unit/test_known_bugs.py:88 (''about 70
+      observations'') is approximate; the exact thresholds are T >= 42 (E=1) and T >= 61 (E=10/None)'
+  - candidate: 'no temporal exclusion (exclusionRadius = 0): temporally adjacent neighbours may inflate rho'
+    outcome: confirmed
+    evidence: 'causal.ccm.E-10|gauss_ar1_pair|256|kernel|xmap-E10-Lfull vs ...|xmap-E10-Lfull-X10 (both exact vs the reference,
+      max_abs <= 4.4e-16): full-library rho drops from 0.3634 / 0.4548 to 0.2339 / 0.3445 with a 10-row Theiler window (gap
+      0.129 / 0.110, 24-36 % of the skill); narrowband_f0-0.1: 0.99697 / 0.99726 vs 0.99702 / 0.99727 (gap < 1e-4, the sinusoid''s
+      neighbours come from other cycles). Behaviour of the method as configured (Sugihara 2012 also uses no Theiler window),
+      not a code defect'
+  - candidate: 'reproducibility: implementation-defined RNG and std::sort tie order'
+    outcome: inconclusive
+    evidence: 'cross-platform RNG: not testable here (one Linux build). Tie order: on the tied fixture logistic_maps the tied
+      column depends on the input''s rounding even within this build: pyEDM ''proc1:proc0'' at E=10 is 0.41454840 on the raw
+      series (causal.ccm.E-10|logistic_maps|256|kernel|tied-E10-Lfull) and 0.41299681 on the z-scored series (...|pipeline|tied-E10-Lfull),
+      while the order-independent stable-argsort reference gives 0.40854783 for both; the tie-free column agrees with the
+      reference to 1.3e-14 on both paths. CCM is therefore not affine-invariant on tied data. The libstdc++ introsort emulation
+      (scratchpad kernels/probe_ccm_stdsort.py) reproduces pyEDM''s tied column to <= 1.1e-13'
+  - candidate: 'diagonal: a direct multivariate call returns 0 on the diagonal; only Calculator sets NaN'
+    outcome: confirmed
+    evidence: 'diag-E1 / diag-E10 / diag-ENone (qualitative, pass): diagonal exactly 0.0, off-diagonal finite; Calculator.compute
+      fills NaN (calculator.py:332). Harmless inside the Calculator'
+  - candidate: 'labels: documented ''unsigned'' vs class Signed'
+    outcome: confirmed
+    evidence: 'negative values on the check data: iid_gaussian T=256 ccm_E-10_mean A[1,0] = -0.0426, ccm_E-1_mean -0.0235
+      / -0.0306 (stat-mean runs), ccm_E-1_diff on logistic_maps_chaotic diff[0,1] = -0.0360; the code label (signed) is the
+      consistent one; documentation-only inconsistency'
+  - candidate: static dependence read as causality (E = 1 is a contemporaneous kNN regression)
+    outcome: confirmed
+    evidence: 'causal.ccm.E-1|nonlinear_dependence|256|pipeline|static-mean (pass): A[0,1] = 0.9672, A[1,0] = -0.0027 on iid
+      samples x1 = x0^2 + noise; kernel full library T=256 0.9768 / -0.0073 and T=1024 0.9763 / -0.0219 (exact vs simplex_crossmap).
+      Method behaviour at E = 1, documented in the note; not a code defect'
+  checks_run:
+  - run_ids:
+    - causal.ccm.E-1|logistic_maps_chaotic|256|kernel|xmap-E1-Lfull
+    - causal.ccm.E-1|logistic_maps_chaotic|256|kernel|xmap-E1-L100
+    - causal.ccm.E-1|logistic_maps_chaotic|256|kernel|xmap-E2-Lfull
+    - causal.ccm.E-1|logistic_maps_chaotic|256|kernel|xmap-E2-L100
+    - causal.ccm.E-1|logistic_maps_sugihara|256|kernel|xmap-E1-Lfull
+    - causal.ccm.E-1|logistic_maps_sugihara|256|kernel|xmap-E1-L100
+    - causal.ccm.E-1|logistic_maps_sugihara|256|kernel|xmap-E2-Lfull
+    - causal.ccm.E-1|logistic_maps_sugihara|256|kernel|xmap-E2-L100
+    - causal.ccm.E-1|var2_bivariate|256|kernel|xmap-E1-Lfull
+    - causal.ccm.E-1|nonlinear_dependence|256|kernel|xmap-E1-Lfull
+    - causal.ccm.E-1|iid_gaussian|256|kernel|xmap-E1-Lfull
+    - causal.ccm.E-1|nonlinear_dependence|1024|kernel|xmap-E1-Lfull
+    reference: audit/checks/refs/_kernels_distance.py:simplex_crossmap via refs/ccm.py:run_xmap
+    outcome: 'pass: 12/12 exact, max_abs 1.65e-14, 0 tied rows'
+  - run_ids:
+    - causal.ccm.E-1|scaled_offset|256|kernel|affine-E1-Lfull
+    reference: audit/checks/refs/ccm.py:run_affine
+    outcome: 'pass: max_abs 6.7e-16'
+  - run_ids:
+    - causal.ccm.E-1|logistic_maps|256|kernel|tied-E1-Lfull
+    - causal.ccm.E-1|logistic_maps|256|pipeline|tied-E1-Lfull
+    reference: audit/checks/refs/ccm.py:run_tied
+    outcome: 'pass: tie-free column exact; tied column (256 tied rows) pyEDM 0.2580 vs stable reference 0.0162'
+  - run_ids:
+    - causal.ccm.E-1|logistic_maps_chaotic|256|pipeline|stat-mean
+    - causal.ccm.E-1|logistic_maps_chaotic|256|pipeline|stat-max
+    - causal.ccm.E-1|logistic_maps_chaotic|256|pipeline|stat-diff
+    - causal.ccm.E-1|logistic_maps_sugihara|256|pipeline|stat-mean
+    - causal.ccm.E-1|logistic_maps_sugihara|256|pipeline|stat-max
+    - causal.ccm.E-1|logistic_maps_sugihara|256|pipeline|stat-diff
+    - causal.ccm.E-1|iid_gaussian|256|pipeline|stat-mean
+    - causal.ccm.E-1|iid_gaussian|256|pipeline|stat-max
+    - causal.ccm.E-1|iid_gaussian|256|pipeline|stat-diff
+    - causal.ccm.E-1|logistic_maps_sugihara|256|pipeline-detrend|stat-mean
+    - causal.ccm.E-1|logistic_maps_chaotic|64|pipeline|stats3-E1
+    reference: audit/checks/refs/ccm.py:run_stat (500 draws, bootstrap)
+    outcome: fail on 3 of 11 runs at |z| 2.99, 2.16, 2.04 (single-seed excursions, see seeds); 8 pass
+  - run_ids:
+    - causal.ccm.E-1|iid_gaussian|256|pipeline|seeds-E1-S16
+    - causal.ccm.E-1|logistic_maps_chaotic|256|pipeline|seeds-E1-S16
+    reference: audit/checks/refs/ccm.py:run_seeds (2000 draws, analytic se)
+    outcome: 'pass: max |z| 1.55'
+  - run_ids:
+    - causal.ccm.E-1|logistic_maps_chaotic|256|pipeline|curve-E1
+    - causal.ccm.E-1|logistic_maps_sugihara|256|pipeline|curve-E1
+    reference: audit/checks/refs/ccm.py:run_curve
+    outcome: 'pass: max|z| 2.29 / 2.50, chi2 p 0.53 / 0.49'
+  - run_ids:
+    - causal.ccm.E-1|logistic_maps_chaotic|256|pipeline|dir-diff
+    - causal.ccm.E-1|logistic_maps_sugihara|256|pipeline|dir-diff
+    - causal.ccm.E-1|logistic_maps_bidir|256|pipeline|dir-diff
+    - causal.ccm.E-1|var2_bivariate|256|pipeline|dir-diff
+    - causal.ccm.E-1|logistic_maps_chaotic|256|pipeline|dir-diff-swap
+    reference: audit/checks/refs/ccm.py:run_dir (Sugihara criterion, CONVENTIONS.md D8)
+    outcome: 3 pass (chaotic both orders +0.0360, sugihara +0.2566), 2 fail (bidir -0.0997, var2 -0.0369)
+  - run_ids:
+    - causal.ccm.E-1|nonlinear_dependence|256|pipeline|static-mean
+    reference: audit/checks/refs/ccm.py:run_static
+    outcome: 'pass: 0.9672 / -0.0027'
+  - run_ids:
+    - causal.ccm.E-1|logistic_maps_chaotic|64|pipeline|sched-E1
+    - causal.ccm.E-1|logistic_maps_chaotic|256|pipeline|sched-E1
+    - causal.ccm.E-1|logistic_maps_chaotic|1024|pipeline|sched-E1
+    reference: audit/checks/refs/ccm.py:run_sched (analytic schedule, causal.py:127-131 + cppEDM Parameter.cc L198-291)
+    outcome: 'pass: exact (max_abs 0.0); 22 sizes kept, truncated at T=64'
+  - run_ids:
+    - causal.ccm.E-1|logistic_maps_chaotic|64|pipeline|short-E1-T41
+    - causal.ccm.E-1|logistic_maps_chaotic|64|pipeline|diag-E1
+    reference: audit/checks/refs/ccm.py:run_short, run_diag (analytic)
+    outcome: 'pass: cppEDM throws at T = 41, computes at T = 42; direct-call diagonal 0.0'
+  - run_ids:
+    - causal.ccm.E-1|iid_gaussian|64|pipeline|agg-E1
+    - causal.ccm.E-1|var2_bivariate|256|pipeline|agg-E1
+    reference: audit/checks/refs/ccm.py:run_agg (analytic, numpy on pyspi's cached curve; proposed check 3)
+    outcome: 'pass: exact, max_abs 0.0 for mean, max and diff; curve length 22'
+optimisation:
+  complexity_P_T: 'O(P^2 S L_n T L) ~ O(P^2 T^2): one pyEDM.CCM call per unordered pair (pyspi/statistics/causal.py:118-144), each cross-mapping both directions over S = 100 random libraries for each of L_n = 22 library sizes (L up to about T) with k-NN search over the library for about T prediction rows. Per-pair T exponent from 7x100 (golden data) to 8x256 (synthetic): 1.84; the check stage''s single E=10 pair took 85 s at T=1024 alone, which implies about 2.3 between T=256 and 1024, so the estimate is a lower bound. summary.json has no 118 projection (8x1024 skipped-budget): ESTIMATE 3.0e5 s per window at 118x1024 = per-ordered-pair 21.4 s at T=1024 x 13,806 ordered pairs (family-warm), estimate; pair term dominates.'
+  hotspot_1: ~:<built-in method pyBindEDM.CCM> (third-party:pyEDM, C++ cppEDM via pyEDM/CoreEDM.py:CCM) 99.7% of the profiled SPI call at 4x256 (6 calls, one per unordered pair)
+  hotspot_2: pandas/core/frame.py:__init__ (third-party:pandas, DataFrame round trips in pyEDM/AuxFunc.py:GetDF) 0.1% of the profiled SPI call at 4x256; nothing else outside the C++ call is visible
+  hotspot_owner: third-party:pyEDM
+  opaque_share: 0.997
+  profile_file: audit/profiles/micro/causal.ccm.E-1__4x256.pstats
+  opportunities:
+  - opportunity_id: ccm-1
+    opportunity: 'Run the unordered-pair loop of ConvergentCrossMapping._from_cache (pyspi/statistics/causal.py:118-144) in a process pool: one pyEDM.CCM call per pair, each independent and seeded, results written into ccmf by index.'
+    opp_type: parallel
+    speedup_kind: throughput
+    expected_speedup: 8-16x alone (at most ~2x inside a window worker)
+    speedup_basis: 'profile:audit/profiles/micro/causal.ccm.E-1__4x256.pstats pyBindEDM.CCM 99.7% (6 calls, one per unordered pair) + complexity: 6,903 independent calls per window at P=118; each call already runs its two cross-map directions in two threads (cppEDM CCM.cc:80-90, CCM_THREADED; measured CPU/wall 2.00 for one call at T=256, audit/profiles/micro/probe_ccm_threads.json), so at most about 16 concurrent calls on the 32 physical cores (Threadripper 3970X, 64 logical CPUs) -> <= 16x per-window latency; no core-hour saving, and window-level parallelism (xc-window-parallel) competes for the same cores; the two are alternatives for those cores, not factors that multiply, so xc-window-parallel is not in depends_on: with the ~8 memory-bounded window workers running, about 4 physical cores per worker remain, so inside a window worker this pool lowers the unit''s latency by at most about 2x (two two-thread calls at a time). No ranking basis on this row. profiles/summary.json has no 118x1024 projection for this unit (its fresh and family-warm reasons read ''no 118x1024 measurement and no ok 8x1024 + 32x1024 records to fit (no extrapolation from 8x1024 alone)''), so rank_basis_s and projected_patient_s_after stay blank. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README ''Optimisation columns'', rule 5).'
+    output_risk: unverified-bit-identical
+    risk_evidence: every pyEDM.CCM call passes seed=42 and reads only its two columns of the same DataFrame; no state carries between calls
+    effort: S
+    depends_on: []
+  - opportunity_id: ccm-3
+    opportunity: 'Reuse the cross-map neighbour sets across targets: with seed 42, the same library sizes and the same E, the random libraries and the k-NN sets and simplex weights of a CCM call depend only on the source column, so compute them once per source channel and apply them to every target (O(P) neighbour searches per window instead of O(P^2)); needs a re-implementation of cppEDM''s CCM outside pyEDM.'
+    opp_type: algorithmic
+    expected_speedup: 10-50x
+    speedup_basis: 'profile:audit/profiles/micro/causal.ccm.E-1__4x256.pstats pyBindEDM.CCM 99.7% + complexity: per call the k-NN search over each random library (O(S L_n T L), S=100 samples, L_n=22 sizes, library size L up to T) dominates; after reuse each target needs only the weighted gather and Pearson per row, O(S L_n T k); at P=118 each source is searched once instead of 117 times. No ranking basis on this row. profiles/summary.json has no 118x1024 projection for this unit (its fresh and family-warm reasons read ''no 118x1024 measurement and no ok 8x1024 + 32x1024 records to fit (no extrapolation from 8x1024 alone)''), so rank_basis_s and projected_patient_s_after stay blank. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README ''Optimisation columns'', rule 5).'
+    output_risk: unverified-rng-stream
+    risk_evidence: 'requires reproducing cppEDM''s random library draws outside cppEDM. The cppEDM source used by the check stage confirms the premise of the avenue: CrossMap seeds its own std::default_random_engine with seed=42 per direction (CCM.cc:114, 203) and draws row indices from uniform_int_distribution(RNGStart, RNGStop) (CCM.cc:175-176, 220) into an unordered_set until libSize are kept (CCM.cc:274-285), so the draws depend only on the seed, the number of library rows (N, E, tau) and the library size, not on the data values. They are implementation-defined (libstdc++ engine, distribution and unordered_set iteration order), so outside cppEDM they are reproduced only by emulating libstdc++; draws that differ change the curves within sampling error (the check stage matched an independent random-library implementation only within statistical tolerance)'
+    effort: L
+    depends_on: []

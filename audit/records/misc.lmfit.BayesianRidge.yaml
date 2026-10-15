@@ -1,0 +1,257 @@
+unit_id: misc.lmfit.BayesianRidge
+status: profiled
+correctness:
+  metric_name_standard: in-sample mean squared error of the posterior-mean fit of Bayesian ridge regression (evidence / type-II maximum-likelihood estimates of noise
+    precision alpha and weight precision lambda, Gamma(1e-6, 1e-6) hyperpriors) of y = x_j on x = x_i
+  canonical_ref: MacKay 1992, Neural Computation 4(3):415-447 ("Bayesian interpolation"), evidence fixed-point updates gamma = sum alpha e/(lambda + alpha e), lambda
+    = gamma/||w||^2, alpha = (N - gamma)/SSE (section 4); Tipping 2001, J. Mach. Learn. Res. 1:211-244 (Gamma hyperpriors, eqs. for the updates with a, b terms);
+    both cited in sklearn/linear_model/_bayes.py:154-160
+  canonical_definition: w = (X^T X + (lambda/alpha) I)^-1 X^T y with (alpha, lambda) at the fixed point of gamma = alpha*e/(lambda + alpha*e), lambda = (gamma + 2
+    l1)/(w^2 + 2 l2), alpha = (T - gamma + 2 a1)/(SSE + 2 a2), e = sum(xc^2); MSE = (1/T) sum (y - b - w x)^2
+  documented_definition: 'supplement §1.6.1, p.18 (supplement.txt lines 856-868; the briefing pack gives 874-887, which is off by 18 lines): "we use a number of linear
+    models and record the mean squared error (MSE) of a regression of y on x. The following models (with the default parameters) from scikit-learn [2] are included:
+    stochastic gradient descent regression with a squared loss (ordinary least squares fit) function (denoted by modifier SGDRegressor); Ridge regression, which uses l2-norm regularization
+    (Ride); the Elastic-Net model [76, 77], which uses both l1 and l2-norm regularization (ElasticNet); and the Bayesian Ridge regressor uses a gamma distribution
+    prior (with lambda1 = lambda2 = 1e-6) for the l2-norm regularizor in Ridge regression (BayesianRidge). This yields four SPIs: 215. lmfit_SGDRegressor 216. lmfit_Ridge
+    217. lmfit_ElasticNet 218. lmfit_BayesianRidge"; keywords "directed, linear, unsigned, bivariate, contemporaneous"; rationale "Linear regression is commonly used
+    for establishing independence through model fits (e.g., see additive noise models in Sec. 1.3.1)". GitBook spi-descriptions/miscellaneous.md "Linear Model Fit"
+    repeats the text verbatim (including the typo "Ride") and lists the same four identifiers.'
+  delegate_lib: scikit-learn==1.9.1 sklearn.linear_model.BayesianRidge().fit (no random_state parameter, so the else branch at misc.py:124 is taken) with scipy==1.17.1
+    linalg.svd; sklearn.metrics.mean_squared_error; numpy==2.5.4
+  implemented_as: 'A[i, j] = in-sample MSE of BayesianRidge(max_iter=300, tol=1e-3, alpha_1=alpha_2=lambda_1=lambda_2=1e-6, alpha_init=None -> 1/(var0(y)+eps), lambda_init=None
+    -> 1, fit_intercept=True) fitted to z_j on z_i. Iteration stops when |w_old - w| < 1e-3 (sum of absolute coefficient change), then coef_ is recomputed once at
+    the final (alpha, lambda). Effective ridge penalty lambda/alpha is data dependent (probe bivariate_gaussian_T256 pair (2,3): n_iter_ 3, alpha_ 3.07, lambda_ 1.49,
+    lambda/alpha 0.484 vs Ridge''s fixed 1). A from-scratch numpy implementation of the same recursion agrees to <= 2.2e-16 on six datasets x four T. For identical
+    series alpha -> very large and the MSE ~ 1e-19..1e-26 (probe shared_envelope).'
+  implementation_trace:
+  - 'pyspi/config.yaml:1264-1278 .statistics.misc LinearModel: labels directed/linear/unsigned/bivariate/contemporaneous; configs model: Ridge, Lasso, SGDRegressor,
+    ElasticNet, BayesianRidge (Lasso is the fifth, undocumented config)'
+  - 'pyspi/calculator.py:230-267 Calculator._load_yaml (HEAD a1f20c7): for params in configs (252): spi = getattr(module, fcn)(**params) (256), i.e. LinearModel(model=...);
+    self._spis[spi.identifier] = spi (257); the class attribute labels (misc.py:109) are what the calculator reports'
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend(axis=1) only if detrend=True (default False) (187), then scipy.stats.zscore(axis=1, nan_policy="omit",
+    ddof=1) if normalise=True (default) (195); stored as (M, T, 1)'
+  - 'pyspi/calculator.py:329-339 Calculator.compute (HEAD a1f20c7): S = self._spis[spi].multivariate(self.dataset) (329); np.fill_diagonal(S, np.nan) (332); any exception
+    -> self._table[spi] = np.nan (336-337), so one failing pair makes the whole matrix NaN'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for j (outer), for i != j (inner): A[i, j] = self.bivariate(data, i=i, j=j); no mirroring'
+  - 'pyspi/base.py:27-49 parse_bivariate: Data passed through unchanged (two raw arrays would be wrapped into a new z-scored Data with i, j = 0, 1)'
+  - 'pyspi/data.py:108-118 Data.to_numpy(): returns the (M, T, 1) array, so z[i] is a (T, 1) design matrix with one feature'
+  - pyspi/statistics/misc.py:106-109 class LinearModel(Directed, Unsigned); labels ["misc", "unsigned", "unordered", "normal", "linear", "directed"]
+  - 'pyspi/statistics/misc.py:111-113 __init__: identifier "lmfit_<model>", self._model = getattr(sklearn.linear_model, model)'
+  - 'pyspi/statistics/misc.py:117-124 bivariate: z = data.to_numpy(); warnings suppressed; if "random_state" in inspect.signature(model).parameters: model(random_state=42).fit(z[i],
+    ravel(z[j])) else model().fit(z[i], ravel(z[j])) -> predictor = process i, target = process j'
+  - pyspi/statistics/misc.py:125-126 y_predict = mdl.predict(z[i]); return mean_squared_error(y_predict, ravel(z[j])) -> in-sample (training) MSE on the same T samples
+    used for fitting (argument order swapped, harmless because MSE is symmetric)
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_bayes.py:26 class BayesianRidge; signature has no random_state (probe "BayesianRidge False"), defaults
+    max_iter=300, tol=1e-3, alpha_1=alpha_2=lambda_1=lambda_2=1e-6
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_bayes.py:217-265 fit: y_var computed before centring; _preprocess_data(fit_intercept=True, rescale_with_sw=True)
+    (257-265)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:188-199 _preprocess_data(fit_intercept=True): X -= mean(X), y -= mean(y) (both already ~1e-17
+    after z-scoring)'
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_bayes.py:270-282 initialisation alpha_ = 1/(y_var + eps), lambda_ = 1
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_bayes.py:293-305 XT_y = X^T y; linalg.svd(X); eigen_vals_ = S^2
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_bayes.py:309-341 evidence loop: _update_coef_ (312-314); gamma_, lambda_, alpha_ MacKay/Tipping updates
+    (330-332); stop when iter_ != 0 and sum|coef_old_ - coef_| < tol (335)'
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_bayes.py:343-349 final coef_ recomputed with the last (alpha_, lambda_)
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_bayes.py:405-425 _update_coef_: coef_ = Vh^T diag(1/(e + lambda/alpha)) Vh X^T y (n_samples > n_features
+    branch); sse_ = sum((y - X coef_)^2)'
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_bayes.py:370 _set_intercept
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_bayes.py:374-403 BayesianRidge.predict -> self._decision_function (396; _base.py:291-299): X @ coef_ + intercept_'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:318-334 _set_intercept: intercept_ = y_offset - X_offset @ coef_ (unpenalised intercept)'
+  - '.venv/lib/python3.12/site-packages/sklearn/metrics/_regression.py:524-600 mean_squared_error: _average((y_true - y_pred) ** 2, axis=0) (586-588), divisor T'
+  deviation_from_documented: '(a) The documentation mentions only the weight-precision hyperprior "(with lambda1 = lambda2 = 1e-6)"; the noise-precision prior alpha_1
+    = alpha_2 = 1e-6 and the evidence (type-II ML) estimation of both precisions are not described, so readers cannot tell that the effective penalty is data dependent
+    (lambda/alpha ~ 0.48 in the probe, versus Ridge''s fixed 1). (b) "directed": symmetric on z-scored data. (c) In-sample MSE and "lower = stronger" not stated.'
+  deviation_from_canonical: 'none for the estimator: sklearn implements the MacKay 1992 fixed-point updates with Tipping 2001 Gamma hyperpriors (shape/rate 1e-6)
+    on centred data with an unpenalised intercept. The stopping rule (sum|delta w| < 1e-3) is loose, so the returned (alpha, lambda) are a near fixed point; check
+    stage: the MSE differs from the MSE at the evidence maximiser by up to 8.5e-4 at T=64 and 1.0e-5 at T=4096 (misc.lmfit.BayesianRidge|*|pipeline|evidence), and
+    the stop makes the SPI non-monotone in |r| by up to 1.4e-5. The SPI (in-sample MSE of the posterior mean) is a pyspi construction; on z-scored data it is a function
+    of (r, T) only.'
+  units_and_range: 'units of the target variance; on z-scored data in (0, (T-1)/T]: about 1e-19..1e-26 for identical series (probe shared_envelope), close to the
+    OLS value (T-1)/T (1 - r^2) for strong dependence and approaching (T-1)/T for r ~ 0 (lambda grows as w -> 0); symmetric (<= 7.8e-16) under default preprocessing;
+    asymmetric with normalise=False; unsigned, >= 0.'
+  direction_convention: 'A[i, j] = in-sample MSE of the linear prediction of process j (target, column) from process i (predictor, row), per misc.py:122-126; LOWER
+    = j better linearly predicted from i. Code-derived; with the default z-scoring the matrix is symmetric (see units_and_range), so the direction is only empirically
+    identifiable with normalise=False, where column j scales with var(x_j) (probe on scaled_offset_T1024: column means of A track std_j^2 = 0.0395, 4.058, 24.78,
+    97.89).'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (direction label is nominal under default preprocessing): after ddof=1 z-scoring every process has sum x^2 = T-1 and mean ~0, so the fit and its in-sample
+    MSE are functions of (r_ij, T) only and A is symmetric; probe max |A - A.T| = 7.8e-16 across 24 dataset/T combinations although the class is Directed (misc.py:106)
+    and labelled "directed". Asymmetry appears only with normalise=False, where A[i, j] is in units of var(x_j).'
+  - 'Candidate (near-redundant with r^2): because the fit depends only on (sum x^2, sum xy, sum y^2) = (T-1, r(T-1), T-1) after z-scoring, lmfit_BayesianRidge is
+    a deterministic function of (r, T); probe1.py shows it within the band between the Ridge and OLS values (e.g. bivariate_gaussian_T256 range [0.3245, 0.9961] vs
+    Ridge [0.3245, 0.9958]); monotonicity in |r| is a hypothesis to test.'
+  - 'Candidate (partial documentation of the prior): supplement mentions lambda1 = lambda2 = 1e-6 but not alpha_1 = alpha_2 = 1e-6 or the evidence maximisation; the
+    effective penalty lambda_/alpha_ = 0.484 on bivariate_gaussian_T256 pair (2,3) (probe2.py "BR 3 [0.8196] 3.0697 1.4860 0.4841").'
+  - 'Candidate (documented rationale vs quantity): the supplement motivates lmfit by independence testing "through model fits (e.g., see additive noise models)",
+    but the SPI is the raw in-sample MSE of a contemporaneous linear fit, which measures linear predictability (a transform of r^2 for the closed-form models), not
+    residual independence; no residual-independence test is computed (misc.py:125-126).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - nonlinear_dependence
+    - anm
+    - shared_envelope
+    path: kernel
+    reference: 'from-scratch numpy MacKay/Tipping recursion for one centred predictor: alpha0 = 1/(var0(y)+eps), lambda0 = 1; loop w = sxy/(sxx + lambda/alpha), gamma
+      = alpha sxx/(lambda + alpha sxx), lambda = (gamma + 2e-6)/(w^2 + 2e-6), alpha = (T - gamma + 2e-6)/(SSE + 2e-6), stop on |dw| < 1e-3 after the first iteration,
+      final w recomputed; MSE in-sample (no sklearn import; same algorithm, independent code)'
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: 'max |A - ref| <= 1e-12 (probe: <= 2.2e-16); identical-series entries compared in absolute terms (<= 1e-15)'
+  - datasets:
+    - bivariate_gaussian
+    - gauss_ar1_pair
+    - sparse_precision
+    path: kernel
+    reference: numpy grid/optimiser maximisation of the closed-form log evidence over (log alpha, log lambda) with the Gamma(1e-6, 1e-6) hyperpriors (Tipping 2001),
+      then MSE of the resulting posterior mean
+    reference_kind: independent-impl
+    criterion: optimality
+    expected_outcome: pyspi MSE within 1e-4 absolute of the MSE at the true evidence maximiser (tol = 1e-3 stopping is loose); quantifies the effect of early stopping
+  - datasets:
+    - trending
+    - cointegrated
+    path: pipeline-detrend
+    reference: same from-scratch recursion on detrend + zscore(ddof=1) data
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: max |A - ref| <= 1e-12
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - anm
+    - nonlinear_dependence
+    - cointegrated
+    - trending
+    path: pipeline
+    reference: 'analytic: A[i, j] depends only on (r_ij, T) after z-scoring, so A must equal A.T; compute max |A - A.T| off the diagonal'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'max |A - A.T| <= 1e-12 at every T (probe: <= 7.8e-16 on iid_gaussian, bivariate_gaussian, delayed_noise, nonlinear_dependence, anm, scaled_offset);
+      confirms that the "directed" label carries no directional information under default preprocessing'
+  - datasets:
+    - scaled_offset
+    - var2_bivariate
+    - anm
+    path: kernel
+    reference: 'analytic direction test: run LinearModel.multivariate on Data(x, normalise=False); compare A[i, j] with var0(x_j) * (1 - r_ij^2) (target-variance
+      scaling) and with var0(x_i) * (1 - r_ij^2) (predictor-variance scaling), numpy only'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A[i, j] tracks var0(x_j) (column = target) and not var0(x_i); establishes the empirical convention A[i, j] = MSE of predicting j from i. '
+  check_method: independent-impl
+  check_reference: 'refs/_kernels_basic_misc.py:bayesian_ridge_mse (MacKay 1992 / Tipping 2001 recursion, own numpy code, no sklearn import) via refs/lmfit.py:h_exact
+    and h_params; refs/lmfit.py:br_evidence_mse (direct maximisation of the log evidence with Gamma(1e-6) hyperpriors: grid + Nelder-Mead, scipy==1.18.1); refs/lmfit.py:h_grid,
+    h_direction'
+  check_data: 'pipeline: all 21 datasets x T in {64, 256, 1024, 4096} (recursion); pipeline-detrend: iid_gaussian, bivariate_gaussian, trending, cointegrated x {64,
+    1024, 4096}; kernel/raw: iid_gaussian, bivariate_gaussian, delayed_noise, nonlinear_dependence, anm, shared_envelope, scaled_offset, var2_bivariate, contaminated
+    x {64, 1024, 4096}; evidence: bivariate_gaussian, gauss_ar1_pair, sparse_precision, iid_gaussian, anm x {64, 256, 1024, 4096}; probes: probes/lmfit_params.py:br_params
+    (5 runs), probes/lmfit_grid.py:br_grid (2001-point r grid, T=256 and 1024); direction (raw) T=1024'
+  agreement_criterion: 'exact (rtol 1e-10, atol 1e-12; identical-pair entries of order 1e-19..1e-26 are therefore compared in absolute terms); params exact on (n_iter_,
+    alpha_, lambda_) with rtol 1e-8; optimality: |pyspi - MSE at the evidence maximiser| <= 1e-4; grid monotonicity recorded'
+  closeness: 'recursion 96/96 pass, max_abs 2.2e-16; scratch (raw) 27/27 pass, max_abs 1.4e-14 (scaled_offset|64); params 5/5 pass (max_abs_n_iter 0, n_iter_ 2-8,
+    alpha_/lambda_ max_rel 1.7e-15); evidence 15/20 pass at 1e-4: max |pyspi - evidence-optimum MSE| 8.5e-4 (T=64), 3.1e-4 (256), 6.3e-5 (1024), 1.0e-5 (4096), pyspi
+    usually below the optimum (signed_min -8.5e-4, iid_gaussian|64), evidence optimum = converged fixed point to <= 2.1e-9; grid 2/2 exact (2.2e-16) but not monotone
+    in r: 6 increases at T=256 (max 1.39e-5), 2 at T=1024 (max 5.1e-6), each at a change of n_iter; direction 4/4 pass'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor-9 variance clause: sklearn''s stopping rule leaves the MSE up to 8.5e-4 (T=64) and 1.0e-5 (T=4096) from the MSE at the evidence maximiser,
+    far below the null sampling spread of about sqrt(2)/T. The recursion is reproduced to 2.2e-16 (96/96).'
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Estimator: sklearn''s evidence recursion is reproduced to floating point, including the iteration count. The stopping rule (sum|delta w| < 1e-3)
+    leaves (alpha, lambda) short of the evidence maximiser, so the MSE differs from the MSE at the maximiser by up to 8.5e-4 at T=64 and 1.0e-5 at T=4096. That is
+    far below the sampling spread of the null MSE (about sqrt(2)/T), so it is a sklearn-default convention rather than a different quantity. The same stop makes the
+    SPI slightly non-monotone in |r| (by up to 1.4e-5). The documentation mentions only lambda_1 = lambda_2 = 1e-6 and not the alpha hyperprior or the evidence estimation;
+    the matrix is symmetric under the default preprocessing.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.02 s per pyspi run (grid probes about 5 s each); reference evidence maximisation about 0.02 s per pair'
+  symmetry_observed: 'sym on the default (z-scored) path: max|A - A.T| <= 7.8e-16 over the 84 pipeline runs (iid_gaussian|64|pipeline|recursion) and <= 5.0e-15 on
+    pipeline-detrend (trending|4096|pipeline-detrend|recursion); asym on raw (kernel) data, where A[i, j] is in units of var0(x_j) (max|A - A.T| 97.9 on scaled_offset|1024|kernel|scratch)'
+  direction_observed: 'A[i, j] = in-sample MSE of predicting process j (target, column) from process i (predictor, row); lower = more linearly predictable. Raw-scale
+    direction runs (misc.lmfit.BayesianRidge|{scaled_offset,var2_bivariate,anm,cointegrated}|1024|kernel|direction, 4/4 pass): pyspi equals the from-scratch f(x_i
+    -> x_j) to max_rel <= 2.1e-16 and differs from f(x_j -> x_i) by max_rel 0.0375 (var2_bivariate) to 2479 (scaled_offset). On the default z-scored path the matrix
+    is symmetric, so on the direction datasets (delayed_noise, var2_bivariate, logistic_maps_chaotic, anm) A[i, j] = A[j, i] to <= 7.8e-16 and the value carries no
+    causal direction.'
+  candidate_resolutions:
+  - candidate: Direction label nominal under default preprocessing (A symmetric although the class is Directed)
+    outcome: confirmed
+    evidence: misc.lmfit.BayesianRidge|*|*|pipeline|recursion asym_max <= 7.8e-16 (84 runs); pipeline-detrend <= 5.0e-15
+  - candidate: 'Near-redundant with r^2: a deterministic function of (r, T) (monotonicity untested)'
+    outcome: confirmed
+    evidence: 'recursion 96/96 exact from (sxx, sxy, syy) only; grid runs misc.lmfit.BayesianRidge|iid_gaussian|{256,1024}|pipeline|grid exact to 2.2e-16. Strict
+      monotonicity in |r| is refuted: n_increases 6 (max_increase 1.39e-5) at T=256 and 2 (5.1e-6) at T=1024, all at n_iter changes, so the SPI is rank-equivalent
+      to r^2 except at those switch points'
+  - candidate: Partial documentation of the prior (alpha_1 = alpha_2 = 1e-6 and evidence estimation not described; data-dependent effective penalty)
+    outcome: confirmed
+    evidence: 'params runs misc.lmfit.BayesianRidge|*|pipeline|params: fitted alpha_, lambda_ vary per pair and match the recursion (max_rel 1.7e-15); supplement.txt:861-863
+      mentions only lambda1 = lambda2 = 1e-6'
+  - candidate: Documented rationale (independence via model fits / ANM) vs quantity (in-sample MSE of a contemporaneous linear fit)
+    outcome: confirmed
+    evidence: 'recursion runs: value is a function of (r, T) only; misc.py:125-126 returns mean_squared_error only'
+  checks_run:
+  - run_ids:
+    - misc.lmfit.BayesianRidge|*|*|pipeline|recursion
+    - misc.lmfit.BayesianRidge|*|*|pipeline-detrend|recursion
+    reference: refs/_kernels_basic_misc.py:bayesian_ridge_mse via refs/lmfit.py:h_exact
+    outcome: pass 96/96, max_abs 2.2e-16
+  - run_ids:
+    - misc.lmfit.BayesianRidge|*|*|kernel|scratch
+    reference: refs/_kernels_basic_misc.py:bayesian_ridge_mse on raw data
+    outcome: pass 27/27, max_abs 1.4e-14
+  - run_ids:
+    - misc.lmfit.BayesianRidge|*|*|pipeline|params
+    reference: refs/lmfit.py:h_params (probes/lmfit_params.py:br_params)
+    outcome: pass 5/5, identical n_iter_
+  - run_ids:
+    - misc.lmfit.BayesianRidge|*|*|pipeline|evidence
+    reference: refs/lmfit.py:br_evidence_mse
+    outcome: pass 15/20; fails at T=64 (2) and T=256 (3), max 8.5e-4
+  - run_ids:
+    - misc.lmfit.BayesianRidge|iid_gaussian|256|pipeline|grid
+    - misc.lmfit.BayesianRidge|iid_gaussian|1024|pipeline|grid
+    reference: refs/lmfit.py:h_grid (probes/lmfit_grid.py:br_grid)
+    outcome: pass 2/2 exact; not monotone (max increase 1.39e-5)
+  - run_ids:
+    - misc.lmfit.BayesianRidge|*|1024|kernel|direction
+    reference: refs/lmfit.py:h_direction
+    outcome: pass 4/4
+optimisation:
+  complexity_P_T: 'O(P^2 T) for the arithmetic, but a T-independent per-call overhead dominates: one sklearn BayesianRidge fit + predict + mean_squared_error per ordered pair (pyspi/statistics/misc.py:115-126, inspect.signature per pair at line 120). Measured P_exponent 2.06, T_exponent 0.01. Pair term dominates; measured 12.0 s per window at 118x1024 (family-warm, measured).'
+  hotspot_1: sklearn/utils/validation.py:check_array (third-party:sklearn) 39.4% of the profiled SPI call at 8x1024 (input validation incl. narwhals dataframe detection and finite checks); the evidence iterations _update_coef_ are 5.2% inside _bayes.py:fit 48.1%
+  hotspot_2: 'sklearn/metrics/_regression.py:mean_squared_error (third-party:sklearn) 18.7% of the profiled SPI call at 8x1024; inspect.signature (Python stdlib) 11.2% in all, of which 5.8% is called per pair from pyspi/statistics/misc.py:bivariate (line 120), 3.5% sits inside sklearn base._validate_params (get_params -> _get_param_names) and 1.9% inside the validate_params wrapper of mean_squared_error'
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.199
+  profile_file: audit/profiles/misc.lmfit.BayesianRidge__8x1024.pstats
+  opportunities:
+  - opportunity_id: lmfit-3
+    opportunity: BayesianRidge with one regressor as a vectorised evidence recursion over all ordered pairs (alpha/lambda updates on arrays from the Gram-matrix moments, per-pair stopping mask with sklearn's sum|delta w| < 1e-3 rule and the final coefficient recomputation).
+    opp_type: vectorise-batch
+    expected_speedup: 300-1000x
+    speedup_basis: 'profile:audit/profiles/misc.lmfit.BayesianRidge__8x1024.pstats base.py:multivariate 99.958% (the ordered-pair loop, replaced as a whole; misc.py:bivariate 99.74%: _bayes.py:fit 48.1% of which _update_coef_ 5.2%, check_array 39.4%, mean_squared_error 18.7%, inspect.signature 11.2%) -> Amdahl bound 2,390x at 8x1024; the remainder is a fixed cost (summary.json family-warm pairs fit t_fixed 1.27 ms of 12.0 s at 118x1024), so the bound at 118x1024 is about 9e3x + complexity: O(P^2 T) moments once (as lmfit-1, 3.5-3.8 ms at 118x1024 in audit/profiles/micro/opp_lmfit-1.json), then O(P^2 n_iter) masked array updates (sklearn n_iter_ mean 3.96, median 4, max 6 over the 13,806 ordered pairs of the synthetic 118x1024 window in a Workflow 4c throwaway probe, scratchpad/wf4c_b2_lmfit_rank_corr/br_niter.py run as br_niter.py 118x1024, which prints the distribution and saves no output file; 262 _update_coef_ calls for 56 pairs in the 8x1024 profile; so a masked loop runs at most 6 array passes), estimated 12-40 ms per window -> 300-1000x'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'check stage: a from-scratch numpy implementation of the same recursion agrees with sklearn to <= 2.2e-16 including n_iter_; batching changes the float order of the moment sums, and through the discrete stopping rule (sum|delta w| < 1e-3) a pair whose convergence test sits within float noise of the tolerance could stop one iteration earlier or later than sklearn, moving its coefficient by up to about 1e-3 and the MSE by a similar order (the same kind of edge effect as the lmfit-2 exit band); the expansion Syy - 2wSxy + w^2Sxx in place of the residual sum loses relative precision when |r| is near 1 (lmfit-1, which uses it, matches the baseline to 9e-16)'
+    effort: M
+    depends_on: []
+  - opportunity_id: lmfit-4
+    opportunity: 'Strip per-call overhead around the unchanged sklearn fit: hoist inspect.signature(self._model) to __init__ (misc.py:120 runs it per pair), run fit/predict under sklearn.config_context(skip_parameter_validation=True, assume_finite=True), and compute the in-sample MSE with numpy instead of sklearn.metrics.mean_squared_error.'
+    opp_type: replace-library
+    expected_speedup: ~1.8x
+    speedup_basis: 'profile:audit/profiles/misc.lmfit.BayesianRidge__8x1024.pstats inspect.signature 11.2% (5.8% called from misc.py:120, the part the hoist removes; the other 5.4% sits inside _validate_params and the mean_squared_error validation wrapper, so it is already in those shares), mean_squared_error 18.7%, sklearn base._validate_params 9.9% (containing validate_parameter_constraints 6.7%), _assert_all_finite 8.9% (overlapping cProfile shares, inflated by profiling) + complexity: per-call constant overhead, T-independent (T_exponent 0.01); an unprofiled throwaway check at 8x1024 (56 ordered pairs, same arrays, OMP_NUM_THREADS=1) gave 1.76x per pair with max_abs_diff 0.0 (not saved as a micro-benchmark); contained in lmfit-3, which replaces the sklearn fit whose per-call overhead this avenue strips, so on this unit it saves nothing on top of lmfit-3 (subsumed_by; README ''Optimisation columns'', ranking rule 4) and remains the fallback that keeps sklearn''s solver if lmfit-3 is not taken'
+    output_risk: unverified-bit-identical
+    risk_evidence: the same sklearn solver code runs on the same arrays; validation and signature inspection do not modify the data; for one output mean_squared_error is numpy mean((y_true - y_pred)**2), the same operations as an explicit numpy mean; assume_finite=True skips the finite-value check, so on input with NaN or inf sklearn raises today while the stripped call would proceed, and the bit-identical claim covers finite input only
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - lmfit-3

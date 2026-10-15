@@ -1,0 +1,249 @@
+unit_id: causal.igci
+status: profiled
+correctness:
+  metric_name_standard: 'information-geometric causal inference (IGCI) score with entropy estimator and Gaussian reference measure: difference
+    of 1-spacing differential-entropy estimates of the standardised variables'
+  canonical_ref: 'Daniusis, Janzing, Mooij, Zscheischler, Steudel, Zhang & Scholkopf 2010, UAI (arXiv:1203.3475), §2.3 (IGCI rule: infer
+    X -> Y if C_{X->Y} < 0), §3.2 (Gaussian reference measure), §3.5 eq. (12) (Kraskov et al. 2004 1-spacing estimator S_hat = psi(m) - psi(1)
+    + 1/(m-1) sum log|x_{i+1} - x_i|), with preprocessing to zero mean / unit variance so that C_{X->Y} = S(p_Y) - S(p_X); Janzing et al.
+    2012, Artificial Intelligence 182-183:1-31'
+  canonical_definition: 'C_{X->Y} = S_hat(Y~) - S_hat(X~) with X~, Y~ standardised (Gaussian reference) and S_hat the eq. (12) estimator;
+    infer X -> Y if C_{X->Y} < 0, Y -> X if > 0; antisymmetric: C_{Y->X} = -C_{X->Y}.'
+  documented_definition: 'supplement §1.3.2, p.8: ''Information-geometric causal inference [26] is a method for inferring causal influence
+    from x -> y for deterministic systems with invertible functions. The statistic is computed using cdt as the difference in differential
+    entropies where the probability density is computed via nearest-neighbor estimators.'' keywords ''directed, nonlinear, unsigned''. GitBook
+    causal-inference.md calls it ''Information-Geometric Conditional Independence'' (as does the class name/name attribute).'
+  delegate_lib: cdt==0.6.0 cdt.causality.pairwise.IGCI().predict_proba((x, y), ref_measure='gaussian', estimator='entropy') -> eval_entropy;
+    scikit-learn==1.9.1 StandardScaler (module-level instance); scipy==1.17.1 scipy.special.psi
+  implemented_as: 'A[i, j] = eval_entropy(std(z[i])) - eval_entropy(std(z[j])), standardisation by a module-level StandardScaler (ddof=0);
+    eval_entropy(v) = (1/(m-1)) sum over sorted consecutive differences d != 0 of log|d| + psi(m) - psi(1) (zero spacings skipped but the
+    divisor stays m-1). So A[i, j] = S_hat(z_i) - S_hat(z_j) = -C_{i->j}: positive means i -> j under the IGCI rule (cdt docstring IGCI.py:138
+    ''>0 if a->b''). Exactly antisymmetric in the Directed.multivariate path (probe max |A + A^T| = 0.0 on 6 dataset/T combinations); from-scratch
+    eq. (12) matches to <= 4.4e-15.'
+  implementation_trace:
+  - 'pyspi/data.py:184-195 Data.set_data: detrend only if detrend=True (default False), then scipy.stats.zscore(axis=1, ddof=1) if normalise=True
+    (default); stored as (M, T, 1)'
+  - 'pyspi/calculator.py:251-267 Calculator._load_yaml: configs is empty for the four causal classes, so iterating None raises TypeError
+    and the class is instantiated with no arguments (261-267); labels come from the class attribute'
+  - 'pyspi/calculator.py:327-339 Calculator.compute: S = spi.multivariate(dataset) (329); fill_diagonal(S, nan) (332); any exception -> whole
+    matrix NaN (336-339) with a warning (354-355)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A[i, j] = self.bivariate(data, i=i, j=j) for every ordered pair i != j (no mirroring)'
+  - 'pyspi/base.py:27-49 parse_bivariate: two raw arrays are wrapped into a new Data object (base.py:33-36) and i, j = 0, 1 is set (base.py:41-43);
+    Data.add_process z-scores only the first array (data.py:238 set_data, normalise=True) and appends the second raw (data.py:230-234); the
+    Calculator/multivariate path passes the already z-scored Data through unchanged. Owned by unit preproc.two_array_api'
+  - pyspi/data.py:108-118 Data.to_numpy returns the (M, T, 1) array, so z[i] is a (T, 1) column
+  - 'pyspi/config.yaml:359-367 InformationGeometricConditionalIndependence: labels include ''unsigned'', configs empty'
+  - 'pyspi/statistics/causal.py:56-65 InformationGeometricConditionalIndependence(Directed, Unsigned): labels include ''unsigned'' (60);
+    bivariate returns IGCI().predict_proba((z[i], z[j])) (65)'
+  - pyspi/base.py:146-150 Unsigned.issigned() returns False (no absolute value is applied)
+  - .venv/lib/python3.12/site-packages/cdt/causality/pairwise/IGCI.py:38-39 module-level MinMaxScaler and StandardScaler instances
+  - .venv/lib/python3.12/site-packages/cdt/causality/pairwise/IGCI.py:126-151 predict_proba defaults ref_measure='gaussian', estimator='entropy';
+    estimator = eval_entropy(x) - eval_entropy(y) (141); gaussian ref = standard_scale.fit_transform(x.reshape(-1, 1)).ravel() (142); a,
+    b scaled (148-149); return _estimator(a, b) (151)
+  - '.venv/lib/python3.12/site-packages/cdt/causality/pairwise/IGCI.py:42-56 eval_entropy: sorted(x); sum log|delta| over nonzero consecutive
+    deltas (50-53); hx/(len-1) + psi(len) - psi(1) (54)'
+  - .venv/lib/python3.12/site-packages/cdt/causality/pairwise/IGCI.py:59-79 integral_approx_estimator (eq. (13) variant) - not used by pyspi
+  deviation_from_documented: (a) Labelled 'unsigned' (supplement keyword, config.yaml:363, causal.py:56/60) but the value is signed and antisymmetric
+    (probe ranges about -0.49 to +0.49; A[j, i] = -A[i, j] exactly). (b) Sign convention (positive = i -> j, i.e. the negative of the paper's
+    C_{i->j}) and the Gaussian reference measure are undocumented. (c) 'nearest-neighbor estimators' is acceptable shorthand for the 1-spacing
+    (Kraskov m=1) estimator. (d) Class/GitBook name 'Information-Geometric Conditional Independence' differs from the method's name 'information-geometric
+    causal inference' used in the supplement. (e) Documented cdt v0.5.23 vs installed 0.6.0 (already documented).
+  deviation_from_canonical: '(1) Returns -C_{X->Y} (cdt sign), so the canonical decision ''X -> Y if C < 0'' becomes ''i -> j if A[i, j] > 0''. (2) Otherwise
+    matches eq. (12) with the Gaussian-reference preprocessing of §3.5; zero spacings are skipped while the divisor stays m-1 (paper silent: eq. (12) is undefined
+    when a spacing is 0 because of log 0; the skip-with-divisor-m-1 rule is cdt''s eval_entropy, IGCI.py:42-56. The earlier statement that this is ''the same
+    as the original Matlab-style estimator'' had no cited source and is withdrawn: no original Matlab code was consulted in this audit. On quantised data
+    this choice decides the value; see the tie candidate). (3) Applied to noisy, non-invertible and autocorrelated data outside the method''s deterministic-invertible
+    assumption (property of the method, not a code deviation).'
+  units_and_range: 'nats (difference of differential-entropy estimates of unit-variance variables); signed, unbounded in principle, observed
+    -0.52..+0.52 on the continuous check data and -6.35..+6.35 on logistic_maps_T1024 (period-4 y with repeated values: zero spacings are
+    skipped while the divisor stays m-1); exactly antisymmetric; invariant to positive affine rescaling of each input (tests/README.md: igci
+    differs between n1d0 and n0d0 by at most 3e-15); entropy of a standardised variable is <= 0.5*log(2*pi*e), so A[i, j] > 0 means z_i is
+    closer to Gaussian than z_j.'
+  direction_convention: 'A[i, j] = S_hat(z_i) - S_hat(z_j) = -C_{i->j}; POSITIVE means i -> j under the IGCI rule, and A[j, i] = -A[i, j].
+    Code-derived; probe on inline synthetic X ~ U(0,1), Y = X^3: A[x, y] = 0.772 / 0.845 / 0.902 at T = 256 / 1024 / 4096 vs analytic -C^G
+    = 0.883.'
+  symmetry_expected: antisym
+  already_documented: 'partly: installed cdt 0.6.0 vs documented 0.5.23 (DEPENDENCY_MIGRATION.md CDT row); the ''unsigned'' label on a signed
+    output is not listed (M8 covers other unsigned-but-negative SPIs: pec, pec_log, Gaussian entropies; label structure M9)'
+  new_finding_candidates:
+  - 'Candidate (signed output labelled unsigned): causal.py:56 class inherits Unsigned and causal.py:60 / config.yaml:363 label it ''unsigned'', but IGCI.py:141
+    returns a difference of entropies; probe iid_gaussian_T64 values range -0.436..+0.436 and max |A + A^T| = 0.0 on every probed dataset, so downstream code
+    that treats the matrix as unsigned/non-negative or symmetrises it would destroy the information (A + A^T = 0).'
+  - 'Candidate (undocumented sign convention): IGCI.py:141 computes eval_entropy(a) - eval_entropy(b) = -C_{a->b} of Daniusis et al. 2010 §2.3; positive =
+    a -> b, opposite in sign to the paper''s C.'
+  - 'Candidate (bivariate raw-array path not exactly antisymmetric; preprocessing asymmetry owned by preproc.two_array_api / base.pair_handling): parse_bivariate
+    (base.py:33-36) builds Data via add_process, which z-scores only the first array (data.py:238 set_data, normalise=True) and appends the second raw (data.py:230-234).
+    bivariate(x, y) therefore evaluates IGCI on (zscore(x), raw y) and bivariate(y, x) on (zscore(y), raw x); the IGCI StandardScaler (IGCI.py:39 and :142,
+    gaussian ref_measure) re-standardises both, so the two calls differ only at ulp level, amplified by the log of tiny spacings in eval_entropy. Probe fix_cdt/igci_raw.py
+    (x ~ U(0,1), y = x^3, T=1024, default_rng(0)): 0.8105075201018178 vs -0.8105075125133075 (gap 7.6e-9); IGCI().predict_proba((zscore(x, ddof=1), y)) and
+    ((zscore(y, ddof=1), x)) reproduce both values exactly; with both inputs z-scored the gap is 0.0, and the Calculator/multivariate path gives A[0,1] +
+    A[1,0] = 0.0. Earlier probe: 5e-9 (0.8448910243 vs -0.8448910189). Low impact for igci; the generic raw-append behaviour is locked by tests/unit/test_data.py:74-88
+    and recorded under preproc.two_array_api.'
+  - 'Candidate (quantised data: value set by tie counts): eq. (12) has no rule for zero spacings; cdt skips them and keeps the divisor at m-1, so each tied
+    spacing contributes 0 to the sum while still counting in the divisor. On quantised data the output is mainly a tie-count artefact (wf4b-2 scratch probes
+    wf4b2_high-optimiser-other/p_igci.py and p_igci_ties.py on an EEG window, 001_Baseline.EDF, six EEG channels, mid-recording; ADC step 2.66e-7): pyspi
+    reproduces the skip/(m-1) rule to 8.4e-15 (T512), but the channels have 179-244 zero spacings at T512 (578-683 at T1024), the alternative divisor (number
+    of non-zero spacings) changes A by up to 0.488 when max|A| is 0.688, A[i, j] correlates 0.993 (T512) and 0.998 (T1024) with the difference in zero-spacing
+    counts of the two channels, and sub-quantum uniform dither (which keeps the signal and breaks the ties) lowers max|A| to 0.236 / 0.169 and changes the
+    sign of A on 80% (T512) and 47% (T1024) of pairs. causal.igci is not in the retained 185-metric EEG set.'
+  proposed_checks:
+  - datasets:
+    - anm
+    - nonlinear_dependence
+    - iid_gaussian
+    - delayed_noise
+    - contaminated
+    path: kernel
+    reference: from-scratch numpy/scipy.special.digamma eq. (12) of Daniusis et al. 2010 on standardised (ddof=0) inputs; A_ref[i, j] = S_hat(z_i)
+      - S_hat(z_j)
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: agreement <= 1e-12 absolute (probe max 4.4e-15)
+  - datasets:
+    - 'inline synthetic: X ~ U(0,1), Y = X^3 (deterministic, invertible); 20 seeds per T in {256, 1024, 4096}'
+    path: kernel
+    reference: analytic C^G_{X->Y} = E log|f'(X)| + log sigma_X - log sigma_Y = (log 3 - 2) + log(1/sqrt(12)) - log(sqrt(1/7 - 1/16)) = -0.8832
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'mean over seeds of A[x, y] converges to +0.883 (= -C^G) as T grows (single-seed probe 0.772, 0.845, 0.902); sign positive
+      establishes the direction convention (positive = i -> j). Check stage: the three 20-seed runs pass within 2 se but do not show the
+      convergence themselves; a 200-seed probe shows a finite-sample bias that shrinks with T (see closeness)'
+  - datasets:
+    - iid_gaussian
+    - anm
+    - nonlinear_dependence
+    - logistic_maps
+    - var2_bivariate
+    path: pipeline
+    reference: analytic antisymmetry A[j, i] = -A[i, j]
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: max |A + A^T| == 0 on the multivariate path (probe 0.0)
+  - datasets:
+    - anm
+    path: pipeline
+    reference: 'ground truth x0 -> x1, x2 -> x3 and the IGCI rule (canonical sign: X -> Y if C_{X->Y} < 0, i.e. pyspi A > 0)'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'qualitative only: the data are noisy (0.2 N(0,1)) and uniform-cause, outside the deterministic assumption; probe T=256/1024
+      gives A[0,1] = -0.200 / -0.088 (i.e. the reverse direction), report as observed'
+  check_method: independent-impl
+  check_reference: refs/cdt_pairwise.py:run_igci -> _kernels_distance.igci_ref (Daniusis et al. 2010 eq. 12, Gaussian reference; numpy/scipy,
+    no cdt/sklearn); analytic -C^G = 0.88320 for X ~ U(0,1), Y = X^3; antisymmetry as a same-lineage self-consistency check (value =
+    -A.T of pyspi's own matrix); probes/cdt_pairwise_probes.py (igci_cubic, igci_raw_bivariate,
+    igci_labels)
+  check_data: 'kernel path: anm, nonlinear_dependence, iid_gaussian, delayed_noise, contaminated at T64/256/1024/4096; pipeline anm, iid_gaussian
+    T1024; inline U(0,1) -> x^3 pair, 20 seeds at T256/1024/4096; antisymmetry on iid_gaussian, anm, nonlinear_dependence, logistic_maps,
+    var2_bivariate T1024; direction anm T256/1024/4096; orientation var2_bivariate, logistic_maps_chaotic T1024; raw two-array path on the
+    cubic pair T1024'
+  agreement_criterion: 'exact (rtol 1e-10, atol 1e-12); antisymmetry bit-exact (rtol = atol = 0); analytic: |mean over 20 seeds - 0.88320|
+    <= 2 se (no convergence claim); direction: sign of A vs ground truth (anm) or the reference (lagged)'
+  closeness: 'exact 22/22 runs, max abs 3.0e-14 (max rel 1.5e-11 on near-zero entries); antisymmetry (same-lineage, pyspi vs -A.T of itself) 5/5 max|A + A.T|
+    = 0.0; analytic 3/3: pyspi mean 0.8746/0.8742/0.8741 at T256/1024/4096 vs 0.8832 (|z| = 0.36/0.93/1.51, se 0.024/0.0097/0.0060); these
+    20-seed means do not approach 0.8832 with T and the pass rests on the 20-seed se; the 200-seed probe cdt_pairwise_check/igci_bias200.py
+    (igci_ref, which equals pyspi to 3.0e-14 in the exact runs; seeds 1000..1199) gives mean - 0.88320 = -0.0183 (z -2.65), -0.0104 (z
+    -2.70), -0.0051 (z -2.76), -0.0024 (z -2.69), -0.0002 (z -0.41) at T256/1024/4096/16384/65536, i.e. a negative finite-sample bias of
+    the 1-spacing entropy estimator that shrinks with T, not a formula difference; raw two-array path gap A[0,1]
+    + A[1,0] = 7.59e-9 reproduced to 1.5e-14 by the reference on (zscore(first), raw second), 0.0 with both z-scored; direction anm agreement
+    0.5 at every T (cubic pair A01 = -0.200/-0.088/-0.151 in pyspi and in the reference, tanh pair A23 = +0.187/+0.123/+0.049); orientation
+    2/2 (truth recovered: A01 = 0.021, 0.946)'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 10''s first clause fails: pyspi returns -C_{i->j} (cdt sign), equal to a sign-flipped Daniusis eq. (12) reference to max abs 3.0e-14 in
+    22/22 runs. Anchor 9 names the sign of a symmetric quantity. igci is antisymmetric (max|A + A.T| = 0.0), and its sign is documented only in cdt''s docstring. So
+    9 is the highest anchor cleared, by analogy.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Matches Daniusis et al. eq. (12) with the Gaussian reference measure up to the sign convention: A[i, j] = -C_{i->j} (positive = i -> j).
+    The deciding agreement is the 22 exact runs against the independent _kernels_distance.igci_ref (no cdt/sklearn), max abs 3.0e-14; the analytic cubic check
+    is statistical and its 20-seed means (0.8746 / 0.8742 / 0.8741) do not approach 0.8832 (finite-sample bias), so check_method is independent-impl. Score
+    mapping: anchor 9''s clause ''trivial documented convention (... sign of a symmetric quantity)'' is applied by analogy. The quantity is antisymmetric,
+    so negating it equals transposing it (A[i, j] = -C_{i->j} = C_{j->i}), and the orientation agrees with pyspi''s directed convention (Directed.multivariate
+    evaluates A[i, j] with process i as the first, source argument, and a positive A[i, j] means i -> j). The convention is documented only in the delegate,
+    in cdt''s docstring (IGCI.py:138 ''>0 if a->b''), not in pyspi''s supplement, config or GitBook. The output is signed and exactly antisymmetric but the
+    class, config and supplement label it ''unsigned''. Zero spacings (tied data) are skipped with divisor m-1 (cdt eval_entropy; the paper is silent). The
+    check data contain no ties (every exact-run dataset is continuous), so the tie rule was not compared against the reference in a manifest run; a scratch
+    probe reproduces it to 8.4e-15 on an EEG window. Scope: on quantised recordings this rule dominates the value. On quantised data the output is mainly
+    a tie-count artefact (wf4b-2 scratch probes wf4b2_high-optimiser-other/p_igci.py and p_igci_ties.py on an EEG window, 001_Baseline.EDF, six EEG channels,
+    mid-recording; ADC step 2.66e-7): pyspi reproduces the skip/(m-1) rule to 8.4e-15 (T512), but the channels have 179-244 zero spacings at T512 (578-683
+    at T1024), the alternative divisor (number of non-zero spacings) changes A by up to 0.488 when max|A| is 0.688, A[i, j] correlates 0.993 (T512) and 0.998
+    (T1024) with the difference in zero-spacing counts of the two channels, and sub-quantum uniform dither (which keeps the signal and breaks the ties) lowers
+    max|A| to 0.236 / 0.169 and changes the sign of A on 80% (T512) and 47% (T1024) of pairs. On logistic_maps T1024 (repeated values) values reach +-6.35.
+    definition_under_review stays false: eq. (12) is defined for continuous data and undefined, not contested, on tied data; the two tie rules are recorded
+    in the tie candidate.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: 0.12 s for a P=4 matrix at T=4096; not run: an exact manifest run on tied (quantised) data against igci_ref, needed to cover the tie
+    rule in results (the wf4b-2 scratch probe is the only comparison on tied data)'
+  symmetry_observed: 'antisym exactly: max|A + A.T| = 0.0 on all 5 antisymmetry runs (multivariate path); max|A - A.T| = 12.69 (logistic_maps_T1024);
+    the raw two-array bivariate path departs by 7.59e-9'
+  direction_observed: 'A[i, j] = S(z_i) - S(z_j) = -C_{i->j}; positive = i -> j: the deterministic U(0,1) -> x^3 pair gives +0.874 (analytic
+    +0.883), var2_bivariate and logistic_maps_chaotic give A[0,1] > 0 for x -> y; on the noisy anm pairs the tanh pair is positive and the
+    cubic pair negative (method limit shared by the reference)'
+  candidate_resolutions:
+  - candidate: signed output labelled unsigned
+    outcome: confirmed
+    evidence: causal.igci|iid_gaussian|64|pipeline|labels (flags [1, 0, 1]); exact runs pyspi range -0.52..+0.52; antisym runs max|A + A.T| = 0.0
+  - candidate: undocumented sign convention (positive = i -> j = -C)
+    outcome: confirmed
+    evidence: causal.igci|iid_gaussian|{256,1024,4096}|pipeline|cubic-analytic (+0.874 vs -C^G = +0.883)
+  - candidate: raw two-array bivariate path not exactly antisymmetric (owned by preproc.two_array_api)
+    outcome: confirmed
+    evidence: causal.igci|iid_gaussian|64|pipeline|raw-bivariate (pyspi gap 7.5885e-9, reference on (zscore(first), raw second) 7.5885e-9, both z-scored 0.0)
+  - candidate: 'quantised (grid-valued) data: IGCI value set mainly by zero-spacing (tie) counts'
+    outcome: confirmed
+    evidence: 'On quantised data the output is mainly a tie-count artefact (wf4b-2 scratch probes wf4b2_high-optimiser-other/p_igci.py and p_igci_ties.py
+      on an EEG window, 001_Baseline.EDF, six EEG channels, mid-recording; ADC step 2.66e-7): pyspi reproduces the skip/(m-1) rule to 8.4e-15 (T512), but
+      the channels have 179-244 zero spacings at T512 (578-683 at T1024), the alternative divisor (number of non-zero spacings) changes A by up to 0.488 when
+      max|A| is 0.688, A[i, j] correlates 0.993 (T512) and 0.998 (T1024) with the difference in zero-spacing counts of the two channels, and sub-quantum uniform
+      dither (which keeps the signal and breaks the ties) lowers max|A| to 0.236 / 0.169 and changes the sign of A on 80% (T512) and 47% (T1024) of pairs.
+      Not in KNOWN_ISSUES.md. No manifest run covers it: every exact-run dataset is continuous (zero spacings 0), so the tie rule was compared against the
+      reference only in this probe; logistic_maps T1024 (+-6.35) is the only tied dataset in the results and it is used for range and antisymmetry, not for
+      an exact comparison'
+  checks_run:
+  - run_ids:
+    - causal.igci|*|exact
+    reference: refs/cdt_pairwise.py:run_igci -> _kernels_distance.igci_ref
+    outcome: pass 22/22 (max abs 3.0e-14)
+  - run_ids:
+    - causal.igci|iid_gaussian|{256,1024,4096}|pipeline|cubic-analytic
+    reference: analytic -C^G = 0.88320
+    outcome: 'pass 3/3 (|z| <= 1.51; within 2 se of 20 seeds, with a finite-sample bias of -0.018/-0.010/-0.005 at T256/1024/4096 in
+      a 200-seed probe)'
+  - run_ids:
+    - causal.igci|*|antisym
+    reference: 'same-lineage self-consistency: value = -A.T of pyspi''s own matrix (antisymmetry expected from IGCI.py:141)'
+    outcome: pass 5/5 (0.0)
+  - run_ids:
+    - causal.igci|anm|{256,1024,4096}|pipeline|direction
+    reference: refs/cdt_pairwise.py:run_igci
+    outcome: '0/3 pass (agreement 0.5: cubic pair reversed in pyspi and the reference alike)'
+  - run_ids:
+    - causal.igci|{var2_bivariate,logistic_maps_chaotic}|1024|pipeline|orientation
+    - causal.igci|iid_gaussian|64|pipeline|raw-bivariate
+    - causal.igci|iid_gaussian|64|pipeline|labels
+    reference: refs/cdt_pairwise.py:run_igci (labels is a static code-property probe, labelled same-lineage)
+    outcome: pass 4/4
+optimisation:
+  complexity_P_T: 'O(P^2 T log T) as implemented: per ordered pair cdt IGCI.predict_proba standardises both series and evaluates eval_entropy (sort plus a Python loop over T-1 spacings) for both (pyspi/statistics/causal.py:62-65); the quantity itself is O(P T log T) because A[i, j] = S(z_i) - S(z_j). Measured P_exponent 2.06, T_exponent 0.53. Pair term dominates; measured 26.9 s per window at 118x1024 (measured).'
+  hotspot_1: cdt/causality/pairwise/IGCI.py:eval_entropy (third-party:cdt) 54.4% of the profiled SPI call at 8x1024 (41.7% self in the Python loop over sorted spacings; builtins.sorted 12.6%)
+  hotspot_2: sklearn/base.py:fit_transform (StandardScaler via IGCI.py:<lambda>, third-party:sklearn) 44.1% of the profiled SPI call at 8x1024 (validation 19.9%, _incremental_mean_and_var 12.1%)
+  hotspot_owner: third-party:cdt
+  opaque_share: 0.219
+  profile_file: audit/profiles/causal.igci__8x1024.pstats
+  opportunities:
+  - opportunity_id: cdt_pairwise-3
+    opportunity: 'IGCI is A[i, j] = S(z_i) - S(z_j): compute the standardised-entropy S once per channel (the same module-level StandardScaler and cdt eval_entropy, P evaluations instead of 2P(P-1)) and fill the matrix as an outer difference (pyspi/statistics/causal.py:62-65).'
+    opp_type: algorithmic
+    expected_speedup: ~100x
+    speedup_basis: 'profile:audit/profiles/causal.igci__8x1024.pstats IGCI.py:predict_proba 99.7% (eval_entropy 54.4% with 41.7% self in its Python loop over sorted spacings, StandardScaler fit_transform 44.1%) + complexity: 2P(P-1) = 27,612 scaler+entropy evaluations per window at P=118 become 118 (234x fewer); Amdahl bound 1/(1-0.997) = 333x'
+    output_risk: unverified-bit-identical
+    risk_evidence: the same scaler and eval_entropy run on the same channel vector, only fewer times; the check stage already shows each channel's term is evaluated identically in every pair (max|A + A.T| = 0.0 on all antisymmetry runs)
+    effort: S
+    depends_on: []

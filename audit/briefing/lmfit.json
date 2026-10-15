@@ -1,0 +1,194 @@
+{
+ "family": "lmfit",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/miscellaneous.md"
+ ],
+ "hypotheses": [
+  "Lasso alpha=1 and ElasticNet alpha=1 l1_ratio=0.5 soft-threshold the single coefficient to 0 on z-scored data whenever |r|(T-1)/T <= alpha*l1_ratio, giving the constant MSE (T-1)/T",
+  "Ridge alpha=1: w = r (T-1)/T after centring; BayesianRidge evidence iterations; SGDRegressor random_state=42 shuffle",
+  "in-sample MSE of z_j regressed on z_i; random_state passed only when the signature has it"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/misc.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    874,
+    887
+   ],
+   "section": "1.6.1",
+   "title": "Linear model fit (lmfit)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/linear_model/_ridge.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/linear_model/_stochastic_gradient.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/linear_model/_bayes.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [
+    "lmfit_Ridge"
+   ],
+   "hyperparameters": {
+    "model": "Ridge"
+   },
+   "identifier_params": {
+    "lmfit_Ridge": {
+     "model": "Ridge"
+    }
+   },
+   "identifiers": [
+    "lmfit_Ridge"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "directed",
+    "linear",
+    "misc",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "sklearn Ridge",
+   "module": "misc",
+   "pair_basis": "ordered",
+   "pyspi_class": "LinearModel",
+   "representative": "lmfit_Ridge",
+   "source": "config",
+   "unit_id": "misc.lmfit.Ridge"
+  },
+  {
+   "eeg_identifiers": [
+    "lmfit_Lasso"
+   ],
+   "hyperparameters": {
+    "model": "Lasso"
+   },
+   "identifier_params": {
+    "lmfit_Lasso": {
+     "model": "Lasso"
+    }
+   },
+   "identifiers": [
+    "lmfit_Lasso"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "directed",
+    "linear",
+    "misc",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "sklearn Lasso",
+   "module": "misc",
+   "pair_basis": "ordered",
+   "pyspi_class": "LinearModel",
+   "representative": "lmfit_Lasso",
+   "source": "config",
+   "unit_id": "misc.lmfit.Lasso"
+  },
+  {
+   "eeg_identifiers": [
+    "lmfit_SGDRegressor"
+   ],
+   "hyperparameters": {
+    "model": "SGDRegressor"
+   },
+   "identifier_params": {
+    "lmfit_SGDRegressor": {
+     "model": "SGDRegressor"
+    }
+   },
+   "identifiers": [
+    "lmfit_SGDRegressor"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "directed",
+    "linear",
+    "misc",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "sklearn SGDRegressor",
+   "module": "misc",
+   "pair_basis": "ordered",
+   "pyspi_class": "LinearModel",
+   "representative": "lmfit_SGDRegressor",
+   "source": "config",
+   "unit_id": "misc.lmfit.SGDRegressor"
+  },
+  {
+   "eeg_identifiers": [
+    "lmfit_ElasticNet"
+   ],
+   "hyperparameters": {
+    "model": "ElasticNet"
+   },
+   "identifier_params": {
+    "lmfit_ElasticNet": {
+     "model": "ElasticNet"
+    }
+   },
+   "identifiers": [
+    "lmfit_ElasticNet"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "directed",
+    "linear",
+    "misc",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "sklearn ElasticNet",
+   "module": "misc",
+   "pair_basis": "ordered",
+   "pyspi_class": "LinearModel",
+   "representative": "lmfit_ElasticNet",
+   "source": "config",
+   "unit_id": "misc.lmfit.ElasticNet"
+  },
+  {
+   "eeg_identifiers": [
+    "lmfit_BayesianRidge"
+   ],
+   "hyperparameters": {
+    "model": "BayesianRidge"
+   },
+   "identifier_params": {
+    "lmfit_BayesianRidge": {
+     "model": "BayesianRidge"
+    }
+   },
+   "identifiers": [
+    "lmfit_BayesianRidge"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "directed",
+    "linear",
+    "misc",
+    "normal",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "sklearn BayesianRidge",
+   "module": "misc",
+   "pair_basis": "ordered",
+   "pyspi_class": "LinearModel",
+   "representative": "lmfit_BayesianRidge",
+   "source": "config",
+   "unit_id": "misc.lmfit.BayesianRidge"
+  }
+ ]
+}

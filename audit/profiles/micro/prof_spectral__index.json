@@ -1,0 +1,148 @@
+{
+ "schema": 1,
+ "script": "audit/profiles/micro/prof_spectral.py",
+ "written_at": "2026-10-15",
+ "threads": {
+  "OMP_NUM_THREADS": "1",
+  "NUMBA_NUM_THREADS": "1",
+  "JIDT": "n/a"
+ },
+ "notes": "cProfile around one harness.compute_spi call after a warm-up at 8x256, run while other Workflow 3 groups were computing (load average 3.7-6.6 on 64 CPUs, 31 GB RAM). The memory-bound undirected multitaper units varied 2-7x in wall between runs (cohmag 6.4 s on a first run, 0.93 s on the kept run; summary.json fresh 118x1024 wall 2.42 s), so only frame shares are quoted from these files; walls come from summary.json. builtin_tottime_share is the tottime of '~' entries over the compute_spi frame; numpy ufunc work (matmul, divide, abs, multiply) is hidden in the self time of the calling Python frame, so the true opaque share is higher (lower bound).",
+ "profiles": {
+  "spectral.cohmag__118x1024": {
+   "unit_id": "spectral.cohmag",
+   "shape": "118x1024",
+   "identifier": "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.cohmag__118x1024.pstats",
+   "compute_spi_cum_s": 0.9266,
+   "builtin_tottime_share": 0.2318,
+   "process_ru_maxrss_mb": 2094
+  },
+  "spectral.dspli__118x1024": {
+   "unit_id": "spectral.dspli",
+   "shape": "118x1024",
+   "identifier": "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.dspli__118x1024.pstats",
+   "compute_spi_cum_s": 0.7125,
+   "builtin_tottime_share": 0.1397,
+   "process_ru_maxrss_mb": 2303
+  },
+  "spectral.dswpli__118x1024": {
+   "unit_id": "spectral.dswpli",
+   "shape": "118x1024",
+   "identifier": "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.dswpli__118x1024.pstats",
+   "compute_spi_cum_s": 2.0454,
+   "builtin_tottime_share": 0.1533,
+   "process_ru_maxrss_mb": 2490
+  },
+  "spectral.gd__118x1024": {
+   "unit_id": "spectral.gd",
+   "shape": "118x1024",
+   "identifier": "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.gd__118x1024.pstats",
+   "compute_spi_cum_s": 4.119,
+   "builtin_tottime_share": 0.3177,
+   "process_ru_maxrss_mb": 2087
+  },
+  "spectral.icoh__118x1024": {
+   "unit_id": "spectral.icoh",
+   "shape": "118x1024",
+   "identifier": "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.icoh__118x1024.pstats",
+   "compute_spi_cum_s": 0.8193,
+   "builtin_tottime_share": 0.2244,
+   "process_ru_maxrss_mb": 2042
+  },
+  "spectral.phase__118x1024": {
+   "unit_id": "spectral.phase",
+   "shape": "118x1024",
+   "identifier": "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.phase__118x1024.pstats",
+   "compute_spi_cum_s": 1.0359,
+   "builtin_tottime_share": 0.2033,
+   "process_ru_maxrss_mb": 2093
+  },
+  "spectral.pli__118x1024": {
+   "unit_id": "spectral.pli",
+   "shape": "118x1024",
+   "identifier": "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.pli__118x1024.pstats",
+   "compute_spi_cum_s": 0.7307,
+   "builtin_tottime_share": 0.1564,
+   "process_ru_maxrss_mb": 2304
+  },
+  "spectral.plv__118x1024": {
+   "unit_id": "spectral.plv",
+   "shape": "118x1024",
+   "identifier": "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.plv__118x1024.pstats",
+   "compute_spi_cum_s": 3.6038,
+   "builtin_tottime_share": 0.0531,
+   "process_ru_maxrss_mb": 3391
+  },
+  "spectral.ppc__118x1024": {
+   "unit_id": "spectral.ppc",
+   "shape": "118x1024",
+   "identifier": "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.ppc__118x1024.pstats",
+   "compute_spi_cum_s": 3.7707,
+   "builtin_tottime_share": 0.0532,
+   "process_ru_maxrss_mb": 3347
+  },
+  "spectral.psi__118x1024": {
+   "unit_id": "spectral.psi",
+   "shape": "118x1024",
+   "identifier": "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.psi__118x1024.pstats",
+   "compute_spi_cum_s": 1.7429,
+   "builtin_tottime_share": 0.2785,
+   "process_ru_maxrss_mb": 2204
+  },
+  "spectral.sgc.nonparametric__32x1024": {
+   "unit_id": "spectral.sgc.nonparametric",
+   "shape": "32x1024",
+   "identifier": "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.sgc.nonparametric__32x1024.pstats",
+   "compute_spi_cum_s": 11.2243,
+   "builtin_tottime_share": 0.0975,
+   "process_ru_maxrss_mb": 762
+  },
+  "spectral.sgc.parametric_order-1__118x1024": {
+   "unit_id": "spectral.sgc.parametric_order-1",
+   "shape": "118x1024",
+   "identifier": "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1",
+   "pstats": "audit/profiles/micro/prof_spectral.sgc.parametric_order-1__118x1024.pstats",
+   "compute_spi_cum_s": 6.2193,
+   "builtin_tottime_share": 0.3768,
+   "process_ru_maxrss_mb": 1136
+  },
+  "spectral.sgc.parametric_order-20__118x1024": {
+   "unit_id": "spectral.sgc.parametric_order-20",
+   "shape": "118x1024",
+   "identifier": "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20",
+   "pstats": "audit/profiles/micro/prof_spectral.sgc.parametric_order-20__118x1024.pstats",
+   "compute_spi_cum_s": 22.8393,
+   "builtin_tottime_share": 0.2173,
+   "process_ru_maxrss_mb": 1135
+  },
+  "spectral.sgc.parametric_order-None__118x1024": {
+   "unit_id": "spectral.sgc.parametric_order-None",
+   "shape": "118x1024",
+   "identifier": "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None",
+   "pstats": "audit/profiles/micro/prof_spectral.sgc.parametric_order-None__118x1024.pstats",
+   "compute_spi_cum_s": 16.3998,
+   "builtin_tottime_share": 0.2651,
+   "process_ru_maxrss_mb": 1132
+  },
+  "spectral.wpli__118x1024": {
+   "unit_id": "spectral.wpli",
+   "shape": "118x1024",
+   "identifier": "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "pstats": "audit/profiles/micro/prof_spectral.wpli__118x1024.pstats",
+   "compute_spi_cum_s": 1.2171,
+   "builtin_tottime_share": 0.1791,
+   "process_ru_maxrss_mb": 2301
+  }
+ }
+}

@@ -1,0 +1,679 @@
+{
+ "it_kraskov+phi": {
+  "not_done": [
+   "it_kraskov: No byte-level rebuild of JIDT master a9b6b3e to prove the jar's exact commit; the numeric evidence only shows it is not the v1.6.1 tag.",
+   "it_kraskov: Bartlett 1946 / Cliff et al. 2021 formula forms and the KSG Eq. 8 / Schreiber Eq. 4 numbers were not checked against the papers (no access in this stage).",
+   "it_kraskov: EEG ADC tie prevalence was not checked; it is moot for this workflow because no kraskov SPI is in the retained-185 EEG set.",
+   "it_kraskov: The canonical-criterion comparison for auto-embedding (Ragwitz-Kantz prediction error vs MAX_CORR_AIS) is literature-only; no Ragwitz-criterion reference was implemented.",
+   "it_kraskov: Copy-path probes (copy/copyprops) were run on te_auto, te_DCE_k2, te_k1 and mi only. For the other units the copy candidate is resolved through the shared JIDTBase/TransferEntropy copy code plus these runs.",
+   "it_kraskov: Deviation from the brief: besides the mi.kraskov T=4096 runs I added two cheap T=4096 TE convergence runs (<= 1.4 s each) to resolve the te_DCE_k2 z=2.02 statistical failure.",
+   "phi: Upstream PhiToolbox minFunc is not vendored, so the published minFunc path was not run. The closest substitute was used: Octave fminunc with GradObj on, consuming the same analytic gradient of I_s_I_s_d.m, plus scipy L-BFGS-B with an analytic jac.",
+   "phi: The Octave reference is labelled same-lineage, not external-pkg as the computed task text said. phi_native.py is a port of those .m files, so the independence rule makes it same-lineage (precedent: gwtau's authors' MATLAB loop). The unit scores rest on the independent brentq / global-minimum references.",
+   "phi: The Oizumi et al. 2016 Eqs. 29-33 are images and were not read, so whether the paper's 'quadratic in beta' refers to a different reduction is unsettled. The check stage shows the cleared numerator is quartic in this parametrisation.",
+   "phi: The policy questions (NaN vs document for negative norm-1 values; NaN/+inf guard for deterministic pairs) cannot be settled by checks. The evidence is recorded in the note.",
+   "phi: run_checks.py exits non-zero because 29 comparisons fail. These are real Phi_G optimiser mismatches; no tolerance was weakened to force a pass.",
+   "phi: The three remaining trace issues for this family had already been fixed in the records and note by the earlier interrupted attempt. I verified them and made no further change."
+  ],
+  "remaining_issues": [
+   {
+    "family": "it_kraskov",
+    "unit_id": "infotheory.te.kraskov_DCE_auto-MAX_CORR_AIS_kmax-10_taumax-4",
+    "field": "deviation_from_documented (1)",
+    "problem": "This field still reads '(1) tau-max documented as 2, implemented 4.' (record line 85). That contradicts the record's own candidate_resolutions, which mark the tau-max candidate refuted as a code-vs-documentation deviation. The prose at supplement.txt:489 and information-theory.md:216 contradicts the identifier lists at :495-496 and :222-223, and the code (config.yaml:556/562) matches the identifiers. The same correction was made in the non-DCE record infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4 but not here. The note's 'Trace-stage fields corrected' tau-max bullet also names only te.kraskov_auto. Fix: reword (1) as in the non-DCE record (a slip inside the documentation, not a code deviation) and mention both records in the note bullet."
+   },
+   {
+    "family": "it_kraskov",
+    "unit_id": "infotheory.theiler_window",
+    "field": "checks_run (pop entry outcome)",
+    "problem": "The outcome says 'MC excess over tau+1 constant in T (gauss_ar1_pair 1.18 / 1.44 / 1.54)'. The quoted numbers rise by about 30% from T=256 to T=4096, and var2_bivariate goes 0.36 / 0.39 / 0.40. Re-run results: ref_mc_excess_over_tau_plus_1 = 1.176 / 1.435 / 1.541 and 0.361 / 0.394 / 0.405, approaching C = 1.571 and 0.405. The closeness field and the note describe this correctly as 'does not shrink / does not vanish as T grows'. Fix: replace 'constant in T' with 'does not shrink with T; rises toward C'."
+   }
+  ],
+  "score_disputes": 5,
+  "weak": 8,
+  "disputed": [
+   {
+    "unit_id": "infotheory.phi.star_norm-0",
+    "field": "score_0_10 (proposed 7, kept 9)",
+    "reason": "Without the same-lineage route, score 9 still holds under another rubric-9 clause. audit/README.md:48 gives 9 for 'within statistical tolerance consistent with estimator variance'. The rubric-7 anchor at README.md:50, 'optimiser-based unit passing optimality checks', is for units whose optimum can only be checked through optimality conditions. Here the canonical optimum is computed independently: a from-scratch tilde-I(beta) with an analytic derivative and a brentq root (refs/phi.py:StarRef.solve). That reference gives pyspi's deviation exactly. It is one-sided optimiser slack of at most 4.65e-8, which is 4 to 5 orders of magnitude below the sampling SD of the estimator. 10 stays ruled out because the agreement is not fp-exact. The same-lineage cap does not apply, because the score no longer depends on the Octave run. A checked family uses the same reasoning: misc.lmfit.BayesianRidge (score 9) treats an optimiser stopping gap far below the sampling spread as within statistical tolerance. misc.gpfit.DotProduct got 7 only because its ML-II optimum could not be verified exactly.",
+    "evidence": "results/phi.json: infotheory.phi.star_norm-0|narrowband_f0-0.25|256|pipeline|indep max_abs 4.6475e-08. infotheory.phi.star_norm-0|iid_gaussian|1024|pipeline|indep max_abs 9.551e-09, max_rel 6.37e-4. infotheory.phi.star_norm-0|iid_gaussian|4096|pipeline|null ref_mc_sd 8.30e-05. infotheory.phi.star_norm-0|iid_gaussian|1024|pipeline|null ref_mc_sd 2.95e-04. The conv runs have ref_mc_sd 3.45e-3 to 3.23e-2. Population D15 gap 4.3e-13 (pop run). Rubric text: audit/README.md:41 (same-lineage cap), :48 (9), :50 (7). Precedent: audit/records/misc.lmfit.BayesianRidge.yaml:162-166 and misc.gpfit.DotProduct.yaml:200-203."
+   }
+  ],
+  "validator_clean": true,
+  "fixed_units": [
+   "infotheory.theiler_window",
+   "infotheory.mi.kraskov",
+   "infotheory.mi.kraskov_DCE",
+   "infotheory.tlmi.kraskov",
+   "infotheory.tlmi.kraskov_DCE",
+   "infotheory.te.kraskov_DCE_k-1_kt-1_l-1_lt-1",
+   "infotheory.te.kraskov_DCE_k-2_kt-1_l-1_lt-1",
+   "infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4",
+   "infotheory.te.kraskov_DCE_auto-MAX_CORR_AIS_kmax-10_taumax-4",
+   "infotheory.te.kraskov_k-1_kt-1_l-1_lt-1",
+   "infotheory.phi.star_norm-0"
+  ],
+  "refutations": 2,
+  "confirmations": 19,
+  "kernel_issues": [
+   "it_kraskov: _kernels_infotheory.py docstring says the seeded NOISE_SEED jitter stream cannot be reproduced in numpy. It can: refs/it_kraskov.py:JavaRandom (pure-Python 48-bit LCG + polar nextGaussian) matches java.util.Random to <= 8.9e-16. Worked around by z-scoring and adding that jitter before calling mi_ksg1/cmi_ksg1 with normalise=False; the kernel was not edited.",
+   "it_kraskov: _kernels_infotheory.py cites JIDT v1.6.1-tag line numbers (unseeded new Random()), while the shipped jar behaves like master a9b6b3e. This family cites a9b6b3e lines instead; no numeric impact.",
+   "phi: None. The phi references use only numpy/scipy primitives defined in refs/phi.py. refs/phi.py imports _kernels_infotheory but calls nothing from it, so no shared kernel was relied on or worked around."
+  ],
+  "confirmed_findings": [
+   "it_kraskov: Copy paths silently change TE configuration: CalculatorFrame/deepcopy/pickle of te_kraskov auto-embedding compute the fixed k=1 TE (0.1336 vs 0.0606) and of te_DCE_k-2 the k=1 value (0.1344 vs 0.1592). Deepcopy also drops NOISE_SEED, so all kraskov SPIs run with unseeded jitter under CalculatorFrame (tied mi 0.2301 -> 0.2248). Not in KNOWN_ISSUES.",
+   "it_kraskov: The DCE Theiler window is Bartlett's factor + 1 (lag 0 double counted), summed over all T-1 lags with no truncation. It grows to ~T/3 on oscillatory/trending input and has an upward finite-sample bias on correlated pairs (gauss_ar1 5.14 vs tau+1 3.63).",
+   "it_kraskov: The DCE window strongly raises MI/TLMI on oscillatory or tied input (narrowband 1.44 -> 2.25 nats) and does not reduce bias on autocorrelated Gaussian data (adds +0.012 nats).",
+   "it_kraskov: The DCE auto-embedding TE returns NaN for whole matrices of short oscillatory series (T=64: narrowband 6/6, logistic 2/2, shared_envelope 6/12). The Theiler window feeds into the AIS embedding search, so a channel's embedding depends on its partner.",
+   "it_kraskov: Auto-embedding tau-max is documented as 2 but implemented and labelled as 4; tau > 2 is actually selected.",
+   "it_kraskov: Bundled JIDT jar honours NOISE_SEED (not the v1.6.1 release); values depend on the seed on tied data (spread up to 0.057 nats) and on the core count at <= 1.6e-14.",
+   "it_kraskov: BIAS_CORRECTION=false set by pyspi is a no-op for the Kraskov calculators.",
+   "it_kraskov: Supplement labels tlmi 'undirected' while the output is directed and asymmetric (the asymmetry itself is already documented as REVIEW M8).",
+   "it_kraskov: Efficiency: MI/MI_DCE compute every unordered pair twice (the ordered matrix is exactly symmetric). Auto-embedding reruns the partner-independent AIS search for every ordered pair. The DCE ACFs are recomputed inside the pair loop.",
+   "phi: phi Geo (norm-0/1): the PhiToolbox augmented-Lagrangian port stops on objective change alone. It over-estimates Phi_G at non-stationary feasible points (up to 1.107 nats, shared_envelope T64) and under-estimates at infeasible points on weakly coupled pairs at large T (cointegrated T4096 -3.46e-4, relative about 1). This makes raw-scale output scale-dependent. Both are inherited from PhiToolbox (Octave reproduces them to <= 3.4e-10). The under-estimate regime is new in the check stage.",
+   "phi: phi (all four units): degenerate pairs never give +inf. A bit-identical copy gives NaN, or -ln(2)/2 for Geo at T4096. An exact one-step delay gives small negative values (star -0.00110 / -0.0215, Geo -0.00062 / -0.0200). The sign depends on a roundoff eigenvalue, so Phi >= 0 can be violated.",
+   "phi: phi norm-1 (star and Geo): the divisor is the min past-window Gaussian differential entropy. It is negative for variance < 0.0585, giving negative values from an Unsigned SPI on non-z-scored input (-0.000834 / -0.00106). Under z-scoring it is a near-constant rescaling (1.37-1.43). The mechanism is partly documented as REVIEW M8 (for je/ce); the phi consequence is not documented.",
+   "phi: phi star: L-BFGS-B leaves beta at 1 on about half the pairs (67/136). This biases Phi* up by <= 4.65e-8 absolute (relative <= 6.4e-4). It is minor and inherited, and also occurs with the analytic gradient.",
+   "phi: phi star/Geo: the supplement/config keyword 'nonlinear' contradicts the second-order Gaussian estimator and the class label 'linear' (documentation)."
+  ],
+  "refuted_candidates": [
+   "it_kraskov: Kernel docstring caveat that the seeded JIDT jitter 'cannot be reproduced in numpy': refuted. A pure-Python java.util.Random port reproduces it, giving fp-exact agreement on tied data for seeds 42/43/44.",
+   "it_kraskov: Possible jitter-induced mismatch on continuous data: refuted. The kernel mi_ksg1 with no jitter equals pyspi to 3.6e-15, and sklearn equals pyspi to <= 1.3e-15.",
+   "phi: Trace-stage claim (Geo) that apart from the delayed_noise/narrowband stalls the AL agrees with the global minimum to about 1e-8: refuted at T=4096 on weakly coupled pairs (infeasible stop, under-estimates). The record's deviation_from_canonical now carries a check-stage correction.",
+   "phi: Trace-stage reading of the paper that dI~/dbeta = 0 is a quadratic in beta: not reproduced for the atomic bipartition in this parametrisation (the cleared numerator is quartic). The paper's equations are images and were not read, so this is recorded as a correction, not a definitive refutation.",
+   "phi: Implicit hypothesis that the finite-difference substitution (vs minFunc's analytic gradient) changes the values: the substitution is confirmed but has no numerical effect (Octave GradObj on and scipy analytic jac stop at the same beta=1 points; differences <= 4.5e-8)."
+  ]
+ },
+ "spectral_directed+sgc": {
+  "not_done": [
+   "spectral_directed: Re-testing the segfault claim at pyspi/statistics/spectral.py:232-235 (multivariate PDC/gPDC/dDTF for large P): no P >= 10 multivariate run was attempted.",
+   "spectral_directed: Korzeniewska et al. 2003 was not retrieved (paywalled); the F^2 C^2 form rests on secondary sources and the upstream master code.",
+   "spectral_directed: The NumPy < 2 random-start fallback (global RNG) was not tested; it cannot be reached in this environment.",
+   "spectral_directed: logistic_maps_chaotic direction is not decisive: the Wilson residual is 0.40/0.37, so the four inverted units there are reported only.",
+   "spectral_directed: One statistical failure is a normal-approximation tail exceedance, not a discrepancy: ddtf var2_chain mc, raw |z| 2.82 against the bound 2.64, empirical two-sided tail 0.01. It is left as a fail and explained in the note.",
+   "spectral_directed: The scale-invariance criterion was moved from 1e-6 to 1e-2 after a probe showed the Wilson estimate is not equivariant. The reason is stated in refs/spectral_directed.py:h_scale and in the note.",
+   "sgc: Upstream pyspi / spectral_connectivity issue trackers were not searched (open questions 1 and 7: whether the direction convention and the spectral.py:439 handler defect are already reported).",
+   "sgc: Geweke 1982 (JASA) itself was not retrieved; the integral identity was verified numerically for the two test models and its form taken from Ding, Chen & Bressler 2006 eq. (28), which states it 'under general conditions' only.",
+   "sgc: logistic_maps_chaotic was not used for direction (nonlinear coupling; VAR-based GC not a ground truth there); direction rests on var2_bivariate, gauss_ar1_pair and delayed_noise.",
+   "sgc: Nonparametric T=4096 MC only for var2/iid; nonparametric pipeline-detrend and kernel paths checked only on trending (detrend) and var2 (affine/scale), not on every dataset.",
+   "sgc: The nonparametric affine/scale runs fail at 1e-6 (max_abs 1.1e-4) from Wilson non-equivariance under channel scaling; recorded as a minor observation, not escalated as a candidate (irrelevant under default z-scoring)."
+  ],
+  "remaining_issues": [
+   {
+    "family": "sgc",
+    "unit_id": "spectral.sgc.parametric_order-None",
+    "field": "candidate_resolutions[7].evidence (also notes/sgc.md:256)",
+    "problem": "The record says 'all lower: 2 -> 1' and the note says 'always lower (2 \u2192 1)'. That is wrong for 2 of the 42 changed draws. My probe scratchpad/sgc_check/ntot_transitions.py ran in the comparison venv with the refs/sgc.py replica, _ntot_draws(256, 42). It tabulated (order 2T, order T) as (1,1) 90, (2,1) 40, (2,2) 68, (3,1) 1, (3,2) 1. The counts already quoted ({1:90, 2:108, 3:2} against {1:131, 2:69}, with 42 differing) force the same split. Suggested wording: 'all lower: 40 draws 2 -> 1, one 3 -> 2, one 3 -> 1'. The fix-report summary repeats the same error."
+   },
+   {
+    "family": "sgc",
+    "unit_id": "spectral.sgc.parametric_order-None",
+    "field": "implementation_trace (spectral.py:438-440 entry, line 111; the same text is at spectral.sgc.parametric_order-1.yaml:102, spectral.sgc.parametric_order-20.yaml:102, spectral.sgc.nonparametric.yaml:110)",
+    "problem": "All four sgc records still say the all-NaN return 'is not reached under the default warnings filter state'. The fix report says every 'default (warnings) filters' phrase was replaced, but this variant was missed. The TypeError needs the message-regex filters numpy installs on import, not Python's default filters. I re-checked this in the project venv: 0 regex filters and warnings.warn(ValueError('x')) succeeds before import numpy; 3 filters and TypeError after. Replace the phrase with 'under the message-regex warnings filters numpy installs on import' in all four records."
+   },
+   {
+    "family": "sgc",
+    "unit_id": "spectral.sgc.nonparametric",
+    "field": "check_cost",
+    "problem": "Minor and timing-only. check_cost quotes '83 runs, 58 s pyspi time in total (out/pyspi/index/sgc.json)' and sweep probes 'up to 21.6 s'. The index written by the forced rerun after the ntot fix gives 39.4 s in total and a 13.3 s maximum (nonparametric|iid_gaussian|1024|pipeline|sweep). Smaller drift elsewhere: parametric_order-1 says sweep up to 10.9 s against 12.3 s in the index, and parametric_order-20 says 34 s in total against 31.0 s. The parametric_order-None figures (36 s, 8.4 s) match. Requote from the current index or drop the file citation."
+   }
+  ],
+  "score_disputes": 1,
+  "weak": 4,
+  "disputed": [],
+  "validator_clean": true,
+  "fixed_units": [
+   "spectral.sgc.parametric_order-None",
+   "spectral.sgc.parametric_order-1",
+   "spectral.sgc.parametric_order-20",
+   "spectral.sgc.nonparametric",
+   "spectral.dtf",
+   "spectral.dcoh",
+   "spectral.pdcoh",
+   "spectral.gpdcoh",
+   "spectral.ddtf",
+   "spectral.wilson_factorisation"
+  ],
+  "refutations": 1,
+  "confirmations": 24,
+  "kernel_issues": [
+   "spectral_directed: None needed a workaround. _kernels_spectral.directed_coherence is flagged 'UNVERIFIED: Baccala 1998 not retrieved'. I checked it against the scanned paper (Eq. 21-24, p.43) and it matches. ddtf (Korzeniewska F^2 C^2) is still unverified against the primary source; the upstream spectral_connectivity master now implements the same form.",
+   "spectral_directed: Note for users of wilson_factorise: on a multitaper CSM that is not exactly factorisable, the step-converged factor depends on the Cholesky start, so it is not equivariant under channel rescaling or reordering. The kernel and the library behave identically here (agreement 4e-13), so this is a property of the method, not a kernel bug.",
+   "sgc: None found in the shared _kernels_* modules; _kernels_spectral.wilson_factorise / granger_nonparametric / multitaper_fft / var_transfer_function used unchanged and reproduce the library to <= 4.6e-12.",
+   "sgc: Not an error but a scope limit: _kernels_spectral.granger_nonparametric uses ln S - ln intr (NaN when either is negative) whereas nitime uses ln(S/intr) (finite when both negative); refs/sgc.py therefore has its own geweke_ratio for the parametric path so the T=64 indefinite-covariance values are reproduced."
+  ],
+  "confirmed_findings": [
+   "spectral_directed: All five directed units: A[i,j] = flow j -> i (row = target), contrary to the glossary's row = source",
+   "spectral_directed: All five directed units: the fixed 5-taper single-window multitaper + Wilson estimator is inconsistent; the T-independent bias is ~+0.055 in the true direction and ~0.11-0.13 in the null direction, and pyspi never converges to the analytic value",
+   "spectral_directed: dtf/pdcoh/dcoh/ddtf: the estimator's expected direction is inverted under very unequal innovation variances (delayed_noise); gpdcoh is not affected",
+   "spectral_directed: dtf/pdcoh/gpdcoh/ddtf: the per-pair bivariate fit removes conditioning (chain 0->2: PDC 0.0887, gPDC 0.0845, dDTF 0.0042 where the conditioned value is 0)",
+   "spectral_directed: dcoh: spectral_connectivity 1.1.2 formula is |H_ij| sqrt(DTF_ij), not Baccala 1998 DC. It is unbounded (up to 2833), not scale invariant, and still unchanged in v2.0.1 (fixed in unreleased master).",
+   "spectral_directed: ddtf: computes |ffDTF| x |PDC| instead of ffDTF^2 x partial coherence^2; degenerate in 2x2; scales as T^-1/2",
+   "spectral_directed: pdcoh/gpdcoh: squared rather than modulus (monotone convention)",
+   "spectral_directed: wilson: numpy-2 AttributeError fallback blanks the whole SPI matrix or, depending on rounding, gives a finite meaningless value for a duplicated pair",
+   "spectral_directed: wilson: no zero padding (residual 0.3-3%); silent use of non-converged or high-residual factorisations (0.32-0.61)",
+   "spectral_directed: wilson: uncached properties rerun Wilson 2-4 times per call, not shared between units or orientations (speed only)",
+   "spectral_directed: wilson: channel-order and scale non-equivariance of the estimate (up to 3.4e-2 per bin)",
+   "sgc: All four sgc units: A[i,j] = GC j -> i (row = target), transpose of the documented glossary convention (new; not in KNOWN_ISSUES)",
+   "sgc: nonparametric: fixed 5-taper single-window estimator gives a T-independent positive bias ~0.125 nats (inconsistent estimator)",
+   "sgc: nonparametric: duplicated channels either raise AttributeError (numpy 2 incompatibility in spectral_connectivity minimum_phase_decomposition.py:48, whole table NaN) or, depending on round-off, return finite values for the copy pair",
+   "sgc: nonparametric: Wilson factor of the unpadded single-window CSM is inaccurate (recon err up to 0.32), producing NaN bins silently dropped by nanmean; zero padding/more tapers fix it",
+   "sgc: nonparametric: exactly zero GC becomes NaN under the library <=0 rule",
+   "sgc: parametric (all): any failing pair aborts the whole SPI; spectral.py:439 warnings.warn(err) raises TypeError under default filters, so the intended all-NaN return is dead code; real Calculator gives all-NaN table",
+   "sgc: parametric (all): not offset-invariant with normalise=False (non-demeaned autocovariances)",
+   "sgc: parametric (all): freqz grid k/1026 labelled k/1024",
+   "sgc: order-None: first-local-minimum BIC with order 0 allowed sets lagged links to exactly 0 (delayed_noise 5/6 links)",
+   "sgc: order-None: NaN BIC never terminates the loop -> ValueError (narrowband, logistic_maps, shared_envelope, delayed_noise T=64)",
+   "sgc: order-None: orders 0..48 fitted, only 0..47 returnable",
+   "sgc: order-1 and order-20: indefinite N-k LWR noise covariance at short T gives negative values (unsigned SPI) and NaN cells; order-20 T=64 explains the partial_nan goldens"
+  ],
+  "refuted_candidates": [
+   "sgc: order-None BIC penalty Ntotal = 2T: no observed effect on selected orders (identical with Ntot = T on all 11 datasets); code deviation stands but is inconsequential here",
+   "sgc: order-None sign candidate: inconclusive (no negative values in any order-None run; indefinite fits ended in ValueError)",
+   "sgc: nonparametric NaN-handling candidate partially corrected: NaN marks exact-zero GC as well as factorisation failure"
+  ]
+ },
+ "dcorr_hsic+hhg_mgc+lagged_dcorr_mgc": {
+  "not_done": [
+   "dcorr_hsic: Five comparisons remain failures and were not loosened. Four are iid_gaussian|256|pipeline|null, one per unit: a single unusual draw at the 0.15% tail of its own permutation null. The fifth is dcorr_biased|nonlinear_dependence|256|pipeline|detected: the circle pair is above all 200 permutations but its z against the iid null is 4.37, below the pre-set margin of 5.",
+   "dcorr_hsic: One pyspi run exceeded the ~60 s guide: dcorr_biased|iid_gaussian|4096|pipeline|null took 72.9 s on a machine shared with other families (P=5, T=4096, O(T^2)). Family pyspi compute totalled 454 s.",
+   "dcorr_hsic: HSIC was not run at T=4096 (O(T^2) memory). HSIC convergence covers T=256 and T=1024 only.",
+   "dcorr_hsic: R energy is not installed, so there is no energy::bcdcor/dcovu cross-check; dcor 0.7 and from-scratch implementations cover dcorr.",
+   "dcorr_hsic: dHSIC has no unbiased estimator. The unbiased hsic value is checked against an R re-implementation of Song eq. 5 on dHSIC Gram matrices plus two independent Python forms, so check_method is independent-impl rather than external-pkg.",
+   "dcorr_hsic: The Theorem 7(ii) theorem number was not re-checked against the PDF. The formula was verified by independent quadrature and Monte Carlo.",
+   "dcorr_hsic: The Monte Carlo cache (mc_cache_v2.json) was computed before the extended-precision change to the HSIC reductions. The affected HSIC MC statistics differ at roughly 1e-12, which is immaterial to the 2-SD criteria; it was not regenerated.",
+   "hhg_mgc: HHG int64-overflow hypothesis (n >= 10812) not run: one end-to-end call is O(n^3), roughly 4-5 h at 14.4 s per call for n=1024, outside budget and the T <= 4096 scope; left inconclusive.",
+   "hhg_mgc: No HHG run at T=4096 (O(T^3), about 6 min per call); HHG T=1024 limited to one pair (bivariate_gaussian (2,3), 14.4 s per call). MGC T=4096 was only timed (16.6 s per call), not added as a check.",
+   "hhg_mgc: No external-package reference: the R packages HHG and mgc are not installed and installing is not permitted at this stage; CRAN mgc would be same-lineage anyway. The r-mgc constants come from GitHub master sources fetched at the trace stage; the CRAN version was not confirmed (no network fetch).",
+   "hhg_mgc: The trace's proposed per-pair 200-permutation null was replaced by an analytic E[T] / Monte Carlo null (rank-statistic null is distribution-free for HHG); no per-pair permutation p-values beyond the Monte Carlo upper-tail fractions reported in the order runs.",
+   "hhg_mgc: The remaining trace issue (mgc sign candidate citing glossary-of-terms.md:21) was already fixed in the record when I started (presumably by the interrupted attempt); I verified the citation and kept it, so no edit was needed.",
+   "lagged_dcorr_mgc: No T=4096 runs: dcorrx at T=1024 already took 49-94 s per run on the shared machine. Null convergence uses T=64/256/1024 for dcorrx and T=64/256 for mgcx (mgcx is capped at T<=256 by the brief).",
+   "lagged_dcorr_mgc: Three pyspi runs exceeded the ~60 s guideline under concurrent load: dcorrx_maxlag-10 lagterms delayed_noise T1024 93.6 s, null T1024 81 s, delayed_noise dir T1024 59 s. The iid T1024 lagterms run was cut to p012 for this reason. Family pyspi total: 754 s.",
+   "lagged_dcorr_mgc: One null run fails (distance.dcorrx.maxlag-1|iid_gaussian|256|pipeline|null: -0.0143 vs band -0.0140, Bonferroni-adjusted empirical p 0.04). It is documented as a chance exceedance, not a finding, and the band was not widened.",
+   "lagged_dcorr_mgc: The null reference band was changed twice: a normal band, then a Pearson III band, then empirical Monte Carlo quantiles. Both changes are documented in the note. The T=1024 dcorrx bands borrow the standardised T=256 shape because 8000-replicate Monte Carlo at T=1024 was too expensive.",
+   "lagged_dcorr_mgc: Upstream hyppo main was not re-fetched; the note cites the trace-stage fetch of 2026-10-14.",
+   "lagged_dcorr_mgc: SciPy's _stats.pyx source was not opened (it is not shipped in the wheel); the compiled map is verified numerically instead.",
+   "lagged_dcorr_mgc: Whether the distance-of-distances statistic keeps the consistency guarantees of Shen et al. 2024 is not settled; empirical evidence and a heuristic argument are in the note.",
+   "lagged_dcorr_mgc: out/results/hhg_mgc.json did not exist, so the mgcx lag-0 vs mgc comparison used the lag0_mgc probe, as the brief allows.",
+   "lagged_dcorr_mgc: The three listed trace issues had already been corrected by the interrupted earlier attempt. This stage verified them and added the check-run evidence to units_and_range."
+  ],
+  "remaining_issues": [
+   {
+    "family": "lagged_dcorr_mgc",
+    "unit_id": "distance.dcorrx.maxlag-1",
+    "field": "notes/lagged_dcorr_mgc.md line 138 (Checks > Setup > Results bullet)",
+    "problem": "This line still says the remaining failure is 'one null exceedance, read as chance (see dcorrx_maxlag-1)'. That contradicts the corrected reading at note line 214 and in the record's closeness and null checks_run outcome. Both of those say it is 'not an independent chance event': the lag-0 term is dcorr_hsic's distance.dcorr.biased-False matrix on the same iid_gaussian T256 draw. I re-ran null256_shared.py: 1.76e-16, A[3,0] = -0.0066 + -0.0077, 18/20 and 14/20 negative. The Setup line needs the same wording."
+   },
+   {
+    "family": "lagged_dcorr_mgc",
+    "unit_id": "distance.dcorrx.maxlag-10",
+    "field": "candidate_resolutions[1].evidence",
+    "problem": "This field still says 'statistic - sum of terms <= 1.1e-16'. The new run distance.dcorrx.maxlag-10|narrowband_f0-0.25|256|kernel|lagterms gives ref_stat_minus_sum_of_terms_maxabs 8.88e-16, and the record's own closeness and the note (line 229) already say <= 8.9e-16. This is a stale number left over from before the run set was widened."
+   },
+   {
+    "family": "hhg_mgc",
+    "unit_id": "distance.mgc",
+    "field": "closeness / note 'Per-pair permutation null' bullet (notes/hhg_mgc.md ~379-384) / checks_run perm outcome",
+    "problem": "The failing distance.mgc|iid_gaussian|256|kernel|perm run (KS p 0.0122, lower tail, 90% of pyspi values negative) uses the same iid_gaussian T256 draw as dcorr_hsic's four failing *|iid_gaussian|256|pipeline|null runs. The z-scored inputs agree to 4.4e-16, and distance.hhg|iid_gaussian|256|kernel|perm uses it too (0.0). On that draw, dcorr_hsic places the mean dCor^2 at the 0.15% lower permutation tail, and lagged_dcorr_mgc now traces its null exceedance to the same draw. MGC on iid data falls back to the global-scale column-centred dCorr, so this shared cause is directly relevant. The hhg_mgc record and note do not cite it: they say only 'it bears on the draw', and for HHG that 'further draws through pyspi would settle' the question. They should cite the dcorr_hsic evidence, as the other two families now do. The HHG T64 perm fail is on the T64 draw, which passes in dcorr_hsic (|z| <= 1.73), so it has no such explanation."
+   },
+   {
+    "family": "lagged_dcorr_mgc",
+    "unit_id": "distance.dcorrx.maxlag-1",
+    "field": "already_documented / candidate_resolutions ('unsigned' item) / note 'Scores and findings' New finding bullet (all four dcorrx/mgcx units)",
+    "problem": "The cross-family treatment of the 'unsigned label on a legitimately negative bias-corrected estimator' class is inconsistent. dcorr_hsic now records it as already_documented 'partly', a new instance of the class covered by REVIEW M7/M8 (KNOWN_ISSUES.md lines 31-32) and EEG_OPTIMIZATION_NOTES.md:169. The four dcorrx/mgcx records still say already_documented 'no', and the note lists 'unsigned' among findings 'absent from KNOWN_ISSUES.md' without citing M7/M8. new_finding stays true either way because of the distance-of-distances construction, but already_documented and the note's wording should match dcorr_hsic's 'partly' treatment, which the dcorr_hsic fix deliberately left to this family."
+   },
+   {
+    "family": "hhg_mgc",
+    "unit_id": "distance.mgc",
+    "field": "already_documented / candidate_resolutions[0].evidence",
+    "problem": "Same cross-family inconsistency as in lagged_dcorr_mgc. The mgc 'unsigned but negative' candidate says 'Not in KNOWN_ISSUES (M7/M8 do not list mgc)', and already_documented cites only REVIEW M2. dcorr_hsic now classes the identical situation as already_documented 'partly' (a new instance of the M7/M8 class). One of the two treatments should be adopted across all three families."
+   }
+  ],
+  "score_disputes": 1,
+  "weak": 10,
+  "disputed": [],
+  "validator_clean": true,
+  "fixed_units": [
+   "distance.dcorrx.maxlag-1",
+   "distance.dcorrx.maxlag-10",
+   "distance.mgcx.maxlag-1",
+   "distance.mgcx.maxlag-10",
+   "distance.dcorr.biased-False",
+   "distance.dcorr.biased-True",
+   "distance.hsic.biased-False",
+   "distance.hhg",
+   "distance.mgc"
+  ],
+  "refutations": 5,
+  "confirmations": 26,
+  "kernel_issues": [
+   "dcorr_hsic: None in the shared _kernels_distance.py functions that I used (dcorr, dcorr_from_dist, hyppo_dcorr_from_dist, median_gamma, hyppo_hsic_replica): all agreed with pyspi to <= 7.4e-14.",
+   "dcorr_hsic: The family reference's own float64 Song eq. 5 (refs/dcorr_hsic.py:hsic_u_from_gram) lost 1.1e-12 absolute (relative 5e-8) on raw scaled_offset A[3,0]. Sums of near-one Gram entries cancel when x's bandwidth is 50x y's scale. An 80-bit evaluation showed pyspi was accurate (4.7e-15), so I moved the HSIC_u and HSIC_b reductions in refs/dcorr_hsic.py to np.longdouble. _kernels_distance.hsic_biased also reduces in float64; I did not use it in the value path and did not test whether the same conditioning affects it.",
+   "hhg_mgc: None in _kernels_distance.py. Its hhg() is correct and was used only to cross-validate the faster refs/hhg_mgc.py:hhg_from_dist in --selftest, including on tied data; the shared kernels have no MGC implementation, so the family ref carries its own mgc_from_dist. Not a kernel issue but a reference-construction fix in the family ref: the first draft's mean +- z*SD null band under-covered HHG's right-skewed null (skewness 0.98), flagging an independent anm pair. It was replaced by empirical quantiles of a 2000-draw Monte Carlo of the from-scratch statistic (mc_quantile_band), which is the exact rank null for continuous iid pairs.",
+   "lagged_dcorr_mgc: No defects found in _kernels_distance. hyppo_dcorrx_replica and dcorrx_mehta were used unchanged.",
+   "lagged_dcorr_mgc: _kernels_distance has no MGC kernel, so a from-scratch MGC (mgc_local_corr / mgc_stat) was written in refs/lagged_dcorr_mgc.py. Dense column ranks are required to match SciPy's map shape on tied data; min, max and average ranks give different shapes.",
+   "lagged_dcorr_mgc: dcorrx_mehta uses exact |a-b| distances while pyspi uses sklearn's dot-product arithmetic. This produces a 5.0e-11 lag-0 difference on tied logistic_maps, at rounding level and irrelevant to the designed-to-fail comparison. The mgcx Mehta variant uses sklearn-mirrored distances so that rank ties match."
+  ],
+  "confirmed_findings": [
+   "dcorr_hsic: distance.dcorr.biased-False: dcorr is bias-corrected dCor^2 while dcorr_biased is unsquared dCor_n. The two are on different scales (dcorr_biased^2 ~ dcorr), which the supplement does not say (new_finding)",
+   "dcorr_hsic: distance.dcorr.biased-False: labelled unsigned but returns negative values (60-90% of iid null pairs); legitimate for an unbiased estimator, so this is a label/range issue (related in kind to REVIEW M7, which does not cover dcorr)",
+   "dcorr_hsic: distance.dcorr.biased-False: supplement calls the unbiased estimator 'double-centering'; code U-centres (documentation)",
+   "dcorr_hsic: distance.dcorr.biased-False: constant input gives 0 not NaN (low impact, only with normalise=False)",
+   "dcorr_hsic: distance.dcorr.biased-True: supplement omits the centring step (documentation; counted on dcorr)",
+   "dcorr_hsic: distance.hsic.biased-False and -True: Gaussian bandwidth taken from the first argument only and reused for the second (hyppo compute_kern). The kernel is asymmetric and stored values depend on process order (up to 5.8% / 0.026 after z-scoring) (new_finding, definition_under_review)",
+   "dcorr_hsic: distance.hsic.biased-False and -True: stored value is normalised HSIC (and its square root for biased), not HSIC; undocumented (new_finding)",
+   "dcorr_hsic: distance.hsic.biased-False: hsic is on the squared scale and hsic_biased on the root scale (scale mismatch)",
+   "dcorr_hsic: distance.hsic.biased-False and -True: with normalise=False the value depends on y's scale relative to x",
+   "dcorr_hsic: distance.hsic.biased-False: labelled unsigned but negative values (70-90% of null pairs)",
+   "hhg_mgc: distance.hhg: exactly symmetric statistic implemented as Directed with a 'directed' label, contradicting config.yaml/supplement 'undirected' (new)",
+   "hhg_mgc: distance.hhg: supplement/GitBook describe an RKHS kernel statistic on ranks of variables; the code computes Heller et al. chi-square sums over rank-of-distance tables (new, documentation)",
+   "hhg_mgc: distance.hhg: sklearn dot-product distance rounding changes the rank statistic by up to 4.9% on tied data (root cause REVIEW M2; consequence new)",
+   "hhg_mgc: distance.hhg: raw T is length-dependent (null mean n(n-2)(n-3)/(n-1)); interpretation finding",
+   "hhg_mgc: distance.mgc: 'unsigned' label contradicted by negative values on 80-90% of independent pairs (new)",
+   "hhg_mgc: distance.mgc: SciPy-specific minimum-region rule changes values by up to 0.061 on continuous data at T=256 versus paper and r-mgc rules (new; scope wider than the trace stated)",
+   "hhg_mgc: distance.mgc: n^2 centring and n-1 threshold follow r-mgc, not the paper text (<= 2.4e-3; author-code convention)",
+   "hhg_mgc: distance.mgc: sklearn distance rounding moves values by up to 0.061 on tied data (root cause REVIEW M2; consequence new)",
+   "hhg_mgc: distance.mgc: supplement 'unbiased estimator (as in hyppo)' inaccurate: global fallback is column-centred dCorr, differing from hyppo's U-centred dCor^2 at O(1/n); GitBook key-reference link points to an LCSS paper",
+   "lagged_dcorr_mgc: Distance-of-distances lag terms in hyppo DcorrX/MGCX: for every lag >= 1 the statistic is computed on Euclidean distances between rows of the sliced distance matrices, not on the lagged series. This contradicts Mehta et al. 2019 / Shen et al. 2024 and hyppo's own docstring. The gap is up to 0.26 (24%) on totals; lag 0 is unaffected; direction ordering is preserved. Not in KNOWN_ISSUES (new_finding true on all 4 records).",
+   "lagged_dcorr_mgc: Output is a weighted SUM over lags 0..L including lag 0, not the 'average' of the supplement; values exceed 1 (up to 7.97).",
+   "lagged_dcorr_mgc: A[i,j] = j -> i (rows = targets), reversed relative to the GitBook glossary and the supplement wording.",
+   "lagged_dcorr_mgc: 'unsigned' label and the glossary's [0,1] range violated: negative values on independent data.",
+   "lagged_dcorr_mgc: 'undirected' keywords in the supplement and config.yaml vs a strongly asymmetric Directed SPI.",
+   "lagged_dcorr_mgc: mgcx: 2 extra discarded multiscale_graphcorr calls per ordered pair (efficiency only; 50% overhead at L=1)."
+  ],
+  "refuted_candidates": [
+   "hhg_mgc: distance.mgc trace sub-claim: 'on continuous data the region rule did not change any probed value' (refuted: anm and narrowband_f0-0.1 at T=256 differ by 0.027 and 0.061)",
+   "hhg_mgc: distance.mgc trace sub-claim: 'both the paper and r-mgc region rules give about 0.316 on logistic_maps T=64' (refuted for r-mgc: ceil(0.02*64)*8 = 16 = 2*min(m,n), identical to pyspi; only the paper 2n rule differs, by 0.056)",
+   "hhg_mgc: Task premise that global-scale MGC equals the unbiased dcorr (holds only approximately, O(1/n); the exact identity is with the column-centred dCorr)"
+  ]
+ },
+ "dtw_family+gwtau+ccm": {
+  "not_done": [
+   "dtw_family: No DP check at T=4096: the task capped DP checks at T <= 1024. Only the tslearn mask probes ran at 4096.",
+   "dtw_family: tslearn versions other than 0.9.0 (0.5.2-0.8.x) were not executed: installing anything was not allowed. The release range of the LCSS mask bug rests on the trace-stage reading of the tags.",
+   "dtw_family: Vlachos 2002 definition numbering and the Sakoe-Chiba 1978 equation/table numbers were not checked against the PDFs (not available here).",
+   "dtw_family: Itakura masks for unequal lengths were not tested (pyspi always uses equal lengths).",
+   "dtw_family: dtaidistance has no Itakura window, so the itakura unit has no external-package reference (own DP plus exact mask only).",
+   "dtw_family: The two remaining trace issues (relabel the scaled_offset pyspi-vs-pyspi checks to same-lineage in the dtw None and lcss None records) were already applied before this stage, so no edit was needed. This is noted in the family note.",
+   "gwtau: I did not spot-check the equation labels (Eqs. 5, 8-12, Prop. 1) against the Springer journal PDF; the PDF was not opened in this stage. The checks rely only on the definitions themselves.",
+   "gwtau: The task text says HEAD is a1f20c7, but the checkout is a42ebc1, one commit later. The calculator.py lines were read and cited at a42ebc1; they match the line numbers the task supplied, except that _load_yaml's def is at line 230, with the config loop at 251-267.",
+   "gwtau: Two Monte Carlo bands from the interrupted attempt's draft were recalibrated, not just reused. null used a symmetric mean +/- z sd band, which is wrong for a right-skewed null (skew 1.14-1.24); it now uses the empirical Bonferroni band. null-m2 used a 2-sd rule, which flagged T=256 at z=2.53. pyspi equals the independent reference exactly on those rows, and the draw sits at the 98th Monte Carlo percentile. The rule is now split into an analytic-vs-Monte Carlo formula check plus an empirical-band draw check. The family note reports both the draft criterion and the percentile.",
+   "ccm: Cross-platform reproducibility (libc++/MSVC RNG and std::sort tie order) not tested: only one Linux toolchain is available; recorded as inconclusive.",
+   "ccm: Null and convergence checks at T >= 1024 were limited to one pyspi run, causal.ccm.E-10|logistic_maps_chaotic|1024|pipeline|stats3-E10, which took 85 s alone and 167 s under load, over the ~60 s per-run guideline; its reference took 524 s. The iid null was checked at T=256 only.",
+   "ccm: The two 16-seed bias probes took 56 s each; they were run for E=1 only (the unit with the excursions), not for E=10.",
+   "ccm: Theiler-window effect quantified on gauss_ar1_pair and a pure sinusoid only, not on EEG-like broadband data.",
+   "ccm: The four seed-42 statistical runs beyond 2 se (E-1 iid mean, chaotic mean, sugihara max; E-10 T=1024 stats3) stay marked as fails in results.json: the tolerance was not widened, and the seed bias test shows they are sampling fluctuation.",
+   "ccm: The per-direction-E vs max(E_i,E_j) design question and the 21-vs-22 sizes intent can only be settled by the maintainers."
+  ],
+  "remaining_issues": [],
+  "score_disputes": 3,
+  "weak": 6,
+  "disputed": [],
+  "validator_clean": true,
+  "fixed_units": [
+   "distance.gwtau",
+   "distance.dtw.constraint-None",
+   "distance.dtw.constraint-itakura",
+   "distance.dtw.constraint-sakoe_chiba",
+   "distance.lcss.constraint-itakura",
+   "causal.ccm.E-1",
+   "causal.ccm.E-10",
+   "causal.ccm.E-None"
+  ],
+  "refutations": 3,
+  "confirmations": 29,
+  "kernel_issues": [
+   "dtw_family: None blocking. _kernels_distance.itakura_mask mirrors tslearn including rounding, so the refs build an exact-integer parallelogram (exact_itakura) and assert at start-up that the kernel mask equals it. lcss_dp and soft_dtw_dp take no mask argument for soft-DTW, so masked soft-DTW (soft_dtw_masked), the Itakura local-slope DP and batched two-diagonal DPs for the Monte Carlo nulls were written in refs/dtw_family.py and asserted against the kernels at start-up. Kernel dtw_dp is slow (0.27 s per pair at T=1024) but adequate; lru caching keeps the refs step at about 5 minutes.",
+   "gwtau: None in _kernels_distance (root_arc_lengths, wasserstein2_1d, gwtau were used unchanged and agree with POT to <= 1.7e-14).",
+   "ccm: No defects found in _kernels_distance. ccm_skill_curve and simplex_crossmap are pure-python per-row loops, too slow for 500 x 22 x 2 random libraries per dataset. refs/ccm.py therefore uses XMap, a vectorised form of the same arithmetic on a precomputed distance matrix. It is validated against simplex_crossmap in every run (difference 0.0) and adds the cppEDM exclusionRadius rule (|pred row - lib row| <= X). The kernel's stable-argsort neighbour choice cannot reproduce pyEDM on tied columns, as its docstring says; tied columns are reported separately as qualitative runs."
+  ],
+  "confirmed_findings": [
+   "dtw_family: distance.lcss.constraint-itakura / distance.lcss.constraint-sakoe_chiba: global constraint ignored by tslearn 0.9.0 numpy LCSS (isfinite on a boolean mask); new, not in KNOWN_ISSUES",
+   "dtw_family: distance.dtw.constraint-sakoe_chiba: band radius fixed at 1 sample for every T (undocumented); only 1-sample delays absorbed; new",
+   "dtw_family: distance.softdtw: raw soft-DTW value is negative and length-dominated on z-scored data (not a divergence), contrary to the unsigned/distance labels; new",
+   "dtw_family: distance.softdtw: constraint identifiers bit-identical to softdtw (KNOWN_ISSUES bug 3, re-confirmed, not new)",
+   "dtw_family: distance.softdtw (minor): dot-product cost gives 1.0e-8 relative error with a +1e4 offset when normalisation is off",
+   "dtw_family: parse_bivariate two-array asymmetry re-measured for dtw/lcss/softdtw (owned by preproc.two_array_api, not new here)",
+   "dtw_family: distance.dtw.constraint-None and distance.lcss.constraint-None: low discriminative range on z-scored noise confirmed as a property of the measure (not a code deviation; new_finding false)",
+   "gwtau: distance.gwtau: the 'unordered' label is inconsistent with the order-dependent computation (new; REVIEW M9 does not name gwtau)",
+   "gwtau: distance.gwtau: root exclusion makes pyspi = paper Def. 2 x sqrt(T/(T-1)), inherited from the authors' MATLAB code (new as an audit statement)",
+   "gwtau: distance.gwtau: the value depends on the sampling rate because time is the unit-step sample index; values from recordings at different fs are not comparable (new)",
+   "gwtau: distance.gwtau: the GitBook 'robust to shifts' claim contradicts the paper's intended time-shift sensitivity and fails on sampled oscillations at f0 = fs/4 (new; quantified as negligible for alpha at fs = 256 Hz)",
+   "gwtau: distance.gwtau: sqrt(T) null growth with no length normalisation (property of the canonical definition, confirmed)",
+   "gwtau: distance.gwtau: the descending sort is a no-op, so the value is an RMS of the running arc-length difference (interpretation, confirmed)",
+   "gwtau: distance.gwtau: preprocessing dependence: raw units without z-scoring, affine-invariant with it (confirmed)",
+   "ccm: All three units: ccm stores A[i,j] as row = target (a large A[i,j] means j -> i). This is opposite to pyspi's glossary convention (rows = sources) and to TE/GC, and is not in KNOWN_ISSUES.md.",
+   "ccm: Library-size grid has 22 points, not the documented 21, and is truncated to the first 22 cppEDM sizes at T=64 (both E) and at T=256 for E=10.",
+   "ccm: Short-series failure: an all-NaN matrix for T <= 60 (E=10/None) and T <= 41 (E=1); exact thresholds are T >= 61 and T >= 42.",
+   "ccm: No Theiler window: a 10-row exclusion lowers rho by 24-36 % on an AR(1) pair (method choice, consistent with Sugihara 2012).",
+   "ccm: Direct multivariate calls return a zero diagonal; only the Calculator sets NaN (harmless).",
+   "ccm: The documentation says 'unsigned' but the class is Signed; negative values occur (documentation only).",
+   "ccm: E-1: static functional dependence is scored as causality (0.967 vs -0.003 on iid data); method behaviour.",
+   "ccm: E-10: on var2_bivariate the CCM reading points 1 -> 0 (diff[0,1] = +0.243); method behaviour.",
+   "ccm: In-build: tied-data CCM values depend on std::sort order and input rounding (raw 0.41455 vs z-scored 0.41300)."
+  ],
+  "refuted_candidates": [
+   "dtw_family: distance.dtw.constraint-itakura: 2-decimal rounding of parallelogram bounds changes boundary cells (0 cells differ at T 64/256/1024/4096; bounds are half-integers for equal lengths)"
+  ]
+ },
+ "it_kozachenko+it_kernel": {
+  "not_done": [
+   "it_kozachenko: JIDT issue tracker not searched for a report of the naive-routine defect; only JIDT master source was checked (defect still present)",
+   "it_kozachenko: The exact JIDT commit of the shipped jar is not pinned beyond 'post-tag, at or after 3d1f3fe/a9b6b3e7'",
+   "it_kozachenko: Whether n=5, the 9-lag xme and the sum H_k/k DI term are intended can only be settled by the authors; both readings were quantified in the note instead",
+   "it_kozachenko: Four statistical runs fail on a single realisation 2.0-2.5 SD from the population (est T1024, si bivariate p23, xme_k1 p03, di indep-truth). Canonical KL on the same data equals pyspi in each, so they were left as fails rather than re-seeded",
+   "it_kozachenko: je|logistic_maps ties run fails a 1e-3 threshold I set before running (observed 3.9e-3); kept as a fail and documented, not loosened",
+   "it_kozachenko: Score anchors for a size-dependent third-party defect (est 3, cce 5, di 3, xme_k10 3) are judgement calls the rubric does not cover directly",
+   "it_kernel: No T=4096 runs: the box estimator is O(T^2) on both sides, as instructed. Convergence is shown over T = 64/256/1024 only, and the trace's T=4096 probe numbers are not re-verified.",
+   "it_kernel: Six statistical runs fail the per-entry 2-SD band (max_z 2.05-2.93). The tolerance was not changed. The calibration (8/130 entries beyond 2 SD, 0 beyond 3) is reported in the note instead, and results.json still shows 7 fails (6 statistical + xme_k10 var2 direction).",
+   "it_kernel: The bare-except 'Cholesky' message candidates for mi/tlmi are confirmed by code reading only (infotheory.py:279-283, 313-317). No check run triggered an exception.",
+   "it_kernel: JIDT jar provenance: not settled byte-for-byte (open question 1). It has no value impact, because every kernel path agrees with the independent numpy reference.",
+   "it_kernel: The xme_k10 count-saturation fraction on logistic_maps_chaotic (4.3% / 0%) comes from a scratch measurement, not a manifest run.",
+   "it_kernel: Frame runs on var2_bivariate cover je and ce only (the trace-issue fix); the other W-0.5 units were checked on bivariate_gaussian.",
+   "it_kernel: Supplement line-number remap (open question 6) not done."
+  ],
+  "remaining_issues": [
+   {
+    "family": "it_kernel",
+    "unit_id": "infotheory.xme.kernel_k10",
+    "field": "score_0_10 / what_changed / notes/it_kernel.md (xme_k10 heading at line 600, text at lines 610-612, 'Trace fields corrected' at line 673, open question 5 at line 698)",
+    "problem": "The two fixes crossed. it_kernel lowered xme.kernel_k10 from 4 to 3 'to match infotheory.xme.kozachenko_k10', and what_changed and the note still say 'infotheory.xme.kozachenko_k10 scores the same off-by-one at 3'. In the same round, it_kozachenko raised kozachenko_k10 from 3 to 4 (anchor 4, 'as xme.gaussian_k10 and xme.kernel_k10'), so that quote is now false. The three k10 siblings now score gaussian 4, kozachenko 4, kernel 3 for the same 9-lags-under-history_length=10 composition. The verdict 'related-quantity' also sits on anchor 3, and anchor 3 is the anchor for an ignored hyperparameter or a label that does not describe the computation. To match the checked gaussian_k10 (4) and the cross-family score policy now stated in notes/it_kozachenko.md, xme.kernel_k10 should go back to 4. Otherwise all three need one agreed anchor, with the cross-references rewritten."
+   },
+   {
+    "family": "it_kozachenko",
+    "unit_id": "infotheory.xme.kozachenko_k10",
+    "field": "what_changed / notes/it_kozachenko.md xme_k10 heading (line 414)",
+    "problem": "States anchor 4 'as infotheory.xme.gaussian_k10 and infotheory.xme.kernel_k10', but infotheory.xme.kernel_k10 now scores 3 (changed in the same fix round). The cross-reference is false until the k10 scores are aligned across families (see the it_kernel item)."
+   },
+   {
+    "family": "it_kozachenko",
+    "unit_id": "infotheory.ce.kozachenko",
+    "field": "symmetry_observed",
+    "problem": "Minor. Lists max|A - A.T| for var2/anm/bivariate/iid/nonlinear_dependence runs but leaves out the family's largest value: ref_sym_maxabs 3.82 on infotheory.ce.kozachenko|scaled_offset|1024|kernel|jrand, where raw unequal scales are used. Adding it with the kernel-path qualifier would make the quote complete."
+   }
+  ],
+  "score_disputes": 4,
+  "weak": 9,
+  "disputed": [],
+  "validator_clean": true,
+  "fixed_units": [
+   "infotheory.est.kozachenko",
+   "infotheory.je.kozachenko",
+   "infotheory.ce.kozachenko",
+   "infotheory.cce.kozachenko",
+   "infotheory.di.kozachenko",
+   "infotheory.si.kozachenko",
+   "infotheory.xme.kozachenko_k1",
+   "infotheory.xme.kozachenko_k10",
+   "infotheory.ce.kernel",
+   "infotheory.di.kernel",
+   "infotheory.est.kernel",
+   "infotheory.xme.kernel_k10",
+   "infotheory.tlmi.kernel",
+   "infotheory.te.kernel_k-1_kt-1_l-1_lt-1",
+   "infotheory.cce.kernel",
+   "infotheory.je.kernel",
+   "infotheory.mi.kernel",
+   "infotheory.si.kernel",
+   "infotheory.xme.kernel_k1"
+  ],
+  "refutations": 4,
+  "confirmations": 21,
+  "kernel_issues": [
+   "it_kozachenko: _kernels_infotheory.py docstring says JIDT's NOISE_SEED jitter stream 'cannot be reproduced in numpy'. It can: java.util.Random is a specified 48-bit LCG with a polar Box-Muller nextGaussian. Worked around with refs/it_kozachenko.py:JavaRandom (stream agrees with the JVM to 4.4e-16) plus a row-major 1e-8 jitter matrix added before calling entropy_kozachenko(noise_level=0).",
+   "it_kozachenko: _kernels_infotheory.entropy_kozachenko implements only exact NN search, so it cannot model JIDT above 2000 rows. Worked around with a same-lineage vectorised port refs/it_kozachenko.py:nn_naive_jidt, used only to explain T=4096 values, never to score.",
+   "it_kozachenko: The computed task brief described NORMALISE=true as z-scoring inside JIDT; the kernel docstring ('JIDT never normalises') and the runs (properties, je shift-d2) show it is inert.",
+   "it_kernel: _kernels_infotheory docstring warning (JIDT bin search can miss pairs at |dx| == w that rounding puts two bins apart): not reproduced. The k*0.1 tie grid at w=0.1 and FORCE_KERNEL_COMPARE_TO_ALL on var2_bivariate both matched the module's compare-to-all rule exactly. No workaround needed; the warning stays as a theoretical limit.",
+   "it_kernel: No defects found in entropy_box_kernel / mi_box_kernel / te_box_kernel / cce_embedding / xme_embedding / embed. All 123 exact runs agree with JIDT to <=1.2e-12. For Monte Carlo speed only, refs/it_kernel.py adds its own KD-tree counting (fast_*, |dx/w| <= 1). It is labelled as such and used only for statistical runs, not for exact comparisons."
+  ],
+  "confirmed_findings": [
+   "it_kozachenko: JIDT EuclideanUtils.computeMinEuclideanDistancesNaive (used for >2000 rows, still unfixed on JIDT master as fetched 2026-10-15) underestimates NN distances in d>=2 where the true distance exceeds 1; this corrupts cce/di/xme_k10 from T=2005/2011 by 1.6-2.6 nat and si slightly (2.2e-3); only the Kozachenko class uses it (jar bytecode grep)",
+   "it_kozachenko: All kozachenko SPIs are labelled 'linear' while the documentation says 'nonlinear'",
+   "it_kozachenko: JIDT NORMALISE=true is inert for the Kozachenko calculator; BIAS_CORRECTION is ignored",
+   "it_kozachenko: ce_kozachenko is asymmetric (Directed) while the supplement keyword says 'undirected'",
+   "it_kozachenko: cce/di use n=5 vs the documented 10 (cross-estimator, same as it_gaussian)",
+   "it_kozachenko: di target term is sum H(Y^k)/k, giving DI = Massey + B(target), B_KL up to 2.77 nat for independent random walks (cross-estimator)",
+   "it_kozachenko: xme_k10 uses 9 source lags (cross-estimator); xme has no documented definition and does no cross mapping",
+   "it_kozachenko: je on near-tied rows is set by the jitter level (shared_envelope -28.809, shifts by 2 ln 100 per 100x jitter)",
+   "it_kozachenko: The k=1 KL estimate in d=10 is biased by about +1.5 nat on near-deterministic relations at T<=1024 (estimator property affecting xme_k10)",
+   "it_kernel: Copy path (new): CalculatorFrame deep-copies JIDT calculators into their default state, so every W-0.5 kernel SPI (je, ce, cce, xme_k1, xme_k10, di, si) is computed at width 0.25 under its W-0.5 identifier. cce and xme_k10 values become negative. mi/tlmi/te are unaffected only because 0.25 is JIDT's default (|frame runs, est|copy-props).",
+   "it_kernel: DI block-rate definition (new, shared with di_gaussian): pyspi DI = Massey DI_5 + B(target) for the kernel estimator (di|var2_bivariate|1024|pipeline|massey-identity).",
+   "it_kernel: cce/di history length 5 vs documented 10 (configured-n, n10).",
+   "it_kernel: xme off-by-one: history_length=10 gives 9 lags, and history_length=1 and =2 coincide (numpy, k2-equals-k1-shifted). xme is undocumented.",
+   "it_kernel: Kernel TE parameter forwarding (new): l_history/k_tau/l_tau are dropped silently. auto_embed_method is accepted but ignored, while the identifier reads _k-max-4 (forwarding, forwarding-flags).",
+   "it_kernel: Raw-array bivariate(x, y) z-scores only x and shifts je and ce by log2 sd(y) (est raw-array). Counted under est.kernel.",
+   "it_kernel: xme_k10 saturation at W-0.5: values are ~0 on stochastic data and the var2 direction is reversed. Recorded as convergence evidence; formula score kept at 4.",
+   "it_kernel: Estimator conventions confirmed: closed box, self-inclusion, N-1 SD half-widths, bits, BIAS_CORRECTION ignored, NOISE_SEED inert, bin search exact."
+  ],
+  "refuted_candidates": [
+   "it_kozachenko: Pack hypothesis 'max-norm': refuted, Euclidean norm (canonical Euclidean KL matches to 7.1e-15)",
+   "it_kozachenko: Computed-task premise 'NORMALISE=true z-scoring inside JIDT': refuted (H(10x)-H(x)=ln 10; raw-path je shifts 0.016-3.91 nat)",
+   "it_kozachenko: Kernel-docstring premise that JIDT's seeded jitter is unreproducible: refuted (java.util.Random replica reproduces JIDT to <=6e-15)",
+   "it_kozachenko: si trace claim of a 'large relative bias' on gauss_ar1_pair: refuted as bias (canonical MC mean 0.123 vs population 0.0999); it is sampling variance (SD 0.118)"
+  ]
+ },
+ "gpfit+coint+ids": {
+  "not_done": [
+   "gpfit: T=4096 was not run for either unit (O(T^3) per LML evaluation; a T=1024 fit takes 2.8 s DotProduct / 5.6 s RBF), and T=1024 runs were limited to P=3 (DotProduct) and P=2 (RBF).",
+   "gpfit: The own multi-start ML-II reference ran at T <= 256 only (T=1024 multistart skipped for cost).",
+   "gpfit: The RBF params probe at anm T=1024 took 70.6 s, above the ~60 s per-run guide, because it does three fits per pair.",
+   "gpfit: BLAS-build sensitivity (open question 5) was not tested; only SciPy 1.17.1 vs 1.18.1 was varied.",
+   "gpfit: Open question 3 (C*RBF + White) and open question 1 (fixed documented values) were answered with throwaway scratchpad probes (oq3_amplitude.py uses sklearn in the comparison venv; oq1_fixed.py uses the own kernels), not manifest runs.",
+   "gpfit: Real quantised or periodic recordings were not tested for how often the single start interpolates (open question 4); only the synthetic datasets were.",
+   "gpfit: The task text gives HEAD as a1f20c7; the actual HEAD is a42ebc1. calculator.py is unchanged between the two, and the cited lines were confirmed at a42ebc1.",
+   "coint: statsmodels 0.12.0 was not executed (installs forbidden). Version equivalence rests on a source diff of the v0.12.0 GitHub sources only.",
+   "coint: MacKinnon-Haug-Michelis 1999 and MacKinnon 2010 critical values were not re-read from the papers. statsmodels' copies were checked by Monte Carlo (Johansen) and null rejection rates (AEG) instead.",
+   "coint: Real EEG was not analysed: neither the persistence-vs-coupling share nor whether saved EEG outputs contain all-NaN Johansen or -inf AEG matrices. The note names the run that would settle each.",
+   "coint: Two failures (misc.coint.johansen_order-0_ardiff-10|cointegrated|64|pipeline|stat-{me,tr}) are genuine power failures at T=64/k=10, left as fails.",
+   "coint: Draft-era files: the six remaining trace citation issues were already fixed when this stage started; they were only verified against HEAD a42ebc1 (not a1f20c7 as the task text says; calculator.py lines are unchanged).",
+   "ids: sgddtw was not run in the cross-SPI RNG probe. MinCovDet was used as the representative global-RNG consumer; sgddtw draws from the same global stream (tests/README.md:146) but its behaviour was not measured.",
+   "ids: I did not run whether removing np.random.seed(1717) would change the regression goldens. The answer in the note says per-SPI tests seed after construction, but that is untested.",
+   "ids: No power comparison of z-score vs min-max [0,8] normalisation on time series, which would settle which convention suits pyspi better.",
+   "ids: The autocorrelation-inflated null was measured only on synthetic AR(1) and random-walk models, not on real EEG data."
+  ],
+  "remaining_issues": [
+   {
+    "family": "gpfit",
+    "unit_id": "misc.gpfit.DotProduct",
+    "field": "check_reference",
+    "problem": "Still says 'h_multistart (theta = 0 plus 10 log-uniform starts)'. refs/gpfit.py:545 uses n = 20, and results.json gives ref_n_starts 21 on both DotProduct multistart runs. closeness, checks_run and the note all correctly say 21 starts, so this field contradicts them."
+   },
+   {
+    "family": "gpfit",
+    "unit_id": "misc.gpfit.DotProduct",
+    "field": "checks_run (kernel|scratch block outcome)",
+    "problem": "The outcome says the 9 failures are 'at max_rel 9.3e-8 to 1.35e-4'. The current results.json (re-run, identical to the stored results) has a smallest failing value of 3.55e-8 (misc.gpfit.DotProduct|cointegrated|1024|kernel|scratch). The range should read 3.6e-8 to 1.35e-4."
+   },
+   {
+    "family": "gpfit",
+    "unit_id": "misc.gpfit.DotProduct",
+    "field": "what_changed / notes/gpfit.md '### misc.gpfit.DotProduct' heading and Score bullet",
+    "problem": "The score-9 rationale says the supplement 'does not describe' the computation. That is factually wrong: supplement \u00a71.6.2 (quoted in this record's documented_definition) describes the GP fit with DotProduct sigma_0 = 1, constant 1.0, white noise 1 and the MSE of the fit. The cited distance.hhg precedent is a computation the supplement misdescribes. The note is also inconsistent with itself: heading line 320 says 'does not describe it', while the Score bullet ends with 'canonical computation that the supplement misdescribes'. Change 'does not describe' to 'misdescribes', citing the fitted-not-fixed hyperparameters and the nonparametric/nonlinear/directed wording. Score 9 itself is defensible: fixedhp gives <= 9.2e-6 at T256, and the kendalltau precedent scores 10 despite a class-label mismatch."
+   },
+   {
+    "family": "ids",
+    "unit_id": "misc.ids",
+    "field": "already_documented / candidate_resolutions[0].evidence (new_finding scope)",
+    "problem": "Minor. The field cites audit/notes/cov_prec_robust.md:161-162, which is that note's open-question hypothesis. It does not cite the checked answer at cov_prec_robust.md:338-343. That answer states that reproducibility of default-config Calculator runs for the robust SPIs 'rests on the misc import side effect' (np.random.seed(1717)), with fresh-process evidence (freshfull vs freshbasic). That is the same fact as 'a pre-construction user seed is discarded', seen from the other side. Cite 338-343 and narrow the claim 'no repository text states its user-facing consequence' to say that the discarded user seed is not stated explicitly. new_finding can stay true."
+   },
+   {
+    "family": "coint",
+    "unit_id": "misc.coint.johansen_order-0_ardiff-1",
+    "field": "candidate_resolutions (stationarity confound) evidence",
+    "problem": "Cosmetic. The appended qualifier runs straight on from the numbers with no sentence break ('... max-eig iid T=1024 median 456.6 (1.19x) Interpretation note, not a finding: ...'). The same run-on appears in johansen_order-0_ardiff-10, johansen_order-1_ardiff-1, johansen_order-1_ardiff-10 and aeg ('var2_bivariate -25.18 Interpretation note'). Add '. ' before 'Interpretation note'. Content and outcomes are otherwise correct."
+   }
+  ],
+  "score_disputes": 1,
+  "weak": 8,
+  "disputed": [
+   {
+    "unit_id": "misc.gpfit.RBF",
+    "field": "candidate_resolutions[6] (review evidence: cross-process values differ from stored npz)",
+    "reason": "The review's evidence that fresh processes give values differing by 2.96e-11 with 2/12 bit-identical is an artefact of the probe. det_rbf.py fed the stored npz 'input' array into Data() again. For pipeline runs that array is already z-scored, so z-scoring it a second time changes the input by up to 2.2e-16. Recomputing from the raw make_data rows in a fresh process reproduces the stored output bit for bit (12/12). Values are therefore deterministic given the data and the BLAS thread count, which is the record's claim once the thread count is spelled out (now done).",
+    "evidence": "scratchpad gpfit_check/fix/xp_det.py: stored-input path gives max_rel 2.96e-11 / nbit 2 and input max|zz - z| 2.2e-16; raw make_data path gives max_rel 0 / nbit 12. Regenerable: misc.gpfit.RBF|shared_envelope|256|pipeline|crossproc ref_n_bit_identical_vs_stored pipeline 12, pipeline_repeat 12, pyspi_first 12, env1 12; scipy_first (SciPy OpenBLAS at 64 threads) 2/12 at 4.1e-11."
+   }
+  ],
+  "validator_clean": true,
+  "fixed_units": [
+   "misc.gpfit.DotProduct",
+   "misc.gpfit.RBF",
+   "misc.ids",
+   "misc.coint.johansen_order-0_ardiff-1",
+   "misc.coint.johansen_order-0_ardiff-10",
+   "misc.coint.johansen_order-1_ardiff-1",
+   "misc.coint.johansen_order-1_ardiff-10",
+   "misc.coint.aeg"
+  ],
+  "refutations": 4,
+  "confirmations": 24,
+  "kernel_issues": [
+   "gpfit: _kernels_basic_misc.gp_fit has no guard for a failed Cholesky (np.linalg.LinAlgError propagates, while sklearn maps it to -inf, _gpr.py:590-593). Worked around in refs/gpfit.py:scratch_fit, which falls back to its own local_fit with LinAlgError -> -inf. The own single start agreed with pyspi on all 14 RBF and 5 DotProduct single-start runs, so the fallback did not matter in this check.",
+   "gpfit: _kernels_basic_misc.gp_log_marginal_likelihood forms the explicit inverse (cho_solve with eye) on every evaluation. That is correct but adds O(T^3) work; it only affected the reference-side run time (multi-start was limited to T <= 256).",
+   "coint: None blocking. _kernels_basic_misc.johansen mirrors statsmodels' deterministic-term placement, so for det_order=1 it is not a canonical reference. I added a textbook RRR (refs/coint.py:rrr_case, cases 2-5) for the canonical comparison. The kernel's documented k_ar_diff=0 divergence does not apply (k=1, 10).",
+   "coint: _kernels_basic_misc.engle_granger_tstat does not return the selected lag. refs/coint.py:eg_lag re-implements the selection only to pick the ur.df Fixed lag; t-statistics still come from the kernel."
+  ],
+  "confirmed_findings": [
+   "gpfit: misc.gpfit.DotProduct: a linear, symmetric function of r^2 under z-scoring ((T-1)/T)(1-r^2) to <= 6.1e-5; the nonlinear/directed labels and 'nonparametric' are nominal (new_finding true)",
+   "gpfit: misc.gpfit.DotProduct: sklearn bound warnings hidden; documented constant 1 and sigma_0 = 1 never apply (at the 1e-5 bound on every z-scored pair; refined: not on raw data)",
+   "gpfit: misc.gpfit.DotProduct: random_state is a no-op and the fit is deterministic",
+   "gpfit: misc.gpfit.RBF: value comes from a single-start local ML-II optimum; multi-start beats it on 99/128 pairs (new_finding true)",
+   "gpfit: misc.gpfit.RBF: fixed-amplitude RBF makes the ML-II maximum degenerate; interpolating optimum MSE = (w'/(1+w'))^2 mean(y^2) to 5.5e-11",
+   "gpfit: misc.gpfit.RBF: pyspi's own start interpolates with no skill on shared_envelope (1.1e-8, LOO 0.50)",
+   "gpfit: misc.gpfit.RBF: single start misses real structure on narrowband_f0-0.1 T64 (0.483 vs 0.023, LOO 0.52 vs 0.056)",
+   "gpfit: misc.gpfit.RBF: independent pairs collapse to (T-1)/T",
+   "gpfit: misc.gpfit.RBF: bound warnings hidden",
+   "gpfit: misc.gpfit.RBF: random_state is a no-op and the result is deterministic",
+   "coint: Johansen order-1 (det_order=1): LeSage/statsmodels pre-detrending matches no textbook case. Vs restricted-trend case 4: up to 0.195 relative (trace, T=256) and 0.38 on null pairs at T=4096. It approximates unrestricted-trend case 5, and its critical-value table is case 5.",
+   "coint: AEG: the stored value depends on channel order and entry point; the regressand is the higher index under multivariate and the first argument under bivariate. Reordering changes values by up to 1.53 (cointegrated T=256), 7.41 (iid T=256) and 60.9 (trending T=4096).",
+   "coint: Johansen robustness: a duplicated channel blanks the whole matrix (8 of 11 coint SPIs fail). Exactly collinear [z,3z+1] pairs either raise or silently return out-of-range values (3-6 of 16 per config).",
+   "coint: AEG robustness: collinear pairs return -inf.",
+   "coint: Stationarity confound (both methods): independent stationary pairs reject 'no cointegration' and score like or beyond the truly cointegrated pair.",
+   "coint: Metadata/documentation: class label 'nonlinear' vs documented 'linear'; aeg is Unsigned but returns the raw negative t-statistic; supplement citation [81] (Pesaran & Shin ARDL) is not Johansen; latent AttributeError for method spellings other than 'johansen'/'aeg'.",
+   "ids: misc.ids: global numpy RNG reseeded to 1717 when pyspi.lib.ids is imported (first Calculator() in a process); a user seed set before construction is silently replaced for the global-RNG SPIs (MinCovDet shown; EllipticEnvelope and sgddtw use the same stream). New, not in KNOWN_ISSUES.md; inherited from upstream.",
+   "ids: misc.ids: undocumented finite-sample null bias (~2.07/sqrt(T) iid; far larger for autocorrelated input) vs GitBook '0 indicates independence' (documentation deviation, not an estimator defect).",
+   "ids: misc.ids: z-score preprocessing vs the paper's reported min-max [0,8], a value-changing variant (up to 0.68).",
+   "ids: misc.ids: last-bit asymmetry max 2.2e-16 (no mirror). Same class as REVIEW M2, which does not list IDS; negligible.",
+   "ids: misc.ids: unsupported pnorm values give a silent all-NaN Calculator block (only with a non-default config)."
+  ],
+  "refuted_candidates": [
+   "gpfit: Orchestrator expectation 'RBF MSE <= linear Ridge MSE on the same pair' is refuted (30/50 pairs exceed Ridge, by <= 0.0063); this is recorded as an observation, not a pyspi defect",
+   "gpfit: DotProduct trace sentence 'c and sigma_0 go to the 1e-5 bound in every probed fit' holds only under z-scoring (raw cointegrated T256: c 1/12, sigma_0 3/12); refined, not refuted",
+   "coint: Trace-stage claim that the order-1 gap to the restricted-trend case 'shrinks with T' is refuted for non-cointegrated pairs (persists at 0.26-0.38 relative at T=4096); it holds only for the cointegrated pair. Corrected in both order-1 records and the note."
+  ]
+ },
+ "wavelet_psi+wavelet_measures": {
+  "not_done": [
+   "wavelet_psi: Epoching the record (the third single-epoch definition option) was not tested; the open question records it as unsettled.",
+   "wavelet_psi: fs != 1 cache-reuse behaviour was not exercised, because the config fixes fs = 1. Answered by code reading only.",
+   "wavelet_psi: Torrence & Webster 1999 was not re-checked against a copy; the unit-modulus claim it supports is verified numerically instead (cohmod).",
+   "wavelet_psi: T = 4096 runs were not made (family budget T <= 1024).",
+   "wavelet_measures: No convergence runs and no T=4096 (extra-config units; budget T <= 1024 as instructed).",
+   "wavelet_measures: Cross-scipy-version / cross-CPU stability of the round-off pattern (open question 3) was not tested: both venvs have scipy 1.17.1 (the task brief said 1.18.1) and only one machine was available. Only FFT-implementation dependence (scipy.fft vs numpy.fft) was shown.",
+   "wavelet_measures: Vinck 2010/2011 and Nolte 2004 equation numbers were not checked against the papers (PDFs not fetched).",
+   "wavelet_measures: The trace's multi-epoch probes (R=8 realisations as epochs: PLV/PLI over round-off signs) were not rerun; only the single-epoch path was checked.",
+   "wavelet_measures: The phase 'pi - 1 ulp' case (anm T=64) was not in this stage's dataset list; every phase max observed here is exactly pi.",
+   "wavelet_measures: The 4 icoh six runs at T=1024 remain failing on purpose: the 1e-12 bound proposed by the trace is exceeded (2.41e-12). This is a refutation of the bound, not a reference bug. The tolerance was not loosened.",
+   "wavelet_measures: psi_wavelet grid question (open question 6) belongs to the already-checked wavelet_psi family; not re-examined."
+  ],
+  "remaining_issues": [
+   {
+    "family": "wavelet_psi",
+    "unit_id": "wavelet.psi",
+    "field": "what_changed; notes/wavelet_psi.md ## Checks 'Net effect' bullet and Verdict paragraph",
+    "problem": "The corrected tail statement is still too broad. what_changed says without qualification that 'The temporal content of input samples t >= 37 cannot reach the stored value'. The note says 'the temporal content of 987 of the 1024 samples cannot affect any of the six identifiers'. Both are false on the pipeline-detrend path, because the fitted slope is a time-weighted sum of the tail. Reviewer probe scratchpad/wavelet_psi_check/review_detrend_rev.py, run on the family's own replica: time-reversing x[:, 37:] changes the stored values by 0.0 on the pipeline path, but by 0.168 (delayed_noise T1024) and 0.448 (var2_bivariate T1024) on pipeline-detrend. The tailpert detrend sd-only change of 0.087 already shows the same thing. Fix: restrict the claim to the kernel path and the default no-detrend pipeline, and state that with detrend the tail's time order enters through the fitted line."
+   },
+   {
+    "family": "wavelet_psi",
+    "unit_id": "wavelet.psi",
+    "field": "what_changed / direction_observed / notes Verdict ('against 100% for the intended quantity')",
+    "problem": "pyspi's per-identifier sign agreement (0.10-0.50, which includes the low variants at 0.28) is set against an intended quantity that scores 1.0. On the same 72 dir runs, ref_intended_whole_agree is 1.0 only for the full and high variants. It is 0.861 for mean-low and max-low. The 12/12 int runs cover only the mean variants on delayed_noise T256/T1024 and var2_* T1024. Fix: quote 0.86 for the low variants, or limit the comparison to full/high."
+   },
+   {
+    "family": "wavelet_measures",
+    "unit_id": "wavelet.icoh",
+    "field": "new_finding / candidate_resolutions (label candidate)",
+    "problem": "Still unresolved. The wavelet_psi fixer deferred this as out of scope, and the wavelet_measures fix report does not mention it. icoh's new_finding true now rests only on the 'unsigned' label of a signed quantity: the one-sample-wavelet cause is counted on wavelet.morlet_cwt. wavelet.psi treats its own label contradiction as already documented (EEG_OPTIMIZATION_NOTES \u00a7review parameter-specific labels, REVIEW M9), and REVIEW M3/M4/M8 document signed values under unsigned labels for other classes. The two families apply opposite rules to the same kind of item. Fix: cite the documented label topic and set new_finding false, or explain in the record and note why the icoh label counts as new when the psi label does not."
+   },
+   {
+    "family": "wavelet_measures",
+    "unit_id": "wavelet.phase",
+    "field": "candidate_resolutions (label candidate and channel-order offset candidate); notes perm bullet",
+    "problem": "Still unresolved: the earlier review item was deferred and never addressed. REVIEW M4 (docs/storage_comparison/REVIEW.md:155-157) documents both of these items for coherence phase. It says an unsigned label is inappropriate, and that at the branch cut +\u03c0 represents both directions, which produces an apparent antisymmetry offset. The wavelet phase A_rev = -A + 2\u03c0\u00b7n(Im=0, Re<0)/N offset is the same mechanism. already_documented cites M4 only for the arithmetic mean of angles, and neither candidate resolution nor the note cites it. new_finding stays true because of candidate 1 (round-off artefact)."
+   },
+   {
+    "family": "wavelet_measures",
+    "unit_id": "wavelet.pli",
+    "field": "notes/wavelet_measures.md run-tag list (ident bullet, line 232)",
+    "problem": "The note says 'An independent replay is the `rep` port, which does not import mne'. However, the rep runs of phase, pli and wspli are labelled same-lineage in results.json (reference_kind same-lineage; h_rep is a 'replay of mne tfr._cwt_gen') and in the records ('h_rep (same-lineage replay)'). The note contradicts the relabelling."
+   },
+   {
+    "family": "wavelet_measures",
+    "unit_id": "wavelet.ppc",
+    "field": "notes ppc canonical values",
+    "problem": "The note quotes the narrowband_f0-0.1 canonical PPC as 0.0170. results.json has ref_canon_value_10 = 0.016950 (0.0169 to 4 dp), and the record quotes 0.01695. This is a trivial rounding misquote."
+   },
+   {
+    "family": "wavelet_psi",
+    "unit_id": "wavelet.psi",
+    "field": "refs h_fscache reference_kind",
+    "problem": "The fscache run is labelled reference_kind 'analytic', but its value is replica_fs, an own re-implementation (independent-impl), combined with a code-reading pass rule. This is a minor labelling inconsistency, and no score depends on it."
+   }
+  ],
+  "score_disputes": 0,
+  "weak": 6,
+  "disputed": [
+   {
+    "unit_id": "wavelet.icoh",
+    "field": "new_finding (label candidate 'unsigned label on a signed quantity' should be cited as documented)",
+    "reason": "Not left unfixed because the review item is wrong; it is out of scope for this task. wavelet.icoh belongs to family wavelet_measures, not wavelet_psi. That family is already checked, so its record, note, manifest and refs are read-only for this task. The item should go to whoever fixes wavelet_measures. For consistency, wavelet.psi itself counts the same label contradiction as already documented (EEG_OPTIMIZATION_NOTES \u00a7review, REVIEW M9).",
+    "evidence": "audit/units.yaml:4403 (unit_id: wavelet.icoh) -> audit/units.yaml:4438 (family: wavelet_measures); audit/records/wavelet.icoh.yaml:2 status: checked; audit/checks/out/results/wavelet_measures.json exists. Task rule: records and notes of already-checked families are read-only."
+   },
+   {
+    "unit_id": "wavelet.phase",
+    "field": "candidate_resolutions (label candidate should cite REVIEW M4, docs/storage_comparison/REVIEW.md:155)",
+    "reason": "Not left unfixed because the review item is wrong; it is out of scope for this task. wavelet.phase belongs to family wavelet_measures, which is already checked and therefore read-only here. The item should go to the wavelet_measures fixer.",
+    "evidence": "audit/units.yaml:4359 (unit_id: wavelet.phase) -> audit/units.yaml:4394 (family: wavelet_measures); audit/records/wavelet.phase.yaml:2 status: checked."
+   }
+  ],
+  "validator_clean": true,
+  "fixed_units": [
+   "wavelet.psi",
+   "wavelet.cohmag",
+   "wavelet.phase",
+   "wavelet.icoh",
+   "wavelet.plv",
+   "wavelet.ppc",
+   "wavelet.pli",
+   "wavelet.dswpli",
+   "wavelet.wspli",
+   "wavelet.dwspli"
+  ],
+  "refutations": 3,
+  "confirmations": 20,
+  "kernel_issues": [
+   "wavelet_psi: None in _kernels_spectral: morlet_wavelet, cwt_morlet, psi_adjacent and coherency were used as-is. The replica's direct-convolution CWT agrees with mne's FFT path to 1e-12, and the psi_adjacent sign convention (Psi_ij > 0 = i leads) matches mne's seed*conj(target). One stale docstring line in morlet_wavelet ('pyspi passes n_cycles = f/7') describes the generic wavelet classes, not PhaseSlopeIndex, which uses the mne default of 7; no workaround was needed.",
+   "wavelet_measures: None in _kernels_spectral: morlet_wavelet and cwt_morlet mirror mne's arithmetic. The orient7 run agrees with the library to 4.2e-15, and the scipy.fft replay built on morlet_wavelet plus next_fast_len_235 reproduces pyspi bitwise.",
+   "wavelet_measures: Contract quirk, not a kernel bug: pyspi_outputs.py stores the RAW x as 'input' for probe runs (preprocessed only for SPI runs). refs/wavelet_measures.py:prep re-applies z-scoring for pipeline probe runs. The first orient1/orient7 failures came from this and were fixed on the reference side."
+  ],
+  "confirmed_findings": [
+   "wavelet_psi: wavelet.psi: antisymmetric directed PSI mirrored into a symmetric matrix; the stored sign is tied to channel order (new)",
+   "wavelet_psi: wavelet.psi: single-epoch wavelet coherency has unit modulus, so the documented and canonical coherence weighting is absent and PSI(t) = sum of 9 unweighted sines (new; KNOWN_ISSUES covers only the nine other wavelet classes)",
+   "wavelet_psi: wavelet.psi: Nyquist wavelet (f = 0.5) is real, so the last adjacent increment is a 0/pi phase, not a phase slope (new)",
+   "wavelet_psi: wavelet.psi: T < 25 drops wavelet frequencies; the low band gives NaN or all-NaN (new, minor, unreachable at T >= 64)",
+   "wavelet_psi: wavelet.psi: stored value does not carry the true direction (sign agreement 0.10-0.50 per identifier vs 1.0 for the intended quantity); consequence of the documented axis selection plus single-epoch coherency",
+   "wavelet_psi: wavelet.psi: label contradictions (undirected/unsigned vs directed, signed output) confirmed; covered by the documented labels topic, not counted as new",
+   "wavelet_measures: wavelet.morlet_cwt: one-sample Morlet wavelet (n_cycles = f/7): CWT = signal times a constant; no time-frequency decomposition (not in KNOWN_ISSUES)",
+   "wavelet_measures: wavelet.morlet_cwt: fixed grid linspace(0.2,0.5,125) for every T contradicts the documented [4/T, fs/2] grid",
+   "wavelet_measures: wavelet.morlet_cwt: data.mne cache key ignores fs (fs=10 SPI reuses the fs=1 tensor)",
+   "wavelet_measures: wavelet.morlet_cwt: T < 25 empties the low band (NaN / ValueError)",
+   "wavelet_measures: wavelet.phase: values are FFT round-off artefacts (unstable under 4.4e-16 input changes and FFT implementation), not antisymmetric under reversal; 'unsigned' label on a signed angle",
+   "wavelet_measures: wavelet.pli: value = 1 - frac(exact-zero FFT round-off Im); contradicts tests/README's 'non-trivial values'",
+   "wavelet_measures: wavelet.wspli: bitwise equal to pli; 'squared' in name but unsquared wPLI",
+   "wavelet_measures: wavelet.icoh: 'unsigned' label on a signed quantity",
+   "wavelet_measures: wavelet.dswpli: class name says Weighted but computes unweighted pli2_unbiased"
+  ],
+  "refuted_candidates": [
+   "wavelet_measures: No candidate was refuted. Trace-stage numeric claims corrected: cohmag 'exactly 1.0 for every statistic' (the max identifiers are 1+2^-52); icoh/phase 4.6e-14 per-point bound holds only at T=256 (up to 2.41e-12 at T=1024; the icoh max<1e-12 expectation fails at T=1024); 'W = sqrt(2)' holds within 2 ulp, not bitwise.",
+   "wavelet_measures: Already documented (cited, not new): single-epoch degeneracy cohmag/plv=1, ppc/dspli=-inf, dwspli=0, icoh rounding noise (tests/README.md:217, :157)."
+  ]
+ }
+}

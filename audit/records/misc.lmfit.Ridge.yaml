@@ -1,0 +1,241 @@
+unit_id: misc.lmfit.Ridge
+status: profiled
+correctness:
+  metric_name_standard: in-sample (training) mean squared error of a ridge regression (alpha = 1, unpenalised intercept) of y = x_j on x = x_i; on z-scored data a
+    monotone transform of the squared Pearson correlation
+  canonical_ref: Hoerl & Kennard 1970, Technometrics 12(1):55-67, ridge estimator beta*(k) = (X'X + kI)^-1 X'y (section 2); scikit-learn objective ||y - Xw||^2_2
+    + alpha ||w||^2_2 with centred X, y (sklearn/linear_model/_ridge.py Ridge docstring, the delegate's own statement); Hastie, Tibshirani & Friedman 2009, The Elements
+    of Statistical Learning, 2nd ed., Springer, section 3.4.1 Ridge Regression (intercept left out of the penalty; inputs centred and beta_0 estimated by ybar) is the
+    independent source for the unpenalised-intercept and centring convention (ESL section and wording from memory, not re-checked against the book). Hoerl & Kennard
+    work with X'X in correlation form, so their k is on a different scale from sklearn's alpha on ddof=1 z-scores (see what_changed).
+  canonical_definition: 'w = sum(xc*yc) / (sum(xc^2) + alpha), b = ybar - w*xbar, MSE = (1/T) sum (y_t - b - w x_t)^2; for z-scored (ddof=1) inputs with alpha = 1:
+    w = r (T-1)/T and MSE = ((T-1)/T) * (1 - r^2 (T-1)(T+1)/T^2)'
+  documented_definition: 'supplement §1.6.1, p.18 (supplement.txt lines 856-868; the briefing pack gives 874-887, which is off by 18 lines): "we use a number of linear
+    models and record the mean squared error (MSE) of a regression of y on x. The following models (with the default parameters) from scikit-learn [2] are included:
+    stochastic gradient descent regression with a squared loss (ordinary least squares fit) function (denoted by modifier SGDRegressor); Ridge regression, which uses l2-norm regularization
+    (Ride); the Elastic-Net model [76, 77], which uses both l1 and l2-norm regularization (ElasticNet); and the Bayesian Ridge regressor uses a gamma distribution
+    prior (with lambda1 = lambda2 = 1e-6) for the l2-norm regularizor in Ridge regression (BayesianRidge). This yields four SPIs: 215. lmfit_SGDRegressor 216. lmfit_Ridge
+    217. lmfit_ElasticNet 218. lmfit_BayesianRidge"; keywords "directed, linear, unsigned, bivariate, contemporaneous"; rationale "Linear regression is commonly used
+    for establishing independence through model fits (e.g., see additive noise models in Sec. 1.3.1)". GitBook spi-descriptions/miscellaneous.md "Linear Model Fit"
+    repeats the text verbatim (including the typo "Ride") and lists the same four identifiers.'
+  delegate_lib: scikit-learn==1.9.1 sklearn.linear_model.Ridge(random_state=42).fit -> _BaseRidge.fit -> _ridge_regression(solver="cholesky") -> _solve_cholesky (scipy==1.17.1
+    linalg.solve assume_a="pos"); sklearn.metrics.mean_squared_error; numpy==2.5.4
+  implemented_as: 'A[i, j] = (1/T) sum_t (z_j[t] - b - w z_i[t])^2 with (w, b) the alpha=1 ridge fit of z_j on z_i over all T samples (no hold-out, no lags). Ridge
+    has a random_state parameter, so random_state=42 is passed; solver "auto" resolves to "cholesky" for dense numpy input and random_state is never used (probe:
+    predictions with 42, 7 and default identical, max diff 0.0). Defaults alpha=1.0, fit_intercept=True, tol=1e-4 (unused by cholesky). Probe: matches the closed
+    form ((T-1)/T)(1 - r^2 (T^2-1)/T^2) to <= 1e-12 on 14 datasets x 4 T (552 ordered pairs).'
+  implementation_trace:
+  - 'pyspi/config.yaml:1264-1278 .statistics.misc LinearModel: labels directed/linear/unsigned/bivariate/contemporaneous; configs model: Ridge, Lasso, SGDRegressor,
+    ElasticNet, BayesianRidge (Lasso is the fifth, undocumented config)'
+  - 'pyspi/calculator.py:230-267 Calculator._load_yaml (HEAD a1f20c7): for params in configs (252): spi = getattr(module, fcn)(**params) (256), i.e. LinearModel(model=...);
+    self._spis[spi.identifier] = spi (257); the class attribute labels (misc.py:109) are what the calculator reports'
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend(axis=1) only if detrend=True (default False) (187), then scipy.stats.zscore(axis=1, nan_policy="omit",
+    ddof=1) if normalise=True (default) (195); stored as (M, T, 1)'
+  - 'pyspi/calculator.py:329-339 Calculator.compute (HEAD a1f20c7): S = self._spis[spi].multivariate(self.dataset) (329); np.fill_diagonal(S, np.nan) (332); any exception
+    -> self._table[spi] = np.nan (336-337), so one failing pair makes the whole matrix NaN'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for j (outer), for i != j (inner): A[i, j] = self.bivariate(data, i=i, j=j); no mirroring'
+  - 'pyspi/base.py:27-49 parse_bivariate: Data passed through unchanged (two raw arrays would be wrapped into a new z-scored Data with i, j = 0, 1)'
+  - 'pyspi/data.py:108-118 Data.to_numpy(): returns the (M, T, 1) array, so z[i] is a (T, 1) design matrix with one feature'
+  - pyspi/statistics/misc.py:106-109 class LinearModel(Directed, Unsigned); labels ["misc", "unsigned", "unordered", "normal", "linear", "directed"]
+  - 'pyspi/statistics/misc.py:111-113 __init__: identifier "lmfit_<model>", self._model = getattr(sklearn.linear_model, model)'
+  - 'pyspi/statistics/misc.py:117-124 bivariate: z = data.to_numpy(); warnings suppressed; if "random_state" in inspect.signature(model).parameters: model(random_state=42).fit(z[i],
+    ravel(z[j])) else model().fit(z[i], ravel(z[j])) -> predictor = process i, target = process j'
+  - pyspi/statistics/misc.py:125-126 y_predict = mdl.predict(z[i]); return mean_squared_error(y_predict, ravel(z[j])) -> in-sample (training) MSE on the same T samples
+    used for fitting (argument order swapped, harmless because MSE is symmetric)
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_ridge.py:1022 class Ridge; signature defaults alpha=1.0, fit_intercept=True, solver="auto", random_state=None
+    (probe inspect.signature)
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_ridge.py:1229-1263 Ridge.fit: validate_data(dtype float64/32) then super().fit'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_ridge.py:919-1019 _BaseRidge.fit: solver = self.solver ("auto") (958); _preprocess_data centring (964-971);
+    _ridge_regression(..., return_intercept=False) (1000-1016); _set_intercept (1017)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:188-199 _preprocess_data(fit_intercept=True): X -= mean(X), y -= mean(y) (both already ~1e-17
+    after z-scoring)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_ridge.py:835-843, 867-877 resolve_solver / resolve_solver_for_numpy: not positive, no return_intercept,
+    dense -> "cholesky"'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_ridge.py:746-761 _ridge_regression cholesky branch: n_features (1) <= n_samples -> _solve_cholesky(X,
+    y, alpha)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_ridge.py:215-227 _solve_cholesky: A = X^T X; A.flat[::n_features+1] += alpha; linalg.solve(A, X^T y,
+    assume_a="pos") -> w = sum(xy) / (sum(x^2) + alpha)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_ridge.py:1265-1279 Ridge.predict -> super().predict, _base.py:301-316 LinearModel.predict -> _decision_function (_base.py:291-299): X @ coef_ + intercept_'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:318-334 _set_intercept: intercept_ = y_offset - X_offset @ coef_ (unpenalised intercept)'
+  - '.venv/lib/python3.12/site-packages/sklearn/metrics/_regression.py:524-600 mean_squared_error: _average((y_true - y_pred) ** 2, axis=0) (586-588), divisor T'
+  deviation_from_documented: '(a) The supplement and GitBook name the modifier "Ride" (typo for Ridge). (b) "With the default parameters": pyspi passes random_state=42,
+    which is inert for the cholesky solver (no numeric effect). (c) The documented keyword "directed" is not borne out under the default z-scoring: the value depends
+    only on r_ij and T, so A is symmetric (see candidates). (d) The documentation does not state that the MSE is in-sample (no train/test split), nor that lower =
+    stronger dependence. Otherwise the documented "MSE of a regression of y on x" with l2 regularisation matches the code.'
+  deviation_from_canonical: 'none for the estimator: the fit is exactly the Hoerl-Kennard ridge estimator with k = alpha = 1 on centred data with an unpenalised intercept.
+    The SPI is the in-sample MSE of that fit, a pyspi construction; on z-scored data it is the closed-form ((T-1)/T)(1 - r^2 (T^2-1)/T^2), i.e. an affine, decreasing
+    function of r^2 whose shrinkage term (T^2-1)/T^2 vanishes as T grows. The fixed alpha = 1 is scale dependent: its relative strength is 1/(T-1) for z-scored data
+    but changes with the raw scale when normalise=False.'
+  units_and_range: 'units of the target variance (dimensionless after z-scoring); unsigned, >= 0; on z-scored data in [(T-1)/T^3, (T-1)/T): (T-1)/T^3 for identical
+    series (probe shared_envelope pair (0,2): 2.403e-04 at T=64, 5.959e-08 at T=4096) and close to (T-1)/T for r = 0; symmetric (A = A.T to 7.8e-16) under default
+    preprocessing; asymmetric with normalise=False (A[i, j] scales with var(x_j)); constant processes (zscore division by zero) were not probed.'
+  direction_convention: 'A[i, j] = in-sample MSE of the linear prediction of process j (target, column) from process i (predictor, row), per misc.py:122-126; LOWER
+    = j better linearly predicted from i. Code-derived; with the default z-scoring the matrix is symmetric (see units_and_range), so the direction is only empirically
+    identifiable with normalise=False, where column j scales with var(x_j) (probe on scaled_offset_T1024: column means of A track std_j^2 = 0.0395, 4.058, 24.78,
+    97.89).'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (direction label is nominal under default preprocessing): after ddof=1 z-scoring every process has sum x^2 = T-1 and mean ~0, so the fit and its in-sample
+    MSE are functions of (r_ij, T) only and A is symmetric; probe max |A - A.T| = 7.8e-16 across 24 dataset/T combinations although the class is Directed (misc.py:106)
+    and labelled "directed". Asymmetry appears only with normalise=False, where A[i, j] is in units of var(x_j).'
+  - 'Candidate (redundant with r^2): on z-scored data lmfit_Ridge = ((T-1)/T)(1 - r^2 (T-1)(T+1)/T^2) exactly; probe3.py assertion holds to <= 1e-12 for all 552 ordered
+    pairs across 14 datasets and T in {64, 256, 1024, 4096}, so the SPI is an affine transform of the squared Pearson correlation and carries no information beyond
+    it.'
+  - 'Candidate (documented rationale vs quantity): the supplement motivates lmfit by independence testing "through model fits (e.g., see additive noise models)",
+    but the SPI is the raw in-sample MSE of a contemporaneous linear fit, which measures linear predictability (a transform of r^2 for the closed-form models), not
+    residual independence; no residual-independence test is computed (misc.py:125-126).'
+  - 'Candidate (documentation typo): supplement p.18 and GitBook miscellaneous.md write the modifier as "(Ride)".'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - nonlinear_dependence
+    - anm
+    - contaminated
+    - cointegrated
+    path: kernel
+    reference: 'from-scratch numpy ridge: xc, yc centred, w = xc@yc / (xc@xc + 1), b = mean(y) - w mean(x), MSE = mean((y - b - w x)^2), applied to the z-scored arrays
+      pyspi passes to sklearn (no sklearn import)'
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: 'max |A - ref| <= 1e-12 at every T (probe: <= 3.3e-16)'
+  - datasets:
+    - bivariate_gaussian
+    - sparse_precision
+    - gauss_ar1_pair
+    path: pipeline
+    reference: analytic closed form ((T-1)/T)(1 - r^2 (T^2-1)/T^2) with r = numpy.corrcoef of the z-scored rows
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: agreement <= 1e-12; demonstrates the SPI is an affine function of r^2
+  - datasets:
+    - trending
+    - cointegrated
+    path: pipeline-detrend
+    reference: same from-scratch ridge on scipy.signal.detrend + zscore(ddof=1) data
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: max |A - ref| <= 1e-12; detrending changes r but not the formula
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - anm
+    - nonlinear_dependence
+    - cointegrated
+    - trending
+    path: pipeline
+    reference: 'analytic: A[i, j] depends only on (r_ij, T) after z-scoring, so A must equal A.T; compute max |A - A.T| off the diagonal'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'max |A - A.T| <= 1e-12 at every T (probe: <= 7.8e-16 on iid_gaussian, bivariate_gaussian, delayed_noise, nonlinear_dependence, anm, scaled_offset);
+      confirms that the "directed" label carries no directional information under default preprocessing'
+  - datasets:
+    - scaled_offset
+    - var2_bivariate
+    - anm
+    path: kernel
+    reference: 'analytic direction test: run LinearModel.multivariate on Data(x, normalise=False); compare A[i, j] with var0(x_j) * (1 - r_ij^2) (target-variance
+      scaling) and with var0(x_i) * (1 - r_ij^2) (predictor-variance scaling), numpy only'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A[i, j] tracks var0(x_j) (column = target) and not var0(x_i); establishes the empirical convention A[i, j] = MSE of predicting j from i. For
+      Ridge with alpha=1 on raw data the expected value is var0(x_j) - cov0_ij^2 T (sxx + 2)/(sxx + 1)^2 with sxx = T var0(x_i); a from-scratch value can be compared
+      exactly.
+  check_method: analytic
+  check_reference: audit/checks/refs/lmfit.py:ridge_closed_form (analytic ((T-1)/T)(1 - r^2 (T^2-1)/T^2) with r = numpy.corrcoef) and refs/lmfit.py:h_exact with refs/_kernels_basic_misc.py:ridge_mse
+    (w = sxy/(sxx + 1), numpy only, no sklearn import); refs/lmfit.py:h_direction; numpy==2.5.4, scipy==1.18.1
+  check_data: 'pipeline: all 21 datasets x T in {64, 256, 1024, 4096} (closedform); kernel/raw: iid_gaussian, bivariate_gaussian, delayed_noise, nonlinear_dependence,
+    anm, contaminated, cointegrated, scaled_offset, var2_bivariate, logistic_maps_chaotic, shared_envelope x T in {64, 1024, 4096} (scratch); pipeline-detrend: iid_gaussian,
+    bivariate_gaussian, trending, cointegrated x {64, 1024, 4096}; direction (raw): scaled_offset, var2_bivariate, anm, cointegrated at T=1024'
+  agreement_criterion: 'exact (rtol 1e-10, atol 1e-12) for the analytic closed form and the from-scratch ridge; qualitative direction: A[i, j] closer on the log scale
+    to ridge(x_i -> x_j) than to ridge(x_j -> x_i) on every pair where the two differ by more than 1%'
+  closeness: closedform 84/84 pass, max_abs 2.19e-15 (anm|256|pipeline); scratch (raw) 33/33 pass, max_abs 4.55e-13 on cointegrated|4096|kernel (values up to ~4e3),
+    max_rel 3.5e-14; pipeline-detrend 12/12 pass, max_abs 1.11e-16; direction 4/4 pass (agreement 1.0); symmetry on the pipeline path asym_max 7.77e-16
+  verdict: matches
+  score_0_10: 10
+  score_rubric: 10
+  score_rubric_basis: anchor
+  score_rubric_note: Analytic closed form 84/84 (max_abs 2.19e-15). The supplement differs only by the 'Ride' typo and the 'directed' keyword.
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 10
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Estimator: nothing; the alpha = 1 Hoerl-Kennard ridge fit with an unpenalised intercept is reproduced to floating point. The SPI is the in-sample
+    MSE of that fit; on z-scored data it equals ((T-1)/T)(1 - r^2 (T^2-1)/T^2) on all 84 dataset/T combinations, i.e. an affine, decreasing function of r^2, and it
+    is symmetric. Documentation-level only: modifier typo "Ride"; the "directed" keyword is not borne out under the default z-scoring. Hyperparameter scale (a convention
+    fixed by the documented ''default parameters'', not a deviation; score unaffected): alpha = 1 acts on ddof=1 z-scores with X''X = T-1, so w = r(T-1)/T, whereas the
+    same k on Hoerl-Kennard correlation-form X (X''X = 1) would give w = r/2; on raw data (normalise=False) the relative strength changes with scale.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.022 s per pyspi run (P <= 5, T <= 4096); all 133 Ridge runs (84 closedform, 33 scratch, 12 detrend, 4 direction) about 1 s of pyspi time'
+  symmetry_observed: 'sym on the default (z-scored) path: max|A - A.T| <= 7.8e-16 over the 84 pipeline runs (iid_gaussian|64|pipeline|closedform) and <= 5.0e-15 on
+    pipeline-detrend (trending|4096|pipeline-detrend|detrend); asym on raw (kernel) data, where A[i, j] is in units of var0(x_j) (max|A - A.T| 3.88e3 on cointegrated|4096|kernel|scratch)'
+  direction_observed: 'A[i, j] = in-sample MSE of predicting process j (target, column) from process i (predictor, row); lower = more linearly predictable. Raw-scale
+    direction runs (misc.lmfit.Ridge|{scaled_offset,var2_bivariate,anm,cointegrated}|1024|kernel|direction, 4/4 pass): pyspi equals the from-scratch f(x_i -> x_j)
+    to max_rel <= 2.1e-16 and differs from f(x_j -> x_i) by max_rel 0.0375 (var2_bivariate) to 2477 (scaled_offset). On the default z-scored path the matrix is symmetric,
+    so on the direction datasets (delayed_noise, var2_bivariate, logistic_maps_chaotic, anm) A[i, j] = A[j, i] to <= 7.8e-16 and the value carries no causal direction.'
+  candidate_resolutions:
+  - candidate: Direction label nominal under default preprocessing (A symmetric although the class is Directed)
+    outcome: confirmed
+    evidence: 'misc.lmfit.Ridge|*|pipeline|closedform (84 runs): asym_max <= 7.77e-16; |*|pipeline-detrend|detrend: <= 5.0e-15; asymmetry only on raw data (|*|kernel|scratch,
+      transpose_max_abs up to 3.88e3)'
+  - candidate: 'Redundant with r^2: lmfit_Ridge = ((T-1)/T)(1 - r^2 (T-1)(T+1)/T^2) on z-scored data'
+    outcome: confirmed
+    evidence: 'misc.lmfit.Ridge|{anm,bivariate_gaussian,cointegrated,contaminated,delayed_noise,gauss_ar1_pair,iid_gaussian,logistic_maps,logistic_maps_bidir,logistic_maps_chaotic,logistic_maps_sugihara,narrowband_f0-0.1,narrowband_f0-0.25,narrowband_f0-0.4,nonlinear_dependence,scaled_offset,shared_envelope,sparse_precision,trending,var2_bivariate,var2_chain}|{64,256,1024,4096}|pipeline|closedform: 84/84 exact, max_abs 2.19e-15'
+  - candidate: Documented rationale (independence via model fits / ANM) vs quantity (in-sample MSE of a contemporaneous linear fit)
+    outcome: confirmed
+    evidence: 'closedform runs: the value is a function of (r, T) only (84/84 exact), so no residual-independence statistic enters; misc.py:125-126 returns mean_squared_error
+      only'
+  - candidate: Documentation typo "(Ride)"
+    outcome: confirmed
+    evidence: /media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt:863 "(Ride)"; GitBook spi-descriptions/miscellaneous.md repeats it
+  checks_run:
+  - run_ids:
+    - misc.lmfit.Ridge|*|*|pipeline|closedform
+    reference: refs/lmfit.py:ridge_closed_form (analytic)
+    outcome: pass 84/84, max_abs 2.19e-15
+  - run_ids:
+    - misc.lmfit.Ridge|*|*|kernel|scratch
+    reference: refs/_kernels_basic_misc.py:ridge_mse via refs/lmfit.py:h_exact
+    outcome: pass 33/33, max_abs 4.55e-13 (max_rel 3.5e-14)
+  - run_ids:
+    - misc.lmfit.Ridge|*|*|pipeline-detrend|detrend
+    reference: refs/_kernels_basic_misc.py:ridge_mse on scipy detrend + zscore(ddof=1)
+    outcome: pass 12/12, max_abs 1.11e-16
+  - run_ids:
+    - misc.lmfit.Ridge|*|1024|kernel|direction
+    reference: refs/lmfit.py:h_direction
+    outcome: pass 4/4, agreement 1.0
+optimisation:
+  complexity_P_T: 'O(P^2 T) for the arithmetic, but a T-independent per-call overhead dominates: one sklearn Ridge fit + predict + mean_squared_error per ordered pair (pyspi/statistics/misc.py:115-126, inspect.signature per pair at line 120). Measured P_exponent 2.06, T_exponent 0.02. Pair term dominates; measured 10.4 s per window at 118x1024 (family-warm, measured).'
+  hotspot_1: sklearn/utils/validation.py:check_array (third-party:sklearn) 42.1% of the profiled SPI call at 8x1024 (input validation incl. narwhals dataframe detection and finite checks); the cholesky solve _ridge_regression is 9.3%
+  hotspot_2: 'sklearn/metrics/_regression.py:mean_squared_error (third-party:sklearn) 20.4% of the profiled SPI call at 8x1024; inspect.signature (Python stdlib) 10.4% in all, of which 5.3% is called per pair from pyspi/statistics/misc.py:bivariate (line 120), 3.0% sits inside sklearn base._validate_params (get_params -> _get_param_names) and 2.1% inside the validate_params wrapper of mean_squared_error'
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.207
+  profile_file: audit/profiles/misc.lmfit.Ridge__8x1024.pstats
+  opportunities:
+  - opportunity_id: lmfit-1
+    opportunity: 'Replace the per-pair sklearn Ridge fit/predict/mean_squared_error (pyspi/statistics/misc.py:115-126) by one batched closed form over all ordered pairs: from one centred Gram matrix, w = Sxy/(Sxx + alpha), MSE[i, j] = (Syy_j - 2 w Sxy_ij + w^2 Sxx_i)/T.'
+    opp_type: vectorise-batch
+    expected_speedup: ~2700x
+    speedup_basis: microbench:audit/profiles/micro/opp_lmfit-1.json (2879x at 118x1024 one-call baseline 10.9 s vs 3.8 ms; 524x at 32x1024; 44x at 8x1024); against the ranking basis (family-warm 10.39 s per window
+      at 118x1024, 6,232 s per patient) the 3.79 ms candidate gives 2742x, so the lower bound is 2700x
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_lmfit-1.json: max_abs_diff 8.9e-16, max_rel_diff 9.1e-16, nan_mask_equal true at 118x1024; max_rel 3.1e-15 against the 7x100 golden snapshot'
+    effort: S
+    depends_on: []
+  - opportunity_id: lmfit-4
+    opportunity: 'Strip per-call overhead around the unchanged sklearn fit: hoist inspect.signature(self._model) to __init__ (misc.py:120 runs it per pair), run fit/predict under sklearn.config_context(skip_parameter_validation=True, assume_finite=True), and compute the in-sample MSE with numpy instead of sklearn.metrics.mean_squared_error.'
+    opp_type: replace-library
+    expected_speedup: ~1.9x
+    speedup_basis: 'profile:audit/profiles/misc.lmfit.Ridge__8x1024.pstats inspect.signature 10.4% (5.3% called from misc.py:120, the part the hoist removes; the other 5.1% sits inside _validate_params and the mean_squared_error validation wrapper, so it is already in those shares), mean_squared_error 20.4%, sklearn base._validate_params 8.4% (containing validate_parameter_constraints 5.9%), _assert_all_finite 9.6% (overlapping cProfile shares, inflated by profiling) + complexity: per-call constant overhead, T-independent (T_exponent 0.02); an unprofiled throwaway check at 8x1024 (56 ordered pairs, same arrays, OMP_NUM_THREADS=1) gave 1.90x per pair with max_abs_diff 0.0 (not saved as a micro-benchmark); contained in lmfit-1, which replaces the sklearn fit whose per-call overhead this avenue strips, so on this unit it saves nothing on top of lmfit-1 (subsumed_by; README ''Optimisation columns'', ranking rule 4) and remains the fallback that keeps sklearn''s solver if lmfit-1 is not taken'
+    output_risk: unverified-bit-identical
+    risk_evidence: the same sklearn solver code runs on the same arrays; validation and signature inspection do not modify the data; for one output mean_squared_error is numpy mean((y_true - y_pred)**2), the same operations as an explicit numpy mean; assume_finite=True skips the finite-value check, so on input with NaN or inf sklearn raises today while the stripped call would proceed, and the bit-identical claim covers finite input only
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - lmfit-1

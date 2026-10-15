@@ -1,0 +1,182 @@
+{
+ "family": "xcorr",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/basic-statistics.md"
+ ],
+ "hypotheses": [
+  "normalised by ddof=0 std * (T-1): on z-scored input lag-0 = r * T/(T-1)",
+  "slice r[T-T//4 : T+T//4] covers lags -(T//4-1)..+T//4 so the window centre N=len//2 is lag +1 (sigonly origin off by one)",
+  "sigonly threshold is 1.96/sqrt(T//4), docs say 1.96/sqrt(T)",
+  "which series leads for positive lag: establish the sign convention of scipy.signal.correlate(x, y)"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/basic.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    197,
+    213
+   ],
+   "section": "1.1.5",
+   "title": "Cross correlation (xcorr)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/signal/_signaltools.py (correlate, choose_conv_method)"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "sigonly": true,
+    "statistic": "max"
+   },
+   "identifier_params": {
+    "xcorr-sq_max_sig-True": {
+     "squared": true,
+     "statistic": "max"
+    },
+    "xcorr_max_sig-True": {
+     "statistic": "max"
+    }
+   },
+   "identifiers": [
+    "xcorr_max_sig-True",
+    "xcorr-sq_max_sig-True"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "method_or_estimator": "scipy.signal.correlate",
+   "module": "basic",
+   "pair_basis": "unordered",
+   "pyspi_class": "CrossCorrelation",
+   "representative": "xcorr_max_sig-True",
+   "source": "config",
+   "unit_id": "basic.xcorr.max_sig-True"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "sigonly": true,
+    "statistic": "mean"
+   },
+   "identifier_params": {
+    "xcorr-sq_mean_sig-True": {
+     "squared": true,
+     "statistic": "mean"
+    },
+    "xcorr_mean_sig-True": {
+     "statistic": "mean"
+    }
+   },
+   "identifiers": [
+    "xcorr_mean_sig-True",
+    "xcorr-sq_mean_sig-True"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "method_or_estimator": "scipy.signal.correlate",
+   "module": "basic",
+   "pair_basis": "unordered",
+   "pyspi_class": "CrossCorrelation",
+   "representative": "xcorr_mean_sig-True",
+   "source": "config",
+   "unit_id": "basic.xcorr.mean_sig-True"
+  },
+  {
+   "eeg_identifiers": [
+    "xcorr-sq_mean_sig-False",
+    "xcorr_mean_sig-False"
+   ],
+   "hyperparameters": {
+    "sigonly": false,
+    "statistic": "mean"
+   },
+   "identifier_params": {
+    "xcorr-sq_mean_sig-False": {
+     "sigonly": false,
+     "squared": true,
+     "statistic": "mean"
+    },
+    "xcorr_mean_sig-False": {
+     "sigonly": false,
+     "statistic": "mean"
+    }
+   },
+   "identifiers": [
+    "xcorr_mean_sig-False",
+    "xcorr-sq_mean_sig-False"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "method_or_estimator": "scipy.signal.correlate",
+   "module": "basic",
+   "pair_basis": "unordered",
+   "pyspi_class": "CrossCorrelation",
+   "representative": "xcorr_mean_sig-False",
+   "source": "config",
+   "unit_id": "basic.xcorr.mean_sig-False"
+  },
+  {
+   "eeg_identifiers": [
+    "xcorr-sq_max_sig-False",
+    "xcorr_max_sig-False"
+   ],
+   "hyperparameters": {
+    "sigonly": false,
+    "statistic": "max"
+   },
+   "identifier_params": {
+    "xcorr-sq_max_sig-False": {
+     "sigonly": false,
+     "squared": true,
+     "statistic": "max"
+    },
+    "xcorr_max_sig-False": {
+     "sigonly": false,
+     "statistic": "max"
+    }
+   },
+   "identifiers": [
+    "xcorr_max_sig-False",
+    "xcorr-sq_max_sig-False"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "method_or_estimator": "scipy.signal.correlate",
+   "module": "basic",
+   "pair_basis": "unordered",
+   "pyspi_class": "CrossCorrelation",
+   "representative": "xcorr_max_sig-False",
+   "source": "retained",
+   "unit_id": "basic.xcorr.max_sig-False"
+  }
+ ]
+}

@@ -1,0 +1,304 @@
+unit_id: spectral.wilson_factorisation
+status: profiled
+correctness:
+  metric_name_standard: Nonparametric spectral-matrix factorisation (Wilson 1972 minimum-phase factor) of a multitaper cross-spectral matrix, giving transfer function H and innovation covariance Sigma (shared
+    by dtf, dcoh, pdcoh, gpdcoh, ddtf and sgc_nonparametric)
+  canonical_ref: 'Wilson GT (1972) The factorization of matricial spectral densities. SIAM J Appl Math 23(4):420-426; Dhamala M, Rangarajan G, Ding M (2008) Analyzing information flow in brain networks
+    with nonparametric Granger causality. NeuroImage 41:354-362; multitaper: Thomson DJ (1982) Proc IEEE 70:1055-1096'
+  canonical_definition: Find Psi(f) = sum_{k>=0} psi_k e^{-i2pi f k} (minimum phase, causal) with S(f) = Psi(f) Psi(f)^H; iterate Psi <- Psi [Psi^{-1} S Psi^{-H} + I]_+ where [.]_+ keeps positive lags and
+    half the zero lag (upper triangular); then Sigma = psi_0 psi_0^T and H(f) = Psi(f) psi_0^{-1} (H(lag 0) = I)
+  documented_definition: 'supplement §1.5, p.12 (line 575-576): ''All directed measures (excluding parametric spectral Granger causality) are nonparametrically estimated through spectral matrix factorization
+    [57, 58]''; §1.5.9 p.16: ''The cross-spectral density matrix can be decomposed into a noise covariance matrix and a spectral transfer matrix''. Band rule, supplement §1.5, p.12-13 (supplement.txt lines
+    570-599 in this checkout; the pack''s line numbers are offset by about 12-16): ''We use 125 uniformly sampled bins across the entire frequency range, f in [f0, fs/2] ... f0 = 4/T'' and bands ''fmin-0_fmax-0-5:
+    f in [0, fs/2]; fmin-0_fmax-0-25: f in [0, fs/4]; fmin-0-25_fmax-0-5: f in [fs/4, fs/2]'', summary = mean or max over the band. Directed measures ''are nonparametrically estimated through spectral matrix
+    factorization [57, 58]'' (§1.5, p.12). Row/column meaning of the MPI: GitBook glossary-of-terms.md:27 ''The rows in this table reflect the sources while the columns reflect the targets''.'
+  delegate_lib: spectral_connectivity==1.1.2 minimum_phase_decomposition (tolerance 1e-8, max_iterations 60) + transforms.Multitaper (NW=3, 5 tapers) (numpy 2.5.4, scipy 1.17.1)
+  implemented_as: 'Per ordered pair: 2-channel multitaper CSM on n_fft = next_fast_len(T) bins (no zero padding), mean over 5 tapers; Wilson: initial Psi = chol(ifft(S)[lag 0].real)^T (fallback to a random
+    start on LinAlgError, unreachable under numpy >= 2.4 as checked, see candidates); g = Psi^{-1} S Psi^{-H} + I; plus operator: ifft, lag 0 halved and lower triangle zeroed, lags >= (n+1)//2 zeroed, fft;
+    Psi <- Psi g_+; stop when sup-norm change < 1e-8 or 60 iterations (only a logger.warning on failure); Sigma = A0 A0^T, H = Psi A0^{-1}, A0 = ifft(Psi)[lag 0].real. The connectivity properties are
+    uncached, so each directed measure re-runs the whole factorisation 2-4 times per call (p6_misc.py). Exact-spectrum kernel (p2_kernel.py; rerun in review probes pD_kernel_directed.py and pG_sigma_eeg.py):
+    on toy VAR(1), var2_bivariate and var2_chain, H is recovered to 3.7e-15..3.9e-15, but Sigma = A0 A0^T only to 3.5e-9..4.1e-9 at the shipped tolerance 1e-8 (minimum_phase_decomposition.py:161-162); with
+    tolerance 1e-12 the Sigma error falls to 4.3e-13, so the Sigma accuracy is set by the stopping tolerance. Earlier text claiming Sigma to 4e-15 was based on 5-decimal printing and is withdrawn.'
+  implementation_trace:
+  - pyspi/statistics/spectral.py:105-126 NonparametricSpectralBivariate._get_cache (per (measure, i, j); Multitaper + Connectivity per pair and per measure)
+  - pyspi/statistics/spectral.py:63-83 NonparametricSpectralMultivariate._get_cache (sgc nonparametric path; factorises pairs inside pairwise_spectral_granger_prediction)
+  - pyspi/_spectral_compat.py:15-28 numpy shim installed only on spectral_connectivity.connectivity
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:74-100 Multitaper defaults: time_halfbandwidth_product=3, detrend_type=''constant'', n_tapers=None, is_low_bias=True; :155-164
+    n_tapers = floor(2*NW-1) = 5'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:167-178 single window = whole series; :181-185 n_fft = next_fast_len(T) (no zero padding; = T for T in {64,256,1024,4096}); :188-190
+    frequencies = fftfreq(n_fft, 1/fs)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:238-260 fft: detrend(constant) -> taper (dpss, :357-387) -> FFT / fs (:335-354)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:156-172 Connectivity.from_multitaper (expectation_type 'trials_tapers' -> mean over trials and the 5 tapers, :45-53)
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:195-208 _cross_spectral_matrix S[a, b] = X_a conj(X_b); :210-220 _expectation_cross_spectral_matrix
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:259-261 _minimum_phase_factor (plain property, NOT cached: every access re-runs Wilson) -> minimum_phase_decomposition.py:161-222'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:263-266 _transfer_function = _estimate_transfer_function(Psi) restricted to the first (n_fft+1)//2 bins (decorator :73-89); :1145-1170
+    H = Psi @ inv(A0), A0 = ifft(Psi)[lag 0].real
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:268-270 _noise_covariance -> :1116-1142 Sigma = A0 @ A0^T
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:697-748 pairwise_spectral_granger_prediction: per unordered pair minimum_phase_decomposition (:726-728), LinAlgError -> NaN
+    (:742-743)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:29-63 _get_intial_conditions: cholesky(ifft(S)[..., 0:1].real).swapaxes; except xp.linalg.linalg.LinAlgError
+    (:48) -> random start from xp.random.standard_normal (:54-63)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:66-99 _get_causal_signal (plus operator: lag 0 * 0.5, lower triangle zeroed, lags >= (n+1)//2 zeroed)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:102-125 _check_convergence (sup norm of change < tolerance per time window)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:128-158 _get_linear_predictor: solve(Psi, S); solve(Psi, (.)^H); + I'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:161-222 minimum_phase_decomposition (tolerance=1e-8, max_iterations=60; logger.warning 'Maximum iterations reached'
+    and returns the last iterate)
+  deviation_from_documented: Documented as a matrix factorisation of the cross-spectral matrix; implemented as such, but per ordered pair on a 2-channel matrix (not the P-channel matrix), recomputed separately
+    for each measure and for (i, j) and (j, i). The multitaper grid and band rule deviate from the documented 125-bin grid (see the measure records).
+  deviation_from_canonical: 'Algorithm follows Wilson 1972 / Dhamala et al. 2008 (same plus operator as their MATLAB code, including halving the upper zero-lag triangle). Deviations: (a) no zero padding
+    (n_fft = T): the multitaper CSM has autocovariance up to lag T-1, which wraps on a T-point grid; the factor cannot represent lag n/2, leaving a relative factorisation residual |Psi Psi^H - S|/max|S|
+    of 1e-3..2e-2 on regular data. In the lag domain the residual peaks at lag n/2 but is spread around it: on var2_bivariate T=1024 lag 512 is the largest single lag yet carries only 5% of the summed lag-domain
+    residual, lags within +/-8 of n/2 carry 19%, within +/-32 33%, within +/-128 66% (pR_lagshare.py; review pF_wilson.py ''share of lag-sum at top lag 0.05''). Zero padding removes most of it (p8_resid.py:
+    2.06e-2 with n_fft=T, 9.1e-5 with n_fft=2T; DTF[1,0] band mean 0.2689 vs 0.2682); (b) convergence is declared on the change of Psi, not on the residual; on logistic_maps T >= 1024 it does not converge
+    in 60 iterations and the result is used anyway (p7_wilson.py); on narrowband_f0-0.25 it "converges" with residual 0.6 (line spectra violate the factorisability (Szego) condition); (c) a 5-taper single-window
+    CSM has variance that does not fall with T, so every downstream directed measure has a T-independent positive bias in the null direction (~0.11, p5_bias_T.py); (d) the result depends on channel order
+    by up to 5e-3 per bin (p6_misc.py equivariance: dtf 5.3e-3, dcoh 8.5e-3, gpdcoh 4.6e-3), whereas the exact factor is order-equivariant.'
+  units_and_range: 'Psi and H complex, per frequency; Sigma real symmetric PSD (scaled by the multitaper normalisation); not a statistic itself; failure modes: AttributeError (numpy >= 2.4 fallback), silent
+    non-convergence'
+  direction_convention: n/a for the factorisation itself; H[a, b] maps innovation b into signal a (column = source, row = target), which fixes A[i, j] = j -> i for every directed measure that reads L[0,
+    1] on the pair [x_i, x_j] (see spectral.dtf)
+  symmetry_expected: n/a
+  already_documented: tests/README.md dependency constraints (spectral-connectivity pinned at 1.1.2); DEPENDENCY_COMPATIBILITY_REVIEW.md (frequency grid / Nyquist); the numpy >= 2.4 fallback failure, uncached
+    re-factorisation, residual and non-convergence are not in KNOWN_ISSUES.md
+  new_finding_candidates:
+  - 'CANDIDATE (numpy >= 2.4 as checked breaks the Cholesky fallback): minimum_phase_decomposition.py:48 ''except xp.linalg.linalg.LinAlgError:''; under numpy 2.5.4 ''np.linalg.linalg exists: False'' and
+    evaluating the except clause raises AttributeError (p6_misc.py); the numpy.linalg.linalg shim resolves (with a DeprecationWarning) in numpy 2.2.6 and 2.3.3 and raises AttributeError in 2.4.6 and 2.5.4, so
+    under numpy < 2.4 as checked the fallback is reachable and this break does not occur. Pipeline effect (p9_degenerate.py): shared_envelope (x2 bit-identical to x0, normalise=True) ->
+    DirectedTransferFunction.multivariate raises ''AttributeError module numpy.linalg has no attribute linalg''; Calculator.compute (calculator.py:336-337 at HEAD a42ebc1, except Exception) then stores an
+    all-NaN matrix for the SPI, so one singular pair blanks every pair. The _spectral_compat shim (pyspi/_spectral_compat.py:28) patches only the connectivity module.'
+  - 'CANDIDATE (re-factorisation per property access; pack hypothesis 3 confirmed): spectral_connectivity/connectivity.py:259-274 plain properties; Wilson runs per call: dtf 2, dcoh 3, pdcoh 2, gpdcoh 3, ddtf 4 (p6_misc.py);
+    per pyspi Data the cache is per (measure, i, j) so the five units never share a factorisation and (i, j), (j, i) are factorised separately (12 Wilson runs for dtf at P=3). Deterministic, so values are
+    unaffected.'
+  - 'CANDIDATE (factorisation residual without zero padding, peaked around lag n/2): mechanism: the plus operator zeroes lags >= (n+1)//2 (minimum_phase_decomposition.py:98) while the multitaper CSM has
+    autocovariance up to lag T-1 wrapped on a T-point grid. p8_resid.py ''var2_bivariate T=1024 n_fft=1024: rel.resid 2.06e-02; largest residual lags [512, 511, 513, 508]'' vs ''n_fft=2048: rel.resid 9.11e-05'';
+    mean DTF[1,0] 0.2689 vs 0.2682. The residual is not concentrated at the single lag n/2: lag 512 carries 5% of the summed lag-domain residual, +/-32 lags around it 33%, +/-128 lags 66% (pR_lagshare.py;
+    2% at the top lag with n_fft=2048).'
+  - 'CANDIDATE (silent non-convergence): p7_wilson.py logistic_maps T=1024 and T=4096 ''iterations= 60 NOT CONVERGED'' (residual 0.32-0.38); pyspi emits only a logging warning and returns values (p3_pipeline.py
+    logistic_maps dtf [[nan, 0.9996], [0.0001, nan]], dcoh 94.46).'
+  - 'CANDIDATE (fixed 5 tapers -> T-independent bias floor): transforms.py:78 time_halfbandwidth_product=3 and :163 n_tapers = 5 with a single window; null-direction DTF ~0.11 at T = 64..16384 (p5_bias_T.py).'
+  - 'CANDIDATE (channel-order dependence): factorising [x_j, x_i] instead of [x_i, x_j] changes the per-bin dtf by up to 5.3e-3 (p6_misc.py ''equivariance directed_transfer_function max|L01(x0,x1) - L10(x1,x0)|
+    0.00525''); relevant to any optimisation that reuses one factorisation for both orientations (not bit-identical).'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - var2_chain
+    path: kernel
+    reference: 'analytic: exact S(f) = H Sigma H^H from the MANIFEST VAR coefficients; compare minimum_phase_decomposition-derived Sigma and H with the true Sigma and H'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'at the shipped tolerance 1e-8: H recovered within 1e-12 (probe 3.7e-15..3.9e-15) and Sigma within 1e-8 (probe 3.5e-9..4.1e-9); with tolerance=1e-12 passed explicitly, Sigma within
+      1e-11 (probe 4.3e-13). A 1e-10 criterion on Sigma fails at the shipped tolerance.'
+  - datasets:
+    - var2_bivariate
+    - iid_gaussian
+    - delayed_noise
+    - gauss_ar1_pair
+    path: kernel
+    reference: 'independent-impl: from-scratch numpy multitaper (scipy.signal.windows.dpss(T, NW=3, Kmax=5), constant detrend, FFT, mean over tapers) and from-scratch numpy Wilson (1972) factorisation following
+      Dhamala et al. 2008 (same plus operator: half zero-lag, upper-triangular, zero lags >= n/2), then the canonical formula; does not import spectral_connectivity'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: from-scratch Wilson on the library CSM reproduces Psi Psi^H, H and Sigma within 1e-6; also report |Psi Psi^H - S|/max|S| for n_fft = T and n_fft = 2T (expect ~1e-2 vs ~1e-4)
+  - datasets:
+    - logistic_maps
+    - narrowband_f0-0.25
+    - var2_bivariate
+    path: kernel
+    reference: 'analytic: factorisation residual |Psi Psi^H - S| / max|S| and iteration count (a residual criterion is the definition of a factorisation, independent of the library)'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'var2_bivariate: converged, residual <= 2e-2; logistic_maps T >= 1024: 60 iterations, not converged, residual ~0.3; narrowband: converged by the step criterion with residual ~0.6;
+      flags inputs on which all five directed units are unreliable'
+  - datasets:
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic: a duplicated channel makes the pair CSM singular; expected behaviour is NaN for the affected pairs only'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'current behaviour: AttributeError from minimum_phase_decomposition.py:48 under numpy >= 2.4 as checked, whole SPI matrix NaN in Calculator; record which pairs/identifiers are affected'
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    path: pipeline
+    reference: 'analytic: call counting wrapper around spectral_connectivity.connectivity.minimum_phase_decomposition'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: Wilson runs per Calculator pass = P(P-1) * (2 + 3 + 2 + 3 + 4) for the five units (one run per ordered pair per measure call; band/statistic variants reuse the cache); values bit-identical
+      when a single factorisation per ordered pair is shared
+  check_method: independent-impl
+  check_reference: audit/checks/refs/spectral_directed.py:h_csm / h_H / h_Sigma / h_conv (_kernels_spectral.multitaper_fft, cross_spectral_matrix, wilson_factorise on the library's exported CSM), audit/checks/refs/spectral_directed.py:h_exactH
+    / h_exactSigma (analytic VAR(2) H and Sigma), audit/checks/refs/spectral_directed.py:h_nfft2 / h_order / h_calls / h_singular; probes audit/checks/probes/spectral_directed_probes.py
+  check_data: pairs of var2_bivariate (both orders), var2_chain (0,2), gauss_ar1_pair (pipeline and kernel), delayed_noise (0,3) at T1024, iid_gaussian T256/T1024; logistic_maps, logistic_maps_chaotic,
+    narrowband_f0-0.25 at T1024/T4096; var2_bivariate T4096; exact var2_bivariate and var2_chain spectra (n = 1024); shared_envelope T256/T1024/T4096 (pipeline, kernel, pipeline-detrend); var2_chain T256
+    (call count)
+  agreement_criterion: 'CSM rtol 1e-8 / atol 1e-12; H and Sigma rtol 1e-6 / atol 1e-6 against the independent factor of the same CSM; diagnostics rtol 1e-3 (iteration count exact); exact spectrum: H exact
+    (1e-10/1e-12), Sigma atol 1e-8 at the shipped tolerance and 1e-11 at tolerance 1e-12; call count exact; singular: branch predicted by the independent kernel'
+  closeness: 'CSM: library = independent multitaper to <= 2.1e-10 (csm 15/15). Factors: library H = independent Wilson on the library CSM to <= 4.3e-13 and Sigma to <= 3.3e-16 (H 7/7, Sigma 7/7); diagnostics
+    (iterations, step convergence, residuals) identical (conv 14/14, max_abs 5.4e-12). Exact spectra: H to 3.8e-15, Sigma to 3.5e-9 at the shipped tolerance 1e-8 and 4.3e-13 at 1e-12 (6/6). Residual max|Psi
+    Psi^H - S|/max|S|: 0.021 (var2_bivariate T1024), 0.009 (T4096), 0.006 (var2_chain), 0.003 (gauss_ar1_pair), 0.028 (delayed_noise), 0.016 (iid T256); zero padding to 2T lowers it from 2.06e-2 to 9.1e-5
+    and moves DTF[1,0] from 0.2689 to 0.2682 (nfft2 2/2). Unreliable inputs: logistic_maps 60 iterations, not converged, residual 0.32/0.38; logistic_maps_chaotic step-converged, residual 0.40/0.37; narrowband_f0-0.25
+    step-converged, residual 0.61/0.59. Order dependence per bin (order 3/3): var2_bivariate dtf 5.3e-3, dcoh 8.6e-3, gpdcoh 4.5e-3, ddtf 3.0e-4; gauss_ar1_pair kernel dtf 1.9e-2, dcoh 3.4e-2. Calls: [12,
+    18, 12, 18, 24] Wilson runs at P=3, 12 for six dtf identifiers on one Data, shared factorisation bit-identical (calls pass). Singular pair: 5/5 runs follow the kernel-predicted branch.'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 7: the Wilson iteration agrees with an independent implementation to 4.3e-13, but the configuration changes values. With no zero padding
+    the residual is 2.06e-2 against 9.1e-5 at n_fft = 2T (DTF[1,0] 0.2689 vs 0.2682), and the 5-taper CSM gives the downstream bias.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The Wilson iteration (Dhamala et al. 2008 form) and the H / Sigma extraction match an independent implementation to 4e-13 and the analytic factors to 4e-15 (Sigma to the stopping tolerance).
+    The configuration deviates: (a) no zero padding, so the factor cannot represent lags >= n/2 and the factorisation residual is 0.3-3% on regular data; (b) convergence is declared on the step size and
+    non-convergence only logs a warning, so factorisations with residual 0.3-0.6 (logistic maps, narrowband) feed every directed measure; (c) the 5-taper single-window CSM makes every downstream measure
+    inconsistent (T-independent bias, measure records); (d) the step-converged factor of the non-factorisable CSM is not equivariant: swapping or rescaling channels changes per-bin H by up to O(1) at isolated
+    bins and band means by 1e-3..3e-2; (e) under numpy >= 2.4 (as checked) the Cholesky fallback raises AttributeError (mpd:48 xp.linalg.linalg), turning the whole SPI matrix NaN, but only when rounding makes
+    the duplicated pair''s lag-0 covariance fail Cholesky; otherwise the degenerate pair silently gets a finite value (dtf 0.528, gpdcoh 0.507). spectral_connectivity v2.0.1 already catches
+    xp.linalg.LinAlgError. Rubric anchor 7 (expectation over 5 tapers, value-changing configuration).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: each probe <= 1 s except the singular probes (7-20 s, they rebuild every pair) and the call counter (9.4 s)'
+  symmetry_observed: n/a (factorisation); per-pair order dependence quoted in closeness
+  direction_observed: 'H[a, b] maps innovation b into signal a: exact var2_bivariate H has H[0,1] = 0 at every bin (exactH pass), so the library''s [a, b] = b -> a and pyspi''s A[i, j] = j -> i (row = target)'
+  candidate_resolutions:
+  - candidate: numpy >= 2.4 (as checked) breaks the Cholesky fallback
+    outcome: confirmed
+    evidence: 'spectral.wilson_factorisation|shared_envelope|256|pipeline|singular:dtf and spectral.wilson_factorisation|shared_envelope|1024|kernel|singular:dtf: AttributeError, whole matrix NaN (kernel:
+      LinAlgError); refinement: spectral.wilson_factorisation|shared_envelope|1024|pipeline|singular:dtf, |singular:gpdcoh and |4096|pipeline-detrend|singular:dtf: Cholesky succeeds by rounding and the
+      degenerate pair gets 0.528 / 0.507 / 0.522 (kernel agrees)'
+  - candidate: re-factorisation on every property access
+    outcome: confirmed
+    evidence: 'spectral.wilson_factorisation|var2_chain|256|pipeline|calls: [12, 18, 12, 18, 24, 12, 0.0]'
+  - candidate: factorisation residual without zero padding
+    outcome: confirmed
+    evidence: 'spectral.wilson_factorisation|var2_bivariate|1024|pipeline|nfft2: 2.06e-2 vs 9.1e-5 (n_fft = 2T), DTF[1,0] 0.2689 vs 0.2682; spectral.wilson_factorisation|iid_gaussian|1024|kernel|nfft2~p01:
+      1.06e-2 vs 1.4e-3'
+  - candidate: silent non-convergence
+    outcome: confirmed
+    evidence: 'spectral.wilson_factorisation|logistic_maps|1024|pipeline|conv~p01 / |4096|: 60 iterations, not converged, residual 0.32 / 0.38; logistic_maps_chaotic residual 0.40 / 0.37 and narrowband_f0-0.25
+      0.61 / 0.59 although step-converged'
+  - candidate: fixed 5 tapers -> T-independent bias floor
+    outcome: confirmed
+    evidence: spectral.dtf|var2_bivariate|*|pipeline|truth:mean-full and the iid_gaussian truth runs of all five measure units (null ~0.11 at T256-4096)
+  - candidate: channel-order dependence
+    outcome: confirmed
+    evidence: 'spectral.wilson_factorisation|var2_bivariate|1024|pipeline|order: dtf 5.3e-3, dcoh 8.6e-3, gpdcoh 4.5e-3, ddtf 3.0e-4 per bin; spectral.wilson_factorisation|gauss_ar1_pair|1024|kernel|order:
+      dtf 1.9e-2, dcoh 3.4e-2; also scale non-equivariance (spectral.gpdcoh|scaled_offset|1024|kernel|scale:mean-full 3.1e-3)'
+  checks_run:
+  - run_ids:
+    - spectral.wilson_factorisation|var2_bivariate|1024|pipeline|csm~p01
+    - spectral.wilson_factorisation|var2_bivariate|1024|pipeline|csm~p10
+    - spectral.wilson_factorisation|var2_chain|1024|pipeline|csm~p02
+    - spectral.wilson_factorisation|gauss_ar1_pair|1024|pipeline|csm~p01
+    - spectral.wilson_factorisation|delayed_noise|1024|pipeline|csm~p03
+    - spectral.wilson_factorisation|iid_gaussian|256|kernel|csm~p01
+    - spectral.wilson_factorisation|gauss_ar1_pair|1024|kernel|csm~p01
+    - spectral.wilson_factorisation|logistic_maps|1024|pipeline|csm~p01
+    - spectral.wilson_factorisation|logistic_maps|4096|pipeline|csm~p01
+    - spectral.wilson_factorisation|logistic_maps_chaotic|1024|pipeline|csm~p01
+    - spectral.wilson_factorisation|logistic_maps_chaotic|4096|pipeline|csm~p01
+    - spectral.wilson_factorisation|narrowband_f0-0.25|1024|pipeline|csm~p01
+    - spectral.wilson_factorisation|narrowband_f0-0.25|4096|pipeline|csm~p01
+    - spectral.wilson_factorisation|var2_bivariate|4096|pipeline|csm~p01
+    - spectral.wilson_factorisation|shared_envelope|1024|pipeline|csm~p02
+    reference: audit/checks/refs/spectral_directed.py:h_csm
+    outcome: 15/15 pass; max_abs 2.1e-10
+  - run_ids:
+    - spectral.wilson_factorisation|var2_bivariate|1024|pipeline|H~p01
+    - spectral.wilson_factorisation|var2_bivariate|1024|pipeline|H~p10
+    - spectral.wilson_factorisation|var2_chain|1024|pipeline|H~p02
+    - spectral.wilson_factorisation|gauss_ar1_pair|1024|pipeline|H~p01
+    - spectral.wilson_factorisation|delayed_noise|1024|pipeline|H~p03
+    - spectral.wilson_factorisation|iid_gaussian|256|kernel|H~p01
+    - spectral.wilson_factorisation|gauss_ar1_pair|1024|kernel|H~p01
+    reference: audit/checks/refs/spectral_directed.py:h_H
+    outcome: 7/7 pass; max_abs 4.3e-13
+  - run_ids:
+    - spectral.wilson_factorisation|var2_bivariate|1024|pipeline|Sigma~p01
+    - spectral.wilson_factorisation|var2_bivariate|1024|pipeline|Sigma~p10
+    - spectral.wilson_factorisation|var2_chain|1024|pipeline|Sigma~p02
+    - spectral.wilson_factorisation|gauss_ar1_pair|1024|pipeline|Sigma~p01
+    - spectral.wilson_factorisation|delayed_noise|1024|pipeline|Sigma~p03
+    - spectral.wilson_factorisation|iid_gaussian|256|kernel|Sigma~p01
+    - spectral.wilson_factorisation|gauss_ar1_pair|1024|kernel|Sigma~p01
+    reference: audit/checks/refs/spectral_directed.py:h_Sigma
+    outcome: 7/7 pass; max_abs 3.3e-16
+  - run_ids:
+    - spectral.wilson_factorisation|var2_bivariate|1024|pipeline|conv~p01
+    - spectral.wilson_factorisation|var2_bivariate|1024|pipeline|conv~p10
+    - spectral.wilson_factorisation|var2_chain|1024|pipeline|conv~p02
+    - spectral.wilson_factorisation|gauss_ar1_pair|1024|pipeline|conv~p01
+    - spectral.wilson_factorisation|delayed_noise|1024|pipeline|conv~p03
+    - spectral.wilson_factorisation|iid_gaussian|256|kernel|conv~p01
+    - spectral.wilson_factorisation|gauss_ar1_pair|1024|kernel|conv~p01
+    - spectral.wilson_factorisation|logistic_maps|1024|pipeline|conv~p01
+    - spectral.wilson_factorisation|logistic_maps|4096|pipeline|conv~p01
+    - spectral.wilson_factorisation|logistic_maps_chaotic|1024|pipeline|conv~p01
+    - spectral.wilson_factorisation|logistic_maps_chaotic|4096|pipeline|conv~p01
+    - spectral.wilson_factorisation|narrowband_f0-0.25|1024|pipeline|conv~p01
+    - spectral.wilson_factorisation|narrowband_f0-0.25|4096|pipeline|conv~p01
+    - spectral.wilson_factorisation|var2_bivariate|4096|pipeline|conv~p01
+    reference: audit/checks/refs/spectral_directed.py:h_conv
+    outcome: 14/14 pass; library diagnostics reproduced; 6 inputs flagged unreliable
+  - run_ids:
+    - spectral.wilson_factorisation|var2_bivariate|1024|kernel|exactH
+    - spectral.wilson_factorisation|var2_bivariate|1024|kernel|exactSigma
+    - spectral.wilson_factorisation|var2_bivariate|1024|kernel|exactSigma-tol12
+    - spectral.wilson_factorisation|var2_chain|1024|kernel|exactH
+    - spectral.wilson_factorisation|var2_chain|1024|kernel|exactSigma
+    - spectral.wilson_factorisation|var2_chain|1024|kernel|exactSigma-tol12
+    reference: audit/checks/refs/spectral_directed.py:h_exactH / h_exactSigma (analytic)
+    outcome: 6/6 pass; H 3.8e-15, Sigma 3.5e-9 (tol 1e-8) / 4.3e-13 (tol 1e-12)
+  - run_ids:
+    - spectral.wilson_factorisation|var2_bivariate|1024|pipeline|nfft2
+    - spectral.wilson_factorisation|iid_gaussian|1024|kernel|nfft2~p01
+    reference: audit/checks/refs/spectral_directed.py:h_nfft2
+    outcome: 2/2 pass; residual 2.06e-2 -> 9.1e-5 with zero padding
+  - run_ids:
+    - spectral.wilson_factorisation|var2_bivariate|1024|pipeline|order
+    - spectral.wilson_factorisation|delayed_noise|1024|pipeline|order~p03
+    - spectral.wilson_factorisation|gauss_ar1_pair|1024|kernel|order
+    reference: audit/checks/refs/spectral_directed.py:h_order
+    outcome: 3/3 pass; order dependence up to 3.4e-2 per bin
+  - run_ids:
+    - spectral.wilson_factorisation|var2_chain|256|pipeline|calls
+    reference: audit/checks/refs/spectral_directed.py:h_calls (analytic count)
+    outcome: pass; [12, 18, 12, 18, 24, 12, 0.0]
+  - run_ids:
+    - spectral.wilson_factorisation|shared_envelope|256|pipeline|singular:dtf
+    - spectral.wilson_factorisation|shared_envelope|1024|pipeline|singular:dtf
+    - spectral.wilson_factorisation|shared_envelope|1024|pipeline|singular:gpdcoh
+    - spectral.wilson_factorisation|shared_envelope|1024|kernel|singular:dtf
+    - spectral.wilson_factorisation|shared_envelope|4096|pipeline-detrend|singular:dtf
+    reference: audit/checks/refs/spectral_directed.py:h_singular
+    outcome: 5/5 pass (branch predicted); 2 whole-matrix NaN, 3 finite values for the degenerate pair
+optimisation:
+  complexity_P_T: 'Per factorisation: ~28 iterations (3100 _get_linear_predictor calls / 112 factorisations in the dtf profile) of an ifft/fft over n_fft and n_fft solves of m x m (m = 2 on the bivariate path); O(iter * n_fft * (log n_fft + m^3)). Infrastructure unit without its own timing: read from spectral.dtf (2 factorisations per ordered pair) and sgc.nonparametric (1 per unordered pair).'
+  hotspot_1: numpy/linalg/_linalg.py:solve (third-party:numpy; 2x2 stacks from minimum_phase_decomposition.py:_get_linear_predictor) 48.8% of the profiled spectral.dtf call at 8x1024
+  hotspot_2: .venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:minimum_phase_decomposition self time (matmul, copies, freezing) 10.6% and _get_causal_signal (ifft/fft, triangular masking) 9.2% of the dtf call at 8x1024
+  hotspot_owner: third-party:spectral_connectivity
+  opaque_share: 0.08
+  profile_file: audit/profiles/spectral.dtf__8x1024.pstats
+  opportunities:
+  - opportunity_id: spectral_directed-1
+    opportunity: 'Memoise the Wilson factor (H, Sigma) per ordered pair on the Data and serve every property access and all five directed units from it: the library recomputes minimum_phase_decomposition on each access of _transfer_function / _noise_covariance / _MVAR_Fourier_coefficients (connectivity.py:260-275), i.e. 2, 3, 2, 3 and 4 factorisations per pair for dtf, dcoh, pdcoh, gpdcoh and ddtf (14 per ordered pair for the five units).'
+    opp_type: cache-sharing
+    expected_speedup: ~4x
+    speedup_basis: 'profile:audit/profiles/spectral.dtf__8x1024.pstats, audit/profiles/spectral.dcoh__8x1024.pstats, audit/profiles/spectral.pdcoh__8x1024.pstats, audit/profiles/spectral.gpdcoh__8x1024.pstats and audit/profiles/spectral.ddtf__8x1024.pstats minimum_phase_decomposition 30.2 s of 38.2 s summed over the five profiled calls (784 factorisations for 56 ordered pairs) + complexity: 14 factorisations per ordered pair become 1 (784 -> 56), i.e. 14x on the factorisation work itself, but ~3.7x on the five directed units'' combined time by Amdahl (the per-pair Multitaper and the measures remain); per unit dtf/pdcoh ~1.6x, dcoh/gpdcoh ~2x, ddtf ~2.7x. No ranking basis on this row. This infrastructure unit has no SPI identifiers of its own, so profiles/summary.json holds no 118x1024 projection for it and rank_basis_s and projected_patient_s_after stay blank; its cost sits inside the timings of the units that call it. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README ''Optimisation columns'', rule 5).'
+    output_risk: unverified-bit-identical
+    risk_evidence: deterministic factorisation reused, no arithmetic changes
+    effort: S
+    depends_on: []
+  - opportunity_id: spectral_directed-2
+    opportunity: Run one batched Wilson factorisation over all pairs with the pairs on the leading axis (the library checks convergence per leading index, minimum_phase_decomposition.py:102-125, 161-222) and replace np.linalg.solve on stacks of 2x2 matrices (_get_linear_predictor, :128-158) by the closed-form 2x2 inverse, removing the per-pair Python loop (pyspi/base.py:85-94 for the directed units, spectral_connectivity/connectivity.py:722-743 for sgc).
+    opp_type: vectorise-batch
+    expected_speedup: 3-10x
+    speedup_basis: profile:audit/profiles/spectral.dtf__8x1024.pstats solve 48.8% + minimum_phase_decomposition self 10.6% + _get_causal_signal 9.2% of a 73.0% Wilson share (Amdahl bound for the factorisation itself ~10x). No ranking basis on this row. This infrastructure unit has no SPI identifiers of its own, so profiles/summary.json holds no 118x1024 projection for it and rank_basis_s and projected_patient_s_after stay blank; its cost sits inside the timings of the units that call it. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README 'Optimisation columns', rule 5).
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'closed-form 2x2 inverse rounds differently and the 1e-8 stop rule can shift by an iteration; a batch must also keep two failure paths: on the sgc path the library pair loop catches np.linalg.LinAlgError per pair and writes NaN (spectral_connectivity/connectivity.py:724-743; a closed-form inverse does not raise, so singular pairs must be detected and set to NaN explicitly; on the directed path pyspi''s pair loop (pyspi/base.py:85-94) has no such handler, so today a raising pair fails the whole SPI in the Calculator''s per-SPI exception handler, and a batch must keep that behaviour or record the change), and a failed Cholesky initial condition fails the whole SPI on both paths: the handler at minimum_phase_decomposition.py:48 names xp.linalg.linalg.LinAlgError, which numpy 2.5.4 does not have, so the failure raises AttributeError, which neither the library pair loop (LinAlgError only) nor pyspi catches, and the Calculator sets the whole SPI to NaN (pyspi/calculator.py:336-337); no RNG is drawn (probes recorded in notes/spectral_directed.md Checks "NumPy-2 fallback" and notes/sgc.md "Error path"). A batch must keep that whole-SPI failure or record the change. The random start from the global numpy RNG (minimum_phase_decomposition.py:54-63), which in a batched call would hit every pair, is reachable only under a numpy that still has the deprecated numpy.linalg.linalg shim (numpy < 2.4 as checked: 2.2.6 and 2.3.3 resolve xp.linalg.linalg.LinAlgError with a DeprecationWarning, 2.4.6 and 2.5.4 raise AttributeError) or a spectral_connectivity release whose handler catches xp.linalg.LinAlgError (v2.0.1 does, notes/spectral_directed.md); that rng-stream risk is conditional on such a numpy or library version and does not apply in this environment (pyproject.toml pins numpy>=2.5.4,<2.6)'
+    effort: L
+    depends_on:
+    - spectral_directed-1

@@ -1,0 +1,245 @@
+{
+ "family": "coint",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/miscellaneous.md"
+ ],
+ "hypotheses": [
+  "johansen trace/max-eig at r=0 from coint_johansen(det_order, k_ar_diff); both statistics share one fit; statsmodels deterministic-term placement vs urca ecdet",
+  "aeg: statsmodels coint t-stat; regression is asymmetric (dependent = the first computed order; with the Directed loop order the HIGHER index is the dependent variable) and the cache symmetrises",
+  "__init__ branches on =='johansen' but _from_cache on =='aeg'"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/misc.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    904,
+    933
+   ],
+   "section": "1.6.3",
+   "title": "Cointegration (coint)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py (coint, adfuller)",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py (coint_johansen)"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "det_order": 0,
+    "k_ar_diff": 10,
+    "method": "johansen"
+   },
+   "identifier_params": {
+    "coint_johansen_max_eig_stat_order-0_ardiff-10": {
+     "det_order": 0,
+     "k_ar_diff": 10,
+     "method": "johansen",
+     "statistic": "max_eig_stat"
+    },
+    "coint_johansen_trace_stat_order-0_ardiff-10": {
+     "det_order": 0,
+     "k_ar_diff": 10,
+     "method": "johansen",
+     "statistic": "trace_stat"
+    }
+   },
+   "identifiers": [
+    "coint_johansen_max_eig_stat_order-0_ardiff-10",
+    "coint_johansen_trace_stat_order-0_ardiff-10"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "statsmodels coint_johansen",
+   "module": "misc",
+   "pair_basis": "unordered",
+   "pyspi_class": "Cointegration",
+   "representative": "coint_johansen_max_eig_stat_order-0_ardiff-10",
+   "source": "config",
+   "unit_id": "misc.coint.johansen_order-0_ardiff-10"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "det_order": 0,
+    "k_ar_diff": 1,
+    "method": "johansen"
+   },
+   "identifier_params": {
+    "coint_johansen_max_eig_stat_order-0_ardiff-1": {
+     "det_order": 0,
+     "k_ar_diff": 1,
+     "method": "johansen",
+     "statistic": "max_eig_stat"
+    },
+    "coint_johansen_trace_stat_order-0_ardiff-1": {
+     "det_order": 0,
+     "k_ar_diff": 1,
+     "method": "johansen",
+     "statistic": "trace_stat"
+    }
+   },
+   "identifiers": [
+    "coint_johansen_max_eig_stat_order-0_ardiff-1",
+    "coint_johansen_trace_stat_order-0_ardiff-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "statsmodels coint_johansen",
+   "module": "misc",
+   "pair_basis": "unordered",
+   "pyspi_class": "Cointegration",
+   "representative": "coint_johansen_max_eig_stat_order-0_ardiff-1",
+   "source": "config",
+   "unit_id": "misc.coint.johansen_order-0_ardiff-1"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "det_order": 1,
+    "k_ar_diff": 10,
+    "method": "johansen"
+   },
+   "identifier_params": {
+    "coint_johansen_max_eig_stat_order-1_ardiff-10": {
+     "det_order": 1,
+     "k_ar_diff": 10,
+     "method": "johansen",
+     "statistic": "max_eig_stat"
+    },
+    "coint_johansen_trace_stat_order-1_ardiff-10": {
+     "det_order": 1,
+     "k_ar_diff": 10,
+     "method": "johansen",
+     "statistic": "trace_stat"
+    }
+   },
+   "identifiers": [
+    "coint_johansen_max_eig_stat_order-1_ardiff-10",
+    "coint_johansen_trace_stat_order-1_ardiff-10"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "statsmodels coint_johansen",
+   "module": "misc",
+   "pair_basis": "unordered",
+   "pyspi_class": "Cointegration",
+   "representative": "coint_johansen_max_eig_stat_order-1_ardiff-10",
+   "source": "config",
+   "unit_id": "misc.coint.johansen_order-1_ardiff-10"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "det_order": 1,
+    "k_ar_diff": 1,
+    "method": "johansen"
+   },
+   "identifier_params": {
+    "coint_johansen_max_eig_stat_order-1_ardiff-1": {
+     "det_order": 1,
+     "k_ar_diff": 1,
+     "method": "johansen",
+     "statistic": "max_eig_stat"
+    },
+    "coint_johansen_trace_stat_order-1_ardiff-1": {
+     "det_order": 1,
+     "k_ar_diff": 1,
+     "method": "johansen",
+     "statistic": "trace_stat"
+    }
+   },
+   "identifiers": [
+    "coint_johansen_max_eig_stat_order-1_ardiff-1",
+    "coint_johansen_trace_stat_order-1_ardiff-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "statsmodels coint_johansen",
+   "module": "misc",
+   "pair_basis": "unordered",
+   "pyspi_class": "Cointegration",
+   "representative": "coint_johansen_max_eig_stat_order-1_ardiff-1",
+   "source": "config",
+   "unit_id": "misc.coint.johansen_order-1_ardiff-1"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "method": "aeg"
+   },
+   "identifier_params": {
+    "coint_aeg_tstat_trend-c_autolag-aic_maxlag-10": {
+     "autolag": "aic",
+     "maxlag": 10,
+     "method": "aeg",
+     "statistic": "tstat",
+     "trend": "c"
+    },
+    "coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10": {
+     "autolag": "aic",
+     "maxlag": 10,
+     "method": "aeg",
+     "statistic": "tstat",
+     "trend": "ct"
+    },
+    "coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10": {
+     "autolag": "bic",
+     "maxlag": 10,
+     "method": "aeg",
+     "statistic": "tstat",
+     "trend": "ct"
+    }
+   },
+   "identifiers": [
+    "coint_aeg_tstat_trend-c_autolag-aic_maxlag-10",
+    "coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10",
+    "coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "misc",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "statsmodels coint (Engle-Granger)",
+   "module": "misc",
+   "pair_basis": "unordered",
+   "pyspi_class": "Cointegration",
+   "representative": "coint_aeg_tstat_trend-c_autolag-aic_maxlag-10",
+   "source": "config",
+   "unit_id": "misc.coint.aeg"
+  }
+ ]
+}

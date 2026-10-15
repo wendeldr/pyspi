@@ -1,0 +1,333 @@
+{
+ "family": "spectral_directed",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/spectral.md"
+ ],
+ "hypotheses": [
+  "bivariate: each ordered pair gets a fresh 2-channel multitaper and Wilson factorisation; DTF_ij == PDC_ij is an exact 2x2 identity (H = adj(A)/det A), so the real deviation is 'bivariate, unconditioned'; dDTF degenerate (partial coherence with no third signal)",
+  "measures squared (|.|^2) vs modulus conventions of Baccala/Kaminski",
+  "properties re-run Wilson 2-4 times per call"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/spectral.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    582,
+    613
+   ],
+   "section": "1.5",
+   "title": "Spectral (126 SPIs)"
+  },
+  {
+   "lines": [
+    768,
+    789
+   ],
+   "section": "1.5.9",
+   "title": "Directed transfer function (dtf)"
+  },
+  {
+   "lines": [
+    790,
+    805
+   ],
+   "section": "1.5.10",
+   "title": "Directed coherence (dcoh)"
+  },
+  {
+   "lines": [
+    806,
+    825
+   ],
+   "section": "1.5.11",
+   "title": "Partial directed coherence (pdcoh)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py (directed_transfer_function, directed_coherence, partial_directed_coherence, generalized_partial_directed_coherence, direct_directed_transfer_function, _transfer_function, _noise_covariance)",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "dtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "dtf_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "dtf_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "dtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "dtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dtf_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "dtf_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "dtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "method_or_estimator": "DirectedTransferFunction",
+   "module": "spectral",
+   "pair_basis": "ordered",
+   "pyspi_class": "DirectedTransferFunction",
+   "representative": "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.dtf"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "dcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "dcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "method_or_estimator": "DirectedCoherence",
+   "module": "spectral",
+   "pair_basis": "ordered",
+   "pyspi_class": "DirectedCoherence",
+   "representative": "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.dcoh"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "pdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "pdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "pdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "pdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "method_or_estimator": "PartialDirectedCoherence",
+   "module": "spectral",
+   "pair_basis": "ordered",
+   "pyspi_class": "PartialDirectedCoherence",
+   "representative": "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.pdcoh"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "gpdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "gpdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "gpdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "gpdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "spectral",
+    "unsigned"
+   ],
+   "method_or_estimator": "GeneralizedPartialDirectedCoherence",
+   "module": "spectral",
+   "pair_basis": "ordered",
+   "pyspi_class": "GeneralizedPartialDirectedCoherence",
+   "representative": "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.gpdcoh"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "ddtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "ddtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "ddtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "ddtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "method_or_estimator": "DirectDirectedTransferFunction",
+   "module": "spectral",
+   "pair_basis": "ordered",
+   "pyspi_class": "DirectDirectedTransferFunction",
+   "representative": "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.ddtf"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "spectral_connectivity minimum_phase_decomposition (Wilson, tol 1e-8, 60 iterations)",
+   "module": "spectral",
+   "pair_basis": "n/a",
+   "pyspi_class": "NonparametricSpectralBivariate",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "spectral.wilson_factorisation"
+  }
+ ]
+}

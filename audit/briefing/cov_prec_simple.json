@@ -1,0 +1,336 @@
+{
+ "family": "cov_prec_simple",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/basic-statistics.md"
+ ],
+ "hypotheses": [
+  "EmpiricalCovariance divides by T (np.cov bias=1) so on z-scored (ddof=1) input cov = (T-1)/T * r, while the docs call it equivalent to correlation",
+  "prec is unnormalised precision (pinvh of the estimate), not partial correlation as a reader might expect",
+  "squared variants are plain elementwise squares of the same matrix"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/basic.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    139,
+    161
+   ],
+   "section": "1.1.1",
+   "title": "Covariance (cov)"
+  },
+  {
+   "lines": [
+    162,
+    175
+   ],
+   "section": "1.1.2",
+   "title": "Precision (prec)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_empirical_covariance.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_shrunk_covariance.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [
+    "cov-sq_EmpiricalCovariance",
+    "cov_EmpiricalCovariance"
+   ],
+   "hyperparameters": {
+    "estimator": "EmpiricalCovariance"
+   },
+   "identifier_params": {
+    "cov-sq_EmpiricalCovariance": {
+     "estimator": "EmpiricalCovariance",
+     "squared": true
+    },
+    "cov_EmpiricalCovariance": {
+     "estimator": "EmpiricalCovariance"
+    }
+   },
+   "identifiers": [
+    "cov_EmpiricalCovariance",
+    "cov-sq_EmpiricalCovariance"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "EmpiricalCovariance",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Covariance",
+   "representative": "cov_EmpiricalCovariance",
+   "source": "config",
+   "unit_id": "basic.cov.EmpiricalCovariance"
+  },
+  {
+   "eeg_identifiers": [
+    "cov-sq_LedoitWolf",
+    "cov_LedoitWolf"
+   ],
+   "hyperparameters": {
+    "estimator": "LedoitWolf"
+   },
+   "identifier_params": {
+    "cov-sq_LedoitWolf": {
+     "estimator": "LedoitWolf",
+     "squared": true
+    },
+    "cov_LedoitWolf": {
+     "estimator": "LedoitWolf"
+    }
+   },
+   "identifiers": [
+    "cov_LedoitWolf",
+    "cov-sq_LedoitWolf"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "LedoitWolf",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Covariance",
+   "representative": "cov_LedoitWolf",
+   "source": "config",
+   "unit_id": "basic.cov.LedoitWolf"
+  },
+  {
+   "eeg_identifiers": [
+    "cov-sq_OAS",
+    "cov_OAS"
+   ],
+   "hyperparameters": {
+    "estimator": "OAS"
+   },
+   "identifier_params": {
+    "cov-sq_OAS": {
+     "estimator": "OAS",
+     "squared": true
+    },
+    "cov_OAS": {
+     "estimator": "OAS"
+    }
+   },
+   "identifiers": [
+    "cov_OAS",
+    "cov-sq_OAS"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "OAS",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Covariance",
+   "representative": "cov_OAS",
+   "source": "config",
+   "unit_id": "basic.cov.OAS"
+  },
+  {
+   "eeg_identifiers": [
+    "cov-sq_ShrunkCovariance",
+    "cov_ShrunkCovariance"
+   ],
+   "hyperparameters": {
+    "estimator": "ShrunkCovariance"
+   },
+   "identifier_params": {
+    "cov-sq_ShrunkCovariance": {
+     "estimator": "ShrunkCovariance",
+     "squared": true
+    },
+    "cov_ShrunkCovariance": {
+     "estimator": "ShrunkCovariance"
+    }
+   },
+   "identifiers": [
+    "cov_ShrunkCovariance",
+    "cov-sq_ShrunkCovariance"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "ShrunkCovariance",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Covariance",
+   "representative": "cov_ShrunkCovariance",
+   "source": "config",
+   "unit_id": "basic.cov.ShrunkCovariance"
+  },
+  {
+   "eeg_identifiers": [
+    "prec-sq_EmpiricalCovariance",
+    "prec_EmpiricalCovariance"
+   ],
+   "hyperparameters": {
+    "estimator": "EmpiricalCovariance"
+   },
+   "identifier_params": {
+    "prec-sq_EmpiricalCovariance": {
+     "estimator": "EmpiricalCovariance",
+     "squared": true
+    },
+    "prec_EmpiricalCovariance": {
+     "estimator": "EmpiricalCovariance"
+    }
+   },
+   "identifiers": [
+    "prec_EmpiricalCovariance",
+    "prec-sq_EmpiricalCovariance"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "EmpiricalCovariance",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Precision",
+   "representative": "prec_EmpiricalCovariance",
+   "source": "config",
+   "unit_id": "basic.prec.EmpiricalCovariance"
+  },
+  {
+   "eeg_identifiers": [
+    "prec-sq_LedoitWolf",
+    "prec_LedoitWolf"
+   ],
+   "hyperparameters": {
+    "estimator": "LedoitWolf"
+   },
+   "identifier_params": {
+    "prec-sq_LedoitWolf": {
+     "estimator": "LedoitWolf",
+     "squared": true
+    },
+    "prec_LedoitWolf": {
+     "estimator": "LedoitWolf"
+    }
+   },
+   "identifiers": [
+    "prec_LedoitWolf",
+    "prec-sq_LedoitWolf"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "LedoitWolf",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Precision",
+   "representative": "prec_LedoitWolf",
+   "source": "config",
+   "unit_id": "basic.prec.LedoitWolf"
+  },
+  {
+   "eeg_identifiers": [
+    "prec-sq_OAS",
+    "prec_OAS"
+   ],
+   "hyperparameters": {
+    "estimator": "OAS"
+   },
+   "identifier_params": {
+    "prec-sq_OAS": {
+     "estimator": "OAS",
+     "squared": true
+    },
+    "prec_OAS": {
+     "estimator": "OAS"
+    }
+   },
+   "identifiers": [
+    "prec_OAS",
+    "prec-sq_OAS"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "OAS",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Precision",
+   "representative": "prec_OAS",
+   "source": "config",
+   "unit_id": "basic.prec.OAS"
+  },
+  {
+   "eeg_identifiers": [
+    "prec-sq_ShrunkCovariance",
+    "prec_ShrunkCovariance"
+   ],
+   "hyperparameters": {
+    "estimator": "ShrunkCovariance"
+   },
+   "identifier_params": {
+    "prec-sq_ShrunkCovariance": {
+     "estimator": "ShrunkCovariance",
+     "squared": true
+    },
+    "prec_ShrunkCovariance": {
+     "estimator": "ShrunkCovariance"
+    }
+   },
+   "identifiers": [
+    "prec_ShrunkCovariance",
+    "prec-sq_ShrunkCovariance"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "ShrunkCovariance",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Precision",
+   "representative": "prec_ShrunkCovariance",
+   "source": "config",
+   "unit_id": "basic.prec.ShrunkCovariance"
+  }
+ ]
+}

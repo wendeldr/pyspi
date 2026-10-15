@@ -1,0 +1,71 @@
+{
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "notes": "Ridge alpha=1 batched closed form from one centred Gram matrix; candidate_s includes building a fresh Data, so the speedup is a lower bound. 118x1024 baseline is one timed call without the helper's warm-up. Agreement means the candidate matches the baseline output, not that either value is mathematically right.",
+ "opportunity_id": "lmfit-1",
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_lmfit-1.py",
+ "shapes": {
+  "118x1024": {
+   "baseline_repeats": 1,
+   "baseline_s": 10.905379789997824,
+   "bit_identical": false,
+   "candidate_s": 0.0037878119910601526,
+   "max_abs_diff": 8.881784197001252e-16,
+   "max_rel_diff": 9.055289191459024e-16,
+   "n_entries": 13924,
+   "nan_mask_equal": true,
+   "speedup": 2879.0710351348694
+  },
+  "32x1024": {
+   "baseline_repeats": 3,
+   "baseline_s": 0.7866359629988438,
+   "bit_identical": false,
+   "candidate_s": 0.0015013990050647408,
+   "max_abs_diff": 5.551115123125783e-16,
+   "max_rel_diff": 5.707696036944644e-16,
+   "n_entries": 1024,
+   "nan_mask_equal": true,
+   "speedup": 523.9353165582548
+  },
+  "7x100": {
+   "baseline_repeats": 3,
+   "baseline_s": 0.03342571000393946,
+   "bit_identical": false,
+   "candidate_s": 0.0006072970136301592,
+   "golden_vs_candidate": {
+    "bit_identical": false,
+    "max_abs_diff": 9.992007221626409e-16,
+    "max_rel_diff": 3.0746664133595146e-15,
+    "n_entries": 49,
+    "nan_mask_equal": true
+   },
+   "max_abs_diff": 9.992007221626409e-16,
+   "max_rel_diff": 3.0746664133595146e-15,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 55.04013563994824
+  },
+  "8x1024": {
+   "baseline_repeats": 3,
+   "baseline_s": 0.0464543540001614,
+   "bit_identical": false,
+   "candidate_s": 0.001048299003741704,
+   "max_abs_diff": 5.551115123125783e-16,
+   "max_rel_diff": 6.24073066704035e-16,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 44.31403047637308
+  }
+ },
+ "threads": {
+  "NUMBA_NUM_THREADS": "n/a (no numba)",
+  "OMP_NUM_THREADS": "1",
+  "jidt": "n/a"
+ },
+ "written_at": "2026-10-15T09:49:09-0400"
+}

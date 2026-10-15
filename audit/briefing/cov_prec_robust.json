@@ -1,0 +1,184 @@
+{
+ "family": "cov_prec_robust",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/basic-statistics.md"
+ ],
+ "hypotheses": [
+  "EllipticEnvelope is MinCovDet with contamination only setting a threshold: cov/prec outputs may be identical",
+  "FastMCD draws from the global numpy RNG (random_state=None); reproducible only via seeding"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/basic.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    139,
+    161
+   ],
+   "section": "1.1.1",
+   "title": "Covariance (cov)"
+  },
+  {
+   "lines": [
+    162,
+    175
+   ],
+   "section": "1.1.2",
+   "title": "Precision (prec)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_robust_covariance.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_elliptic_envelope.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "EllipticEnvelope"
+   },
+   "identifier_params": {
+    "cov-sq_EllipticEnvelope": {
+     "estimator": "EllipticEnvelope",
+     "squared": true
+    },
+    "cov_EllipticEnvelope": {
+     "estimator": "EllipticEnvelope"
+    }
+   },
+   "identifiers": [
+    "cov_EllipticEnvelope",
+    "cov-sq_EllipticEnvelope"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "EllipticEnvelope",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Covariance",
+   "representative": "cov_EllipticEnvelope",
+   "source": "config",
+   "unit_id": "basic.cov.EllipticEnvelope"
+  },
+  {
+   "eeg_identifiers": [
+    "cov-sq_MinCovDet",
+    "cov_MinCovDet"
+   ],
+   "hyperparameters": {
+    "estimator": "MinCovDet"
+   },
+   "identifier_params": {
+    "cov-sq_MinCovDet": {
+     "estimator": "MinCovDet",
+     "squared": true
+    },
+    "cov_MinCovDet": {
+     "estimator": "MinCovDet"
+    }
+   },
+   "identifiers": [
+    "cov_MinCovDet",
+    "cov-sq_MinCovDet"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "MinCovDet",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Covariance",
+   "representative": "cov_MinCovDet",
+   "source": "config",
+   "unit_id": "basic.cov.MinCovDet"
+  },
+  {
+   "eeg_identifiers": [
+    "prec-sq_EllipticEnvelope",
+    "prec_EllipticEnvelope"
+   ],
+   "hyperparameters": {
+    "estimator": "EllipticEnvelope"
+   },
+   "identifier_params": {
+    "prec-sq_EllipticEnvelope": {
+     "estimator": "EllipticEnvelope",
+     "squared": true
+    },
+    "prec_EllipticEnvelope": {
+     "estimator": "EllipticEnvelope"
+    }
+   },
+   "identifiers": [
+    "prec_EllipticEnvelope",
+    "prec-sq_EllipticEnvelope"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "EllipticEnvelope",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Precision",
+   "representative": "prec_EllipticEnvelope",
+   "source": "config",
+   "unit_id": "basic.prec.EllipticEnvelope"
+  },
+  {
+   "eeg_identifiers": [
+    "prec-sq_MinCovDet",
+    "prec_MinCovDet"
+   ],
+   "hyperparameters": {
+    "estimator": "MinCovDet"
+   },
+   "identifier_params": {
+    "prec-sq_MinCovDet": {
+     "estimator": "MinCovDet",
+     "squared": true
+    },
+    "prec_MinCovDet": {
+     "estimator": "MinCovDet"
+    }
+   },
+   "identifiers": [
+    "prec_MinCovDet",
+    "prec-sq_MinCovDet"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "MinCovDet",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Precision",
+   "representative": "prec_MinCovDet",
+   "source": "config",
+   "unit_id": "basic.prec.MinCovDet"
+  }
+ ]
+}

@@ -1,0 +1,251 @@
+unit_id: distance.pdist.braycurtis
+status: profiled
+correctness:
+  metric_name_standard: Bray-Curtis dissimilarity (SciPy's absolute-value form) between z-scored series
+  canonical_ref: Bray & Curtis 1957, Ecological Monographs 27(4):325-349 'An ordination of the upland forest communities of southern Wisconsin'; Legendre
+    & Legendre 2012, Numerical Ecology (3rd ed.), coefficient D14 (percentage difference)
+  canonical_definition: BC(x,y) = sum_t |x_t - y_t| / sum_t (x_t + y_t) for non-negative x, y (range [0,1])
+  documented_definition: 'GitBook distance-similarity.md ''Pairwise Distance'' (lines 297-321): "Pairwise distance between time-series, computed using sklearn''s
+    pairwise distance function using the following distance metrics: Euclidean, Cityblock, Cosine, Chebyshev, Canberra, Braycurtis"; keywords "undirected,
+    nonlinear, unsigned, unordered". No formula is given. pdist is absent from the supplement: supplement §1.2 ''Distance similarity (26 SPIs)'', p.5 (heading
+    line 209) lists SPIs 22-47 (dcorr, dcorrx, mgc, mgcx, hsic, hhg, dtw, lcss, softdtw, bary) and no pdist entry.'
+  delegate_lib: scipy==1.17.1 scipy.spatial.distance.pdist(X, 'braycurtis') (C++ _distance_pybind.pdist_braycurtis), reached through sklearn==1.9.1 pairwise_distances'
+    SciPy branch, then squareform
+  implemented_as: Rows z-scored (ddof=1) by default; scipy computes sum_t |x_t - y_t| / sum_t |x_t + y_t|. On zero-mean signed data the denominator shrinks
+    as the pair becomes anti-correlated, so the value exceeds 1 for negative correlation and is +inf (no warning) for y = -x. Asymptotically for Gaussian
+    pairs BC -> sqrt((1-rho)/(1+rho)).
+  implementation_trace:
+  - pyspi/calculator.py:277 Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend) (Calculator defaults detrend=False, normalise=True,
+    calculator.py:48-50; lines at HEAD a1f20c7)
+  - pyspi/data.py:184-195 optional scipy.signal.detrend(axis=1), then zscore(data, axis=1, nan_policy='omit', ddof=1) per process
+  - pyspi/calculator.py:329-335 S = self._spis[spi].multivariate(self.dataset); np.fill_diagonal(S, np.nan); self._table[spi] = S (HEAD a1f20c7)
+  - 'pyspi/base.py:51-68 parse_multivariate: passes the Data object through unchanged'
+  - pyspi/statistics/distance.py:28-36 class PairwiseDistance(Undirected, Unsigned); __init__ stores metric, identifier 'pdist_<metric>'
+  - 'pyspi/statistics/distance.py:38-40 multivariate overrides Undirected.multivariate (base.py:132-138, never called): return pairwise_distances(data.to_numpy(squeeze=True),
+    metric=self._metric)'
+  - pyspi/data.py:108-118 to_numpy(squeeze=True) -> (M processes, T observations) float64; each row is one vector in R^T
+  - sklearn/metrics/pairwise.py:2309 pairwise_distances(X, Y=None, metric, n_jobs=None, ensure_all_finite=True) (scikit-learn 1.9.1)
+  - sklearn/metrics/pairwise.py:2472 else-branch (metric not precomputed, not in PAIRWISE_DISTANCE_FUNCTIONS, not callable); :2476 dtype = 'infer_float';
+    :2482-2484 check_pairwise_arrays(X, None, dtype=dtype, ensure_all_finite=...) (sklearn/metrics/pairwise.py:171-172 infer_float -> float64, :174-175
+    X = Y = check_array(X))
+  - sklearn/metrics/pairwise.py:2490-2491 n_jobs==1 and X is Y -> distance.squareform(distance.pdist(X, metric))
+  - scipy/spatial/distance.py:1816 pdist (scipy 1.17.1); scipy/spatial/distance.py:2133-2138 metric alias lookup -> metric_info.pdist_func
+  - scipy/spatial/distance.py:1660-1665 MetricInfo('braycurtis', pdist_func=_distance_pybind.pdist_braycurtis) (compiled scipy/spatial/_distance_pybind.cpython-312-x86_64-linux-gnu.so)
+  - 'scipy/spatial/distance.py:1102 braycurtis(u, v) Python reference: abs(u - v).sum() / abs(u + v).sum(); docstring notes it is bounded in [0,1] only
+    ''if all coordinates are positive'''
+  - scipy/spatial/distance.py:2154 squareform
+  deviation_from_documented: 'None in substance: the code is sklearn.metrics.pairwise_distances with metric=''braycurtis'' as the GitBook page states. Not
+    stated on the page: inputs are z-scored per process (ddof=1) by Data by default (optionally detrended first), sklearn forwards this metric to scipy.spatial.distance.pdist,
+    and the Calculator sets the diagonal to NaN. No formula or normalisation (e.g. per-sample scaling) is documented.'
+  deviation_from_canonical: 'Formula: SciPy''s |x+y| denominator equals the canonical one only for non-negative data. On z-scored data the canonical [0,1]
+    range is lost: probe values 1.75 (rho=-0.5), 4.39 (-0.9), 14.2 (-0.99), 45.1 (-0.999) at T=4096, and +inf for y = -x, silently (probe: no warning recorded
+    for y = -x under warnings.simplefilter(always)). Implementation matches SciPy''s definition exactly (probe max |A - scipy loop| = 6.7e-16).'
+  units_and_range: 'Dimensionless; range [0, +inf]: < 1 for positive correlation, ~1 for independence, > 1 for negative correlation, +inf when sum|x+y|
+    = 0 (y = -x). Asymptotically sqrt((1-rho)/(1+rho)) for Gaussian pairs (probe rho=0.8: 0.33337 vs 0.33333); independent of T in expectation.'
+  direction_convention: 'A[i,j] = d(z_i, z_j) for rows i, j of the (z-scored) M x T data; the metric is symmetric so A[i,j] = A[j,i]; no direction is encoded;
+    diagonal NaN after Calculator.compute (confirmed in the check stage: sym runs).'
+  symmetry_expected: sym
+  already_documented: docs/storage_comparison/REVIEW.md M1 (PairwiseDistance overrides Undirected.multivariate; output exactly symmetric via squareform)
+  new_finding_candidates:
+  - 'Candidate (domain): Bray-Curtis is an ecological dissimilarity for non-negative abundances; applied to z-scored signed data it is unbounded and can
+    return +inf. Probe: y = -x -> inf (no warning); rho=-0.999 -> 45.08; rho=-0.5 -> 1.754. Probed through Calculator (p_bc_calc.py, configfile with PairwiseDistance
+    configs braycurtis+canberra, data [x, -x, 2x+1], x iid N(0,1), T=256): compute() completes, the summary counts both SPIs as successful with 0 NaNs,
+    no divide warning is raised, and calc.table[''pdist_braycurtis''] holds +inf at (0,1)/(1,0). The z-scored affine copies are not exact: z0 - z2 and z1
+    + z2 have max abs 4.4e-16, so (x, 2x+1) gives 1.77e-17 instead of 0 and (-x, 2x+1) gives 5.67e16 instead of +inf; z-scoring rounding decides between
+    ~1e16 and inf. Propagation into downstream analyses is not probed.'
+  - 'Candidate (labels): on Gaussian pairs BC -> sqrt((1-rho)/(1+rho)), a monotone function of rho (probe rho=0.3: 0.7363 vs 0.7338 at T=4e5), so the ''nonlinear''
+    label is weakly supported; it is a dissimilarity (larger = less coupled) and sign-sensitive.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - anm
+    path: kernel
+    reference: 'from-scratch numpy loop over row pairs: sum(abs(x - y)) / sum(abs(x + y)) (no sklearn, no scipy.spatial)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: PairwiseDistance(metric).multivariate(Data(x, normalise=False)) equals the numpy reference off the diagonal to rel 1e-12 at every
+      T
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - iid_gaussian
+    path: pipeline
+    reference: A versus A.T (direction convention) and A[i,j] versus the numpy reference d(z_i, z_j) on the z-scored rows
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A[i,j] = A[j,i] = d(z_i, z_j): symmetric, no direction; diagonal NaN after Calculator; reciprocal entries bit-identical'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    path: pipeline
+    reference: pipeline output on scaled_offset compared with pipeline output on bivariate_gaussian (same draw; positive scale + offset removed by z-scoring)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'identical to rel 1e-12: default z-scoring makes every pdist metric invariant to positive per-channel scale and offset'
+  - datasets:
+    - trending
+    - bivariate_gaussian
+    path: pipeline-detrend
+    reference: pipeline-detrend output on trending compared with pipeline-detrend output on bivariate_gaussian; plain pipeline on trending for contrast
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: with detrend the two agree to rel 1e-10 (linear trend removed exactly by scipy detrend); without detrend trending values differ markedly
+      (trend dominates the distance)
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: same data with a common random permutation of the time index (numpy permutation)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'unchanged to rel 1e-12: every pdist metric is invariant to a joint reordering of samples (supports the ''unordered'' label; shows
+      no temporal structure is used)'
+  - datasets:
+    - delayed_noise
+    path: pipeline
+    reference: qualitative comparison of d(x0, x_k) for delays 1,3,5 against d on iid_gaussian pairs
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'delayed copies look as dissimilar as independent noise (e.g. cosine ~ 1): the metric is lag-0 only and cannot see delayed coupling'
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: population value sqrt((1 - rho)/(1 + rho)) = E|X-Y| / E|X+Y| for a Gaussian pair, rho from the dataset truth
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: within 3 standard errors at T=4096; bias decreasing with T
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: edge input (x, -x) built from a dataset row; numpy reference sum|x-y| / sum|x+y|
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: +inf (division by zero) with no exception; records whether a warning is emitted
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/pdist.py handlers run for this unit (run tag in parentheses): ref_def -> audit/checks/refs/_kernels_basic_misc.py:pdist_metric
+    (def); ref_cdist = same-lineage scipy==1.18.1 cdist (cdist); ref_scaleinv (scaleinv); ref_detrendinv (detrendinv); ref_trend_nodetrend
+    (trend-nodetrend); ref_perm (perm); ref_sym, bit-exact branch max|A-A.T| == 0 (sym, sym-wide64); ref_pop with population() braycurtis branch
+    sqrt((1-rho)/(1+rho)) and a 2000-pair Monte-Carlo se from mc_sample, braycurtis branch of ref_pop also stores max_value_pop (pop, pop-negated);
+    ref_delayed, Monte-Carlo rho=0 null band (delayed-null); ref_dup (dup); ref_near, stable_metric falls through to pdist_metric (near); ref_edge (edge);
+    ref_signed_affine, braycurtis branch S01 = S10 = +inf (signed-affine); ref_signed_warn, braycurtis branch silent +inf (signed-warn);
+    ref_calc_downstream (calc-downstream); probes audit/checks/probes/pdist_derived.py (permuted, wide64, negated, near_identical, edge, signed_affine,
+    signed_affine_warnings, calc_downstream)'
+  check_data: 'kernel: bivariate_gaussian (T 64/1024/4096), iid_gaussian, nonlinear_dependence, anm (T 1024); pipeline: bivariate_gaussian (T 64/256/1024/4096),
+    scaled_offset (T 64/1024/4096), nonlinear_dependence, contaminated, sparse_precision, trending, var2_bivariate, gauss_ar1_pair, iid_gaussian (T 1024/4096),
+    delayed_noise, shared_envelope (T 64-4096); pipeline-detrend: bivariate_gaussian, trending; probe-derived inputs (probes/pdist_derived.py): joint time
+    permutation, 64-row mixture of iid_gaussian, negated rows (rho -> -rho), near-identical rows x0 + eps x1, edge rows (x, -x, shared zeros)'
+  agreement_criterion: 'exact rtol = atol = 1e-12 for from-definition runs (def, kernel/pipeline/pipeline-detrend), dup and edge; tolerance rtol 1e-10 /
+    atol 1e-12 for analytic identities and invariances (ident, scaleinv, detrendinv, perm); rtol 1e-6 / atol 1e-12 for near-identical rows (near); statistical
+    |pyspi - population| <= 2 se with se = Monte-Carlo sd x Bonferroni factor (1.319 for 6 pairs, 1.404 for 10 pairs: family-wise 5 %); qualitative pass_flag
+    for symmetry (bit-exact, euclidean last-bit), delayed-null band, signed/edge/downstream cases'
+  closeness: 'from-definition (SciPy form sum|x-y| / sum|x+y|) kernel 6 runs max_rel 5.09e-15, pipeline 8 runs max_rel 5.28e-15; same-lineage cdist 0.0;
+    scaleinv 5.06e-15, detrendinv 1.78e-15, perm 2.22e-15; population sqrt((1-rho)/(1+rho)) pass 7/7, max_z 1.35; negated pairs: population 3.0 for rho=-0.8,
+    pyspi 3.054 (T=1024) and 2.933 (T=4096), i.e. outside [0, 1]; edge d(x,-x) = +inf (reference +inf); signed-affine through the pipeline: S01 = S10 =
+    +inf, S12 = 2.66e16 (decided by z-score rounding), no RuntimeWarning; Calculator.compute keeps +inf and _rmmin keeps +inf, the Spearman SPI-SPI matrix
+    stays finite'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: Anchor 8 fails. SciPy's |x+y| denominator equals the canonical sum(x+y) only for non-negative data, so on z-scored input the value is not a constant
+    factor or monotone map of the canonical [0,1] index and leaves that range (rho=-0.8 gives 3.054 at T=1024; y=-x gives +inf). Anchor 7's supplement-variant clause
+    is met only through the GitBook sklearn braycurtis form (max_rel 5.28e-15), because the supplement does not mention pdist.
+  documentation_status: silent
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Canonical Bray-Curtis is sum|x-y| / sum(x+y) for non-negative abundances with range [0, 1]. pyspi (via SciPy) computes sum|x-y| / sum|x+y|
+    on z-scored signed data: identical to the canonical index only for non-negative data. On default input the value is unbounded, exceeds 1 for negative
+    correlation (3.0 in population for rho = -0.8), and is +inf without any warning for y = -x; for an affine pair (-x, 2x+1) z-score rounding decides between
+    +inf and ~1e16. For Gaussian pairs it converges to sqrt((1-rho)/(1+rho)). Score 7: matches the documented (sklearn/SciPy) variant fp-exactly but differs
+    from the canonical index in a value-changing way on pyspi''s default input.
+    Rubric reading is nearest-anchor 7 (score_rubric_note), because anchor 7''s supplement-variant clause is met only through the GitBook sklearn form; the
+    score-7 sentence above is the original reasoning for score_0_10.'
+  new_finding: true
+  definition_under_review: true
+  check_cost: cheap (every pyspi run < 0.03 s; whole family incl. 2000-pair Monte-Carlo references < 1 min; T up to 4096)
+  symmetry_observed: 'self-consistency check (pyspi''s matrix against its own transpose; sym runs labelled same-lineage in results.json): sym: max|A - A.T|
+    = 0.0 (bit-exact) on var2_bivariate, gauss_ar1_pair, iid_gaussian (T=1024) and on the 64-row probe (...|iid_gaussian|1024|pipeline|sym-wide64: n_asym_pairs
+    0); diagonal NaN in every run'
+  direction_observed: 'A[i,j] = A[j,i] = d(z_i, z_j) on the z-scored rows; no direction is encoded: on var2_bivariate (x0 -> x1) the matrix is exactly symmetric,
+    and on delayed_noise the lagged copies x_k = x0(t - d_k) + noise sit inside the rho = 0 null band (...|delayed_noise|1024|pipeline|delayed-null pass),
+    so the metric is lag-0 only. Larger value = less similar (dissimilarity); anti-correlated pairs give the largest values (pop-negated runs).'
+  candidate_resolutions:
+  - candidate: 'ecological dissimilarity applied to signed z-scored data: unbounded, can return +inf silently; inf survives Calculator.compute'
+    outcome: confirmed
+    evidence: 'distance.pdist.braycurtis|iid_gaussian|256|pipeline|signed-affine (S01 = S10 = +inf, S12 = 2.66e16), distance.pdist.braycurtis|iid_gaussian|256|pipeline|signed-warn
+      (0 RuntimeWarnings), distance.pdist.braycurtis|iid_gaussian|256|pipeline|calc-downstream (+inf after compute and after _rmmin; SPI-SPI Spearman finite),
+      distance.pdist.braycurtis|bivariate_gaussian|{1024,4096}|pipeline|pop-negated (rho=-0.8: 3.054, 2.933)'
+  - candidate: on Gaussian pairs BC -> sqrt((1-rho)/(1+rho)), a monotone function of rho; dissimilarity and sign-sensitive
+    outcome: confirmed
+    evidence: 'distance.pdist.braycurtis|bivariate_gaussian|{64,256,1024,4096}|pipeline|pop and |pop-negated: 7/7 within the Bonferroni band (max_z 1.35);
+      rho=-0.8 pair 3.054 vs rho=+0.8 pair 0.3275 at T=1024'
+  checks_run:
+  - run_ids:
+    - distance.pdist.braycurtis|*|kernel|def
+    - distance.pdist.braycurtis|*|pipeline|def
+    - distance.pdist.braycurtis|*|pipeline-detrend|def
+    reference: audit/checks/refs/pdist.py:ref_def -> _kernels_basic_misc.pdist_metric (independent-impl)
+    outcome: pass 15/15, max_rel 5.28e-15
+  - run_ids:
+    - distance.pdist.braycurtis|bivariate_gaussian|1024|pipeline|cdist
+    reference: audit/checks/refs/pdist.py:ref_cdist -> scipy==1.18.1 scipy.spatial.distance.cdist (same-lineage)
+    outcome: pass, bit-identical (same-lineage)
+  - run_ids:
+    - distance.pdist.braycurtis|scaled_offset|*|pipeline|scaleinv
+    - distance.pdist.braycurtis|trending|1024|pipeline-detrend|detrendinv
+    - distance.pdist.braycurtis|trending|1024|pipeline|trend-nodetrend
+    - distance.pdist.braycurtis|bivariate_gaussian|1024|pipeline|perm
+    reference: audit/checks/refs/pdist.py:ref_scaleinv, ref_detrendinv, ref_trend_nodetrend, ref_perm (analytic invariances)
+    outcome: 'pass 6/6; trending without detrend: pair (1,3) 0.035 vs 0.995 untrended'
+  - run_ids:
+    - distance.pdist.braycurtis|var2_bivariate|1024|pipeline|sym
+    - distance.pdist.braycurtis|gauss_ar1_pair|1024|pipeline|sym
+    - distance.pdist.braycurtis|iid_gaussian|1024|pipeline|sym
+    - distance.pdist.braycurtis|iid_gaussian|1024|pipeline|sym-wide64
+    reference: 'audit/checks/refs/pdist.py:ref_sym (qualitative symmetry, NaN diagonal; self-consistency: pyspi''s matrix against its own transpose, reference_kind
+      same-lineage)'
+    outcome: pass 4/4, max|A-A.T| = 0.0
+  - run_ids:
+    - distance.pdist.braycurtis|bivariate_gaussian|*|pipeline|pop
+    - distance.pdist.braycurtis|iid_gaussian|4096|pipeline|pop
+    - distance.pdist.braycurtis|bivariate_gaussian|*|pipeline|pop-negated
+    reference: audit/checks/refs/pdist.py:ref_pop (analytic population value, Monte-Carlo se)
+    outcome: pass 7/7, max_z 1.35
+  - run_ids:
+    - distance.pdist.braycurtis|delayed_noise|1024|pipeline|delayed-null
+    reference: audit/checks/refs/pdist.py:ref_delayed (Monte-Carlo rho=0 null band)
+    outcome: 'pass: 1.035, 0.988, 0.947 inside [0.918, 1.094]'
+  - run_ids:
+    - distance.pdist.braycurtis|shared_envelope|*|pipeline|dup
+    reference: audit/checks/refs/pdist.py:ref_dup (identical rows -> 0)
+    outcome: pass 4/4, d(x0,x2) = 0.0
+  - run_ids:
+    - distance.pdist.braycurtis|iid_gaussian|1024|pipeline|near
+    reference: audit/checks/refs/pdist.py:ref_near (cancellation-free direct forms)
+    outcome: pass, rel error <= 1.7e-15
+  - run_ids:
+    - distance.pdist.braycurtis|iid_gaussian|1024|kernel|edge
+    reference: audit/checks/refs/pdist.py:ref_edge (from-definition on (x, -x) and shared zeros)
+    outcome: 'pass: d(x,-x) = +inf (reference +inf)'
+  - run_ids:
+    - distance.pdist.braycurtis|iid_gaussian|256|pipeline|signed-affine
+    - distance.pdist.braycurtis|iid_gaussian|256|pipeline|signed-warn
+    - distance.pdist.braycurtis|iid_gaussian|256|pipeline|calc-downstream
+    reference: 'audit/checks/refs/pdist.py:ref_signed_affine (qualitative, analytic constants: (x,-x) = +inf, (x, 2x+1) = 0), ref_signed_warn and ref_calc_downstream
+      (qualitative, pyspi-side observations of warnings and Calculator output: same-lineage)'
+    outcome: 'pass: +inf for (x,-x), 2.66e16 for (-x, 2x+1), no RuntimeWarning; +inf survives compute and _rmmin, Spearman matrix finite'
+optimisation:
+  complexity_P_T: 'O(P^2 T) in one call (pyspi/statistics/distance.py:PairwiseDistance.multivariate -> sklearn pairwise_distances, compiled scipy/sklearn
+    kernel), but at EEG sizes the fixed per-call cost dominates: measured 0.53 ms at 8x1024 and 5.12 ms at 118x1024 (P_exponent 0.02-0.45, T_exponent
+    about 0.1 between 8x256 and 8x1024).'
+  hotspot_1: 'sklearn/metrics/pairwise.py:check_pairwise_arrays -> sklearn/utils/validation.py:check_array (third-party:sklearn) 31.6% of the profiled SPI call at 8x1024 (1.22 ms profiled; called from pairwise_distances): fixed per-call input validation, the largest deep frame at 8x1024. Everything runs under the sklearn/utils/_param_validation.py:wrapper (about 95%, a wrapper). At 118x1024 the compute grows with P^2 and this fixed cost becomes a small share'
+  hotspot_2: 'scipy/spatial/distance.py:pdist (third-party:scipy) 16.1% (compiled pdist_braycurtis 2.9%, squareform 2.4% of the same call)'
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.3085
+  profile_file: audit/profiles/distance.pdist.braycurtis__8x1024.pstats
+  no_opportunity_reason: 'No opportunity is listed: pdist is one compiled call per window, and the six pdist units together cost about 24 ms per 118x1024 window (about 14 core-seconds per 600-window patient). Calling scipy pdist + squareform directly would skip sklearn''s validation, a few percent of the call at 118x1024, and is not material at these walls (notes/pdist.md, Optimisation, Opportunities).'
+  opportunities: []

@@ -1,0 +1,506 @@
+{
+ "family": "it_gaussian",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/information-theory.md"
+ ],
+ "hypotheses": [
+  "te_symbolic configs are Gaussian TE (known bug 1)",
+  "cce = sum_{i=1..5} H(Y_t | Y past i-1, X past i) with n=5 (docs may say 10)",
+  "di = sum_i H(Y^(i))/i - cce uses block entropy / i, not the entropy-rate sum H(Y^n) = sum H(Y_i | Y^{i-1})",
+  "xme uses source lags 1..k-1 (range(2,k)), so k=1 and k=2 may coincide",
+  "Gaussian entropy in nats; JIDT NORMALISE defaults differ between entropy (true) and MI/TE (false); JIDT covariance ddof to be established"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/infotheory.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    414,
+    453
+   ],
+   "section": "1.4",
+   "title": "Information theory (37 SPIs)"
+  },
+  {
+   "lines": [
+    454,
+    460
+   ],
+   "section": "1.4.1",
+   "title": "Joint entropy (je)"
+  },
+  {
+   "lines": [
+    461,
+    468
+   ],
+   "section": "1.4.2",
+   "title": "Conditional entropy (ce)"
+  },
+  {
+   "lines": [
+    469,
+    476
+   ],
+   "section": "1.4.3",
+   "title": "Mutual information (mi)"
+  },
+  {
+   "lines": [
+    477,
+    485
+   ],
+   "section": "1.4.4",
+   "title": "Time-lagged mutual information (tlmi)"
+  },
+  {
+   "lines": [
+    486,
+    510
+   ],
+   "section": "1.4.5",
+   "title": "Transfer entropy (te)"
+  },
+  {
+   "lines": [
+    511,
+    523
+   ],
+   "section": "1.4.6",
+   "title": "Granger causality (gc)"
+  },
+  {
+   "lines": [
+    524,
+    536
+   ],
+   "section": "1.4.7",
+   "title": "Causally conditioned entropy (cce)"
+  },
+  {
+   "lines": [
+    537,
+    550
+   ],
+   "section": "1.4.8",
+   "title": "Directed information (di)"
+  },
+  {
+   "lines": [
+    551,
+    561
+   ],
+   "section": "1.4.9",
+   "title": "Stochastic interaction (si)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "JIDT 1.6.1 jar (pyspi/lib/jidt/infodynamics.jar); source: github.com/jlizier/jidt v1.6.1 infodynamics/measures/continuous/gaussian/*.java"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [
+    "je_gaussian"
+   ],
+   "hyperparameters": {
+    "estimator": "gaussian"
+   },
+   "identifier_params": {
+    "je_gaussian": {
+     "estimator": "gaussian"
+    }
+   },
+   "identifiers": [
+    "je_gaussian"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "infotheory",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "unordered",
+   "pyspi_class": "JointEntropy",
+   "representative": "je_gaussian",
+   "source": "config",
+   "unit_id": "infotheory.je.gaussian"
+  },
+  {
+   "eeg_identifiers": [
+    "ce_gaussian"
+   ],
+   "hyperparameters": {
+    "estimator": "gaussian"
+   },
+   "identifier_params": {
+    "ce_gaussian": {
+     "estimator": "gaussian"
+    }
+   },
+   "identifiers": [
+    "ce_gaussian"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "ConditionalEntropy",
+   "representative": "ce_gaussian",
+   "source": "config",
+   "unit_id": "infotheory.ce.gaussian"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "gaussian"
+   },
+   "identifier_params": {
+    "cce_gaussian": {
+     "estimator": "gaussian"
+    }
+   },
+   "identifiers": [
+    "cce_gaussian"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "CausalEntropy",
+   "representative": "cce_gaussian",
+   "source": "config",
+   "unit_id": "infotheory.cce.gaussian"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "gaussian",
+    "history_length": 1
+   },
+   "identifier_params": {
+    "xme_gaussian_k1": {
+     "estimator": "gaussian",
+     "history_length": 1
+    }
+   },
+   "identifiers": [
+    "xme_gaussian_k1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "CrossmapEntropy",
+   "representative": "xme_gaussian_k1",
+   "source": "config",
+   "unit_id": "infotheory.xme.gaussian_k1"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "gaussian",
+    "history_length": 10
+   },
+   "identifier_params": {
+    "xme_gaussian_k10": {
+     "estimator": "gaussian",
+     "history_length": 10
+    }
+   },
+   "identifiers": [
+    "xme_gaussian_k10"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "CrossmapEntropy",
+   "representative": "xme_gaussian_k10",
+   "source": "config",
+   "unit_id": "infotheory.xme.gaussian_k10"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "gaussian"
+   },
+   "identifier_params": {
+    "di_gaussian": {
+     "estimator": "gaussian"
+    }
+   },
+   "identifiers": [
+    "di_gaussian"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "DirectedInfo",
+   "representative": "di_gaussian",
+   "source": "config",
+   "unit_id": "infotheory.di.gaussian"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "gaussian"
+   },
+   "identifier_params": {
+    "si_gaussian_k-1": {
+     "estimator": "gaussian"
+    }
+   },
+   "identifiers": [
+    "si_gaussian_k-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "StochasticInteraction",
+   "representative": "si_gaussian_k-1",
+   "source": "config",
+   "unit_id": "infotheory.si.gaussian"
+  },
+  {
+   "eeg_identifiers": [
+    "mi_gaussian"
+   ],
+   "hyperparameters": {
+    "estimator": "gaussian"
+   },
+   "identifier_params": {
+    "mi_gaussian": {
+     "estimator": "gaussian"
+    }
+   },
+   "identifiers": [
+    "mi_gaussian"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "infotheory",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "MutualInfo",
+   "representative": "mi_gaussian",
+   "source": "config",
+   "unit_id": "infotheory.mi.gaussian"
+  },
+  {
+   "eeg_identifiers": [
+    "tlmi_gaussian"
+   ],
+   "hyperparameters": {
+    "estimator": "gaussian"
+   },
+   "identifier_params": {
+    "tlmi_gaussian": {
+     "estimator": "gaussian"
+    }
+   },
+   "identifiers": [
+    "tlmi_gaussian"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "TimeLaggedMutualInfo",
+   "representative": "tlmi_gaussian",
+   "source": "config",
+   "unit_id": "infotheory.tlmi.gaussian"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "auto_embed_method": "MAX_CORR_AIS",
+    "estimator": "gaussian",
+    "k_search_max": 10,
+    "tau_search_max": 2
+   },
+   "identifier_params": {
+    "gc_gaussian_k-max-10_tau-max-2": {
+     "auto_embed_method": "MAX_CORR_AIS",
+     "estimator": "gaussian",
+     "k_search_max": 10,
+     "tau_search_max": 2
+    }
+   },
+   "identifiers": [
+    "gc_gaussian_k-max-10_tau-max-2"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "TransferEntropy",
+   "representative": "gc_gaussian_k-max-10_tau-max-2",
+   "source": "config",
+   "unit_id": "infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2"
+  },
+  {
+   "eeg_identifiers": [
+    "gc_gaussian_k-1_kt-1_l-1_lt-1"
+   ],
+   "hyperparameters": {
+    "estimator": "gaussian",
+    "k_history": 1,
+    "l_history": 1
+   },
+   "identifier_params": {
+    "gc_gaussian_k-1_kt-1_l-1_lt-1": {
+     "estimator": "gaussian",
+     "k_history": 1,
+     "l_history": 1
+    }
+   },
+   "identifiers": [
+    "gc_gaussian_k-1_kt-1_l-1_lt-1"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT gaussian",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "TransferEntropy",
+   "representative": "gc_gaussian_k-1_kt-1_l-1_lt-1",
+   "source": "config",
+   "unit_id": "infotheory.te.gaussian_k-1_kt-1_l-1_lt-1"
+  },
+  {
+   "eeg_identifiers": [
+    "te_symbolic_k-10_kt-1_l-1_lt-1",
+    "te_symbolic_k-1_kt-1_l-1_lt-1"
+   ],
+   "hyperparameters": {
+    "estimator": "symbolic"
+   },
+   "identifier_params": {
+    "te_symbolic_k-10_kt-1_l-1_lt-1": {
+     "estimator": "symbolic",
+     "k_history": 10,
+     "l_history": 1
+    },
+    "te_symbolic_k-1_kt-1_l-1_lt-1": {
+     "estimator": "symbolic",
+     "k_history": 1,
+     "l_history": 1
+    }
+   },
+   "identifiers": [
+    "te_symbolic_k-1_kt-1_l-1_lt-1",
+    "te_symbolic_k-10_kt-1_l-1_lt-1"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "symbolic",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT TransferEntropyCalculatorGaussian (symbolic falls through)",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "TransferEntropy",
+   "representative": "te_symbolic_k-1_kt-1_l-1_lt-1",
+   "source": "config",
+   "unit_id": "infotheory.te.symbolic"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "JIDT Gaussian entropy/MI/TE calculators (nats)",
+   "module": "infotheory",
+   "pair_basis": "n/a",
+   "pyspi_class": "JIDTBase",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "infotheory.est.gaussian"
+  }
+ ]
+}

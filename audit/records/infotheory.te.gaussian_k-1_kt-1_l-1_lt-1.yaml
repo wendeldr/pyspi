@@ -1,0 +1,190 @@
+unit_id: infotheory.te.gaussian_k-1_kt-1_l-1_lt-1
+status: profiled
+correctness:
+  metric_name_standard: Gaussian transfer entropy with target history k=1 and source history l=1 (= one half of Geweke's lag-1 Granger causality log variance ratio)
+  canonical_ref: Geweke J. 1982, J Am Stat Assoc 77:304-313, eq. (2.3)-(2.4) F_{X->Y} = ln(var(e_restricted)/var(e_full)); Barnett L., Barrett A.B. & Seth A.K. 2009, Phys Rev Lett 103:238701 (F_{X->Y} =
+    2 TE_{X->Y} for Gaussian variables); Schreiber T. 2000, Phys Rev Lett 85:461, eq. (4)
+  canonical_definition: TE_{X->Y} = I(X_t; Y_{t+1} | Y_t) = 0.5*ln(sigma^2(Y_{t+1}|Y_t) / sigma^2(Y_{t+1}|Y_t,X_t)) = F_{X->Y}/2, where F = ln(RSS_restricted/RSS_full) is Geweke's GC
+  documented_definition: 'supplement §1.4.6, p.11 (supplement.txt:500-511): ''Granger causality [40] is obtained by assessing directed dependence of x -> y as the predictive power of a bivariate autoregressive
+    model (comprising x and y) over the univariate autoregressive model (with y only). The statistic included in our framework is the log-ratio of residual variance for the two models, which is a variant
+    of Granger causality popularized by Geweke [41] later found to be equivalent to transfer entropy with a Gaussian estimator [38]''; keywords ''directed, linear, unsigned, bivariate, time-dependent''.
+    GitBook information-theory.md:90-107 same text. Supplement §1.4.5, p.10-11 (supplement.txt:476-493) defines k, kt (target) and l, lt (source).'
+  delegate_lib: JIDT infodynamics.jar bundled at pyspi/lib/jidt (labelled 1.6.1 by version-1.6.1.txt, but its class inventory includes EntropyCalculatorMultiVariateCommon, added upstream in commit 3d1f3fe
+    on 2024-04-20; between tag v1.6.1 and commit a9b6b3e the Gaussian MI/CMI/TE/AIS leaf classes, MatrixUtils, MathsUtils and ChiSquareMeasurementDistribution are byte-identical, their MultiVariateCommon/Via
+    parents differ only in observation-ID/noise-seed bookkeeping, and EntropyCalculatorMultiVariateGaussian was refactored onto EntropyCalculatorMultiVariateCommon with its value path unchanged; details
+    in infotheory.est.gaussian) via JPype1==1.7.1 on OpenJDK 21; gaussian.TransferEntropyCalculatorGaussian -> TransferEntropyCalculatorViaCondMutualInfo -> ConditionalMutualInfoCalculatorMultiVariateGaussian
+  implemented_as: 'For each ordered pair (i=source, j=target) on z-scored data: N = T-1 samples (t = 0..T-2) of (x_i(t), x_j(t+1), x_j(t)); JIDT Gaussian CMI with ddof=1 covariance: TE = 0.5*ln(det S(x_i(t),x_j(t))
+    det S(x_j(t+1),x_j(t)) / (det S(all three) var x_j(t))) = 0.5*ln(RSS_r/RSS_f) of the OLS-with-intercept regressions x_j(t+1) ~ x_j(t) and x_j(t+1) ~ x_j(t) + x_i(t) on the same samples. Properties confirmed
+    by getProperty: k_HISTORY=1, k_TAU=1, l_HISTORY=1, l_TAU=1, DELAY=1, AUTO_EMBED_METHOD=NONE, BIAS_CORRECTION=false, NORMALISE=false.'
+  implementation_trace:
+  - pyspi/calculator.py:329 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 fill_diagonal NaN; :336-339 any exception from any pair -> the whole SPI entry becomes NaN (:337) and the error is recorded, warning issued at :354-355
+  - 'pyspi/data.py:184-195 preprocessing in Data.set_data: optional scipy.signal.detrend(axis=1), then (default normalise=True) scipy.stats.zscore(axis=1, ddof=1)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for every ordered pair i != j, A[i,j] = self.bivariate(data, i=i, j=j)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: _entropy_calc = _getcalc(''entropy'') (:36); identifier += ''_gaussian'' (:38); estimator ''gaussian'' -> labels += [''linear''], _dyn_corr_excl
+    = None (:53-55)'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: every calculator gets setProperty(''BIAS_CORRECTION'',''false'') and setProperty(''NOISE_SEED'',''42''); no NORMALISE property is set'
+  - 'pyspi/statistics/infotheory.py:103-134 _getcalc: ''gaussian'' (and any unrecognised estimator) falls to the else branches -> gaussian.EntropyCalculatorMultiVariateGaussian (:111-112), gaussian.MutualInfoCalculatorMultiVariateGaussian
+    (:120-123), gaussian.TransferEntropyCalculatorGaussian (:129-130)'
+  - 'pyspi/statistics/infotheory.py:320-341 TransferEntropy(JIDTBase, Directed).__init__: estimator absent or ''gaussian'' -> identifier ''gc'' (:338-339); _calc = _getcalc(''TransferEntropy'') (:341)'
+  - 'pyspi/statistics/infotheory.py:376-391 bivariate(i,j): _set_theiler_window (no-op); _calc.initialise(); src, targ = data.to_numpy(squeeze=True)[[i, j]]; setObservations(src, targ); computeAverageLocalOfObservations();
+    exception -> warning + NaN'
+  - 'pyspi/statistics/infotheory.py:357-365 no auto-embedding: setProperty k_HISTORY, k_TAU, l_HISTORY, l_TAU; identifier += ''_k-1_kt-1_l-1_lt-1'''
+  - 'pyspi/config.yaml:604-606 TransferEntropy config: estimator gaussian, k_history 1, l_history 1'
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/measures/continuous/gaussian/TransferEntropyCalculatorGaussian.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] constructor :117-119 builds TransferEntropyCalculatorViaCondMutualInfo
+    around ConditionalMutualInfoCalculatorMultiVariateGaussian; setProperty :165-180 forwards to parent
+  - https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java defaults k=1 (:98), delay=1
+    (:116); setProperty :435-471 (k_HISTORY, k_TAU, l_HISTORY, l_TAU, AUTO_EMBED_*; anything else forwarded to the CMI calculator and remembered in props :463-464); computeStartTimeForFirstDestEmbedding
+    :375-384 = max((k-1)*k_tau, (l-1)*l_tau + delay - 1); finaliseAddObservations :865-869 -> prepareCMICalculator :923-929 initialise(l, 1, k)
+  - 'https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java addObservationsWithGivenParams
+    :586-621: dest past = makeDelayEmbeddingVector(dest, k, k_tau, start, N) (:606), dest next = dest[start+1 ...] (:610), source past = makeDelayEmbeddingVector(source, l, l_tau, start+1-delay, N) (:614),
+    N = T - start - 1'
+  - 'https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] makeDelayEmbeddingVector(double[], k, tau, startKthPoint, n) :2212-2230: row r = [x[t], x[t-tau], ..., x[t-(k-1)tau]]
+    with t = startKthPoint + r'
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/measures/continuous/gaussian/ConditionalMutualInfoCalculatorMultiVariateGaussian.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] constructor :143-147 normalise = false; finaliseAddObservations
+    :236-253 covariance of (var1=source past, var2=dest next, cond=dest past) with ddof=1; computeAverageLocalOfObservations :427-482 returns 0.5*ln(det(S_c1)*det(S_c2)/(det(S_all)*det(S_cc))) (0 if var1
+    or var2 fully redundant given cond; +Infinity if L==null); no bias correction (pyspi BIAS_CORRECTION=false)
+  deviation_from_documented: 'Factor 1/2: the documented statistic is ''the log-ratio of residual variance for the two models'' (Geweke F), but the returned value is the Gaussian transfer entropy = F/2.
+    Probe var2_bivariate_T1024: pyspi A[0,1] = 0.14832534 = 0.5*ln(RSS_r/RSS_f) (numpy OLS, agreement 1e-15), so F = 0.29665. Ranking is unaffected. Otherwise matches (one-lag models; time delays kt=lt=1).'
+  deviation_from_canonical: none as Gaussian TE (Barnett et al. 2009); as Geweke GC the value is F/2 (candidate above). Model order fixed at 1 lag for both target and source (a configuration choice; under-specified
+    for the VAR(2) test data). No bias correction.
+  units_and_range: nats; [0, +inf); asymmetric; scale invariant; exactly 0 when the target past makes the source linearly redundant (probe shared_envelope identical channels -> 0.0)
+  direction_convention: 'A[i,j] = TE from x_i (source) to x_j (target) (bivariate docstring infotheory.py:379, src/targ order :383). Probe var2_bivariate_T1024 (x0 drives x1): A[0,1]=0.1483 > A[1,0]=0.0127'
+  symmetry_expected: asym
+  already_documented: tests/README.md bug 1 (te_symbolic_* == gc_gaussian_*, so te_symbolic_k-1 duplicates this unit); REVIEW.md 'current metadata for gc_gaussian_k-1_kt-1_l-1_lt-1 lacks pyspi labels' (metadata
+    only)
+  new_finding_candidates:
+  - 'CANDIDATE (documented-value mismatch): gc_gaussian returns TE = F/2, not the documented ''log-ratio of residual variance'' F. Evidence: JIDT CMI formula 0.5*ln(...) (ConditionalMutualInfoCalculatorMultiVariateGaussian.java:464-466 [line numbers at JIDT tag v1.6.1, where implementation_trace cites this file; the bundled infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e; see delegate_lib)]);
+    probe var2_bivariate_T1024 A[0,1] = 0.14832534 vs numpy 0.5*ln(RSS_r/RSS_f) = 0.14832533717957885 and A[1,0] = 0.01265255 vs 0.012652549306752473.'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - delayed_noise
+    - iid_gaussian
+    - logistic_maps
+    path: pipeline
+    reference: 'from-scratch numpy OLS with intercept: F = ln(RSS(x_j(t+1) ~ 1 + x_j(t)) / RSS(x_j(t+1) ~ 1 + x_j(t) + x_i(t))) on t = 0..T-2; reference TE = F/2'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: pyspi equals F/2 to 1e-12 on every ordered pair; pyspi/F = 0.5 exactly (documents the factor)
+  - datasets:
+    - var2_bivariate
+    path: pipeline
+    reference: analytic population TE for k=l=1 from the VAR(2) autocovariances (companion-form discrete Lyapunov via scipy.linalg.solve_discrete_lyapunov, then Gamma(0), Gamma(1) of (x0, x1)); 0.5*ln of
+      conditional variance ratio
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: within 3 sampling SDs at T=4096; reverse direction (1->0) population value > 0 is possible because the lag-1 model is misspecified, record it
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    path: pipeline
+    reference: 'known ground truth: var2_bivariate x0 -> x1 only; delayed_noise x0 leads x1 by one sample (TE 0->1 approx 0.5*ln(101) = 2.3076, 1->0 approx 0)'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A[0,1] > A[1,0] in both datasets for T >= 256; establishes A[i,j] = TE(i -> j)
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic null: 2*N*TE_hat ~ chi-square(1) (Barnett & Bossomaier 2012 PRL 109:138105)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: mean over ordered pairs approx 1/(2(T-1)); no negative values
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_gaussian.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:gaussian_te (covariance/CMI form); audit/checks/refs/it_gaussian.py:chk_ols -> audit/checks/refs/_kernels_infotheory.py:gaussian_te_ols
+    (0.5 ln(RSS_r/RSS_f), OLS with intercept); audit/checks/refs/it_gaussian.py:chk_gc_truth (population TE k=l=1 of the VAR(2) from companion-form Lyapunov Gamma(0), Gamma(1); Monte Carlo SE); audit/checks/refs/it_gaussian.py:chk_null;
+    audit/checks/refs/it_gaussian.py:chk_direction
+  check_data: var2_bivariate T64/T1024/T4096; gauss_ar1_pair T1024; delayed_noise T1024; iid_gaussian T256/T1024; logistic_maps_chaotic T1024; logistic_maps T1024; scaled_offset T1024 (kernel); trending
+    T1024 (pipeline-detrend)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12; statistical: |pyspi - Monte Carlo mean| <= 2 Monte Carlo SD; null: mean over 20 ordered pairs within 2 Monte Carlo SD of the Monte Carlo mean; direction:
+    A[0,1] > A[1,0]'
+  closeness: 'Covariance form: 9/9 exact runs pass, max_abs <= 5.7e-14 (kernel scaled_offset 1.8e-15, pipeline-detrend trending 1.2e-15). OLS log-ratio form: max_abs 0.0 (var2_bivariate) and 1.7e-14 (delayed_noise);
+    covariance vs OLS form 1.0e-15 / 4.0e-14; pyspi / Geweke F = 0.5 exactly (var2_bivariate F(0->1) = 0.29665, pyspi 0.14833). VAR(2) population at T=4096: TE(0->1) = 0.13258, TE(1->0) = 0.01052 (non-zero
+    because the lag-1 model is misspecified), |pyspi - population| 0.0060 (max_z 0.77). Null iid_gaussian T1024: mean 3.6e-4 (analytic 1/(2(T-1)) = 4.9e-4, Monte Carlo 5.0e-4 +- 1.6e-4, z -0.92), minimum
+    1.4e-8.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 10''s supplement clause fails. The supplement''s statistic is the log-ratio of residual variances (Geweke F), but pyspi returns Gaussian
+    TE = F/2 (var2_bivariate F(0->1) 0.29665, pyspi 0.14833). The numeric clause holds: 9/9 exact runs, max_abs <= 5.7e-14. No anchor-9 clause names a factor of 1/2.'
+  documentation_status: misdescribed
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: Nothing against the canonical Gaussian transfer entropy I(X_t; Y_t+1 | Y_t) (Barnett, Barrett & Seth 2009), fp-exact. The supplement names the statistic 'the log-ratio of residual variance'
+    (Geweke F) while stating its equivalence to Gaussian TE; the returned value is TE = F/2 (pyspi/F = 0.5 exactly), the documented F = 2 TE convention, so the score is rubric anchor 9 (trivial documented
+    convention of the log-base kind) rather than 10. Rankings are unchanged. One target lag and one source lag.
+    Rubric reading is nearest-anchor 9 (score_rubric_note), because no anchor-9 clause names a factor of 1/2; the anchor-9 log-base wording above is the original reasoning for score_0_10.
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap (pyspi time_s in out/pyspi/index/it_gaussian.json, single runs of the review-stage forced re-run, made under machine load: slowest delayed_noise|1024|pipeline|numpy 0.24 s; every other run <
+    0.01 s; 15 runs, 0.30 s in total; an earlier run quoted <= 0.03 s per pyspi run at T = 1024 (not stored in the index or results files))'
+  symmetry_observed: 'asym: max|A - A.T| = 0.136 (var2_bivariate T1024), 2.27 (delayed_noise T1024), 0.050 (gauss_ar1_pair), 0.0038 (iid_gaussian T256)'
+  direction_observed: 'A[i,j] = TE(x_i -> x_j) (i source, j target). var2_bivariate T1024: A[0,1] = 0.1483 vs A[1,0] = 0.0127; delayed_noise T1024: A[0,1] = 2.2704 vs A[1,0] = 1.3e-5 (gc|*|1024|pipeline|direction)'
+  candidate_resolutions:
+  - candidate: gc_gaussian returns TE = F/2, not the documented log-ratio F
+    outcome: confirmed
+    evidence: 'infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|var2_bivariate|1024|pipeline|ols and |delayed_noise|1024|pipeline|ols: pyspi equals 0.5 ln(RSS_r/RSS_f) to <= 1.7e-14, ref_pyspi_over_F = 0.5'
+  checks_run:
+  - run_ids:
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|var2_bivariate|64|pipeline|numpy
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|var2_bivariate|1024|pipeline|numpy
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|gauss_ar1_pair|1024|pipeline|numpy
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|delayed_noise|1024|pipeline|numpy
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|iid_gaussian|256|pipeline|numpy
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|logistic_maps_chaotic|1024|pipeline|numpy
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|logistic_maps|1024|pipeline|numpy
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|scaled_offset|1024|kernel|numpy
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|trending|1024|pipeline-detrend|numpy
+    reference: audit/checks/refs/it_gaussian.py:chk_numpy (audit/checks/refs/_kernels_infotheory.py:gaussian_te)
+    outcome: 9/9 pass; max_abs <= 5.7e-14
+  - run_ids:
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|var2_bivariate|1024|pipeline|ols
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|delayed_noise|1024|pipeline|ols
+    reference: audit/checks/refs/it_gaussian.py:chk_ols (audit/checks/refs/_kernels_infotheory.py:gaussian_te_ols)
+    outcome: 2/2 pass; max_abs <= 1.7e-14; pyspi/F = 0.5
+  - run_ids:
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|var2_bivariate|4096|pipeline|truth
+    reference: audit/checks/refs/it_gaussian.py:chk_gc_truth (analytic + Monte Carlo SE)
+    outcome: 1/1 pass; max_z 0.77
+  - run_ids:
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|iid_gaussian|1024|pipeline|null
+    reference: audit/checks/refs/it_gaussian.py:chk_null
+    outcome: 1/1 pass; z -0.92
+  - run_ids:
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|var2_bivariate|1024|pipeline|direction
+    - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1|delayed_noise|1024|pipeline|direction
+    reference: audit/checks/refs/it_gaussian.py:chk_direction
+    outcome: 2/2 pass; A[0,1] > A[1,0] on both
+optimisation:
+  complexity_P_T: 'O(P^2 T): TransferEntropy.bivariate (infotheory.py:376-389), one JIDT TransferEntropyCalculatorGaussian call per ordered pair (3x3 conditional covariance on T-1 samples) with two 1-D
+    conversions. Measured fresh P exponent 2.36, T exponent 0.82. At 118x1024 the pair term is everything: 6.05 s measured fresh.'
+  hotspot_1: pyspi/statistics/infotheory.py:TransferEntropy.bivariate (third-party:jidt via JPype, self time) 98.3% cum / 94.4% self of the profiled SPI call at 8x1024
+  hotspot_2: 'jpype/_jarray.py:JArray.__new__ (third-party:jpype) 3.2%. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self time
+    of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.033
+  profile_file: audit/profiles/infotheory.te.gaussian_k-1_kt-1_l-1_lt-1__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_gaussian-1
+    opportunity: Compute the pairwise Gaussian SPIs for all pairs at once in numpy from one ddof=1 covariance of the z-scored rows (lag blocks x(t-m) and x(t+1) for tlmi and TE), with a batched slogdet
+      over the pair sub-matrices, instead of one JIDT calculator call per pair through JPype (infotheory.py:JIDTBase._compute_joint_entropy, MutualInfo.bivariate, TimeLaggedMutualInfo.bivariate, TransferEntropy.bivariate).
+    opp_type: replace-library
+    expected_speedup: ~500x
+    speedup_basis: 'microbench:audit/profiles/micro/opp_it_gaussian-1.json (gc_gaussian_k-1_kt-1_l-1_lt-1: candidate alone at 118x1024 11.8 ms including Data construction (2.9 ms), shapes
+      118x1024_candidate_only, against the quiet summary.json 118x1024 walls 6.05 s fresh (measured) and 6.23 s family-warm (extrapolated-pairs-from-32) = 514x / 529x. Those ratios count Data
+      construction in the candidate, which the basis leaves out (profile_units.py times compute_spi on a prebuilt Data), so they move with Data-construction time (493x against the family-warm
+      basis in the Workflow 4c run, 12.6 ms with Data). The like-for-like cost is the math alone: shapes 118x1024_split (4c run) gives 9.3 ms on a prebuilt Data, 669x against the family-warm basis
+      and 650x against the fresh wall. The lower bound 500x is below the like-for-like ratio; the rank does not depend on the convention (3,736 s / k leaves 5.6-7.5 s per patient for k from 669x down
+      to 500x); the extrapolated family-warm basis and the fresh 118x1024 measurement agree within 3%; same-run speedups against the pyspi baseline on the shared machine 16x at 8x1024 and 643x
+      at 32x1024 in the latest run (17x / 433x in the first; the 32x1024 same-run baselines are noisy)) + profile:audit/profiles/infotheory.te.gaussian_k-1_kt-1_l-1_lt-1__8x1024.pstats pyspi/statistics/infotheory.py:376
+      TransferEntropy.bivariate 98.3% (the candidate replaces the whole multivariate call; its own cost is one (k+1)P-square covariance plus O(P^2) small slogdets, milliseconds at 118x1024)'
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_it_gaussian-1.json: max_abs_diff 9.2e-16 (8x1024) and 9.1e-16 (32x1024); max_rel_diff 7.0e-11 (8x1024) and 2.2e-6 (32x1024), the relative figure on a near-zero entry
+      (|value| <= max_abs/max_rel ~ 4.1e-10 at 32x1024); at 118x1024 (shapes 118x1024_split, one-shot pyspi baseline against the math-only candidate) max_abs_diff 1.0e-15 and max_rel_diff 1.9e-5, again on a
+      near-zero entry (|value| <= ~5e-11); NaN masks equal, not bit-identical (np.cov + slogdet instead of JIDT''s covariance + Cholesky)'
+    effort: M
+    depends_on: []

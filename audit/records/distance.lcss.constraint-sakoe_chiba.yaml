@@ -1,0 +1,301 @@
+unit_id: distance.lcss.constraint-sakoe_chiba
+status: profiled
+correctness:
+  metric_name_standard: Longest common subsequence similarity with Sakoe-Chiba band (radius 1)
+  canonical_ref: Vlachos M, Kollios G, Gunopulos D 2002, Proc. 18th ICDE pp. 673-684, definitions of LCSS_{delta,eps} and similarity S1 = LCSS/min(n,m)
+    (Sec. 2; definition numbering not re-checked against the PDF; the paper states the eps test per coordinate for 2-D trajectories)
+  canonical_definition: LCSS(A,B) = 0 if A or B empty; 1+LCSS(Head(A),Head(B)) if |a_n-b_m| < eps and |n-m| <= delta; else max(LCSS(Head(A),B),
+    LCSS(A,Head(B))); similarity S1 = LCSS_{delta,eps}(A,B)/min(n,m)
+  documented_definition: 'supplement §1.2.8, p.7 (pack lines 302-311) and GitBook ''Longest Common Subsequence'': "measuring the similarity between
+    continuous subsections of time series... subject to distance thresholds and alignment constraints. We use the default threshold from the tslearn
+    package (eps = 1), and include the three global constraints"; keywords undirected, nonlinear, unsigned.'
+  delegate_lib: tslearn==0.9.0 tslearn.metrics.lcss (dtw_variants.py:2383) -> numba _njit_lcss
+  units_and_range: Dimensionless similarity in [0, 1] (count of matched pairs / min(n, m)); 1 = every point matched; higher = more similar (a
+    similarity, despite the 'distance' module); symmetric in its arguments; quantised in steps of 1/T.
+  direction_convention: 'Undirected: A[i,j] = A[j,i] = lcss(z_min(i,j), z_max(i,j)) via Undirected.multivariate mirroring; diagonal NaN.'
+  symmetry_expected: sym
+  already_documented: 'no'
+  implemented_as: 'Intended: matches allowed only for |i-j| <= 1 (tslearn default radius 1), which equals Vlachos delta = 1. Actual (numpy backend,
+    tslearn 0.9.0): the boolean mask is computed and passed but njit_lcss_accumulated_matrix tests numpy.isfinite(mask) which is True for every
+    boolean entry, so the full grid is used and the value equals unconstrained lcss exactly. Score = LCSS / T with match rule |x_i - y_j| <= 1
+    on z-scored rows.'
+  implementation_trace:
+  - pyspi/calculator.py:329 Calculator.compute calls self._spis[spi].multivariate(self.dataset)
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend(axis=1) only if detrend=True (default False), then scipy.stats.zscore(axis=1, nan_policy=''omit'',
+    ddof=1) if normalise=True (default True)'
+  - 'pyspi/base.py:132-138 Undirected.multivariate: A = Directed.multivariate(data); A[tril(-1)] = A.T[tril(-1)] (lower triangle overwritten by
+    the upper triangle, so A[i,j] = bivariate(min(i,j), max(i,j)))'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A filled with NaN, bivariate(data, i, j) for every ordered pair i != j (both orders computed,
+    diagonal stays NaN)'
+  - 'pyspi/base.py:27-49 parse_bivariate: a raw (x, y) call builds Data() and add_process(x), add_process(y) (pyspi/data.py:219-240)'
+  - 'pyspi/statistics/distance.py:154-163 TimeWarping.__init__: identifier += ''_constraint-'' + global_constraint.replace(''_'',''-''); self._global_constraint
+    stored'
+  - 'pyspi/statistics/distance.py:174-177 TimeWarping.bivariate: z = data.to_numpy(squeeze=True) (pyspi/data.py:108-118); return self._simfn(z[i],
+    z[j], global_constraint=self._global_constraint)'
+  - 'pyspi/statistics/distance.py:190-197 LongestCommonSubsequence: self._simfn = tslearn.metrics.lcss (eps not passed, library default used)'
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/__init__.py:44-55 tslearn.metrics.lcss is tslearn.metrics.dtw_variants.lcss (tslearn==0.9.0)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2383-2391 lcss(s1, s2, eps=1.0, global_constraint=None, sakoe_chiba_radius=None,
+    itakura_max_slope=None, be=None)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2485-2496 to_time_series(remove_nans=True); mask = compute_mask_(...) where
+    compute_mask_ is tslearn.metrics._masks.compute_mask (import at dtw_variants.py:11), which returns a BOOLEAN mask (.venv/lib/python3.12/site-packages/tslearn/metrics/_masks.py:199-307,
+    310-361; same defaults radius 1 / slope 2.0)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2497-2498 numpy backend -> _njit_lcss(s1, s2, eps, mask)
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2321-2345 _njit_lcss: acc = njit_lcss_accumulated_matrix(...); return
+    float(acc[-1][-1]) / min(l1, l2)'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2232-2267 njit_lcss_accumulated_matrix: integer DP; line 2259 ''if numpy.isfinite(mask[i
+    - 1, j - 1]):'' (True for both True and False boolean entries); line 2260 match if sqrt(squared dist) <= eps -> 1 + acc[i-1][j-1], else max(acc[i][j-1],
+    acc[i-1][j])'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2270-2318 lcss_accumulated_matrix (non-numpy backends only): line 2306
+    ''if mask[i - 1, j - 1]:'' honours the boolean mask'
+  - 'https://raw.githubusercontent.com/tslearn-team/tslearn/v0.5.2/tslearn/metrics/dtw_variants.py compute_mask/sakoe_chiba_mask/itakura_mask:
+    mask = numpy.full((sz1, sz2), numpy.inf) with admissible cells set to 0. (float 0/inf mask), and the same ''if numpy.isfinite(mask[i - 1,
+    j - 1])'' test in njit_lcss_accumulated_matrix (WebFetch of the v0.5.2 tag)'
+  - 'https://raw.githubusercontent.com/tslearn-team/tslearn/{v0.6.4,v0.7.0,v0.8.0,v0.8.1,main}/tslearn/metrics/dtw_variants.py and v0.8.0
+    tslearn/metrics/_masks.py (WebFetch): v0.6.4 and v0.7.0 float inf/0 masks with ''if numpy.isfinite(mask[i - 1, j - 1]):''; v0.8.0 _masks.py builds
+    masks with backend.full((sz1, sz2), False) and v0.8.0/v0.8.1 keep the isfinite test (ignored mask); main njit_lcss_accumulated_matrix uses ''if
+    mask[i - 1, j - 1]:'' (fixed upstream, no tag after v0.9.0)'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_masks.py:13-29 _sakoe_chiba_mask_generic: for equal lengths width = radius; row i allowed
+    columns max(0,i-radius) .. min(T,i+radius) inclusive, i.e. |i-j| <= radius = 1'
+  deviation_from_documented: 'Documented as LCSS with the sakoe_chiba global constraint; the constraint has no effect (output identical to lcss).
+    Identifier spelling: the code produces ''lcss_constraint-sakoe-chiba'' (distance.py:161 replaces ''_'' by ''-''), the supplement and GitBook
+    list ''lcss_constraint-sakoe_chiba'' (cosmetic).'
+  deviation_from_canonical: 'Match test uses <= eps (dtw_variants.py:2260) instead of the strict < eps of Vlachos et al. (only matters on exact
+    ties; probe: lcss([0,0],[1,1]) = 1.0 vs 0.0 under the strict rule). Normalisation by min(n,m) matches S1. eps = 1 is absolute, applied after
+    z-scoring, i.e. one standard deviation. The time-window restriction (delta / parallelogram) that defines the constrained variant is not applied.'
+  new_finding_candidates:
+  - 'Candidate NEW finding (upstream tslearn bug in releases 0.8.0, 0.8.1 and 0.9.0; not in KNOWN_ISSUES): the numpy/numba LCSS path ignores the
+    global constraint. dtw_variants.py:2259 tests ''numpy.isfinite(mask[i-1, j-1])'' but the mask from _masks.compute_mask is boolean, and
+    np.isfinite(False) is True, so every cell is evaluated. Release range (WebFetch of the GitHub tags): v0.5.2, v0.6.4 and v0.7.0 build float masks
+    (numpy.full(..., numpy.inf), admissible cells 0.0), so the same isfinite test excluded masked cells; v0.8.0 (tslearn/metrics/_masks.py,
+    backend.full((sz1, sz2), False)), v0.8.1 and v0.9.0 pair boolean masks with the isfinite test; tslearn main now tests ''if mask[i - 1, j - 1]:''
+    in njit_lcss_accumulated_matrix, so the bug is fixed upstream but v0.9.0 is the latest tag. Probe: delayed series T=60 -> tslearn lcss = 0.9167
+    for None, itakura and sakoe_chiba alike, while a from-scratch masked LCSS gives 0.9167 / 0.0 / 0.70 and tslearn''s torch backend (which uses ''if
+    mask[...]'', line 2306) gives the masked values (T=64: itakura 0.797 torch vs 0.8125 numpy; sakoe_chiba 0.766 torch vs 0.8125 numpy). pyspi
+    end-to-end (4x128): lcss, lcss_constraint-itakura and lcss_constraint-sakoe-chiba matrices are bit-identical; the regression snapshot files
+    (tests/regression/goldens small/full) also hold identical matrices for the three identifiers (a snapshot observation only). pyspi requirement
+    history (git): ef478a8 (2021-11-29) setup.py ''tslearn>=0.5.2''; e66057f (2022-02-10) ''tslearn==0.5.2''; 0943868 (2024-05-18) bare unpinned
+    ''tslearn'' (requirements.txt:20, setup.py:29 at a2c3300^); a2c3300 changes the bare ''tslearn'' to ''tslearn>=0.9,<0.10'' (pyproject.toml:41).
+    The test lock tests/requirements-test-lock.txt already held tslearn==0.9.0 when it was created (30556b9, line 66), before a2c3300, so the
+    migration did not change the locked tslearn version and the snapshot goldens already reflect the ignored mask. The version behind published pyspi
+    results is not known from the pins: the ==0.5.2 pin (2022-02-10 to 2024-05-18) honours the mask, and an install from the unpinned period could
+    resolve to any release current at install time (0.8.0 or later ignores it). Hypothesis only: published lcss_constraint-* values may differ between
+    installs.'
+  - 'Candidate (low dynamic range): with eps = 1 on z-scored data the unconstrained score saturates near 0.8 for unrelated series. Probe: independent
+    N(0,1) T=64/256/1024 -> 0.797/0.805/0.809; x vs -x -> 0.828/0.797/0.807; x vs x -> 1.0. Hypothesis: lcss cannot distinguish independence from
+    perfect anti-correlation and spans roughly [0.8, 1] in practice (snapshot small/full matrices span 0.84-0.97).'
+  - 'Cross-family (infrastructure) candidate, affects direct two-array calls only: parse_bivariate (pyspi/base.py:33-36) builds Data() (normalise=True)
+    and calls add_process(x) then add_process(y); the first call goes through set_data and is z-scored, the second is np.append-ed raw (pyspi/data.py:230-234).
+    Probe with x, y ~ 5 + 3 N(0,1), T=64: stored means [0.0, 4.783], stds [1.0, 2.995]. So spi.bivariate(x, y) compares z-scored x with raw y.
+    Calculator/multivariate paths are unaffected.'
+  proposed_checks:
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    - narrowband_f0-0.25
+    path: kernel
+    reference: from-scratch numpy LCSS DP with an independently built sakoe_chiba mask (masked cells hold 0), eps = 1, <= rule, divided by min(n,m)
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: pyspi value DIFFERS from the masked reference and EQUALS the unconstrained reference exactly on most pairs (confirms the
+      ignored-mask candidate)
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: pyspi lcss (unconstrained) matrix on the same data
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: lcss_constraint-sakoe-chiba matrix is bit-identical to the lcss matrix at every T
+  - datasets:
+    - delayed_noise
+    path: kernel
+    reference: tslearn.metrics.lcss with torch tensors and be='pytorch' (same library, mask-honouring branch dtw_variants.py:2306)
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: torch-backend value equals the from-scratch masked reference, numpy-backend value does not
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: from-scratch numpy sakoe_chiba-masked LCSS DP applied to the ddof=1 z-scored rows z_i, z_j (no tslearn import)
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'Direction/symmetry convention: A == A.T exactly (np.array_equal with equal_nan), diagonal all NaN, and A[i,j] == A[j,i]
+      == reference(z_min(i,j), z_max(i,j)) within tolerance; reference(z_i, z_j) and reference(z_j, z_i) agree to <= 1e-12 relative, so the undirected
+      label carries no hidden order.'
+  check_method: independent-impl
+  check_reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:lcss_dp(constraint='sakoe_chiba') (masked LCSS, the documented
+    quantity) and lcss_dp(constraint=None); tslearn torch backend (probe torch_lcss) vs the masked reference; same-lineage bit identity with the pyspi lcss
+    matrix; audit/checks/refs/dtw_family.py:mc_null (masked)
+  check_data: iid_gaussian, delayed_noise, narrowband_f0-0.25, logistic_maps (kernel T 64/256/1024); pipeline T1024 on iid_gaussian, delayed_noise, bivariate_gaussian,
+    shared_envelope; delayed_noise T256 (torch); scaled_offset, trending T1024
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 vs the masked and unmasked references; bit identity (rtol 0) with lcss; null Bonferroni 2 se'
+  closeness: 'Against the masked (documented) LCSS: 10 of 16 dp runs fail. distance.lcss.constraint-sakoe_chiba|delayed_noise|1024|pipeline|dp: masked band-1
+    LCSS differs by up to 0.280 (max_rel 0.39) on the delay-3/5 pairs, iid_gaussian T1024 pipeline pair (0,1) 0.8037 vs 0.7061. Against unconstrained LCSS:
+    16/16 unmasked runs exact (max_abs 0.0), and the pyspi matrix is bit-identical to pyspi lcss in all 6 ''same'' runs and in every dp run (pyspi_eq_unmasked
+    = 1). tslearn''s torch backend equals the masked reference exactly (distance.lcss.constraint-sakoe_chiba|delayed_noise|256|pipeline|torch, max_abs 0.0)
+    and differs from the numpy value. Masked null (iid_gaussian T1024): Monte Carlo mean 0.715 +- 0.009 vs pyspi 0.804-0.819 (distance.lcss.constraint-sakoe_chiba|iid_gaussian|1024|pipeline|null-masked
+    fails, max_z 8.2).'
+  verdict: wrong
+  score_0_10: 3
+  score_rubric: 3
+  score_rubric_basis: anchor
+  score_rubric_note: The band is ignored, so pyspi equals unconstrained lcss bit for bit. On iid_gaussian T1024 pair (0,1) pyspi gives 0.8037 against 0.7061 for the
+    masked LCSS; the masked null test fails with max_z 8.2.
+  documentation_status: misdescribed
+  verdict_adjusted: wrong
+  score_adjusted: 3
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The sakoe_chiba constraint named by the identifier is not applied: tslearn 0.9.0''s numpy path gates cells with numpy.isfinite(mask[i-1,
+    j-1]) (dtw_variants.py:2259) on a boolean mask, which is always True, so the value equals unconstrained lcss exactly (rubric 3: identifier hyperparameter
+    ignored). The torch branch of the same library honours the mask, as does the from-scratch reference.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.1 s per pyspi run at T=1024 (numpy path); torch probe 3.5-20 s at T=256'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on every matrix; unmirrored probe max|B - B.T| = 0.0 at T1024; diagonal NaN'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = f(z_i, z_j); on delayed_noise (x_k = x0 delayed by 0/1/3/5) the matrix carries no lead/lag sign, only
+    how well warping absorbs the delay; identical to lcss (0.999 for every delay on delayed_noise), the constraint would otherwise change this.'
+  candidate_resolutions:
+  - candidate: tslearn 0.8.0-0.9.0 numpy LCSS ignores the boolean global-constraint mask (isfinite test)
+    outcome: confirmed
+    evidence: distance.lcss.constraint-sakoe_chiba|*|same (6 runs, bit_identical 1); distance.lcss.constraint-sakoe_chiba|*|dp (10/16 fail vs masked LCSS,
+      pyspi_eq_unmasked 1 in all 16); distance.lcss.constraint-sakoe_chiba|delayed_noise|256|pipeline|torch (torch backend = masked reference, max_abs 0.0).
+      Not in KNOWN_ISSUES. The tslearn release range (0.8.0-0.9.0) and the upstream fix rest on the trace-stage reading of the tags; only 0.9.0 was run here.
+  - candidate: 'low dynamic range: eps = 1 on z-scored data saturates near 0.8 for unrelated series and does not separate anti-correlation from independence'
+    outcome: confirmed
+    evidence: 'distance.lcss.constraint-None|iid_gaussian|{64,256,1024}|pipeline|null: Monte Carlo null mean 0.788 / 0.803 / 0.810 (SD 0.021 / 0.0082 / 0.0037);
+      |1024|pipeline|null-neg: lcss(x,-x) 0.7988 vs independent 0.8105 (-1.4%; the Monte Carlo 1% quantile is 0.8018, so the anti-correlated pair is only
+      just below it); |256|pipeline|null-neg -1.0%; |bivariate_gaussian|1024|pipeline|range: rho 0.3 pair 0.8145 (z 1.3), rho 0.8 pair 0.9023 (z 25). The
+      ordering is right but the range on z-scored data is about [0.79, 1]; a property of the eps = 1 default, not a code deviation.'
+  - candidate: parse_bivariate z-scores only the first of two raw arrays
+    outcome: confirmed
+    evidence: 'Confirmed, but it belongs to preproc.two_array_api (preprocessing_base family, already checked; run preproc.two_array_api|scaled_offset|256|pipeline|spi-dtw),
+      so it is not a finding of this unit. Re-measured here on the direct-array API: the same parse decorator serves this identifier; measured on lcss: distance.lcss.constraint-None|scaled_offset|256|pipeline|rawcall.'
+  checks_run:
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|bivariate_gaussian|1024|pipeline|dp
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|1024|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|1024|pipeline|dp
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|256|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|64|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|1024|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|1024|pipeline|dp
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|256|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|64|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|logistic_maps|1024|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|logistic_maps|256|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|logistic_maps|64|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|narrowband_f0-0.25|1024|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|narrowband_f0-0.25|256|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|narrowband_f0-0.25|64|kernel|dp
+    - distance.lcss.constraint-sakoe_chiba|shared_envelope|1024|pipeline|dp
+    reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:dtw_dp / lcss_dp / soft_dtw_dp (every ordered pair separately)
+      [exact rtol 1e-10 atol 1e-12 (soft-DTW tolerance rtol/atol 1e-10)]
+    outcome: 'mixed: 6/16 pass; max_abs <= 0.28, max_rel <= 0.391'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|bivariate_gaussian|1024|pipeline|unmasked
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|1024|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|1024|pipeline|unmasked
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|256|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|64|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|1024|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|1024|pipeline|unmasked
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|256|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|64|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|logistic_maps|1024|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|logistic_maps|256|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|logistic_maps|64|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|narrowband_f0-0.25|1024|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|narrowband_f0-0.25|256|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|narrowband_f0-0.25|64|kernel|unmasked
+    - distance.lcss.constraint-sakoe_chiba|shared_envelope|1024|pipeline|unmasked
+    reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:lcss_dp(constraint=None) [exact]
+    outcome: 'pass: 16/16 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|1024|pipeline|same
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|256|kernel|same
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|64|kernel|same
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|1024|pipeline|same
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|256|kernel|same
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|64|kernel|same
+    reference: pyspi lcss matrix (same-lineage bit identity) [rtol 0 atol 0]
+    outcome: 'pass: 6/6 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|1024|pipeline|unmirrored
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|1024|pipeline|unmirrored
+    reference: audit/checks/refs/dtw_family.py:matrix vs probes/dtw_family_probes.py:unmirrored (Directed.multivariate) [exact]
+    outcome: 'pass: 2/2 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|delayed_noise|256|pipeline|torch
+    reference: audit/checks/refs/_kernels_distance.py:lcss_dp(constraint) vs probes/dtw_family_probes.py:torch_lcss [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|1024|pipeline|null-masked
+    reference: audit/checks/refs/dtw_family.py:mc_null (masked LCSS) [statistical]
+    outcome: 'fail: 0/1 pass; max_z 8.19'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|iid_gaussian|256|pipeline|ident
+    reference: audit/checks/refs/dtw_family.py:matrix on rows (x0, x0, x1) / same-lineage pyspi softdtw bit identity [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|scaled_offset|1024|kernel|scale-raw
+    reference: audit/checks/refs/dtw_family.py:matrix on raw scaled_offset rows [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|scaled_offset|1024|pipeline|scaleinv
+    reference: audit/checks/refs/dtw_family.py:matrix on z-scored bivariate_gaussian [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|scaled_offset|1024|pipeline|scaleinv-self
+    reference: pyspi matrix on bivariate_gaussian (same-lineage) [rtol 1e-10]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|trending|1024|pipeline-detrend|detrend
+    reference: audit/checks/refs/dtw_family.py:matrix on z-score(LS-detrend(trending)) [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-sakoe_chiba|trending|1024|pipeline|trend
+    reference: audit/checks/refs/dtw_family.py:matrix on z-scored trending rows [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+optimisation:
+  complexity_P_T: 'O(P^2 T^2): tslearn lcss (the sakoe_chiba mask is built but ignored by the numpy backend) per ordered pair (TimeWarping is
+    Undirected over Directed.multivariate, both orders computed, pyspi/statistics/distance.py:TimeWarping.bivariate), a T x T mask plus a numba
+    DP over the full grid. Measured P_exponent 2.09, T_exponent 1.15 (8x256 -> 8x1024; a fixed per-call cost of tens of microseconds and a ~50
+    ms 8x256 overhead flatten it); 118x1024 measured (88.4 s per window). The P^2 pair term dominates.'
+  hotspot_1: tslearn/metrics/dtw_variants.py:lcss (third-party:tslearn) 92.0% self time of the profiled SPI call at 8x1024 (numba njit_lcss_accumulated_matrix
+    hidden in it)
+  hotspot_2: tslearn/metrics/_masks.py:compute_mask (third-party:tslearn) 2.7%; instantiate_backend 4.0% (str() of the inputs)
+  hotspot_owner: third-party:tslearn
+  opaque_share: 0.0127
+  profile_file: audit/profiles/distance.lcss.constraint-sakoe_chiba__8x1024.pstats
+  opportunities:
+  - opportunity_id: dtw_family-1
+    opportunity: 'One batched numba kernel over the unordered pairs: call tslearn''s njit accumulated-matrix kernels directly (_njit_accumulated_matrix
+      / njit_lcss_accumulated_matrix) from a loop over i < j, build the global-constraint mask once per window (it depends only on T and the constraint)
+      and skip the per-call Python layer (instantiate_backend, which formats each input array with str() to sniff the backend; to_time_series;
+      compute_mask). A prange over pairs adds thread parallelism (the kernels are nogil).'
+    opp_type: vectorise-batch
+    expected_speedup: ~1.1x
+    speedup_basis: profile:audit/profiles/distance.lcss.constraint-sakoe_chiba__8x1024.pstats compute_mask 2.7% + instantiate_backend 4.0% removable
+      serially (Amdahl 1.07x); parallel gain counted under xc-window-parallel.
+      Subsumed_by dtw_family-5 on this unit. While tslearn ignores the LCSS mask, this unit's matrix is a copy of the unconstrained lcss matrix (default config), so no DP runs here; build_csv credits
+      this avenue no saving here and counts its call-layer saving on distance.lcss.constraint-None
+    output_risk: unverified-bit-identical
+    risk_evidence: same njit kernel and per-cell arithmetic; only the Python call layer and the mask placement change
+    effort: M
+    depends_on:
+    - xc-undirected-upper
+    - xc-window-parallel
+    subsumed_by:
+    - dtw_family-5
+  - opportunity_id: dtw_family-5
+    opportunity: 'CONDITIONAL on identifier lcss in the same run (true in the default config). While tslearn 0.9.0 ignores the boolean LCSS mask (njit_lcss_accumulated_matrix tests numpy.isfinite(mask), True for every boolean, see the correctness block), this unit''s matrix equals the unconstrained lcss matrix exactly; when both are configured, copy it instead of recomputing. Invalid as soon as the mask is honoured (fixing the mask is a semantic change that would also make the Sakoe-Chiba band O(T)).'
+    opp_type: cache-sharing
+    expected_speedup: '1000-10000x'
+    speedup_basis: 'complexity: CONDITIONAL on the identifier lcss (distance.lcss.constraint-None) being computed in the same run, which holds in the default config; otherwise no gain. The unit''s cost (88.4 s per window at 118x1024, measured) becomes a copy of a 118 x 118 matrix (well under 0.1 s); correctness block: values equal unconstrained lcss exactly'
+    output_risk: unverified-bit-identical
+    risk_evidence: mask ignored by the numpy backend, so the same DP runs on the same inputs (correctness block)
+    effort: S
+    depends_on: []

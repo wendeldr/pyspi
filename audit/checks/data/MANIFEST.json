@@ -1,0 +1,6446 @@
+{
+  "array_order": "ps (processes, observations)",
+  "array_sha256_rule": "per file, arrays[key].sha256 = sha256 of np.ascontiguousarray(v).tobytes() for every npz key (x included); dtype is numpy dtype.str (with byte order)",
+  "files": [
+    {
+      "P": 5,
+      "T": 64,
+      "arrays": {
+        "x": {
+          "dtype": "<f8",
+          "sha256": "7f1057d9aeb34838598e5feebf60fcb34244c54d252cc2f1621508cf00977e20",
+          "shape": [
+            5,
+            64
+          ]
+        }
+      },
+      "description": "5 iid N(0,1) processes (null behaviour, symmetry, bias)",
+      "file": "iid_gaussian_T64.npz",
+      "id": "D1",
+      "name": "iid_gaussian",
+      "notes": "",
+      "params": {},
+      "seed": 1000064,
+      "truth": {},
+      "x_sha256": "7f1057d9aeb34838598e5feebf60fcb34244c54d252cc2f1621508cf00977e20"
+    },
+    {
+      "P": 5,
+      "T": 256,
+      "arrays": {
+        "x": {
+          "dtype": "<f8",
+          "sha256": "3c8cd298c564f6fa9376189cf1c3ed1de837489ad880e88cda06abaf7fd6f830",
+          "shape": [
+            5,
+            256
+          ]
+        }
+      },
+      "description": "5 iid N(0,1) processes (null behaviour, symmetry, bias)",
+      "file": "iid_gaussian_T256.npz",
+      "id": "D1",
+      "name": "iid_gaussian",
+      "notes": "",
+      "params": {},
+      "seed": 1000256,
+      "truth": {},
+      "x_sha256": "3c8cd298c564f6fa9376189cf1c3ed1de837489ad880e88cda06abaf7fd6f830"
+    },
+    {
+      "P": 5,
+      "T": 1024,
+      "arrays": {
+        "x": {
+          "dtype": "<f8",
+          "sha256": "be0d7d04ec627e0419807a667e2dbe55634cda2d291fda5c97d4c8d60ca12947",
+          "shape": [
+            5,
+            1024
+          ]
+        }
+      },
+      "description": "5 iid N(0,1) processes (null behaviour, symmetry, bias)",
+      "file": "iid_gaussian_T1024.npz",
+      "id": "D1",
+      "name": "iid_gaussian",
+      "notes": "",
+      "params": {},
+      "seed": 1001024,
+      "truth": {},
+      "x_sha256": "be0d7d04ec627e0419807a667e2dbe55634cda2d291fda5c97d4c8d60ca12947"
+    },
+    {
+      "P": 5,
+      "T": 4096,
+      "arrays": {
+        "x": {
+          "dtype": "<f8",
+          "sha256": "11b3f27d03de41ded7b41417ffeb26ee9322a5b1c3e46a4f0a5ddc776d0a25e8",
+          "shape": [
+            5,
+            4096
+          ]
+        }
+      },
+      "description": "5 iid N(0,1) processes (null behaviour, symmetry, bias)",
+      "file": "iid_gaussian_T4096.npz",
+      "id": "D1",
+      "name": "iid_gaussian",
+      "notes": "",
+      "params": {},
+      "seed": 1004096,
+      "truth": {},
+      "x_sha256": "11b3f27d03de41ded7b41417ffeb26ee9322a5b1c3e46a4f0a5ddc776d0a25e8"
+    },
+    {
+      "P": 4,
+      "T": 64,
+      "arrays": {
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "pairs": {
+          "dtype": "<i8",
+          "sha256": "a1e03200f1f82ad2c1cec8795c271aaecf98f5aa2d151d2229ec5fa0c177cf77",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "rho": {
+          "dtype": "<f8",
+          "sha256": "adfbb8b35edfeb458ccd7dc171be4fdd6001bb74f08a4459358a46ca67ecdf69",
+          "shape": [
+            2
+          ]
+        },
+        "true_mi_nats": {
+          "dtype": "<f8",
+          "sha256": "24a90557b25206f3d19c94c790a1709c1dac874494879d6e8dd90ff1cc286677",
+          "shape": [
+            2
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "92d6d20a1fb22d68d81d6b08e0e09ec5114b913ba7819ae546a8b4a3868bbd7c",
+          "shape": [
+            4,
+            64
+          ]
+        }
+      },
+      "description": "Gaussian pairs (0,1) rho=0.3 and (2,3) rho=0.8, unit variance, zero mean",
+      "file": "bivariate_gaussian_T64.npz",
+      "id": "D2",
+      "name": "bivariate_gaussian",
+      "notes": "true_mi_nats = -0.5*log(1-rho^2) per pair",
+      "params": {
+        "pairs": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "rho": [
+          0.3,
+          0.8
+        ]
+      },
+      "seed": 2000064,
+      "truth": {
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "pairs": {
+          "dtype": "int64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "rho": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        },
+        "true_mi_nats": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        }
+      },
+      "x_sha256": "92d6d20a1fb22d68d81d6b08e0e09ec5114b913ba7819ae546a8b4a3868bbd7c"
+    },
+    {
+      "P": 4,
+      "T": 256,
+      "arrays": {
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "pairs": {
+          "dtype": "<i8",
+          "sha256": "a1e03200f1f82ad2c1cec8795c271aaecf98f5aa2d151d2229ec5fa0c177cf77",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "rho": {
+          "dtype": "<f8",
+          "sha256": "adfbb8b35edfeb458ccd7dc171be4fdd6001bb74f08a4459358a46ca67ecdf69",
+          "shape": [
+            2
+          ]
+        },
+        "true_mi_nats": {
+          "dtype": "<f8",
+          "sha256": "24a90557b25206f3d19c94c790a1709c1dac874494879d6e8dd90ff1cc286677",
+          "shape": [
+            2
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "72b758c0951fdbc501c0f4fadeee03cff5fbd4eea693ba4baf28f4bb339fe43a",
+          "shape": [
+            4,
+            256
+          ]
+        }
+      },
+      "description": "Gaussian pairs (0,1) rho=0.3 and (2,3) rho=0.8, unit variance, zero mean",
+      "file": "bivariate_gaussian_T256.npz",
+      "id": "D2",
+      "name": "bivariate_gaussian",
+      "notes": "true_mi_nats = -0.5*log(1-rho^2) per pair",
+      "params": {
+        "pairs": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "rho": [
+          0.3,
+          0.8
+        ]
+      },
+      "seed": 2000256,
+      "truth": {
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "pairs": {
+          "dtype": "int64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "rho": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        },
+        "true_mi_nats": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        }
+      },
+      "x_sha256": "72b758c0951fdbc501c0f4fadeee03cff5fbd4eea693ba4baf28f4bb339fe43a"
+    },
+    {
+      "P": 4,
+      "T": 1024,
+      "arrays": {
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "pairs": {
+          "dtype": "<i8",
+          "sha256": "a1e03200f1f82ad2c1cec8795c271aaecf98f5aa2d151d2229ec5fa0c177cf77",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "rho": {
+          "dtype": "<f8",
+          "sha256": "adfbb8b35edfeb458ccd7dc171be4fdd6001bb74f08a4459358a46ca67ecdf69",
+          "shape": [
+            2
+          ]
+        },
+        "true_mi_nats": {
+          "dtype": "<f8",
+          "sha256": "24a90557b25206f3d19c94c790a1709c1dac874494879d6e8dd90ff1cc286677",
+          "shape": [
+            2
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "50c8421ef24093f5c453fb17d429a0615849d7fd67ee760843b9c81a9a36b5c0",
+          "shape": [
+            4,
+            1024
+          ]
+        }
+      },
+      "description": "Gaussian pairs (0,1) rho=0.3 and (2,3) rho=0.8, unit variance, zero mean",
+      "file": "bivariate_gaussian_T1024.npz",
+      "id": "D2",
+      "name": "bivariate_gaussian",
+      "notes": "true_mi_nats = -0.5*log(1-rho^2) per pair",
+      "params": {
+        "pairs": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "rho": [
+          0.3,
+          0.8
+        ]
+      },
+      "seed": 2001024,
+      "truth": {
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "pairs": {
+          "dtype": "int64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "rho": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        },
+        "true_mi_nats": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        }
+      },
+      "x_sha256": "50c8421ef24093f5c453fb17d429a0615849d7fd67ee760843b9c81a9a36b5c0"
+    },
+    {
+      "P": 4,
+      "T": 4096,
+      "arrays": {
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "pairs": {
+          "dtype": "<i8",
+          "sha256": "a1e03200f1f82ad2c1cec8795c271aaecf98f5aa2d151d2229ec5fa0c177cf77",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "rho": {
+          "dtype": "<f8",
+          "sha256": "adfbb8b35edfeb458ccd7dc171be4fdd6001bb74f08a4459358a46ca67ecdf69",
+          "shape": [
+            2
+          ]
+        },
+        "true_mi_nats": {
+          "dtype": "<f8",
+          "sha256": "24a90557b25206f3d19c94c790a1709c1dac874494879d6e8dd90ff1cc286677",
+          "shape": [
+            2
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "f720e8bde50d5f9b81a45dcb4e0950d35621cbcceed181e15fa3dacafaea42e4",
+          "shape": [
+            4,
+            4096
+          ]
+        }
+      },
+      "description": "Gaussian pairs (0,1) rho=0.3 and (2,3) rho=0.8, unit variance, zero mean",
+      "file": "bivariate_gaussian_T4096.npz",
+      "id": "D2",
+      "name": "bivariate_gaussian",
+      "notes": "true_mi_nats = -0.5*log(1-rho^2) per pair",
+      "params": {
+        "pairs": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ]
+        ],
+        "rho": [
+          0.3,
+          0.8
+        ]
+      },
+      "seed": 2004096,
+      "truth": {
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "pairs": {
+          "dtype": "int64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "rho": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        },
+        "true_mi_nats": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        }
+      },
+      "x_sha256": "f720e8bde50d5f9b81a45dcb4e0950d35621cbcceed181e15fa3dacafaea42e4"
+    },
+    {
+      "P": 4,
+      "T": 64,
+      "arrays": {
+        "corr_true": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "3c29e9671ba046e446e1f9de55b007b9284dc6adac68303983e92d2efff7aac0",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "offset": {
+          "dtype": "<f8",
+          "sha256": "90deb1c006237acad37f4934bc27d7f1849e0de0b367135381604f8602a190bc",
+          "shape": [
+            4
+          ]
+        },
+        "scale": {
+          "dtype": "<f8",
+          "sha256": "bcc7d7ce747cd7edea53a7a7b788d3b2ad787bb15c229a2e40aae1c028f7963f",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "ca840945ee15c1b6b22e1933ee899167d65b3b2d19bb3fe609399a94c49e5cf1",
+          "shape": [
+            4,
+            64
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 (same draw) times per-process scale plus offset",
+      "file": "scaled_offset_T64.npz",
+      "id": "D3",
+      "name": "scaled_offset",
+      "notes": "x = scale*D2 + offset",
+      "own_seed": 3000064,
+      "params": {
+        "offset": [
+          0.0,
+          1.0,
+          -2.0,
+          5.0
+        ],
+        "scale": [
+          0.2,
+          2.0,
+          5.0,
+          10.0
+        ]
+      },
+      "seed": 2000064,
+      "truth": {
+        "corr_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "offset": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "scale": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "ca840945ee15c1b6b22e1933ee899167d65b3b2d19bb3fe609399a94c49e5cf1"
+    },
+    {
+      "P": 4,
+      "T": 256,
+      "arrays": {
+        "corr_true": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "3c29e9671ba046e446e1f9de55b007b9284dc6adac68303983e92d2efff7aac0",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "offset": {
+          "dtype": "<f8",
+          "sha256": "90deb1c006237acad37f4934bc27d7f1849e0de0b367135381604f8602a190bc",
+          "shape": [
+            4
+          ]
+        },
+        "scale": {
+          "dtype": "<f8",
+          "sha256": "bcc7d7ce747cd7edea53a7a7b788d3b2ad787bb15c229a2e40aae1c028f7963f",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "4c77f22f46280a3229fe3b99b64fdd7fd9ca1b340d2cef02a1a89a6f8306be40",
+          "shape": [
+            4,
+            256
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 (same draw) times per-process scale plus offset",
+      "file": "scaled_offset_T256.npz",
+      "id": "D3",
+      "name": "scaled_offset",
+      "notes": "x = scale*D2 + offset",
+      "own_seed": 3000256,
+      "params": {
+        "offset": [
+          0.0,
+          1.0,
+          -2.0,
+          5.0
+        ],
+        "scale": [
+          0.2,
+          2.0,
+          5.0,
+          10.0
+        ]
+      },
+      "seed": 2000256,
+      "truth": {
+        "corr_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "offset": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "scale": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "4c77f22f46280a3229fe3b99b64fdd7fd9ca1b340d2cef02a1a89a6f8306be40"
+    },
+    {
+      "P": 4,
+      "T": 1024,
+      "arrays": {
+        "corr_true": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "3c29e9671ba046e446e1f9de55b007b9284dc6adac68303983e92d2efff7aac0",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "offset": {
+          "dtype": "<f8",
+          "sha256": "90deb1c006237acad37f4934bc27d7f1849e0de0b367135381604f8602a190bc",
+          "shape": [
+            4
+          ]
+        },
+        "scale": {
+          "dtype": "<f8",
+          "sha256": "bcc7d7ce747cd7edea53a7a7b788d3b2ad787bb15c229a2e40aae1c028f7963f",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "1103e50f2b758335a44477445c40bfa97ae9c6e46e1b6628f909167a48b20439",
+          "shape": [
+            4,
+            1024
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 (same draw) times per-process scale plus offset",
+      "file": "scaled_offset_T1024.npz",
+      "id": "D3",
+      "name": "scaled_offset",
+      "notes": "x = scale*D2 + offset",
+      "own_seed": 3001024,
+      "params": {
+        "offset": [
+          0.0,
+          1.0,
+          -2.0,
+          5.0
+        ],
+        "scale": [
+          0.2,
+          2.0,
+          5.0,
+          10.0
+        ]
+      },
+      "seed": 2001024,
+      "truth": {
+        "corr_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "offset": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "scale": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "1103e50f2b758335a44477445c40bfa97ae9c6e46e1b6628f909167a48b20439"
+    },
+    {
+      "P": 4,
+      "T": 4096,
+      "arrays": {
+        "corr_true": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "3c29e9671ba046e446e1f9de55b007b9284dc6adac68303983e92d2efff7aac0",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "offset": {
+          "dtype": "<f8",
+          "sha256": "90deb1c006237acad37f4934bc27d7f1849e0de0b367135381604f8602a190bc",
+          "shape": [
+            4
+          ]
+        },
+        "scale": {
+          "dtype": "<f8",
+          "sha256": "bcc7d7ce747cd7edea53a7a7b788d3b2ad787bb15c229a2e40aae1c028f7963f",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "d124e93075e7d47b059399626c5da687b7953354eb615cf2a8ae4919e8c55d24",
+          "shape": [
+            4,
+            4096
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 (same draw) times per-process scale plus offset",
+      "file": "scaled_offset_T4096.npz",
+      "id": "D3",
+      "name": "scaled_offset",
+      "notes": "x = scale*D2 + offset",
+      "own_seed": 3004096,
+      "params": {
+        "offset": [
+          0.0,
+          1.0,
+          -2.0,
+          5.0
+        ],
+        "scale": [
+          0.2,
+          2.0,
+          5.0,
+          10.0
+        ]
+      },
+      "seed": 2004096,
+      "truth": {
+        "corr_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "offset": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "scale": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "d124e93075e7d47b059399626c5da687b7953354eb615cf2a8ae4919e8c55d24"
+    },
+    {
+      "P": 4,
+      "T": 64,
+      "arrays": {
+        "cov_true_detrended": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "slope": {
+          "dtype": "<f8",
+          "sha256": "a579f7f492a09c2eaa0cd8116017c6ac54549d434e870bc0e002fe7f3dcf5f86",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "48f76ce1d4399ddd0db3e472a1fed4772067c7e950fa4070cd6b7ac26dee22bd",
+          "shape": [
+            4,
+            64
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 (same draw) plus linear trends slope*t, t = 0..T-1",
+      "file": "trending_T64.npz",
+      "id": "D4",
+      "name": "trending",
+      "notes": "",
+      "own_seed": 4000064,
+      "params": {
+        "slope": [
+          0.0,
+          0.05,
+          -0.02,
+          0.1
+        ]
+      },
+      "seed": 2000064,
+      "truth": {
+        "cov_true_detrended": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "slope": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "48f76ce1d4399ddd0db3e472a1fed4772067c7e950fa4070cd6b7ac26dee22bd"
+    },
+    {
+      "P": 4,
+      "T": 256,
+      "arrays": {
+        "cov_true_detrended": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "slope": {
+          "dtype": "<f8",
+          "sha256": "a579f7f492a09c2eaa0cd8116017c6ac54549d434e870bc0e002fe7f3dcf5f86",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "caef86991107cbc969b399636ec58cf587b134e40c9c5c586f852a563b31a184",
+          "shape": [
+            4,
+            256
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 (same draw) plus linear trends slope*t, t = 0..T-1",
+      "file": "trending_T256.npz",
+      "id": "D4",
+      "name": "trending",
+      "notes": "",
+      "own_seed": 4000256,
+      "params": {
+        "slope": [
+          0.0,
+          0.05,
+          -0.02,
+          0.1
+        ]
+      },
+      "seed": 2000256,
+      "truth": {
+        "cov_true_detrended": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "slope": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "caef86991107cbc969b399636ec58cf587b134e40c9c5c586f852a563b31a184"
+    },
+    {
+      "P": 4,
+      "T": 1024,
+      "arrays": {
+        "cov_true_detrended": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "slope": {
+          "dtype": "<f8",
+          "sha256": "a579f7f492a09c2eaa0cd8116017c6ac54549d434e870bc0e002fe7f3dcf5f86",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "e37c8e01bc67b3dbee0b3d1cc4bcbcdbbd0a8f34e9e2516d2ed9b13ebceb6c30",
+          "shape": [
+            4,
+            1024
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 (same draw) plus linear trends slope*t, t = 0..T-1",
+      "file": "trending_T1024.npz",
+      "id": "D4",
+      "name": "trending",
+      "notes": "",
+      "own_seed": 4001024,
+      "params": {
+        "slope": [
+          0.0,
+          0.05,
+          -0.02,
+          0.1
+        ]
+      },
+      "seed": 2001024,
+      "truth": {
+        "cov_true_detrended": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "slope": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "e37c8e01bc67b3dbee0b3d1cc4bcbcdbbd0a8f34e9e2516d2ed9b13ebceb6c30"
+    },
+    {
+      "P": 4,
+      "T": 4096,
+      "arrays": {
+        "cov_true_detrended": {
+          "dtype": "<f8",
+          "sha256": "4f35f4605b78433a7e83349e0cffebbea37a76db035d21dd7b5f6efbfe172572",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "slope": {
+          "dtype": "<f8",
+          "sha256": "a579f7f492a09c2eaa0cd8116017c6ac54549d434e870bc0e002fe7f3dcf5f86",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "ba7c19dbb652c5654b4022c51a14bd0f8bfca6a1dcf8980b40a3390b007828dd",
+          "shape": [
+            4,
+            4096
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 (same draw) plus linear trends slope*t, t = 0..T-1",
+      "file": "trending_T4096.npz",
+      "id": "D4",
+      "name": "trending",
+      "notes": "",
+      "own_seed": 4004096,
+      "params": {
+        "slope": [
+          0.0,
+          0.05,
+          -0.02,
+          0.1
+        ]
+      },
+      "seed": 2004096,
+      "truth": {
+        "cov_true_detrended": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "slope": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "ba7c19dbb652c5654b4022c51a14bd0f8bfca6a1dcf8980b40a3390b007828dd"
+    },
+    {
+      "P": 2,
+      "T": 64,
+      "arrays": {
+        "A1": {
+          "dtype": "<f8",
+          "sha256": "a287670041f3b410dcc689f1dbebc61ce0d9e774d7c3575ed829186afde4e273",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "A2": {
+          "dtype": "<f8",
+          "sha256": "07401f3c3477f021912542fea3257789bede1a5e6ec54089d723e26c23b7b769",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Gamma0": {
+          "dtype": "<f8",
+          "sha256": "bb4a8430b9e542503c4d390fc2b8c20a3d93a009ba01df03178a364ff7e4adbe",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "S_true": {
+          "dtype": "<c16",
+          "sha256": "ffb239f0ee093289ad13c19d2d5a1025e22fc588978cc37403149ac3a76baef8",
+          "shape": [
+            513,
+            2,
+            2
+          ]
+        },
+        "Sigma": {
+          "dtype": "<f8",
+          "sha256": "ab38653050440a96d8c5668ccebc7b08432a3dfee8bf201a607a62543550ea87",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "freqs": {
+          "dtype": "<f8",
+          "sha256": "0cf71fcd60d41fe812c9ea76e97c1e5aec87b537be4b93b3e3d35bf24149bf1c",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "88e89967e445b04c8b9861844d0930f1a5061435325b37c88f38f08847f9088a",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "045196353024736531700321cd5b7f5491fd12610cce07fb2940229ac9d00e38",
+          "shape": [
+            2,
+            64
+          ]
+        }
+      },
+      "description": "stable VAR(2), X->Y only (lag1 0.5, lag2 -0.2)",
+      "file": "var2_bivariate_T64.npz",
+      "id": "D5",
+      "name": "var2_bivariate",
+      "notes": "x_t = A1 x_{t-1} + A2 x_{t-2} + e_t; A[i,j] = source j -> target i; S_true(f) = H Sigma H^H, two-sided, integral over [-1/2,1/2] = Gamma0",
+      "params": {
+        "A1": [
+          [
+            0.5,
+            0.0
+          ],
+          [
+            0.5,
+            0.4
+          ]
+        ],
+        "A2": [
+          [
+            -0.3,
+            0.0
+          ],
+          [
+            -0.2,
+            -0.2
+          ]
+        ],
+        "Sigma_diag": [
+          1.0,
+          0.8
+        ],
+        "burn_in": 1000,
+        "n_freqs": 513
+      },
+      "seed": 51000064,
+      "truth": {
+        "A1": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "A2": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Gamma0": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "S_true": {
+          "dtype": "complex128",
+          "shape": [
+            513,
+            2,
+            2
+          ]
+        },
+        "Sigma": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "freqs": {
+          "dtype": "float64",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "045196353024736531700321cd5b7f5491fd12610cce07fb2940229ac9d00e38"
+    },
+    {
+      "P": 2,
+      "T": 256,
+      "arrays": {
+        "A1": {
+          "dtype": "<f8",
+          "sha256": "a287670041f3b410dcc689f1dbebc61ce0d9e774d7c3575ed829186afde4e273",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "A2": {
+          "dtype": "<f8",
+          "sha256": "07401f3c3477f021912542fea3257789bede1a5e6ec54089d723e26c23b7b769",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Gamma0": {
+          "dtype": "<f8",
+          "sha256": "bb4a8430b9e542503c4d390fc2b8c20a3d93a009ba01df03178a364ff7e4adbe",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "S_true": {
+          "dtype": "<c16",
+          "sha256": "ffb239f0ee093289ad13c19d2d5a1025e22fc588978cc37403149ac3a76baef8",
+          "shape": [
+            513,
+            2,
+            2
+          ]
+        },
+        "Sigma": {
+          "dtype": "<f8",
+          "sha256": "ab38653050440a96d8c5668ccebc7b08432a3dfee8bf201a607a62543550ea87",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "freqs": {
+          "dtype": "<f8",
+          "sha256": "0cf71fcd60d41fe812c9ea76e97c1e5aec87b537be4b93b3e3d35bf24149bf1c",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "88e89967e445b04c8b9861844d0930f1a5061435325b37c88f38f08847f9088a",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "db3653b3c8aa52a0ed6b4a5ae24a08d220a97750cbf00889d11d540c0f809753",
+          "shape": [
+            2,
+            256
+          ]
+        }
+      },
+      "description": "stable VAR(2), X->Y only (lag1 0.5, lag2 -0.2)",
+      "file": "var2_bivariate_T256.npz",
+      "id": "D5",
+      "name": "var2_bivariate",
+      "notes": "x_t = A1 x_{t-1} + A2 x_{t-2} + e_t; A[i,j] = source j -> target i; S_true(f) = H Sigma H^H, two-sided, integral over [-1/2,1/2] = Gamma0",
+      "params": {
+        "A1": [
+          [
+            0.5,
+            0.0
+          ],
+          [
+            0.5,
+            0.4
+          ]
+        ],
+        "A2": [
+          [
+            -0.3,
+            0.0
+          ],
+          [
+            -0.2,
+            -0.2
+          ]
+        ],
+        "Sigma_diag": [
+          1.0,
+          0.8
+        ],
+        "burn_in": 1000,
+        "n_freqs": 513
+      },
+      "seed": 51000256,
+      "truth": {
+        "A1": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "A2": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Gamma0": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "S_true": {
+          "dtype": "complex128",
+          "shape": [
+            513,
+            2,
+            2
+          ]
+        },
+        "Sigma": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "freqs": {
+          "dtype": "float64",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "db3653b3c8aa52a0ed6b4a5ae24a08d220a97750cbf00889d11d540c0f809753"
+    },
+    {
+      "P": 2,
+      "T": 1024,
+      "arrays": {
+        "A1": {
+          "dtype": "<f8",
+          "sha256": "a287670041f3b410dcc689f1dbebc61ce0d9e774d7c3575ed829186afde4e273",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "A2": {
+          "dtype": "<f8",
+          "sha256": "07401f3c3477f021912542fea3257789bede1a5e6ec54089d723e26c23b7b769",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Gamma0": {
+          "dtype": "<f8",
+          "sha256": "bb4a8430b9e542503c4d390fc2b8c20a3d93a009ba01df03178a364ff7e4adbe",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "S_true": {
+          "dtype": "<c16",
+          "sha256": "ffb239f0ee093289ad13c19d2d5a1025e22fc588978cc37403149ac3a76baef8",
+          "shape": [
+            513,
+            2,
+            2
+          ]
+        },
+        "Sigma": {
+          "dtype": "<f8",
+          "sha256": "ab38653050440a96d8c5668ccebc7b08432a3dfee8bf201a607a62543550ea87",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "freqs": {
+          "dtype": "<f8",
+          "sha256": "0cf71fcd60d41fe812c9ea76e97c1e5aec87b537be4b93b3e3d35bf24149bf1c",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "88e89967e445b04c8b9861844d0930f1a5061435325b37c88f38f08847f9088a",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "aa60e627a0cebe4bc7a81db20a8472a4f80e3ea2a6819d2d99b3d52d22c61352",
+          "shape": [
+            2,
+            1024
+          ]
+        }
+      },
+      "description": "stable VAR(2), X->Y only (lag1 0.5, lag2 -0.2)",
+      "file": "var2_bivariate_T1024.npz",
+      "id": "D5",
+      "name": "var2_bivariate",
+      "notes": "x_t = A1 x_{t-1} + A2 x_{t-2} + e_t; A[i,j] = source j -> target i; S_true(f) = H Sigma H^H, two-sided, integral over [-1/2,1/2] = Gamma0",
+      "params": {
+        "A1": [
+          [
+            0.5,
+            0.0
+          ],
+          [
+            0.5,
+            0.4
+          ]
+        ],
+        "A2": [
+          [
+            -0.3,
+            0.0
+          ],
+          [
+            -0.2,
+            -0.2
+          ]
+        ],
+        "Sigma_diag": [
+          1.0,
+          0.8
+        ],
+        "burn_in": 1000,
+        "n_freqs": 513
+      },
+      "seed": 51001024,
+      "truth": {
+        "A1": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "A2": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Gamma0": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "S_true": {
+          "dtype": "complex128",
+          "shape": [
+            513,
+            2,
+            2
+          ]
+        },
+        "Sigma": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "freqs": {
+          "dtype": "float64",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "aa60e627a0cebe4bc7a81db20a8472a4f80e3ea2a6819d2d99b3d52d22c61352"
+    },
+    {
+      "P": 2,
+      "T": 4096,
+      "arrays": {
+        "A1": {
+          "dtype": "<f8",
+          "sha256": "a287670041f3b410dcc689f1dbebc61ce0d9e774d7c3575ed829186afde4e273",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "A2": {
+          "dtype": "<f8",
+          "sha256": "07401f3c3477f021912542fea3257789bede1a5e6ec54089d723e26c23b7b769",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Gamma0": {
+          "dtype": "<f8",
+          "sha256": "bb4a8430b9e542503c4d390fc2b8c20a3d93a009ba01df03178a364ff7e4adbe",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "S_true": {
+          "dtype": "<c16",
+          "sha256": "ffb239f0ee093289ad13c19d2d5a1025e22fc588978cc37403149ac3a76baef8",
+          "shape": [
+            513,
+            2,
+            2
+          ]
+        },
+        "Sigma": {
+          "dtype": "<f8",
+          "sha256": "ab38653050440a96d8c5668ccebc7b08432a3dfee8bf201a607a62543550ea87",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "freqs": {
+          "dtype": "<f8",
+          "sha256": "0cf71fcd60d41fe812c9ea76e97c1e5aec87b537be4b93b3e3d35bf24149bf1c",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "88e89967e445b04c8b9861844d0930f1a5061435325b37c88f38f08847f9088a",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "20a3ad86009e79468084d98f3af901b6e60445e04da4de55fee3d612ea453e88",
+          "shape": [
+            2,
+            4096
+          ]
+        }
+      },
+      "description": "stable VAR(2), X->Y only (lag1 0.5, lag2 -0.2)",
+      "file": "var2_bivariate_T4096.npz",
+      "id": "D5",
+      "name": "var2_bivariate",
+      "notes": "x_t = A1 x_{t-1} + A2 x_{t-2} + e_t; A[i,j] = source j -> target i; S_true(f) = H Sigma H^H, two-sided, integral over [-1/2,1/2] = Gamma0",
+      "params": {
+        "A1": [
+          [
+            0.5,
+            0.0
+          ],
+          [
+            0.5,
+            0.4
+          ]
+        ],
+        "A2": [
+          [
+            -0.3,
+            0.0
+          ],
+          [
+            -0.2,
+            -0.2
+          ]
+        ],
+        "Sigma_diag": [
+          1.0,
+          0.8
+        ],
+        "burn_in": 1000,
+        "n_freqs": 513
+      },
+      "seed": 51004096,
+      "truth": {
+        "A1": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "A2": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Gamma0": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "S_true": {
+          "dtype": "complex128",
+          "shape": [
+            513,
+            2,
+            2
+          ]
+        },
+        "Sigma": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "freqs": {
+          "dtype": "float64",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "20a3ad86009e79468084d98f3af901b6e60445e04da4de55fee3d612ea453e88"
+    },
+    {
+      "P": 3,
+      "T": 64,
+      "arrays": {
+        "A1": {
+          "dtype": "<f8",
+          "sha256": "4d5c4e249eed54f0cc3f61ed18178da75511bc732200f1fac5c5bdbdd8069854",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "A2": {
+          "dtype": "<f8",
+          "sha256": "d46b104d274f470376a15f1c59e4fbcbe45d623d5e64c1307940318507a2d2d2",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "Gamma0": {
+          "dtype": "<f8",
+          "sha256": "ba6ffb0e511556fdc5751276aed6a088372f384b6215427fc9e32ddba409aa2a",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "S_true": {
+          "dtype": "<c16",
+          "sha256": "6274e6e21a0a51857b1ea40065aa8639e1492950fd9b6dcf2cb79ea3431b720f",
+          "shape": [
+            513,
+            3,
+            3
+          ]
+        },
+        "Sigma": {
+          "dtype": "<f8",
+          "sha256": "700c234560330824fc1431f15633da985076214aa36de5542b5c0a6022c8f63c",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "freqs": {
+          "dtype": "<f8",
+          "sha256": "0cf71fcd60d41fe812c9ea76e97c1e5aec87b537be4b93b3e3d35bf24149bf1c",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "88e89967e445b04c8b9861844d0930f1a5061435325b37c88f38f08847f9088a",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "ad8e239f8e4c88e4f3d8fcb655d2fe83e3e8bfca95e98b39d37783013621ebcb",
+          "shape": [
+            3,
+            64
+          ]
+        }
+      },
+      "description": "stable VAR(2) chain X->Y->Z, no direct X->Z",
+      "file": "var2_chain_T64.npz",
+      "id": "D5",
+      "name": "var2_chain",
+      "notes": "x_t = A1 x_{t-1} + A2 x_{t-2} + e_t; A[i,j] = source j -> target i; S_true(f) = H Sigma H^H, two-sided, integral over [-1/2,1/2] = Gamma0",
+      "params": {
+        "A1": [
+          [
+            0.5,
+            0.0,
+            0.0
+          ],
+          [
+            0.5,
+            0.4,
+            0.0
+          ],
+          [
+            0.0,
+            0.5,
+            0.3
+          ]
+        ],
+        "A2": [
+          [
+            -0.3,
+            0.0,
+            0.0
+          ],
+          [
+            -0.2,
+            -0.2,
+            0.0
+          ],
+          [
+            0.0,
+            -0.2,
+            -0.1
+          ]
+        ],
+        "Sigma_diag": [
+          1.0,
+          0.8,
+          0.6
+        ],
+        "burn_in": 1000,
+        "n_freqs": 513
+      },
+      "seed": 52000064,
+      "truth": {
+        "A1": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "A2": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "Gamma0": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "S_true": {
+          "dtype": "complex128",
+          "shape": [
+            513,
+            3,
+            3
+          ]
+        },
+        "Sigma": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "freqs": {
+          "dtype": "float64",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "ad8e239f8e4c88e4f3d8fcb655d2fe83e3e8bfca95e98b39d37783013621ebcb"
+    },
+    {
+      "P": 3,
+      "T": 256,
+      "arrays": {
+        "A1": {
+          "dtype": "<f8",
+          "sha256": "4d5c4e249eed54f0cc3f61ed18178da75511bc732200f1fac5c5bdbdd8069854",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "A2": {
+          "dtype": "<f8",
+          "sha256": "d46b104d274f470376a15f1c59e4fbcbe45d623d5e64c1307940318507a2d2d2",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "Gamma0": {
+          "dtype": "<f8",
+          "sha256": "ba6ffb0e511556fdc5751276aed6a088372f384b6215427fc9e32ddba409aa2a",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "S_true": {
+          "dtype": "<c16",
+          "sha256": "6274e6e21a0a51857b1ea40065aa8639e1492950fd9b6dcf2cb79ea3431b720f",
+          "shape": [
+            513,
+            3,
+            3
+          ]
+        },
+        "Sigma": {
+          "dtype": "<f8",
+          "sha256": "700c234560330824fc1431f15633da985076214aa36de5542b5c0a6022c8f63c",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "freqs": {
+          "dtype": "<f8",
+          "sha256": "0cf71fcd60d41fe812c9ea76e97c1e5aec87b537be4b93b3e3d35bf24149bf1c",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "88e89967e445b04c8b9861844d0930f1a5061435325b37c88f38f08847f9088a",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "e92d9eadb2e92d627bc1d195ea71e8feeaff8fbdd4b0bd2058165cf189f8e836",
+          "shape": [
+            3,
+            256
+          ]
+        }
+      },
+      "description": "stable VAR(2) chain X->Y->Z, no direct X->Z",
+      "file": "var2_chain_T256.npz",
+      "id": "D5",
+      "name": "var2_chain",
+      "notes": "x_t = A1 x_{t-1} + A2 x_{t-2} + e_t; A[i,j] = source j -> target i; S_true(f) = H Sigma H^H, two-sided, integral over [-1/2,1/2] = Gamma0",
+      "params": {
+        "A1": [
+          [
+            0.5,
+            0.0,
+            0.0
+          ],
+          [
+            0.5,
+            0.4,
+            0.0
+          ],
+          [
+            0.0,
+            0.5,
+            0.3
+          ]
+        ],
+        "A2": [
+          [
+            -0.3,
+            0.0,
+            0.0
+          ],
+          [
+            -0.2,
+            -0.2,
+            0.0
+          ],
+          [
+            0.0,
+            -0.2,
+            -0.1
+          ]
+        ],
+        "Sigma_diag": [
+          1.0,
+          0.8,
+          0.6
+        ],
+        "burn_in": 1000,
+        "n_freqs": 513
+      },
+      "seed": 52000256,
+      "truth": {
+        "A1": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "A2": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "Gamma0": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "S_true": {
+          "dtype": "complex128",
+          "shape": [
+            513,
+            3,
+            3
+          ]
+        },
+        "Sigma": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "freqs": {
+          "dtype": "float64",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "e92d9eadb2e92d627bc1d195ea71e8feeaff8fbdd4b0bd2058165cf189f8e836"
+    },
+    {
+      "P": 3,
+      "T": 1024,
+      "arrays": {
+        "A1": {
+          "dtype": "<f8",
+          "sha256": "4d5c4e249eed54f0cc3f61ed18178da75511bc732200f1fac5c5bdbdd8069854",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "A2": {
+          "dtype": "<f8",
+          "sha256": "d46b104d274f470376a15f1c59e4fbcbe45d623d5e64c1307940318507a2d2d2",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "Gamma0": {
+          "dtype": "<f8",
+          "sha256": "ba6ffb0e511556fdc5751276aed6a088372f384b6215427fc9e32ddba409aa2a",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "S_true": {
+          "dtype": "<c16",
+          "sha256": "6274e6e21a0a51857b1ea40065aa8639e1492950fd9b6dcf2cb79ea3431b720f",
+          "shape": [
+            513,
+            3,
+            3
+          ]
+        },
+        "Sigma": {
+          "dtype": "<f8",
+          "sha256": "700c234560330824fc1431f15633da985076214aa36de5542b5c0a6022c8f63c",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "freqs": {
+          "dtype": "<f8",
+          "sha256": "0cf71fcd60d41fe812c9ea76e97c1e5aec87b537be4b93b3e3d35bf24149bf1c",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "88e89967e445b04c8b9861844d0930f1a5061435325b37c88f38f08847f9088a",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "c70191bfba806dc3b7af6e58c5911dbe3e8d70345b8113e09dec264015e40969",
+          "shape": [
+            3,
+            1024
+          ]
+        }
+      },
+      "description": "stable VAR(2) chain X->Y->Z, no direct X->Z",
+      "file": "var2_chain_T1024.npz",
+      "id": "D5",
+      "name": "var2_chain",
+      "notes": "x_t = A1 x_{t-1} + A2 x_{t-2} + e_t; A[i,j] = source j -> target i; S_true(f) = H Sigma H^H, two-sided, integral over [-1/2,1/2] = Gamma0",
+      "params": {
+        "A1": [
+          [
+            0.5,
+            0.0,
+            0.0
+          ],
+          [
+            0.5,
+            0.4,
+            0.0
+          ],
+          [
+            0.0,
+            0.5,
+            0.3
+          ]
+        ],
+        "A2": [
+          [
+            -0.3,
+            0.0,
+            0.0
+          ],
+          [
+            -0.2,
+            -0.2,
+            0.0
+          ],
+          [
+            0.0,
+            -0.2,
+            -0.1
+          ]
+        ],
+        "Sigma_diag": [
+          1.0,
+          0.8,
+          0.6
+        ],
+        "burn_in": 1000,
+        "n_freqs": 513
+      },
+      "seed": 52001024,
+      "truth": {
+        "A1": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "A2": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "Gamma0": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "S_true": {
+          "dtype": "complex128",
+          "shape": [
+            513,
+            3,
+            3
+          ]
+        },
+        "Sigma": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "freqs": {
+          "dtype": "float64",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "c70191bfba806dc3b7af6e58c5911dbe3e8d70345b8113e09dec264015e40969"
+    },
+    {
+      "P": 3,
+      "T": 4096,
+      "arrays": {
+        "A1": {
+          "dtype": "<f8",
+          "sha256": "4d5c4e249eed54f0cc3f61ed18178da75511bc732200f1fac5c5bdbdd8069854",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "A2": {
+          "dtype": "<f8",
+          "sha256": "d46b104d274f470376a15f1c59e4fbcbe45d623d5e64c1307940318507a2d2d2",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "Gamma0": {
+          "dtype": "<f8",
+          "sha256": "ba6ffb0e511556fdc5751276aed6a088372f384b6215427fc9e32ddba409aa2a",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "S_true": {
+          "dtype": "<c16",
+          "sha256": "6274e6e21a0a51857b1ea40065aa8639e1492950fd9b6dcf2cb79ea3431b720f",
+          "shape": [
+            513,
+            3,
+            3
+          ]
+        },
+        "Sigma": {
+          "dtype": "<f8",
+          "sha256": "700c234560330824fc1431f15633da985076214aa36de5542b5c0a6022c8f63c",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "freqs": {
+          "dtype": "<f8",
+          "sha256": "0cf71fcd60d41fe812c9ea76e97c1e5aec87b537be4b93b3e3d35bf24149bf1c",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "88e89967e445b04c8b9861844d0930f1a5061435325b37c88f38f08847f9088a",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "56d87f0d408bc1f59a9078dbe6270f491a70b641998855d4916113b6bb3df8bb",
+          "shape": [
+            3,
+            4096
+          ]
+        }
+      },
+      "description": "stable VAR(2) chain X->Y->Z, no direct X->Z",
+      "file": "var2_chain_T4096.npz",
+      "id": "D5",
+      "name": "var2_chain",
+      "notes": "x_t = A1 x_{t-1} + A2 x_{t-2} + e_t; A[i,j] = source j -> target i; S_true(f) = H Sigma H^H, two-sided, integral over [-1/2,1/2] = Gamma0",
+      "params": {
+        "A1": [
+          [
+            0.5,
+            0.0,
+            0.0
+          ],
+          [
+            0.5,
+            0.4,
+            0.0
+          ],
+          [
+            0.0,
+            0.5,
+            0.3
+          ]
+        ],
+        "A2": [
+          [
+            -0.3,
+            0.0,
+            0.0
+          ],
+          [
+            -0.2,
+            -0.2,
+            0.0
+          ],
+          [
+            0.0,
+            -0.2,
+            -0.1
+          ]
+        ],
+        "Sigma_diag": [
+          1.0,
+          0.8,
+          0.6
+        ],
+        "burn_in": 1000,
+        "n_freqs": 513
+      },
+      "seed": 52004096,
+      "truth": {
+        "A1": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "A2": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "Gamma0": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "S_true": {
+          "dtype": "complex128",
+          "shape": [
+            513,
+            3,
+            3
+          ]
+        },
+        "Sigma": {
+          "dtype": "float64",
+          "shape": [
+            3,
+            3
+          ]
+        },
+        "freqs": {
+          "dtype": "float64",
+          "shape": [
+            513
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "56d87f0d408bc1f59a9078dbe6270f491a70b641998855d4916113b6bb3df8bb"
+    },
+    {
+      "P": 4,
+      "T": 64,
+      "arrays": {
+        "delay": {
+          "dtype": "<i8",
+          "sha256": "47e55ce09fae04d1f2de4ce5c05cd371d2fe5ec8e0e3fc7563ede6b75013d151",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "fc4132b2e59743806dc01e940756611f06f53dc057d7bd3a69426ef0c97da13a",
+          "shape": [
+            4,
+            64
+          ]
+        }
+      },
+      "description": "x0 white noise; x1,x2,x3 = x0 delayed by 1,3,5 samples + 0.1 noise",
+      "file": "delayed_noise_T64.npz",
+      "id": "D6",
+      "name": "delayed_noise",
+      "notes": "x_k(t) = x0(t - delay_k) + noise; x0 leads; exact (non-circular) delays",
+      "params": {
+        "delay": [
+          0,
+          1,
+          3,
+          5
+        ],
+        "noise_std": 0.1
+      },
+      "seed": 6000064,
+      "truth": {
+        "delay": {
+          "dtype": "int64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "fc4132b2e59743806dc01e940756611f06f53dc057d7bd3a69426ef0c97da13a"
+    },
+    {
+      "P": 4,
+      "T": 256,
+      "arrays": {
+        "delay": {
+          "dtype": "<i8",
+          "sha256": "47e55ce09fae04d1f2de4ce5c05cd371d2fe5ec8e0e3fc7563ede6b75013d151",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "aeffcdc897f6a8251e7efc10e19abb0ca6cfce2ac4e6f722757573a3ff8fea31",
+          "shape": [
+            4,
+            256
+          ]
+        }
+      },
+      "description": "x0 white noise; x1,x2,x3 = x0 delayed by 1,3,5 samples + 0.1 noise",
+      "file": "delayed_noise_T256.npz",
+      "id": "D6",
+      "name": "delayed_noise",
+      "notes": "x_k(t) = x0(t - delay_k) + noise; x0 leads; exact (non-circular) delays",
+      "params": {
+        "delay": [
+          0,
+          1,
+          3,
+          5
+        ],
+        "noise_std": 0.1
+      },
+      "seed": 6000256,
+      "truth": {
+        "delay": {
+          "dtype": "int64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "aeffcdc897f6a8251e7efc10e19abb0ca6cfce2ac4e6f722757573a3ff8fea31"
+    },
+    {
+      "P": 4,
+      "T": 1024,
+      "arrays": {
+        "delay": {
+          "dtype": "<i8",
+          "sha256": "47e55ce09fae04d1f2de4ce5c05cd371d2fe5ec8e0e3fc7563ede6b75013d151",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "0208e884f1f0f2a9e52a09632b448fb0d1ecc8cc4767a7b26f7e7994f088414c",
+          "shape": [
+            4,
+            1024
+          ]
+        }
+      },
+      "description": "x0 white noise; x1,x2,x3 = x0 delayed by 1,3,5 samples + 0.1 noise",
+      "file": "delayed_noise_T1024.npz",
+      "id": "D6",
+      "name": "delayed_noise",
+      "notes": "x_k(t) = x0(t - delay_k) + noise; x0 leads; exact (non-circular) delays",
+      "params": {
+        "delay": [
+          0,
+          1,
+          3,
+          5
+        ],
+        "noise_std": 0.1
+      },
+      "seed": 6001024,
+      "truth": {
+        "delay": {
+          "dtype": "int64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "0208e884f1f0f2a9e52a09632b448fb0d1ecc8cc4767a7b26f7e7994f088414c"
+    },
+    {
+      "P": 4,
+      "T": 4096,
+      "arrays": {
+        "delay": {
+          "dtype": "<i8",
+          "sha256": "47e55ce09fae04d1f2de4ce5c05cd371d2fe5ec8e0e3fc7563ede6b75013d151",
+          "shape": [
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "2fd9dc10ec491b8fc721b65e5ad91e203828d1ba812b7dc422bf2d25c2b63efc",
+          "shape": [
+            4,
+            4096
+          ]
+        }
+      },
+      "description": "x0 white noise; x1,x2,x3 = x0 delayed by 1,3,5 samples + 0.1 noise",
+      "file": "delayed_noise_T4096.npz",
+      "id": "D6",
+      "name": "delayed_noise",
+      "notes": "x_k(t) = x0(t - delay_k) + noise; x0 leads; exact (non-circular) delays",
+      "params": {
+        "delay": [
+          0,
+          1,
+          3,
+          5
+        ],
+        "noise_std": 0.1
+      },
+      "seed": 6004096,
+      "truth": {
+        "delay": {
+          "dtype": "int64",
+          "shape": [
+            4
+          ]
+        }
+      },
+      "x_sha256": "2fd9dc10ec491b8fc721b65e5ad91e203828d1ba812b7dc422bf2d25c2b63efc"
+    },
+    {
+      "P": 3,
+      "T": 64,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "04cfdaf837cef95d09cabd77f861e3f7fce9d21444e6f3e0af6886cc34f8cd4b",
+          "shape": [
+            3,
+            64
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.1 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.1_T64.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.1",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.1,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 71000064,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "04cfdaf837cef95d09cabd77f861e3f7fce9d21444e6f3e0af6886cc34f8cd4b"
+    },
+    {
+      "P": 3,
+      "T": 256,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "57237f2ae4be8270b8b22226279ea49ed2f0979ed9c057476171dce5122f8549",
+          "shape": [
+            3,
+            256
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.1 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.1_T256.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.1",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.1,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 71000256,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "57237f2ae4be8270b8b22226279ea49ed2f0979ed9c057476171dce5122f8549"
+    },
+    {
+      "P": 3,
+      "T": 1024,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "3568df026cde03610b24db9cb22ed45f60b4bf5eae4792b48558a6061746d84f",
+          "shape": [
+            3,
+            1024
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.1 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.1_T1024.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.1",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.1,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 71001024,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "3568df026cde03610b24db9cb22ed45f60b4bf5eae4792b48558a6061746d84f"
+    },
+    {
+      "P": 3,
+      "T": 4096,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "57a3085752099f06b2e9959be51e9b54702daee20e55c5738a0981b56ffb7ead",
+          "shape": [
+            3,
+            4096
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.1 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.1_T4096.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.1",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.1,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 71004096,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "57a3085752099f06b2e9959be51e9b54702daee20e55c5738a0981b56ffb7ead"
+    },
+    {
+      "P": 3,
+      "T": 64,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "272f78036db6721f7cf7444315e5f6360426d14c3d446d6ae8a89ef70d134002",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "e751d6f01cccc560e564f931acf1dde3d6ff71044b89048c83037bbf3a9b9e37",
+          "shape": [
+            3,
+            64
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.25 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.25_T64.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.25",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.25,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 72000064,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "e751d6f01cccc560e564f931acf1dde3d6ff71044b89048c83037bbf3a9b9e37"
+    },
+    {
+      "P": 3,
+      "T": 256,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "272f78036db6721f7cf7444315e5f6360426d14c3d446d6ae8a89ef70d134002",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "15999befbb64de5342c883dc1c92cab9653af52bdb709ac0bea43eada99375ad",
+          "shape": [
+            3,
+            256
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.25 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.25_T256.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.25",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.25,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 72000256,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "15999befbb64de5342c883dc1c92cab9653af52bdb709ac0bea43eada99375ad"
+    },
+    {
+      "P": 3,
+      "T": 1024,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "272f78036db6721f7cf7444315e5f6360426d14c3d446d6ae8a89ef70d134002",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "f66c2db2ade1440887c8434f44a12a4947605000c6a04079498dca51e551e260",
+          "shape": [
+            3,
+            1024
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.25 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.25_T1024.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.25",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.25,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 72001024,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "f66c2db2ade1440887c8434f44a12a4947605000c6a04079498dca51e551e260"
+    },
+    {
+      "P": 3,
+      "T": 4096,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "272f78036db6721f7cf7444315e5f6360426d14c3d446d6ae8a89ef70d134002",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "85885871a254b88f0d1c90462c1e3db7e0d4f731d13a93a4cf892269b4102038",
+          "shape": [
+            3,
+            4096
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.25 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.25_T4096.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.25",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.25,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 72004096,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "85885871a254b88f0d1c90462c1e3db7e0d4f731d13a93a4cf892269b4102038"
+    },
+    {
+      "P": 3,
+      "T": 64,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "76ac2cde7665454a2feeeb3ff8bf3c4b85272509b98228dbc1e8f7a8c979a647",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "c0fbf07b098e5fa7a0fd6850e45da627f516d9d37175afaa371b0149bb2aac88",
+          "shape": [
+            3,
+            64
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.4 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.4_T64.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.4",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.4,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 73000064,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "c0fbf07b098e5fa7a0fd6850e45da627f516d9d37175afaa371b0149bb2aac88"
+    },
+    {
+      "P": 3,
+      "T": 256,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "76ac2cde7665454a2feeeb3ff8bf3c4b85272509b98228dbc1e8f7a8c979a647",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "bfdfa3d054cd5de301ab4495798d4938051f8702687c9ce362a736e2904c53a7",
+          "shape": [
+            3,
+            256
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.4 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.4_T256.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.4",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.4,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 73000256,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "bfdfa3d054cd5de301ab4495798d4938051f8702687c9ce362a736e2904c53a7"
+    },
+    {
+      "P": 3,
+      "T": 1024,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "76ac2cde7665454a2feeeb3ff8bf3c4b85272509b98228dbc1e8f7a8c979a647",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "1177f11a094c50d4134dc5571aa13d878a05da9e01462ff6f0b3f15fad5612da",
+          "shape": [
+            3,
+            1024
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.4 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.4_T1024.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.4",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.4,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 73001024,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "1177f11a094c50d4134dc5571aa13d878a05da9e01462ff6f0b3f15fad5612da"
+    },
+    {
+      "P": 3,
+      "T": 4096,
+      "arrays": {
+        "f0": {
+          "dtype": "<f8",
+          "sha256": "76ac2cde7665454a2feeeb3ff8bf3c4b85272509b98228dbc1e8f7a8c979a647",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "<f8",
+          "sha256": "56c11dd310b1ddf79baa256061ee0615e6b9d7a6a20c3067ae7e5d2ec0cc30c6",
+          "shape": [
+            3
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "65e966c454764fd1db3bfa5b304efd6679d283efb2449cde7c2c9653d28278ca",
+          "shape": [
+            3,
+            4096
+          ]
+        }
+      },
+      "description": "sinusoids at f0=0.4 cycles/sample, phase shifts 0, +pi/4, -pi/2, +0.05 noise",
+      "file": "narrowband_f0-0.4_T4096.npz",
+      "id": "D7",
+      "name": "narrowband_f0-0.4",
+      "notes": "x_k(t) = sin(2 pi f0 t + phase_shift_k) + noise, t = 0..T-1",
+      "params": {
+        "f0": 0.4,
+        "noise_std": 0.05,
+        "phase_shift": [
+          0.0,
+          0.7853981633974483,
+          -1.5707963267948966
+        ]
+      },
+      "seed": 73004096,
+      "truth": {
+        "f0": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "phase_shift": {
+          "dtype": "float64",
+          "shape": [
+            3
+          ]
+        }
+      },
+      "x_sha256": "65e966c454764fd1db3bfa5b304efd6679d283efb2449cde7c2c9653d28278ca"
+    },
+    {
+      "P": 2,
+      "T": 64,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "8c5b6897b086662107fa9d07cb75f8cc63b8a06f48b319d0ddf840893f0e978e",
+          "shape": [
+            2,
+            64
+          ]
+        }
+      },
+      "description": "coupled logistic maps (Sugihara et al. 2012, Eq. 1 of the main text), y->x only",
+      "file": "logistic_maps_T64.npz",
+      "id": "D8",
+      "name": "logistic_maps",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.1,
+        "beta_yx": 0.0,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 81000064,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "8c5b6897b086662107fa9d07cb75f8cc63b8a06f48b319d0ddf840893f0e978e"
+    },
+    {
+      "P": 2,
+      "T": 256,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "23a49436dc8039c94fd3f6b251a0230e844ed7597f70ba525939f9e86e3807cf",
+          "shape": [
+            2,
+            256
+          ]
+        }
+      },
+      "description": "coupled logistic maps (Sugihara et al. 2012, Eq. 1 of the main text), y->x only",
+      "file": "logistic_maps_T256.npz",
+      "id": "D8",
+      "name": "logistic_maps",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.1,
+        "beta_yx": 0.0,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 81000256,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "23a49436dc8039c94fd3f6b251a0230e844ed7597f70ba525939f9e86e3807cf"
+    },
+    {
+      "P": 2,
+      "T": 1024,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "e0cfec97cc8608b2e0df684f03b75f642918ccd2d95d9abebbf17e7234defd26",
+          "shape": [
+            2,
+            1024
+          ]
+        }
+      },
+      "description": "coupled logistic maps (Sugihara et al. 2012, Eq. 1 of the main text), y->x only",
+      "file": "logistic_maps_T1024.npz",
+      "id": "D8",
+      "name": "logistic_maps",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.1,
+        "beta_yx": 0.0,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 81001024,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "e0cfec97cc8608b2e0df684f03b75f642918ccd2d95d9abebbf17e7234defd26"
+    },
+    {
+      "P": 2,
+      "T": 4096,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "dde83aac92bf5544a31176cfd547c18c3a68f17039d6149a759ca80b97397368",
+          "shape": [
+            2,
+            4096
+          ]
+        }
+      },
+      "description": "coupled logistic maps (Sugihara et al. 2012, Eq. 1 of the main text), y->x only",
+      "file": "logistic_maps_T4096.npz",
+      "id": "D8",
+      "name": "logistic_maps",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.1,
+        "beta_yx": 0.0,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 81004096,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "dde83aac92bf5544a31176cfd547c18c3a68f17039d6149a759ca80b97397368"
+    },
+    {
+      "P": 2,
+      "T": 64,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "d144783f1ff33776a9fe135900a60ac1eec34eddb2204ec58faab157e66df454",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "65249fc52777a7e21a974e0ee45491535a4adeff1a6b56a83f5fc048081a6eb7",
+          "shape": [
+            2,
+            64
+          ]
+        }
+      },
+      "description": "coupled logistic maps, y->x (0.1) and x->y (0.02)",
+      "file": "logistic_maps_bidir_T64.npz",
+      "id": "D8",
+      "name": "logistic_maps_bidir",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.1,
+        "beta_yx": 0.02,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 82000064,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "65249fc52777a7e21a974e0ee45491535a4adeff1a6b56a83f5fc048081a6eb7"
+    },
+    {
+      "P": 2,
+      "T": 256,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "d144783f1ff33776a9fe135900a60ac1eec34eddb2204ec58faab157e66df454",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "6f633695d53d180c3bf5d4c82395f5b317fac76f222fb14c53b05c77382c5af4",
+          "shape": [
+            2,
+            256
+          ]
+        }
+      },
+      "description": "coupled logistic maps, y->x (0.1) and x->y (0.02)",
+      "file": "logistic_maps_bidir_T256.npz",
+      "id": "D8",
+      "name": "logistic_maps_bidir",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.1,
+        "beta_yx": 0.02,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 82000256,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "6f633695d53d180c3bf5d4c82395f5b317fac76f222fb14c53b05c77382c5af4"
+    },
+    {
+      "P": 2,
+      "T": 1024,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "d144783f1ff33776a9fe135900a60ac1eec34eddb2204ec58faab157e66df454",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "77b2e6e92522a139e4b846dd6cec1a237a18e97df2b4cd2aae8c002c8e93fae1",
+          "shape": [
+            2,
+            1024
+          ]
+        }
+      },
+      "description": "coupled logistic maps, y->x (0.1) and x->y (0.02)",
+      "file": "logistic_maps_bidir_T1024.npz",
+      "id": "D8",
+      "name": "logistic_maps_bidir",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.1,
+        "beta_yx": 0.02,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 82001024,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "77b2e6e92522a139e4b846dd6cec1a237a18e97df2b4cd2aae8c002c8e93fae1"
+    },
+    {
+      "P": 2,
+      "T": 4096,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "d144783f1ff33776a9fe135900a60ac1eec34eddb2204ec58faab157e66df454",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "98332aabed2fc04e81e5cf966a57d61478f769d7c07005a78b0c9bb9058a4d89",
+          "shape": [
+            2,
+            4096
+          ]
+        }
+      },
+      "description": "coupled logistic maps, y->x (0.1) and x->y (0.02)",
+      "file": "logistic_maps_bidir_T4096.npz",
+      "id": "D8",
+      "name": "logistic_maps_bidir",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.1,
+        "beta_yx": 0.02,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 82004096,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "98332aabed2fc04e81e5cf966a57d61478f769d7c07005a78b0c9bb9058a4d89"
+    },
+    {
+      "P": 2,
+      "T": 64,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "ac9ba6e4496f457279d0e894564ea17ff64fc4f9815851e538f8d80ceacb61b4",
+          "shape": [
+            2,
+            64
+          ]
+        }
+      },
+      "description": "coupled logistic maps, x->y only (0.1); the chaotic r=3.8 map drives the r=3.5 map, so neither series is periodic",
+      "file": "logistic_maps_chaotic_T64.npz",
+      "id": "D8",
+      "name": "logistic_maps_chaotic",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.0,
+        "beta_yx": 0.1,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 83000064,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "ac9ba6e4496f457279d0e894564ea17ff64fc4f9815851e538f8d80ceacb61b4"
+    },
+    {
+      "P": 2,
+      "T": 256,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "443392da85a28d53ba5b5ebfb3ae8557406cb003f176029384c553f65db21890",
+          "shape": [
+            2,
+            256
+          ]
+        }
+      },
+      "description": "coupled logistic maps, x->y only (0.1); the chaotic r=3.8 map drives the r=3.5 map, so neither series is periodic",
+      "file": "logistic_maps_chaotic_T256.npz",
+      "id": "D8",
+      "name": "logistic_maps_chaotic",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.0,
+        "beta_yx": 0.1,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 83000256,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "443392da85a28d53ba5b5ebfb3ae8557406cb003f176029384c553f65db21890"
+    },
+    {
+      "P": 2,
+      "T": 1024,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "66638c20b50e0a92ba896691a1e4d0b2ccba77b1fb1a2bb4e014acf75f314063",
+          "shape": [
+            2,
+            1024
+          ]
+        }
+      },
+      "description": "coupled logistic maps, x->y only (0.1); the chaotic r=3.8 map drives the r=3.5 map, so neither series is periodic",
+      "file": "logistic_maps_chaotic_T1024.npz",
+      "id": "D8",
+      "name": "logistic_maps_chaotic",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.0,
+        "beta_yx": 0.1,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 83001024,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "66638c20b50e0a92ba896691a1e4d0b2ccba77b1fb1a2bb4e014acf75f314063"
+    },
+    {
+      "P": 2,
+      "T": 4096,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "6040e8da6468c57c15b3bfa9cb6e8cd6df5f4aef38605ffaef864d883381e1fe",
+          "shape": [
+            2,
+            4096
+          ]
+        }
+      },
+      "description": "coupled logistic maps, x->y only (0.1); the chaotic r=3.8 map drives the r=3.5 map, so neither series is periodic",
+      "file": "logistic_maps_chaotic_T4096.npz",
+      "id": "D8",
+      "name": "logistic_maps_chaotic",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.0,
+        "beta_yx": 0.1,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 83004096,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "6040e8da6468c57c15b3bfa9cb6e8cd6df5f4aef38605ffaef864d883381e1fe"
+    },
+    {
+      "P": 2,
+      "T": 64,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "d144783f1ff33776a9fe135900a60ac1eec34eddb2204ec58faab157e66df454",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "8173094482f758b215d29047101347068a9e349ab0f109b9ebe05c0667eb3d2f",
+          "shape": [
+            2,
+            64
+          ]
+        }
+      },
+      "description": "coupled logistic maps with the Sugihara et al. 2012 Fig. 1 caption parameters: x->y 0.1, y->x 0.02",
+      "file": "logistic_maps_sugihara_T64.npz",
+      "id": "D8",
+      "name": "logistic_maps_sugihara",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.02,
+        "beta_yx": 0.1,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 84000064,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "8173094482f758b215d29047101347068a9e349ab0f109b9ebe05c0667eb3d2f"
+    },
+    {
+      "P": 2,
+      "T": 256,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "d144783f1ff33776a9fe135900a60ac1eec34eddb2204ec58faab157e66df454",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "df8a7c846006cb707488837ff516dd4f6df4131679889de9cfd183c25455a670",
+          "shape": [
+            2,
+            256
+          ]
+        }
+      },
+      "description": "coupled logistic maps with the Sugihara et al. 2012 Fig. 1 caption parameters: x->y 0.1, y->x 0.02",
+      "file": "logistic_maps_sugihara_T256.npz",
+      "id": "D8",
+      "name": "logistic_maps_sugihara",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.02,
+        "beta_yx": 0.1,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 84000256,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "df8a7c846006cb707488837ff516dd4f6df4131679889de9cfd183c25455a670"
+    },
+    {
+      "P": 2,
+      "T": 1024,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "d144783f1ff33776a9fe135900a60ac1eec34eddb2204ec58faab157e66df454",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "b1bf9726bed48ba2d7513648d3d8827513efc3db5ff4fb5a236798166ffe2f08",
+          "shape": [
+            2,
+            1024
+          ]
+        }
+      },
+      "description": "coupled logistic maps with the Sugihara et al. 2012 Fig. 1 caption parameters: x->y 0.1, y->x 0.02",
+      "file": "logistic_maps_sugihara_T1024.npz",
+      "id": "D8",
+      "name": "logistic_maps_sugihara",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.02,
+        "beta_yx": 0.1,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 84001024,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "b1bf9726bed48ba2d7513648d3d8827513efc3db5ff4fb5a236798166ffe2f08"
+    },
+    {
+      "P": 2,
+      "T": 4096,
+      "arrays": {
+        "beta_xy": {
+          "dtype": "<f8",
+          "sha256": "d144783f1ff33776a9fe135900a60ac1eec34eddb2204ec58faab157e66df454",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "<f8",
+          "sha256": "45d2b662d9d490ae9b932759c910b26b9a874065de620f4ac0a3a23a65e40b8c",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "<f8",
+          "sha256": "f135a9bfccc5fb910cd547f7959be6a7e7d2ed7f45909279cfcc7e2f241c6743",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "<f8",
+          "sha256": "42b215bc5c10e8a6453db424667de747070305824b7e67e63df3aca31215898f",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "3c3f9d25b820e59a60efe257aa08009fff666094cc6678e112e3d64f749ce37c",
+          "shape": [
+            2,
+            4096
+          ]
+        }
+      },
+      "description": "coupled logistic maps with the Sugihara et al. 2012 Fig. 1 caption parameters: x->y 0.1, y->x 0.02",
+      "file": "logistic_maps_sugihara_T4096.npz",
+      "id": "D8",
+      "name": "logistic_maps_sugihara",
+      "notes": "process 0 = x, process 1 = y; x(t+1)=x(t)[r_x - r_x x(t) - beta_xy y(t)], y(t+1)=y(t)[r_y - r_y y(t) - beta_yx x(t)]; beta_xy>0 means y CAUSES x",
+      "params": {
+        "beta_xy": 0.02,
+        "beta_yx": 0.1,
+        "burn_in": 1000,
+        "r_x": 3.8,
+        "r_y": 3.5
+      },
+      "seed": 84004096,
+      "truth": {
+        "beta_xy": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "beta_yx": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_x": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "r_y": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "3c3f9d25b820e59a60efe257aa08009fff666094cc6678e112e3d64f749ce37c"
+    },
+    {
+      "P": 4,
+      "T": 64,
+      "arrays": {
+        "theta": {
+          "dtype": "<f8",
+          "sha256": "1975077a8348661e194cc6f0a32e3eed248cf6cf987bc96b89a6ab631c72bb67",
+          "shape": [
+            64
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "d06275555cf4b929eca5c3e702647be4498578179ee1f36104b1ad7ef5af990b",
+          "shape": [
+            4,
+            64
+          ]
+        }
+      },
+      "description": "x1 = x0^2 + 0.05 noise (Pearson ~0, dependent); (x2,x3) = (cos th, sin th) circle",
+      "file": "nonlinear_dependence_T64.npz",
+      "id": "D9",
+      "name": "nonlinear_dependence",
+      "notes": "",
+      "params": {
+        "noise_std": 0.05,
+        "theta": "uniform(0,2pi)",
+        "x0": "uniform(-1,1)"
+      },
+      "seed": 9000064,
+      "truth": {
+        "theta": {
+          "dtype": "float64",
+          "shape": [
+            64
+          ]
+        }
+      },
+      "x_sha256": "d06275555cf4b929eca5c3e702647be4498578179ee1f36104b1ad7ef5af990b"
+    },
+    {
+      "P": 4,
+      "T": 256,
+      "arrays": {
+        "theta": {
+          "dtype": "<f8",
+          "sha256": "ec90cac1664f6205748572e50bf829956df6c6189e9c617d8aa264685acadd82",
+          "shape": [
+            256
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "24595edbbbd2bffe763eb578314c39fb3289d0f5012ccdec9099c5e20469f89e",
+          "shape": [
+            4,
+            256
+          ]
+        }
+      },
+      "description": "x1 = x0^2 + 0.05 noise (Pearson ~0, dependent); (x2,x3) = (cos th, sin th) circle",
+      "file": "nonlinear_dependence_T256.npz",
+      "id": "D9",
+      "name": "nonlinear_dependence",
+      "notes": "",
+      "params": {
+        "noise_std": 0.05,
+        "theta": "uniform(0,2pi)",
+        "x0": "uniform(-1,1)"
+      },
+      "seed": 9000256,
+      "truth": {
+        "theta": {
+          "dtype": "float64",
+          "shape": [
+            256
+          ]
+        }
+      },
+      "x_sha256": "24595edbbbd2bffe763eb578314c39fb3289d0f5012ccdec9099c5e20469f89e"
+    },
+    {
+      "P": 4,
+      "T": 1024,
+      "arrays": {
+        "theta": {
+          "dtype": "<f8",
+          "sha256": "8d54cc4811116553b02ca58b2757e71804f1c37e0f4421d1ad0f50f07d2f879a",
+          "shape": [
+            1024
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "a0ff49135c778385c7a250c7317e2a02cd10e6f183b59c95a284336d7c861d4b",
+          "shape": [
+            4,
+            1024
+          ]
+        }
+      },
+      "description": "x1 = x0^2 + 0.05 noise (Pearson ~0, dependent); (x2,x3) = (cos th, sin th) circle",
+      "file": "nonlinear_dependence_T1024.npz",
+      "id": "D9",
+      "name": "nonlinear_dependence",
+      "notes": "",
+      "params": {
+        "noise_std": 0.05,
+        "theta": "uniform(0,2pi)",
+        "x0": "uniform(-1,1)"
+      },
+      "seed": 9001024,
+      "truth": {
+        "theta": {
+          "dtype": "float64",
+          "shape": [
+            1024
+          ]
+        }
+      },
+      "x_sha256": "a0ff49135c778385c7a250c7317e2a02cd10e6f183b59c95a284336d7c861d4b"
+    },
+    {
+      "P": 4,
+      "T": 4096,
+      "arrays": {
+        "theta": {
+          "dtype": "<f8",
+          "sha256": "18df314222b53935bbc4f4539618b7583e327ec3c483a317c9dbcbf7f4204c11",
+          "shape": [
+            4096
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "b233ce5f12700ec74f603411a615391e6aee91d9c820ad60202bd12c1ae6dc69",
+          "shape": [
+            4,
+            4096
+          ]
+        }
+      },
+      "description": "x1 = x0^2 + 0.05 noise (Pearson ~0, dependent); (x2,x3) = (cos th, sin th) circle",
+      "file": "nonlinear_dependence_T4096.npz",
+      "id": "D9",
+      "name": "nonlinear_dependence",
+      "notes": "",
+      "params": {
+        "noise_std": 0.05,
+        "theta": "uniform(0,2pi)",
+        "x0": "uniform(-1,1)"
+      },
+      "seed": 9004096,
+      "truth": {
+        "theta": {
+          "dtype": "float64",
+          "shape": [
+            4096
+          ]
+        }
+      },
+      "x_sha256": "b233ce5f12700ec74f603411a615391e6aee91d9c820ad60202bd12c1ae6dc69"
+    },
+    {
+      "P": 2,
+      "T": 64,
+      "arrays": {
+        "clean_cov_true": {
+          "dtype": "<f8",
+          "sha256": "5dd65710b9fdfa244b2742ce0e10beea0d2d81e18f12ffbee750f579421daf35",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "mixture_cov_population": {
+          "dtype": "<f8",
+          "sha256": "e0bd49c08f65d68c02a54d744b4395303bd6a78848094cc8faa4b8135273d816",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "outlier_mask": {
+          "dtype": "|b1",
+          "sha256": "1e6549c2cb5278148c24df0ca37c67ed8470bd29e42350808985db8bcb2a9b80",
+          "shape": [
+            64
+          ]
+        },
+        "outlier_mean": {
+          "dtype": "<f8",
+          "sha256": "cfb6a7c5bfc059159572f3dab4febaba9cca50aea6333ba97e3b3d19d757958e",
+          "shape": [
+            2
+          ]
+        },
+        "outlier_std": {
+          "dtype": "<f8",
+          "sha256": "272f78036db6721f7cf7444315e5f6360426d14c3d446d6ae8a89ef70d134002",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "35a0225c171a034039ac3359ada40efdc235a54bcd4b19679150501770e1ed59",
+          "shape": [
+            2,
+            64
+          ]
+        },
+        "x_clean": {
+          "dtype": "<f8",
+          "sha256": "48d128c20574a2b3f73523f9bc0cd2f3f4089d227d9fac2a6f8347266fb9bf88",
+          "shape": [
+            2,
+            64
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 pair (2,3) rho=0.8 with 15% samples replaced by cluster at (6,-6)",
+      "file": "contaminated_T64.npz",
+      "id": "D10",
+      "name": "contaminated",
+      "notes": "x_clean = D2 rows 2,3 (same draw); contamination drawn from this dataset's seed; mixture_cov_population uses the realised outlier fraction",
+      "own_seed": 10000064,
+      "params": {
+        "fraction": 0.15,
+        "outlier_mean": [
+          6.0,
+          -6.0
+        ],
+        "outlier_std": 0.25
+      },
+      "seed": 2000064,
+      "truth": {
+        "clean_cov_true": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "mixture_cov_population": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "outlier_mask": {
+          "dtype": "bool",
+          "shape": [
+            64
+          ]
+        },
+        "outlier_mean": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        },
+        "outlier_std": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "x_clean": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            64
+          ]
+        }
+      },
+      "x_sha256": "35a0225c171a034039ac3359ada40efdc235a54bcd4b19679150501770e1ed59"
+    },
+    {
+      "P": 2,
+      "T": 256,
+      "arrays": {
+        "clean_cov_true": {
+          "dtype": "<f8",
+          "sha256": "5dd65710b9fdfa244b2742ce0e10beea0d2d81e18f12ffbee750f579421daf35",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "mixture_cov_population": {
+          "dtype": "<f8",
+          "sha256": "6799b89163d7ab5e60e020900b6246639dcdc6c59aa9d5a8ba956c486c1fda04",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "outlier_mask": {
+          "dtype": "|b1",
+          "sha256": "b6a4a2676a81238563b41cb1a0e54ded9e35ae81d657e056954d19732a660655",
+          "shape": [
+            256
+          ]
+        },
+        "outlier_mean": {
+          "dtype": "<f8",
+          "sha256": "cfb6a7c5bfc059159572f3dab4febaba9cca50aea6333ba97e3b3d19d757958e",
+          "shape": [
+            2
+          ]
+        },
+        "outlier_std": {
+          "dtype": "<f8",
+          "sha256": "272f78036db6721f7cf7444315e5f6360426d14c3d446d6ae8a89ef70d134002",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "3af1964c89d39c152355f0626f57f7c74fc629102b5a8991e38858cebf52b5fd",
+          "shape": [
+            2,
+            256
+          ]
+        },
+        "x_clean": {
+          "dtype": "<f8",
+          "sha256": "9cfb4d87f334d22e420a10a00c59b1824a22eacbf683126c1c1fa91ce54b90db",
+          "shape": [
+            2,
+            256
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 pair (2,3) rho=0.8 with 15% samples replaced by cluster at (6,-6)",
+      "file": "contaminated_T256.npz",
+      "id": "D10",
+      "name": "contaminated",
+      "notes": "x_clean = D2 rows 2,3 (same draw); contamination drawn from this dataset's seed; mixture_cov_population uses the realised outlier fraction",
+      "own_seed": 10000256,
+      "params": {
+        "fraction": 0.15,
+        "outlier_mean": [
+          6.0,
+          -6.0
+        ],
+        "outlier_std": 0.25
+      },
+      "seed": 2000256,
+      "truth": {
+        "clean_cov_true": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "mixture_cov_population": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "outlier_mask": {
+          "dtype": "bool",
+          "shape": [
+            256
+          ]
+        },
+        "outlier_mean": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        },
+        "outlier_std": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "x_clean": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            256
+          ]
+        }
+      },
+      "x_sha256": "3af1964c89d39c152355f0626f57f7c74fc629102b5a8991e38858cebf52b5fd"
+    },
+    {
+      "P": 2,
+      "T": 1024,
+      "arrays": {
+        "clean_cov_true": {
+          "dtype": "<f8",
+          "sha256": "5dd65710b9fdfa244b2742ce0e10beea0d2d81e18f12ffbee750f579421daf35",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "mixture_cov_population": {
+          "dtype": "<f8",
+          "sha256": "991c81a076a4d23a1acec8120458f72ccf1b44c084d9f029b8141c4917c4aac8",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "outlier_mask": {
+          "dtype": "|b1",
+          "sha256": "ecee4e27c6474335c9d4c60e9a5957139a681ed389263f5cc6011fa018607746",
+          "shape": [
+            1024
+          ]
+        },
+        "outlier_mean": {
+          "dtype": "<f8",
+          "sha256": "cfb6a7c5bfc059159572f3dab4febaba9cca50aea6333ba97e3b3d19d757958e",
+          "shape": [
+            2
+          ]
+        },
+        "outlier_std": {
+          "dtype": "<f8",
+          "sha256": "272f78036db6721f7cf7444315e5f6360426d14c3d446d6ae8a89ef70d134002",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "16f0e644e964088cca4116bfa11c4b45201741bde4c267fa9441b8afcbb36e83",
+          "shape": [
+            2,
+            1024
+          ]
+        },
+        "x_clean": {
+          "dtype": "<f8",
+          "sha256": "9faed9dc567dd51948347ff46b4da8c555a1766789f20220cc85c3f5371f83ed",
+          "shape": [
+            2,
+            1024
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 pair (2,3) rho=0.8 with 15% samples replaced by cluster at (6,-6)",
+      "file": "contaminated_T1024.npz",
+      "id": "D10",
+      "name": "contaminated",
+      "notes": "x_clean = D2 rows 2,3 (same draw); contamination drawn from this dataset's seed; mixture_cov_population uses the realised outlier fraction",
+      "own_seed": 10001024,
+      "params": {
+        "fraction": 0.15,
+        "outlier_mean": [
+          6.0,
+          -6.0
+        ],
+        "outlier_std": 0.25
+      },
+      "seed": 2001024,
+      "truth": {
+        "clean_cov_true": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "mixture_cov_population": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "outlier_mask": {
+          "dtype": "bool",
+          "shape": [
+            1024
+          ]
+        },
+        "outlier_mean": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        },
+        "outlier_std": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "x_clean": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            1024
+          ]
+        }
+      },
+      "x_sha256": "16f0e644e964088cca4116bfa11c4b45201741bde4c267fa9441b8afcbb36e83"
+    },
+    {
+      "P": 2,
+      "T": 4096,
+      "arrays": {
+        "clean_cov_true": {
+          "dtype": "<f8",
+          "sha256": "5dd65710b9fdfa244b2742ce0e10beea0d2d81e18f12ffbee750f579421daf35",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "mixture_cov_population": {
+          "dtype": "<f8",
+          "sha256": "c718d78156eacc7e0a62a11d0bea792451bb921194df63bf2481968228d6b639",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "outlier_mask": {
+          "dtype": "|b1",
+          "sha256": "73a2bb7ef418ed65c54b24fe8cbf7a497e0a094184be7ba7cb4f81ee480ef622",
+          "shape": [
+            4096
+          ]
+        },
+        "outlier_mean": {
+          "dtype": "<f8",
+          "sha256": "cfb6a7c5bfc059159572f3dab4febaba9cca50aea6333ba97e3b3d19d757958e",
+          "shape": [
+            2
+          ]
+        },
+        "outlier_std": {
+          "dtype": "<f8",
+          "sha256": "272f78036db6721f7cf7444315e5f6360426d14c3d446d6ae8a89ef70d134002",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "6a4ad918ff04b75327352abffa7b4c0d25474f72a7bf3d0ebdb39b9698622b1c",
+          "shape": [
+            2,
+            4096
+          ]
+        },
+        "x_clean": {
+          "dtype": "<f8",
+          "sha256": "60a2d897d67a2d8c6348358e2003cc0cbf09a916f575a53030f4115b9f42f4cc",
+          "shape": [
+            2,
+            4096
+          ]
+        }
+      },
+      "derived_from": "bivariate_gaussian",
+      "description": "D2 pair (2,3) rho=0.8 with 15% samples replaced by cluster at (6,-6)",
+      "file": "contaminated_T4096.npz",
+      "id": "D10",
+      "name": "contaminated",
+      "notes": "x_clean = D2 rows 2,3 (same draw); contamination drawn from this dataset's seed; mixture_cov_population uses the realised outlier fraction",
+      "own_seed": 10004096,
+      "params": {
+        "fraction": 0.15,
+        "outlier_mean": [
+          6.0,
+          -6.0
+        ],
+        "outlier_std": 0.25
+      },
+      "seed": 2004096,
+      "truth": {
+        "clean_cov_true": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "mixture_cov_population": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "outlier_mask": {
+          "dtype": "bool",
+          "shape": [
+            4096
+          ]
+        },
+        "outlier_mean": {
+          "dtype": "float64",
+          "shape": [
+            2
+          ]
+        },
+        "outlier_std": {
+          "dtype": "float64",
+          "shape": []
+        },
+        "x_clean": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            4096
+          ]
+        }
+      },
+      "x_sha256": "6a4ad918ff04b75327352abffa7b4c0d25474f72a7bf3d0ebdb39b9698622b1c"
+    },
+    {
+      "P": 4,
+      "T": 64,
+      "arrays": {
+        "coint_vector": {
+          "dtype": "<f8",
+          "sha256": "5244d8418510773f9631533e04585f7d9e942815117a1d6ccc7551a706419767",
+          "shape": [
+            4
+          ]
+        },
+        "common_trend": {
+          "dtype": "<f8",
+          "sha256": "2fb97af19959ef9f273d0964a4b637702b9a119706b17ccc8a6b9a88767beb2d",
+          "shape": [
+            64
+          ]
+        },
+        "is_cointegrated": {
+          "dtype": "|b1",
+          "sha256": "5bf3c38da27c2142523f60359c4c3d67a423d9d174247ddc51694a985915d26a",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "62588d9b523171c7a55886387af99840d4c09c0587bc4e98163e90486b57da10",
+          "shape": [
+            4,
+            64
+          ]
+        }
+      },
+      "description": "x0 = w + e1, x1 = 2w + e2 (cointegrated [2,-1]); x2, x3 independent random walks",
+      "file": "cointegrated_T64.npz",
+      "id": "D11",
+      "name": "cointegrated",
+      "notes": "2*x0 - x1 = 2 e1 - e2 is stationary; is_cointegrated[i,j] symmetric, False on diagonal",
+      "params": {
+        "coint_vector": [
+          2.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "noise_std": 1.0
+      },
+      "seed": 11000064,
+      "truth": {
+        "coint_vector": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "common_trend": {
+          "dtype": "float64",
+          "shape": [
+            64
+          ]
+        },
+        "is_cointegrated": {
+          "dtype": "bool",
+          "shape": [
+            4,
+            4
+          ]
+        }
+      },
+      "x_sha256": "62588d9b523171c7a55886387af99840d4c09c0587bc4e98163e90486b57da10"
+    },
+    {
+      "P": 4,
+      "T": 256,
+      "arrays": {
+        "coint_vector": {
+          "dtype": "<f8",
+          "sha256": "5244d8418510773f9631533e04585f7d9e942815117a1d6ccc7551a706419767",
+          "shape": [
+            4
+          ]
+        },
+        "common_trend": {
+          "dtype": "<f8",
+          "sha256": "30b383d9c625e5a2041475656901b068a81d268bcec392f96655518d909a4d9f",
+          "shape": [
+            256
+          ]
+        },
+        "is_cointegrated": {
+          "dtype": "|b1",
+          "sha256": "5bf3c38da27c2142523f60359c4c3d67a423d9d174247ddc51694a985915d26a",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "d89cfdf15d059338946fd93306fe037a79411b8f55bf90066c18154888b926b4",
+          "shape": [
+            4,
+            256
+          ]
+        }
+      },
+      "description": "x0 = w + e1, x1 = 2w + e2 (cointegrated [2,-1]); x2, x3 independent random walks",
+      "file": "cointegrated_T256.npz",
+      "id": "D11",
+      "name": "cointegrated",
+      "notes": "2*x0 - x1 = 2 e1 - e2 is stationary; is_cointegrated[i,j] symmetric, False on diagonal",
+      "params": {
+        "coint_vector": [
+          2.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "noise_std": 1.0
+      },
+      "seed": 11000256,
+      "truth": {
+        "coint_vector": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "common_trend": {
+          "dtype": "float64",
+          "shape": [
+            256
+          ]
+        },
+        "is_cointegrated": {
+          "dtype": "bool",
+          "shape": [
+            4,
+            4
+          ]
+        }
+      },
+      "x_sha256": "d89cfdf15d059338946fd93306fe037a79411b8f55bf90066c18154888b926b4"
+    },
+    {
+      "P": 4,
+      "T": 1024,
+      "arrays": {
+        "coint_vector": {
+          "dtype": "<f8",
+          "sha256": "5244d8418510773f9631533e04585f7d9e942815117a1d6ccc7551a706419767",
+          "shape": [
+            4
+          ]
+        },
+        "common_trend": {
+          "dtype": "<f8",
+          "sha256": "ec08c749a75038eb1b2693bf10028d2f3b3776989fd6fe001361824de61cddfc",
+          "shape": [
+            1024
+          ]
+        },
+        "is_cointegrated": {
+          "dtype": "|b1",
+          "sha256": "5bf3c38da27c2142523f60359c4c3d67a423d9d174247ddc51694a985915d26a",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "02009731beb29969bebd2a898a0ce64376066aad086e559c66ca44cd68d1a520",
+          "shape": [
+            4,
+            1024
+          ]
+        }
+      },
+      "description": "x0 = w + e1, x1 = 2w + e2 (cointegrated [2,-1]); x2, x3 independent random walks",
+      "file": "cointegrated_T1024.npz",
+      "id": "D11",
+      "name": "cointegrated",
+      "notes": "2*x0 - x1 = 2 e1 - e2 is stationary; is_cointegrated[i,j] symmetric, False on diagonal",
+      "params": {
+        "coint_vector": [
+          2.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "noise_std": 1.0
+      },
+      "seed": 11001024,
+      "truth": {
+        "coint_vector": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "common_trend": {
+          "dtype": "float64",
+          "shape": [
+            1024
+          ]
+        },
+        "is_cointegrated": {
+          "dtype": "bool",
+          "shape": [
+            4,
+            4
+          ]
+        }
+      },
+      "x_sha256": "02009731beb29969bebd2a898a0ce64376066aad086e559c66ca44cd68d1a520"
+    },
+    {
+      "P": 4,
+      "T": 4096,
+      "arrays": {
+        "coint_vector": {
+          "dtype": "<f8",
+          "sha256": "5244d8418510773f9631533e04585f7d9e942815117a1d6ccc7551a706419767",
+          "shape": [
+            4
+          ]
+        },
+        "common_trend": {
+          "dtype": "<f8",
+          "sha256": "349c85ebe8714075efee973b52c31892a0e7e7d876d23f1f5053223d56eadcad",
+          "shape": [
+            4096
+          ]
+        },
+        "is_cointegrated": {
+          "dtype": "|b1",
+          "sha256": "5bf3c38da27c2142523f60359c4c3d67a423d9d174247ddc51694a985915d26a",
+          "shape": [
+            4,
+            4
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "a98c203ad24ec30dd93c5cd180ab3c39ee1fd111584c602fbdcb3512fdabc4dc",
+          "shape": [
+            4,
+            4096
+          ]
+        }
+      },
+      "description": "x0 = w + e1, x1 = 2w + e2 (cointegrated [2,-1]); x2, x3 independent random walks",
+      "file": "cointegrated_T4096.npz",
+      "id": "D11",
+      "name": "cointegrated",
+      "notes": "2*x0 - x1 = 2 e1 - e2 is stationary; is_cointegrated[i,j] symmetric, False on diagonal",
+      "params": {
+        "coint_vector": [
+          2.0,
+          -1.0,
+          0.0,
+          0.0
+        ],
+        "noise_std": 1.0
+      },
+      "seed": 11004096,
+      "truth": {
+        "coint_vector": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "common_trend": {
+          "dtype": "float64",
+          "shape": [
+            4096
+          ]
+        },
+        "is_cointegrated": {
+          "dtype": "bool",
+          "shape": [
+            4,
+            4
+          ]
+        }
+      },
+      "x_sha256": "a98c203ad24ec30dd93c5cd180ab3c39ee1fd111584c602fbdcb3512fdabc4dc"
+    },
+    {
+      "P": 4,
+      "T": 64,
+      "arrays": {
+        "cause": {
+          "dtype": "<i8",
+          "sha256": "c571327cb01ac1de6972713cbf6cc1fc3c2cab8b581ee0bc3fe6d8b56963fd5b",
+          "shape": [
+            2
+          ]
+        },
+        "effect": {
+          "dtype": "<i8",
+          "sha256": "8e8f6841378f772c40db2f07e876776d50c481ed7329ebcab75312e3b1fa7807",
+          "shape": [
+            2
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "618dcc7e347d458fd3c3c69774a05a82eb7af689f6607c75dac694666d4c4db3",
+          "shape": [
+            4,
+            64
+          ]
+        }
+      },
+      "description": "additive noise models x0->x1 (cubic) and x2->x3 (tanh)",
+      "file": "anm_T64.npz",
+      "id": "D12",
+      "name": "anm",
+      "notes": "",
+      "params": {
+        "x0,x2": "uniform(-1,1)",
+        "x1": "x0^3 + 0.2 N(0,1)",
+        "x3": "tanh(2 x2) + 0.2 N(0,1)"
+      },
+      "seed": 12000064,
+      "truth": {
+        "cause": {
+          "dtype": "int64",
+          "shape": [
+            2
+          ]
+        },
+        "effect": {
+          "dtype": "int64",
+          "shape": [
+            2
+          ]
+        }
+      },
+      "x_sha256": "618dcc7e347d458fd3c3c69774a05a82eb7af689f6607c75dac694666d4c4db3"
+    },
+    {
+      "P": 4,
+      "T": 256,
+      "arrays": {
+        "cause": {
+          "dtype": "<i8",
+          "sha256": "c571327cb01ac1de6972713cbf6cc1fc3c2cab8b581ee0bc3fe6d8b56963fd5b",
+          "shape": [
+            2
+          ]
+        },
+        "effect": {
+          "dtype": "<i8",
+          "sha256": "8e8f6841378f772c40db2f07e876776d50c481ed7329ebcab75312e3b1fa7807",
+          "shape": [
+            2
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "a63f0549724d1f5e92bb9e8c2c069dbd69c2bb2188b741f5c3f13d714090ac3b",
+          "shape": [
+            4,
+            256
+          ]
+        }
+      },
+      "description": "additive noise models x0->x1 (cubic) and x2->x3 (tanh)",
+      "file": "anm_T256.npz",
+      "id": "D12",
+      "name": "anm",
+      "notes": "",
+      "params": {
+        "x0,x2": "uniform(-1,1)",
+        "x1": "x0^3 + 0.2 N(0,1)",
+        "x3": "tanh(2 x2) + 0.2 N(0,1)"
+      },
+      "seed": 12000256,
+      "truth": {
+        "cause": {
+          "dtype": "int64",
+          "shape": [
+            2
+          ]
+        },
+        "effect": {
+          "dtype": "int64",
+          "shape": [
+            2
+          ]
+        }
+      },
+      "x_sha256": "a63f0549724d1f5e92bb9e8c2c069dbd69c2bb2188b741f5c3f13d714090ac3b"
+    },
+    {
+      "P": 4,
+      "T": 1024,
+      "arrays": {
+        "cause": {
+          "dtype": "<i8",
+          "sha256": "c571327cb01ac1de6972713cbf6cc1fc3c2cab8b581ee0bc3fe6d8b56963fd5b",
+          "shape": [
+            2
+          ]
+        },
+        "effect": {
+          "dtype": "<i8",
+          "sha256": "8e8f6841378f772c40db2f07e876776d50c481ed7329ebcab75312e3b1fa7807",
+          "shape": [
+            2
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "947da9abb386aefbc6cbd887970d96646eb0ca356feb4204158f4fd1956eed2a",
+          "shape": [
+            4,
+            1024
+          ]
+        }
+      },
+      "description": "additive noise models x0->x1 (cubic) and x2->x3 (tanh)",
+      "file": "anm_T1024.npz",
+      "id": "D12",
+      "name": "anm",
+      "notes": "",
+      "params": {
+        "x0,x2": "uniform(-1,1)",
+        "x1": "x0^3 + 0.2 N(0,1)",
+        "x3": "tanh(2 x2) + 0.2 N(0,1)"
+      },
+      "seed": 12001024,
+      "truth": {
+        "cause": {
+          "dtype": "int64",
+          "shape": [
+            2
+          ]
+        },
+        "effect": {
+          "dtype": "int64",
+          "shape": [
+            2
+          ]
+        }
+      },
+      "x_sha256": "947da9abb386aefbc6cbd887970d96646eb0ca356feb4204158f4fd1956eed2a"
+    },
+    {
+      "P": 4,
+      "T": 4096,
+      "arrays": {
+        "cause": {
+          "dtype": "<i8",
+          "sha256": "c571327cb01ac1de6972713cbf6cc1fc3c2cab8b581ee0bc3fe6d8b56963fd5b",
+          "shape": [
+            2
+          ]
+        },
+        "effect": {
+          "dtype": "<i8",
+          "sha256": "8e8f6841378f772c40db2f07e876776d50c481ed7329ebcab75312e3b1fa7807",
+          "shape": [
+            2
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "1d852cdc4719f149a9898b1e62741726769b2683157b16d68cb403a7a41a3a59",
+          "shape": [
+            4,
+            4096
+          ]
+        }
+      },
+      "description": "additive noise models x0->x1 (cubic) and x2->x3 (tanh)",
+      "file": "anm_T4096.npz",
+      "id": "D12",
+      "name": "anm",
+      "notes": "",
+      "params": {
+        "x0,x2": "uniform(-1,1)",
+        "x1": "x0^3 + 0.2 N(0,1)",
+        "x3": "tanh(2 x2) + 0.2 N(0,1)"
+      },
+      "seed": 12004096,
+      "truth": {
+        "cause": {
+          "dtype": "int64",
+          "shape": [
+            2
+          ]
+        },
+        "effect": {
+          "dtype": "int64",
+          "shape": [
+            2
+          ]
+        }
+      },
+      "x_sha256": "1d852cdc4719f149a9898b1e62741726769b2683157b16d68cb403a7a41a3a59"
+    },
+    {
+      "P": 5,
+      "T": 64,
+      "arrays": {
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "2b94295033fc7f81627a696cd403ab689255b832d5f38667ef726784130b1e84",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "precision_true": {
+          "dtype": "<f8",
+          "sha256": "c6b9e097a65e8f5dc498258d6963f5165686f34d593a4319d57d2c194dd44405",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "02b17579022195ebaaf2a847ba4955ef976743793ebf9db72dcf8f2a97e49810",
+          "shape": [
+            5,
+            64
+          ]
+        }
+      },
+      "description": "Gaussian with tridiagonal precision (diag 1.0, off-diag -0.4)",
+      "file": "sparse_precision_T64.npz",
+      "id": "D13",
+      "name": "sparse_precision",
+      "notes": "",
+      "params": {
+        "diag": 1.0,
+        "offdiag": -0.4
+      },
+      "seed": 13000064,
+      "truth": {
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "precision_true": {
+          "dtype": "float64",
+          "shape": [
+            5,
+            5
+          ]
+        }
+      },
+      "x_sha256": "02b17579022195ebaaf2a847ba4955ef976743793ebf9db72dcf8f2a97e49810"
+    },
+    {
+      "P": 5,
+      "T": 256,
+      "arrays": {
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "2b94295033fc7f81627a696cd403ab689255b832d5f38667ef726784130b1e84",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "precision_true": {
+          "dtype": "<f8",
+          "sha256": "c6b9e097a65e8f5dc498258d6963f5165686f34d593a4319d57d2c194dd44405",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "31e4ecc665901f024935e47ce3239990b5667ec454549ff063d65b07be0626ed",
+          "shape": [
+            5,
+            256
+          ]
+        }
+      },
+      "description": "Gaussian with tridiagonal precision (diag 1.0, off-diag -0.4)",
+      "file": "sparse_precision_T256.npz",
+      "id": "D13",
+      "name": "sparse_precision",
+      "notes": "",
+      "params": {
+        "diag": 1.0,
+        "offdiag": -0.4
+      },
+      "seed": 13000256,
+      "truth": {
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "precision_true": {
+          "dtype": "float64",
+          "shape": [
+            5,
+            5
+          ]
+        }
+      },
+      "x_sha256": "31e4ecc665901f024935e47ce3239990b5667ec454549ff063d65b07be0626ed"
+    },
+    {
+      "P": 5,
+      "T": 1024,
+      "arrays": {
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "2b94295033fc7f81627a696cd403ab689255b832d5f38667ef726784130b1e84",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "precision_true": {
+          "dtype": "<f8",
+          "sha256": "c6b9e097a65e8f5dc498258d6963f5165686f34d593a4319d57d2c194dd44405",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "0990e0ef5a0973e9fae44bdfb8d7e57f5d66d153ec8c25380874c7af75f64fce",
+          "shape": [
+            5,
+            1024
+          ]
+        }
+      },
+      "description": "Gaussian with tridiagonal precision (diag 1.0, off-diag -0.4)",
+      "file": "sparse_precision_T1024.npz",
+      "id": "D13",
+      "name": "sparse_precision",
+      "notes": "",
+      "params": {
+        "diag": 1.0,
+        "offdiag": -0.4
+      },
+      "seed": 13001024,
+      "truth": {
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "precision_true": {
+          "dtype": "float64",
+          "shape": [
+            5,
+            5
+          ]
+        }
+      },
+      "x_sha256": "0990e0ef5a0973e9fae44bdfb8d7e57f5d66d153ec8c25380874c7af75f64fce"
+    },
+    {
+      "P": 5,
+      "T": 4096,
+      "arrays": {
+        "cov_true": {
+          "dtype": "<f8",
+          "sha256": "2b94295033fc7f81627a696cd403ab689255b832d5f38667ef726784130b1e84",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "precision_true": {
+          "dtype": "<f8",
+          "sha256": "c6b9e097a65e8f5dc498258d6963f5165686f34d593a4319d57d2c194dd44405",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "7068ff565e270a66175ae8fadd18f98bb55d633e49124e54f0d2144dcb215f5b",
+          "shape": [
+            5,
+            4096
+          ]
+        }
+      },
+      "description": "Gaussian with tridiagonal precision (diag 1.0, off-diag -0.4)",
+      "file": "sparse_precision_T4096.npz",
+      "id": "D13",
+      "name": "sparse_precision",
+      "notes": "",
+      "params": {
+        "diag": 1.0,
+        "offdiag": -0.4
+      },
+      "seed": 13004096,
+      "truth": {
+        "cov_true": {
+          "dtype": "float64",
+          "shape": [
+            5,
+            5
+          ]
+        },
+        "precision_true": {
+          "dtype": "float64",
+          "shape": [
+            5,
+            5
+          ]
+        }
+      },
+      "x_sha256": "7068ff565e270a66175ae8fadd18f98bb55d633e49124e54f0d2144dcb215f5b"
+    },
+    {
+      "P": 4,
+      "T": 64,
+      "arrays": {
+        "envelope": {
+          "dtype": "<f8",
+          "sha256": "a6fa030f1894b02fd8e42a98d7e88167616da6c9bb1cf64d1286b225131509a1",
+          "shape": [
+            4,
+            64
+          ]
+        },
+        "phase": {
+          "dtype": "<f8",
+          "sha256": "92aa54ed1e3da516cfb7aa6f4ce37324dbae645f6b6aa5e8c2b817aa6f2d3ad0",
+          "shape": [
+            4,
+            64
+          ]
+        },
+        "phase_offset_defined": {
+          "dtype": "|b1",
+          "sha256": "f896c3a5f9841b6e1f0a22bd35a6a1bc5efb28aaa23b66301ec8098ce57cf99a",
+          "shape": [
+            4
+          ]
+        },
+        "phase_offset_rel_x0": {
+          "dtype": "<f8",
+          "sha256": "1665bd0a5c50b7c919b0a41cc4db36c05e52a0ddb4365c2b7e39d3e127b1d5e6",
+          "shape": [
+            4
+          ]
+        },
+        "phi0": {
+          "dtype": "<f8",
+          "sha256": "1b7f537da804f7ff08057edd16b5dae8f22196e7372d4495866c2fbace539ed5",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "5ff515eb1d960f03363fedccb629470723a224df165ec65061aac2de5650f73c",
+          "shape": [
+            4,
+            64
+          ]
+        }
+      },
+      "description": "x0,x1 shared slow envelope at 0.2 c/s with pi/3 lag; x2 = copy of x0; x3 independent phase-diffusing narrowband with own envelope (phase_offset_rel_x0[3] = NaN: no fixed offset; see phase_offset_defined)",
+      "file": "shared_envelope_T64.npz",
+      "id": "D14",
+      "name": "shared_envelope",
+      "notes": "x_k = envelope_k * sin(phase_k); phase = wrapped sin argument (analytic-signal phase is approx phase - pi/2); x2 is bit-identical to x0; phase_offset_rel_x0[3] is NaN by design (x3 has its own random-walk phase, no constant offset) and phase_offset_defined = [True, True, True, False] marks it",
+      "params": {
+        "env_amp": 0.5,
+        "f_env": 0.005,
+        "fc": 0.2,
+        "lag": 1.0471975511965976,
+        "x3_f_env": 0.0031,
+        "x3_phase_step_std": 0.3
+      },
+      "seed": 14000064,
+      "truth": {
+        "envelope": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            64
+          ]
+        },
+        "phase": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            64
+          ]
+        },
+        "phase_offset_defined": {
+          "dtype": "bool",
+          "shape": [
+            4
+          ]
+        },
+        "phase_offset_rel_x0": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "phi0": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "5ff515eb1d960f03363fedccb629470723a224df165ec65061aac2de5650f73c"
+    },
+    {
+      "P": 4,
+      "T": 256,
+      "arrays": {
+        "envelope": {
+          "dtype": "<f8",
+          "sha256": "2f7146bf81f40adf62261c6c148b38537b6bf269c23a348acacae43e783ab4ec",
+          "shape": [
+            4,
+            256
+          ]
+        },
+        "phase": {
+          "dtype": "<f8",
+          "sha256": "1e01580882238de57033c482da325b51f6a18f77e83d5ce0eea51bd59d0b57ac",
+          "shape": [
+            4,
+            256
+          ]
+        },
+        "phase_offset_defined": {
+          "dtype": "|b1",
+          "sha256": "f896c3a5f9841b6e1f0a22bd35a6a1bc5efb28aaa23b66301ec8098ce57cf99a",
+          "shape": [
+            4
+          ]
+        },
+        "phase_offset_rel_x0": {
+          "dtype": "<f8",
+          "sha256": "1665bd0a5c50b7c919b0a41cc4db36c05e52a0ddb4365c2b7e39d3e127b1d5e6",
+          "shape": [
+            4
+          ]
+        },
+        "phi0": {
+          "dtype": "<f8",
+          "sha256": "3885b8dc52a67a783c739c808b76ac13fb34d3377c2108ff4190a3e46b354e7a",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "52da372ff0df0d51bd70210a77b32b5827211aebe5e00b44349e6de0d2fb2340",
+          "shape": [
+            4,
+            256
+          ]
+        }
+      },
+      "description": "x0,x1 shared slow envelope at 0.2 c/s with pi/3 lag; x2 = copy of x0; x3 independent phase-diffusing narrowband with own envelope (phase_offset_rel_x0[3] = NaN: no fixed offset; see phase_offset_defined)",
+      "file": "shared_envelope_T256.npz",
+      "id": "D14",
+      "name": "shared_envelope",
+      "notes": "x_k = envelope_k * sin(phase_k); phase = wrapped sin argument (analytic-signal phase is approx phase - pi/2); x2 is bit-identical to x0; phase_offset_rel_x0[3] is NaN by design (x3 has its own random-walk phase, no constant offset) and phase_offset_defined = [True, True, True, False] marks it",
+      "params": {
+        "env_amp": 0.5,
+        "f_env": 0.005,
+        "fc": 0.2,
+        "lag": 1.0471975511965976,
+        "x3_f_env": 0.0031,
+        "x3_phase_step_std": 0.3
+      },
+      "seed": 14000256,
+      "truth": {
+        "envelope": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            256
+          ]
+        },
+        "phase": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            256
+          ]
+        },
+        "phase_offset_defined": {
+          "dtype": "bool",
+          "shape": [
+            4
+          ]
+        },
+        "phase_offset_rel_x0": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "phi0": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "52da372ff0df0d51bd70210a77b32b5827211aebe5e00b44349e6de0d2fb2340"
+    },
+    {
+      "P": 4,
+      "T": 1024,
+      "arrays": {
+        "envelope": {
+          "dtype": "<f8",
+          "sha256": "7b19743f01d12d89b9784b2bfbcbf1d9e670b366ae7fa8bce6fe70bd1528b01d",
+          "shape": [
+            4,
+            1024
+          ]
+        },
+        "phase": {
+          "dtype": "<f8",
+          "sha256": "deab2bca3964a71f78980c23f2b3ed8091398e206a8ec09022c78fcced14fce7",
+          "shape": [
+            4,
+            1024
+          ]
+        },
+        "phase_offset_defined": {
+          "dtype": "|b1",
+          "sha256": "f896c3a5f9841b6e1f0a22bd35a6a1bc5efb28aaa23b66301ec8098ce57cf99a",
+          "shape": [
+            4
+          ]
+        },
+        "phase_offset_rel_x0": {
+          "dtype": "<f8",
+          "sha256": "1665bd0a5c50b7c919b0a41cc4db36c05e52a0ddb4365c2b7e39d3e127b1d5e6",
+          "shape": [
+            4
+          ]
+        },
+        "phi0": {
+          "dtype": "<f8",
+          "sha256": "07272495386988ac10019f9d9dc6d8815db1d25cd0863cfd2679725f5901ec94",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "bf3d74551af5aa5688dbfc0662002aa5984da1712fec15f97c086496bcb464b2",
+          "shape": [
+            4,
+            1024
+          ]
+        }
+      },
+      "description": "x0,x1 shared slow envelope at 0.2 c/s with pi/3 lag; x2 = copy of x0; x3 independent phase-diffusing narrowband with own envelope (phase_offset_rel_x0[3] = NaN: no fixed offset; see phase_offset_defined)",
+      "file": "shared_envelope_T1024.npz",
+      "id": "D14",
+      "name": "shared_envelope",
+      "notes": "x_k = envelope_k * sin(phase_k); phase = wrapped sin argument (analytic-signal phase is approx phase - pi/2); x2 is bit-identical to x0; phase_offset_rel_x0[3] is NaN by design (x3 has its own random-walk phase, no constant offset) and phase_offset_defined = [True, True, True, False] marks it",
+      "params": {
+        "env_amp": 0.5,
+        "f_env": 0.005,
+        "fc": 0.2,
+        "lag": 1.0471975511965976,
+        "x3_f_env": 0.0031,
+        "x3_phase_step_std": 0.3
+      },
+      "seed": 14001024,
+      "truth": {
+        "envelope": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            1024
+          ]
+        },
+        "phase": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            1024
+          ]
+        },
+        "phase_offset_defined": {
+          "dtype": "bool",
+          "shape": [
+            4
+          ]
+        },
+        "phase_offset_rel_x0": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "phi0": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "bf3d74551af5aa5688dbfc0662002aa5984da1712fec15f97c086496bcb464b2"
+    },
+    {
+      "P": 4,
+      "T": 4096,
+      "arrays": {
+        "envelope": {
+          "dtype": "<f8",
+          "sha256": "5934ad23d61b2f0f0abe67be4d81696338d407a41e0ace7a696960e7e6859f50",
+          "shape": [
+            4,
+            4096
+          ]
+        },
+        "phase": {
+          "dtype": "<f8",
+          "sha256": "a081aa7f95fb511651f4dc76db513c679d3665238362037ced35fec93551f028",
+          "shape": [
+            4,
+            4096
+          ]
+        },
+        "phase_offset_defined": {
+          "dtype": "|b1",
+          "sha256": "f896c3a5f9841b6e1f0a22bd35a6a1bc5efb28aaa23b66301ec8098ce57cf99a",
+          "shape": [
+            4
+          ]
+        },
+        "phase_offset_rel_x0": {
+          "dtype": "<f8",
+          "sha256": "1665bd0a5c50b7c919b0a41cc4db36c05e52a0ddb4365c2b7e39d3e127b1d5e6",
+          "shape": [
+            4
+          ]
+        },
+        "phi0": {
+          "dtype": "<f8",
+          "sha256": "b3fa73cf3c8d420558f88089c82740becb5c60d510f096ca5eb31f944fd3ef76",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "516fcd07be690363030ea27246a8d27f48f8b3c34c4df061a7f47c75f55eb534",
+          "shape": [
+            4,
+            4096
+          ]
+        }
+      },
+      "description": "x0,x1 shared slow envelope at 0.2 c/s with pi/3 lag; x2 = copy of x0; x3 independent phase-diffusing narrowband with own envelope (phase_offset_rel_x0[3] = NaN: no fixed offset; see phase_offset_defined)",
+      "file": "shared_envelope_T4096.npz",
+      "id": "D14",
+      "name": "shared_envelope",
+      "notes": "x_k = envelope_k * sin(phase_k); phase = wrapped sin argument (analytic-signal phase is approx phase - pi/2); x2 is bit-identical to x0; phase_offset_rel_x0[3] is NaN by design (x3 has its own random-walk phase, no constant offset) and phase_offset_defined = [True, True, True, False] marks it",
+      "params": {
+        "env_amp": 0.5,
+        "f_env": 0.005,
+        "fc": 0.2,
+        "lag": 1.0471975511965976,
+        "x3_f_env": 0.0031,
+        "x3_phase_step_std": 0.3
+      },
+      "seed": 14004096,
+      "truth": {
+        "envelope": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4096
+          ]
+        },
+        "phase": {
+          "dtype": "float64",
+          "shape": [
+            4,
+            4096
+          ]
+        },
+        "phase_offset_defined": {
+          "dtype": "bool",
+          "shape": [
+            4
+          ]
+        },
+        "phase_offset_rel_x0": {
+          "dtype": "float64",
+          "shape": [
+            4
+          ]
+        },
+        "phi0": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "516fcd07be690363030ea27246a8d27f48f8b3c34c4df061a7f47c75f55eb534"
+    },
+    {
+      "P": 2,
+      "T": 64,
+      "arrays": {
+        "A": {
+          "dtype": "<f8",
+          "sha256": "55f3b57e20f86d3e884b7be29ddbcd6173d106d09095b448e2b7610edc22948c",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_E": {
+          "dtype": "<f8",
+          "sha256": "9b4a11cf9fedbae3440523c5273b8f18a9952d621f14d55d6d982ff727c1a3c4",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_X": {
+          "dtype": "<f8",
+          "sha256": "d12d1313ec7f5722496322317bf42c406123817c32b2aa412ec9f1090f298fe6",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_XY": {
+          "dtype": "<f8",
+          "sha256": "83b50b614ce1f47a9210ad0095f302ca64b17a630f98f802870a22c00e3ad32c",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "4dea98c7d78f9dfe04570ffb2b5b87f5a14c94263d9c81bed73b71eb2d186669",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "9dda9b6d7de0716c6372083b338d6daf398b036cfb86488b21f20289a8a27f29",
+          "shape": [
+            2,
+            64
+          ]
+        }
+      },
+      "description": "2-node Gaussian AR(1) X(t+1) = A X(t) + E (Oizumi et al. 2016 style)",
+      "file": "gauss_ar1_pair_T64.npz",
+      "id": "D15",
+      "name": "gauss_ar1_pair",
+      "notes": "Sigma_X = stationary Cov(X) from solve_discrete_lyapunov; Sigma_XY = E[X(t+1) X(t)^T] = A Sigma_X (row: time t+1, column: time t); Cov(X(t+1) | X(t)) = Sigma_E",
+      "params": {
+        "A": [
+          [
+            0.5,
+            0.3
+          ],
+          [
+            0.2,
+            0.5
+          ]
+        ],
+        "Sigma_E": [
+          [
+            1.0,
+            0.2
+          ],
+          [
+            0.2,
+            1.0
+          ]
+        ],
+        "burn_in": 1000
+      },
+      "seed": 15000064,
+      "truth": {
+        "A": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_E": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_X": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_XY": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "9dda9b6d7de0716c6372083b338d6daf398b036cfb86488b21f20289a8a27f29"
+    },
+    {
+      "P": 2,
+      "T": 256,
+      "arrays": {
+        "A": {
+          "dtype": "<f8",
+          "sha256": "55f3b57e20f86d3e884b7be29ddbcd6173d106d09095b448e2b7610edc22948c",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_E": {
+          "dtype": "<f8",
+          "sha256": "9b4a11cf9fedbae3440523c5273b8f18a9952d621f14d55d6d982ff727c1a3c4",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_X": {
+          "dtype": "<f8",
+          "sha256": "d12d1313ec7f5722496322317bf42c406123817c32b2aa412ec9f1090f298fe6",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_XY": {
+          "dtype": "<f8",
+          "sha256": "83b50b614ce1f47a9210ad0095f302ca64b17a630f98f802870a22c00e3ad32c",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "4dea98c7d78f9dfe04570ffb2b5b87f5a14c94263d9c81bed73b71eb2d186669",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "cf453b5a0f0aef1e1addfd38dfbff1e284a2bfc915bb382ec4d65f583ab67606",
+          "shape": [
+            2,
+            256
+          ]
+        }
+      },
+      "description": "2-node Gaussian AR(1) X(t+1) = A X(t) + E (Oizumi et al. 2016 style)",
+      "file": "gauss_ar1_pair_T256.npz",
+      "id": "D15",
+      "name": "gauss_ar1_pair",
+      "notes": "Sigma_X = stationary Cov(X) from solve_discrete_lyapunov; Sigma_XY = E[X(t+1) X(t)^T] = A Sigma_X (row: time t+1, column: time t); Cov(X(t+1) | X(t)) = Sigma_E",
+      "params": {
+        "A": [
+          [
+            0.5,
+            0.3
+          ],
+          [
+            0.2,
+            0.5
+          ]
+        ],
+        "Sigma_E": [
+          [
+            1.0,
+            0.2
+          ],
+          [
+            0.2,
+            1.0
+          ]
+        ],
+        "burn_in": 1000
+      },
+      "seed": 15000256,
+      "truth": {
+        "A": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_E": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_X": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_XY": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "cf453b5a0f0aef1e1addfd38dfbff1e284a2bfc915bb382ec4d65f583ab67606"
+    },
+    {
+      "P": 2,
+      "T": 1024,
+      "arrays": {
+        "A": {
+          "dtype": "<f8",
+          "sha256": "55f3b57e20f86d3e884b7be29ddbcd6173d106d09095b448e2b7610edc22948c",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_E": {
+          "dtype": "<f8",
+          "sha256": "9b4a11cf9fedbae3440523c5273b8f18a9952d621f14d55d6d982ff727c1a3c4",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_X": {
+          "dtype": "<f8",
+          "sha256": "d12d1313ec7f5722496322317bf42c406123817c32b2aa412ec9f1090f298fe6",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_XY": {
+          "dtype": "<f8",
+          "sha256": "83b50b614ce1f47a9210ad0095f302ca64b17a630f98f802870a22c00e3ad32c",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "4dea98c7d78f9dfe04570ffb2b5b87f5a14c94263d9c81bed73b71eb2d186669",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "12e98aab5298fb7c28e7a496a7b087a45e6a888dad6268faea7ca82e9d0b0f5c",
+          "shape": [
+            2,
+            1024
+          ]
+        }
+      },
+      "description": "2-node Gaussian AR(1) X(t+1) = A X(t) + E (Oizumi et al. 2016 style)",
+      "file": "gauss_ar1_pair_T1024.npz",
+      "id": "D15",
+      "name": "gauss_ar1_pair",
+      "notes": "Sigma_X = stationary Cov(X) from solve_discrete_lyapunov; Sigma_XY = E[X(t+1) X(t)^T] = A Sigma_X (row: time t+1, column: time t); Cov(X(t+1) | X(t)) = Sigma_E",
+      "params": {
+        "A": [
+          [
+            0.5,
+            0.3
+          ],
+          [
+            0.2,
+            0.5
+          ]
+        ],
+        "Sigma_E": [
+          [
+            1.0,
+            0.2
+          ],
+          [
+            0.2,
+            1.0
+          ]
+        ],
+        "burn_in": 1000
+      },
+      "seed": 15001024,
+      "truth": {
+        "A": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_E": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_X": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_XY": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "12e98aab5298fb7c28e7a496a7b087a45e6a888dad6268faea7ca82e9d0b0f5c"
+    },
+    {
+      "P": 2,
+      "T": 4096,
+      "arrays": {
+        "A": {
+          "dtype": "<f8",
+          "sha256": "55f3b57e20f86d3e884b7be29ddbcd6173d106d09095b448e2b7610edc22948c",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_E": {
+          "dtype": "<f8",
+          "sha256": "9b4a11cf9fedbae3440523c5273b8f18a9952d621f14d55d6d982ff727c1a3c4",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_X": {
+          "dtype": "<f8",
+          "sha256": "d12d1313ec7f5722496322317bf42c406123817c32b2aa412ec9f1090f298fe6",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_XY": {
+          "dtype": "<f8",
+          "sha256": "83b50b614ce1f47a9210ad0095f302ca64b17a630f98f802870a22c00e3ad32c",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "<f8",
+          "sha256": "4dea98c7d78f9dfe04570ffb2b5b87f5a14c94263d9c81bed73b71eb2d186669",
+          "shape": []
+        },
+        "x": {
+          "dtype": "<f8",
+          "sha256": "e8cbd9e8bef9eeaef08467aac8ad9f0786361851076c6c35c230d5976e14fe32",
+          "shape": [
+            2,
+            4096
+          ]
+        }
+      },
+      "description": "2-node Gaussian AR(1) X(t+1) = A X(t) + E (Oizumi et al. 2016 style)",
+      "file": "gauss_ar1_pair_T4096.npz",
+      "id": "D15",
+      "name": "gauss_ar1_pair",
+      "notes": "Sigma_X = stationary Cov(X) from solve_discrete_lyapunov; Sigma_XY = E[X(t+1) X(t)^T] = A Sigma_X (row: time t+1, column: time t); Cov(X(t+1) | X(t)) = Sigma_E",
+      "params": {
+        "A": [
+          [
+            0.5,
+            0.3
+          ],
+          [
+            0.2,
+            0.5
+          ]
+        ],
+        "Sigma_E": [
+          [
+            1.0,
+            0.2
+          ],
+          [
+            0.2,
+            1.0
+          ]
+        ],
+        "burn_in": 1000
+      },
+      "seed": 15004096,
+      "truth": {
+        "A": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_E": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_X": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "Sigma_XY": {
+          "dtype": "float64",
+          "shape": [
+            2,
+            2
+          ]
+        },
+        "spectral_radius": {
+          "dtype": "float64",
+          "shape": []
+        }
+      },
+      "x_sha256": "e8cbd9e8bef9eeaef08467aac8ad9f0786361851076c6c35c230d5976e14fe32"
+    }
+  ],
+  "format_version": 2,
+  "numpy_version": "2.5.4",
+  "seed_rule": "base_seed * 1_000_000 + T",
+  "x_sha256_rule": "sha256 of C-contiguous little-endian float64 bytes of x"
+}

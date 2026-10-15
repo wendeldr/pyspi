@@ -1,0 +1,181 @@
+unit_id: distance.bary.softdtw
+status: profiled
+correctness:
+  metric_name_standard: Summary (time-mean or time-max) of the soft-DTW barycenter (gamma = 1) of two z-scored series; squared variant summarises its square
+  canonical_ref: 'Cuturi & Blondel 2017, ICML, PMLR 70:894-903 (soft-DTW, §2 eq. 1-2 and barycenter §4 eq. 4, Alg. 1-2 forward/backward recursions); bias of soft-DTW (sdtw_gamma(x,x) != 0): Blondel, Mensch & Vert 2021, AISTATS, PMLR 130:3853-3861. Mean/max summary: pyspi construction.'
+  canonical_definition: 'b* in argmin_b sum_k lambda_k dtw_gamma(b, x_k), dtw_gamma(b,x) = -gamma log sum_{A in paths} exp(-<A, Delta(b,x)>/gamma), Delta_ts = (b_t - x_s)^2; smooth and differentiable, recovers the DTW barycenter as gamma -> 0; SPI = mean_t b(t) or max_t b(t) (squared: of b(t)^2).'
+  documented_definition: 'supplement §1.2.10, p.7 (supplement.txt lines 321-335): "A barycenter (or Fréchet mean) [21, 22] is a (univariate) time series that minimizes the sum of squared distances between MTS ... For each pair of (bivariate) time series ... we compute the raw barycenters then summarize them by taking their mean (modifier mean) and maximum (max), yielding seven SPIs" (keywords: undirected, nonlinear, unsigned, bivariate, time-dependent). GitBook distance-similarity.md:41-75 repeats this, adds "timepoint at which the maximum occurs (max_time)" and lists 12 identifiers bary_{euclidean,dtw,softdtw,sgddtw}_{mean,max,max_time}; neither source documents the squared (bary-sq_*) variants. Mode softdtw is documented as "alignment via a differential loss function"; supplement §1.2.9 (p.6-7) gives the soft-DTW default gamma = 1.'
+  delegate_lib: tslearn==0.9.0 tslearn.barycenters.softdtw_barycenter (defaults gamma=1.0, weights=None -> ones, method="L-BFGS-B", tol=1e-3, max_iter=50, init = Euclidean barycenter) via scipy==1.17.1 scipy.optimize.minimize, numba soft-DTW kernels
+  implemented_as: z-scored pair (ddof=1). Init b0 = (x+y)/2. Objective f(b) = sum_k sdtw_1(D(b,x_k)) with D squared Euclidean and unit (unnormalised) weights; gradient by the soft-DTW backward recursion and Jacobian 2(b_t - x_s)E_ts; scipy L-BFGS-B with ftol = gtol = 1e-3 and maxiter 50; res.x returned without checking res.success. gamma = 1 is fixed (pyspi exposes no parameter). Deterministic and order-invariant (probe2 order-diff 0). Then nanmean/nanmax of b or b**2.
+  implementation_trace:
+  - pyspi/statistics/distance.py:4-9 imports euclidean_barycenter, dtw_barycenter_averaging, dtw_barycenter_averaging_subgradient, softdtw_barycenter from tslearn.barycenters
+  - pyspi/statistics/distance.py:211-215 class Barycenter(Directed, Signed); class labels ['distance','signed','undirected','temporal','nonlinear']
+  - pyspi/statistics/distance.py:224-225 mode 'softdtw' -> self._fn = softdtw_barycenter
+  - pyspi/statistics/distance.py:230-234 squared=True sets preproc x**2 and identifier prefix 'bary-sq'
+  - 'pyspi/statistics/distance.py:236-243 statistic: mean -> np.nanmean(preproc(bc)); max -> np.nanmax(preproc(bc)); max_time -> np.argmax(preproc(bc)) (not in any config)'
+  - pyspi/statistics/distance.py:245 identifier suffix _{mode}_{statistic}
+  - 'pyspi/statistics/distance.py:247-263 bivariate: looks up data.barycenter[mode][(i,j)]; on miss z = data.to_numpy(squeeze=True); bc = self._fn(z[[i, j]]) with library defaults; caches bc under (i,j) AND (j,i) (line 261); returns statfn(bc)'
+  - pyspi/base.py:27-48 parse_bivariate (wraps raw arrays in a Data object, default normalise=True)
+  - 'pyspi/base.py:85-94 Directed.multivariate: j outer, i inner, A[i,j] = bivariate(i, j); the first call for pair {a<b} is (i=b, j=a), so the cached barycenter is computed from z[[b, a]] and reused for A[a,b]'
+  - pyspi/data.py:59-71 Data defaults detrend=False, normalise=True; pyspi/data.py:184-195 optional scipy detrend then zscore(axis=1, ddof=1)
+  - pyspi/data.py:108-116 to_numpy(squeeze=True) -> (P, T) array
+  - pyspi/calculator.py:252-266 configs instantiated as Barycenter(**params); spi.labels come from the class (config labels at pyspi/config.yaml:256-261 are not applied); pyspi/calculator.py:329 every SPI's multivariate() receives the same self.dataset, so all statistics/squared variants of one mode share one cached barycenter per pair
+  - 'pyspi/config.yaml:255-311 Barycenter configs: 4 modes x {mean,max} x {squared False, True} = 16 identifiers'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/utils.py:7-13 _set_weights(None, 2) -> numpy.ones(2) (unnormalised uniform weights)
+  - '.venv/lib/python3.12/site-packages/tslearn/utils/utils.py:215 to_time_series_dataset: (2, T) -> (2, T, 1)'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/softdtw.py:38-39 softdtw_barycenter(X, gamma=1.0, weights=None, method='L-BFGS-B', tol=1e-3, max_iter=50, init=None)
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/softdtw.py:94-99 to_time_series_dataset, _set_weights -> ones, init = euclidean_barycenter
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/softdtw.py:106-115 minimize(f, b0, method, jac=True, tol=tol, options=dict(maxiter=max_iter)); returns res.x (no success check)
+  - '.venv/lib/python3.12/site-packages/tslearn/barycenters/softdtw.py:19-35 _softdtw_func: obj = sum_i w_i SoftDTW(SquaredEuclidean(Z, X_i), gamma).compute(); G = sum_i w_i D.jacobian_product(sdtw.grad())'
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/softdtw_variants.py:1068-1135 SoftDTW.__init__/compute (R_[m, n] from _njit_soft_dtw)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/softdtw_variants.py:1137-1173 SoftDTW.grad (_njit_soft_dtw_grad, returns E[1:-1, 1:-1])
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/softdtw_variants.py:1176-1216 SquaredEuclidean.compute = pairwise_euclidean_distances(X, Y)**2; 1218-1240 jacobian_product
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/soft_dtw_fast.py:15-39 _njit_softmin3 (soft-min with gamma); 101-125 _njit_soft_dtw forward recursion R[i,j] = D[i-1,j-1] + softmin(R[i-1,j], R[i-1,j-1], R[i,j-1])
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/soft_dtw_fast.py:205-234 _njit_soft_dtw_grad backward recursion for E
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/soft_dtw_fast.py:318-340 _njit_jacobian_product_sq_euc: G[i,k] += E[i,j]*2*(X[i,k]-Y[j,k])'
+  - .venv/lib/python3.12/site-packages/scipy/optimize/_minimize.py:677-681 tol -> options ftol and gtol for L-BFGS-B
+  deviation_from_documented: Documented keyword "unsigned", but the class is Signed (issigned() True, class label "signed"); the config labels (undirected, nonlinear, unsigned, bivariate, time-dependent) are never attached to the SPI (calculator.py:252-266 uses class labels). Documented "undirected", but the class inherits Directed; symmetry comes only from the per-Data cache writing (j,i) = (i,j) (distance.py:261), not from Undirected.multivariate mirroring. Supplement says "seven SPIs" (lists euclidean_max, dtw_mean/max, softdtw_mean/max, sgddtw_mean/max); config computes 16, including bary_euclidean_mean and all eight bary-sq_* variants, none of which are documented; GitBook lists max_time variants that exist in code (distance.py:240-241) but are absent from every config. gamma = 1 is the stated soft-DTW default (§1.2.9) and is used here. bary-sq_softdtw_* undocumented.
+  deviation_from_canonical: 'Objective and gradient follow Cuturi & Blondel 2017. Practical deviations: gamma = 1 is large relative to the per-sample squared differences of z-scored data, so the barycenter is strongly smoothed and shrunk toward 0; soft-DTW is not a divergence (sdtw_gamma(x,x) < 0, != 0), so the barycenter of identical series is not that series. Probe3: softdtw barycenter of (x, x) has max|b-x| = 1.249, var(b) = 0.704 vs var(x) = 0.996 (DBA returns x exactly). Probe2 narrowband_f0-0.25: max(b) = 0.83-0.86 vs 1.31-1.34 for DBA. Optimiser tolerance 1e-3 (relative function reduction) is loose; in probes all runs converged (nit 4-13, success True). Mean/max summaries are pyspi-defined.'
+  units_and_range: 'z-score units. mean: small, either sign (probe2 -0.0243 .. 0.0036 across 9 runs). max: positive, systematically smaller than the DBA/Euclidean max. sq variants >= 0. Objective values negative (probe2 -84 .. -1669). Finite for finite input. Symmetric.'
+  direction_convention: 'undirected: A[i,j] = A[j,i] bit-identical via the cache; the routine is order-invariant (Euclidean init and symmetric objective; probe2 order-diff 0)'
+  symmetry_expected: sym
+  already_documented: no (tests/README.md bug 3 concerns the SoftDynamicTimeWarping distance class ignoring global_constraint, not this barycenter; Barycenter exposes no constraint)
+  new_finding_candidates:
+  - 'Candidate: with gamma = 1 on z-scored data the soft-DTW barycenter is biased (shrunk/smoothed), so bary_softdtw_max is systematically lower than the DTW-barycenter max and the barycenter of two identical series differs from the series. Evidence: probe3 max|b-x| = 1.249, var(b) 0.704 vs 0.996; probe2 narrowband max 0.834 (T=64) vs DBA 1.336; consistent with Blondel et al. 2021 (soft-DTW is not a divergence).'
+  - 'Candidate: optimiser tolerance tol=1e-3 (ftol/gtol) and max_iter=50 with no success check (softdtw.py:113-115) could return a non-converged barycenter for long series; not observed in probes (success True, nit <= 13 for T <= 1024), to be checked at T=4096.'
+  - 'Candidate: cost: each objective evaluation is O(T^2) per series; probe2 timing 2.5-3.3 s per pair at T=1024, which makes this the dominant barycenter cost (relevant to optimisation stage).'
+  - 'Candidate: label inconsistencies and undocumented bary-sq_softdtw_* identifiers, see deviation_from_documented.'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    path: kernel
+    reference: from-scratch numpy soft-DTW (forward recursion with log-sum-exp soft-min, backward E recursion per Cuturi & Blondel 2017 Alg. 2) + scipy.optimize.minimize L-BFGS-B with identical init, tol 1e-3, maxiter 50
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: objective and gradient at b0 match tslearn to rtol 1e-10; final barycenter statistics match pyspi to rtol 1e-6 at T=64 and 256 (optimiser path sensitivity may cause small differences)
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    path: kernel
+    reference: central finite differences of the from-scratch soft-DTW objective
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: analytic gradient used by tslearn agrees with finite differences to rtol 1e-6 (validates the optimised objective)
+  - datasets:
+    - bivariate_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    path: kernel
+    reference: re-optimise from the pyspi barycenter with the from-scratch objective, L-BFGS-B tol 1e-12, maxiter 2000
+    reference_kind: independent-impl
+    criterion: optimality
+    expected_outcome: relative objective decrease <= 1e-3 and change in bary_softdtw_mean/max small (report); at T=1024/4096 report whether pyspi stopped short
+  - datasets:
+    - iid_gaussian
+    - narrowband_f0-0.25
+    path: kernel
+    reference: 'analytic contrast: Fréchet mean of (x, x) under any divergence is x; compare with from-scratch soft-DTW barycenter for gamma in {1, 0.1, 0.01}'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: gamma = 1 barycenter deviates from x (shrinkage, var(b) < var(x)); deviation decreases as gamma -> 0, documenting the bias
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    - logistic_maps
+    path: pipeline
+    reference: 'SELF-CONSISTENCY (pyspi vs pyspi): numpy comparison of A and A.T from Calculator-style Barycenter(mode=''softdtw'').multivariate(Data(x)) plus a cold-cache call bivariate(Data(x), i=0, j=1) vs bivariate(Data(x), i=1, j=0) on fresh Data objects (direction convention). Can establish symmetry/order-invariance only, not what A[i,j] means'
+    reference_kind: same-lineage
+    criterion: direction
+    expected_outcome: A[i,j] == A[j,i] bit-identically in multivariate (cache, distance.py:261); establishes that A[i,j] carries no direction; cold-cache swapped-order calls equal for deterministic modes (euclidean, dtw, softdtw) and possibly unequal for sgddtw
+  check_method: independent-impl
+  check_reference: audit/checks/refs/_kernels_distance.py:soft_dtw_barycenter_objective (Cuturi & Blondel 2017 Alg. 1-2) + scipy.optimize.minimize L-BFGS-B with tslearn's settings via audit/checks/refs/barycenters.py:softdtw_bary, h_sdtw, h_sdtw_bc, h_obj0, h_cold, h_xx; audit/checks/refs/barycenters.py:h_fd (central differences); audit/checks/refs/barycenters.py:h_opt_sdtw (gradient at the returned barycenter and tight re-optimisation); audit/checks/refs/barycenters.py:h_gamma (analytic contrast, gamma sweep); h_sym (same-lineage)
+  check_data: bivariate_gaussian, delayed_noise, narrowband_f0-0.25, iid_gaussian (kernel T=64, four identifiers + raw barycenters); bivariate_gaussian, delayed_noise, narrowband_f0-0.25 (pipeline T=256 statistics; optimality at T=64/256 all pairs and T=1024 pair [0,1]); bivariate_gaussian [0,1] T=4096 (optimality lower bound); bivariate_gaussian, delayed_noise T=64/256 (objective at init); bivariate_gaussian, iid_gaussian [0,1] T=64 (finite differences); iid_gaussian, narrowband_f0-0.25 [0,0] T=256 (identical series, gamma sweep); var2_bivariate, delayed_noise, logistic_maps_chaotic, anm T=1024 (symmetry)
+  agreement_criterion: 'statistics of the from-scratch barycenter: rtol 1e-6, atol 1e-8; raw barycenters rtol/atol 1e-6; objective and gradient at the init: rtol 1e-9, atol 1e-9; finite differences: rtol/atol 1e-5; optimality (declared before running): relative objective gap to a tight L-BFGS-B re-optimisation from pyspi''s point (ftol = gtol = 1e-12, maxiter 300/150/500 at T=64/256/1024, run to scipy convergence) <= 1e-3 on every pair (T=4096: lower bound from one Armijo step); gamma sweep: var(b) < var(x) at gamma 1 and max|b - x| decreasing with gamma; symmetry: max|A - A.T| == 0'
+  closeness: 'From-scratch soft-DTW barycenter vs pyspi: statistics 19/19 pass, max_abs 3.7e-13, max_rel 2.4e-13 (*|sdtw|*; L-BFGS-B took 4-12 iterations, all success); raw barycenters 4/4, max_abs 7.0e-14; objective and gradient at the Euclidean init 4/4, max_abs 2.8e-13; tslearn gradient vs central differences 2/2, max_abs 2.4e-8. Optimality (*|opt|*) FAILS on bivariate_gaussian and delayed_noise at every T: relative objective gap to the local minimum reached by a converged L-BFGS-B re-optimisation from pyspi''s point 2.2e-5 to 0.0138 (T=64), 2.5e-4 to 0.0058 (T=256), 0.00118 and 0.00313 (T=1024 pair [0,1], 48 and 49 iterations); every T=64/256/1024 re-optimisation reached scipy''s convergence test (reopt_converged 1, final max|grad| <= 1.6e-4); at T=4096 only a lower bound, >= 0.00103 from one Armijo step along -grad (no re-optimisation, so the distance to the nearby minimum at T=4096 is not measured); max|grad(b)|/max|grad(b0)| 0.02-0.27; re-optimisation moves bary_softdtw_max by up to 0.051 and bary_softdtw_mean by up to 0.030 (bivariate_gaussian T=64 pair (2,3)). narrowband_f0-0.25 passes at T=64/256/1024 (gap <= 6.0e-5). Identical series (x, x), raw input, gamma=1: pyspi barycenter equals the reference to 7.3e-14 and is shrunk: iid_gaussian max|b - x| 1.315, var(b) 0.732 vs var(x) 1.015; narrowband_f0-0.25 var(b) 0.0036 vs 0.511 and max(b) 0.312 vs max(x) 1.142. gamma sweep 1 / 0.1 / 0.01: max|b - x| 1.315 / 0.234 / 0.022 (iid) and 1.136 / 0.0015 / 0 (narrowband). Symmetry: max|A - A.T| = 0 on the four direction datasets; cold-cache ordered pairs (delayed_noise T=64) match the reference to 4.1e-12 with max|M - M.T| = 0.'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 7''s optimiser clause fails: optimality fails on 7 of 10 runs (relative gap up to 0.0138 at T=64). tslearn returns res.x at tol 1e-3, which
+    departs from both the supplement''s ''minimizes'' and the canonical argmin.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Objective, gradient and the optimiser path are reproduced exactly (the soft-DTW code in tslearn is Blondel''s; independent reference to 1e-13). Two value-changing properties: (1) tslearn calls L-BFGS-B with tol=1e-3 (ftol = gtol) and maxiter 50 and returns res.x without checking convergence; on Gaussian and delayed pairs it stops 0.02-1.4% above the attainable objective, which moves bary_softdtw_max by up to 0.05 and bary_softdtw_mean by up to 0.03 at T=64 (narrowband pairs converge). (2) With gamma = 1 on z-scored or raw data, the soft-DTW barycenter is strongly smoothed and shrunk (the barycenter of (x, x) is not x; a raw sinusoid collapses to var 0.0036 from 0.511). This follows from the soft-DTW definition (soft-DTW is not a divergence), so it is a property of the canonical quantity with gamma = 1, not an implementation error, but it makes bary_softdtw_max a different quantity from the DTW-barycenter max that the supplement''s wording (''minimizes the sum of squared distances'') suggests.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'expensive: pyspi ~4 s per pair at T=1024 (24.6 s for 6 pairs of delayed_noise) and 66 s for ONE pair at T=4096 (O(T^2) per objective evaluation); the from-scratch objective costs ~0.7 s per evaluation at T=1024'
+  symmetry_observed: 'sym: max|A - A.T| = 0 on var2_bivariate, delayed_noise, logistic_maps_chaotic, anm (T=1024, bary_softdtw_max); cold-cache ordered pairs on delayed_noise T=64 also give max|M - M.T| = 0 (symmetric objective, Euclidean init)'
+  direction_observed: 'none: A[i,j] = A[j,i] bit-identically on all four direction datasets; the statistic carries no direction'
+  candidate_resolutions:
+  - candidate: gamma = 1 shrinks/smooths the barycenter; barycenter of (x, x) is not x
+    outcome: confirmed
+    evidence: 'distance.bary.softdtw|{iid_gaussian,narrowband_f0-0.25}|256|kernel|{xx,gamma}|bary_softdtw_mean|p0-0: max|b - x| 1.315 / 1.136, var(b) 0.732 vs 1.015 and 0.0036 vs 0.511; deviation falls to 0.022 / 0 at gamma 0.01. A property of the soft-DTW definition (Blondel, Mensch & Vert 2021), recorded as such'
+  - candidate: tol=1e-3, maxiter 50, no success check could return a non-converged barycenter
+    outcome: confirmed
+    evidence: 'distance.bary.softdtw|*|opt|bary_softdtw_mean: 7 of 10 runs fail the declared gap <= 1e-3 rule; gaps up to 0.0138 (T=64), 0.0058 (T=256), 0.0031 (T=1024; all three converged re-optimisations), >= 0.0010 (T=4096, lower bound from one line-search step); statistic changes up to 0.051 (max) and 0.030 (mean). Already visible at T=64, not only at T=4096'
+  - candidate: 'cost: O(T^2) per objective evaluation, dominant barycenter cost'
+    outcome: confirmed
+    evidence: 'out/pyspi/index/barycenters.json time_s: distance.bary.softdtw|delayed_noise|1024|pipeline|sym|bary_softdtw_max 24.6 s (6 pairs), distance.bary.softdtw|bivariate_gaussian|4096|pipeline|opt|bary_softdtw_mean|p0-1 66.4 s (1 pair); DBA and SSG runs <= 4.6 s'
+  - candidate: label inconsistencies and undocumented bary-sq_softdtw_* identifiers
+    outcome: confirmed
+    evidence: static (distance.py:211-215, config.yaml:255-311, supplement lines 321-329); bary_softdtw_mean takes both signs (trace probe2 -0.0243 .. 0.0036)
+  checks_run:
+  - run_ids:
+    - distance.bary.softdtw|*|64|kernel|sdtw|*
+    - distance.bary.softdtw|*|256|pipeline|sdtw|bary_softdtw_max
+    reference: audit/checks/refs/barycenters.py:h_sdtw (independent-impl)
+    outcome: pass 19/19; max_rel 2.4e-13
+  - run_ids:
+    - distance.bary.softdtw|*|64|kernel|sdtw-bc|bary_softdtw_mean
+    reference: audit/checks/refs/barycenters.py:h_sdtw_bc (independent-impl)
+    outcome: pass 4/4; max_abs 7.0e-14
+  - run_ids:
+    - distance.bary.softdtw|*|kernel|obj0|bary_softdtw_mean
+    - distance.bary.softdtw|*|64|kernel|fd|bary_softdtw_mean|p0-1
+    reference: audit/checks/refs/barycenters.py:h_obj0, h_fd (independent-impl)
+    outcome: pass 6/6; objective/gradient max_abs 2.8e-13; finite differences 2.4e-8
+  - run_ids:
+    - distance.bary.softdtw|*|pipeline|opt|bary_softdtw_mean*
+    reference: audit/checks/refs/barycenters.py:h_opt_sdtw (independent-impl, optimality)
+    outcome: fail 7/10 (bivariate_gaussian and delayed_noise at T=64/256/1024/4096); pass 3/3 narrowband; max gap 0.0138; T=1024 gaps 0.00118 / 0.00313 from converged re-optimisations; T=4096 gap >= 0.00103 (lower bound only)
+  - run_ids:
+    - distance.bary.softdtw|*|256|kernel|xx|bary_softdtw_mean|p0-0
+    - distance.bary.softdtw|*|256|kernel|gamma|bary_softdtw_mean|p0-0
+    reference: audit/checks/refs/barycenters.py:h_xx (independent-impl), h_gamma (analytic contrast)
+    outcome: pass 4/4; max|b - x| 1.315 / 1.136 at gamma 1
+  - run_ids:
+    - distance.bary.softdtw|*|1024|pipeline|sym|bary_softdtw_max
+    - distance.bary.softdtw|delayed_noise|64|pipeline|cold|bary_softdtw_max
+    reference: audit/checks/refs/barycenters.py:h_sym (same-lineage), h_cold (independent-impl)
+    outcome: pass 5/5; max|A - A.T| 0
+optimisation:
+  complexity_P_T: 'O(P^2 n_eval T^2): one soft-DTW barycenter per unordered pair, scipy L-BFGS-B (maxiter 50, ftol/gtol 1e-3) where each objective
+    evaluation runs two soft-DTW forward and backward passes (304 evaluations for 28 pairs at 8x1024, about 11 per pair). Measured T_exponent
+    1.75 (8x256 4.99 s -> 8x1024 56.1 s); never run above 8x1024, projected by pair count (13831 s).'
+  hotspot_1: tslearn/metrics/softdtw_variants.py:SoftDTW.grad (third-party:tslearn) 56.8% cumulative, 50.7% self time of the profiled SPI call
+    at 8x1024 (numba backward recursion hidden)
+  hotspot_2: tslearn/metrics/softdtw_variants.py:SoftDTW.compute (third-party:tslearn) 28.6% (numba forward recursion hidden)
+  hotspot_owner: third-party:tslearn
+  opaque_share: 0.0584
+  profile_file: audit/profiles/distance.bary.softdtw__8x1024.pstats
+  opportunities:
+  - opportunity_id: barycenters-3
+    opportunity: Fuse the squared-Euclidean cost matrix and its Jacobian product into the objective kernel (tslearn/barycenters/softdtw.py:_softdtw_func
+      builds both through sklearn euclidean_distances, astype casts, vstack/hstack per evaluation). The two soft-DTW recursions (85%) stay; beyond
+      that only process-level pair parallelism remains.
+    opp_type: rewrite-numba-rust-cpp
+    expected_speedup: ~1.2x
+    speedup_basis: profile:audit/profiles/distance.bary.softdtw__8x1024.pstats astype 4.7% + safe_sparse_dot 3.8% + vstack 3.0% + hstack 2.4%
+      + jacobian_product 1.1% + sklearn in-place 1.0% = about 16% (Amdahl 1.19x)
+    output_risk: unverified-within-tolerance
+    risk_evidence: a direct (b_t - x_s)^2 differs from sklearn's expansion by rounding; L-BFGS-B with ftol 1e-3 can amplify that into a different
+      stopping iterate (the check stage found the returned point is not at the optimum)
+    effort: M
+    depends_on:
+    - xc-window-parallel

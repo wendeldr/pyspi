@@ -1,0 +1,246 @@
+unit_id: wavelet.dswpli
+status: profiled
+correctness:
+  metric_name_standard: debiased squared phase lag index (unbiased estimator of PLI^2) from Morlet-wavelet cross-spectra, summarised by mean/max over band and time
+  canonical_ref: 'Vinck, Oostenveld, van Wingerden, Battaglia & Pennartz 2011, NeuroImage 55:1548 (supplement ref [68]): unbiased estimator of squared PLI, (N PLI_hat^2 - 1)/(N - 1) (mne-connectivity comment
+    epochs_bivariate.py:199 cites ''Vinck paper Eq. (30)''; equation number not re-checked).'
+  canonical_definition: dsPLI = (N * PLI_hat^2 - 1)/(N - 1) = (1/(N(N-1))) sum_{j != k} sign(Im X_j) sign(Im X_k) over N trials; undefined for N = 1; can be negative.
+  documented_definition: 'Not documented as such: the nine wavelet classes are absent from pyspi/config.yaml (tests/README.md:155 ''run today but are absent from pyspi/config.yaml''), from the supplement
+    SPI list and from the GitBook page. Supplement §1.5.4, p.14 (supplement.txt heading line 644) states the opposite: PSI ''is the only spectral measure that is computed in the time-frequency domain (denoted by
+    modifier wavelet)''; same on GitBook spectral.md:330. The closest documented text is the multitaper version: supplement §1.5.8, p.15 (supplement.txt heading line 715) / GitBook spectral.md:233-244: ''... we include
+    weighted variations that make the measure more robust against ... noise, and sample-size bias ...: the weighted phase lag index (wpli), the debiased squared phase lag index (dspli), and the debiased
+    squared weighted phase lag index (dswpli)''. Shared band rule, supplement §1.5 preamble, p.13 (supplement.txt heading line 570, text lines 589-599; GitBook spectral.md:14-20): ''We use 125 uniformly sampled bins across
+    the entire frequency range, f in [f0, fs/2] ... f0 = 4/T ... the mean (mean) and the maximum (max) values of each measure over three ranges ... fmin-0_fmax-0-5 ... [0, fs/2]; fmin-0_fmax-0-25 ... [0,
+    fs/4]; fmin-0-25_fmax-0-5 ... [fs/4, fs/2]''.'
+  delegate_lib: mne-connectivity==0.9.0 mne_connectivity.spectral_connectivity_epochs(mode='cwt_morlet', method='pli2_unbiased') -> mne==1.13.2 mne.time_frequency.tfr.morlet + cwt (scipy 1.17.1 scipy.fft,
+    numpy 2.5.4); band mask, mean/max over (freq, time), lower->upper mirror and NaN diagonal are native pyspi (pyspi/statistics/wavelet.py)
+  implemented_as: 'Input z-scored per channel (ddof=1, Data default; optional detrend first). pyspi hands mne-connectivity ONE epoch (z = moveaxis(data (P,T,1), 2, 0) -> (1,P,T)) with cwt_freqs = linspace(0.2,
+    0.5, 125) and cwt_n_cycles = cwt_freqs/7 (0.029..0.071 cycles). mne.morlet sets sigma_t = n_cycles/(2 pi f) = 1/(14 pi) = 0.0227 samples for every f, so the time grid arange(0, 5 sigma_t, 1) = [0] and
+    every wavelet is the single sample W = sqrt(2)+0j (probe: 125 wavelets, length 1, value 1.41421356). The ''CWT'' is X(f,t) = sqrt(2) x(t) for all 125 f up to FFT round-off (probe: max|Re X - sqrt2 x|
+    2.7e-15, max|Im X| 7.2e-16, ~2-5% of Im exactly 0). csd(f,t) = X_hi(f,t) conj(X_lo(f,t)) = 2 x_hi(t) x_lo(t) + i*roundoff (hi = higher channel index, lower-triangular connections), psd = |X|^2 = 2 x^2.
+    n_epochs = 1, so every across-epoch average in the estimator is a single term. pyspi then keeps the frequencies with fmin <= f <= fmax on the 0.2..0.5 grid (21 bins for fmin-0_fmax-0-25: 0.2..0.2476;
+    104 for fmin-0-25_fmax-0-5; all 125 for 0..0.5), applies np.nanmean or np.nanmax over (freq, time) jointly, mirrors the lower triangle to the upper, sets the diagonal NaN. Estimator pli2_unbiased (epochs_bivariate.py:187-202):
+    (n_epochs * pli_mean^2 - 1)/(n_epochs - 1) with n_epochs = 1 and pli_mean = sign(eps): 0/0 = NaN where Im != 0, -1/0 = -inf where Im == 0 exactly (probe iid T=256: 666 -inf, 31334 NaN, 0 finite). nanmean/nanmax
+    -> -inf whenever any exact-zero Im point lies in the band (every probe), NaN if none (hypothesis). Identifier ''dspli'', class DebiasedSquaredWeightedPhaseLagIndex.'
+  implementation_trace:
+  - 'pyspi/statistics/wavelet.py:15-39 mne.__init__: fmax default fs/2; statistic ''mean'' -> np.nanmean, ''max'' -> np.nanmax; identifier suffix _wavelet_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}
+    with ''.''->''-'''
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, ddof=1) when normalise=True (default); pyspi/data.py:108-118 to_numpy returns
+    the (P, T, R) array'
+  - 'pyspi/statistics/wavelet.py:48-53 _get_cache: cache lookup data.mne[self.measure] (keyed by measure only); on miss z = np.moveaxis(data.to_numpy(), 2, 0) -> (R=1, P, T): a single epoch for an ordinary
+    Data'
+  - pyspi/statistics/wavelet.py:54-55 cwt_freqs = np.linspace(0.2, 0.5, 125); cwt_n_cycles = cwt_freqs / 7.0
+  - pyspi/statistics/wavelet.py:56-67 mnec.spectral_connectivity_epochs(data=z, method=self.measure, mode='cwt_morlet', sfreq=fs, mt_adaptive=True, fmin=5/n_observations, fmax=fs/2, cwt_freqs, cwt_n_cycles)
+  - pyspi/statistics/wavelet.py:68-74 conn = connectivity.get_data(output='dense') (shape P x P x 125 x T), freq = connectivity.freqs; stored in data.mne[measure]
+  - pyspi/statistics/wavelet.py:76 freq_id = np.where((freq >= fmin) * (freq <= fmax)) (inclusive both ends)
+  - 'pyspi/statistics/wavelet.py:163-170 DebiasedSquaredWeightedPhaseLagIndex(mne, Undirected): name ''Debiased squared phase lag index (wavelet)'', identifier ''dspli'', _measure ''pli2_unbiased'' (unweighted,
+    despite ''Weighted'' in the class name)'
+  - 'pyspi/statistics/wavelet.py:80-90 multivariate: adj = statfn(adj_freq[..., freq_id, :], axis=(2, 3)) (frequency AND time); ui = triu_indices(P, 1); adj[ui] = adj.T[ui] (lower -> upper); fill_diagonal
+    NaN. The class MRO puts mne.multivariate before Undirected.multivariate (pyspi/base.py:132-138), so pyspi''s own mirror in wavelet.py:87-88 is the one that runs'
+  - mne_connectivity/spectral/epochs.py:770 spectral_connectivity_epochs; :1143-1154 fmin/fmax to arrays (fmin = 5/T, fmax = 0.5)
+  - 'mne_connectivity/spectral/epochs.py:216 -> :97-113 _check_freqs: fmin = 5/T only warns if below 5 cycles; :219 -> :116-138 _compute_freqs cwt branch (124-135): freqs_all = cwt_freqs, raises if any
+    > sfreq/2'
+  - 'mne_connectivity/spectral/epochs.py:222 -> :141-153 _compute_freq_mask: (freqs >= fmin) & (freqs <= fmax); for T >= 25 all 125 cwt freqs are kept (probe: T=16 keeps 78, T=24 keeps 121)'
+  - 'mne_connectivity/spectral/epochs.py:262-276 indices=None and bivariate method -> np.tril_indices(n_signals, -1): connections (row i > col j) only; :1373 idx_map = searchsorted(sig_idx, indices)'
+  - 'mne_connectivity/spectral/epochs.py:1332-1344 -> :320-367 _assemble_spectral_params cwt branch (345-365): cwt_n_cycles[freq_mask] (357); wavelets = morlet(sfreq, freqs, n_cycles=cwt_n_cycles, zero_mean=True)
+    (361); mt_adaptive is only used in the multitaper branch (337-341) and is returned unchanged'
+  - mne/time_frequency/tfr.py:65 morlet; :159 sigma_t = n_cycles/(2 pi f) = 1/(14 pi) = 0.0227; :165-166 t = arange(0, 5 sigma_t, 1/sfreq) = [0] -> single sample; :167-172 oscillation = 1 - exp(-2 (pi f
+    sigma_t)^2) (zero_mean offset, 4.1e-4..2.5e-3); :173-174 envelope 1; :178 W /= sqrt(0.5) * norm(W) -> W = [sqrt(2)]
+  - 'mne_connectivity/spectral/epochs.py:443-457 _compute_spectra cwt branch: this_x_t = cwt(x, wavelets, use_fft=True, mode=''same'') (451); psd = (X * conj X).real (457)'
+  - 'mne/time_frequency/tfr.py:766-794 cwt -> :303-319 _get_nfft (next_fast_len(T), called at 793) -> :797-806 _cwt_array (called at 794; calls _cwt_gen at 799) -> :322-401 _cwt_gen: fft_Ws (366), ret = ifft(fft_x * fft_Ws[ii]) (377), _centered(ret, n_times) (400): real input times
+    real constant, imaginary part is FFT round-off'
+  - 'mne_connectivity/spectral/epochs.py:647-656 cwt accumulation: csd = x_t[idx_map[0]] * conj(x_t[idx_map[1]]) (652) = X_hi conj(X_lo); this_method.accumulate(con_idx, csd)'
+  - mne_connectivity/spectral/epochs.py:1472-1474 n_epochs = epoch_idx = 1; psd /= 1; :1477-1493 compute_con(con_idx, n_epochs[, psd_xx, psd_yy])
+  - 'mne_connectivity/spectral/epochs.py:1555-1567 dense assembly: zeros (P,P,...) then this_con[indices_use] = values (lower triangle only; upper and diagonal 0); :1621 SpectroTemporalConnectivity; mne_connectivity/base.py:721-790
+    get_data(output=''dense'') reshape to (P, P, n_freqs, n_times)'
+  - mne_connectivity/spectral/epochs_bivariate.py:163-177 _PLIEst.accumulate sign(Im csd); :187-202 _PLIUnbiasedEst.compute_con (n_epochs pli_mean^2 - 1)/(n_epochs - 1) (200); :359 'pli2_unbiased' -> _PLIUnbiasedEst
+  deviation_from_documented: '(a) Frequency grid: documented 125 bins over [4/T, fs/2]; implemented 125 bins over [0.2, 0.5] for every T (wavelet.py:54), so the ''low'' band [0, 0.25] contains only 21 bins
+    in [0.2, 0.248] and frequencies below 0.2 are never analysed; the mne fmin argument is 5/T, not 4/T (it only masks cwt freqs when T < 25). (b) No time-frequency decomposition: n_cycles = f/7 makes every
+    Morlet wavelet one sample long (W = sqrt(2)), so X(f,t) = sqrt(2) x(t) at all 125 frequencies; the band choice changes nothing except which round-off pattern is averaged. (c) Aggregation runs over frequency
+    AND time (axis=(2,3)) of per-(f,t) single-epoch values; the documentation for the multitaper versions describes a summary over frequency only. (d) Not in the documented SPI set at all (extra classes).
+    (e) Output -inf (division by zero). (f) Naming: class name says ''Weighted'', computed measure is the unweighted debiased squared PLI; this matches the identifier ''dspli'' and the supplement''s dspli,
+    not the class name.'
+  deviation_from_canonical: Undefined for one trial; the library divides by N - 1 = 0 without a guard; pyspi's nanmean/nanmax return -inf (or NaN). Degenerate.
+  units_and_range: Nominally [-1/(N-1), 1] (negative legitimate for N >= 2, REVIEW M7); implemented -inf (possibly NaN); symmetric; diagonal NaN.
+  direction_convention: Undirected; A[i,j] = A[j,i] from conn[max(i,j), min(i,j)] (mne_connectivity/spectral/epochs.py:276, :652; wavelet.py:87-88).
+  symmetry_expected: sym
+  already_documented: tests/README.md 'Degenerate outputs in the extra wavelet set' (tests/README.md:217 'ppc and dspli are -inf everywhere'). REVIEW M7 concerns legitimate negative values of multi-trial
+    estimators.
+  new_finding_candidates:
+  - 'CANDIDATE: whether the output is -inf or NaN depends on whether any FFT round-off imaginary part is exactly zero in the band (per point: -inf where Im == 0, NaN otherwise; probe 666 -inf / 31334 NaN);
+    an input with no exact zeros would give NaN (not observed).'
+  - 'CANDIDATE (naming): class DebiasedSquaredWeightedPhaseLagIndex computes the unweighted ''pli2_unbiased'' (wavelet.py:163-169); unit id wavelet.dswpli and class name suggest the weighted variant, which
+    is actually the separate dwspli class.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    - var2_bivariate
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic: N = 1 gives (sign^2 - 1)/0'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: no finite value; -inf for every pair where at least one exact-zero Im point exists in the band (expected everywhere); record any NaN cases
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'from-scratch numpy implementation of the literal pyspi pipeline without mne/mne_connectivity: Morlet built from the Tallon-Baudry/MNE formula (sigma_t = n/(2 pi f), t = arange(0, 5 sigma_t,
+      1) mirrored, zero-mean offset exp(-2 (pi f sigma_t)^2), scale 1/(sqrt(0.5)||W||)) with n = f/7 on linspace(0.2,0.5,125); CWT by direct numpy.convolve(mode=''same'') (no FFT); csd = X_hi conj(X_lo),
+      psd = |X|^2, single-epoch estimator formula; band mask fmin<=f<=fmax; np.nanmean/np.nanmax over (f,t); mirror lower->upper'
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: from-scratch (Im exactly 0 everywhere) gives -inf at every point; pyspi -inf; both degenerate
+  - datasets:
+    - bivariate_gaussian
+    - narrowband_f0-0.1
+    - narrowband_f0-0.25
+    - narrowband_f0-0.4
+    - delayed_noise
+    - iid_gaussian
+    - var2_bivariate
+    path: pipeline
+    reference: 'canonical debiased squared PLI in numpy: split into K = 8 epochs, Morlet n_cycles = 7, (K PLI^2 - 1)/(K - 1) per (f,t), band/time mean'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'disagree: canonical finite, ~1 for narrowband and delayed_noise at lagged frequencies, ~0 (+-1/(K-1)) for zero-lag and independent pairs; pyspi -inf'
+  - datasets:
+    - narrowband_f0-0.25
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: 'self-consistency under channel permutation: A(X[::-1])[::-1, ::-1] vs A(X); plus orientation: compare the raw cached conn[hi, lo] with the from-scratch csd X_hi conj(X_lo) and confirm A[i,j]
+      = A[j,i] = statistic of conn[max(i,j), min(i,j)]'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: symmetric; channel reversal leaves -inf
+  check_method: independent-impl
+  check_reference: audit/checks/refs/wavelet_measures.py:h_six (analytic constant on audit/checks/probes/wavelet_measures_probes.py:six), audit/checks/refs/wavelet_measures.py:h_rep, audit/checks/refs/wavelet_measures.py:direct_cwt
+    + pipeline_value (closed-form Morlet n_cycles f/7, np.convolve, no FFT, no mne), audit/checks/refs/wavelet_measures.py:canonical (Morlet n_cycles 7 via _kernels_spectral.cwt_morlet; time-averaged single
+    trial or K=8 epochs), audit/checks/refs/wavelet_measures.py:h_perm
+  check_data: six identifiers on iid_gaussian, bivariate_gaussian, delayed_noise, narrowband_f0-0.25, var2_bivariate, shared_envelope, trending, logistic_maps at T 64 and 1024 (pipeline); iid_gaussian T256
+    pipeline, trending T256 pipeline-detrend, scaled_offset T256 kernel (representative identifier); iid_gaussian, delayed_noise, narrowband_f0-0.25 T256 kernel (from-scratch); bivariate_gaussian, delayed_noise,
+    iid_gaussian, narrowband_f0-0.1, narrowband_f0-0.25, narrowband_f0-0.4, var2_bivariate T1024 (canonical); channel reversal on narrowband_f0-0.25, delayed_noise, iid_gaussian T256
+  agreement_criterion: exact against -inf (NaN mask equal); from-scratch exact; census qualitative; synthetic exact [NaN, -inf]; canonical tolerance atol 0.05 (illustration)
+  closeness: 'six: 16/16 pass (-inf everywhere, 0 NaN); rep 3/3; from-scratch 3/3 pass exactly (-inf); pts iid T256 666 -inf / 31334 NaN / 0 finite, T1024 1000 / 127000; dsplisyn [NaN, -inf] exact; perm
+    3/3; canonical: bivariate_gaussian: max_abs inf; delayed_noise: max_abs inf; iid_gaussian: max_abs inf; narrowband_f0-0.1: max_abs inf; narrowband_f0-0.25: max_abs inf; narrowband_f0-0.4: max_abs inf;
+    var2_bivariate: max_abs inf'
+  verdict: degenerate
+  score_0_10: 0
+  score_rubric: 0
+  score_rubric_basis: anchor
+  score_rubric_note: 'Constant clause: -inf in every off-diagonal entry on 16/16 six runs (division by N - 1 = 0); without an exact zero in the band the output is NaN.'
+  documentation_status: silent
+  verdict_adjusted: degenerate
+  score_adjusted: 0
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Degenerate (rubric 0: -inf everywhere). Already documented (tests/README.md:217). Per point (1*sign(Im)^2 - 1)/0 is NaN where Im != 0 and -inf where Im == 0 (iid T256 pair (1,0): 666 -inf
+    / 31334 NaN; T1024: 1000 / 127000), so nanmean/nanmax return -inf as long as one exact zero falls in the band; the synthetic probe shows the output becomes NaN without an exact zero. The from-scratch
+    direct convolution (Im exactly 0 everywhere) gives -inf at every point; this is the mechanism of an already-documented output, not a new finding. Code-naming remark only (not a finding): the Python
+    class name DebiasedSquaredWeightedPhaseLagIndex says weighted but the measure is the unweighted pli2_unbiased (wavelet.py:163-169; the weighted debiased estimator is the separate dwspli class); the
+    user-facing name ''Debiased squared phase lag index (wavelet)'' (wavelet.py:164) and the identifier dspli describe the computation, and tests/README.md:155 already lists dspli as DebiasedSquaredWeightedPhaseLagIndex.
+    Canonical epoched dsPLI (K = 8) gives 0.6331 narrowband_f0-0.25, 0.8185 delayed_noise, -0.0016 bivariate_gaussian, 0.0042 iid_gaussian (pair (1,0)).'
+  new_finding: false
+  definition_under_review: false
+  check_cost: 'cheap: <= 1.5 s per pyspi run at T = 1024 (T <= 1024 only, extra-config unit; no convergence runs; canonical illustrations on all 7 proposed datasets at T = 1024)'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on every (P,P) run of the unit (six/ident, rep, scratch, canon, perm; ref key sym_maxabs), from pyspis lower -> upper mirror'
+  direction_observed: 'undirected by construction: A[i,j] = A[j,i] = statistic of conn[max(i,j), min(i,j)], conn[hi,lo] = X_hi conj(X_lo) (wavelet.morlet_cwt orient7: delayed_noise T256 library angle of
+    pair (1,0) -1.2541 at f=0.2 vs -2 pi f = -1.2566, x1 lags; narrowband_f0-0.25 pair (1,0) +0.7837 vs +pi/4, pair (2,0) -1.5761 vs -pi/2); with the one-sample wavelet no lead/lag information reaches the
+    output'
+  candidate_resolutions:
+  - candidate: -inf vs NaN depends on whether an exact-zero Im falls in the band; no exact zero would give NaN
+    outcome: confirmed
+    evidence: wavelet.dswpli|iid_gaussian|{256,1024}|pipeline|pts (-inf count = exact-zero count, rest NaN); wavelet.dswpli|iid_gaussian|64|pipeline|dsplisyn ([NaN, -inf]); no audit dataset produced a band
+      without an exact zero (16/16 six runs -inf)
+  - candidate: class name says Weighted but computes the unweighted pli2_unbiased
+    outcome: confirmed
+    evidence: 'code: pyspi/statistics/wavelet.py:163-169 (_measure "pli2_unbiased", identifier dspli); mne-connectivity epochs_bivariate.py:187-200 _PLIUnbiasedEst uses only sign(Im); wavelet.dswpli|*|256|kernel|scratch:mean-full
+      reproduces pyspi with the unweighted formula; affects the Python class name only (display name wavelet.py:164 and identifier dspli name it as computed), so it is recorded as a code-naming remark, not a new
+      finding'
+  checks_run:
+  - run_ids:
+    - wavelet.dswpli|bivariate_gaussian|1024|pipeline|six
+    - wavelet.dswpli|bivariate_gaussian|64|pipeline|six
+    - wavelet.dswpli|delayed_noise|1024|pipeline|six
+    - wavelet.dswpli|delayed_noise|64|pipeline|six
+    - wavelet.dswpli|iid_gaussian|1024|pipeline|six
+    - wavelet.dswpli|iid_gaussian|64|pipeline|six
+    - wavelet.dswpli|logistic_maps|1024|pipeline|six
+    - wavelet.dswpli|logistic_maps|64|pipeline|six
+    - wavelet.dswpli|narrowband_f0-0.25|1024|pipeline|six
+    - wavelet.dswpli|narrowband_f0-0.25|64|pipeline|six
+    - wavelet.dswpli|shared_envelope|1024|pipeline|six
+    - wavelet.dswpli|shared_envelope|64|pipeline|six
+    - wavelet.dswpli|trending|1024|pipeline|six
+    - wavelet.dswpli|trending|64|pipeline|six
+    - wavelet.dswpli|var2_bivariate|1024|pipeline|six
+    - wavelet.dswpli|var2_bivariate|64|pipeline|six
+    reference: audit/checks/refs/wavelet_measures.py:h_six
+    outcome: 16/16 pass; -inf everywhere
+  - run_ids:
+    - wavelet.dswpli|iid_gaussian|256|pipeline|rep:mean-full
+    - wavelet.dswpli|scaled_offset|256|kernel|rep:mean-full
+    - wavelet.dswpli|trending|256|pipeline-detrend|rep:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:h_rep
+    outcome: 3/3 pass; analytic -inf
+  - run_ids:
+    - wavelet.dswpli|delayed_noise|256|kernel|scratch:mean-full
+    - wavelet.dswpli|iid_gaussian|256|kernel|scratch:mean-full
+    - wavelet.dswpli|narrowband_f0-0.25|256|kernel|scratch:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:direct_cwt + pipeline_value (closed-form Morlet n_cycles f/7, np.convolve, no FFT, no mne)
+    outcome: 3/3 pass; from-scratch -inf, exact
+  - run_ids:
+    - wavelet.dswpli|bivariate_gaussian|1024|pipeline|canon:mean-full
+    - wavelet.dswpli|delayed_noise|1024|pipeline|canon:mean-full
+    - wavelet.dswpli|iid_gaussian|1024|pipeline|canon:mean-full
+    - wavelet.dswpli|narrowband_f0-0.1|1024|pipeline|canon:mean-full
+    - wavelet.dswpli|narrowband_f0-0.25|1024|pipeline|canon:mean-full
+    - wavelet.dswpli|narrowband_f0-0.4|1024|pipeline|canon:mean-full
+    - wavelet.dswpli|var2_bivariate|1024|pipeline|canon:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:canonical (Morlet n_cycles 7 via _kernels_spectral.cwt_morlet; time-averaged single trial or K=8 epochs)
+    outcome: 0/7 pass; illustration, expected to disagree; bivariate_gaussian pyspi -inf vs canonical -0.00158; delayed_noise pyspi -inf vs canonical 0.8185; iid_gaussian pyspi -inf vs canonical 0.004161;
+      narrowband_f0-0.1 pyspi -inf vs canonical 0.008996; narrowband_f0-0.25 pyspi -inf vs canonical 0.6331; narrowband_f0-0.4 pyspi -inf vs canonical 0.7066; var2_bivariate pyspi -inf vs canonical 0.1935
+      (pair (1,0))
+  - run_ids:
+    - wavelet.dswpli|delayed_noise|256|pipeline|perm:mean-full
+    - wavelet.dswpli|iid_gaussian|256|pipeline|perm:mean-full
+    - wavelet.dswpli|narrowband_f0-0.25|256|pipeline|perm:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:h_perm (probe perm)
+    outcome: 3/3 pass; -inf in both orders
+  - run_ids:
+    - wavelet.dswpli|iid_gaussian|1024|pipeline|pts
+    - wavelet.dswpli|iid_gaussian|256|pipeline|pts
+    reference: audit/checks/refs/wavelet_measures.py:h_pts
+    outcome: 2/2 pass; -inf exactly at Im == 0 points, NaN elsewhere
+  - run_ids:
+    - wavelet.dswpli|iid_gaussian|64|pipeline|dsplisyn
+    reference: audit/checks/refs/wavelet_measures.py:h_dsplisyn
+    outcome: '1/1 pass; library _PLIUnbiasedEst: NaN without an exact zero, -inf with one'
+optimisation:
+  complexity_P_T: 'O(P F T log T) Morlet CWT (mne/time_frequency/tfr.py:cwt, F = 125) + O(P^2/2 F T) per-connection _PLIUnbiasedEst.accumulate/compute_con (mne_connectivity/spectral/epochs_bivariate.py)
+    + O(P^2 F T) dense (P, P, 125, T) output and pyspi''s nan-statistic over (freq, time) (pyspi/statistics/wavelet.py:mne._get_cache / multivariate). The P^2 F T terms dominate at 118x1024,
+    where the dense real tensor alone is 14.3 GB. summary.json gives P_exponent 3.49 fresh / 3.93 family-warm (8 -> 32) and T_exponent 0.87 / 0.98, from 32x1024 walls of 22.40 s fresh
+    / 58.86 s family-warm (all nine fresh units and the family-warm pass ran in one subprocess per (family, shape) at P <= 32, profile_units.py:136 and 1060-1063, a probable but unconfirmed
+    cause; repeats 1-3, peak RSS 3415 MB fresh). Those 32x1024 walls do not reproduce: isolated re-times of the representative identifier at 32x1024 gave 11.02 s (this stage; identifier
+    dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5) (audit/profiles/micro/prof_wavelet__index.json), 2.0x lower, while the 8x1024 walls the reviewer re-timed (cohmag 0.27 s vs 0.21 s, pli 0.168
+    s vs 0.163 s) roughly reproduce. With the re-times the 8 -> 32 exponent is about 2.98. Above P^2; one re-time only, taken at load average ~6, so the exponent is uncertain. The family-warm
+    8x1024 wall_cv 0.75 comes from one slow first pass (walls_s 1.04 s, then 0.25-0.27 s); wall_s is the minimum over passes (0.255 s,
+    profile_units.py:69-71), so the cv does not enter the summary.json exponent, which is log4(58.86/0.255) = 3.93 and is set by the non-reproducing
+    32x1024 family-warm wall. The summary.json 118x1024 projections (2123 s fresh / 9887 s family-warm, extrapolated-power-from-32, 118
+    skipped-budget) are therefore inflated and should not be used; scaling the re-timed 32x1024 wall by (118/32)^2 to (118/32)^2.98 gives about 150-540 s per identifier build (order
+    of magnitude only, not measured). A 118x1024 run would probably not fit in 31 GB (the dense tensor plus mne''s per-connection complex accumulators of about 14 GB; inference from
+    array sizes, not run).'
+  hotspot_1: mne_connectivity/spectral/epochs.py:_epoch_spectral_connectivity (third-party:mne_connectivity) 50.5% of the profiled SPI call at 8x1024 (19.3% self), of which _PLIUnbiasedEst.compute_con
+    13.4% and _PLIEst.accumulate 7.8%
+  hotspot_2: mne_connectivity/spectral/epochs.py:_compute_spectra -> mne/time_frequency/tfr.py:cwt (third-party:mne) 18.6% (cwt 13.4%); numpy nanmean 18.2%. These shares are at 8x1024
+    only; at 32x1024 the sister profile of pli (ndarray.conjugate 30.8%, accumulate 16.8%, compute_con 9.9%, cwt 2.2%) (audit/profiles/micro/prof_wavelet.*__32x1024.pstats) moves the
+    weight to mne's per-connection frames and the CWT falls to 1-2%
+  hotspot_owner: third-party:mne_connectivity
+  opaque_share: 0.266
+  profile_file: audit/profiles/wavelet.dswpli__8x1024.pstats
+  no_opportunity_reason: 'No opportunity, by the user''s decision: the wavelet family is not used (''i don''t think we use this though so its not a priority'', HANDOFF.md standing rules), and its definition is under review (cwt_n_cycles = freqs/7 makes every Morlet wavelet one sample long, wavelet.morlet_cwt; psi_wavelet aggregates over time indices). The optimisation block holds hotspot fields only (notes/wavelet_measures.md and notes/wavelet_psi.md, Optimisation).'
+  opportunities: []

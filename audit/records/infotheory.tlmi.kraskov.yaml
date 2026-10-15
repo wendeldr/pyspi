@@ -1,0 +1,239 @@
+unit_id: infotheory.tlmi.kraskov
+status: profiled
+correctness:
+  metric_name_standard: lag-1 time-lagged mutual information I(X_t; Y_{t+1}) in nats, KSG1 estimator, k = 4
+  canonical_ref: Lagged (time-delayed) mutual information I(X_t; Y_{t+τ}), as discussed by Schreiber 2000, Phys. Rev. Lett. 85, 461 (supplement [35]) as the conventional predecessor of transfer entropy;
+    estimator Kraskov, Stögbauer & Grassberger 2004, Phys. Rev. E 69, 066138, algorithm 1.
+  canonical_definition: 'τ = 1: I(X_t; Y_{t+1}) = ∫∫ p(x_t, y_{t+1}) log[p(x_t, y_{t+1}) / (p(x_t) p(y_{t+1}))], estimated by KSG1 on the N = T − 1 pairs (x_t, y_{t+1}), t = 1..T−1; not symmetric in (X,
+    Y).'
+  documented_definition: 'supplement §1.4.4, p.10 (pack lines 477-485): ''Keywords: undirected, nonlinear, unsigned, bivariate, time-dependent. Time-lagged mutual information [35] is an undirected measure
+    of the dependence between time series x and a time-lagged instance of the series y. We include statistics for only lag-one mutual information''. GitBook information-theory.md:235-251: keywords ''directed'',
+    ''Time-lagged mutual information is a directed measure ...'', lists tlmi_kraskov_NN-4 and tlmi_kraskov_NN-4_DCE. [35] = Schreiber 2000. Estimator text as in supplement §1.4, p.9.'
+  delegate_lib: JIDT jar pyspi/lib/jidt/infodynamics.jar (labelled 1.6.1 by pyspi/lib/jidt/version-1.6.1.txt, but its classes contain the NOISE_SEED property that JIDT master added after the v1.6.1 tag;
+    build date 2024-04-21 matches master a9b6b3e of 2024-04-20, whose source is cited below) infodynamics.measures.continuous.kraskov.MutualInfoCalculatorMultiVariateKraskov1.computeAverageLocalOfObservations,
+    called through jpype 1.7.1 on OpenJDK 21.0.12
+  implemented_as: 'Each channel optionally detrended, then z-scored. bivariate(i, j): src = x_i[:-1], targ = x_j[1:] (pyspi slices the arrays itself; JIDT TIME_DIFF stays 0), then the KSG1 MI exactly as
+    infotheory.mi.kraskov on N = T − 1 pairs: re-standardisation, 1e-8 jitter (seed 42), k = 4, max-norm, ψ(4) − ⟨ψ(n_x+1)+ψ(n_y+1)⟩ + ψ(T−1). Directed: all ordered pairs computed, no mirror.'
+  implementation_trace:
+  - pyspi/config.yaml:516-536 TimeLaggedMutualInfo configs (kraskov prop_k 4; kraskov prop_k 4 dyn_corr_excl AUTO)
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, ddof=1) when normalise=True (Calculator default normalise=True, detrend=False)'
+  - 'pyspi/calculator.py:295-355 Calculator.compute: S = spi.multivariate(dataset); any exception escaping multivariate turns the whole SPI matrix NaN (per-pair JIDT exceptions are caught earlier inside
+    bivariate and give a NaN entry)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: outer loop j, inner loop i != j, A[i, j] = self.bivariate(data, i=i, j=j) (no mirroring)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: identifier += ''_kraskov_NN-{prop_k}'', labels += [''nonlinear''], ''_DCE'' appended when dyn_corr_excl is truthy'
+  - 'pyspi/statistics/infotheory.py:84-93 JIDTBase._setup: setProperty(''k'', ''4''); setProperty(''BIAS_CORRECTION'', ''false'') (not a property of the Kraskov calculators: probe getProperty(''BIAS_CORRECTION'')
+    -> None, i.e. ignored); setProperty(''NOISE_SEED'', ''42'')'
+  - 'pyspi/statistics/infotheory.py:286-299 TimeLaggedMutualInfo(JIDTBase, Directed): labels [''unsigned'',''infotheory'',''temporal'',''directed''], calculator MutualInfoCalculatorMultiVariateKraskov1'
+  - 'pyspi/statistics/infotheory.py:301-317 TimeLaggedMutualInfo.bivariate: _set_theiler_window (no-op without DCE), initialise(1, 1), src, targ = data.to_numpy(squeeze=True)[[i, j]]; src = src[:-1]; targ
+    = targ[1:]; setObservations(src, targ); computeAverageLocalOfObservations; bare except -> NaN'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/MutualInfoMultiVariateCommon.java#L574-L643 MutualInfoMultiVariateCommon.finaliseAddObservations:
+    copies data, computes means and std (MatrixUtils.stdDevs, divisor N-1, MatrixUtils.java#L2490-L2502), normalises each column when NORMALISE=true (default true, :164; MatrixUtils.normalise :2663-2672),
+    then adds random.nextGaussian()*noiseLevel to every source then destination entry row by row from java.util.Random seeded with NOISE_SEED (:626-642; NOISE_SEED parsed at :265-271)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L180-L185 constructor:
+    addNoise=true, noiseLevel=1e-8; :74 k default 4; :79 normType = NORM_MAX_NORM; :133 numThreads = availableProcessors() (probe: 64 here)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L225-L250 setProperty:
+    k, NORM_TYPE, DYN_CORR_EXCL (dynCorrExcl = W > 0), NUM_THREADS; unknown names go to MutualInfoMultiVariateCommon.setProperty (unknown ignored)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L294-L308 finaliseAddObservations:
+    throws if totalObservations <= k + 2*DYN_CORR_EXCL; digammaK = digamma(k), digammaN = digamma(totalObservations) (N not reduced for the exclusion window)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L315-L330 computeAverageLocalOfObservations
+    -> computeFromObservations :427-526: splits time points over numThreads threads, sums per-thread partial digamma sums, returns digammaK - averageDiGammas + digammaN for algorithm 1 (:518-522)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L715-L738 ensureKdTreesConstructed:
+    joint KdTree over (source, dest) and per-marginal NearestNeighbourSearcher (UnivariateNearestNeighbourSearcher for 1-D), all max-norm, carrying observationTimePoints for the exclusion window'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov1.java#L60-L123 partialComputeFromObservations:
+    eps_t = distance of the k-th nearest neighbour in the joint space (kdTreeJoint.findKNearestNeighbours(k, t, dynCorrExclTime), :79-83); n_x, n_y = countPointsStrictlyWithinR(t, eps_t, dynCorrExclTime)
+    in each marginal (:88-91); sum digamma(n_x+1) + digamma(n_y+1) (:97-99)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/utils/KdTree.java#L751-L753 findKNearestNeighbours: a candidate is admissible only if it
+    comes from another observation set or |timePoint(candidate) - timePoint(sample)| > dynCorrExclTime (so W=0 excludes only the sample itself); https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/utils/UnivariateNearestNeighbourSearcher.java#L497-L530
+    countPointsWithinR skips |dt| <= dynCorrExclTime and counts norm < r strictly (allowEqualToR=false)'
+  deviation_from_documented: 'Supplement §1.4.4 calls tlmi ''undirected'' (keyword list and text); the code labels it ''directed'', computes every ordered pair without mirroring, and the value is asymmetric
+    (probe p5 delayed_noise T=256: A[0,1] 2.168 vs A[1,0] 0.048). The GitBook says ''directed''. Documented ''dependence between time series x and a time-lagged instance of the series y'': implemented as
+    I(x_i(t); x_j(t+1)), i.e. y = column channel is advanced by one sample. Other undocumented details as for infotheory.mi.kraskov (jitter, seed, nats, negative values, version).'
+  deviation_from_canonical: Matches lag-1 KSG1 lagged MI (from-scratch KSG1 on (x_i[:-1], x_j[1:]) reproduces pyspi to 12 decimals, probe p5). Autocorrelated samples are treated as i.i.d. Lagged MI is not
+    a measure of directed transfer in the TE sense (shared history inflates it), which is a property of the quantity, not a deviation.
+  units_and_range: nats; real, can be negative (probe iid_gaussian T=64 min -0.143); asymmetric; NaN only if JIDT raises (T−1 <= 4)
+  direction_convention: 'A[i, j] = I(x_i(t); x_j(t+1)): row i is the earlier (source) channel, column j the later one (infotheory.py:306-308; probe p5 delayed_noise, x0 leads x1 by 1: A[0,1] = 2.168, A[1,0]
+    = 0.048). To be confirmed empirically in the check stage.'
+  symmetry_expected: asym
+  already_documented: docs/storage_comparison/REVIEW.md M8 ('tlmi is asymmetric by construction', recorded for tlmi_gaussian; the same lag construction is used here)
+  new_finding_candidates:
+  - 'CANDIDATE (pack hypothesis confirmed): lag convention src = x_i[:-1], targ = x_j[1:] gives I(X_t; Y_{t+1}) with X = row channel; from-scratch KSG1 on those slices matches pyspi on 10 ordered pairs
+    (probe p5, e.g. var2_bivariate (0,1) 0.236189889797 both).'
+  - 'CANDIDATE (documentation): supplement §1.4.4 labels tlmi ''undirected'' while the code/GitBook label it ''directed'' and the output is asymmetric (REVIEW M8 already notes the asymmetry; the supplement/code
+    label conflict is the new part).'
+  - 'CANDIDATE: the value depends on the machine''s core count at the 1e-14 level, because NUM_THREADS defaults to availableProcessors() (64 here) and per-thread digamma partial sums are added in thread
+    order. Probe p2 (bivariate_gaussian T=1024): max |A(default) - A(NUM_THREADS=1)| = 7.1e-15 mi, 1.1e-14 mi_DCE, 1.6e-14 tlmi, 2.4e-15 te_k1, 4.2e-15 te_auto; repeat runs on the same machine are bit-identical.'
+  - 'CANDIDATE: on tied or discrete-valued inputs the estimate is set by the 1e-8 jitter and its seed. Probe p12, logistic_maps T=256 (series 1 is the period-4 r=3.5 map, 4 distinct values): pair 1->0 for
+    NOISE_SEED 42/43/44 gives mi 0.226622/0.226587/0.230899, tlmi 0.278902/0.276961/0.281417, te_k1 0.115063/0.113329/0.107266, te_auto 0.101410 (l,lt=7,2) / 0.089128 (10,2) / 0.044229 (6,1); bivariate_gaussian
+    is identical for all seeds.'
+  - 'CANDIDATE (estimator property, not a pyspi bug): labelled ''unsigned'' but KSG estimates are negative on independent data. Probe p13 minima at T=64: mi -0.167 (nonlinear_dependence), tlmi -0.143 (iid_gaussian),
+    te_k1 -0.134 (logistic_maps), te_auto_DCE -0.178 (cointegrated); at T=256 iid_gaussian mi min -0.055.'
+  - 'CANDIDATE (new, confirmed by probe): a deep copy of this SPI loses NOISE_SEED and prop_k. JIDTBase.__deepcopy__ (infotheory.py:77-82) deep-copies the JPype calculator, which yields a fresh Java object
+    with JIDT constructor defaults (NOISE_SEED ''NONE'', k 4). CalculatorFrame.init_from_list deep-copies the base Calculator (calculator.py:556-563, deepcopy at :559), so CalculatorFrame runs this SPI
+    with unseeded jitter. On tie-free data the value is unchanged (var2_bivariate T=256 diff 0.0, probe scratchpad it_kraskov_fix/p_te_copy.py). On tied input it is not reproducible: logistic_maps T=256
+    pair 1->0 (channel 1 has 4 distinct values) tlmi 0.278902 on every run, three deep copies 0.270293/0.274896/0.279048 (probe scratchpad it_kraskov_fix/r6_tied.py; the review''s run gave 0.278590/0.272750/0.280136).
+    The k reset is harmless at NN-4 but changes any NN-k with k != 4: mi_kraskov_NN-6 on bivariate_gaussian T=256 (0,1) 0.039668 -> 0.028352 after deepcopy (probe scratchpad it_kraskov_fix/r4_deepcopy.py).
+    Pickle (JIDTBase.__setstate__ via _getcalc/_setup) keeps NOISE_SEED and prop_k and reproduces the original.'
+  proposed_checks:
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    - gauss_ar1_pair
+    - bivariate_gaussian
+    - iid_gaussian
+    path: kernel
+    reference: 'from-scratch brute-force KSG1 MI in numpy (max-norm pairwise distance matrices, k-th neighbour by sort, strict counts, |dt| <= W exclusion) + scipy.special.digamma, columns standardised
+      with ddof=1 and the 1e-8 jitter regenerated by a pure-Python java.util.Random LCG (nextGaussian polar method, seed 42; matches java.util.Random to 2e-16); does not import JIDT/jpype. Prototype: scratchpad
+      it_kraskov/probes/ksg_ref.py applied to (x_i[:-1], x_j[1:])'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'agreement to <= 1e-12 on every ordered pair (prototype probe p5 T=256: identical to 12 printed decimals)'
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    - gauss_ar1_pair
+    - logistic_maps
+    path: pipeline
+    reference: 'known coupling direction: delayed_noise x0 leads x1, x2, x3 by 1, 3, 5 samples; var2_bivariate x0 -> x1; gauss_ar1_pair A=[[0.5,0.3],[0.2,0.5]] (both directions, stronger 1->0 at lag 1);
+      logistic_maps y (index 1) -> x (index 0)'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A[i, j] = I(x_i(t); x_j(t+1)), i.e. row = earlier (source) channel: A[0,1] >> A[1,0] on delayed_noise (probe p5 T=256: 2.168 vs 0.048), A[0,1] > A[1,0] on var2_bivariate (0.236 vs
+      -0.020), A[1,0] > A[0,1] on gauss_ar1_pair (analytic 0.1738 vs 0.1266)'
+  - datasets:
+    - gauss_ar1_pair
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic Gaussian lagged MI −½ log(1 − ρ_ij(1)²) with ρ_ij(1) = corr(x_i(t), x_j(t+1)) from the AR(1) truth (Cov(X_{t+1}, X_t) = A Σ_X): gauss_ar1_pair 0->1 0.1266, 1->0 0.1738; delayed_noise
+      0->1 ½ log(1 + 1/0.01) = 2.3076'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'convergence towards the analytic values with T; KSG underestimates large MI at small T (probe delayed_noise T=256: 2.168 vs 2.308)'
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: analytic null 0 for independent white processes
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: values centred near 0, negative values present (probe T=64 min -0.143)
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: 'asymmetry by construction: A != A.T; A(x) equals A(reversed time).T only approximately'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: A is asymmetric (directed SPI, no mirror); confirms that the supplement keyword "undirected" does not describe the output
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/it_kraskov.py:mi_jidt/cmi_jidt/te_jidt/te_auto_jidt (N-1 column z-score, pure-Python java.util.Random(42) jitter port in JIDT row/column order, then audit/checks/refs/_kernels_infotheory.py:mi_ksg1/cmi_ksg1
+    with normalise=False: cKDTree max norm, k=4, strict counts, Theiler |s-t|<=W, guard N<=k+2W -> NaN); DCE window audit/checks/refs/it_kraskov.py:window_raw (explicit lag-loop ACF); no JIDT/jpype; numpy
+    2.5.4, scipy 1.18.1 on (x_i[:-1], x_j[1:]) (audit/checks/refs/it_kraskov.py:chk_ksg, chk_seeds); audit/checks/refs/it_kraskov.py:chk_truth (analytic population value + Monte Carlo mean/SD of the same
+    estimator without jitter under the generating model) (Gaussian lagged MI from Gamma(1)); audit/checks/refs/it_kraskov.py:chk_null (mean over pairs vs Monte Carlo distribution on iid N(0,1) data); audit/checks/refs/it_kraskov.py:chk_direction
+    (ground-truth coupling); audit/checks/refs/it_kraskov.py:chk_threads (same-lineage)'
+  check_data: delayed_noise, var2_bivariate, gauss_ar1_pair, bivariate_gaussian T1024; iid_gaussian T256; logistic_maps T256 (tied); delayed_noise rows 0-1 T1024 (truth); logistic_maps_chaotic T1024 (direction);
+    delayed_noise T1024, iid_gaussian T256, logistic_maps T256 (time reversal)
+  agreement_criterion: tolerance rtol 1e-10 / atol 1e-12; statistical |pyspi - MC mean| <= 2 MC SD; direction and null qualitative
+  closeness: 'from-scratch lag-1 KSG1: 6/6 ksg runs max_abs <= 5.3e-15. Statistical: gauss_ar1_pair 0.1386 / 0.1958 vs population 0.1266 / 0.1738 (MC 0.1309 / 0.1771, z 0.50); delayed_noise (0,1) 2.3233
+    vs 0.5 ln 101 = 2.3076 (MC 2.3280, z 0.32). Null iid T=256: mean -0.0012 (MC 0.0009 +- 0.0083, z -0.24), min -0.067. Direction 3/3 pass. Direction on logistic_maps_chaotic (x -> y): A[0,1] 0.822 vs
+    A[1,0] 0.251. Time reversal: pyspi on the reversed series transposed equals pyspi on the original to 7.1e-15 (delayed_noise) and 2.7e-15 (iid_gaussian), but only to 0.0063 on tied logistic_maps, where
+    the jitter follows the sample order (the from-scratch reference reproduces both layers, max_abs <= 5.3e-15; without jitter the reversal is exact, 8.9e-16).'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 10
+  score_rubric_basis: anchor
+  score_rubric_note: Raised from the record's 9, which rested only on the supplement's 'undirected' keyword, a metadata conflict (tlmi.gaussian is 10 with the same
+    conflict). 6/6 runs agree with the from-scratch lag-1 KSG1 with the jitter port to <= 5.3e-15.
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 10
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Value: canonical lag-1 lagged MI I(X_t; Y_{t+1}) by KSG1, fp-exact. Documentation: the supplement keywords/text call tlmi ''undirected'' while the code labels it directed and the output
+    is asymmetric (row = earlier channel); GitBook says directed. Score 9 for that documentation conflict; asymmetry itself already documented (REVIEW M8).
+    Rubric reading is anchor 10 (score_rubric_note), because the ''undirected'' keyword is a metadata conflict; the score-9 sentence above is the original reasoning for score_0_10.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: pyspi <= 2.6 s at T=1024. Direction proposal: logistic_maps (the tied period-4 fixture) replaced by logistic_maps_chaotic (x -> y only), as audit/checks/data/CONVENTIONS.md asks; the
+    tied fixture is used for the time-reversal check instead.'
+  symmetry_observed: 'asym: max|A - A.T| = 2.327 (delayed_noise T1024), 0.196 (var2_bivariate), 0.057 (gauss_ar1_pair)'
+  direction_observed: 'A[i,j] = I(x_i(t); x_j(t+1)), row = earlier (source) channel: delayed_noise A[0,1] 2.323 vs A[1,0] -0.004 (lag-3/5 pairs |A| <= 0.047); var2_bivariate 0.164 vs -0.032; gauss_ar1_pair
+    0.139 vs 0.196 (population 0.127 vs 0.174); logistic_maps_chaotic (x -> y) 0.822 vs 0.251'
+  candidate_resolutions:
+  - candidate: lag convention src = x_i[:-1], targ = x_j[1:] (I(X_t; Y_{t+1}), X = row)
+    outcome: confirmed
+    evidence: infotheory.tlmi.kraskov|*|kernel|ksg (6/6, <= 5.3e-15) and *|direction (delayed_noise A[0,1] 2.323)
+  - candidate: 'documentation: supplement ''undirected'' vs code/GitBook ''directed'''
+    outcome: confirmed
+    evidence: 'infotheory.tlmi.kraskov|delayed_noise|1024|pipeline|direction: max|A - A.T| = 2.327; supplement §1.4.4 keyword list'
+  - candidate: core-count dependence at 1e-14
+    outcome: confirmed
+    evidence: 'infotheory.tlmi.kraskov|bivariate_gaussian|1024|pipeline|threads: 1.6e-14, repeat 0.0'
+  - candidate: 'tied inputs: value set by jitter seed'
+    outcome: confirmed
+    evidence: 'infotheory.tlmi.kraskov|logistic_maps|256|pipeline|seeds: 1->0 0.2789/0.2770/0.2814 (spread 0.0051), reproduced to 2.7e-15'
+  - candidate: negative values despite 'unsigned'
+    outcome: confirmed
+    evidence: 'infotheory.tlmi.kraskov|iid_gaussian|256|pipeline|null: min -0.067, 45% negative'
+  - candidate: deepcopy (CalculatorFrame) loses NOISE_SEED and prop_k
+    outcome: confirmed
+    evidence: 'same JIDTBase.__deepcopy__: deepcopy reads NOISE_SEED NONE (infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|var2_bivariate|256|pipeline|copyprops); tied data: mi_kraskov logistic_maps T=256 A[0,1]
+      Calculator 0.2301, CalculatorFrame a non-reproducible draw, because deepcopy leaves the jitter unseeded (here 0.2300; an earlier run of the same check gave 0.2248), pickle 0.2301 (infotheory.mi.kraskov|logistic_maps|256|pipeline|copy,
+      frame_vs_calculator 1.3e-04 in this run); prop_k loss shown at the check stage on MutualInfo(kraskov, prop_k=6) = mi_kraskov_NN-6 (bivariate_gaussian rows 2-3 T=256, tie-free): Calculator and pickle
+      equal the k=6 reference 0.5290 (<= 5.3e-15), CalculatorFrame and deepcopy give 0.5379, the k=4 value (2.7e-15 from the k=4 reference); read-back k: original 6, deepcopy 4, pickle 6 (infotheory.mi.kraskov|bivariate_gaussian-p23|256|pipeline|copyk6,
+      |copypropsk6)'
+  checks_run:
+  - run_ids:
+    - infotheory.tlmi.kraskov|*|kernel|ksg
+    reference: audit/checks/refs/it_kraskov.py:chk_ksg
+    outcome: pass 6/6; max_abs <= 5.3e-15
+  - run_ids:
+    - infotheory.tlmi.kraskov|gauss_ar1_pair|1024|pipeline|truth
+    - infotheory.tlmi.kraskov|delayed_noise-p01|1024|pipeline|truth
+    reference: audit/checks/refs/it_kraskov.py:chk_truth
+    outcome: pass 2/2; max z 0.50
+  - run_ids:
+    - infotheory.tlmi.kraskov|iid_gaussian|256|pipeline|null
+    reference: audit/checks/refs/it_kraskov.py:chk_null
+    outcome: pass; z -0.24
+  - run_ids:
+    - infotheory.tlmi.kraskov|{delayed_noise,var2_bivariate,gauss_ar1_pair}|1024|pipeline|direction
+    reference: audit/checks/refs/it_kraskov.py:chk_direction
+    outcome: pass 3/3
+  - run_ids:
+    - infotheory.tlmi.kraskov|bivariate_gaussian|1024|pipeline|threads
+    - infotheory.tlmi.kraskov|logistic_maps|256|pipeline|seeds
+    reference: audit/checks/refs/it_kraskov.py:chk_threads (same-lineage), chk_seeds
+    outcome: pass 2/2
+  - run_ids:
+    - infotheory.tlmi.kraskov|logistic_maps_chaotic|1024|pipeline|direction
+    reference: audit/checks/refs/it_kraskov.py:chk_direction
+    outcome: pass; A[0,1] 0.822 > A[1,0] 0.251
+  - run_ids:
+    - infotheory.tlmi.kraskov|{delayed_noise|1024,iid_gaussian|256,logistic_maps|256}|pipeline|reversal
+    reference: audit/checks/refs/it_kraskov.py:chk_reversal (probe time_reversed)
+    outcome: 'pass 3/3 (max_abs <= 5.3e-15); A(reversed).T - A: 7.1e-15 / 2.7e-15 / 0.0063 (tied)'
+optimisation:
+  complexity_P_T: 'O(P^2 N log N): TimeLaggedMutualInfo.bivariate (infotheory.py:301-317), one KSG MI per ordered pair on (x_i[:-1], x_j[1:]). JIDT KSG1 per call: kd-tree build and k=4 max-norm neighbour
+    search O(N log N d), split over NUM_THREADS = 64 threads by default (MutualInfoCalculatorMultiVariateKraskov.computeFromObservations). Measured T exponent -0.13; 244 s projected at 118 (extrapolated-pairs-from-8).'
+  hotspot_1: pyspi/statistics/infotheory.py:TimeLaggedMutualInfo.bivariate (third-party:jidt KSG, self time) 100.0% cum / 99.9% self of the profiled SPI call at 8x1024
+  hotspot_2: 'none visible inside Java (profiled wall 4.06 s vs 0.99 s quiet). opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as
+    self time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0007
+  profile_file: audit/profiles/infotheory.tlmi.kraskov__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_kraskov-1
+    opportunity: Set NUM_THREADS=1 on every JIDT KSG calculator (pyspi never sets it, so JIDT splits each call over availableProcessors() = 64 threads) and take throughput from running windows or pair blocks
+      in separate processes with one JVM each.
+    opp_type: parallel
+    expected_speedup: 1-7x
+    speedup_basis: microbench:audit/profiles/micro/opp_it_kraskov-1.json (tlmi_kraskov_NN-4 at 8x1024, single-thread 0.135 / 0.344 / 0.634 s in three runs against the quiet default wall of 0.99 s = 7.3x
+      / 2.9x / 1.6x; same-run defaults 2.90 / 2.71 / 2.30 s; process CPU per call 0.14-1.32 s single-thread vs 3.6-5.3 s default); three runs of the script on the shared machine (top level + earlier_runs)
+      give single-thread walls that vary ~5x at 8x1024 with JVM background CPU, so the low end is the contended case and the high end the least contended (CPU ~ wall) + profile:audit/profiles/infotheory.tlmi.kraskov__8x1024.pstats
+      pyspi/statistics/infotheory.py:301 TimeLaggedMutualInfo.bivariate 100.0% (the JIDT call; cProfile cannot split thread start-up from the KSG search)
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_it_kraskov-1.json: max_abs_diff 2.3e-14 in all three runs, NaN masks equal (per-thread digamma partial sums are added in a different order); check stage threads
+      runs <= 1.6e-14'
+    effort: S
+    depends_on:
+    - xc-window-parallel

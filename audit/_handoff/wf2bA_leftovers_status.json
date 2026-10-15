@@ -1,0 +1,22 @@
+{
+ "applied_2026-10-15": [
+  "cov_prec_simple: calculator.py citations moved to 327-339/329/332/335/336-339/354-355 in 8 records + note",
+  "pdist: check_reference made metric-specific in 6 records",
+  "barycenters: zb=2.865 relabelled as two-sided Bonferroni over 12 ordered entries, Phi^-1(1-0.05/24), in refs/barycenters.py h_popstat comment + notes f-string, bary.euclidean record, notes/barycenters.md",
+  "pec: notes/pec.md:169 three->four (4 pass->fail runs identified)",
+  "it_gaussian: 29 JIDT version qualifiers across 13 records (bundled jar labelled 1.6.1, entries dated 2024-04-21, later build than the v1.6.1 tag); notes/it_gaussian.md version tags",
+  "spectral_phase_sync: 1.7e-16 -> 1.1e-16 in pli/wpli/dspli/dswpli + note; check_cost rewritten from index time_s in 6 records",
+  "preprocessing_base: results 179 runs 131 pass / 48 fail unchanged; in-memory recompare identical; 86 pyspi npz rewritten by the interrupted reviewer re-run, refs not regenerated after",
+  "it_gaussian: calculator.py citations moved to HEAD lines (329/332/336-339, warning 354-355) in 13 records + notes/it_gaussian.md:36",
+  "cov_prec_robust: notes/cov_prec_robust.md:26 -> 329-335 (records were already current)",
+  "check_cost rewritten from index time_s for cov_prec_robust (4 records), causal.anm, it_gaussian (13 records); superseded timings kept and marked '(not stored in the index or results files)'; notes/it_gaussian.md:219 and notes/cdt_pairwise.md:501-505 updated",
+  "other stale calculator.py citations fixed in notes/lmfit.md:18, notes/pdist.md:14,16,296, notes/spectral_coherence.md:19, notes/spectral_csm.md:140; distance.pdist.* records 329-333 -> 329-335"
+ ],
+ "still_open_for_synthesis": [
+  "barycenters: stored ref npz and results/barycenters.json still carry the old popstat notes string; refresh with a --force popstat run (ref cache keyed on VERSION + run spec)",
+  "preprocessing_base: 86 pyspi npz rewritten after the last ref/compare; run run_checks --family preprocessing_base --force in final verification",
+  "stale calculator.py citations in 2b-B families (e.g. infotheory.*.kernel :264/:294, infotheory.phi.* :264): Workflow 4a wave 2",
+  "notes/it_gaussian.md:426 correction log says gc-auto check_cost quotes 'three timings, about 200x'; now four timings, about 270x (history entry; decide whether to annotate)",
+  "HEAD moved a1f20c7 -> a42ebc1 (user commit, pyspi/workflow/* only); records label citations 'HEAD a1f20c7'; synthesis should state both commits are identical outside pyspi/workflow/"
+ ]
+}

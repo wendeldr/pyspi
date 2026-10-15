@@ -1,0 +1,275 @@
+unit_id: distance.dtw.constraint-itakura
+status: profiled
+correctness:
+  metric_name_standard: Dynamic time warping distance with Itakura parallelogram (max slope 2)
+  canonical_ref: Sakoe H, Chiba S 1978, IEEE Trans. Acoust. Speech Signal Process. 26(1):43-49, symmetric DP-equation (Table I / eq. for P=0)
+    and adjustment window |i-j| <= r; global path constraints also in Itakura F 1975, IEEE Trans. ASSP 23(1):67-72 (slope limits 1/2..2)
+  canonical_definition: g(1,1)=2d(1,1); g(i,j)=min{g(i,j-1)+d(i,j), g(i-1,j-1)+2d(i,j), g(i-1,j)+d(i,j)}; D(A,B)=g(I,J)/(I+J), with d(i,j)=||a_i-b_j||
+    a (non-squared) distance; constrained variants restrict (i,j) to a window/parallelogram
+  documented_definition: 'supplement §1.2.7, p.6-7 (pack lines 286-301) and GitBook distance-similarity.md ''Dynamic Time Warping'': "DTW finds
+    the minimum distance between two time series through alignment (shifting and dilating of the sequences)... the Sakoe-Chiba band [17] and the
+    Itakura parallelogram [18] global constraints... computed using the tslearn package for the three global constraints"; keywords undirected,
+    nonlinear, unsigned, bivariate, time-dependent. No constraint width/slope is documented.'
+  delegate_lib: tslearn==0.9.0 tslearn.metrics.dtw (_dtw.py:30) -> numba _njit_dtw
+  units_and_range: Same units as the (z-scored, hence dimensionless) input; >= 0; 0 iff an admissible warping aligns the series exactly; unnormalised,
+    grows with T; symmetric in its two arguments for equal-length inputs; finite for finite input (an infeasible Itakura mask raises instead of
+    returning NaN). Diagonal of the pyspi matrix is NaN.
+  direction_convention: 'Undirected: A[i,j] = A[j,i] = dtw(z_min(i,j), z_max(i,j)) (Undirected.multivariate mirrors the upper triangle); both
+    orders are computed and the function is argument-symmetric, so the copy only removes last-bit differences; diagonal NaN.'
+  symmetry_expected: sym
+  implemented_as: 'As dtw, but the DP is restricted to tslearn''s Itakura parallelogram with max_slope 2.0 (default, pyspi passes none): cells
+    whose path from (0,0) and to (T-1,T-1) can keep slopes within [1/2, 2]; bounds rounded to 2 decimals then ceil/floor. Covers ~1/3 of the grid
+    for every T (probe: 0.3335 at T=64, 0.33333 at T=4096); the corner rows/columns admit only the corner cell.'
+  implementation_trace:
+  - pyspi/calculator.py:329 Calculator.compute calls self._spis[spi].multivariate(self.dataset)
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend(axis=1) only if detrend=True (default False), then scipy.stats.zscore(axis=1, nan_policy=''omit'',
+    ddof=1) if normalise=True (default True)'
+  - 'pyspi/base.py:132-138 Undirected.multivariate: A = Directed.multivariate(data); A[tril(-1)] = A.T[tril(-1)] (lower triangle overwritten by
+    the upper triangle, so A[i,j] = bivariate(min(i,j), max(i,j)))'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A filled with NaN, bivariate(data, i, j) for every ordered pair i != j (both orders computed,
+    diagonal stays NaN)'
+  - 'pyspi/base.py:27-49 parse_bivariate: a raw (x, y) call builds Data() and add_process(x), add_process(y) (pyspi/data.py:219-240)'
+  - 'pyspi/statistics/distance.py:154-163 TimeWarping.__init__: identifier += ''_constraint-'' + global_constraint.replace(''_'',''-''); self._global_constraint
+    stored'
+  - 'pyspi/statistics/distance.py:174-177 TimeWarping.bivariate: z = data.to_numpy(squeeze=True) (pyspi/data.py:108-118); return self._simfn(z[i],
+    z[j], global_constraint=self._global_constraint)'
+  - 'pyspi/statistics/distance.py:180-187 DynamicTimeWarping: self._simfn = tslearn.metrics.dtw'
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/__init__.py:20-27 tslearn.metrics.dtw is tslearn.metrics._dtw.dtw (tslearn==0.9.0 per tslearn/__init__.py:2)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:30-37 dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None, itakura_max_slope=None,
+    be=None)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:145-147 instantiate_backend (numpy for ndarray inputs); to_time_series(remove_nans=True)
+    reshapes to (T,1) and strips trailing all-NaN rows (.venv/lib/python3.12/site-packages/tslearn/utils/utils.py:154-212, _ts_size 511-518)
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:157-163 global_constraint mapped via GLOBAL_CONSTRAINT_CODE (.venv/lib/python3.12/site-packages/tslearn/metrics/_masks.py:10:
+    None->0, itakura->1, sakoe_chiba->2) and passed to _njit_dtw'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:383-412 __make_dtw/_dtw_generic: mask = _njit_compute_mask(sz1, sz2, code, radius,
+    slope); cum_sum = _njit_accumulated_matrix(s1, s2, mask); return sqrt(cum_sum[-1, -1]) (line 400)'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_masks.py:310-361 _compute_mask_generic: code 2 -> radius None replaced by 1 (339-341);
+    code 1 -> max_slope None replaced by 2.0 (346-348); code 0 -> all-True mask (350)'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:324-344 _njit_accumulated_matrix: cell cost = sum_d (s1[i,d]-s2[j,d])**2; cum[i+1,j+1]
+    = cost + min(cum[i,j+1], cum[i+1,j], cum[i,j]) (equal weights on all three moves, masked cells stay +inf)'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_masks.py:89-140 _itakura_mask_generic: slopes in [1/max_slope, max_slope] = [0.5, 2]
+    scaled by sz1/sz2; lower/upper bounds from both corners, rounded to 2 decimals (102-103, 113-114), ceil/floor; raises RuntimeWarning if any
+    row/column is empty (122-138)'
+  deviation_from_documented: The slope parameter (2) is undocumented; otherwise none.
+  deviation_from_canonical: 'Three convention differences from the Sakoe-Chiba 1978 symmetric form: (1) local cost is the SQUARED difference and
+    the result is sqrt of the minimal accumulated squared cost (Euclidean-over-path DTW), not the sum of |a_i-b_j|; (2) step pattern is ''symmetric1''
+    (diagonal move weight 1, not 2); (3) no normalisation by I+J (or by path length), so the value grows with T (about sqrt(T) for independent
+    noise). Probe (T=50 iid N(0,1)): tslearn 6.5668 == from-scratch sqrt(min sum sq) 6.5668; abs-cost unweighted DP 36.674. This is the convention
+    of most ML libraries (tslearn docstring _dtw.py:41-46; dtaidistance 2.5.1 dtw.distance(use_c=False) gives the identical unconstrained value on seeded probes T=50 seed 0 and T=80 seed 5). Constraint: Itakura 1975 imposes LOCAL slope
+    constraints (no two consecutive horizontal moves, slopes 1/2..2), whose reachable region is the parallelogram; tslearn imposes only the GLOBAL
+    parallelogram with ordinary symmetric1 local moves, so arbitrarily long horizontal/vertical runs are allowed inside the region (common ''Itakura
+    window'' practice, e.g. R dtw itakuraWindow).'
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (minor, boundary rounding): tslearn rounds the parallelogram bounds to 2 decimals before ceil/floor (_masks.py:101-116); at large
+    T a cell whose exact bound is within 0.005 of an integer can be admitted or excluded differently from an exact-arithmetic mask. To be measured
+    by cell-by-cell comparison with an exact rational mask at T in {64,256,1024,4096}.'
+  - 'Cross-family (infrastructure) candidate, affects direct two-array calls only: parse_bivariate (pyspi/base.py:33-36) builds Data() (normalise=True)
+    and calls add_process(x) then add_process(y); the first call goes through set_data and is z-scored, the second is np.append-ed raw (pyspi/data.py:230-234).
+    Probe with x, y ~ 5 + 3 N(0,1), T=64: stored means [0.0, 4.783], stds [1.0, 2.995]. So spi.bivariate(x, y) compares z-scored x with raw y.
+    Calculator/multivariate paths are unaffected.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    path: kernel
+    reference: 'from-scratch exact-rational parallelogram mask {(i,j): j/2 <= i <= 2j and (T-1-j)/2 <= T-1-i <= 2(T-1-j)} plus numpy DP'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: masks agree cell-by-cell (report any boundary differences); DTW values agree to <= 1e-12 relative where masks agree
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    path: kernel
+    reference: 'analytic ordering: dtw_unconstrained <= dtw_itakura <= ||x-y||_2'
+    reference_kind: analytic
+    criterion: optimality
+    expected_outcome: ordering holds for every pair
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: Itakura 1975 local-slope DP (no two consecutive horizontal/vertical moves) from scratch
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: 'documents the global-vs-local constraint gap: pyspi value <= local-slope-constrained value; report differences'
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: from-scratch numpy parallelogram-masked DTW DP applied to the ddof=1 z-scored rows z_i, z_j (no tslearn import)
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'Direction/symmetry convention: A == A.T exactly (np.array_equal with equal_nan), diagonal all NaN, and A[i,j] == A[j,i]
+      == reference(z_min(i,j), z_max(i,j)) within tolerance; reference(z_i, z_j) and reference(z_j, z_i) agree to <= 1e-12 relative, so the undirected
+      label carries no hidden order.'
+  check_method: independent-impl
+  check_reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:dtw_dp(constraint='itakura') (mask from audit/checks/refs/_kernels_distance.py:itakura_mask,
+    found equal to audit/checks/refs/dtw_family.py:exact_itakura); audit/checks/refs/dtw_family.py:exact_itakura vs tslearn compute_mask (probe); audit/checks/refs/dtw_family.py:local_slope_dtw;
+    audit/checks/refs/_kernels_distance.py:dtw_dp(squared_cost=False); audit/checks/refs/dtw_family.py:mc_null
+  check_data: iid_gaussian, delayed_noise, narrowband_f0-0.25, logistic_maps (kernel, T 64/256/1024); iid_gaussian, delayed_noise, bivariate_gaussian, shared_envelope
+    (pipeline T1024); masks T 64/256/1024/4096; scaled_offset, trending T1024; iid_gaussian null T256/T1024
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12; masks cell by cell (rtol 0); null: Bonferroni 2 se; optimality / qualitative flags'
+  closeness: 'All 16 dp runs bit-identical to the from-scratch masked DP (max_abs 0.0). tslearn''s parallelogram equals the exact-integer parallelogram cell
+    by cell at T 64/256/1024/4096 (n_cells_differ 0; 1366 / 21846 / 349526 / 5592406 cells, 1/3 of the grid). Bounds and nesting hold (dtw_None <= dtw_itakura
+    <= ||x-y||). A symmetric local-slope rule inside the same parallelogram (no two consecutive horizontal and no two consecutive vertical moves, weight-1 steps, local slopes 1/2..2 as in the Sakoe-Chiba P = 1 pattern but with horizontal-vertical corners allowed) raises the value by a median 18% on iid_gaussian (T1024 range 17.7-19.6%) and 0.7-4.5% median on delayed_noise; pyspi <= local-slope value on every pair. These gaps are specific to that rule: Itakura 1975''s asymmetric local rule (reference index advancing 0/1/2 per test frame, no two consecutive 0 advances) is a different DP and was not computed. Null T1024 22.11 vs Monte Carlo 21.99 +- 0.26 (max_z 1.16); T256 max_z 1.08. 1978 form: ratio
+    25.6-62.2, Spearman 0.71-0.95.'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: anchor
+  score_rubric_note: 16/16 dp runs are bit-identical to the masked from-scratch DP. The 1978 form differs by a ratio of 25.6-62.2, with Spearman 0.71-0.95.
+  documentation_status: described
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: tslearn's DTW is sqrt(min over warping paths of sum (x_i - y_j)^2) with weight-1 steps and no length normalisation. Sakoe & Chiba 1978 (symmetric
+    form, P = 0) uses |x_i - y_j| with diagonal weight 2 and divides by n + m. On this unit's 4 canon runs the two disagree in scale by a factor 25.6-62.2 (pyspi / 1978 form) and in ranking (Spearman 0.71-0.95 over the 6 pairs of a dataset), so this is a value-changing convention rather than a constant factor. The constraint is the global Itakura parallelogram (slope 2) only; no local slope rule is applied inside it. Against one symmetric local rule (no two consecutive horizontal or vertical moves, slopes 1/2..2) the value is about 15% lower (1 - 1/1.18) on independent noise; that figure depends on the local rule chosen, and Itakura 1975's own asymmetric rule was not computed. Common 'Itakura window' practice; supplement variant (rubric 7).
+  new_finding: false
+  definition_under_review: true
+  check_cost: 'cheap: <= 0.1 s per pyspi run at T=1024; mask probe at T=4096 < 1 s; all DTW checks at T <= 1024'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on every pyspi matrix (mirrored by Undirected.multivariate); the unmirrored probe (Directed.multivariate, tslearn
+    computes both orders) also gives max|B - B.T| = 0.0 at T=1024 on iid_gaussian and delayed_noise, so the function itself is argument-symmetric; diagonal
+    NaN'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = f(z_i, z_j); on delayed_noise (x_k = x0 delayed by 0/1/3/5) the matrix carries no lead/lag sign, only
+    how well warping absorbs the delay: dtw/||z0 - zk|| = 0.090 / 0.098 / 0.123 for delays 1 / 3 / 5 (the parallelogram absorbs these delays).'
+  candidate_resolutions:
+  - candidate: 2-decimal rounding of the parallelogram bounds may admit/exclude boundary cells differently from exact arithmetic at large T
+    outcome: refuted
+    evidence: 'distance.dtw.constraint-itakura|iid_gaussian|{64,256,1024,4096}|kernel|mask: n_cells_differ 0 at every T. For equal lengths and slope 2 every
+      bound is a multiple of 0.5 (k/2, 2k, 2k-(T-1), (T-1)/2+k/2), so rounding to 2 decimals is exact; unequal lengths (not used by pyspi) were not tested.'
+  - candidate: parse_bivariate z-scores only the first of two raw arrays
+    outcome: confirmed
+    evidence: 'Confirmed, but it belongs to preproc.two_array_api (preprocessing_base family, already checked; run preproc.two_array_api|scaled_offset|256|pipeline|spi-dtw),
+      so it is not a finding of this unit. Re-measured here on the direct-array API: the same parse decorator serves this identifier; measured value on the
+      dtw identifier: distance.dtw.constraint-None|scaled_offset|256|pipeline|rawcall (23.85 / 13.44 vs 10.50 both z-scored).'
+  checks_run:
+  - run_ids:
+    - distance.dtw.constraint-itakura|bivariate_gaussian|1024|pipeline|dp
+    - distance.dtw.constraint-itakura|delayed_noise|1024|kernel|dp
+    - distance.dtw.constraint-itakura|delayed_noise|1024|pipeline|dp
+    - distance.dtw.constraint-itakura|delayed_noise|256|kernel|dp
+    - distance.dtw.constraint-itakura|delayed_noise|64|kernel|dp
+    - distance.dtw.constraint-itakura|iid_gaussian|1024|kernel|dp
+    - distance.dtw.constraint-itakura|iid_gaussian|1024|pipeline|dp
+    - distance.dtw.constraint-itakura|iid_gaussian|256|kernel|dp
+    - distance.dtw.constraint-itakura|iid_gaussian|64|kernel|dp
+    - distance.dtw.constraint-itakura|logistic_maps|1024|kernel|dp
+    - distance.dtw.constraint-itakura|logistic_maps|256|kernel|dp
+    - distance.dtw.constraint-itakura|logistic_maps|64|kernel|dp
+    - distance.dtw.constraint-itakura|narrowband_f0-0.25|1024|kernel|dp
+    - distance.dtw.constraint-itakura|narrowband_f0-0.25|256|kernel|dp
+    - distance.dtw.constraint-itakura|narrowband_f0-0.25|64|kernel|dp
+    - distance.dtw.constraint-itakura|shared_envelope|1024|pipeline|dp
+    reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:dtw_dp / lcss_dp / soft_dtw_dp (every ordered pair separately)
+      [exact rtol 1e-10 atol 1e-12 (soft-DTW tolerance rtol/atol 1e-10)]
+    outcome: 'pass: 16/16 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.dtw.constraint-itakura|delayed_noise|1024|kernel|bounds
+    - distance.dtw.constraint-itakura|iid_gaussian|1024|kernel|bounds
+    - distance.dtw.constraint-itakura|narrowband_f0-0.25|1024|kernel|bounds
+    reference: audit/checks/refs/dtw_family.py:handle 'bounds' (analytic bounds + nesting) [optimality]
+    outcome: 'pass: 3/3 pass'
+  - run_ids:
+    - distance.dtw.constraint-itakura|delayed_noise|1024|kernel|canon
+    - distance.dtw.constraint-itakura|delayed_noise|256|kernel|canon
+    - distance.dtw.constraint-itakura|iid_gaussian|1024|kernel|canon
+    - distance.dtw.constraint-itakura|iid_gaussian|256|kernel|canon
+    reference: audit/checks/refs/_kernels_distance.py:dtw_dp(squared_cost=False) (Sakoe-Chiba 1978 symmetric form) [tolerance rtol 1e-8 (expected to differ)]
+    outcome: 'fail: 0/4 pass; max_abs <= 22.2, max_rel <= 61.2'
+  - run_ids:
+    - distance.dtw.constraint-itakura|delayed_noise|1024|kernel|local-slope
+    - distance.dtw.constraint-itakura|delayed_noise|256|kernel|local-slope
+    - distance.dtw.constraint-itakura|iid_gaussian|1024|kernel|local-slope
+    - distance.dtw.constraint-itakura|iid_gaussian|256|kernel|local-slope
+    reference: audit/checks/refs/dtw_family.py:local_slope_dtw [qualitative]
+    outcome: 'pass: 4/4 pass'
+  - run_ids:
+    - distance.dtw.constraint-itakura|delayed_noise|1024|pipeline|delay
+    reference: audit/checks/refs/dtw_family.py:handle 'delay' (delayed_noise truth delays 1/3/5) [qualitative]
+    outcome: 'pass: 1/1 pass'
+  - run_ids:
+    - distance.dtw.constraint-itakura|delayed_noise|1024|pipeline|unmirrored
+    - distance.dtw.constraint-itakura|iid_gaussian|1024|pipeline|unmirrored
+    reference: audit/checks/refs/dtw_family.py:matrix vs probes/dtw_family_probes.py:unmirrored (Directed.multivariate) [exact]
+    outcome: 'pass: 2/2 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.dtw.constraint-itakura|iid_gaussian|1024|kernel|mask
+    - distance.dtw.constraint-itakura|iid_gaussian|256|kernel|mask
+    - distance.dtw.constraint-itakura|iid_gaussian|4096|kernel|mask
+    - distance.dtw.constraint-itakura|iid_gaussian|64|kernel|mask
+    reference: audit/checks/refs/dtw_family.py:exact_itakura / exact_band vs probes/dtw_family_probes.py:tslearn_mask [exact, rtol 0]
+    outcome: 'pass: 4/4 pass; n_cells_differ 0, 0, 0, 0'
+  - run_ids:
+    - distance.dtw.constraint-itakura|iid_gaussian|1024|pipeline|null
+    - distance.dtw.constraint-itakura|iid_gaussian|256|pipeline|null
+    reference: audit/checks/refs/dtw_family.py:mc_null (400 independent z-scored Gaussian pairs, batched DP) [statistical, Bonferroni 2 se]
+    outcome: 'pass: 2/2 pass; max_z 1.16, 1.08'
+  - run_ids:
+    - distance.dtw.constraint-itakura|iid_gaussian|1024|pipeline|null-neg
+    - distance.dtw.constraint-itakura|iid_gaussian|256|pipeline|null-neg
+    reference: audit/checks/refs/dtw_family.py:handle 'null-neg' (rows x0, -x0, x1, x2) [qualitative]
+    outcome: 'pass: 2/2 pass'
+  - run_ids:
+    - distance.dtw.constraint-itakura|iid_gaussian|256|pipeline|ident
+    reference: audit/checks/refs/dtw_family.py:matrix on rows (x0, x0, x1) / same-lineage pyspi softdtw bit identity [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.dtw.constraint-itakura|scaled_offset|1024|kernel|scale-raw
+    reference: audit/checks/refs/dtw_family.py:matrix on raw scaled_offset rows [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.dtw.constraint-itakura|scaled_offset|1024|pipeline|scaleinv
+    reference: audit/checks/refs/dtw_family.py:matrix on z-scored bivariate_gaussian [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 3.55e-15, max_rel <= 2.12e-16'
+  - run_ids:
+    - distance.dtw.constraint-itakura|scaled_offset|1024|pipeline|scaleinv-self
+    reference: pyspi matrix on bivariate_gaussian (same-lineage) [rtol 1e-10]
+    outcome: 'pass: 1/1 pass; max_abs <= 3.55e-15, max_rel <= 2.12e-16'
+  - run_ids:
+    - distance.dtw.constraint-itakura|trending|1024|pipeline-detrend|detrend
+    reference: audit/checks/refs/dtw_family.py:matrix on z-score(LS-detrend(trending)) [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 2.84e-14, max_rel <= 1.28e-15'
+  - run_ids:
+    - distance.dtw.constraint-itakura|trending|1024|pipeline|trend
+    reference: audit/checks/refs/dtw_family.py:matrix on z-scored trending rows [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+optimisation:
+  complexity_P_T: 'O(P^2 T^2): tslearn dtw with the Itakura mask per ordered pair (TimeWarping is Undirected over Directed.multivariate, both
+    orders computed, pyspi/statistics/distance.py:TimeWarping.bivariate), a T x T mask plus a numba DP over the full grid. Measured P_exponent
+    2.1, T_exponent 0.82 (8x256 -> 8x1024; a fixed per-call cost of tens of microseconds and a ~50 ms 8x256 overhead flatten it); 118x1024 measured
+    (46.6 s per window). The P^2 pair term dominates.'
+  hotspot_1: 'tslearn/metrics/_dtw.py:dtw (third-party:tslearn) 88.7% self time of the profiled SPI call at 8x1024 (numba mask build and DP hidden; a scratch timing at T=1024, NUMBA/OMP threads 1, puts the per-call Itakura mask build _njit_compute_mask at 1.74 ms of a 3.48 ms _njit_dtw call, about half of it)'
+  hotspot_2: tslearn/backend/backend.py:instantiate_backend (third-party:tslearn) 8.5%, of which numpy arrayprint 7.0%
+  hotspot_owner: third-party:tslearn
+  opaque_share: 0.0253
+  profile_file: audit/profiles/distance.dtw.constraint-itakura__8x1024.pstats
+  opportunities:
+  - opportunity_id: dtw_family-2
+    opportunity: 'Banded DP for the constrained DTW: iterate only over the admissible cells (|i - j| <= 1 for sakoe_chiba: 3T-2 cells, 0.29% of
+      the grid at T=1024; the Itakura parallelogram rows for itakura, about 1/3 of the grid) instead of scanning the whole T x T mask; cells outside
+      the mask stay +inf exactly as now.'
+    opp_type: algorithmic
+    expected_speedup: '~2.5x'
+    speedup_basis: 'profile:audit/profiles/distance.dtw.constraint-itakura__8x1024.pstats dtw self 88.7% + complexity: the parallelogram is 33.3% of the grid; scratch timing at T=1024 (NUMBA/OMP threads 1): DP with a cached mask 1.59 ms vs 3.32 ms unconstrained, mask build 1.74 ms of a 3.48 ms call. The unconstrained and Itakura walls are nearly equal (0.187 vs 0.183 s at 8x1024) only because the per-call mask build adds back what the mask saves. A banded DP that derives the parallelogram row bounds directly removes the mask build and the masked-out scan (about 2.5x); one that still builds the T x T mask per call gains only about 1.1x. It overlaps dtw_family-1 on the mask part: both together about 2.5-3x'
+    output_risk: unverified-bit-identical
+    risk_evidence: out-of-mask cells are +inf and never contribute to min(); in-band arithmetic unchanged
+    effort: M
+    depends_on:
+    - dtw_family-1
+  - opportunity_id: dtw_family-1
+    opportunity: 'One batched numba kernel over the unordered pairs: call tslearn''s njit accumulated-matrix kernels directly (_njit_accumulated_matrix
+      / njit_lcss_accumulated_matrix) from a loop over i < j, build the global-constraint mask once per window (it depends only on T and the constraint)
+      and skip the per-call Python layer (instantiate_backend, which formats each input array with str() to sniff the backend; to_time_series;
+      compute_mask). A prange over pairs adds thread parallelism (the kernels are nogil).'
+    opp_type: vectorise-batch
+    expected_speedup: '~2x'
+    speedup_basis: 'profile:audit/profiles/distance.dtw.constraint-itakura__8x1024.pstats instantiate_backend 8.5% + dtw self 88.7% (contains the per-call Itakura mask build, which cProfile cannot see inside the njit frame) + complexity: tslearn/metrics/_dtw.py:_dtw_generic (line 398) rebuilds the T x T Itakura mask inside every call; scratch timing at T=1024 (NUMBA/OMP threads 1): mask 1.74 ms, DP with the mask cached 1.59 ms (same value), full _njit_dtw 3.48 ms, public dtw() 3.56 ms (summary.json: 0.183 s / 56 pairs = 3.27 ms). A once-per-window mask plus no Python layer removes about 55-60% of the call (Amdahl about 2.4x)'
+    output_risk: unverified-bit-identical
+    risk_evidence: same njit kernel and per-cell arithmetic; mask computed once instead of per pair
+    effort: M
+    depends_on:
+    - xc-undirected-upper
+    - xc-window-parallel

@@ -1,0 +1,999 @@
+{
+ "batches": [
+  {
+   "batch": "low-spectral",
+   "kind": "low",
+   "challenge": [
+    {
+     "unit_id": "spectral.psi",
+     "verdict_now": "related-quantity",
+     "score_now": "2",
+     "holds": true,
+     "proposed_verdict": "related-quantity",
+     "proposed_score": "2",
+     "problems": [
+      "The score is not too low. Rubric anchor 2 reads 'Substantially non-standard formula whose sign can differ from canonical (all-pairs PSI)' and names this unit. I re-derived Nolte 2008 eq. 3 (Psi_tilde = Im sum_f C*_ij(f) C_ij(f+df), adjacent bins) and the library code (connectivity.py:1090-1104 decimates the band, then _inner_combination at :1107-1113 sums all unordered pairs). The REVIEW M5 four-coherency example gives a sign flip with an independent numpy computation (adjacent -1.3070153772, all-pairs +1.1167942658). Nothing in the evidence makes this a documented convention or a reference error: MNE agrees with the Nolte reference to 2.5e-3. The score is not too high either. The unit is not degenerate overall, and anchor 1 (estimator substituted) does not apply.",
+      "Per-identifier gap: 3 of the 10 retained EEG band identifiers return an all-NaN matrix by construction at T=1024 (1 bin in the band) and at T=512 (0 bins). For those identifiers the anchor-0 condition 'Degenerate: ... all-NaN' holds. The unit score cannot show this, so identifier_map.csv / the CSV check_cost should flag those 3 identifiers explicitly. The record only mentions it in what_changed (notes/spectral_psi_gd.md:175, :274).",
+      "Missing candidate: the long-delay sign reversal comes from the band-relative decimation step (frequency_resolution=(fmax-fmin)/50 rounded up). It is a separate mechanism from M5's all-pairs sum: Nolte's adjacent formula on the same decimated bins also reverses (ref_nolte_dec_triu contains -24.6), while Nolte at native resolution gets 10/10 signs right. The record reports it in what_changed and in checks_run as 'fail (finding)', but it has no new_finding_candidates / candidate_resolutions entry.",
+      "Citation mis-attribution: already_documented and deviation_from_documented cite 'tests/README.md bug 5 (Undirected mirror bypassed)'. The current bug 5 (tests/README.md:206) is about PLI being signed and antisymmetric, and only cross-references PSI. The mirror bypass is REVIEW M1, and KNOWN_ISSUES item 5 says so.",
+      "Verdict-word consistency (minor, optional): dcoh and ddtf are called 'wrong' because the delegate's formula differs from the paper it cites. PSI is in the same situation, since the library cites Nolte 2008. 'related-quantity' is still defensible because REVIEW M5 treats the definition as a pending decision (definition_under_review true). The verdict word should be chosen consistently across these three units."
+     ],
+     "evidence": [
+      "audit/records/spectral.psi.yaml (verdict, score_0_10, what_changed, checks_run)",
+      "README.md rubric anchor 2 text quoted above",
+      "Re-run: run_checks.py --family spectral_psi_gd --skip-pyspi (7.6 s) gives 413 pass / 33 fail, 0 fields differ from the pre-run snapshot <scratch>/wf4b_low-spectral/before/spectral_psi_gd.json. spectral.psi: 194 pass / 16 fail. Nolte sign agreement 17/30, MNE 7/9, replica 101/101 with max_abs 5.87e-10",
+      "spectral.psi|delayed_noise|64|kernel|m5: ref_adjacent_value -1.3070153772, ref_allpairs_value = ref_library_value 1.1167942658",
+      "spectral.psi|delayed_noise|1024|pipeline|longdelay:full: ref_step 11, ref_aliasing_limit_samples 46.5, ref_sign_agree_pyspi_truth 0.7, ref_sign_agree_nolte_truth 1.0",
+      "Independent probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_low-spectral/probe_directed_population.py (comparison venv): M5 adjacent -1.3070153772 vs all-pairs 1.1167942658; a delayed copy gives a positive S_01 phase slope, so Psi_01 > 0 means 0 leads 1, as the record's direction convention says",
+      "spectral_connectivity 1.1.2 connectivity.py:1090-1113 (decimation and _inner_combination)",
+      "tests/README.md:206 (current bug 5 wording); docs/storage_comparison/REVIEW.md:168-181 (M5)"
+     ]
+    },
+    {
+     "unit_id": "spectral.phase",
+     "verdict_now": "related-quantity",
+     "score_now": "4",
+     "holds": true,
+     "proposed_verdict": "related-quantity",
+     "proposed_score": "4",
+     "problems": [
+      "The score is not too low. Rubric anchor 4 names 'arithmetic mean of wrapped phases'. The deviation is not a documented convention: the supplement does not say how the band phase is summarised. The wrap error comes from the absolute phase being near +-pi, not from band width, so narrow EEG bands do not escape it. The pop runs fail only in the bands that wrap and do not converge with T (var2 high band T=4096: 1.1765 vs population 2.4658, max_z 10.88), while the bands that do not wrap pass. The score is not too high either. The max statistic saturates near pi (null 3.1413 at T=4096) but still differs between pairs whose phase does not wrap, so anchor 0 ('constant') does not apply. The max form is a non-standard quantity (anchor 5) that is better than the mean's anchor 4, so the unit stays at 4.",
+      "definition_under_review is false, but REVIEW M4 ends with 'Decision needed: preserve the historical arithmetic band summary ... or introduce a circular/complex phase summary'. EEG_OPTIMIZATION_NOTES.md:169 also lists 'phase aggregation/endpoints' as outstanding. The sibling units cohmag and icoh carry definition_under_review true for an equivalent pending maintainer decision (notes/spectral_coherence.md:243). For consistency phase should be true, or the note should say why it differs.",
+      "Citation mis-attribution: already_documented cites 'REVIEW M1 and tests/README.md bug 5 (no Undirected mirroring)'. The current bug 5 (tests/README.md:206) is about PLI being signed. M1 is the right reference for the mirror bypass.",
+      "new_finding true is justified only by the max-saturation candidate. The other confirmed candidates are correctly marked as elaborations of M4. That reasoning is sound but should be stated in the record (the note says it at :200)."
+     ],
+     "evidence": [
+      "audit/records/spectral.phase.yaml (verdict, what_changed, checks_run pop/mcexp/circular/null)",
+      "audit/notes/spectral_coherence.md:183-200 (verdict section), :243 (cohmag/icoh definition_under_review true)",
+      "Re-run: run_checks.py --family spectral_coherence --skip-pyspi (56.8 s) gives 549 pass / 33 fail, 0 fields differ from the snapshot. spectral.phase: 189 pass / 12 fail",
+      "docs/storage_comparison/REVIEW.md M4 'Decision needed'; EEG_OPTIMIZATION_NOTES.md:169",
+      "tests/README.md:206"
+     ]
+    },
+    {
+     "unit_id": "spectral.dcoh",
+     "verdict_now": "wrong",
+     "score_now": "2",
+     "holds": true,
+     "proposed_verdict": "wrong",
+     "proposed_score": "2",
+     "problems": [
+      "The score is not too low. I re-derived the library formula from connectivity.py:800-805 together with _get_noise_variance (:1234-1238, which reshapes diag(Sigma) to (...,1,n,1), i.e. along the ROW axis) and _total_inflow (:1222-1231). The result is sqrt(nv_i)|H_ij|^2 / (sqrt(nv_i) sqrt(sum_k |H_ik|^2)) = |H_ij|^2/sqrt(sum_k |H_ik|^2). The innovation variance cancels and the powers are mixed, so the value is neither Baccala 1998 eq. 21 nor its square. It is unbounded and not scale-invariant. The reference is not the problem: upstream master replaced this formula with the canonical squared DC. The score is not too high: anchor 1 (estimator substituted) does not fit.",
+      "The evidence for the anchor-2 sign clause is weaker than it could be. The record's sign-difference example is delayed_noise, where both the as-coded and the canonical quantity have the correct direction in population (ref_truth [1,0]=0.70, [0,1]~0). The flip there is an estimator effect (Monte Carlo means dcoh 0.39 vs 2.99, gpdcoh 0.88 vs 0.11), and the same Wilson failure inverts dtf and pdcoh too. A population-level (exact-spectrum) case shows that the formula alone reverses direction. With bidirectional VAR(1) a=0.4, b=0.45, innovation SDs (1, 0.1), the as-coded band-mean A[1,0]-A[0,1] is -0.040 while the canonical squared DC gives +0.937. With a=0.4, b=0.5, SDs (1, 0.2): -0.083 vs +0.786. The record should cite such a population case for anchor 2.",
+      "Bivariate fit and the supplement: deviation_from_documented (ii) lists the pairwise 2-channel factorisation as a deviation. The supplement's own keywords for dcoh say 'bivariate' (supplement.txt:775), and documented_definition does not quote them. This does not move the score, because the formula error decides it, but the record should cite the keyword."
+     ],
+     "evidence": [
+      "audit/records/spectral.dcoh.yaml (what_changed, closeness, candidate_resolutions)",
+      "spectral_connectivity 1.1.2 connectivity.py:800-805, :1222-1238",
+      "Re-run: run_checks.py --family spectral_directed --skip-pyspi (16.9 s) gives 352 pass / 63 fail, 0 fields differ from the snapshot. spectral.dcoh: 52 pass / 17 fail",
+      "spectral.dcoh|delayed_noise|1024|pipeline|mc:mean-full ref_truth [1,0]=0.7018, [0,1]=4e-28 (population direction correct); ref_mc_mean [0,1]=2.99, [1,0]=0.389. spectral.gpdcoh|delayed_noise|1024|pipeline|mc:mean-full ref_mc_mean [1,0]=0.882, [0,1]=0.111",
+      "Probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_low-spectral/probe_directed_population.py: 'a=0.4 b=0.45 sd=(1.0,0.1) lib dcoh diff=-0.0396 | canonical DC^2 diff=+0.9371'; scaling x1 by 10 moves lib [1,0] from 0.165 to 4.13 while canonical stays 0.9392",
+      "supplement.txt:774-776 (dcoh keywords include bivariate)"
+     ]
+    },
+    {
+     "unit_id": "spectral.ddtf",
+     "verdict_now": "wrong",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "wrong",
+     "proposed_score": "3",
+     "problems": [
+      "The score is not too low. connectivity.py:895-900 returns |ffDTF| * sqrt(PDC^2): PDC replaces Korzeniewska's partial coherence, and moduli replace squares. Fitting each pair as its own 2-channel model leaves nothing conditioned out. Rubric anchor 3 names this case: 'An identifier hyperparameter is ignored or the label does not describe the computation (... dDTF bivariate ...)'. The record correctly separates out the T-dependence, which canonical ffDTF shares, so that is not double-counted. The 'wrong' verdict follows from the delegate formula differing from the cited paper; upstream master changed it to ffDTF * squared partial coherence.",
+      "Checked for a worse anchor: anchor 2 would need a sign difference from canonical. In 3961 random stable 2-channel VAR(1) systems with unequal innovation variances, the band-mean sign of A-A.T from the library formula never differed from the canonical 2-channel dDTF (ffDTF^2 * coherence^2) on the exact spectrum. Anchor 2 is not supported, so 3 is not too high.",
+      "canonical_ref says 'equation numbers not re-checked against the PDF'. The canonical form (chi^2 = F^2 * C^2 with F^2 normalised over frequencies and inflows; C the partial coherence) matches the standard statement and upstream master's rewrite, but the record should either say what it was checked against or keep the caveat in the CSV.",
+      "As for dcoh, deviation_from_documented (ii) calls the bivariate fit a deviation, while supplement.txt:753 (dtf/ddtf section keywords) says 'bivariate'. The rubric's anchor-3 example 'dDTF bivariate' already covers this, so the score stands, but documented_definition should quote the keyword."
+     ],
+     "evidence": [
+      "audit/records/spectral.ddtf.yaml (what_changed, closeness, candidate_resolutions)",
+      "spectral_connectivity 1.1.2 connectivity.py:895-900",
+      "spectral.ddtf|var2_chain|1024|pipeline|chain:mean-full: ref_multivariate_20 7.3e-19, ref_bivariate_population_20 0.00416, ref_pyspi_20 0.00909 (re-run, unchanged)",
+      "Re-run spectral_directed: spectral.ddtf 59 pass / 13 fail; 0 fields differ from the snapshot",
+      "Probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_low-spectral/probe_ddtf_sign.py: 'flips lib vs canonical 2-ch dDTF: 0/3961'",
+      "supplement.txt:752-759 (dtf/ddtf keywords: bivariate)"
+     ]
+    },
+    {
+     "unit_id": "spectral.pdcoh",
+     "verdict_now": "related-quantity",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "related-quantity",
+     "proposed_score": "3",
+     "problems": [
+      "The strongest case that 3 is too low: the formula is the canonical squared PDC to floating-point precision (exactbin 1.1e-15). Squared vs modulus is an anchor-9 convention. The supplement keywords for pdcoh say 'bivariate' (supplement.txt:790), which could be read as anchor 7 ('Matches the pyspi-supplement variant but differs from canonical in a value-changing way (bivariate instead of multivariate normalisation ...)'). I reject this. A pairwise fit removes PDC's defining property (partialisation), and the 2x2 adjugate identity makes the output exactly the dtf matrix (ident 7/7, max_abs 4.4e-16; my exact-spectrum probe gives max|DTF - PDC^2| 2.5e-16). So the label 'partial' does not describe what is returned. This is the same situation as the rubric's own anchor-3 example 'dDTF bivariate', whose supplement section also carries the 'bivariate' keyword. Holds at 3.",
+      "Checked against a worse anchor: anchor 2 would need a formula-level sign difference. The chain run shows a spurious indirect value (multivariate PDC(0->2) 0, bivariate population 0.0887, pyspi 0.2117), not a reversed sign, so 3 is not too high.",
+      "The record does not quote the supplement's 'bivariate' keyword (supplement.txt:790) in documented_definition. deviation_from_documented (ii) presents the bivariate fit as undocumented. The record should cite the keyword and say explicitly why anchor 7 does not apply (anchor-3 analogy with dDTF bivariate). The current justification ('anchor 4 is for a quantity distinct ... from every other SPI') adds a criterion the rubric does not contain.",
+      "new_finding true is borderline. The confirmed 'bivariate PDC is not partial' candidate is the cause of the already-documented 'dtf_* == pdcoh_*' item (tests/README.md:224 worth knowing). The record does cite that item in already_documented and calls the identity a mechanism detail. It should state that new_finding rests on the loss of partialisation for P > 2 (the var2_chain chain run), not on the equality."
+     ],
+     "evidence": [
+      "audit/records/spectral.pdcoh.yaml (what_changed 'Rescored from 4 after review', closeness)",
+      "spectral.pdcoh|var2_chain|1024|pipeline|chain:mean-full: ref_multivariate_20 4.8e-33, ref_bivariate_population_20 0.0887, ref_pyspi_20 0.2117 (re-run, unchanged)",
+      "spectral.pdcoh|*|ident:* 7/7 pass, max_abs 4.44e-16 (re-run)",
+      "Re-run spectral_directed: spectral.pdcoh 64 pass / 12 fail; 0 fields differ from the snapshot",
+      "Probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_low-spectral/probe_directed_population.py: 2x2 off-diagonal max|DTF-PDC^2| = 2.5e-16, 2.2e-16, 1.2e-16",
+      "supplement.txt:789-792 (pdcoh keywords include bivariate; text 'normalized by the total outflow from all other signals')",
+      "tests/README.md:224 ('dtf_* == pdcoh_*')"
+     ]
+    }
+   ],
+   "changed": [],
+   "disputed": [],
+   "reruns": [],
+   "remaining": [],
+   "validator_clean": null
+  },
+  {
+   "batch": "low-lagged-distance",
+   "kind": "low",
+   "challenge": [
+    {
+     "unit_id": "distance.dcorrx.maxlag-1",
+     "verdict_now": "related-quantity",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "related-quantity",
+     "proposed_score": "3",
+     "problems": [
+      "Too-low case tested and rejected. Shen et al. 2024 Alg. Step 3 (canonical, re-derived) is T_n = sum_{l=0..L} (n-l)/n * udCor*(X_{1+l..n}, Y_{1..n-l}): a weighted sum with lag 0 included, paired as (X_t, Y_{t-l}). hyppo matches this except for the lag terms. For l>=1, compute_stat (time_series/_utils.py:92,99-101) passes slices of the distance matrices to a Dcorr built with compute_distance='euclidean', and Dcorr.statistic (dcorr.py:144-147) then takes Euclidean distances again. hyppo's own docstring (dcorrx.py:69-72) states the series-slice formula, so this is not a documented library convention. The canonical reference is not mismatched: my from-scratch U-centred dCor of x[l:], y[:n-l] gives the record's gaps exactly. The check data does separate the two definitions, with gaps of 1-24%. README anchor 3 holds: 'An identifier hyperparameter is ignored or the label does not describe the computation (softdtw constraints, dDTF bivariate, mgcx lag handling)'. The approved plan (line 24) shows 'mgcx lag handling' means exactly this distance-of-distances recomputation, and dcorrx shares it.",
+      "Too-high case tested and rejected. Anchor 2 ('Substantially non-standard formula whose sign can differ from canonical') is not met. sign(A-A^T) of pyspi equals the canonical sign at every truth-claimed pair. On narrowband_f0-0.25, shared_envelope and narrowband_f0-0.1 (my probe), the antisymmetric parts agree in sign even where totals differ by up to 1.216.",
+      "Cross-family consistency (open item). The already_documented wording ('unsigned label on a legitimately negative bias-corrected estimator', citing REVIEW M7 REVIEW.md:189-193, M8 :197 and EEG_OPTIMIZATION_NOTES.md:169) matches dcorr_hsic and is accurate for the U-centred dCor^2. new_finding: true is correct because it rests on the distance-of-distances lag terms, which are in none of the known-issue documents. Minor: new_finding_candidates[3] ('unsigned' but negative) does not say in its own text that it is an instance of the documented M7/M8 class (KNOWN_ISSUES.md:31-32); only candidate_resolutions[3] says so. Suggest appending '(instance of the REVIEW M7/M8 class, KNOWN_ISSUES.md:31-32; not a new finding by itself)', as the corrected distance.mgc text would.",
+      "check_method independent-impl is not overstated, but it rests on the designed-to-fail canonical 'mehta' runs. All as-implemented confirmation in results (replica, lagterms, scaleinv, multireal) is reference_kind same-lineage. My from-scratch probe (not a hyppo port) reproduces pyspi to <=1.9e-14 (2.5e-10 on tied logistic_maps). That gives independent support for the as-implemented formula and could be cited, but it does not change the score. The same-lineage cap of 6 does not bind at 3.",
+      "definition_under_review: false is defensible. The plan's adversarial list names 'DcorrX sum vs average' as contested, but Shen 2024 Step 3 is unambiguous (sum). 'Average' is only the supplement's wording, and the records already record both forms (sum - mean up to 0.583). The open direction-intent question (note \u00a7Open questions answered, item 3) is about documentation, not the standard.",
+      "what_changed is concrete: per-dataset gaps, per-lag terms, the sign-of-gap pattern and the documentation mismatches. It quotes anchor 3 and explains why the score is not 4."
+     ],
+     "evidence": [
+      "audit/records/distance.dcorrx.maxlag-1.yaml:60 (already_documented), :71-72 (unsigned candidate), :170-181 (verdict/score/what_changed), :204-207 (resolution cites KNOWN_ISSUES.md lines 31-32)",
+      "README.md anchor 3; plan ~/.claude/plans/pasted-content-id-0966-the-testing-unified-marshmallow.md:24 'DcorrX/MGCX recompute distances on distance matrices for lag >= 1'",
+      "hyppo time_series/_utils.py:85-108 (92 indep_test built with 'euclidean'; 99-101 slices passed; 106 np.sum); independence/dcorr.py:116-118, 144-147; time_series/dcorrx.py:69-72 docstring formula",
+      "supplement.txt:232-236 'average of lagged distance correlations between the past of time series x to the future of time series y'; pyspi/config.yaml:204-210 'undirected'; pyspi/statistics/distance.py:114-129",
+      "Probe scratchpad/wf4b_low-lagged-distance/canon_probe.py (comparison venv, -I; output canon_probe.out). distance.dcorrx.maxlag-1|gauss_ar1_pair|1024|kernel|mehta: max|pyspi - dist-of-dist| = 1.85e-14; pyspi - canonical in [-0.0794, -0.0593]; worst pair (0,1) 0.4294 vs 0.5088. var2_bivariate|1024: [-0.0673, -0.0015]. logistic_maps|256: [+0.0077, +0.0116], dod gap 2.5e-10 (ties). All match the record's closeness figures.",
+      "results/lagged_dcorr_mgc.json tallies for dcorrx_maxlag-1: replica 13/13 same-lineage pass; lagterms 7/7; mehta 0/12 (independent-impl, designed to fail); dir 8/8 analytic; null 2/3"
+     ]
+    },
+    {
+     "unit_id": "distance.dcorrx.maxlag-10",
+     "verdict_now": "related-quantity",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "related-quantity",
+     "proposed_score": "3",
+     "problems": [
+      "Same mechanism as maxlag-1, now on 10 of the 11 terms. My independent probe reproduces both the pyspi value (dist-of-dist to 5.7e-13) and the record's largest canonical gaps: narrowband_f0-0.25 T256 pair (2,0) 7.1156 vs 5.8994 (+1.2163), the same run down to -0.7357, and gauss_ar1_pair T1024 -0.2604. The deviation is real and value-changing in both directions. Anchor 3 ('label does not describe the computation ... mgcx lag handling') holds.",
+      "Too-high check. The canonical inflation on narrowband (+1.2163 on (2,0)) appears in both directions: the antisymmetric part is pyspi -0.0033 vs canonical -0.0013, same sign. On shared_envelope and narrowband_f0-0.1 every antisymmetric sign agrees. Anchor 2 is not met.",
+      "Too-low check. No convention explains a data-dependent, two-signed gap of up to 21% (even-lag terms about 2.4x the canonical ones on narrowband_f0-0.25). The canonical reference cannot be wrong here because hyppo's own docstring (dcorrx.py:69-72) states the series-slice formula. The sum-vs-average, direction and 'undirected' documentation mismatches compound the label problem, so 4 does not fit.",
+      "Consistency: already_documented and the unsigned candidate are handled as in maxlag-1. The same minor suggestion applies: tag new_finding_candidates[3] in its own text as an instance of the M7/M8 class. new_finding: true is correctly based on the distance-of-distances construction.",
+      "check_method independent-impl: same remark as maxlag-1. The as-implemented runs are same-lineage; the canonical runs are independent and designed to fail. The cap does not bind."
+     ],
+     "evidence": [
+      "audit/records/distance.dcorrx.maxlag-10.yaml:139 (check_method), :167-181 (verdict/score/what_changed/new_finding), :202-205 (unsigned resolution)",
+      "scratchpad/wf4b_low-lagged-distance/canon_probe.out: distance.dcorrx.maxlag-10|narrowband_f0-0.25|256|kernel|mehta max|pyspi-dod| 5.71e-13, pyspi-canon [-0.7357, 1.2163], worst (2,0) 7.1156 vs 5.8994; |gauss_ar1_pair|1024|kernel|mehta [-0.2604, -0.1587], (0,1) 0.8070 vs 1.0675",
+      "scratchpad/wf4b_low-lagged-distance/antisym_probe.py: narrowband_f0-0.25 (0,2) pyspi -0.0033 / canonical -0.0013; shared_envelope (0,3) -0.0985 / -0.0866; narrowband_f0-0.1 (0,1) 0.0402 / 0.0407; no sign differences",
+      "notes/lagged_dcorr_mgc.md:228-263 (per-lag table, bound 10.785 = 11 - 55/256 at n=256)",
+      "results/lagged_dcorr_mgc.json: dcorrx_maxlag-10 replica 13/13 (same-lineage), mehta 0/12, dir 8/8, null 3/3"
+     ]
+    },
+    {
+     "unit_id": "distance.mgcx.maxlag-1",
+     "verdict_now": "related-quantity",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "related-quantity",
+     "proposed_score": "3",
+     "problems": [
+      "Anchor 3 applies verbatim: the README example 'mgcx lag handling' is this unit. Canonical (Shen et al. 2024 Step 3 with tau = MGC on the lagged pairs) was re-derived. hyppo's MGC.statistic re-applies Euclidean distances to the sliced distance matrices (mgc.py:154-157), against hyppo's own mgcx.py:69-72 docstring. I reproduced this with SciPy MGC in the comparison venv; this is same-lineage for MGC itself, which is acceptable for the lag-construction question. var2_bivariate T256: pyspi - canonical in [-0.0615, -0.0018]; gauss_ar1_pair T256: [-0.0571, -0.0369]. pyspi equals the dist-of-dist construction to <=1.6e-14. Not too high: the direction sign agrees with canonical at every truth-claimed pair (5/5 dir runs). Not too low: same reasoning as dcorrx.",
+      "Cross-family consistency (open item), and the settlement I propose. (a) The mgcx already_documented class 'unsigned label on a legitimately negative bias-corrected estimator' is defensible for MGC. SciPy's own docstring describes the column-centring as 'the centering and unbiased modification' (scipy/stats/_mgc.py:197-200; hyppo independence/mgc.py:84). Keep it, and cite those lines once. (b) distance.mgc.yaml:69 uses the shorter class name 'legitimately negative estimator'. Harmonise it to the same wording as dcorr_hsic, dcorrx and mgcx (the only allowed edit to distance.mgc). (c) distance.mgc.yaml:73-74 states 'KNOWN_ISSUES M7/M8 list legitimate negatives only for wavelet, pec and entropy SPIs, not mgc'. That is factually wrong: REVIEW M7 (REVIEW.md:189-193, KNOWN_ISSUES.md:31) names dspli/dswpli/ppc, the multitaper and wavelet variants. Replace it with: 'REVIEW M7 (REVIEW.md:189-193; dspli/dswpli/ppc, multitaper and wavelet variants) and M8 (REVIEW.md:197-198; pec/pec_log, Gaussian joint/conditional entropy), KNOWN_ISSUES.md:31-32, document legitimately negative estimates under unsigned labels for other SPIs; none names mgc, so this is a new instance of that class, not a new finding by itself.' (d) new_finding: true stays on all five records. Each rests on a confirmed item absent from every known-issue document: the distance-of-distances lag terms for dcorrx and mgcx, and SciPy's region rule plus the REVIEW-M2 rounding consequence for mgc. None rests on the sign item.",
+      "Minor: candidate_resolutions 'unsigned' entry (record ~:230) is titled '(glossary: distance correlation in [0,1])'. For mgcx the glossary's [0,1] statement concerns distance correlation, so only the 'unsigned' keyword is contradicted (notes/lagged_dcorr_mgc.md:96 says so). Reword it. The evidence line also prints 'Monte Carlo null fraction negative 0.56-0.56'; write it as a single value.",
+      "check_method independent-impl is right. mgc_stat/mgc_local_corr (refs/lagged_dcorr_mgc.py:98-165) is a numpy re-implementation that takes only SciPy's constants and does not import multiscale_graphcorr. The 'scipy' runs are correctly labelled same-lineage. The cap does not bind at 3.",
+      "definition_under_review: false is acceptable for the lag construction, since the canonical is unambiguous. The lag-0 MGC term inherits distance.mgc's contested region rule (definition_under_review true there). Consider one sentence in the record noting that inheritance; it does not change the score."
+     ],
+     "evidence": [
+      "audit/records/distance.mgcx.maxlag-1.yaml:74 (already_documented, 'bias-corrected'), :173 check_method, :197-209 verdict/score/what_changed/new_finding, :230-233 unsigned resolution",
+      "audit/records/distance.mgc.yaml:69 (already_documented, 'legitimately negative estimator'), :71-74 (incorrect M7/M8 scope sentence at :74)",
+      "docs/storage_comparison/REVIEW.md:189-193 (M7 dspli/dswpli/ppc), :195-198 (M8 pec/pec_log, Gaussian entropies); audit/briefing/KNOWN_ISSUES.md:31-32; EEG_OPTIMIZATION_NOTES.md:169",
+      "scipy/stats/_mgc.py:197-200 'modified to be mean zero columnwise ... (the centering and unbiased modification)'; hyppo/independence/mgc.py:84",
+      "hyppo time_series/mgcx.py:69-72 docstring MGCX_n = sum (n-j)/n MGC_n(x[j:n], y[0:n-j]); _utils.py:92,99-101",
+      "scratchpad/wf4b_low-lagged-distance/mgcx_probe.py: distance.mgcx.maxlag-1|var2_bivariate|256|kernel|mehta max|pyspi-dod| 9e-15, pyspi-canon [-0.0615, -0.0018]; |gauss_ar1_pair|256|kernel|mehta 1.6e-14, [-0.0571, -0.0369]",
+      "results/lagged_dcorr_mgc.json mgcx_maxlag-1: replica 9/9 independent-impl, mehta 0/9, dir 5/5, null 2/2, scipy 3/3 same-lineage"
+     ]
+    },
+    {
+     "unit_id": "distance.mgcx.maxlag-10",
+     "verdict_now": "related-quantity",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "related-quantity",
+     "proposed_score": "3",
+     "problems": [
+      "Re-run with SciPy MGC on the stored pyspi inputs: distance.mgcx.maxlag-10|narrowband_f0-0.25|256|kernel|mehta gives pyspi - canonical in [-0.7349, +0.1560], and pyspi equals dist-of-dist to 5.6e-13. This is exactly the record's figure (pair (1,0) 4.0807 vs 4.8156). Anchor 3 holds for the same reasons as maxlag-1. Anchor 2 is not met: 6/6 dir runs agree in sign with canonical.",
+      "Cross-family consistency: same as mgcx.maxlag-1. Keep 'bias-corrected', supported by scipy/stats/_mgc.py:197-200. Harmonise distance.mgc.yaml:69 and correct distance.mgc.yaml:74. Retitle the 'unsigned' resolution (~:230), whose '(glossary: distance correlation in [0,1])' does not apply to MGC (note :96). new_finding: true stays, based on the distance-of-distances construction.",
+      "Minor internal mismatch, not an error. new_finding_candidates[3] quotes the trace probe (8 of 20 negative, min -0.0972, 5 processes), while candidate_resolutions and closeness quote the check run (2/6, min -0.0272, p012). Both are correct for their data. A clause naming the dataset and process subset would avoid confusion.",
+      "check_method independent-impl is right, as for maxlag-1. The cap does not bind."
+     ],
+     "evidence": [
+      "audit/records/distance.mgcx.maxlag-10.yaml:74, :173, :196-209, :230-233",
+      "scratchpad/wf4b_low-lagged-distance/mgcx_probe.py output: distance.mgcx.maxlag-10|narrowband_f0-0.25|256|kernel|mehta max|pyspi-dod| 5.6e-13, pyspi-canon [-0.7349, 0.1560]",
+      "notes/lagged_dcorr_mgc.md:288-304 (mgcx_maxlag-10 checks), :96 (glossary [0,1] concerns dcorr only), :306-312 (score rationale)",
+      "results/lagged_dcorr_mgc.json mgcx_maxlag-10: replica 10/10, mehta 0/9, dir 6/6, null 2/2, lagterms 5/5"
+     ]
+    },
+    {
+     "unit_id": "preproc.two_array_api",
+     "verdict_now": "wrong",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "wrong",
+     "proposed_score": "3",
+     "problems": [
+      "Re-confirmed independently. parse_bivariate (base.py:29-36) creates Data() and calls add_process twice. Only the first array goes through set_data/zscore (data.py:238, 195); later arrays are np.append'ed raw (data.py:232). My probe gives row means [0, 3.2027] and ddof-1 SDs [1, 9.1532]. dtw: direct(xs,ys) 139.03, direct(ys,xs) 70.03, Data path 10.0677, direct z-scored 10.0677.",
+      "Too-low case examined and rejected. The canonical contract is weak: supplement.txt:101 ('Prior to evaluating each statistic, we standardize (z-score) the MTS'), the base.py:5-7 comment, and no user-facing page for the direct API. But z-scoring only the first argument of a bivariate call cannot be a deliberate convention: it makes dtw asymmetric in its arguments (139.0 vs 70.0). tests/unit/test_data.py:74-88 is a regression snapshot of Data.add_process, not a design statement, and is correctly cited as 'partly' documented. Calculator and pyspi/workflow are unaffected (calculator.py:277 builds Data from the whole array; workflow has no direct-array calls). That limits impact, but impact is not what the score measures.",
+      "Too-high case examined and rejected. Anchor 2 (sign can differ), anchor 1 (wrong estimator substituted) and anchor 0 (degenerate/constant/all-NaN/wrong axis) do not describe an input-scaling inconsistency. The SPI computes its own formula on wrongly scaled input. Scale-invariant SPIs are untouched (spearmanr, gc_gaussian dev <= 9.6e-16).",
+      "Rubric wording. No anchor is written for infrastructure units, so 3 is applied by analogy to 'An identifier hyperparameter is ignored or the label does not describe the computation'. The record's what_changed never names the anchor. The note heading (notes/preprocessing_base.md:202) paraphrases it as 'the computation does not do what the documented API contract says' instead of quoting it. Add the exact anchor text and the analogy (documented contract = label) to what_changed.",
+      "check_method independent-impl is not overstated. The decisive cap-*/list-* runs are reference_kind analytic and the spi-* runs independent-impl (results/preprocessing_base.json). The same-lineage cap does not apply.",
+      "already_documented and new_finding discipline is correct. None of tests/README.md bugs 1-10, flagged items, REVIEW M1-M9, DEPENDENCY_COMPATIBILITY_REVIEW.md, EEG_OPTIMIZATION_NOTES.md or KNOWN_ISSUES.md mentions the direct-array normalisation or the discarded Warning (base.py:45). definition_under_review: false is fine.",
+      "Scope caveat already stated in check_cost and the note's 'Not done': value effects were measured for 5 of the 141 generic-loop identifiers. The wording is consistent."
+     ],
+     "evidence": [
+      "audit/records/preproc.two_array_api.yaml:5-9 (contract/implemented_as), :25 (already_documented), :54 check_method, :59-63 verdict/score/what_changed",
+      "pyspi/base.py:29-36, :41-45; pyspi/data.py:195, 219-238; supplement.txt:101; tests/unit/test_data.py:74-88",
+      "Probe scratchpad/wf4b_low-lagged-distance/two_array_probe.py (project venv): row means [0, 3.2027], sd [1, 9.1532]; dtw direct 139.0323 / reversed 70.0252 / Data path 10.0677 / direct z-scored 10.0677",
+      "results/preprocessing_base.json: preproc.two_array_api|scaled_offset|1024|pipeline|cap-contract fail max_abs 35.006 (row 1 mean 4.678, sd 9.899, bit-identical to raw); cap-mechanism pass 0.0; spi-dtw ref_dev_direct_raw 150.77, data path 0.0; spi-lmfit_Ridge 31.38; spi-cov_EmpiricalCovariance 7.267; spi-spearmanr / spi-gc_gaussian pass <= 9.6e-16; mod-causal fail (cds 0.0132)",
+      "notes/preprocessing_base.md:69-100, 202-229"
+     ]
+    }
+   ],
+   "changed": [],
+   "disputed": [],
+   "reruns": [],
+   "remaining": [],
+   "validator_clean": null
+  },
+  {
+   "batch": "low-elastic-degenerate",
+   "kind": "low",
+   "challenge": [
+    {
+     "unit_id": "distance.lcss.constraint-itakura",
+     "verdict_now": "wrong",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "wrong",
+     "proposed_score": "3",
+     "problems": [
+      "No scoring defect found. The anchor that applies is 3: 'An identifier hyperparameter is ignored or the label does not describe the computation'. The output equals unconstrained LCSS bit for bit, so the constraint named by the identifier is ignored.",
+      "I tried to argue the score is too low and found nothing. The deviation is not a documented convention. The reference is not mismatched: the from-scratch masked DP agrees exactly with tslearn's own torch branch, which does honour the mask. The check data do separate the two definitions: 13 of 16 dp runs fail against the masked reference.",
+      "I tried to argue the score is too high. Anchor 1 ('wrong estimator substituted') does not fit, because the same LCSS estimator runs without its window. Anchor 0 does not fit, because the output is not constant. The masked LCSS the identifier promises would itself be 0 about 48% of the time, but that is not what pyspi computes, so it cannot lower the score. It belongs, as the record already puts it, in open question 3.",
+      "Bookkeeping is in order. already_documented is 'no' and new_finding is true, which is right: the only matches for lcss in tests/README.md are timing-table rows (318-320), and lcss appears nowhere in KNOWN_ISSUES.md, REVIEW.md, DEPENDENCY_COMPATIBILITY_REVIEW.md, EEG_OPTIMIZATION_NOTES.md or tests/unit. check_method is independent-impl with an independent from-scratch reference, and the score of 3 is below the same-lineage cap of 6. definition_under_review is false, which is acceptable because the canonical Vlachos definition is not contested. what_changed is concrete, naming the isfinite(bool) gate at dtw_variants.py:2259.",
+      "Minor: the release range 0.8.0-0.9.0 comes from reading GitHub tags; only 0.9.0 was executed. The record already says this."
+     ],
+     "evidence": [
+      ".venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2259 'if numpy.isfinite(mask[i - 1, j - 1]):'. Same file, line 2306 (torch branch): 'if mask[i - 1, j - 1]:'. _masks.compute_mask(8x8, itakura) returns dtype bool with True = admissible, and np.isfinite(mask).all() is True.",
+      "results/dtw_family.json distance.lcss.constraint-itakura|iid_gaussian|1024|pipeline|dp: pass false, max_abs 0.819 (pyspi 0.8037 vs masked 0.0). distance.lcss.constraint-itakura|delayed_noise|256|pipeline|torch: pass, max_abs 0.0.",
+      "My probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_low-elastic-degenerate/probe_lcss_softdtw.py (T=128, delays 0/1/3 plus an independent row, my own parallelogram mask). The pyspi lcss_constraint-itakura matrix is bit-identical to lcss. Pair (0,1): pyspi 0.992188, from-scratch unconstrained 0.992188, itakura-masked 0.000000. Pair (1,3): pyspi 0.78125, masked 0.0.",
+      "supplement.txt:296-303 documents 'include the three global constraints'. README.md:55 gives anchor 3."
+     ]
+    },
+    {
+     "unit_id": "distance.lcss.constraint-sakoe_chiba",
+     "verdict_now": "wrong",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "wrong",
+     "proposed_score": "3",
+     "problems": [
+      "No scoring defect found. Anchor 3 applies: 'An identifier hyperparameter is ignored'. The radius-1 band, which is exactly Vlachos delta = 1, is computed by tslearn and then ignored, so the value equals unconstrained LCSS (delta = infinity).",
+      "I tried to argue the score is too low. The canonical LCSS_{delta,eps} with delta = 1 is precisely what the identifier promises, so there is no convention to excuse the difference. The check data do separate the definitions: 10 of 16 dp runs fail against the band-1 reference, and the runs that pass are ones where the band does not bind (logistic_maps, narrowband).",
+      "I tried to argue the score is too high. The output is neither constant nor a different estimator, so anchor 3 is the floor.",
+      "Bookkeeping is in order. already_documented is 'no' and new_finding is true, which is right (not in any known-issue document). check_method is independent-impl. what_changed is concrete. definition_under_review is false, which is right.",
+      "Cosmetic, already recorded: the identifier is spelled lcss_constraint-sakoe-chiba in code and lcss_constraint-sakoe_chiba in the supplement."
+     ],
+     "evidence": [
+      "results/dtw_family.json distance.lcss.constraint-sakoe_chiba|iid_gaussian|1024|pipeline|dp: pass false, max_abs 0.107, max_rel 0.152 (pyspi 0.8037 vs band-1 0.7061 on pair (0,1)).",
+      "My probe .../wf4b_low-elastic-degenerate/probe_lcss_softdtw.py: the lcss_constraint-sakoe-chiba matrix is bit-identical to lcss. Pair (0,2) (delay 3): pyspi 0.976562 vs from-scratch band-1 0.789062. Pair (0,3): 0.796875 vs 0.695312.",
+      "dtw_variants.py:2485-2498: the mask is built with GLOBAL_CONSTRAINT_CODE and passed to _njit_lcss. Line 2259 is the isfinite gate.",
+      "records/distance.lcss.constraint-sakoe_chiba.yaml:18-20 and 139-145."
+     ]
+    },
+    {
+     "unit_id": "distance.softdtw",
+     "verdict_now": "wrong",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "wrong",
+     "proposed_score": "3",
+     "problems": [
+      "The score holds. The anchor-3 text names this case explicitly ('softdtw constraints'), and two of the unit's three identifiers ignore their constraint (tests/README.md bug 3, cited correctly in already_documented).",
+      "Argument that the score is too low, with real force: the representative identifier, 'softdtw' (units.yaml representative: softdtw), matches Cuturi & Blondel Algorithm 1 to max_rel about 2.5e-14 against an independent DP and matches the supplement. On its own it would score 10. The CSV row will read 'softdtw, wrong, 3'.",
+      "This conflicts with the barycenters note. notes/barycenters.md:167-174 justifies its score as 'scored on the representative identifier'. Applied here, that rule would give softdtw 10. Only a worst-identifier rule gives both bary.euclidean 0 and softdtw 3. Synthesis should state that rule once in README.md, and this record's what_changed should open by saying that the 3 applies to softdtw_constraint-itakura and softdtw_constraint-sakoe-chiba, not to the representative.",
+      "I recommend setting new_finding to false. The only non-documented candidate it rests on is 'raw soft-DTW value reported, not the divergence'. That value is the canonical Cuturi-Blondel 2017 quantity (eq. 2 / Alg. 1) and the documented one (supplement.txt:305-308, 'soft dynamic time warping ... gamma = 1'), so it is a property of the canonical quantity, not a deviation.",
+      "The record's claim that the 'unsigned' label 'does not describe the output' is not supported. The supplement (supplement.txt:126-128) and the GitBook glossary define signed/unsigned as whether the sign indicates how fluctuations in A correspond to B. Soft-DTW's negative entropic offset carries no such information, so 'unsigned' is accurate.",
+      "The same family note treats the analogous DTW and LCSS low-dynamic-range properties as 'a property of the canonical quantity ... new_finding false' (notes/dtw_family.md, DTW constraint-None and LCSS constraint-None sections). Applying that consistently gives new_finding false here.",
+      "If the auditors keep value vs divergence as a contested standard (open question 4), then definition_under_review should be true, with both forms recorded. It is currently false while the note poses the choice as open.",
+      "what_changed is otherwise concrete: the identity runs, the masked differences of 2.5-22.6 (itakura) and 57-1303 (sakoe-chiba), and the Spearman 0.44-0.60 against the divergence.",
+      "check_method is independent-impl, and the score is below the same-lineage cap."
+     ],
+     "evidence": [
+      "pyspi/statistics/distance.py:200-208: SoftDynamicTimeWarping.bivariate returns tslearn.metrics.soft_dtw(z[i], z[j]) with no constraint. The class name 'Dynamic time warping' duplicates the DTW name.",
+      "results/dtw_family.json distance.softdtw|iid_gaussian|1024|pipeline|dp|softdtw: pass, max_abs 1.1e-13, max_rel 5.9e-16. distance.softdtw|iid_gaussian|1024|pipeline|ident|softdtw_constraint-itakura: max_abs 0.0. distance.softdtw|iid_gaussian|1024|kernel|masked|softdtw_constraint-sakoe-chiba: max_abs 848.",
+      "My probe .../wf4b_low-elastic-degenerate/probe_lcss_softdtw.py: the constraint matrices are bit-identical to softdtw. softdtw vs my from-scratch logsumexp DP gives max_rel 9.4e-16. sdtw(z0,z0) = -91.4 at T=128.",
+      "supplement.txt:126-128 defines the keyword categories. pyspiDocumentation/information-about-pyspi/spis/glossary-of-terms.md:21 defines Signed ('whether the sign of the SPI indicates how fluctuations in time series A correspond to that of time series B').",
+      "notes/barycenters.md:167-174 (representative-identifier rationale). audit/units.yaml representative: softdtw. audit/README.md:55 gives anchor 3."
+     ]
+    },
+    {
+     "unit_id": "distance.bary.euclidean",
+     "verdict_now": "degenerate",
+     "score_now": "0",
+     "holds": true,
+     "proposed_verdict": "degenerate",
+     "proposed_score": "0",
+     "problems": [
+      "The score holds. The anchor is 0: 'Degenerate: constant, all-NaN, or wrong axis indexed'. The representative identifier, bary_euclidean_mean, is analytically mean_t (z_i+z_j)/2 = 0 on every z-scoring path, including the EEG workflow's detrend then z-score. It is in config.yaml and in the retained EEG-185 set.",
+      "Argument that the score is too low: the barycenter itself and bary_euclidean_max (the supplement's SPI) are fp-exact and would score 10. bary-sq_euclidean_mean is an exact affine transform of Pearson r, and bary-sq_euclidean_max is computed as stated. The 0 therefore rests on 1 of 4 identifiers. The record's what_changed says this explicitly, and under the worst-identifier convention (see the distance.softdtw entry) 0 is right. The note's representative-identifier justification needs to be reconciled with how softdtw is scored, so that the audit uses one rule.",
+      "The supplement's seven-SPI list (supplement.txt:321-328) includes bary_euclidean_max and omits bary_euclidean_mean, which suggests the authors excluded the mean deliberately. The record already notes this. It does not change the score, because the identifier is still produced and retained.",
+      "already_documented / new_finding: tests/README.md:147 already records that bary_euclidean_mean output is '~1e-16' 'pure rounding noise'. That is a prior observation of the zero value, though it is not one of bugs 1-10 or the flagged items. The record cites it. new_finding true is defensible because the other confirmed candidates are not in any known-issue document: bary-sq_mean equals (1+r)(T-1)/(2T), the class is Signed against the documented 'unsigned', and with normalise=False the mean measures offsets. what_changed should say that the newness lies in identifying the degeneracy and these candidates, not in the zero value itself.",
+      "check_method is analytic, which is right for the zero and the formula runs. definition_under_review is false, which is right."
+     ],
+     "evidence": [
+      "results/barycenters.json: 84 runs '*|zero|bary_euclidean_mean', all pass, max_abs 2.52e-16.",
+      "My probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_low-elastic-degenerate/probe_bary_lasso.py: correlated rows with scale, offset and a linear trend, T=512. bary_euclidean_mean off-diagonal is in [2.8e-17, 1.7e-16] (normalise) and [-3.1e-17, -3.5e-18] (normalise + detrend, the EEG path). bary_euclidean_max vs from-scratch max((z_i+z_j)/2): max_abs 0.0. bary-sq_mean vs (1+r)(T-1)/(2T): max_abs 6.7e-16.",
+      "tests/README.md:147 (bary_euclidean_mean ~1e-16 rounding noise). supplement.txt:321-328 (seven SPIs, no bary_euclidean_mean). pyspi/statistics/distance.py:211-215 (Directed, Signed).",
+      "units.yaml representative bary_euclidean_mean, in_eeg_selection true. notes/barycenters.md:167-174."
+     ]
+    },
+    {
+     "unit_id": "misc.lmfit.Lasso",
+     "verdict_now": "degenerate",
+     "score_now": "0",
+     "holds": true,
+     "proposed_verdict": "degenerate",
+     "proposed_score": "0",
+     "problems": [
+      "The score holds. The anchor is 0: 'Degenerate: constant'. With sklearn's objective (1/(2T))||y - Xw||^2 + alpha||w||_1 and alpha = 1, the soft-threshold w = S(x^T y, alpha*T)/(x^T x) is nonzero only if |r|(T-1) > T. That is impossible for ddof=1 z-scored rows (sum z^2 = T-1, |r| <= 1). The fit is therefore intercept-only and the MSE is (T-1)/T for every pair, every dataset and every T, under detrending too.",
+      "Argument that the score is too low: the lasso estimator is the canonical one (Tibshirani 1996, in sklearn's penalised form) and is computed correctly, and alpha = 1 is the sklearn default, which matches the supplement's 'with the default parameters' convention. But anchor 0 is defined by the output, and the output is a data-independent constant. Lasso is also not among the supplement's 'four SPIs', so no documented convention covers it.",
+      "Argument that the score is too high: the score is already 0.",
+      "Bookkeeping is in order. already_documented is 'no' and new_finding is true, which is right: lmfit_Lasso appears only in the tests/README.md timing table (line 515) and in no known-issue document. check_method is analytic, and it is exact. definition_under_review is false, which is right. what_changed is concrete: alpha = 1, the 1/(2T) scaling, coordinate descent exiting at iteration 0, the constant (T-1)/T, the undocumented SPI, and activation only when |cov0| > 1 on raw data.",
+      "Practical note for the EEG user: lmfit_Lasso is in the retained 185, and on the EEG preprocessing (n1d1) it is the constant (T-1)/T. It stores no information."
+     ],
+     "evidence": [
+      "results/lmfit.json: 96 runs 'misc.lmfit.Lasso|*|constant' (84 pipeline plus 12 pipeline-detrend), 96/96 pass, max_abs 3.55e-15.",
+      "My probe .../wf4b_low-elastic-degenerate/probe_bary_lasso.py: rows with r up to \u00b10.95, scale 0.2-50, offsets and a trend, T=512. lmfit_Lasso off-diagonal unique values are {0.998046875} = (T-1)/T under both normalise and normalise + detrend. lmfit_Ridge on the same data spans 0.258-0.998 (0.112-0.938 detrended), which shows the data do carry linear dependence.",
+      "supplement.txt:856-868 ('This yields four SPIs', no Lasso). pyspi/config.yaml:1275 '- model: Lasso'. pyspi/statistics/misc.py:117-126.",
+      "units.yaml misc.lmfit.Lasso in_eeg_selection true. audit/README.md:57 gives anchor 0."
+     ]
+    }
+   ],
+   "changed": [],
+   "disputed": [],
+   "reruns": [],
+   "remaining": [],
+   "validator_clean": null
+  },
+  {
+   "batch": "low-infotheory-xcorr",
+   "kind": "low",
+   "challenge": [
+    {
+     "unit_id": "infotheory.te.symbolic",
+     "verdict_now": "wrong",
+     "score_now": "1",
+     "holds": true,
+     "proposed_verdict": "wrong",
+     "proposed_score": "1",
+     "problems": [
+      "The score cannot reasonably go up or down. The rubric's own anchor-1 example is this unit: 'Wrong estimator substituted (te_symbolic \u2192 Gaussian)'. _getcalc('TransferEntropy') has no 'symbolic' branch, so the else branch builds TransferEntropyCalculatorGaussian (pyspi/statistics/infotheory.py:124-130). No ordinal symbolisation happens anywhere, and STE is not computed on any input.",
+      "Minor wording gap: what_changed (record line 89-90) does not name the rubric anchor. The note heading at notes/it_gaussian.md:350 does ('anchor 1: wrong estimator substituted'). Suggest adding 'rubric anchor 1, wrong estimator substituted (the rubric's own example)' to what_changed.",
+      "Bookkeeping is right: already_documented cites tests/README.md bug 1 (= KNOWN_ISSUES item 1) and new_finding is false. The 'symbolic' label without 'linear' is filed correctly as a metadata consequence of bug 1, not a new finding. check_method independent-impl is right (numpy Gaussian TE via _kernels_infotheory.gaussian_te, which does not import JIDT). The same-lineage identity check with gc_gaussian is only supporting evidence, so the cap of 6 does not apply. definition_under_review false is right because the canonical STE (Staniek & Lehnertz 2008) is not contested."
+     ],
+     "evidence": [
+      "pyspi/statistics/infotheory.py:124-130 (no symbolic branch) and :45-52 (symbolic returns early, so no 'linear' label)",
+      "audit/records/infotheory.te.symbolic.yaml:84-90: 6/6 numpy Gaussian-TE runs max_abs <= 8.9e-14; 2/2 bitwise identity with gc_gaussian_k-1; STE unchanged under exp(x) while pyspi changes by up to 185% (anm)",
+      "My probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_low-infotheory-xcorr/probe_jidt.py on fresh coupled data (seed 7, 3x512): te_symbolic_k1 == gc_gaussian_k1 bitwise -> True",
+      "audit/briefing/KNOWN_ISSUES.md:8 (bug 1); notes/it_gaussian.md:350"
+     ]
+    },
+    {
+     "unit_id": "infotheory.est.kozachenko",
+     "verdict_now": "wrong",
+     "score_now": "1",
+     "holds": true,
+     "proposed_verdict": "wrong",
+     "proposed_score": "1",
+     "problems": [
+      "The defect is real and I reproduced it independently. JIDT EuclideanUtils.computeMinEuclideanDistancesNaive exits its dimension loop early by comparing a squared partial sum (thisDistance) with the un-squared minDistance. It then accepts sqrt(partial) as a distance. JIDT dispatches to this routine whenever N > MAX_TIMESTEPS_FOR_FAST_DISTANCE = 2000. I read the a9b6b3e source copy in the scratchpad: line 30 is the threshold, 69-75 the dispatch, 96-104 the early-exit condition and the acceptance step. The deviation is not a convention, not a normalisation mismatch and not a weak-data artefact. It is a value change of several nats, and it breaks the scale law.",
+      "Too low? There is a case. Anchor 1 ('wrong estimator substituted') is applied by analogy: the estimator formula is unchanged and the delegate feeds it wrong NN distances, only for N > 2000 and d >= 2 at points with rho_i > 1. Up to 2000 rows the unit would rate 9. No rubric anchor describes a regime-limited delegate defect. Every candidate is worse than anchor 1 or does not fit: 0 is not met, 2 needs a sign difference that the estimator itself does not show, and 3/4 describe definitional, not computational, deviations. The record states both regimes and the analogy explicitly (what_changed lines 163-169; notes/it_kozachenko.md:383), so 1 stands as the scored worst-case regime.",
+      "Too high? No. The output is not constant or NaN, so anchor 0 does not apply.",
+      "The score policy is consistent. The defect is scored once, here, and carried unscored on cce/di/si/xme_k10 (notes/it_kozachenko.md:341). already_documented 'no' and new_finding true are right: the JIDT naive-distance defect, the jar provenance, the inert NORMALISE and the copy-path NOISE_SEED loss appear nowhere in tests/README.md, REVIEW M1-M9, KNOWN_ISSUES or the EEG/dependency notes. check_method independent-impl (scipy cKDTree KL) is right. The naive-routine port is labelled same-lineage and used only to explain the mechanism.",
+      "Context, not a score issue: no *_kozachenko identifier is among the retained EEG metrics (audit/env/retained_metrics.txt). Default EEG windows (docs/workflow.md:72, 0.5 s) give fewer than 2000 rows unless the sampling rate is above 4 kHz, so the defect does not reach the stored EEG run. This is worth one line in check_cost or the note, not a score change."
+     ],
+     "evidence": [
+      "/tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/fable_it_review/dl/a9b6/EuclideanUtils.java:30 (=2000), :69-75 (dispatch), :96 'for (int d = 0; (d < dimensions) && (thisDistance < minDistance); d++)', :101-104",
+      "My probe .../scratchpad/wf4b_low-infotheory-xcorr/probe_jidt.py (fresh seed 7, noise off, iid N(0,I)): d=10 N=2000 JIDT 14.2549 = cKDTree KL 14.2549; N=2001 9.1323 vs 14.0759; N=4096 9.8207 vs 14.1880. d=5 N=2001 6.9851 vs 7.0490; N=4096 7.0150 vs 7.0463. d=1,2 equal at every N. Every naive-routine wrong distance has true rho > 1 (1969/2001 at d=10).",
+      "Record runs: infotheory.est.kozachenko|iid_gaussian|4096|kernel|direct-noiseoff (fail, d=10 -4.334), |nn-routines, |scale-law-naive, |direct-naive-noiseoff (port 2e-14); infotheory.xme.kozachenko_k10|iid_gaussian|4096|pipeline|threshold (T'=2010 equal, T'=2011 -0.1976 vs 1.4489)",
+      "audit/records/infotheory.est.kozachenko.yaml:161-170; notes/it_kozachenko.md:341, 362, 383"
+     ]
+    },
+    {
+     "unit_id": "infotheory.xme.kernel_k10",
+     "verdict_now": "related-quantity",
+     "score_now": "3",
+     "holds": false,
+     "proposed_verdict": "related-quantity",
+     "proposed_score": "4",
+     "problems": [
+      "The only stated basis for 3 is out of date. what_changed (record line 130-131) and notes/it_kernel.md:613-615 say 'infotheory.xme.kozachenko_k10 scores the same off-by-one at 3'. kozachenko_k10 is 4 (records/infotheory.xme.kozachenko_k10.yaml:99). It was briefly 3 in the it_kozachenko first pass, which docked it for the inherited JIDT > 2000-row defect, and was put back to 4 under the score policy at notes/it_kozachenko.md:341. The it_kernel review moved this unit from 4 to 3 by matching that temporary value (it_kernel.md:614-615, 676).",
+      "Rubric fit. All three xme_k10 units share one deviation in pyspi code: CrossmapEntropy.bivariate builds src[k-1:-1] plus 'for i in range(2, k)', so history_length=10 gives source lags 1..9 (pyspi/statistics/infotheory.py:405-414, which I re-read). The base quantity, H(Y_t | X past) with no documented definition, is scored anchor 5 on all three k1 units. The off-by-one turns k10 into a 'Related but different quantity' (anchor 4): a lagged conditional entropy over lags 1..9 instead of the 1..10 the identifier names. Anchor 3 ('An identifier hyperparameter is ignored or the label does not describe the computation') fits worse. The hyperparameter is applied, with k-1 lags, not ignored. Its examples (softdtw constraints ignored entirely, dDTF 'direct' in a bivariate setting, mgcx lag terms computed on distance profiles) misdescribe the whole computation, whereas k10 is off by one lag. The size of the off-by-one here: the ten-lag variant differs by 0.008-0.015 bits on Gaussian data and 0.06-0.07 bits on logistic maps (ref_ten_lag_variant_maxabs_diff).",
+      "The W-0.5 saturation (|v| <= 0.024 bits, var2 ordering reversed) cannot justify a lower score. README: 'Finite-sample bias is not incorrectness: convergence runs are reported separately from formula agreement'. The record itself says the saturation is 'reported as convergence evidence, not as the formula score'. Anchor 0 does not apply either: values are not constant by construction (logistic_maps_chaotic 0.977 vs 1.777), as notes/it_kernel.md:697-701 already argues.",
+      "Fix needed (score and text): score_0_10 3 -> 4. In what_changed, replace '(anchor 3, the label does not describe the computation; infotheory.xme.kozachenko_k10 scores the same off-by-one at 3)' with an anchor-4 quote ('related but different quantity': H(Y_t | X_{t-1..t-9}) rather than the 10 lags the identifier names; the hyperparameter is applied off by one, not ignored, so anchor 3 does not apply), plus 'as infotheory.xme.gaussian_k10 and infotheory.xme.kozachenko_k10'. Note edits: notes/it_kernel.md:603 heading 'score 3' -> 'score 4'; :613-616 same replacement as what_changed; :676 'xme_k10 moves from score 4 to 3' needs a follow-up saying it was put back to 4 in Workflow 4b for consistency with the kozachenko and gaussian siblings; :701 '(related-quantity 3, anchor 3 ...)' -> '(related-quantity 4, anchor 4 ...)'. The HANDOFF.md 2b-B verdict table (line 221) also says 3; it is regenerated at synthesis.",
+      "Everything else holds. check_method independent-impl (numpy box kernel, no JIDT import) is right; the same-lineage cap does not apply. new_finding true is right (off-by-one, saturation and CalculatorFrame width 0.25 are not in KNOWN_ISSUES). definition_under_review false matches the other xme units: no standard exists, so none is contested."
+     ],
+     "evidence": [
+      "pyspi/statistics/infotheory.py:405-414 (range(2, k) gives lags 1..k-1)",
+      "audit/records/infotheory.xme.kernel_k10.yaml:128-131 (score 3 and the cross-reference); audit/records/infotheory.xme.kozachenko_k10.yaml:98-100 (score 4); audit/records/infotheory.xme.gaussian_k10.yaml:88-91 (score 4)",
+      "notes/it_kernel.md:603, 613-616, 676, 697-701; notes/it_kozachenko.md:341 (first pass lowered xme_k10 4->3, then restored), :417",
+      "audit/records/infotheory.xme.kernel_k10.yaml check block closeness: 7/7 numpy lags 1..9 max_abs <= 1.2e-12; ten-lag variant diff 6.2e-15 (iid T256) / 0.0079-0.0146 (Gaussian T1024) / 0.060-0.073 (logistic maps)",
+      "audit/records/infotheory.xme.kernel_k1.yaml:133-136 (k1 = anchor 5, so k10 with one extra deviation = 4)",
+      "README.md rubric: anchors 3, 4, 5 and the finite-sample sentence"
+     ]
+    },
+    {
+     "unit_id": "infotheory.xme.kozachenko_k10",
+     "verdict_now": "related-quantity",
+     "score_now": "4",
+     "holds": true,
+     "proposed_verdict": "related-quantity",
+     "proposed_score": "4",
+     "problems": [
+      "Score 4 is right under the rubric and the family score policy. Composition: canonical KL on the 9-lag design to <= 1e-8 at T <= 1024; lag-10 copy 1.50506 = 9-lag design, not the 10-lag 0.689. The off-by-one is the 'Related but different quantity' anchor 4, one below the anchor-5 base (xme_kozachenko_k1). The JIDT > 2000-row drop (about -1.6 nat, sign flip) is inherited from infotheory.est.kozachenko and correctly carried there without a deduction. The d=10 KL bias (+1.5 nat) is an estimator property and correctly not deducted.",
+      "The justification text is inaccurate. what_changed (record line 100-101) and notes/it_kozachenko.md:417 say 'anchor 4, as infotheory.xme.gaussian_k10 and infotheory.xme.kernel_k10'. kernel_k10 is currently 3, so the statement is true only once kernel_k10 is moved to 4 (see that entry). The clause 'so the identifier does not describe the lag set' paraphrases anchor 3's wording ('the label does not describe the computation') while claiming anchor 4. Suggested rewording: 'anchor 4, related but different quantity: H(Y_t | X_{t-1..t-9}) instead of the 10 lags the identifier names (the hyperparameter is applied off by one, not ignored, so anchor 3 does not apply), as infotheory.xme.gaussian_k10 and infotheory.xme.kernel_k10'.",
+      "Everything else holds. check_method independent-impl (cKDTree KL plus a java.util.Random(42) jitter replica, no JIDT) is right; the JIDT-port run is same-lineage and only explains the mechanism, so no cap. already_documented 'no' and new_finding true are right. definition_under_review false matches the other xme units."
+     ],
+     "evidence": [
+      "audit/records/infotheory.xme.kozachenko_k10.yaml:93-103 (closeness, score, what_changed); :156-162 (shift-pattern, threshold runs)",
+      "notes/it_kozachenko.md:341 (score policy: xme_k10 first lowered 4->3 for the inherited defect, then restored), :417 (heading)",
+      "audit/records/infotheory.xme.kozachenko_k1.yaml:86-88 (anchor 5 base)",
+      "My probe .../scratchpad/wf4b_low-infotheory-xcorr/probe_jidt.py confirms the inherited mechanism: d=10 N=2001 JIDT 9.13 vs KL 14.08"
+     ]
+    },
+    {
+     "unit_id": "infotheory.xme.gaussian_k10",
+     "verdict_now": "related-quantity",
+     "score_now": "4",
+     "holds": true,
+     "proposed_verdict": "related-quantity",
+     "proposed_score": "4",
+     "problems": [
+      "This unit is not in this batch; I include it only for the xme_k10 consistency item, which allows editing it. Score 4 is right and matches the proposed common anchor for the three k10 siblings. The numpy check with lags 1..9 agrees to <= 8.5e-14. The shift test shows a lag-9 coupling is seen (-0.8957) and a lag-10 coupling is not (1.4146 \u2248 H1).",
+      "The justification does not quote a rubric anchor. what_changed (record line 90-91) gives no anchor, and notes/it_gaussian.md:370 says 'anchor between 5 and 3', which is not a rubric anchor. Suggested replacement: 'anchor 4, related but different quantity: H(Y_t | X_{t-1..t-9}) instead of the 10 lags the identifier names; the hyperparameter is applied off by one, not ignored (so not anchor 3); as infotheory.xme.kernel_k10 and infotheory.xme.kozachenko_k10'. The NonPositiveDefiniteMatrixException on noise-free narrowband sources is input-conditional robustness and is correctly not deducted."
+     ],
+     "evidence": [
+      "audit/records/infotheory.xme.gaussian_k10.yaml:85-91",
+      "notes/it_gaussian.md:363 (k1 anchor 5), :370 ('anchor between 5 and 3')",
+      "run infotheory.xme.gaussian_k10|iid_gaussian|4096|pipeline|shift-pattern"
+     ]
+    },
+    {
+     "unit_id": "basic.xcorr.mean_sig-True",
+     "verdict_now": "wrong",
+     "score_now": "3",
+     "holds": true,
+     "proposed_verdict": "wrong",
+     "proposed_score": "3",
+     "problems": [
+      "Too low? No. The rubric's anchor-6 example 'sigonly threshold/origin' would cover a doubled threshold and an off-by-one centre. The checks show more than that. The mirrored left cut (pyspi/statistics/basic.py:116-120, start N - fzr) makes the kept window span almost the whole negative half: 254-256 of 256 lags at T=1024, at most 0.39% of them significant. 'sig-True' therefore does not restrict to significant lags, and the mean of mostly insignificant lags does not rank dependence (bivariate_gaussian T1024: rho=0.8 pair 0.0010, rho=0.3 pair 0.0012, independent pairs up to 0.0029). It is also channel-order dependent and raises IndexError (whole matrix NaN) on structured data. The literal replica reproduces pyspi to 1.4e-17, and every gap closes only at the literal mirrored rule (gap_d4 <= 1.7e-18). So this is not a reference or normalisation mismatch. Anchor 3 ('the label does not describe the computation') is the right anchor.",
+      "Too high (anchor 2)? I checked and it does not hold up robustly. The sign claim in what_changed (record line 264-265: 'delayed_noise pair (0,3): -0.0028 against a positive lag-5 correlation of 0.993') compares the pyspi summary with a single-lag correlation, not with the documented summary. I re-derived the documented summary with refs/xcorr.py:canon_steps. Under the filter reading (keep lags with |rho| > 1.96/sqrt(T)) A[0,3] = +0.0483 at T=1024 and +0.3227 at T=256, so the sign does differ. Under the contiguous-about-lag-0 reading it is 0.0, so there is no sign difference. Because definition_under_review is true and the two readings disagree, anchor 2 holds under only one reading. Anchor 3 holds under both and is the robust choice. Suggested what_changed wording: '-0.0028 against +0.048 under the documented filter reading (0 under the contiguous reading)'. Qualify 'anchor 2 would also apply on the sign' in what_changed and notes/xcorr.md:218 as 'under the filter reading only'.",
+      "Small factual addition: the channel-reversal sign flip happens at T=1024 too (-0.0028 -> +0.0021, record line 302), not only at T=256 as what_changed says.",
+      "Anchor 0 does not apply. All-NaN appears only on periodic, trending or long-memory inputs (errsweep 58/58). On iid, VAR and Gaussian data the output is finite and not constant. Note: neither sig-True identifier is among the retained EEG metrics; only the sig-False ones are.",
+      "Bookkeeping holds. already_documented cites tests/README.md lines 120/130/249 (the n0d0 IndexError locked as nan_golden). The threshold, centre, mirrored cut, order dependence and default-preprocessing IndexError are not in KNOWN_ISSUES, tests/README bugs 1-10, REVIEW M1-M9, EEG_OPTIMIZATION_NOTES or DEPENDENCY_COMPATIBILITY_REVIEW (I grepped them), so new_finding true is right. check_method analytic is acceptable (B&D CCF, the T/(T-1) selfcopy identity, Bartlett null). The replica is independent-impl (np.convolve, not scipy.signal.correlate). The same-lineage perm-selfcons runs are not the score basis, so no cap. definition_under_review true is right (filter vs contiguous reading)."
+     ],
+     "evidence": [
+      "pyspi/statistics/basic.py:107 (window slice), :116-120 (N = len//2, thr 1.96/sqrt(N), r[N-fzr:N+fzf])",
+      "audit/checks/out/results/xcorr.json basic.xcorr.mean_sig-True|delayed_noise|1024|pipeline|canon: ref_gap_d0 0.0578, ref_gap_c_doc 0.00297, ref_gap_d4 1.7e-18; |256|pipeline|canon gap_d0 0.335",
+      "My probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_low-infotheory-xcorr/xcorr_pair03.py (comparison venv, refs/xcorr.py:canon_steps): T1024 (hi,lo)=(3,0) d0 +0.04833, c_doc 0.0, d4 -0.0028 (= pyspi A[0,3] -0.0027989); reversed d4 +0.00206; T256 d0 +0.32274, c_doc 0.0, d4 -0.00247, reversed +0.00625",
+      "audit/records/basic.xcorr.mean_sig-True.yaml:243-257 (closeness), 258-268 (verdict, what_changed, definition_under_review)",
+      "notes/xcorr.md:207 (max_sig-True anchor 4), :218 (anchor 3, 'Anchor 2 would also apply on the sign')",
+      "audit/env/retained_metrics.txt (only sig-False xcorr identifiers retained)"
+     ]
+    }
+   ],
+   "changed": [
+    "infotheory.xme.kernel_k10: score 3 -> 4, verdict stays related-quantity. I agree with the reviewer. pyspi/statistics/infotheory.py:405-414 builds src[k-1:-1] plus range(2, k), so history_length=10 gives source lags 1..9. The hyperparameter is applied off by one, not ignored, so this is anchor 4 (related but different quantity), not anchor 3. The only stated basis for 3 was 'kozachenko_k10 scores the same off-by-one at 3', and that is stale: kozachenko_k10 was put back to 4 under the it_kozachenko score policy (notes/it_kozachenko.md:341). The W-0.5 saturation is finite-sample behaviour, which the README excludes from the score. I rewrote what_changed in audit/records/infotheory.xme.kernel_k10.yaml to quote anchor 4, list both siblings and record that 4b moved it from 3 to 4. In audit/notes/it_kernel.md I changed the heading to 'score 4', rewrote the scoring paragraph, added a follow-up to the check-stage review bullet ('Workflow 4b put it back to 4') and changed Open question 5 to 'related-quantity 4, anchor 4'. I did not edit the HANDOFF.md 2b-B table, which is regenerated at synthesis.",
+    "infotheory.xme.kozachenko_k10: score stays 4. Wording only: what_changed and the notes/it_kozachenko.md heading now quote anchor 4 ('related but different quantity'), say the hyperparameter is applied off by one, not ignored, so anchor 3 does not apply, and name the siblings. The sibling cross-reference is now true because kernel_k10 is 4.",
+    "infotheory.xme.gaussian_k10: score stays 4. Wording only: what_changed now quotes anchor 4 with the same off-by-one reasoning and the sibling cross-reference. The notes/it_gaussian.md heading 'anchor between 5 and 3' is replaced by the anchor-4 statement.",
+    "basic.xcorr.mean_sig-True: score stays 3. I re-ran the reviewer's probe xcorr_pair03.py in the comparison venv and got the same numbers. At T=1024, pair (0,3) gives d0 +0.04833, c_doc 0.0 and d4 -0.0028 (= pyspi -0.0027989), and the reversed d4 is +0.00206. At T=256: d0 +0.32274, c_doc 0, d4 -0.00247, reversed +0.00625. In the record's what_changed and in notes/xcorr.md (Sign bullet and anchor paragraph) the sign claim now compares with the documented summary under the filter reading (+0.048 / +0.323) and with 0 under the contiguous reading. The channel-reversal flip is now given at T=1024 as well as T=256. 'Anchor 2 would also apply' is qualified as holding under the filter reading only, while anchor 3 holds under both readings.",
+    "infotheory.te.symbolic: score stays 1. Wording only: what_changed now names 'rubric anchor 1, wrong estimator substituted: the rubric's own example'.",
+    "infotheory.est.kozachenko: score stays 1. I added one context line to notes/it_kozachenko.md after the Verdict bullet (not to the record, because check_cost is outside the allowed fields). No *_kozachenko identifier is in audit/env/retained_metrics.txt (grep count 0), and the default 0.5 s window (docs/workflow.md:72) gives more than 2000 rows only above 4 kHz, so the defect does not reach the stored default EEG run."
+   ],
+   "disputed": [],
+   "reruns": [
+    "Ran the reviewer's probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_low-infotheory-xcorr/xcorr_pair03.py in the comparison venv; its numbers match the reviewer's.",
+    "No reference script under audit/checks/refs/ and no manifest was changed, so no run_checks.py --force re-run was needed and the pass/fail counts are unchanged."
+   ],
+   "remaining": [
+    "audit/HANDOFF.md:222 (2b-B verdict table) still lists infotheory.xme.kernel_k10 at score 3; the record and notes now say 4. The table was deliberately left for regeneration at synthesis and must be refreshed then."
+   ],
+   "validator_clean": true
+  },
+  {
+   "batch": "low-wavelet",
+   "kind": "low",
+   "challenge": [
+    {
+     "unit_id": "wavelet.psi",
+     "verdict_now": "degenerate",
+     "score_now": "0",
+     "holds": true,
+     "proposed_verdict": "degenerate",
+     "proposed_score": "0",
+     "problems": [
+      "None blocking. The score sits exactly on the rubric anchor 0 text 'Degenerate: constant, all-NaN, or wrong axis indexed' (the 'wrong axis indexed' clause), what_changed quotes it, and the axis selection is correctly put in already_documented (EEG_OPTIMIZATION_NOTES.md:169 'wavelet PSI axes'; DEPENDENCY_MIGRATION.md:84-85; KNOWN_ISSUES). Nothing argues for a higher score: the stored value is a mean or maximum over the first 2-10 TIME samples of a single-epoch PSI(t). Its sign disagrees with the true lead/lag on 50-90% of entries.",
+      "Consistency with wavelet.icoh: this record does not count its own 'unsigned label on a signed output' candidate as new, citing the general label topic (EEG_OPTIMIZATION_NOTES \u00a7review 'parameter-specific/shared labels', REVIEW M9). wavelet.icoh counts the same kind of item as new. Neither M9 nor the EEG notes item names a specific metric, so by the SCHEMA rule this candidate is also undocumented. Harmonise the wording; new_finding stays true either way because other new candidates support it (antisymmetric-to-symmetric mirror, unit-modulus coherency, real Nyquist wavelet).",
+      "new_finding true is justified by candidates that are not in KNOWN_ISSUES: the mirror of an antisymmetric quantity (distinct from bug 5 / M1), the unit-modulus single-epoch coherency (no coherence weighting), the real Nyquist wavelet, and the empty low band for T < 25. definition_under_review true is justified: there is no canonical single-epoch time-resolved PSI (notes/wavelet_psi.md:175,191).",
+      "check_method independent-impl is right: the refs/wavelet_psi.py replica uses a closed-form Morlet and np.convolve and does not import mne. The same-lineage mne run is display only. The cap is moot at 0."
+     ],
+     "evidence": [
+      "Rubric anchor 0: audit/README.md score table, 'Degenerate: constant, all-NaN, or wrong axis indexed'",
+      "Code: pyspi/statistics/wavelet.py:221-232. freq_id comes from freqs_computed (10 wavelet frequencies) and is applied with adj_freq[..., freq_id], which indexes the last axis of the (N,N,1,T) result, i.e. time. Canonical form re-derived: Nolte 2008 eq. 3, Psi = Im sum_f C*(f) C(f+df), adjacent frequencies; mne_connectivity/effective.py:513-526 matches that kernel.",
+      "My probe wf4b_low-wavelet/p2_psi.py (x0 leads x1 by 3 samples, T=1024). Dense shape (2,2,1,1024). pyspi mean-full 2.13836 equals mean(psi[1,0,0,0:10]) to the last bit; mean-low 1.42074 = mean over t=0,1; mean-high 2.31776 = mean over t=2..9. The all-time mean is -1.1008 and the central mean -1.1281, which carry the correct (negative) sign for seed 1 lagging; the stored value has the opposite sign.",
+      "Re-ran run_checks.py --family wavelet_psi --force (scratchpad run_psi.log): 297 runs, 173 pass / 124 fail, 0 pass/fail flips and 0 max_abs changes against the previous results (copy in wf4b_low-wavelet/wavelet_psi.json). rep 106/106, tsel 2/2 (max_abs 1.4e-14), dir 9/72, int 0/12, welch 0/12, doc 0/36, perm 6/6, nullmc 3/3.",
+      "Records: audit/records/wavelet.psi.yaml:384-404 (what_changed, new_finding, definition_under_review), :449-452 (label candidate set as documented by the general topic)"
+     ]
+    },
+    {
+     "unit_id": "wavelet.morlet_cwt",
+     "verdict_now": "degenerate",
+     "score_now": "0",
+     "holds": true,
+     "proposed_verdict": "degenerate",
+     "proposed_score": "0",
+     "problems": [
+      "The anchor is paraphrased rather than quoted. what_changed (records/wavelet.morlet_cwt.yaml:147) says 'Degenerate (rubric 0: no time-frequency decomposition)', which is not anchor text. The applicable clause is 'constant': X(f,t) = sqrt(2) x(t) is identical across all 125 frequencies, so the transform's defining axis carries no information. Suggested wording: 'Degenerate (rubric 0, constant: the transform is constant along the frequency axis, X(f,t) = sqrt(2) x(t) at every f)'.",
+      "Arguments for a higher score were considered and rejected. The output is not constant in t, but anchor 3 ('label does not describe the computation') would describe a meaningful quantity under the wrong name. Here every frequency slice is the same scaled copy of the input, and every downstream estimator built on it is degenerate. 0 holds.",
+      "new_finding true is justified. tests/README.md:217 attributes the degeneracy to the single epoch only. The one-sample wavelet (n_cycles = f/7 is the Tallon-Baudry sigma_f = f/7 passed where MNE expects a cycle count), the fixed 0.2-0.5 grid, the fs-blind cache, the T < 25 NaN and the no-op mt_adaptive are not in KNOWN_ISSUES.",
+      "check_method independent-impl is right (h_cwtdirect direct convolution; h_orient7 uses the independent _kernels_spectral.cwt_morlet). The cap is moot. definition_under_review false is acceptable: Morlet CWT itself is not contested."
+     ],
+     "evidence": [
+      "Canonical form re-derived: Tallon-Baudry 1997, w = A exp(-t^2/(2 sigma_t^2)) exp(2 i pi f t), sigma_f = 1/(2 pi sigma_t), f/sigma_f = 7, so sigma_t = 7/(2 pi f), i.e. MNE n_cycles = 7. pyspi passes n_cycles = f/7, giving sigma_t = 1/(14 pi) = 0.0227 samples (mne/time_frequency/tfr.py:159-178 read).",
+      "My probe wf4b_low-wavelet/p1_morlet_phase.py: mne.morlet(1, linspace(.2,.5,125), n_cycles=f/7, zero_mean=True) gives lengths [1] and value 1.41421356+0j; n_cycles=7 gives lengths 23..55.",
+      "Re-ran run_checks.py --family wavelet_measures --force (run_measures.log): 355 runs, 244 pass / 111 fail, identical pass flags and max_abs to the previous results. morlet_cwt 18/18 pass (cwtx max_abs 2.66e-15 / 2.22e-15 / 1.11e-15; wavelets 4.4e-16; fscache pass).",
+      "Rubric anchor 0: audit/README.md 'Degenerate: constant, all-NaN, or wrong axis indexed'"
+     ]
+    },
+    {
+     "unit_id": "wavelet.icoh",
+     "verdict_now": "degenerate",
+     "score_now": "0",
+     "holds": true,
+     "proposed_verdict": "degenerate",
+     "proposed_score": "0",
+     "problems": [
+      "Open item settled: the 'unsigned label on a signed quantity' candidate is NOT already documented. REVIEW M3 (docs/storage_comparison/REVIEW.md:145-151) covers PLI/wPLI only; M4 (:153-166) covers coherence phase only; M8 (:195-201) covers pec/pec_log, Gaussian entropies, spearman/kendall and tlmi. M9 and EEG_OPTIMIZATION_NOTES.md:169 ('parameter-specific/shared labels') are general label-structure topics that name no metric. REVIEW reviewed the stored metrics, and audit/env/retained_metrics.txt contains no wavelet identifier, so the extra wavelet classes were outside its scope. KNOWN_ISSUES does not list the item. By the SCHEMA rule (confirmed and not in KNOWN_ISSUES), new_finding true stands. already_documented should add one sentence: M3/M4/M8 document the same kind of mismatch for other metrics, and M9/EEG \u00a7review cover label structure in general, without naming imaginary coherence.",
+      "The label evidence in the record rests on round-off values (perm 7.6e-17 vs -7.6e-17) and on canonical reference values. pyspi's own output is signed beyond round-off when fs is non-default, which strengthens the candidate: my probe gives ImaginaryCoherence(fs=10) mean off-diagonal values in [-0.01198, +0.01027] with A_rev = -A (0.0016114 vs -0.0016114). Add this to candidate_resolutions.",
+      "The anchor is paraphrased: what_changed (records/wavelet.icoh.yaml:137) says 'rubric 0: rounding noise'. Write 'rubric 0, constant: 0 up to round-off (|A| <= 2.41e-12)'. The score holds: the output is the constant 0 up to FFT round-off, and the direct-convolution pipeline gives exactly 0.",
+      "Text defect: implemented_as (records/wavelet.icoh.yaml:23-24) repeats 'up to 2.41e-12 at T=1024 in the check stage' twice.",
+      "Minor consistency point (optional): spectral.icoh sets definition_under_review true for the signed versus unsigned ImC decision (notes/spectral_coherence.md:243), while this unit keeps false although its signed/unsigned-label conflict is the same open decision. The score is unaffected.",
+      "check_method independent-impl is right (direct_cwt + pipeline_value: no mne, no FFT, exactly 0). The cap is moot."
+     ],
+     "evidence": [
+      "Code: pyspi/statistics/wavelet.py:123-130 (labels ['unsigned','wavelet','undirected'] at :125). mne_connectivity/spectral/epochs_bivariate.py:97-107 _ImCohEst returns imag(csd_mean)/sqrt(psd_xx psd_yy), which is signed. Canonical form: Nolte 2004, ImC = Im(S_ij)/sqrt(S_ii S_jj), signed and antisymmetric.",
+      "My probe wf4b_low-wavelet/p3_icoh_fs.py: fs=1 off-diagonal values in [-2.5e-16, 4.5e-16]; fs=10 values in [-0.011979, +0.010275] with 6 negative entries; under channel reversal A[1,0] = 0.0016114 and A_rev[1,0] = -0.0016114.",
+      "My probe wf4b_low-wavelet/p1_morlet_phase.py: icoh mean in [-1.9e-16, 1.2e-16], max in [9.6e-15, 5.4e-14]; perm -1.568e-17 vs +1.568e-17.",
+      "Re-run (run_measures.log): six 12/16 pass, with the T=1024 failures unchanged (2.41e-12 bivariate_gaussian, 2.01e-12 iid, 1.83e-12 delayed_noise, 2.40e-12 var2); scratch 3/3 (max_abs <= 7.2e-16); perm 3/3.",
+      "Documentation searched: tests/README.md:155,157,217; docs/storage_comparison/REVIEW.md:145-205; audit/briefing/KNOWN_ISSUES.md; grep for 'icoh|imaginary' in REVIEW.md and EEG_OPTIMIZATION_NOTES.md finds nothing."
+     ]
+    },
+    {
+     "unit_id": "wavelet.phase",
+     "verdict_now": "degenerate",
+     "score_now": "0",
+     "holds": true,
+     "proposed_verdict": "degenerate",
+     "proposed_score": "0",
+     "problems": [
+      "Open item settled: new_finding true is justified, but by candidates 1 AND 2, not by candidate 1 alone. Candidate 1: the 'varying' values are a round-off artefact; this contradicts tests/README.md:157/:217 ('Only phase, pli and wspli carry non-trivial values') and is in no listed document. Candidate 2: the max identifiers are exactly pi on every non-identical pair; also undocumented. Candidate 3 (A_rev = -A + 2 pi n/N) is the M4 branch-cut mechanism (REVIEW.md:155-157), reached here through mne's +0.0 accumulator rather than the DC bin, and candidate 4 (unsigned label) is M4 (REVIEW.md:155). Both are correctly cited as documented. Candidate 1 is a consequence of the one-sample wavelet counted on morlet_cwt, but the observable fact (values depend on round-off, not on the data) is itself undocumented and contradicts the tests/README description. This is unlike cohmag and icoh, whose degenerate outputs are already documented.",
+      "The anchor is paraphrased: what_changed (records/wavelet.phase.yaml:199) says 'rubric 0: the value is a function of FFT round-off, not of the data', which is not anchor text. Suggested: 'rubric 0 (Degenerate: constant): max identifiers are the constant pi; mean identifiers carry no input information beyond round-off'. The mean identifiers are not literally constant, so state that they are round-off noise with no dependence on the input.",
+      "The score was challenged as too low and holds. My probe shows the mean identifier does not track the only data feature it could encode (the fraction of negative lag-0 products). Over 30 draws per correlation, mean phase is -0.007 / +0.064 / +0.025 / +0.004 / -0.004 (sd 0.09-0.15) at rho -0.9 / -0.5 / 0 / +0.5 / +0.9, while pi*frac(negative products) moves from 2.72 to 0.46. Re-z-scoring (input change 4.4e-16) moves it by 0.164. No anchor above 0 fits a value with no reproducible dependence on the input.",
+      "check_method: the degeneracy rests mainly on same-lineage self-consistency (ident, rep, perm, roundoff) plus an independent from-scratch pipeline that disagrees by design. independent-impl does not materially overstate, because the scratch reference is independent; 'analytic' would describe the decisive evidence slightly better. The cap is moot at 0.",
+      "definition_under_review false is consistent with spectral.phase (also false)."
+     ],
+     "evidence": [
+      "My probe wf4b_low-wavelet/p1_morlet_phase.py: the correlation sweep above; phase max off-diagonal exactly 3.14159265 on all 6 entries (3 x 256 iid); A + A_rev off-diagonal = 0.0245, 0.0550, 0.0736 (multiples of 2 pi/256 = 2 pi*125/32000), so the matrix is not antisymmetric; re-z-score change 0.1636.",
+      "Re-run (run_measures.log): ident 16/16 (max_abs <= 3.6e-15); roundoff 0/3 (delayed_noise 0.13666 -> -0.03829, max change 0.1749; iid 0.23896 -> 0.16650; narrowband 0.23719 -> 0.26821); perm 3/3 (relation within 6.1e-16; offsets 0.0630 / 0.0491 / 0.0520); scratch 0/3 (expected). Identical to the previous results file.",
+      "REVIEW M4 text read at docs/storage_comparison/REVIEW.md:153-166 (line 155: unsigned label inappropriate, +pi at the branch cut represents both directions; line 157: apparent antisymmetry offset). tests/README.md:157 and :217 call phase non-trivial.",
+      "Code: pyspi/statistics/wavelet.py:110-116 (labels at :112); mne_connectivity/spectral/epochs_bivariate.py:62-68 (zero-initialised complex accumulator, += csd)."
+     ]
+    },
+    {
+     "unit_id": "wavelet.cohmag",
+     "verdict_now": "degenerate",
+     "score_now": "0",
+     "holds": true,
+     "proposed_verdict": "degenerate",
+     "proposed_score": "0",
+     "problems": [
+      "None. The score sits exactly on the rubric anchor 0 'constant' clause, and what_changed quotes it ('rubric 0: constant'). The output is exactly 1.0 for mean identifiers and 1 + 2^-52 for max identifiers on every dataset, band and T. There is no case for a higher score: a single-epoch, unsmoothed coherence is identically 1 by construction (|z|/|z|), so the check data cannot distinguish anything. new_finding false with already_documented tests/README.md:217/:157 is correct, since the new causes are counted on wavelet.morlet_cwt. check_method independent-impl is right (direct-convolution pipeline, max_abs 0.0). The cap is moot. definition_under_review false is acceptable."
+     ],
+     "evidence": [
+      "My probe wf4b_low-wavelet/p1_morlet_phase.py: CoherenceMagnitude mean min = max = 1.0; max identifier 1.0000000000000002.",
+      "Re-run (run_measures.log): cohmag pass/fail flags and max_abs identical to the previous results (six 16/16 pass, max_abs 2.2e-16).",
+      "Canonical form: |C| = |<W_x W_y*>| / sqrt(<|W_x|^2><|W_y|^2>), with averaging before normalisation; with no averaging it is identically 1 (records/wavelet.cohmag.yaml:7-8). Rubric anchor 0: audit/README.md."
+     ]
+    }
+   ],
+   "changed": [],
+   "disputed": [],
+   "reruns": [],
+   "remaining": [],
+   "validator_clean": null
+  },
+  {
+   "batch": "mid-eeg",
+   "kind": "low",
+   "challenge": [
+    {
+     "unit_id": "spectral.gd",
+     "verdict_now": "variant",
+     "score_now": "6",
+     "holds": true,
+     "proposed_verdict": "variant",
+     "proposed_score": "6",
+     "problems": [
+      "Score holds. Anchor 6 names this case: 'Library formula deviates from both the supplement and canonical in an interpretable way (... group-delay significance machinery ...)'. Too-low test: the OLS core (slope/2pi, antisymmetric fill) is exact on pure delays, but the selection machinery is not a documented convention. Pooled Benjamini-Hochberg across all pairs, the largest-run rule and the band-relative decimation change which bins enter the fit, and whether the result is NaN. A plain label or ddof difference would justify more than 6; this is not one. Too-high test: anchor 3 ('label does not describe the computation') is too harsh because the quantity is still a group delay. Anchor 4 does not fit either.",
+      "Gotman 1983's exact selection and weighting rules are still unchecked. My web search found the citation but no text describing the method, so definition_under_review: true is right. The score does not depend on this.",
+      "My probe supports the direction_convention claim that the wrong-sign var2_bivariate value is a selection artefact. On the run pyspi kept at T=256 (f = 0.176-0.199, 7 bins), the true VAR coherency phase gives a local slope of +1.53 samples, while the replica gives -0.4725 (full band) and -0.5550 (low band). So the negative sign is not a local property of the true phase.",
+      "what_changed leaves out the main EEG consequence, which the note and candidate_resolutions do record. At the workflow window length T=1024, 3 of the 10 retained gd EEG bands (1-4, 4-8, 8-12 Hz at 2048 Hz, i.e. 0.5-2/2-4/4-6 per 1024) hold one bin each and are all-NaN by construction. At T=512 they raise ValueError, which makes the whole matrix NaN.",
+      "Wording rule: direction_observed (record line 133) says 'long-delay probe 9/9 finite pairs correct'. Suggest 'agree with the analytic delay sign'.",
+      "check_method independent-impl holds: the gd_pyspi replica does not import spectral_connectivity. already_documented (REVIEW M6, tests/README:249, DEPENDENCY_COMPATIBILITY_REVIEW:51) and new_finding true (pooled BH, band-relative step) are correctly separated. The narrow-band NaN diagnosis is marked as an elaboration of M6."
+     ],
+     "evidence": [
+      "audit/records/spectral.gd.yaml:127-130 (score, what_changed, new_finding, definition_under_review); :133 'correct' wording",
+      "audit/notes/spectral_psi_gd.md:236 (anchor-6 rationale), :270 (Gotman open question), :275-279 (EEG bands at T=1024/512)",
+      "audit/checks/out/results/spectral_psi_gd.json: rep 114/114, alone 8/8, base 3/3, eeg 40/40, delay 9/9, dir 9/9, gotman 9/9, embed 2/8 pass, popgd 3/12, null 10/12",
+      "Probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_mid-eeg/gd_localslope.py (.out): T=256, band 0-0.5: replica A01 = -0.4725; kept run [0.1758, 0.1992]; true-phase slope on that run +1.5291; true whole-band slope +1.1257. T=1024, band 0-0.25: replica 3.608 vs true local slope 1.465",
+      "WebSearch for Gotman 1983 found the citation (EEG Clin Neurophysiol 56:501-514, PMID 6194969) but no text describing the method"
+     ]
+    },
+    {
+     "unit_id": "spectral.pli",
+     "verdict_now": "variant",
+     "score_now": "6",
+     "holds": true,
+     "proposed_verdict": "variant",
+     "proposed_score": "6",
+     "problems": [
+      "Score holds. The rubric names the case: anchor 6 '(signed PLI/wPLI ...)'. Too-low test: the supplement's text 'averaging the sign of the (per taper) phase difference' could be read as describing the signed form, and the library documents that it is signed. The labels (unsigned/undirected) and the cited Stam 2007 (|E sign|) say otherwise, and the rubric settles the point explicitly. The replication is exact (rep 150/150, per-bin 15/15, mne per-bin |PLI| 8/8, max abs 0.0).",
+      "Too-high consideration for the three max identifiers (not in the EEG selection). Saturation is not only a null property, contrary to how the record frames it ('pli_max saturated under independence'). At T >= 1024 every off-diagonal entry is exactly 1.0, in both orientations and all three bands, on coupled data as well: var2_bivariate, var2_chain, bivariate_gaussian and narrowband_f0-0.1 at T=1024 and 4096. Only the strongly lagged delayed_noise pairs (min 0.2-0.6) and identical channels (0.0) fall below 1. So the max identifiers are close to constant at T >= 1024. The unit score is carried by the mean identifiers, but what_changed and units_and_range should say this. what_changed currently omits saturation altogether.",
+      "The 11 retained EEG identifiers (mean only) are not checked for PLI at EEG bands and T. The shared-front-end plv eeg-bands run covers bin counts only. At T=1024 the 1-4, 4-8 and 8-12 Hz bands (at 2048 Hz) hold 2, 3 and 3 bins. Adjacent bands share their edge bins (inclusive rule: bin 2 is in both 0.5-2 and 2-4 per 1024; bin 4 is in both 2-4 and 4-6). Because there are only 5 tapers, the band mean takes only 11-16 distinct values over 380 iid entries, with null SD 0.355-0.371. That is coarse quantisation, which the record does not state.",
+      "already_documented (M3, bug 5/M1, EEG notes \u00a7review, M4/DCR for DC/Nyquist) and new_finding true are separated correctly: max asymmetry and saturation are not covered by M3 or bug 5.",
+      "check_method independent-impl holds: refs/spectral_phase_sync.py imports neither pyspi nor spectral_connectivity. definition_under_review: true is right."
+     ],
+     "evidence": [
+      "audit/records/spectral.pli.yaml:113-116 (score, what_changed, new_finding, definition_under_review); :32 units_and_range (saturation framed as null-only); :109 check_data (no EEG bands)",
+      "audit/notes/spectral_phase_sync.md:45 (max variants under independence), :46 and :202 (EEG band mechanism via spectral.plv eeg-bands)",
+      "audit/checks/out/results/spectral_phase_sync.json: sat T=256 fraction 0.962 (min 0.85), T=1024/4096 1.0; null |z| <= 1.70; mne-band 0/6 by design (delayed_noise T=1024 A03 pyspi 0.180 vs mne 0.937)",
+      "Probe .../scratchpad/wf4b_mid-eeg/pli_max_sat.py (.out): frac==1.0 is 1.00 with min 1.00 for var2_bivariate, var2_chain, bivariate_gaussian and narrowband_f0-0.1 at T=1024 and 4096 in all three bands; delayed_noise T=1024 0.92/0.75/0.83 (min 0.6/0.2/0.2)",
+      "Probe .../scratchpad/wf4b_mid-eeg/pli_eeg_bands.py (.out), P=20 iid, T=1024: [0.5,2]/1024 has 2 bins, 11 distinct values, SD 0.355; [2,4] has 3 bins, 12 distinct, SD 0.370; [4,6] has 3 bins, 16 distinct, SD 0.371; full band has 512 bins, SD 0.037",
+      "Rubric audit/README.md anchor 6 text"
+     ]
+    },
+    {
+     "unit_id": "misc.lmfit.SGDRegressor",
+     "verdict_now": "variant",
+     "score_now": "5",
+     "holds": true,
+     "proposed_verdict": "variant",
+     "proposed_score": "5",
+     "problems": [
+      "Score holds, but the note's rationale needs fixing. notes/lmfit.md:267 says 'an optimiser unit that passes only the qualitative and optimality checks; the family cap is 6'. (a) Passing optimality checks is anchor 7 language ('an optimiser-based unit passing optimality checks'), which would contradict a 5. (b) The 'optimality' check A >= OLS - 1e-12 (54/54) is a tautology: OLS with an intercept minimises in-sample MSE over all linear predictors, so any SGD iterate passes it. It is a lower-bound sanity check, not an optimality check. The real closeness-to-optimum test, |A - OLS| <= 1/(10T), fails 24/48. (c) 'Family cap 6' is not a rubric concept: the only cap is the same-lineage cap, and check_method here is independent-impl. Anchor 5 ('Stochastic/optimiser unit verified only qualitatively') applies because no reference reproduces pyspi's SGD iterate. The independent checks only bound it (>= OLS, at most about 3e-3 above). Anchor 6 would be the next candidate, not 7. Anchor 9 fails because the excess reaches about 8x the null r^2 scale 1/T at T=4096.",
+      "what_changed (record line 177) states 'At T >= 1024 the excess is larger than the null-pair mean of r^2 (1/T)'. That is false at T=1024 by the record's own closeness: max excess 4.13e-4 < 1/T = 9.77e-4. It holds only at T=4096 (1.98e-3 vs 2.44e-4). My probe gives at most 4.1e-4 at T=1024 on four datasets. deviation_from_canonical's 'comparable to or larger' is acceptable.",
+      "implemented_as (line 21) still quotes trace-stage numbers ('changes with the seed by up to ~4.6e-4 (seeds 0-9)'; '49 of 552 probed ordered pairs'). The check stage superseded these: seed spread up to 1.78e-3 over seeds 0-19, and 0/2/11/30 of 120 entries per T above (T-1)/T.",
+      "agreement_criterion and closeness call A >= OLS an 'optimality' pass. They should say it is a bound every linear fit satisfies.",
+      "already_documented 'no' and new_finding true are right: nothing in tests/README, REVIEW, KNOWN_ISSUES or the EEG notes covers SGD non-convergence or seed dependence. definition_under_review: false is acceptable."
+     ],
+     "evidence": [
+      "audit/records/misc.lmfit.SGDRegressor.yaml:176-177 (score, what_changed), :21 (implemented_as, stale numbers)",
+      "audit/notes/lmfit.md:247-267 (verdict table and anchor-5 rationale with 'family cap is 6')",
+      "audit/checks/out/results/lmfit.json: ols 24/48, optimality 54/54, seedsweep 4/4, determinism 2/2, direction 3/4",
+      "Probe .../scratchpad/wf4b_mid-eeg/sgd_excess.py (.out), pyspi LinearModel(SGDRegressor) vs numpy OLS: max excess iid 1.34e-4 / bivariate 3.95e-4 / sparse_precision 4.13e-4 at T=1024 (1/T = 9.8e-4); sparse_precision 1.98e-3, iid 4.77e-4, bivariate 5.76e-4 at T=4096 (1/T = 2.4e-4); entries > (T-1)/T at T=4096: iid 12/20, bivariate 5/12; asym max 1.4e-3 (sparse_precision 4096)",
+      "Rubric audit/README.md anchors 5, 6, 7 and the same-lineage cap rule"
+     ]
+    },
+    {
+     "unit_id": "basic.prec.OAS",
+     "verdict_now": "variant",
+     "score_now": "6",
+     "holds": true,
+     "proposed_verdict": "variant",
+     "proposed_score": "6",
+     "problems": [
+      "Score holds under the family's reading, but that reading is still open: notes/cov_prec_simple.md:359-367 asks synthesis to confirm the symmetric reading of anchor 7. Too-low argument: the supplement's operative definition is 'the matrix inverse of the covariance matrix', and the code matches it exactly (pinvh of sklearn OAS, the 0.24.1 no-2/p formula the supplement ran). The partial-correlation sentence is an incorrect gloss. On that reading prec.OAS would equal cov.OAS (7) and prec.LedoitWolf/Empirical/Shrunk would be 9. I uphold 6 because the supplement asserts a concrete value property ('equivalent to the partial correlation ... within [-1, 1]') that fails in a value-changing, non-monotone way (opposite sign on every pair, unbounded up to 49.1). Together with the canonical 2/p deviation, that fits anchor 6: 'deviates from both the supplement and canonical in an interpretable way'. cov.OAS kept 7 because its doc gap is a monotone factor, so the family treatment is consistent.",
+      "For EEG-sized P the canonical deviation is nearly trivial. The shrinkage excess is bounded by 1/(p-1) (0.7% observed at P=19), so in EEG use the score rests mainly on the documentation gap. what_changed could say this.",
+      "Formula check: the installed sklearn 1.9.1 _shrunk_covariance.py:64-85 drops the 2/p terms, and the docstring at :754-758 documents it (citation verified). refs/_kernels_basic_misc.py:81-99 oas(paper=True) matches Chen et al. 2010 Eq. 23 as written: rho = min(((1-2/p) tr S^2 + tr^2 S)/((n+1-2/p)(tr S^2 - tr^2 S/p)), 1).",
+      "check_method independent-impl holds (numpy LU inverse, no sklearn). new_finding true holds: the partial-correlation claim and the cache mutation appear in no known-issue document; M1 and M2 are correctly cited. definition_under_review: true is right."
+     ],
+     "evidence": [
+      "audit/records/basic.prec.OAS.yaml:80-81 (score, what_changed)",
+      "audit/notes/cov_prec_simple.md:323 (cov.OAS anchor 7), :359-367 (symmetric anchor-7 reading, synthesis to confirm), :399 (prec.OAS anchor 6)",
+      "audit/records/basic.prec.LedoitWolf.yaml and basic.prec.EmpiricalCovariance.yaml what_changed (matches 7 under the same convention)",
+      "audit/checks/out/results/cov_prec_simple.json basic.prec.OAS: ref 18/18, stackA/B 6/6, truth 9/9, null 4/4, sym 6/6, doc-pcorr 0/3 and eq23 0/8 (both by design)",
+      "Probe .../scratchpad/wf4b_mid-eeg/oas_prec.py (.out), pipeline path: rho sklearn 0.18388 vs Eq. 23 0.16058 (+14.5%) on bivariate_gaussian T=64; max|pyspi - inv(sklearn-variant)| 2.4e-15; off-diagonal relative difference to inv(Eq. 23) median 5.25% (T=64) and 0.44% (T=1024); opposite sign to partial correlation on 100% of pairs; max|prec| 2.06",
+      "sklearn 1.9.1 .venv/.../sklearn/covariance/_shrunk_covariance.py:64-85, :754-758"
+     ]
+    },
+    {
+     "unit_id": "basic.cov.MinCovDet",
+     "verdict_now": "variant",
+     "score_now": "6",
+     "holds": true,
+     "proposed_verdict": "variant",
+     "proposed_score": "6",
+     "problems": [
+      "Score holds. Given sklearn's raw subset, the computation agrees with external robustbase to 3.5e-15 (after mapping the n_w vs n_w-1 divisor, a ddof-type convention). h = ceil and the MLE divisor are convention-sized. Two deviations are not conventions: (1) the FAST-MCD search returns a non-best h-subset (the best found in only 3/14 runs; rrcov reaches lower determinants on contaminated|256 in all 20 seeds); (2) the documented 'equivalent to correlation, within [-1, 1]' fails (up to 1.141; 0.15 vs a robust correlation of 0.81). Anchor 7 ('optimiser-based unit passing optimality checks') is therefore not met. Anchor 5 ('verified only qualitatively') understates the check, which is quantitative and external. Anchor 6 ('deviates from both the supplement and canonical in an interpretable way') fits.",
+      "Gap relevant to the EEG selection (cov_MinCovDet and cov-sq_MinCovDet are retained): the checks use P <= 5 and never average-referenced input. The EEG workflow uses up to about 118 channels with CAR as the initial reference. Probe at T=1024 (5 seeds): seed spread grows with P, reaching max 0.046 and median 0.018 at P=64 on iid data against a median |cov| of 0.024. So at EEG P the seed noise is of the same order as the null-level values, larger than the record's 0.013-0.015 at T=1024. With CAR (rank P-1), every MinCovDet fit raises 18-38 sklearn 'Determinant has increased; this should not happen' warnings at P = 5-64; iid input without CAR raises none. Every h-subset scatter is singular, which Rousseeuw & Van Driessen call the exact-fit situation, and robustbase flags it. pyspi suppresses these warnings (basic.py:37-38, noted only in the prec.MinCovDet record). This does not change the score on the record's synthetic evidence, but the record and note should state that the canonical objective is degenerate on CAR EEG input.",
+      "The version-drift candidate (c(p,0.975) absent in sklearn 0.24.1) is correctly marked 'inconclusive (source only)'. No local sklearn 0.24.x exists to run it (local copies are 1.5.1-1.9.1).",
+      "check_method external-pkg holds for the decisive rdet runs (robustbase with initHsets, use.correction = FALSE). The state and base runs are same-lineage and say so. The reference takes sklearn's raw support as input, so it checks only the post-search steps. The search itself is checked by the independent 2000-start C-step search and by rrcov's own search, with a wide tolerance that closeness labels as weak. already_documented (tests/README:134, 145; M1) vs new_finding true (EE = MCD redundancy, spread magnitude, range claim, aliasing) is separated correctly.",
+      "what_changed is concrete and states the RNG dependence, h-subset suboptimality and range failure. definition_under_review: true is right."
+     ],
+     "evidence": [
+      "audit/records/basic.cov.MinCovDet.yaml:210-211 (score, what_changed), :189 check_data (P <= 5, no average reference); audit/records/basic.prec.MinCovDet.yaml:85 (warnings suppressed)",
+      "audit/checks/out/results/cov_prec_robust.json basic.cov.MinCovDet: state 18/18, base 10/10, rdet 7/8, rrcov 5/6, stat 11/12, statc 3/4, rcorr 4/4, opt 3/14, seeds 0/18 (proposition fails), range 1/4",
+      "audit/checks/r/cov_prec_robust.R:6-14, 39-50 (rrcov own search; robustbase det mode with initHsets, use.correction = FALSE)",
+      "Probe .../scratchpad/wf4b_mid-eeg/mcd_highp_seeds.py (.out), T=1024, 5 seeds: P=8 max spread 0.0207 / median 0.0091; P=32 0.0267 / 0.0096; P=64 0.0460 / 0.0182 (median |cov| 0.0237); with CAR, P=64 0.0499 / 0.0185",
+      "Probe .../scratchpad/wf4b_mid-eeg/mcd_detwarn.py: mcd_detwarn.out (iid, no reference) 0 warnings per fit at P=5/8/32/64; mcd_detwarn_car.out (same script edited in place to CAR) 18-38 'Determinant has increased' warnings per fit at every P",
+      "Rubric audit/README.md anchors 5, 6, 7"
+     ]
+    }
+   ],
+   "changed": [],
+   "disputed": [],
+   "reruns": [],
+   "remaining": [],
+   "validator_clean": null
+  },
+  {
+   "batch": "high-eeg",
+   "kind": "high",
+   "challenge": [
+    {
+     "unit_id": "spectral.cohmag",
+     "verdict_now": "matches",
+     "score_now": "9",
+     "holds": true,
+     "proposed_verdict": "matches",
+     "proposed_score": "9",
+     "problems": [
+      "check_method 'analytic' (record line 136) overstates the evidence. The analytic runs that pass are the identical pair (C=1) and the single f0 bin (C=exp(i dphi)). Both equal 1 under |C|^2 and under |C|, and under either taper weighting, so neither separates the canonical form from the plausible variants. The population runs fail by design (fixed-K bias). The verdict actually rests on the 120/120 independent re-implementation (results reference_kind independent-impl), and the note says so too (notes/spectral_coherence.md: 'the impl, identical, f0bin and population runs carry the verdicts'). check_method should be independent-impl. The score is unaffected because anchor 9 does not depend on the reference kind.",
+      "Wrong citation in already_documented (line 42) and deviation_from_documented (4) (line 37). Both cite 'tests/README.md bug 5' for the spectral MRO bypass of Undirected.multivariate, but the current tests/README.md bug 5 (tests/README.md:207) is PLI signed antisymmetry, as KNOWN_ISSUES item 5 warns. Only REVIEW M1 documents the bypass, so cite M1 alone (or 'bug 5, earlier wording').",
+      "what_changed (line 143) calls the grid, DC inclusion and closed band edges 'conventions'. They change values well beyond a trivial convention: excluding DC moves band means by up to 0.092 (results ref_alt_no_dc_maxabs 0.0916), and a strict band moves them by up to 0.273. They also contradict the documented 125-bin grid on [4/T, fs/2]. The score of 9 is defensible only because these band-level deviations are owned and scored by spectral.band_selection (variant 6). Neither the cohmag record nor the note mentions spectral.band_selection (grep count 0), and the cohmag new_finding candidates (125-bin/f0, shared 0.25 bin, empty band) duplicate that unit's findings. A cross-reference is needed so that the band-level deviations are not counted as new findings twice.",
+      "Anchor applied: 9, 'Matches canonical up to a trivial documented convention (squared vs not, ddof, log base, sign of a symmetric quantity)'. The squaring is documented: the supplement says 'frequency domain equivalent of the squared time-domain cross correlation' (supplement.txt:604-605). So 'matches 9' holds per bin, and definition_under_review true is right given Bastos & Schoffelen [59].",
+      "canonical_ref (line 5) itself says the Carter 1987 equation numbers and the bias formula are from memory. The canonical MSC definition does not depend on them, but the bias citation remains unverified."
+     ],
+     "evidence": [
+      "audit/records/spectral.cohmag.yaml:42, :136, :140, :142-145",
+      "results/spectral_coherence.json: 190 cohmag runs, 179 pass. impl 120/120: max_abs 7.64e-13 (kernel, 96 runs), 8.88e-14 (pipeline, 18), 1.32e-13 (pipeline-detrend, 6). ref_alt_unsquared_maxabs max 0.250, ref_alt_no_dc_maxabs max 0.0916. unsquared run 0.2647 vs 0.4766. mne: 7.85e-5 vs library form, 0.204 vs canonical. All of these match the record.",
+      "f0bin runs: ref_independent_ref_maxabs 4.4e-16 / 6.7e-16, analytic target 1 (does not separate squared from unsquared); identical runs: 0.0 / 8.9e-16",
+      "Probe <scratch>/wf4b_high-eeg/probe_all.py (output probe_all.out), my own numpy/scipy-dpss reference with no audit kernels and no spectral_connectivity, 25 runs (var2_bivariate 1024, bivariate_gaussian 4096, delayed_noise 1024, narrowband_f0-0.1 256, T=67 truncation): max |pyspi - ref| 1.0e-12. Each alternative is detected at the 1e-10 criterion: unsquared differs by at least 2.0e-4, eigenvalue-weighted tapers by 4.0e-6 to 7.3e-3, no-DC by up to 5.9e-3. max|A - A.T| 0.0.",
+      "tests/README.md:207 (bug 5 = PLI signed antisymmetry); audit/briefing/KNOWN_ISSUES.md item 5; audit/records/spectral.band_selection.yaml (variant 6, owns the grid and closed-edge rules)"
+     ]
+    },
+    {
+     "unit_id": "infotheory.mi.gaussian",
+     "verdict_now": "matches",
+     "score_now": "10",
+     "holds": true,
+     "proposed_verdict": "matches",
+     "proposed_score": "10",
+     "problems": [
+      "Anchor applied: 10, 'Matches the canonical definition within floating-point tolerance (\u2264 1e-8 relative) on an analytic or independent reference, and matches the pyspi supplement description'. The reference is numpy slogdet and imports no JIDT or jpype. The largest relative error is 3.1e-11, and the exact criterion separates nats from bits and a 1/(2N) bias correction. The score holds.",
+      "documented_definition (line 7) quotes only the \u00a71.4.3 MI paragraph and argues that the 'nonlinear' keyword 'describes the MI family'. The supplement defines this estimator directly: supplement.txt:414-415, 'The Gaussian-distribution model (denoted by modifier gaussian) assumes a linear-Gaussian multivariate, where the measure is derived from the cross-covariance matrix'. That is the text that satisfies the 'matches the supplement' clause of anchor 10, and it should be cited.",
+      "already_documented is 'no' (line 44), but the record's own direction_convention (line 40) describes P(P-1) JIDT calls with the lower triangle computed and then discarded. That is EEG_OPTIMIZATION_NOTES.md:132 (the generic Undirected path computes both ordered directions), which basic.spearmanr cites for the same pattern. It should be cited, not left as 'no'. new_finding false is correct.",
+      "No numeric discrepancies: closeness ('all 10 exact runs <= 4.7e-15', kernel 5.0e-16, detrend 2.9e-15, truth |pyspi - truth| 5.6e-5 ...) matches results (the truth numbers are ref_pyspi_minus_population_maxabs; max_abs in results is |pyspi - MC mean|)."
+     ],
+     "evidence": [
+      "audit/records/infotheory.mi.gaussian.yaml:7, :40, :44, :83, :90, :96",
+      "results/it_gaussian.json: 19 mi.gaussian runs, all pass. Exact runs max_abs 2.55e-15 (bivariate 1024), 2.89e-15 (trending detrend), 4.66e-15 (scaled_offset invariance), 4.96e-16 (var2 kernel). Largest max_rel 3.1e-11 (iid_gaussian 256). truth-p01 T256 ref_pyspi_minus_population_maxabs 5.62e-5.",
+      "Probe <scratch>/wf4b_high-eeg/probe_mi.py with JVM started, reference -0.5 ln(1 - corrcoef^2) written here, 6 datasets: max_abs <= 3.7e-15, max_rel <= 4.3e-12. A bits reference misses by 3.4e-4 to 0.25. 1/(2N) = 4.9e-4 to 7.8e-3 is far above the tolerance. max|A - A.T| 0.",
+      "supplement.txt:414-415 (Gaussian estimator definition); EEG_OPTIMIZATION_NOTES.md:132; audit/checks/refs/_kernels_infotheory.py:169-177 (imports numpy, scipy only)"
+     ]
+    },
+    {
+     "unit_id": "misc.lmfit.Ridge",
+     "verdict_now": "matches",
+     "score_now": "10",
+     "holds": true,
+     "proposed_verdict": "matches",
+     "proposed_score": "10",
+     "problems": [
+      "Anchor applied: 10. The closed form ((T-1)/T)(1 - r^2 (T^2-1)/T^2) is an analytic reference, and the from-scratch ridge uses numpy only, no sklearn. Agreement is <= 2.2e-15 abs and 1.4e-12 rel, and the criteria separate every plausible variant (see probe). check_method analytic is correct. The score holds.",
+      "check_cost (line 160) says 'all 137 Ridge runs', but results/lmfit.json has 133 Ridge runs (84 closedform + 33 scratch + 12 detrend + 4 direction).",
+      "For the unpenalised-intercept and centring convention, canonical_ref (line 6) cites sklearn's own Ridge docstring, which is the delegate library. An independent canonical source (for example Hastie, Tibshirani & Friedman, ESL 2nd ed., \u00a73.4.1, intercept left unpenalised after centring) should carry that part. Hoerl & Kennard 1970 define k on X in correlation form, where alpha = 1 would mean w = r/2. pyspi's alpha = 1 on ddof=1 z-scores gives w = r(T-1)/T. deviation_from_canonical states this scale dependence, but what_changed ('Estimator: nothing') does not mention it. It is a hyperparameter-scaling convention fixed by the documented 'default parameters', not a deviation, so the score is unaffected.",
+      "The 'directed' keyword is not borne out under default z-scoring (A symmetric to 7.8e-16). That is a label issue, handled like the 'linear' label in basic.spearmanr, and the value itself matches the documented 'MSE of a regression of y on x'. new_finding true is fine: there is no KNOWN_ISSUES entry for lmfit symmetry or r^2 redundancy, and REVIEW M9 and the EEG notes discuss labels only generically."
+     ],
+     "evidence": [
+      "audit/records/misc.lmfit.Ridge.yaml:6, :143, :151, :154-155, :160",
+      "results/lmfit.json Ridge: 133 runs, 133 pass. closedform 84/84 max_abs 2.19e-15 (anm|256|pipeline), max_rel 1.4e-12. scratch 33/33 max_abs 4.55e-13 (cointegrated|4096|kernel), max_rel 3.5e-14. detrend 12/12 1.11e-16. direction 4/4. All match the record except the count of 137.",
+      "Probe <scratch>/wf4b_high-eeg/probe_all.py (own ridge reference, 5 datasets, T 64-4096): pipeline <= 2.2e-16, raw rel <= 2.9e-16. Alternatives are separated: OLS by 2.8e-9 to 1.6e-4, ddof=0 z-score by 2.3e-4 to 1.6e-2, divisor T-2 by 4.7e-4 to 3.2e-2, transposed orientation on raw data by 5.7e-3 to 3.9e3. Pipeline asymmetry <= 3.3e-16.",
+      "supplement.txt:856-868; GitBook spi-descriptions/miscellaneous.md:69-84"
+     ]
+    },
+    {
+     "unit_id": "basic.spearmanr",
+     "verdict_now": "matches",
+     "score_now": "10",
+     "holds": true,
+     "proposed_verdict": "matches",
+     "proposed_score": "10",
+     "problems": [
+      "Anchor applied: 10. The references are independent: _kernels_basic_misc.spearman uses numpy mid-ranks with no scipy.stats, R stats::cor is external, and the Moran expectation is analytic. Agreement is <= 2.2e-16. The supplement says scipy spearmanr, range [-1,1]. The checks separate the canonical form from the variants: ties (the untied formula misses by 2.1e-4 to 1.1e-2), squared (-sq), both orientations (directed-ties), and Pearson-of-values (misses by 0.019 to 0.82). NaN input is rejected upstream by Data. No reason to lower the score.",
+      "documented_definition (line 8) gives 'supplement \u00a71.1.3, p.4' with no supplement.txt line numbers (the text is supplement.txt:172-178). Every other unit cites line numbers, so this is a small consistency gap.",
+      "spearmanr-sq is not described in the supplement (the record says so). It is a bit-identical square of the signed value, so it does not affect the anchor-10 supplement clause beyond the label.",
+      "Numbers check out against results: 67/67 pass, 38 exact runs max_abs 2.22e-16. The population max_z_1se values 1.26/0.88/1.04/1.54 equal results max_z x 1.5 (0.837/0.589/0.692/1.028). The null near-miss 2.94 (= 1.96 x 1.5) is correctly disclosed and does not bear on formula agreement. already_documented (bug 4, M8, EEG_OPTIMIZATION_NOTES.md:132, tests/README.md:131) and new_finding true (the 'linear' class label, which is not in KNOWN_ISSUES) are disciplined."
+     ],
+     "evidence": [
+      "audit/records/basic.spearmanr.yaml:8, :48, :140, :145, :151",
+      "results/rank_corr.json basic.spearmanr: 67 runs, 67 pass; criterion counts exact 38 / qualitative 21 / statistical 7 / direction 1. Exact max_abs 2.22e-16; R-cor 5.55e-17. Population ref_abs_err pair01 0.150/0.0071/0.0253/0.0065, pair23 0.026/0.024/0.0054/0.0105.",
+      "Probe <scratch>/wf4b_high-eeg/probe_all.py (own merge-sort mid-rank reference, continuous and np.round(x,1) ties, 3 datasets): max_abs <= 1.1e-16, -sq <= 1.1e-16. On tied data the untied formula misses by 5.8e-4 to 1.1e-2.",
+      "supplement.txt:172-178; GitBook basic-statistics.md:126-140"
+     ]
+    },
+    {
+     "unit_id": "distance.pdist.cosine",
+     "verdict_now": "matches",
+     "score_now": "10",
+     "holds": false,
+     "proposed_verdict": "matches",
+     "proposed_score": "9",
+     "problems": [
+      "Anchor 10 requires agreement 'within floating-point tolerance (\u2264 1e-8 relative)'. The record's own near-identical probe fails that bar. The relative error is 2.2e-6 at eps=1e-5, 7.7e-2 at eps=1e-7 and 1.0 at eps=1e-9, where pyspi returns exactly 0.0 for two distinct rows whose true distance is 4.95e-19. The run passes only because atol 1e-12 dominates the rtol 1e-6 it also declares.",
+      "The same family scored distance.pdist.euclidean 9 for exactly this reason: 'Score 9 rather than 10 because agreement is not within 1e-8 relative for near-duplicate rows' (records/distance.pdist.euclidean.yaml what_changed; notes/pdist.md:211). The cosine note's defence (notes/pdist.md:228, 'inherent to any 1 \u2212 S implementation') applies equally to euclidean's dot-product expansion. A cancellation-free form exists for both, and the audit's own ref_near uses it for cosine. Either both units are 9 or both are 10 under an explicit absolute-floor policy. Under the rubric as written, cosine is anchor 9 ('within statistical tolerance ...' does not apply; the closest fit is 'matches canonical up to a trivial ... convention', the 1 - S evaluation form).",
+      "The closeness field (line 126) and checks_run under-report the near run. They quote 'relative error 7.7e-02 at eps 1e-7' and 'absolute error <= 5.3e-16', but results give max_rel 1.0 (eps=1e-9, pyspi 0.0) and max_abs 3.79e-16. 5.3e-15 is pyspi's value at eps=1e-7, not an error.",
+      "pdist does not appear in the supplement (the record says so at line 10), so the anchor-10 clause 'matches the pyspi supplement description' cannot be met literally. Only the GitBook page, with no formula, exists. This applies family-wide (cityblock and chebyshev were also given 10) and should be settled as one rubric interpretation at synthesis, not unit by unit.",
+      "Otherwise sound. The def reference (_kernels_basic_misc.pdist_metric) imports no sklearn or scipy.spatial. The kernel path on raw rows separates uncentred from centred cosine (they differ by 2.3e-4 to 3.6e-2). check_method analytic (the 1 - r identity) is fair. already_documented M1 is right, and new_finding true (1 - r redundancy; sign-sensitive though labelled unsigned) is not in KNOWN_ISSUES."
+     ],
+     "evidence": [
+      "audit/records/distance.pdist.cosine.yaml:10, :111, :126-131, :194-196",
+      "results/pdist.json distance.pdist.cosine|iid_gaussian|1024|pipeline|near: max_abs 3.79e-16, max_rel 1.0, ref_rel_err_d0k [2.27e-10, 2.21e-6, 0.0766, 1.0], ref_pyspi_d0k[3] = 0.0 vs ref 4.95e-19; rtol 1e-6, atol 1e-12",
+      "results/pdist.json cosine: 45 runs, 45 pass. def max_rel 6.5e-15, ident max_abs 4.44e-16, cdist (same-lineage) 2.2e-16. These match the record.",
+      "records/distance.pdist.euclidean.yaml what_changed ('Score 9 rather than 10 because agreement is not within 1e-8 relative for near-duplicate rows'); notes/pdist.md:209-211, :228",
+      "Probe <scratch>/wf4b_high-eeg/probe_all.py: pyspi vs 1 - corrcoef <= 8.9e-16; raw-row (normalise=False) vs uncentred cosine <= 8.9e-16 and vs centred 2.3e-4 to 3.6e-2. Near rows z(x0 + eps x1): pyspi 4.9498e-7 / 4.9498e-11 / 5.33e-15 / 0.0 vs stable 4.9498e-7 / 4.9498e-11 / 4.95e-15 / 4.95e-19 (rel 2.3e-10 / 2.2e-6 / 7.7e-2 / 1.0)."
+     ]
+    }
+   ],
+   "changed": [
+    "distance.pdist.cosine: verdict and score unchanged (matches, 10). The closeness, checks_run (near run) and what_changed fields of the correctness/check blocks were corrected in /media/dan/Data/git/pyspi/audit/records/distance.pdist.cosine.yaml, and the cosine 'Near-identical rows' bullet in the '## Checks' section of /media/dan/Data/git/pyspi/audit/notes/pdist.md was rewritten to match. Why: the reviewer is right that the near run was under-reported. closeness/checks_run said 'absolute error <= 5.3e-16, relative 7.7e-02 at eps 1e-7'. They now give the stored values from results/pdist.json: max_abs 3.79e-16, and relative error 2.3e-10 / 2.2e-06 / 7.7e-02 / 1.0 at eps 1e-3 / 1e-5 / 1e-7 / 1e-9, where pyspi returns 0.0 against 4.95e-19. They also say outright that the per-value 1e-8 relative bar is missed for eps <= 1e-5. The note's defence 'inherent to any 1 - S implementation' was replaced with what was measured: the cancellation belongs to the canonical 1 - S form, and a cancellation-free reformulation avoids it. what_changed now gives the score basis: rtol plus an absolute floor at the [0,2] scale, the reason euclidean differs, and a flag for synthesis that pdist is absent from the supplement, so the anchor-10 supplement clause is met only through the GitBook page. That last point applies to the whole family (cityblock and chebyshev too), as the reviewer asked."
+   ],
+   "disputed": [
+    "distance.pdist.cosine proposed 10 -> 9: disputed. Probe /tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/wf4b_high-eeg/fix_cosine_near.py (output fix_cosine_near.out, comparison venv) rebuilds the exact near-run rows z(x0 + eps x1), iid_gaussian T=1024. (1) The canonical definition 1 - u.v/(|u||v|), computed directly by the audit's own independent kernel _kernels_basic_misc.pdist_metric (no sklearn), is off from the cancellation-free form in the same way pyspi is: rel 5.4e-02 at eps 1e-7, and -2.2e-16 (a negative distance, rel 450) at eps 1e-9. A plain per-pair loop gives rel 1.0 at eps 1e-9. pyspi agrees with that direct evaluation of the canonical definition to <= 4.4e-16 absolute at every eps. So the large relative error comes from how 1 - cos behaves near 0, not from pyspi departing from the canonical definition, and pyspi matches the canonical definition within floating-point tolerance at the [0,2] value scale. (2) The parallel with euclidean does not hold. Euclidean's canonical form is a direct difference with no cancellation, and pyspi departs from it through the dot-product expansion. Its absolute error is 1.56e-07 (results: euclidean near max_abs 1.555e-07, fails atol 1e-12), and it also fails 3 dup runs, where identical rows give up to 9.5e-07 instead of 0. Cosine's dup runs give <= 2.2e-16 and pass. Under the rtol+atol rule every audit run is judged by, euclidean fails and cosine passes, so 'either both 9 or both 10' is a false choice. (3) Anchor 9 does not fit either: there is no convention, squaring or ddof difference, and no statistical tolerance involved. The literal '<= 1e-8 relative' reading against the absolute-floor reading is now stated openly in what_changed and in the note so synthesis can settle the policy. No other score-10 unit in any results file has a passing run with max_rel > 1e-8 and max_abs < 1e-12, so this is the only unit affected."
+   ],
+   "reruns": [
+    "No family re-run: no reference script or manifest changed. One standalone probe was run in the comparison venv: scratchpad/wf4b_high-eeg/fix_cosine_near.py (output fix_cosine_near.out). It compares pyspi's stored near-run values with the cancellation-free form, the audit kernel's 1 - S, and a per-pair loop."
+   ],
+   "remaining": [
+    "distance.pdist.cosine: fix applied consistently. The record (closeness, near checks_run, what_changed) and notes/pdist.md:228-231 now match results/pdist.json (max_abs 3.79e-16; rel 2.3e-10/2.2e-6/7.7e-2/1.0) and fix_cosine_near.out. Dispute 10->9 upheld: pyspi equals the from-definition 1-S to <=4.4e-16 abs; the audit kernel shows the same cancellation (-2.2e-16 at eps 1e-9); euclidean fails atol 1e-12 on its near and dup runs while cosine passes; and cosine near is the only passing exact/tolerance run among the 11 score-10 units with max_rel>1e-8. Keep 10 for now. Synthesis still has to settle the open policies: rtol plus absolute floor versus a literal <=1e-8 relative reading, and the GitBook-only supplement clause for the whole pdist family (cityblock and chebyshev too).",
+    "spectral.cohmag (not addressed): check_method is still 'analytic' (record :136) but the verdict rests on the 120/120 independent-impl runs; it should be independent-impl.",
+    "spectral.cohmag (not addressed): already_documented (:42) and deviation_from_documented (4) (:37) still cite 'tests/README.md bug 5' for the MRO bypass, but tests/README.md bug 5 is now PLI signed antisymmetry (:207). Cite REVIEW M1 only.",
+    "spectral.cohmag (not addressed): neither the record nor notes/spectral_coherence.md cross-references spectral.band_selection (grep count 0). The grid, DC and closed-edge deviations and the matching new_finding candidates duplicate that unit's findings and need to point to it.",
+    "infotheory.mi.gaussian (not addressed): already_documented is still 'no' (:44) even though direction_convention (:40) describes the computed-then-discarded lower triangle that EEG_OPTIMIZATION_NOTES.md:132 documents. documented_definition (:7) still omits the direct estimator text at supplement.txt:414-415.",
+    "misc.lmfit.Ridge (not addressed): check_cost (:160) still says 'all 137 Ridge runs'; results/lmfit.json has 133 (133 pass). canonical_ref (:6) still uses sklearn's docstring for the intercept and centring convention, and what_changed does not mention the alpha scale convention (minor, score unaffected).",
+    "basic.spearmanr (not addressed, minor): documented_definition (:8) gives 'supplement \u00a71.1.3, p.4' with no supplement.txt:172-178 line reference.",
+    "spectral.cohmag (minor, not addressed): canonical_ref (:5) still says the Carter 1987 equation numbers and bias formula are from memory, so the bias citation remains unverified."
+   ],
+   "validator_clean": true
+  },
+  {
+   "batch": "high-optimiser-other",
+   "kind": "high",
+   "challenge": [
+    {
+     "unit_id": "misc.gpfit.DotProduct",
+     "verdict_now": "matches",
+     "score_now": "9",
+     "holds": true,
+     "proposed_verdict": "matches",
+     "proposed_score": "9",
+     "problems": [
+      "check_method is 'analytic', but the agreement that decides the score comes from an independent implementation. That is h_scratch -> blr_ml2 (global type-II ML, no sklearn), 8/8 pipeline runs, max_rel 2.41e-9, and results/gpfit.json gives it reference_kind independent-impl. The analytic runs (ridgecf, posterior, postmean) take sklearn's fitted theta from probes/gpfit_probes.py:params. They therefore check only the posterior algebra, not the hyperparameter fit. The other analytic run (closedform) agrees only to 6.1e-5. Relabel check_method as independent-impl. The score is unaffected and the same-lineage cap does not apply.",
+      "The score rationale does not quote the README anchor. The record cites 'anchor 9 as applied to distance.hhg' and notes/gpfit.md:323 cites 'anchor 9: matches canonical; the supplement misdescribes it'. README anchor 9 reads 'Matches canonical up to a trivial documented convention (squared vs not, ddof, log base, sign of a symmetric quantity), or within statistical tolerance consistent with estimator variance, or matches a MATLAB/author reference for optimiser-based units'. None of those clauses is 'the supplement misdescribes it'. What actually holds: on the default path the numeric half of anchor 10 is met (2.4e-9 <= 1e-8 against an independent reference), and the 'matches the pyspi supplement description' half fails. 9 is the defensible house mapping, but the record should say so explicitly. The README has no anchor for 'canonical exact, supplement wrong'.",
+      "Separating the documented fixed-hyperparameter variant from ML-II depends on correlated pairs. On near-independent pairs the fitted s is about 1 - r^2, which is about 1, so the fixed variant (s = 1) agrees with pyspi to 1.5e-10, inside rtol 1e-8 (my probe: nonlinear_dependence T256). It is separated only where r is non-zero: 4.7e-4 on bivariate_gaussian T64, 1.5e-4 on anm T256, 7.4e-6 on EEG T256. The fixedhp runs used bivariate_gaussian, which is adequate, but the record should state this.",
+      "definition_under_review is false, yet canonical_ref itself says 'There is no canonical pairwise GP fit MSE statistic'. The supplement also reads as fixed values ('parameters chosen from default settings', sigma_0 = 1, noise level 1) while the code fits them. Either set the flag, or state in the note why the standard is not contested.",
+      "The closeness numbers match results/gpfit.json: kernel scratch 4/13 pass, worst 1.35e-4 (anm T256); closedform max_rel 6.09e-5 (T64), 3.82e-6 (T256), 6.94e-8 (T1024); ridgecf max 2.02e-13; fixedhp max_rel 0. new_finding true is valid: neither KNOWN_ISSUES nor REVIEW M9 names gpfit."
+     ],
+     "evidence": [
+      "audit/records/misc.gpfit.DotProduct.yaml correctness.check_method 'analytic'; check_reference; what_changed ('as applied to distance.hhg')",
+      "audit/notes/gpfit.md:323 and :364-374 (score rationale)",
+      "audit/checks/refs/gpfit.py:289-306 blr_ml2 (numpy/scipy only; the single sklearn import, at :705, is the same-lineage h_scipy118); :498-515 h_ridgecf uses sklearn's theta from the params sibling run",
+      "results/gpfit.json: misc.gpfit.DotProduct|bivariate_gaussian|64|pipeline|scratch max_rel 2.41e-9 (reference_kind independent-impl); |*|pipeline|ridgecf reference_kind analytic; |anm|256|kernel|scratch fail 1.35e-4",
+      "Probe <scratch>/wf4b_high-optimiser-other/p_gpfit.py (own 1-D ML-II over s, Woodbury closed form, no sklearn) against fresh pyspi GPModel(kernel='DotProduct') on the Data path. Max rel: bivariate_gaussian T64 2.41e-9, anm T256 5.6e-14, nonlinear_dependence T256 3.0e-15, EEG 001_Baseline 3ch T256 8.4e-13. Fixed s=1 variant vs pyspi: 4.73e-4, 1.47e-4, 1.53e-10, 7.4e-6. Symmetric to <= 5.3e-15.",
+      "README anchor 9 and anchor 10 text (audit/README.md 'Score anchors')"
+     ]
+    },
+    {
+     "unit_id": "infotheory.phi.star_norm-0",
+     "verdict_now": "matches",
+     "score_now": "9",
+     "holds": true,
+     "proposed_verdict": "matches",
+     "proposed_score": "9",
+     "problems": [
+      "No score problem. The rationale quotes an actual README anchor-9 clause ('within statistical tolerance consistent with estimator variance'), and its arithmetic checks out: 4.65e-8 / 8.30e-5 = 5.6e-4, where 8.30e-5 is ref_mc_sd of iid_gaussian|4096|pipeline|null in results/phi.json. One caveat: that clause is applied to a one-sided optimiser bias (L-BFGS-B stopping at beta = 1), not to estimator noise. This is defensible because the gap is about 1e-3 of the sampling SD, but the record should say the clause is used by analogy.",
+      "My own Gaussian Phi* reproduces pyspi's numbers exactly. I derived tilde-I(beta) here by the Gaussian integral and did not take it from refs/phi.py. Worst absolute gap 4.65e-8 (narrowband_f0-0.25 T256, beta 0.92165) and worst relative gap 6.37e-4 (iid_gaussian T1024, 1.500725e-5 vs 1.499770e-5), both matching the record. On a real EEG window (15 pairs, T512) the gap is <= 9.8e-11. The Octave vendored-toolbox runs are correctly excluded from the score as same-lineage.",
+      "Variant separation is adequate. Denominators cancel, and separate past/present means versus a joint mean change values at O(1/T), which is well above the 1e-7 criterion on most pairs. Agreement down to 7e-12 on gauss_ar1_pair T4096 and var2_bivariate T1024 rules out those variants.",
+      "Minor: on exact-delay constructions pyspi returns negative values (-0.00110 z-scored, -0.0215 raw), which violates 0 <= Phi*. This is recorded as a confirmed candidate and is edge-case only, so it does not touch the formula score. The 'closeness' count '37/37 indep runs' is 36 indep runs plus 1 detrend run (results tags), and should say so.",
+      "Citations check out: supplement.txt:550-564; refs [52] Kitazono & Oizumi, [53] Oizumi et al. 2016 and [54] Merhav et al. 1994 are at supplement.txt:2122-2128. already_documented 'no' and new_finding true are consistent with KNOWN_ISSUES."
+     ],
+     "evidence": [
+      "results/phi.json: infotheory.phi.star_norm-0|narrowband_f0-0.25|256|pipeline|indep max_abs 4.6475e-8; the indep tag over 36 runs gives max_rel 6.37e-4; octave 16 runs max_abs 4.54e-8; |trending|1024|pipeline-detrend|detrend max_abs 1.16e-10; |iid_gaussian|4096|pipeline|null ref_mc_sd 8.30e-5 (T1024: 2.95e-4)",
+      "Probe <scratch>/wf4b_high-optimiser-other/p_phi.py (own covariances and closed form tilde-I(b) = 1/2 log|Sx| + 1/2 log|Q^-1| + 1/2 tr(R Sy) - b/2 tr(D^-1 M), bounded maximiser xatol 1e-13, no phi_native), run against fresh IntegratedInformation(phitype='star', delay=1, normalization=0). Results: narrowband T256 max 4.65e-8; iid T1024 max rel 6.37e-4; gauss_ar1_pair T4096 6.9e-11; var2_bivariate T1024 7.0e-12; EEG 6ch T512 max 9.8e-11; Phi* <= I on every pair.",
+      "audit/notes/phi.md:404-414 score rationale"
+     ]
+    },
+    {
+     "unit_id": "distance.hhg",
+     "verdict_now": "matches",
+     "score_now": "9",
+     "holds": true,
+     "proposed_verdict": "matches",
+     "proposed_score": "9",
+     "problems": [
+      "The rationale misquotes the rubric. what_changed and notes/hhg_mgc.md:254 say 'rubric 9: matches canonical up to a documented-convention issue'. README anchor 9 says 'trivial documented convention (squared vs not, ddof, log base, sign of a symmetric quantity)'. A supplement that describes a different statistic (RKHS, ranks of the variables) is not a convention. The clause that does cover the one real value deviation (ties resolved by sklearn dot-product rounding) is 'within statistical tolerance consistent with estimator variance'. The deviations run from 0.026% to 4.9%, against a null Monte Carlo SD of 14225 on a mean of 64514 (about 22%) at n=256 (results ref_mc_sd). 9 holds on that clause, and the record should cite it.",
+      "what_changed calls the sklearn rounding one of 'two input conventions'. It is a floating-point artefact of the dot-product distance formula (root cause REVIEW M2), not a convention.",
+      "The scope is understated. 'tied or near-tied data only' reads as a niche case, but every digitised recording is grid-valued: the EEG window has about 400 distinct values per 1024 samples and 179-244 zero spacings per 511. On a real EEG window, pyspi differs from the canonical statistic computed with exact ties (integer ADC codes) by 1.2e-3 to 3.7e-3 relative, so it is not bit-exact. The audit's 'exact |x_a - x_b|' reference on z-scored floats does not recover the canonical ties either: it differs from pyspi by 4e-6 to 4.8e-4, and from the integer-code value by about the same 1e-3 as pyspi does. The check design therefore cannot separate canonical ties from rounded ties on grid-valued data. A run on integer codes is needed. Bit-exactness on continuous data is confirmed.",
+      "There is no other problem. check_method independent-impl is right (hhg_mgc.py imports neither hyppo nor sklearn), the same-lineage hyppo-exact runs are correctly used only for attribution, and the closeness numbers match results/hhg_mgc.json. The unit is not in the retained 185 EEG set, so the EEG impact is secondary."
+     ],
+     "evidence": [
+      "results/hhg_mgc.json: 14 def runs max_abs 0; distance.hhg|logistic_maps|256|kernel|exact max_rel 4.88e-2 (abs 3.99e4), |256|pipeline|exact 1.40e-2, |shared_envelope|256|pipeline|exact 4.32e-3; |iid_gaussian|256|pipeline|null ref_mc_sd 14225.2, ref_analytic_null_mean 64514.0",
+      "Probe <scratch>/wf4b_high-optimiser-other/p_hhg.py: own Heller et al. 2013 HHG, numpy only, against fresh pyspi HellerHellerGorfine on the Data path. EEG 001_Baseline.EDF, channels EEG G1-G3, mid-recording window (eeg_load.py -> eeg_win.npy). T256 pairs 01/02/12: pyspi 478503.36 / 1421017.12 / 1138885.65 vs integer-code exact ties 479576.81 / 1423198.44 / 1143108.41 (rel 2.24e-3 / 1.53e-3 / 3.69e-3); vs np.abs on pyspi's z rows rel 4.8e-4 / 6.8e-5 / 4.8e-5. T512: rel 1.62e-3 / 1.18e-3 / 1.53e-3. Continuous data: bivariate_gaussian T64 pipeline 1.7e-16, nonlinear_dependence T256 8.5e-16. Asymmetry 0.0 throughout.",
+      "audit/notes/hhg_mgc.md:254; record what_changed; KNOWN_ISSUES.md M2 line 26"
+     ]
+    },
+    {
+     "unit_id": "causal.igci",
+     "verdict_now": "matches",
+     "score_now": "9",
+     "holds": true,
+     "proposed_verdict": "matches",
+     "proposed_score": "9",
+     "problems": [
+      "check_method is 'analytic', but the agreement that decides the score is the 22 exact runs against _kernels_distance.igci_ref, which results/cdt_pairwise.json labels independent-impl. The analytic cubic check is statistical, and its 20-seed means (0.8746 / 0.8742 / 0.8741) do not approach 0.8832, as the record itself says. Relabel as independent-impl. There is no cap effect.",
+      "The anchor applied is only partly literal. Anchor 9 lists 'sign of a symmetric quantity' as a trivial documented convention. Here the quantity is antisymmetric, so negating it is a transpose (A[i,j] = -C_{i->j} = C_{j->i}). The convention is documented only in the cdt docstring (IGCI.py:138), not in pyspi. 9 is still defensible, because the orientation agrees with pyspi's directed convention (positive = i -> j). The record and note should name the clause and the documentation source.",
+      "The check data contain no ties: every exact-run dataset is continuous, so the tie-handling convention (zero spacings skipped, divisor kept at m-1) was never compared against the reference. On quantised data it decides the value. On a real EEG window (T512, 179-244 zero spacings per channel), the alternative divisor (number of non-zero spacings) changes A by up to 0.488 when max|A| is 0.688. pyspi does reproduce the skip/(m-1) convention to 8.4e-15. Across pairs, A[i,j] correlates 0.993 (T512) and 0.998 (T1024) with the difference in zero-spacing counts. Sub-quantum dither keeps the signal but changes the sign of A on 80% (T512) and 47% (T1024) of pairs. On digitised recordings the output is therefore mainly a quantisation and tie-count artefact. The record mentions ties only for logistic_maps (+-6.35). Add an exact run on tied data and a scope note. Consider definition_under_review, since eq. (12) is undefined with log 0, and consider this as a new candidate.",
+      "The record says the tie handling is 'same as the original Matlab-style estimator' but cites no source for it.",
+      "The other fields check out. The closeness numbers match the results (22/22 exact, max abs 3.02e-14, max rel 1.49e-11). already_documented 'partly' (cdt version, DEPENDENCY_MIGRATION.md:50) and new_finding true (unsigned label on a signed antisymmetric output, not named in M8) are consistent. My single-seed cubic check confirms the reported negative finite-sample bias: 0.8708 at T4096 and 0.8788 at T65536, against 0.8832."
+     ],
+     "evidence": [
+      "results/cdt_pairwise.json: causal.igci|*|exact (22 runs, reference_kind independent-impl, max_abs 3.02e-14 on anm|4096|kernel, max_rel 1.49e-11 on delayed_noise|4096|kernel); |iid_gaussian|{256,1024,4096}|pipeline|cubic-analytic reference_kind analytic, criterion statistical",
+      "Probe <scratch>/wf4b_high-optimiser-other/p_igci.py (own eq. 12, numpy and digamma, no cdt) against fresh InformationGeometricConditionalIndependence. Max diff: anm T1024 3.6e-15, iid T4096 3.2e-14, contaminated T256 8.9e-16, EEG 6ch T512 8.4e-15. Antisymmetry 0.0. On EEG the divisor variant changes values by up to 0.488.",
+      "Probe <scratch>/wf4b_high-optimiser-other/p_igci_ties.py: EEG T512 zero spacings [179,231,241,216,235,244]; corr(A, nz_i - nz_j) 0.993 (T512) / 0.998 (T1024); dithered max|A| 0.236 / 0.169; sign agreement 0.20 / 0.53",
+      "audit/notes/cdt_pairwise.md:415; record deviation_from_canonical (2)"
+     ]
+    },
+    {
+     "unit_id": "misc.coint.johansen_order-0_ardiff-10",
+     "verdict_now": "matches",
+     "score_now": "9",
+     "holds": true,
+     "proposed_verdict": "matches",
+     "proposed_score": "9",
+     "problems": [
+      "No score problem. Agreement is exact against three references: the textbook reduced-rank regression (case 3), an R package (urca ca.jo with ecdet='none', K=11), and the own kernel. 10 is correctly withheld because the supplement calls the outputs the 'maximum eigenvalue' and 'trace' of the VECM and 'autoregressive lags'; the code returns the rank-0 LR statistics and k_ar_diff lagged differences. Citation [81] is Pesaran & Shin (ARDL).",
+      "Rubric wording: notes/coint.md:212 says 'anchor 9: canonical up to a documented naming convention', but the anchor-9 examples are value conventions. What_changed should state that 10 fails on the supplement-description clause.",
+      "The own reference _kernels_basic_misc.johansen admits it places the deterministic terms 'EXACTLY as statsmodels coint_johansen (vecm.py:665-684)'. It counts as independent only under the import rule; it is a structural transcription. The independent-impl label rests safely on rrr_case and urca, which are truly independent and agree to 2.0e-12 and 3.5e-12.",
+      "The data separate the plausible variants. In my probe the restricted-constant and no-constant cases differ from pyspi by at least 8.1e-7 and 3.7e-6 relative (minimum over pairs). That margin is thin on iid T1024 but still far above rtol 1e-9 / 1e-8. The record's 'ecdet const differs by 6.8e-5-0.17' is a per-run maximum, not a per-pair minimum, so it overstates the margin. Mentioning the minimum would be clearer.",
+      "The closeness numbers match results/coint.json (own 19/19 max_rel 2.45e-13, canon max 2.0e-12, urca max 3.45e-12). The stationarity confound is correctly treated as an applicability limit, not a value defect. new_finding true is valid: the collinear-pair robustness defects are not in KNOWN_ISSUES."
+     ],
+     "evidence": [
+      "results/coint.json: misc.coint.johansen_order-0_ardiff-10|cointegrated|1024|kernel|urca-me max_rel 3.45e-12 (reference_kind external-pkg); |cointegrated|4096|kernel|canon-me 2.0e-12; |cointegrated|1024|kernel|own-me 2.45e-13",
+      "Probe <scratch>/wf4b_high-optimiser-other/p_coint.py: own RRR with unrestricted constant, 10 lagged differences, scipy eigh, no statsmodels, against fresh Cointegration(statistic=max_eig_stat/trace_stat, det_order=0, k_ar_diff=10). Max rel: cointegrated T256 2.3e-13 (A[0,1] 27.483770 / 35.158291), T4096 4.3e-12, iid T1024 1.5e-15, EEG 3ch T512 4.9e-15. Min variant gaps: none 2.2e-5 / rconst 8.1e-7 (iid T1024), none 3.7e-6 (cointegrated T4096).",
+      "Probe <scratch>/wf4b_high-optimiser-other/p_coint_urca.R on eeg_pair01.csv (R urca ca.jo ecdet='none', K=11, transitory): eigen 6.0418587745, trace 8.8743131766, vs pyspi 6.041859 / 8.874313",
+      "audit/checks/refs/_kernels_basic_misc.py:294-317 (docstring: 'placed EXACTLY as statsmodels'); audit/checks/refs/coint.py:180-210 rrr_case; supplement.txt:885-899 and :2214"
+     ]
+    }
+   ],
+   "changed": [],
+   "disputed": [],
+   "reruns": [],
+   "remaining": [],
+   "validator_clean": null
+  }
+ ]
+}

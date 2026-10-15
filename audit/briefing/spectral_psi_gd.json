@@ -1,0 +1,147 @@
+{
+ "family": "spectral_psi_gd",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/spectral.md"
+ ],
+ "hypotheses": [
+  "PSI sums all unordered frequency pairs in the band (M5) after strict bandpass and decimation to resolution (fmax-fmin)/50; Nolte 2008 eq. 3 uses adjacent pairs with a fixed step; no jackknife normalisation",
+  "group delay: Fisher-z significance with coherence_bias(5), BH 0.05, independent-frequency decimation, groups >= 3, linregress of phase on frequency, delay = slope/2pi; antisymmetric fill (M6); all-NaN when no significant group",
+  "narrow bands at T=512/1024 leave 0-1 usable bins (IndexError or NaN)"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/spectral.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    582,
+    613
+   ],
+   "section": "1.5",
+   "title": "Spectral (126 SPIs)"
+  },
+  {
+   "lines": [
+    643,
+    657
+   ],
+   "section": "1.5.3",
+   "title": "Group delay (gd)"
+  },
+  {
+   "lines": [
+    658,
+    683
+   ],
+   "section": "1.5.4",
+   "title": "Phase slope index (psi)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py (phase_slope_index, _inner_combination, _bandpass, group_delay, _find_significant_frequencies)",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/spectral_connectivity/statistics.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [
+    "psi_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+    "psi_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+    "psi_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+    "psi_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+    "psi_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+    "psi_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+    "psi_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+    "psi_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+    "psi_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+    "psi_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0
+    }
+   },
+   "identifiers": [
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "PhaseSlopeIndex",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PhaseSlopeIndex",
+   "representative": "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.psi"
+  },
+  {
+   "eeg_identifiers": [
+    "gd_multitaper_delay_fs-1_fmin-0-000488_fmax-0-00195",
+    "gd_multitaper_delay_fs-1_fmin-0-000488_fmax-0-0342",
+    "gd_multitaper_delay_fs-1_fmin-0-000488_fmax-0-122",
+    "gd_multitaper_delay_fs-1_fmin-0-00195_fmax-0-00391",
+    "gd_multitaper_delay_fs-1_fmin-0-00391_fmax-0-00586",
+    "gd_multitaper_delay_fs-1_fmin-0-00586_fmax-0-0146",
+    "gd_multitaper_delay_fs-1_fmin-0-0146_fmax-0-0342",
+    "gd_multitaper_delay_fs-1_fmin-0-0342_fmax-0-0732",
+    "gd_multitaper_delay_fs-1_fmin-0-0342_fmax-0-122",
+    "gd_multitaper_delay_fs-1_fmin-0-0732_fmax-0-122"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "delay"
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "delay"
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "delay"
+    }
+   },
+   "identifiers": [
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5",
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25",
+    "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "directed",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "method_or_estimator": "GroupDelay",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "GroupDelay",
+   "representative": "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.gd"
+  }
+ ]
+}

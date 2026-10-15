@@ -1,0 +1,392 @@
+unit_id: distance.mgcx.maxlag-1
+status: profiled
+correctness:
+  metric_name_standard: cross multiscale graph correlation (MGCX), temporal dependence statistic with MGC
+  canonical_ref: 'Shen, Chung, Mehta, Xu & Vogelstein 2024, "Independence Testing for Temporal Data", TMLR (05/2024), arXiv:1908.06486v5, Sec. 2.2 Alg. Steps 1-3 (p.3); lag statistic MGC: Vogelstein et
+    al. 2019 eLife 8:e41690 and Shen, Priebe & Vogelstein 2020 JASA 115(529):280-291'
+  canonical_definition: T_n(X,Y) = sum_{l=0}^{L} ((n-l)/n) * MGC_n(X_vec, Y_vec_{-l}), where (X_vec, Y_vec_{-l}) = {(X_{1+l},Y_1),...,(X_n,Y_{n-l})} are the n-l lagged sample pairs (present X with past
+    Y, i.e. tests Y_{t-l} -> X_t); here L = 1. Optimal lag = argmax_l of the weighted terms. The lag-l statistic is computed on the distances among the lagged samples themselves.
+  documented_definition: 'supplement §1.2.4, p.6 "Cross multiscale graph correlation (mgcx)": "defined similarly to dcorrx (Sec. 1.2.2) but uses lagged MGCs instead of lagged distance correlations (see
+    Sec. 1.2.3)"; via §1.2.2, p.5 this is "the average of lagged ... between the past of time series x to the future of time series y, up to a given lag". Keywords: "undirected, nonlinear, unsigned, bivariate,
+    time-dependent". GitBook distance-similarity.md "Cross Multiscale Graph Correlation" repeats the text.'
+  delegate_lib: hyppo==0.5.2 hyppo.time_series.MGCX(max_lag=1).statistic -> hyppo.independence.MGC -> scipy==1.17.1 scipy.stats.multiscale_graphcorr, sklearn==1.9.1 pairwise_distances
+  implemented_as: 'pyspi z-scores each series (Data default), then calls hyppo MGCX(max_lag=1).statistic(x=z[i], y=z[j]). hyppo forms Euclidean distance matrices D_x, D_y of the series; term 0 = MGC (scipy
+    multiscale_graphcorr) of the raw series (weight 1); for j = 1..1, term j = (n-j)/n * MGC(compute_distance="euclidean").statistic(D_x[j:n,j:n], D_y[0:n-j,0:n-j]), which re-applies Euclidean pairwise_distances
+    to the ROWS of the sliced distance matrices (each time point represented by its vector of distances to the other retained time points), i.e. a distance of distances, not the distance among the lagged
+    samples. Output = np.sum of the 2 weighted terms (lag 0 included, no division by 2). x_t (future, process i) is paired with y_{t-j} (past, process j). After the sum, hyppo runs compute_scale_at_lag
+    (MGC.test with reps=0) to obtain opt_scale, which pyspi discards: two extra multiscale_graphcorr evaluations per pair, no effect on the value and no global RNG consumption (probe).'
+  implementation_trace:
+  - 'pyspi/statistics/distance.py:134-151 CrossMultiscaleGraphCorrelation: bivariate takes x = z[i], y = z[j] and returns MGCX(max_lag).statistic(x, y)[0]; opt_lag and opt_scale are discarded'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A[i, j] = self.bivariate(data, i=i, j=j) for all i != j; diagonal NaN'
+  - 'pyspi/base.py:27-47 parse_bivariate: passes the (already detrended/normalised by pyspi.data.Data) Data object through'
+  - 'pyspi/data.py:108-118 Data.to_numpy: returns the (M, T, R) array; z[i] is (T, R) = (T, 1) for a single realisation'
+  - pyspi/config.yaml:191-213 configs max_lag 1 and 10 (config labels say "undirected"; the runtime labels come from the class attribute, distance.py:119/139)
+  - .venv/lib/python3.12/site-packages/hyppo/time_series/mgcx.py:79-82 MGCX.__init__(compute_distance="euclidean", max_lag=0)
+  - .venv/lib/python3.12/site-packages/hyppo/time_series/mgcx.py:106-118 MGCX.statistic -> compute_stat(x, y, MGC, "euclidean", max_lag), then compute_scale_at_lag(x, y, opt_lag, ...) whose result pyspi
+    discards
+  - .venv/lib/python3.12/site-packages/hyppo/time_series/_utils.py:88 distx, disty = compute_dist(x, y, metric="euclidean") (n x n Euclidean distance matrices of the series)
+  - .venv/lib/python3.12/site-packages/hyppo/time_series/_utils.py:92-94 indep_test = MGC(compute_distance="euclidean"); lag-0 term = indep_test.statistic(x, y) on the raw series
+  - '.venv/lib/python3.12/site-packages/hyppo/time_series/_utils.py:97-102 for j in 1..max_lag: slice_distx = distx[j:n, j:n]; slice_disty = disty[0:n-j, 0:n-j]; term = (n-j)/n * indep_test.statistic(slice_distx,
+    slice_disty)'
+  - .venv/lib/python3.12/site-packages/hyppo/time_series/_utils.py:105-108 opt_lag = argmax(dep_lag); stat = np.sum(dep_lag) (weighted SUM over j = 0..max_lag, lag 0 weight 1)
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/mgc.py:126-131 MGC.__init__: is_distance = False for compute_distance="euclidean"'
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/mgc.py:151-166 MGC.statistic: compute_dist(..., "euclidean") on whatever is passed (rows of the sliced distance matrices for j>=1), then scipy.stats.multiscale_graphcorr(distx,
+    disty, compute_distance=None, reps=0).stat'
+  - .venv/lib/python3.12/site-packages/hyppo/tools/common.py:486-503 compute_dist -> sklearn.metrics.pairwise_distances(mat, metric="euclidean")
+  - .venv/lib/python3.12/site-packages/scipy/stats/_mgc.py:100-101,331-333 multiscale_graphcorr signature; requires n >= 5
+  - .venv/lib/python3.12/site-packages/scipy/stats/_mgc.py:343-351 reps=0 is accepted (only a warning, suppressed by hyppo mgc.py:159-160)
+  - .venv/lib/python3.12/site-packages/scipy/stats/_mgc.py:358-369 compute_distance=None so inputs are used as distance matrices; _mgc_stat; _perm_test with reps=0 (empty null)
+  - '.venv/lib/python3.12/site-packages/scipy/stats/_mgc.py:383-429 _mgc_stat: stat_mgc_map = _local_correlations(distx, disty, global_corr="mgc") (compiled; source https://github.com/scipy/scipy/blob/v1.17.1/scipy/stats/_stats.pyx
+    _local_correlations; the installed scipy ships only the compiled extension (no .pyx), so the trace ends at this compiled boundary; the from-scratch MGC check (proposed_checks[1]) is what tests the map)'
+  - '.venv/lib/python3.12/site-packages/scipy/stats/_mgc.py:432-474 _threshold_mgc_map: beta-approximation threshold at 1-0.02/samp_size, max with global-scale value, largest connected component'
+  - '.venv/lib/python3.12/site-packages/scipy/stats/_mgc.py:477-525 _smooth_mgc_map: stat = max local correlation in the significant region if the region is large enough and exceeds the global value, else
+    the global-scale local correlation'
+  - '.venv/lib/python3.12/site-packages/hyppo/time_series/_utils.py:111-126 compute_scale_at_lag: recomputes distx/disty and runs MGC().test(slice_distx, slice_disty, reps=0) only to read opt_scale (discarded
+    by pyspi)'
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/mgc.py:224-262 MGC.test: compute_dist (again Euclidean of the sliced distance matrices), multiscale_graphcorr (call 1), then IndependenceTest.test'
+  - .venv/lib/python3.12/site-packages/hyppo/independence/base.py:130-139 IndependenceTest.test -> perm_test(self.statistic, ..., reps=0)
+  - .venv/lib/python3.12/site-packages/hyppo/tools/common.py:728-732 perm_test computes calc_stat(x, y) once more (call 2 of multiscale_graphcorr, now with is_distance=True)
+  deviation_from_documented: '(1) Supplement says "the average of lagged distance correlations"; code returns the (n-j)/n-weighted SUM over j = 0..1 (time_series/_utils.py:102,106), so values can exceed 1 (up to about
+    2). (2) Supplement does not say the contemporaneous lag-0 term is included; it is, with weight 1. (3) Supplement says "between the past of time series x to the future of time series y"; with x = z[i],
+    y = z[j] the code pairs FUTURE of x (z[i]) with PAST of y (z[j]) (time_series/_utils.py:99-100), so A[i,j] measures j -> i, and the GitBook glossary convention (rows = sources) is reversed. (4) Keywords in supplement
+    and config.yaml say "undirected", the class labels say "directed" (pyspi treats it as directed; it is asymmetric). (5) "unsigned" (keyword and class label) is not honoured: values are negative on independent
+    data (iid_gaussian T64 probe min -0.0318, 13 of 20 off-diagonal entries negative). The negativity comes from scipy''s MGC statistic, not from an unbiased dcorr: scipy multiscale_graphcorr returns a
+    local-correlation value documented as lying in [-1, 1] (scipy/stats/_mgc.py:396, 493); when the thresholded significant region is empty or too small, _smooth_mgc_map returns the global-scale entry stat_mgc_map[m-1][n-1]
+    (_mgc.py:502), and that entry takes both signs. hyppo Dcorr and its unbiased U-centring are not on this path (hyppo independence/mgc.py:151-166 calls scipy directly). The sign mechanism inside the compiled
+    _local_correlations was not traced. (6) Lag terms j>=1 are computed on distances between rows of the sliced distance matrices rather than on the lagged series (not stated anywhere in the docs).'
+  deviation_from_canonical: 'Weights (n-l)/n, inclusion of lag 0, summation (not averaging), the pairing (X_{t}, Y_{t-l}) and the use of MGC all match Shen et al. 2024 Alg. Step 3. Deviation: for every
+    l >= 1 the lag statistic is not MGC_n of the lagged samples but MGC_n of Euclidean distances between rows of D_x[l:n,l:n] and D_y[0:n-l,0:n-l] (hyppo time_series/_utils.py:92,101 constructs the test with compute_distance="euclidean"
+    and passes distance matrices). Toy probe (n=64, x_t = y_{t-1} + 0.3 noise, max_lag=1): MGCX = 0.746817 = dist-of-dist sum; canonical (slices used as precomputed distances) = 0.804596. The deviation
+    is a different but still consistent-looking dependence statistic (each time point embedded by its distance profile); whether it keeps the universal-consistency guarantee of the paper is a hypothesis
+    to examine. Upstream status: neurodata/hyppo main, hyppo/time_series/_utils.py (raw.githubusercontent.com, fetched 2026-10-14), still has "indep_test = indep_test(compute_distance=compute_distance,
+    **kwargs)" and "stat = indep_test.statistic(slice_distx, slice_disty)" on slices of the distance matrices, identical to the installed 0.5.2 time_series/_utils.py:85-108, and main''s Dcorr.statistic / MGC.statistic
+    still recompute compute_dist whenever is_distance is False; the branch "if not compute_distance: compute_distance = precomputed" in compute_scale_at_lag is present in both main and the installed 0.5.2
+    (time_series/_utils.py:114-115) and is unreachable on the pyspi path (compute_distance="euclidean" is truthy), so it cannot rescue the lag terms from the distance-of-distances construction. The distance-of-distances
+    construction is therefore present in current upstream, not specific to 0.5.2. Upstream main also differs from 0.5.2 in small-sample handling: its MGC.statistic wraps multiscale_graphcorr in "except
+    (IndexError, ValueError): stat = 0.0" and compute_scale_at_lag catches ValueError, so slices with fewer than 5 samples give 0.0 there instead of raising.'
+  units_and_range: 'dimensionless; signed in practice despite the "unsigned" label (each lag term is a scipy MGC value in [-1, 1], which can be negative); range approximately [-(M+1), M+1] with M = 1, i.e.
+    not bounded by 1 (probe T256 max 1.69); asymmetric (lag-0 term symmetric, lag terms directional); no NaN on regular input; raises ValueError("MGC requires at least 5 samples ...") (scipy/stats/_mgc.py:331-333)
+    when any lag slice has fewer than 5 samples, i.e. requires T >= max_lag + 5 = 6 (probe: T = 5 raises, T = 6 returns a value) (check run distance.mgcx.maxlag-1|delayed_noise|64|kernel|smalln: n = 2..5
+    raise ValueError, n = 6 returns a value).'
+  direction_convention: A[i,j] = bivariate(i, j) = statistic(x=z[i], y=z[j]) = dependence between the future of process i and the past of process j (plus the symmetric lag-0 term); i.e. j -> i, rows are
+    targets and columns are sources (from the code; confirmed by the check-stage dir runs, see direction_observed).
+  symmetry_expected: asym
+  already_documented: 'partly: the class ''unsigned label on a legitimately negative bias-corrected estimator'' is documented for other SPIs in REVIEW M7 (docs/storage_comparison/REVIEW.md:189-193, negative debiased dspli/dswpli/ppc estimates are valid; metadata should separate an unsigned population target from the estimator range), REVIEW M8 (REVIEW.md:197, pec/pec_log negative despite unsigned) and EEG_OPTIMIZATION_NOTES.md:169 (review topic ''legitimate negative estimates''); none of them names mgcx, so its negative values are a new instance of that class (same treatment as dcorr_hsic). ''Bias-corrected'' fits MGC: SciPy column-centres both distance matrices with ''the centering and unbiased modification'' (scipy/stats/_mgc.py:199-201, SciPy 1.17.1 in the project venv and 1.18.1 in the comparison venv; hyppo independence/mgc.py:82-84). The distance-of-distances lag construction, the weighted sum over lags, the direction convention and the ''undirected'' keyword, and the extra discarded MGC evaluations, are not in KNOWN_ISSUES.md'
+  new_finding_candidates:
+  - 'Lag terms j >= 1 are computed on Euclidean distances between rows of the sliced distance matrices (distance of distances), not on the lagged series, so mgcx_maxlag-1 differs from the Shen et al. 2024
+    statistic. Evidence: hyppo time_series/_utils.py:92 "indep_test = indep_test(compute_distance=compute_distance, **kwargs)" with compute_distance="euclidean"; :101 "stat = indep_test.statistic(slice_distx,
+    slice_disty)"; independence/mgc.py:154-157 recomputes compute_dist because is_distance is False. Probe probe1.py: MGCX(max_lag=1)=0.746817279909577 equals the dist-of-dist sum exactly; slices as precomputed
+    = 0.804595784827016.'
+  - 'Output is the (n-j)/n-weighted SUM over lags 0..1 including the contemporaneous lag 0, not the "average" stated in the supplement; values exceed 1. Evidence: hyppo time_series/_utils.py:102 "dep_lag.append((n
+    - j) * stat / n)", :106 "stat = np.sum(dep_lag)". Probe probe3.py T256: mgcx_maxlag-1 max off-diagonal 1.6888.'
+  - 'Direction is reversed relative to the supplement wording and the GitBook glossary: A[i,j] measures dependence of the future of i on the past of j (j -> i, rows = targets). Evidence: hyppo time_series/_utils.py:99-100
+    slices distx[j:n] (x = z[i] at later times) against disty[0:n-j] (y = z[j] at earlier times); distance.py:148-150 x = z[i], y = z[j]; glossary-of-terms.md:27 "rows in this table reflect the sources".
+    Probe probe2.py delayed_noise T256 (x0 leads x1 by 1): mgcx_maxlag-1 A[1,0]=0.9681 vs A[0,1]~0.000.'
+  - 'The SPI is labelled "unsigned" but returns negative values on independent data. Mechanism: each lag term is scipy''s MGC statistic, which is a local correlation in [-1, 1] (scipy/stats/_mgc.py:396,
+    493) and, when no significant region is selected, equals the global-scale entry stat_mgc_map[m-1][n-1] (_mgc.py:502), which takes both signs; hyppo Dcorr is not executed for mgcx (hyppo independence/mgc.py:151-166).
+    Evidence: probe probe2.py iid_gaussian T64 (all 5 processes, 20 ordered pairs): mgcx_maxlag-1 off-diagonal min -0.0318, 13 of 20 entries negative (reproduced by fable_review/probe_lagged.py); scipy multiscale_graphcorr on the lag-0 distance
+    matrices alone: min -0.0264, 18 of 20 negative. The check run distance.mgcx.maxlag-1|iid_gaussian|64|pipeline|neg-p012 uses processes 0-2 only (6 ordered pairs): 6/6 negative, min -0.0318, the figure quoted in candidate_resolutions and closeness. Instance of the REVIEW M7/M8 class (KNOWN_ISSUES.md:31-32); not a new finding by itself.'
+  - 'Documentation keywords say "undirected" (supplement and config.yaml) while the class is Directed with label "directed". Evidence: supplement §1.2.4 keyword line "undirected, nonlinear, unsigned, bivariate,
+    time-dependent"; pyspi/config.yaml:191-197 "- undirected"; pyspi/statistics/distance.py:134,139 class (Directed, Unsigned) with "directed" label.'
+  - 'mgcx runs two extra, discarded MGC evaluations per ordered pair (efficiency only). Evidence: hyppo time_series/mgcx.py:113-115 compute_scale_at_lag; time_series/_utils.py:124 MGC.test(..., reps=0); mgc.py:254
+    multiscale_graphcorr; independence/base.py:130 + tools/common.py:730 recompute statistic; pyspi distance.py:150 discards opt_scale. Probe probe2.py: 4 multiscale_graphcorr calls for max_lag=1 where 2 are needed;
+    global RNG not consumed, output deterministic.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - var2_bivariate
+    - nonlinear_dependence
+    path: kernel
+    reference: 'scipy.stats.multiscale_graphcorr(compute_distance=None, reps=0) applied by the check script to the lag-0 Euclidean distance matrices and to Euclidean distances between rows of D_x[j:n,j:n],
+      D_y[0:n-j,0:n-j], summed with (n-j)/n weights (no hyppo import). SAME-LINEAGE: hyppo MGC delegates to this exact scipy function'
+    reference_kind: same-lineage
+    criterion: tolerance
+    expected_outcome: pyspi mgcx_maxlag-1 kernel output agrees within 1e-10 abs; confirms the trace (distance-of-distances inputs, weighted sum, lag 0 included); cannot validate MGC itself
+  - datasets:
+    - nonlinear_dependence
+    - bivariate_gaussian
+    - iid_gaussian
+    path: kernel
+    reference: 'checks/refs/lagged_dcorr_mgc.py: from-scratch MGC following Shen, Priebe & Vogelstein 2020 (JASA) / Vogelstein et al. 2019 (eLife) Alg. 1: column-centred distance matrices with diagonal
+      excluded, rank-based k/l nearest-neighbour truncation, local correlation map, beta-approximation threshold, largest connected component, smoothed maximum (numpy + scipy.ndimage.label + scipy.stats.beta
+      only)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: lag-0 MGC term agrees with the from-scratch MGC within 1e-8 (MGC map and statistic); if not, report which step (centring, ranking ties, threshold, smoothing) differs
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    - gauss_ar1_pair
+    - logistic_maps
+    path: kernel
+    reference: canonical Shen et al. 2024 (TMLR, Alg. Step 3) T_n = sum_l=0..1 (n-l)/n * MGC_n(x[l:n], y[0:n-l]) using the from-scratch MGC above on the lagged sample pairs
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'lag-0 term identical; lag>=1 terms and the total differ from pyspi (toy probe: 0.7468 vs 0.8046 at n=64, max_lag=1); quantify abs/rel difference and whether the A[i,j] vs A[j,i] ordering
+      is preserved'
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    - logistic_maps
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'analytic ground truth of the generating process: delayed_noise x0 leads x1,x2,x3; var2_bivariate X(0)->Y(1) only; logistic_maps y(1) causes x(0)'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'establish what A[i,j] means for mgcx_maxlag-1: from the trace, A[i,j] = dependence of the FUTURE of process i on the PAST of process j (j -> i, rows = targets); expect A[target, source]
+      > A[source, target] (probe fable_review/probe_lagged.py, delayed_noise T256 first two processes: mgcx_maxlag-1 A[1,0]=0.9681 vs A[0,1]=-0.0012). This is the opposite of the GitBook glossary convention
+      (rows = sources) and of the supplement wording "past of x to future of y"'
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic null: independent iid series give population dependence 0 for every lag; the sample MGC statistic is not clipped at 0 and takes both signs'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'off-diagonal values centred near 0 with spread shrinking with T (T=64,256,1024,4096); a non-trivial fraction negative (probe T64: mgcx_maxlag-1 min -0.0318, 13 of 20 negative), which
+      contradicts the "unsigned" label'
+  - datasets:
+    - narrowband_f0-0.1
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic bound of the implemented formula: sum_j=0..1 (n-j)/n * r_j with |r_j| <= 1 gives |A| <= 1+1 - sum_j j/n'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'values above 1 on strongly autocorrelated coupled series (probe T256: dcorrx_maxlag-1 up to 1.43, mgcx_maxlag-1 up to 1.69) and never above the bound; confirms the output is a weighted
+      SUM, not the "average" stated in the supplement'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    path: pipeline
+    reference: 'SELF-CONSISTENCY (pyspi vs pyspi): invariance property of MGC to per-variable positive scaling and offset; compares pyspi output on scaled_offset with pyspi output on bivariate_gaussian
+      (pyspi z-scores anyway). Can establish invariance only, not what A[i,j] means'
+    reference_kind: same-lineage
+    criterion: tolerance
+    expected_outcome: scaled_offset output equals bivariate_gaussian output within 1e-10 (same draw); the lag-0 term dominates for these contemporaneous pairs so A is nearly symmetric
+  - datasets:
+    - delayed_noise
+    path: kernel
+    reference: call counting with a wrapper around hyppo.independence.mgc.multiscale_graphcorr (instrumentation, not a numeric reference)
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: '1+3 = 4 multiscale_graphcorr evaluations per ordered pair where 1+1 are needed (probe: 4); output and global RNG state unchanged when the extra compute_scale_at_lag call is skipped'
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/lagged_dcorr_mgc.py:mgc_stat / mgc_local_corr (from-scratch MGC: Shen, Priebe & Vogelstein 2020 JASA Sec. 3.1, Vogelstein et al. 2019 eLife Alg. 1, SciPy constants;
+    numpy + scipy.ndimage.label + scipy.stats.beta only) inside audit/checks/refs/lagged_dcorr_mgc.py:mgcx_terms (as implemented: distance of distances; canonical: series slices, Shen et al. 2024 Alg. Step
+    3); audit/checks/refs/lagged_dcorr_mgc.py:ref_scipy (SAME-LINEAGE second opinion, scipy==1.18.1 multiscale_graphcorr); audit/checks/refs/lagged_dcorr_mgc.py:ref_lag0, ref_mgcmap, ref_dir, ref_null,
+    ref_neg, ref_sum, ref_scaleinv, ref_smalln, ref_calls; probes audit/checks/probes/lagged_dcorr_mgc_probes.py:lagterms, lag0_mgc, mgcmap, antisym, calls, smalln'
+  check_data: 'T <= 256 and P <= 3 throughout (processes subsets p01/p012/p023): iid_gaussian T64/256; delayed_noise T64/256; var2_bivariate, var2_chain, gauss_ar1_pair, logistic_maps (tied), logistic_maps_chaotic,
+    narrowband_f0-0.25, narrowband_f0-0.1, nonlinear_dependence, bivariate_gaussian, shared_envelope, scaled_offset T256; trending T256 (pipeline-detrend); nonlinear_dependence T64 (mgcmap)'
+  agreement_criterion: 'replica/lagterms/scaleinv/multireal/lag0/mgcmap/scipy: tolerance rtol = atol = 1e-10; mehta: same tolerance, designed to fail (the gap is the deviation); dir: sign of A - A.T at
+    every claimed [target, source] entry; null: every off-diagonal entry inside the Bonferroni band of the empirical Monte Carlo null quantiles (0.025/m, 1 - 0.025/m); neg, sum, smalln, calls: qualitative,
+    decided by the reference'
+  closeness: 'As implemented: 9/9 replica runs (kernel, pipeline, pipeline-detrend) pass, max_abs <= 3.3e-14; per-lag terms of hyppo''s compute_stat equal the replica terms (4 lagterms runs, max_abs <=
+    3.3e-14); the statistic equals the SUM of the weighted terms to <= 0.0e+00 and differs from their mean by up to 0.834. From-scratch MGC agrees with the SciPy result on the same distance-of-distance
+    inputs (3 same-lineage ''scipy'' runs, max_abs <= 0.0e+00; scipy 1.18.1 in the comparison venv); mgcx lag-0 term = pyspi mgc unit to <= 2.7e-15 and = from-scratch MGC to <= 9.1e-15 (3 lag0 runs), and
+    = the checked hhg_mgc family''s pyspi distance.mgc matrices on the same draws to <= 2.7e-15 (distance.mgc|bivariate_gaussian|256|kernel|def, distance.mgc|nonlinear_dependence|256|kernel|def, distance.mgc|iid_gaussian|256|kernel|def,
+    which pass against that family''s independent MGC to <= 2.7e-14; scratchpad/lagged_dcorr_mgc_check/lag0_vs_hhg_mgc.py). SciPy''s compiled local-correlation map = mgc_local_corr to <= 3.8e-14 on 5 mgcmap
+    runs, including the tied logistic_maps map of shape (256, 8) (dense column ranks). Canonical (series slices, Mehta et al. 2019 / Shen et al. 2024; designed-to-fail mehta runs, 0/9 pass; every dataset
+    of the replica and sum runs except trending has one): lag-0 terms identical (<= 0.0e+00), totals differ by 0.0020 to 0.0741 (max 0.0741 on distance.mgcx.maxlag-1|narrowband_f0-0.25|256|kernel|mehta,
+    pair (1,0): 0.8163 vs 0.8904, 8.3% below; 0.0615 on var2_bivariate, 0.0571 = 15.1% on gauss_ar1_pair, 0.0438 on narrowband_f0-0.1, 0.0284 on shared_envelope, 0.0084 on delayed_noise); the sign of pyspi
+    - Mehta is not fixed (narrowband_f0-0.1 -0.0074 to +0.0438, shared_envelope -0.0177 to +0.0284, every var2_bivariate, gauss_ar1_pair and logistic_maps entry below); per-lag max|pyspi - Mehta| on delayed_noise
+    [7.456e-15, 0.008401] and on var2_bivariate [5.829e-16, 0.06149] (lags 0..1); true-delay terms on delayed_noise pyspi [0.9695] vs Mehta [0.9779] (ratio [0.9914]); var2_bivariate lag-1 term pyspi 0.1725
+    vs Mehta 0.2340. Direction: 5/5 dir runs pass (agreement 1.0; Mehta agrees in sign on every claim). Null iid_gaussian: T=256: pyspi min -0.009789 max 0.0005437 mean -0.00635, band [-0.01332, 0.04027],
+    Monte Carlo SD 0.00987, skew 1.85, pass (max_z 1.74); T=64: pyspi min -0.03183 max -0.01654 mean -0.0233, band [-0.05457, 0.1517], Monte Carlo SD 0.0399, skew 1.54, pass (max_z 1.56); Monte Carlo SD
+    shrinks [0.03989, 0.009867] with T. Negative values: 6/6 entries < 0 at T=64 (min -0.0318). Sum: max 1.689 > 1, within the bound 1.996. scaled_offset = z-scored bivariate_gaussian replica to 2.1e-15.
+    Calls: 4 multiscale_graphcorr calls per pair where 2 are needed, identical value, RNG untouched, 50% of the per-pair time at T=256.'
+  verdict: related-quantity
+  score_0_10: 3
+  score_rubric: 3
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 3 names mgcx lag handling: the lag-1 term is MGC of distance-profile rows; total 0.8163 vs series-slice 0.8904 on narrowband_f0-0.25 T256
+    pair (1,0).'
+  documentation_status: misdescribed
+  verdict_adjusted: related-quantity
+  score_adjusted: 3
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'pyspi/hyppo compute the weighted SUM over lags 0..1 with weights (n-l)/n, lag 0 included, pairing x_t = z[i] (future) with y_(t-l) = z[j] (past), as in Shen et al. 2024 Alg. Step 3 and
+    hyppo''s own docstring (time_series/mgcx.py:69-72). But for every lag l >= 1 hyppo passes the SLICED DISTANCE MATRICES D_x[l:,l:], D_y[:n-l,:n-l] to a test object built with compute_distance=''euclidean''
+    (time_series/_utils.py:92, 99-101), which recomputes Euclidean distances between their ROWS (dcorr.py:144-147 / mgc.py:154-157): the lag terms are MGC (scipy multiscale_graphcorr) of each time point''s distance
+    profile, not of the lagged samples. The lag-0 term is the canonical one. Size of the change on 9 canonical comparisons: up to 0.074 on the total (narrowband_f0-0.25; 15% relative on gauss_ar1_pair),
+    lag-1 term 0.173 vs 0.234 on var2_bivariate, about 0.8% on the near-deterministic delayed_noise delays; the gap takes both signs (narrowband_f0-0.1, shared_envelope); the sign of A[i,j] - A[j,i] agrees
+    with the canonical statistic at every truth-claimed pair. Against the documentation: a weighted SUM (values up to 1.69, bound 2.00) where the supplement says ''average''; lag 0 included; A[i,j] measures
+    j -> i (rows = targets) where the GitBook glossary says rows are sources; keywords ''undirected'' and ''unsigned'' do not hold (strongly asymmetric, negative on independent data). Score 3 (README anchor
+    3 names ''mgcx lag handling'': the max_lag label promises lagged MGCs of the series, the lag terms are a different statistic of a sample-dependent embedding); not 4 because the documented quantity is
+    not what the lag terms compute, and the score is the same for dcorrx and mgcx since the lag construction is shared. definition_under_review is false for the lag construction, because Shen et al. 2024 Alg. Step 3 is unambiguous (weighted sum, lag 0 included); every MGC term, lag 0 included, inherits distance.mgc''s contested minimum-region rule (definition_under_review true on that record), which does not change this score.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: T <= 256 and P <= 3 by design; MGCX(max_lag=1) 0.05-0.1 s per ordered pair at T=256; 17 s for the 46 runs of this unit'
+  symmetry_observed: 'asym: max|A - A.T| = 0.9693 on delayed_noise (distance.mgcx.maxlag-1|delayed_noise|256|pipeline|dir-p012); 0.0061-0.014 on iid_gaussian replica runs; the lag-0 term alone is symmetric
+    (pyspi lag-0 term max|A - A.T| <= 2.7e-15 on the lag0 runs)'
+  direction_observed: 'A[i,j] = dependence of the FUTURE of process i on the PAST of process j (plus the symmetric lag-0 term), i.e. j -> i, rows = targets, columns = sources; every claimed [target, source]
+    entry of A - A.T is positive on every direction run (5 dir runs: delayed_noise, var2_bivariate, var2_chain, logistic_maps_chaotic, gauss_ar1_pair); delayed_noise d=1: A[1,0] - A[0,1] = 0.9693. This
+    is the reverse of the GitBook glossary (rows = sources).'
+  candidate_resolutions:
+  - candidate: lag terms l >= 1 computed on Euclidean distances between rows of the sliced distance matrices (distance of distances), not on the lagged series
+    outcome: confirmed
+    evidence: '9 replica runs reproduce pyspi to <= 3.3e-14; 4 lagterms runs (hyppo per-lag terms = replica terms); 9 designed-to-fail mehta runs: lag 0 identical, totals differ by up to 0.0741 (distance.mgcx.maxlag-1|narrowband_f0-0.25|256|kernel|mehta),
+      in both directions (distance.mgcx.maxlag-1|narrowband_f0-0.1|256|pipeline|mehta: -0.0074 to +0.0438); hyppo source time_series/_utils.py:92, 99-101 and dcorr.py:144-147 / mgc.py:154-157; hyppo''s own docstring
+      formula (time_series/mgcx.py:69-72) is the series-slice statistic'
+  - candidate: output is the (n-j)/n-weighted SUM over lags 0..L including lag 0, not an average; values exceed 1
+    outcome: confirmed
+    evidence: 'lagterms runs: statistic - sum of terms <= 0.0e+00, statistic - mean of terms up to 0.834; sum runs distance.mgcx.maxlag-1|narrowband_f0-0.1|256|pipeline|sum, distance.mgcx.maxlag-1|shared_envelope|256|pipeline|sum-p012:
+      max 1.689 > 1, bound 1.996'
+  - candidate: 'direction reversed relative to the supplement wording and the glossary: A[i,j] = j -> i (rows = targets)'
+    outcome: confirmed
+    evidence: '5/5 dir runs pass with direction_agreement 1.0 (e.g. distance.mgcx.maxlag-1|delayed_noise|256|pipeline|dir-p012: A[1,0] - A[0,1] = 0.9693); glossary-of-terms.md:27 ''rows ... reflect the
+      sources'''
+  - candidate: 'labelled ''unsigned'' but negative on independent data (the glossary''s [0,1] range is stated for distance correlation, so for MGC only the ''unsigned'' keyword is contradicted; notes/lagged_dcorr_mgc.md section 4 item 5)'
+    outcome: confirmed
+    evidence: 'distance.mgcx.maxlag-1|iid_gaussian|64|pipeline|neg-p012: 6/6 negative, min -0.0318; Monte Carlo null fraction negative 0.56 (0.558 at T=256, 0.559 at T=64; distance.mgcx.maxlag-1|iid_gaussian|256|pipeline|null-p012,
+      distance.mgcx.maxlag-1|iid_gaussian|64|pipeline|null-p012); already-documented class: a new instance of REVIEW M7/M8 (KNOWN_ISSUES.md lines 31-32), which do not name mgcx'
+  - candidate: documentation keywords say 'undirected' while the class is Directed
+    outcome: confirmed
+    evidence: 'confirmed (documentation fact plus measurement): supplement 1.2.2/1.2.4 and pyspi/config.yaml:191-213 say ''undirected''; the matrix is strongly asymmetric on lagged data: max|A - A.T| =
+      0.9693 (distance.mgcx.maxlag-1|delayed_noise|256|pipeline|dir-p012)'
+  - candidate: two extra, discarded MGC evaluations per ordered pair (efficiency only)
+    outcome: confirmed
+    evidence: 'distance.mgcx.maxlag-1|delayed_noise|256|kernel|calls-p01: 4 calls per pair vs 2 for compute_stat alone, value change 0, global RNG unchanged, overhead 50% of the per-pair time; hyppo mgcx.py:113-115,
+      time_series/_utils.py:111-126, mgc.py:254, independence/base.py:130, tools/common.py:729-730'
+  checks_run:
+  - run_ids:
+    - distance.mgcx.maxlag-1|delayed_noise|256|kernel|replica-p012
+    - distance.mgcx.maxlag-1|delayed_noise|256|pipeline|replica-p012
+    - distance.mgcx.maxlag-1|iid_gaussian|256|kernel|replica-p012
+    - distance.mgcx.maxlag-1|iid_gaussian|64|kernel|replica-p012
+    - distance.mgcx.maxlag-1|logistic_maps|256|kernel|replica
+    - distance.mgcx.maxlag-1|narrowband_f0-0.25|256|kernel|replica
+    - distance.mgcx.maxlag-1|nonlinear_dependence|256|kernel|replica-p012
+    - distance.mgcx.maxlag-1|trending|256|pipeline-detrend|replica-p01
+    - distance.mgcx.maxlag-1|var2_bivariate|256|kernel|replica
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_replica -> mgcx_terms(dist_of_dist=True) / mgc_stat
+    outcome: 9/9 pass; max_abs <= 3.3e-14
+  - run_ids:
+    - distance.mgcx.maxlag-1|delayed_noise|256|kernel|lagterms-p012
+    - distance.mgcx.maxlag-1|iid_gaussian|256|kernel|lagterms-p012
+    - distance.mgcx.maxlag-1|narrowband_f0-0.25|256|kernel|lagterms
+    - distance.mgcx.maxlag-1|var2_bivariate|256|kernel|lagterms
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_lagterms (probe audit/checks/probes/lagged_dcorr_mgc_probes.py:lagterms)
+    outcome: 4/4 pass; max_abs <= 3.3e-14; per-lag gap to Mehta on delayed_noise [7.456e-15, 0.008401]
+  - run_ids:
+    - distance.mgcx.maxlag-1|delayed_noise|256|kernel|mehta-p012
+    - distance.mgcx.maxlag-1|gauss_ar1_pair|256|kernel|mehta
+    - distance.mgcx.maxlag-1|iid_gaussian|256|kernel|mehta-p012
+    - distance.mgcx.maxlag-1|logistic_maps|256|kernel|mehta
+    - distance.mgcx.maxlag-1|narrowband_f0-0.1|256|pipeline|mehta
+    - distance.mgcx.maxlag-1|narrowband_f0-0.25|256|kernel|mehta
+    - distance.mgcx.maxlag-1|nonlinear_dependence|256|kernel|mehta-p012
+    - distance.mgcx.maxlag-1|shared_envelope|256|pipeline|mehta-p012
+    - distance.mgcx.maxlag-1|var2_bivariate|256|kernel|mehta
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_mehta -> mgcx_terms(dist_of_dist=False)
+    outcome: 0/9 pass; designed to fail; pyspi - Mehta max_abs 0.0020-0.0741 (both signs; per run in closeness), lag-0 terms identical
+  - run_ids:
+    - distance.mgcx.maxlag-1|delayed_noise|256|pipeline|dir-p012
+    - distance.mgcx.maxlag-1|gauss_ar1_pair|256|pipeline|dir
+    - distance.mgcx.maxlag-1|logistic_maps_chaotic|256|pipeline|dir
+    - distance.mgcx.maxlag-1|var2_bivariate|256|pipeline|dir
+    - distance.mgcx.maxlag-1|var2_chain|256|pipeline|dir
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_dir (probe audit/checks/probes/lagged_dcorr_mgc_probes.py:antisym)
+    outcome: 5/5 pass; direction_agreement 1.0
+  - run_ids:
+    - distance.mgcx.maxlag-1|iid_gaussian|256|pipeline|null-p012
+    - distance.mgcx.maxlag-1|iid_gaussian|64|pipeline|null-p012
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_null (Monte Carlo quantiles)
+    outcome: 2/2 pass; bands in closeness
+  - run_ids:
+    - distance.mgcx.maxlag-1|iid_gaussian|64|pipeline|neg-p012
+    - distance.mgcx.maxlag-1|narrowband_f0-0.1|256|pipeline|sum
+    - distance.mgcx.maxlag-1|shared_envelope|256|pipeline|sum-p012
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_neg, ref_sum
+    outcome: 3/3 pass; negatives present, max 1.689 > 1
+  - run_ids:
+    - distance.mgcx.maxlag-1|scaled_offset|256|pipeline|scaleinv-p01
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_scaleinv
+    outcome: 1/1 pass; max_abs 2.1e-15
+  - run_ids:
+    - distance.mgcx.maxlag-1|delayed_noise|64|kernel|smalln
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_smalln (probe audit/checks/probes/lagged_dcorr_mgc_probes.py:smalln)
+    outcome: 1/1 pass; raises below T = 6 (codes [2, 2, 2, 2, 0, 0] for n = [2, 3, 4, 5, 6, 7])
+  - run_ids:
+    - distance.mgcx.maxlag-1|delayed_noise|256|kernel|scipy-p012
+    - distance.mgcx.maxlag-1|logistic_maps|256|kernel|scipy
+    - distance.mgcx.maxlag-1|nonlinear_dependence|256|kernel|scipy-p012
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_scipy (SAME-LINEAGE)
+    outcome: 3/3 pass; max_abs <= 0.0e+00
+  - run_ids:
+    - distance.mgcx.maxlag-1|bivariate_gaussian|256|kernel|lag0-p012
+    - distance.mgcx.maxlag-1|iid_gaussian|256|kernel|lag0-p012
+    - distance.mgcx.maxlag-1|nonlinear_dependence|256|kernel|lag0-p012
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_lag0 (probe lag0_mgc)
+    outcome: 3/3 pass; max_abs <= 9.1e-15; lag-0 term = hhg_mgc pyspi distance.mgc|bivariate_gaussian|256|kernel|def, distance.mgc|iid_gaussian|256|kernel|def
+      and distance.mgc|nonlinear_dependence|256|kernel|def to <= 2.7e-15 (scratchpad/lagged_dcorr_mgc_check/lag0_vs_hhg_mgc.py)
+  - run_ids:
+    - distance.mgcx.maxlag-1|bivariate_gaussian|256|kernel|mgcmap-p23
+    - distance.mgcx.maxlag-1|iid_gaussian|256|kernel|mgcmap-p01
+    - distance.mgcx.maxlag-1|logistic_maps|256|kernel|mgcmap-p01
+    - distance.mgcx.maxlag-1|nonlinear_dependence|256|kernel|mgcmap-p01
+    - distance.mgcx.maxlag-1|nonlinear_dependence|64|kernel|mgcmap-p01
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_mgcmap (probe mgcmap)
+    outcome: 5/5 pass; max_abs <= 3.8e-14
+  - run_ids:
+    - distance.mgcx.maxlag-1|delayed_noise|256|kernel|calls-p01
+    reference: audit/checks/refs/lagged_dcorr_mgc.py:ref_calls (probe calls)
+    outcome: 1/1 pass; qualitative
+optimisation:
+  complexity_P_T: 'O(P^2 (T^2 log T + L T^3)) with L=1: per ordered pair compute_stat runs MGC on the series and on the lag-1 distance-of-distance
+    matrices (GEMM, O(T^3)), and MGCX.statistic then runs compute_scale_at_lag (another distance matrix pair, distance-of-distance and MGC().test(reps=0)
+    with two multiscale_graphcorr calls). Measured T_exponent 2.07 (8x256 3.33 s -> 8x1024 58.8 s); projected by pair count (14507 s).'
+  hotspot_1: scipy/stats/_mgc.py:_mgc_stat (third-party:scipy) 82.3% cumulative, 41.2% self time of the profiled SPI call at 8x1024, over 224
+    MGC evaluations (four per ordered pair); numpy unique (rank transforms) 31.2%
+  hotspot_2: 'hyppo/time_series/_utils.py:compute_scale_at_lag (third-party:hyppo) 51.4% cumulative: the discarded scale search (hyppo/independence/mgc.py:MGC.test
+    50.6%, its perm_test observed statistic 21.0%)'
+  hotspot_owner: third-party:scipy
+  opaque_share: 0.2835
+  profile_file: audit/profiles/distance.mgcx.maxlag-1__8x1024.pstats
+  opportunities:
+  - opportunity_id: lagged_dcorr_mgc-1
+    opportunity: 'Skip MGCX''s discarded scale search: call hyppo time_series compute_stat(x, y, MGC, ''euclidean'', max_lag) instead of MGCX.statistic,
+      which afterwards runs compute_scale_at_lag (a fresh distance-of-distance plus MGC().test(reps=0) = two more multiscale_graphcorr calls)
+      only to return opt_scale, which pyspi/statistics/distance.py:CrossMultiscaleGraphCorrelation.bivariate discards.'
+    opp_type: algorithmic
+    expected_speedup: ~2x
+    speedup_basis: profile:audit/profiles/distance.mgcx.maxlag-1__8x1024.pstats compute_scale_at_lag 51.4% (Amdahl 2.06x).
+      Subsumed_by lagged_dcorr_mgc-3 on this unit. When the maxlag-10 identifier runs in the same run (default config) this unit's value is read from it and the MGCX call this avenue trims no longer
+      runs, so build_csv credits it no saving on top of that avenue; it keeps its figure on distance.mgcx.maxlag-10
+    output_risk: unverified-bit-identical
+    risk_evidence: 'the returned statistic comes only from compute_stat; opt_scale is discarded at pyspi/statistics/distance.py:150; RNG: MGC.test(reps=0) -> hyppo/tools/common.py:perm_test calls np.random.randint(..., size=0) with random_state=None, which leaves the legacy global RandomState unchanged (scratch check: np.random.random() after compute_scale_at_lag equals the value drawn without it), so dropping the call does not shift the global RNG stream'
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - lagged_dcorr_mgc-3
+  - opportunity_id: lagged_dcorr_mgc-2
+    opportunity: 'Lag-major per-channel cache: compute each channel''s distance matrix once, and for every lag j its two distance-of-distance
+      matrices (rows of D[j:, j:] for the leading side, D[:-j, :-j] for the lagging side) once, plus their centred forms and self products (dcorrx)
+      or column ranks (mgcx); every ordered pair then needs only one cross term per lag. Processing lag by lag keeps memory at about 2P T^2 floats
+      (1.9 GB at 118x1024, float64). Also removes the duplicate distance computation in hyppo/time_series/_utils.py:compute_stat (line 88 builds
+      distx/disty, then the lag-0 statistic(x, y) rebuilds them). The distance-of-distance construction itself (a correctness finding) is kept
+      as is.'
+    opp_type: cache-sharing
+    expected_speedup: ~1.3x
+    speedup_basis: profile:audit/profiles/distance.mgcx.maxlag-1__8x1024.pstats per-channel distance and rank work inside compute_stat (compute_dist
+      12.1% and unique 31.2% overall, roughly half of each in compute_stat) = about 20-25% of the call.
+      Subsumed_by lagged_dcorr_mgc-3 on this unit. When the maxlag-10 identifier runs in the same run (default config) this unit's value is read from it and the per-pair lag computation this avenue
+      caches no longer runs, so build_csv credits it no saving on top of that avenue; it keeps its figure on the maxlag-10 unit
+    output_risk: unverified-within-tolerance
+    risk_evidence: needs the hhg_mgc-3 port of scipy's local-correlation kernel to accept cached ranks; summation order may change
+    effort: L
+    depends_on:
+    - lagged_dcorr_mgc-1
+    - hhg_mgc-3
+    subsumed_by:
+    - lagged_dcorr_mgc-3
+  - opportunity_id: lagged_dcorr_mgc-3
+    opportunity: 'CONDITIONAL on the maxlag-10 identifier of the same class in the same run (dcorrx_maxlag-10 for dcorrx_maxlag-1, mgcx_maxlag-10 for mgcx_maxlag-1; true in the default config). Derive the maxlag-1 value from the maxlag-10 computation: hyppo compute_stat returns sum(dep_lag) and the first two per-lag terms are the same computation for max_lag 1 and 10, so maxlag-1 = sum of the first two terms of maxlag-10''s list when both identifiers are configured.'
+    opp_type: cache-sharing
+    expected_speedup: '1000-10000x'
+    speedup_basis: 'complexity: CONDITIONAL on the identifier mgcx_maxlag-10 being computed in the same run, which holds in the default config; otherwise no gain. With it, the maxlag-1 unit reduces to a two-term sum per ordered pair (13806 sums plus pyspi pair dispatch, well under 1 s per window, against the 1743-14507 s projections; family-warm increment today 57.3 s at 8x1024)'
+    output_risk: unverified-bit-identical
+    risk_evidence: the first two dep_lag terms are the same operations for max_lag 1 and 10; opt_lag/opt_scale differ but are discarded
+    effort: S
+    depends_on: []

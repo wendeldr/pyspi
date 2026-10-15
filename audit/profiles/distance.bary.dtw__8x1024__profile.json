@@ -1,0 +1,221 @@
+{
+ "P": 8,
+ "T": 1024,
+ "baseline_rss_mb": 549.8,
+ "budget_s": 120.0,
+ "data_kind": "synthetic",
+ "data_sha256": "8e7e5fadc565fde86c145bcd58801cc90799abd9427b553b966b0df36ab32ada",
+ "edf": null,
+ "entry_sources": {
+  "bary_dtw_mean": "config"
+ },
+ "env": {
+  "java": null,
+  "omp_num_threads": "1",
+  "packages": {
+   "cdt": "0.6.0",
+   "hyppo": "0.5.2",
+   "jpype1": "1.7.1",
+   "mne": "1.13.2",
+   "nitime": "0.12.1",
+   "numpy": "2.5.4",
+   "pandas": "3.0.6",
+   "pyEDM": "1.15.2.0",
+   "pyyaml": "6.0.3",
+   "scikit-learn": "1.9.1",
+   "scipy": "1.17.1",
+   "sktime": "1.2.0",
+   "spectral-connectivity": "1.1.2",
+   "statsmodels": "0.15.0",
+   "torch": "2.14.1+cpu",
+   "tslearn": "0.9.0"
+  },
+  "platform": "linux",
+  "pyspi_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+  "pyspi_version": "2.0.2",
+  "python": "3.12.3"
+ },
+ "error": null,
+ "family": "barycenters",
+ "finished_at": "2026-10-15T04:41:37+00:00",
+ "fit": null,
+ "git_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+ "hwm_reset": true,
+ "identifiers": [
+  "bary_dtw_mean"
+ ],
+ "jvm_requested": false,
+ "jvm_started": false,
+ "measure_mode": "measured",
+ "mode": "profile",
+ "n_pairs": 28,
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)",
+ "opaque_share": 0.3442096049779751,
+ "opaque_share_by_owner": {
+  "builtin": 5.187748751442936e-06,
+  "harness": 8.989925270560705e-08,
+  "third-party:numpy": 0.09752866113379689,
+  "third-party:tslearn": 0.24667566619617398
+ },
+ "pair_basis": "unordered",
+ "peak_rss_delta_mb": 35.9,
+ "peak_rss_mb": 585.7,
+ "process_peak_rss_mb": 585.7,
+ "pstats": "audit/profiles/distance.bary.dtw__8x1024.pstats",
+ "pyspi_dirty": false,
+ "reason": null,
+ "repeats": 1,
+ "repeats_extended": null,
+ "repeats_planned": null,
+ "representative": "bary_dtw_mean",
+ "result_status": "ok",
+ "ru_maxrss_mb": 585.7,
+ "schema": 1,
+ "self_time_share_by_owner": {
+  "builtin": 5.187748751442936e-06,
+  "harness": 6.421990575047e-06,
+  "pyspi": 0.00042725687401965623,
+  "third-party:numpy": 0.12184466569432152,
+  "third-party:tslearn": 0.8777164676923321
+ },
+ "shape": "8x1024",
+ "spi_seed": 42,
+ "started_at": "2026-10-15T04:41:26+00:00",
+ "status": "ok",
+ "synth_seed": 20261014,
+ "t_cold_s": 15.227020678001281,
+ "t_per_pair_ms": null,
+ "threads": {
+  "affinity_cpus": 64,
+  "jvm_running": false,
+  "numba_threads": 64,
+  "omp_num_threads": "1",
+  "os_threads": 1,
+  "threadpools": [
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   }
+  ],
+  "torch_threads": 1
+ },
+ "timeout_s": 360.0,
+ "top10_cumulative": [
+  {
+   "cumtime_s": 10.678565070000001,
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "harness",
+   "tottime_s": 4.4938e-05
+  },
+  {
+   "cumtime_s": 10.678461663,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 7.978e-06
+  },
+  {
+   "cumtime_s": 10.678452935000001,
+   "function": "pyspi/base.py:multivariate",
+   "line": 84,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.000377417
+  },
+  {
+   "cumtime_s": 10.678063088,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 28,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.00023235800000000003
+  },
+  {
+   "cumtime_s": 10.677820751,
+   "function": "pyspi/statistics/distance.py:bivariate",
+   "line": 247,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.0031613920000000003
+  },
+  {
+   "cumtime_s": 10.664216163,
+   "function": "tslearn/barycenters/dba.py:dtw_barycenter_averaging",
+   "line": 485,
+   "ncalls": 28,
+   "opaque": false,
+   "owner": "third-party:tslearn",
+   "tottime_s": 0.10645233700000001
+  },
+  {
+   "cumtime_s": 10.557763826,
+   "function": "tslearn/barycenters/dba.py:dtw_barycenter_averaging_one_init",
+   "line": 621,
+   "ncalls": 28,
+   "opaque": false,
+   "owner": "third-party:tslearn",
+   "tottime_s": 0.225946681
+  },
+  {
+   "cumtime_s": 5.147571393000001,
+   "function": "tslearn/barycenters/dba.py:_mm_valence_warping",
+   "line": 355,
+   "ncalls": 192,
+   "opaque": false,
+   "owner": "third-party:tslearn",
+   "tottime_s": 0.005849435
+  },
+  {
+   "cumtime_s": 5.1403294200000005,
+   "function": "tslearn/barycenters/dba.py:_subgradient_valence_warping",
+   "line": 308,
+   "ncalls": 192,
+   "opaque": false,
+   "owner": "third-party:tslearn",
+   "tottime_s": 3.289532346
+  },
+  {
+   "cumtime_s": 3.0694400920000002,
+   "function": "tslearn/barycenters/dba.py:_mm_assignment",
+   "line": 229,
+   "ncalls": 192,
+   "opaque": false,
+   "owner": "third-party:tslearn",
+   "tottime_s": 3.0063213600000003
+  }
+ ],
+ "total_tt_s": 10.678620468000004,
+ "traceback_tail": null,
+ "unit_id": "distance.bary.dtw",
+ "wall_cv": null,
+ "wall_median_s": null,
+ "wall_profiled_s": 10.678684737002186,
+ "wall_s": null,
+ "walls_s": null,
+ "warmup_error": null,
+ "warmup_shape": "8x1024"
+}

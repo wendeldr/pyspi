@@ -1,0 +1,360 @@
+unit_id: basic.kendalltau
+status: profiled
+correctness:
+  metric_name_standard: Kendall's tau-b (tie-adjusted Kendall rank correlation); kendalltau-sq is its square
+  canonical_ref: 'Kendall M.G. 1938, ''A new measure of rank correlation'', Biometrika 30(1-2):81-93 (tau-a); tie adjustment tau-b: Kendall M.G. 1945, ''The treatment of ties in ranking
+    problems'', Biometrika 33(3):239-251; O(n log n) algorithm: Knight W.R. 1966, JASA 61:436-439'
+  canonical_definition: tau_a = (C - D) / (n(n-1)/2); tau_b = (C - D) / sqrt((n0 - n1)(n0 - n2)), n0 = n(n-1)/2, n1/n2 = pairs tied in x/y; tau_a == tau_b when there are no ties
+  documented_definition: 'supplement §1.1.4, p.4: ''Kendall''s tau [1] assesses the association of ordinal variables, similar to Spearman''s rho, but has certain differences, such as
+    becoming more mathematically tractable in the event of ties [7]. The method is implemented via function kendalltau in SciPy [6], and has a value in [-1, 1].'' [1] = Kendall 1938
+    Biometrika 30, 81. GitBook basic-statistics.md:81-97 same text; table-of-spis.md:35 lists kendalltau and kendalltau-sq. The variant (a/b/c) is not stated; kendalltau-sq is not described
+    in the supplement.'
+  delegate_lib: scipy==1.17.1 scipy.stats.kendalltau (variant='b', compiled _kendall_dis)
+  implemented_as: 'Default pipeline z-scores (optionally detrends) each channel; for each ordered pair, scipy.stats.kendalltau(x, y) with defaults: dense ranks, discordant pairs by Fenwick
+    tree, joint/x/y tie counts, tau-b = (tot - xtie - ytie + ntie - 2 dis)/sqrt(tot-xtie)/sqrt(tot-ytie), clipped to [-1,1]; p-value discarded. -sq returns tau_b**2. Lower triangle overwritten
+    from upper (i<j). Zero lag only.'
+  implementation_trace:
+  - pyspi/calculator.py:230-267 Calculator._load_yaml (HEAD a1f20c7) instantiates getattr(module, fcn)(**params) at :256 with configs squared True/False from pyspi/config.yaml:74-97;
+    the YAML 'labels' block is not read, so instance labels come from the class
+  - pyspi/calculator.py:329 Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan) (HEAD a1f20c7)
+  - 'pyspi/data.py:184-195 preprocessing before any SPI: optional scipy.signal.detrend(axis=1) then scipy.stats.zscore(axis=1, ddof=1, nan_policy=''omit''); :199-203 any NaN after this
+    raises ValueError (so constant channels, which z-score to NaN, never reach scipy)'
+  - 'pyspi/base.py:132-138 Undirected.multivariate calls Directed.multivariate then mirrors: li = np.tril_indices(P,-1); A[li] = A.T[li] (upper triangle i<j kept)'
+  - pyspi/base.py:88-94 Directed.multivariate loops over all ordered pairs i != j and calls self.bivariate(data, i=i, j=j), i.e. P(P-1) calls, each unordered pair computed twice
+  - 'pyspi/base.py:27-47 parse_bivariate: Data passes straight through; raw arrays are wrapped in Data() (first via set_data, z-scored; second via add_process data.py:230-234, appended
+    without preprocessing)'
+  - pyspi/statistics/basic.py:160-173 class KendallTau(Undirected, Signed); __init__(squared=False) identical pattern to SpearmanR (identifier 'kendalltau-sq', labels += mutation, bug
+    4)
+  - 'pyspi/statistics/basic.py:175-181 bivariate: x, y = data.to_numpy()[[i, j]]; returns stats.kendalltau(x, y).correlation (defaults: variant=''b'', method=''auto'', nan_policy=''propagate''),
+    or its square'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5530-5535 kendalltau wrapped by _axis_nan_policy_factory(default_axis=None, too_small=1) (NaN
+    propagation, n<=1 -> NaN); _pack_CorrelationResult :138-141 sets .correlation
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5650-5651 x, y ravelled (the (T,1) slices become length-T vectors)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5671-5678 sort on y and convert to dense ranks, stable mergesort on x and dense ranks
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5680 dis = _kendall_dis(x, y) (compiled; source https://raw.githubusercontent.com/scipy/scipy/v1.17.1/scipy/stats/_stats.pyx
+    def _kendall_dis, about line 83: Fenwick-tree O(n log n) discordant-pair count, Knight 1966 style)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5682-5689 joint ties ntie, ties in x xtie and y ytie (count_rank_tie :5662-5668), tot = n(n-1)/2;
+    :5691-5695 all-tied x or y -> NaN
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5699 con_minus_dis = tot - xtie - ytie + ntie - 2*dis
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5700-5701 variant ''b'': tau = con_minus_dis / sqrt(tot - xtie) / sqrt(tot - ytie)  (tau-b)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5710 tau = np.minimum(1., max(-1., tau)) clip; :5739 res.correlation = tau
+  deviation_from_documented: 'Value: none against ''kendalltau in SciPy'' (scipy default variant=''b'' is used). The supplement cites Kendall 1938 (tau-a) without naming the variant;
+    the implementation is tau-b, which equals tau-a only without ties. Metadata: ''linear'' class label vs documented ''nonlinear'' keyword (candidate); both ''signed'' and ''unsigned''
+    labels (bug 4). kendalltau-sq not described in the supplement.'
+  deviation_from_canonical: 'Relative to Kendall 1938 tau-a: tau-b tie correction is applied; identical on continuous data (probe, n=50 continuous: tau-b = tau-a = 0.2897959183673469),
+    different with ties (probe, rounded data: pyspi 0.30084768027508835 = scratch tau-b, tau-a 0.22285714285714286). Relative to tau-b (Kendall 1945): none (exact match to from-scratch
+    O(n^2) tau-b in probes). kendalltau-sq has no standard name.'
+  units_and_range: dimensionless; kendalltau signed in [-1,1]; kendalltau-sq in [0,1]; symmetric in exact arithmetic (kernel reciprocal calls can differ by a few ulp with ties; pipeline
+    output exactly symmetric via the mirror); NaN on the diagonal; NaN if one series is all-tied, but constant channels are rejected by the Data loader first
+  direction_convention: 'undirected: A[i,j] = A[j,i] = tau_b(x_i, x_j) computed with i<j (upper triangle, base.py:136-137); no lag, no direction'
+  symmetry_expected: sym
+  already_documented: 'tests/README.md bug 4 (SpearmanR/KendallTau mutate class-level labels: instances carry both ''signed'' and ''unsigned''); REVIEW M8 (same label mutation); tests/README.md
+    line 131 records n1d0 == n0d0 for spearmanr/kendalltau (rank invariance under z-scoring, measured max difference 0); EEG_OPTIMIZATION_NOTES.md:132 (generic Undirected path computes
+    both ordered directions before one triangle is overwritten; optimisation candidate); tests/unit/test_data.py:74-88 locks Data.add_process appending later processes raw (the basis
+    of the parse_bivariate infrastructure item below). Related pattern, different SPIs: REVIEW M2 (last-bit reciprocal asymmetry in precision, Euclidean distance, envelope correlation).'
+  new_finding_candidates:
+  - 'CANDIDATE (metadata): class labels say ''linear'' (pyspi/statistics/basic.py:140 and :164 labels = [''basic'',''unordered'',''rank'',''linear'',''undirected'']) while the supplement
+    keywords and config.yaml:75-80 / :88-93 say ''nonlinear''; Calculator._load_yaml (calculator.py:230-267, instantiation at :256, HEAD a1f20c7) never reads the YAML labels, so every
+    instance carries ''linear''. Probe in a fresh interpreter: SpearmanR().labels and KendallTau().labels -> [''basic'',''unordered'',''rank'',''linear'',''undirected'',''signed''];
+    after a squared=True instance has been created in the same interpreter (bug 4 mutation) a new default instance carries [...,''signed'',''unsigned'',''signed''] (rank_corr_fix/p_labels.py).
+    ''linear'' is present in both states. Distinct from bug 4 (signed/unsigned).'
+  - 'CANDIDATE (efficiency quantification only; the double work itself is already documented at EEG_OPTIMIZATION_NOTES.md:132): for this unit, probe with P=4 bivariate_gaussian_T256
+    counted 12 bivariate calls where 6 suffice (base.py:91-93 loop, base.py:136-137 mirror), and the pipeline result is exactly symmetric. The discarded calls can differ from the kept
+    ones only at the last-bit level on tied data (see the numerics item), so for kendalltau values the discarded half is pure waste.'
+  - 'CANDIDATE (definition/documentation): documented citation is Kendall 1938 (tau-a) while scipy computes tau-b (_stats_py.py:5701). On continuous float data they coincide; on quantised
+    data they diverge (probe, coarse integer data T=4096: tau-b 0.38386 vs tau-a 0.33287). Whether EEG inputs carry ties depends on ADC/export resolution (hypothesis; z-scoring preserves
+    ties, probe: 0/500 changes on tied integer data).'
+  - 'CANDIDATE (numerics, value-neutral in pipeline; not Kendall-specific, basic.spearmanr shows the same effect through np.corrcoef): scipy divides con_minus_dis / sqrt(tot-xtie) /
+    sqrt(tot-ytie) (_stats_py.py:5701), so with ties (xtie != ytie) swapping x and y changes the division order. Earlier probe on 2000 tied random pairs: 666 reciprocal mismatches, max
+    1.11e-16. Re-probe rank_corr_fix/p_recip.py, 2000 pairs n in [20,400) of np.round(N(0,9)): kendalltau 691 mismatches, spearmanr 691 (different pairs, overlap 234), both max |diff|
+    5.55e-17 (at most 2 ulp of the smaller value); continuous data 0/2000 for both. Masked in the pipeline by the Undirected mirror (base.py:137); matters only for reference comparisons
+    with bit-exact criteria.'
+  - 'CANDIDATE (documentation): ''nonlinear'' keyword covers only monotone dependence; tau is expected near 0 for nonlinear_dependence (x0^2, circle).'
+  - 'CANDIDATE (infrastructure consequence only, no effect on this unit''s values; the underlying Data.add_process behaviour is already locked by tests/unit/test_data.py:74-88 test_add_process_appends_raw_unnormalised,
+    owned by unit preproc.two_array_api): parse_bivariate with raw arrays (base.py:33-36) z-scores only the first array (Data.set_data) and appends the second raw (data.py:230-234).
+    Probe: row0 mean/std 0/1, row1 mean/std 4.38/4.763. Rank statistics are invariant, but other bivariate SPIs called on arrays would see unequal preprocessing.'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - contaminated
+    - iid_gaussian
+    path: kernel
+    reference: 'from-scratch O(n^2) numpy: S = sum_{i<j} sign(x_i-x_j) sign(y_i-y_j), n1/n2 = pairs tied in x/y; tau_b = S / sqrt((n0-n1)(n0-n2)), tau_a = S / n0 (int8 sign matrices,
+      T <= 4096); repeat on bivariate_gaussian rounded to 1 decimal inside the check to induce ties (no scipy.stats import)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'abs difference to tau_b <= 1e-12 for all pairs/T; on tied data the output matches tau_b and differs from tau_a (probe on coarse integers: tau_b 0.3839 vs tau_a
+      0.3329)'
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic population Kendall tau for a bivariate normal: tau = (2/pi) arcsin(rho) (Greiner 1909; Kendall 1949); rho = 0.3 -> 0.19397, rho = 0.8 -> 0.59033'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: at T = 4096 |tau_hat - tau| within 3 jackknife standard errors; bias shrinks with T
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: invariance under strictly increasing affine maps (positive scales)
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: kendalltau and kendalltau-sq bit-identical between the datasets and between normalise True/False
+  - datasets:
+    - trending
+    path: pipeline-detrend
+    reference: from-scratch O(n^2) tau_b on lstsq-detrended, z-scored series
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'match to 1e-12; detrending changes the value (probe at T=1024 pair (0,1): -0.0252 raw vs 0.1735 detrended)'
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    path: pipeline
+    reference: from-scratch tau_b on rows (x_i, x_j)
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: at pipeline level A[i,j] == A[j,i] exactly (upper triangle mirrored), diagonal NaN, values equal tau_b(x_i, x_j) at zero lag; no directional meaning
+  - datasets:
+    - bivariate_gaussian
+    path: kernel
+    reference: 'reciprocity on tied data (bivariate_gaussian rounded to 1 decimal in-check): compare scipy-delegated bivariate(x,y) vs bivariate(y,x) and the pipeline matrix'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: reciprocal kernel calls may differ by a few ulp (observed at most 2 ulp of the smaller value; division order at _stats_py.py:5701); identical on continuous data;
+      pipeline matrix exactly symmetric because of the mirror
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    path: pipeline
+    reference: analytic identity kendalltau-sq = kendalltau ** 2
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: bit-identical elementwise; values in [0,1]
+  - datasets:
+    - bivariate_gaussian
+    path: kernel
+    reference: R stats::cor(x, y, method='kendall') (tau-b with ties), optional external cross-check
+    reference_kind: external-pkg
+    criterion: tolerance
+    expected_outcome: agreement <= 1e-12 including the tied variant
+  check_method: independent-impl
+  check_reference: 'refs/rank_corr.py:ref_run using refs/_kernels_basic_misc.py:kendall_tau_b (from-scratch O(n^2) sign-product pair count, Kendall 1945 tau-b; no scipy.stats) and refs/rank_corr.py:kendall_tau_a;
+    analytic bivariate-normal expectation refs/rank_corr.py:population (Greiner 1909: E tau = (2/pi) asin rho) with SE refs/rank_corr.py:standard_error (null sqrt(2(2n+5)/(9n(n-1)));
+    Fieller, Hartley & Pearson 1957 var z = 0.437/(n-4)); external R 4.6.1 stats::cor(method=''kendall'') via r/rank_corr.R; probes/rank_corr_probes.py for tied input, unmirrored Directed
+    calls, labels, call count, realisations, array input'
+  closeness: '67/67 runs pass (results/rank_corr.json). Exact: max_abs 1.7e-16 over 38 exact-criterion runs (kernel, pipeline, pipeline-detrend, tied, R); kernel continuous max_abs 1.1e-16,
+    tied max_abs 1.1e-16, R stats::cor vs pyspi max 1.1e-16. Variant: equals tau-b and differs from tau-a by 5.06e-3 (pair (0,1)) and 1.72e-2 (pair (2,3)) on tied bivariate_gaussian
+    T=1024 (ties-vs-untied-formula). Statistical: max_z_1se 1.27/0.79/1.06/1.41 at T=64/256/1024/4096 vs (2/pi) asin rho; pair (2,3) |error| 0.017/0.021/0.0061/0.0095 with SE 0.056/0.027/0.013/0.0067. Null iid_gaussian (P=5, 10 pairs, population 0): max_z_1se 2.95 at T=1024 and 1.97 at T=4096. T=1024 is a near-miss: pair (0,2) has tau 0.06164 against null SD 0.02087, so it passes only because the declared band is 3 SE (2.95 vs 3.00). With 10 pairs treated as independent, P(max |z| > 2.95) is about 3%. The same pair has Pearson z = r sqrt(n-1) = 2.68 in the data, and pyspi equals the from-scratch kernel on this dataset (basic.kendalltau|iid_gaussian|1024|kernel|exact max_abs 0), so the excursion belongs to the sample and does not come from pyspi. Invariance: pipeline bit-identical to kernel (5 runs, diff 0); scaled_offset bit-identical to bivariate_gaussian (kernel and pipeline). -sq: bit-identical to signed^2.'
+  verdict: matches
+  score_0_10: 10
+  score_rubric: 10
+  score_rubric_basis: anchor
+  score_rubric_note: Tau-b equals a from-scratch Kendall 1945 kernel and R stats::cor to max_abs 1.7e-16 over 38 exact runs, as the supplement's 'kendalltau in SciPy'
+    text states. The Kendall 1938 (tau-a) citation and the 'linear' class label are metadata conflicts.
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 10
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Value: nothing against the tie-corrected tau-b (Kendall 1945), to 1.7e-16 on independent and external references, as the supplement describes (scipy kendalltau, range
+    [-1,1]). The supplement''s citation [1] is Kendall 1938 (tau-a); tau-a and tau-b coincide without ties and differ with ties (5e-3 to 1.7e-2 on 1-decimal-rounded Gaussian data). kendalltau-sq
+    is tau_b^2 (relabel, bit-identical to the signed value squared; not defined in the supplement). Metadata only: class label ''linear'' vs documented ''nonlinear'' (confirmed); bug
+    4 reproduced and already documented.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: pyspi time per SPI run <= 0.014 s at T=4096 (P=4-5); 67 runs total 2.7 s of which 2.4 s is the labels probe''s fresh interpreters; O(n^2) reference about 20 s in
+    total at T=4096'
+  symmetry_observed: 'sym: max|A - A.T| = 0 in every Calculator-path run (ref_pyspi_max_asym 0, T=64-4096, continuous and tied). Unmirrored Directed.multivariate: 0/6 pairs differ on
+    continuous input (recip-continuous); on tied input 1/6 pairs differ by 1.11e-16 = 1 ulp (bivariate_gaussian T=1024), 0/1 on contaminated T=4096; the Undirected mirror removes it'
+  direction_observed: 'no direction: A[i,j] = A[j,i] = zero-lag tau-b of x_i and x_j. var2_bivariate (x0 -> x1): A[0,1] = A[1,0] = 0.11514 with the sign of the zero-lag correlation 0.2107;
+    delayed_noise (exact lagged copies): all pairs within 1.71 null SD of 0, so lagged dependence is invisible'
+  candidate_resolutions:
+  - candidate: class label 'linear' contradicts the documented/config 'nonlinear' keyword
+    outcome: confirmed
+    evidence: 'basic.kendalltau|iid_gaussian|64|kernel|labels: fresh KendallTau() labels have ''linear'' and no ''nonlinear''; Calculator-built instances too. Not in KNOWN_ISSUES (bug
+      4 is signed/unsigned only)'
+  - candidate: 'efficiency quantification: P(P-1) bivariate calls where P(P-1)/2 suffice (double work documented at EEG_OPTIMIZATION_NOTES.md:132)'
+    outcome: confirmed
+    evidence: 'basic.kendalltau|bivariate_gaussian|256|pipeline|call-count: 12 calls for P=4 (6 needed), output max|A-A.T| 0; already documented, quantification only'
+  - candidate: documented citation Kendall 1938 (tau-a) while scipy computes tau-b; they diverge with ties
+    outcome: confirmed
+    evidence: 'basic.kendalltau|bivariate_gaussian|1024|kernel|ties-vs-untied-formula: pyspi 0.18134 / 0.61192 = tau-b (max_abs 8.7e-19) vs tau-a 0.17628 / 0.59470; |4096|: 0.20453 /
+      0.59646 vs 0.19881 / 0.57948. Whether EEG input carries ties was not examined'
+  - candidate: reciprocal kernel calls differ by a few ulp on tied data (division order at _stats_py.py:5701), masked by the mirror
+    outcome: confirmed
+    evidence: basic.kendalltau|bivariate_gaussian|1024|kernel|recip-ties (1/6 pairs, 1.11e-16, 1 ulp), basic.kendalltau|contaminated|4096|kernel|recip-ties (0/1), basic.kendalltau|bivariate_gaussian|1024|kernel|recip-continuous
+      (0/6); pipeline asymmetry 0 in every run
+  - candidate: '''nonlinear'' keyword covers monotone dependence only; tau near 0 on non-monotone dependence'
+    outcome: confirmed
+    evidence: 'basic.kendalltau|nonlinear_dependence|1024|kernel|monotone-only and |4096|: |tau| <= 0.0155 (band 0.063) and <= 0.0028 (band 0.031) while tau(|x0|, x1) = 0.866 and tau(x2^2,
+      x3^2) = -1.0'
+  - candidate: parse_bivariate with raw arrays z-scores only the first array (infrastructure; no effect on ranks)
+    outcome: confirmed
+    evidence: 'basic.kendalltau|scaled_offset|256|kernel|array-input: row 1 mean 1.0117 std 1.9969 (raw), value 0.19540441176470588 identical to Data input and reference. Owned by preproc.two_array_api;
+      no effect on this unit'
+  check_data: bivariate_gaussian T=64/256/1024/4096 (kernel, pipeline, tied), nonlinear_dependence T=256/1024/4096, contaminated T=256/1024/4096 (incl. tied), iid_gaussian T=64/256/1024/4096
+    (null), scaled_offset T=256/1024, trending T=256/1024 (pipeline and pipeline-detrend), delayed_noise T=1024, var2_bivariate T=1024; tied variants = np.round(x, 1) applied identically
+    in probe and reference
+  agreement_criterion: 'exact: |pyspi - ref| <= 1e-12 (rtol 0) for every ordered pair (kernel, pipeline on raw-row reference, pipeline-detrend on lstsq-detrended rows, tied input, R
+    stats::cor); statistical: |pyspi - population expectation| <= 3 analytic SE (stored se = 1.5 SE, compare band 2 se; the SE is analytic, exact null SD sqrt(2(2n+5)/(9n(n-1))) at rho = 0 and the Fieller-Hartley-Pearson 1957 Fisher-z delta method var z = 0.437/(n-4) otherwise. This replaces the jackknife standard errors named in proposed_checks[1]: the analytic SE is closed-form and deterministic, and a scratch Monte Carlo (3000 replicates, n = 64/256/1024, rho = 0/0.3/0.8, scratchpad rank_corr_check/mc2.py) gave empirical SD / analytic SE 0.94-1.00. The 3-SE band was declared in proposed_checks before any run and was not changed afterwards); qualitative: bit-identity pipeline == kernel, scaled_offset ==
+    bivariate_gaussian, -sq == signed^2, reciprocal Directed calls <= 4 ulp, |r| <= 3 null SD on non-monotone pairs; direction: sign of the zero-lag correlation in both orientations'
+  checks_run:
+  - run_ids:
+    - basic.kendalltau|bivariate_gaussian|64|kernel|exact
+    - basic.kendalltau|bivariate_gaussian|256|kernel|exact
+    - basic.kendalltau|bivariate_gaussian|1024|kernel|exact
+    - basic.kendalltau|bivariate_gaussian|4096|kernel|exact
+    - basic.kendalltau|nonlinear_dependence|256|kernel|exact
+    - basic.kendalltau|nonlinear_dependence|1024|kernel|exact
+    - basic.kendalltau|nonlinear_dependence|4096|kernel|exact
+    - basic.kendalltau|contaminated|256|kernel|exact
+    - basic.kendalltau|contaminated|1024|kernel|exact
+    - basic.kendalltau|contaminated|4096|kernel|exact
+    - basic.kendalltau|iid_gaussian|256|kernel|exact
+    - basic.kendalltau|iid_gaussian|1024|kernel|exact
+    reference: refs/rank_corr.py:ref_run (tag exact) -> refs/_kernels_basic_misc.py:kendall_tau_b
+    outcome: pass 12/12, exact atol 1e-12 rtol 0 on both orientations; max_abs 1.1e-16 over bivariate_gaussian T=64..4096, nonlinear_dependence, contaminated, iid_gaussian
+  - run_ids:
+    - basic.kendalltau|bivariate_gaussian|256|kernel|ties
+    - basic.kendalltau|bivariate_gaussian|1024|kernel|ties
+    - basic.kendalltau|bivariate_gaussian|4096|kernel|ties
+    - basic.kendalltau|contaminated|1024|kernel|ties
+    - basic.kendalltau|contaminated|4096|kernel|ties
+    - basic.kendalltau|nonlinear_dependence|1024|kernel|ties
+    - basic.kendalltau|bivariate_gaussian|1024|pipeline|ties
+    - basic.kendalltau|contaminated|1024|pipeline|ties
+    reference: probes/rank_corr_probes.py:ties_kernel/ties_pipeline (np.round(x, 1)) vs refs/rank_corr.py:ref_run (tag ties) -> _kernels_basic_misc.kendall_tau_b on the identically rounded
+      input
+    outcome: pass 8/8, max_abs 1.1e-16 on input rounded to 1 decimal (13-80 distinct values per row); tau-a vs tau-b differs by up to 1.7e-2 on the same input
+  - run_ids:
+    - basic.kendalltau|bivariate_gaussian|1024|kernel|ties-vs-untied-formula
+    - basic.kendalltau|bivariate_gaussian|4096|kernel|ties-vs-untied-formula
+    reference: refs/rank_corr.py:kendall_tau_a vs the tie-corrected kernel
+    outcome: 'pass 2/2, pyspi equals tau-b (max_abs 8.7e-19 at T=1024, 2.2e-19 at T=4096) and differs from tau-a by >= 5.06e-3 on the dependent pairs (T=1024: pair (0,1) 0.18134 vs tau-a
+      0.17628, pair (2,3) 0.61192 vs 0.59470)'
+  - run_ids:
+    - basic.kendalltau|bivariate_gaussian|1024|kernel|R-cor
+    - basic.kendalltau|bivariate_gaussian|1024|kernel|R-cor-ties
+    - basic.kendalltau|contaminated|1024|kernel|R-cor-ties
+    reference: r/rank_corr.R stats::cor(method='kendall'), R 4.6.1, via refs/rank_corr.py:run_r
+    outcome: pass 3/3, R vs pyspi max_abs 2.2e-19 (continuous), 1.1e-16 and 0 (tied); R vs from-scratch kernel max 1.1e-16
+  - run_ids:
+    - basic.kendalltau|bivariate_gaussian|64|pipeline|population
+    - basic.kendalltau|bivariate_gaussian|256|pipeline|population
+    - basic.kendalltau|bivariate_gaussian|1024|pipeline|population
+    - basic.kendalltau|bivariate_gaussian|4096|pipeline|population
+    - basic.kendalltau|iid_gaussian|1024|pipeline|null
+    - basic.kendalltau|iid_gaussian|4096|pipeline|null
+    reference: refs/rank_corr.py:population and standard_error (analytic, bivariate normal)
+    outcome: pass 6/6, max_z_1se 1.27/0.79/1.06/1.41 at T=64/256/1024/4096 against (2/pi) asin rho; |error| pair (0,1) 0.105/0.0014/0.0176/0.0052 with SE 0.082/0.040/0.020/0.010; null max_z_1se 2.95 (T=1024, pair (0,2); near-miss, 0.05 inside the 3-SE band, about 3% chance over 10 null pairs), 1.97 (T=4096). SE is analytic (exact null SD; FHP 1957 delta method), substituted for the jackknife SE named in proposed_checks[1]
+  - run_ids:
+    - basic.kendalltau|bivariate_gaussian|1024|pipeline|exact
+    - basic.kendalltau|contaminated|1024|pipeline|exact
+    - basic.kendalltau|nonlinear_dependence|1024|pipeline|exact
+    - basic.kendalltau|bivariate_gaussian|256|pipeline|pipeline-eq-kernel
+    - basic.kendalltau|bivariate_gaussian|1024|pipeline|pipeline-eq-kernel
+    - basic.kendalltau|bivariate_gaussian|4096|pipeline|pipeline-eq-kernel
+    - basic.kendalltau|contaminated|1024|pipeline|pipeline-eq-kernel
+    - basic.kendalltau|nonlinear_dependence|1024|pipeline|pipeline-eq-kernel
+    reference: refs/rank_corr.py:ref_run (tag exact on RAW rows; tag pipeline-eq-kernel = pyspi kernel-path matrix)
+    outcome: pass 8/8, z-scored pipeline equals the raw-data reference (max_abs <= 5.6e-17) and is bit-identical to the kernel-path matrix (max_abs_pipeline_vs_kernel 0 in all 5)
+  - run_ids:
+    - basic.kendalltau|scaled_offset|1024|kernel|invariance-exact
+    - basic.kendalltau|scaled_offset|1024|pipeline|invariance-exact
+    - basic.kendalltau|scaled_offset|1024|kernel|invariance-bitid
+    - basic.kendalltau|scaled_offset|1024|pipeline|invariance-bitid
+    reference: refs/rank_corr.py:ref_run (tags invariance-exact on the unscaled bivariate_gaussian rows; invariance-bitid = pyspi bivariate_gaussian matrix)
+    outcome: pass 4/4, scaled_offset bit-identical to bivariate_gaussian on kernel and pipeline paths (max_abs_vs_unscaled 0)
+  - run_ids:
+    - basic.kendalltau|trending|256|pipeline-detrend|exact
+    - basic.kendalltau|trending|1024|pipeline-detrend|exact
+    - basic.kendalltau|trending|1024|pipeline|exact
+    reference: refs/rank_corr.py:lstsq_detrend_zscore + kernel (independent of scipy.signal.detrend)
+    outcome: pass 3/3, pipeline-detrend matches the lstsq reference (max_abs 3.5e-18 at T=256, 1.7e-18 at T=1024; raw pipeline 1.1e-16); trending pair (2,3) -0.87879 raw vs 0.59666 detrended at T=1024
+  - run_ids:
+    - basic.kendalltau|delayed_noise|1024|pipeline|exact
+    - basic.kendalltau|delayed_noise|1024|pipeline|contemporaneous-null
+    - basic.kendalltau|var2_bivariate|1024|pipeline|exact
+    - basic.kendalltau|var2_bivariate|1024|pipeline|direction
+    reference: refs/rank_corr.py:ref_run (kernel on rows; null SD; sign of the Gamma0 zero-lag correlation)
+    outcome: pass 4/4, var2_bivariate A[0,1] = A[1,0] = 0.11514 (zero-lag correlation 0.2107, sign agreement 1.0); delayed_noise max_z_1se 1.71 vs 0 despite lagged copies
+  - run_ids:
+    - basic.kendalltau|nonlinear_dependence|1024|kernel|monotone-only
+    - basic.kendalltau|nonlinear_dependence|4096|kernel|monotone-only
+    reference: analytic population value 0 (symmetric non-monotone dependence), band 3 null SD; dependence witnesses via the kernel
+    outcome: pass 2/2, |tau| 0.0155 and 0.0005 (T=1024, band 0.063), 0.0028 and 0.0008 (T=4096, band 0.031) while witnesses tau(|x0|, x1) = 0.866 and tau(x2^2, x3^2) = -1.0
+  - run_ids:
+    - basic.kendalltau|bivariate_gaussian|256|pipeline|sq-exact
+    - basic.kendalltau|bivariate_gaussian|1024|pipeline|sq-exact
+    - basic.kendalltau|iid_gaussian|1024|pipeline|sq-exact
+    - basic.kendalltau|bivariate_gaussian|1024|kernel|sq-ties
+    - basic.kendalltau|bivariate_gaussian|256|pipeline|sq-relabel
+    - basic.kendalltau|bivariate_gaussian|1024|pipeline|sq-relabel
+    - basic.kendalltau|iid_gaussian|1024|pipeline|sq-relabel
+    reference: refs/rank_corr.py:ref_run (kernel squared; sq-relabel = pyspi signed matrix squared, same-lineage)
+    outcome: pass 7/7, -sq equals the independent kernel squared (max_abs 1.7e-16) and is bit-identical to the signed matrix squared; range observed [1.4e-7, 0.374]
+  - run_ids:
+    - basic.kendalltau|bivariate_gaussian|1024|kernel|directed-ties
+    - basic.kendalltau|bivariate_gaussian|1024|kernel|recip-ties
+    - basic.kendalltau|contaminated|4096|kernel|recip-ties
+    - basic.kendalltau|bivariate_gaussian|1024|kernel|recip-continuous
+    reference: probes/rank_corr_probes.py:directed_ties/directed_kernel (Directed.multivariate, no mirror) vs kernel per orientation; reciprocal comparison
+    outcome: pass 4/4, Directed (unmirrored) per-orientation max_abs 1.1e-16; reciprocal calls differ on 1/6 pairs by 1.11e-16 (1 ulp) on tied bivariate_gaussian, 0/1 on tied contaminated
+      T=4096, 0/6 on continuous data
+  - run_ids:
+    - basic.kendalltau|iid_gaussian|64|kernel|labels
+    - basic.kendalltau|bivariate_gaussian|256|pipeline|call-count
+    - basic.kendalltau|bivariate_gaussian|1024|kernel|realisations
+    - basic.kendalltau|scaled_offset|256|kernel|array-input
+    reference: probes/rank_corr_probes.py:labels_fresh/call_count/realisations/array_input (qualitative, reference side decides)
+    outcome: 'pass 4/4 (pass = candidate behaviour reproduced as described): labels: fresh KendallTau() has ''linear'' and no ''nonlinear''; Calculator-built kendalltau and kendalltau-sq
+      share one list carrying ''signed'' and ''unsigned'' (bug 4); 12 bivariate calls for P=4 (6 needed); R=2 realisations -> scalar tau-b of the pooled samples 0.17637 (per-realisation
+      0.15079, 0.20172); array input row 1 left raw with identical value 0.19540441176470588'
+optimisation:
+  complexity_P_T: 'O(P^2 T log T): pyspi/statistics/basic.py:KendallTau.bivariate runs scipy.stats.kendalltau for all P(P-1) ordered pairs (pyspi/base.py:Directed.multivariate); scipy already uses the O(T
+    log T) path (argsort, mergesort argsort, _kendall_dis merge-sort discordance count, count_rank_tie). Measured P_exponent 2.06, T_exponent 0.19 (per-call overhead dominates); at 118x1024 the pair term
+    is the whole cost (13806 calls x 0.33 ms).'
+  hotspot_1: scipy/stats/_stats_py.py:kendalltau (third-party:scipy) 47.5% of the profiled SPI call at 8x1024 (56 calls; numpy argsort 11.4%, count_rank_tie 8.8%, the compiled _kendall_dis merge count hidden
+    in its 12.5% self time); the frame rank_corr-2 replaces
+  hotspot_2: 'scipy/stats/_axis_nan_policy.py:axis_nan_policy_wrapper (third-party:scipy) overhead outside the kendalltau body: 96.6% cumulative - 47.5% = 49.1% at 8x1024 (inspect signature machinery 24.4%:
+    getfullargspec 16.2% over 112 calls and signature 8.1% over 56 calls, whose shared inner _signature_from_callable is 19.8%; wrapper self 5.2%, scipy/_lib/_util.py:_contains_nan 4.5%, _get_nan 3.5%, xp_promote 2.9%)'
+  hotspot_owner: third-party:scipy
+  opaque_share: 0.29
+  profile_file: audit/profiles/basic.kendalltau__8x1024.pstats
+  opportunities:
+  - opportunity_id: rank_corr-2
+    opportunity: 'Replace the per-ordered-pair scipy.stats.kendalltau call (basic.py:175-181) by one compiled all-pairs tau-b kernel over i<j: per-channel sort order and tie counts computed once, then per
+      pair the y-reordering and merge-sort discordance count (Knight''s O(T log T) method, which scipy already uses through _kendall_dis), without scipy''s nan-policy wrapper.'
+    opp_type: rewrite-numba-rust-cpp
+    expected_speedup: 10-30x
+    speedup_basis: 'profile:audit/profiles/basic.kendalltau__8x1024.pstats pyspi/base.py:28:parsed_function 99.30% (the 56 per-pair calls, replaced as a whole; inside them
+      scipy/stats/_stats_py.py:kendalltau 47.5% and the scipy/stats/_axis_nan_policy.py:axis_nan_policy_wrapper overhead 49.1%, 96.6% cumulative) -> Amdahl bound 143x at 8x1024 (base.py:84
+      multivariate 99.59% with the loop itself, 246x); the wrapper frame alone (96.6%, 29x) would be too small a frame for the upper end, since the kernel also drops the per-pair pyspi call
+      + complexity: O(P^2 T log T) kept, but i<j only (halves calls; the xc-undirected-upper factor 2 is inside this estimate), one argsort per channel instead of two per call, compiled merge count ~20-40
+      us per pair at T=1024 vs 0.33 ms per ordered call now; with tied samples the per-pair (x, y) lexicographic order still needs per-pair work inside each run of tied x values (a sort
+      within tie groups or a tie-aware merge), so the per-channel argsort removes the whole per-pair sort only for tie-free channels; that extra cost depends on the tie structure of the data
+      and was not measured, and heavy ties raise the 20-40 us per pair'
+    output_risk: unverified-bit-identical
+    risk_evidence: tau-b is built from integer concordance/tie counts and one float expression (con_minus_dis / sqrt(tot - xtie) / sqrt(tot - ytie), clipped to [-1, 1]); reproducing that expression and
+      the upper-triangle orientation keeps the bits (with ties xtie != ytie, so the bits depend on which channel is passed as x, and the kernel must keep the orientation of the kept triangle), and -sq must square through the numpy scalar path
+    effort: M
+    depends_on: []
+  - opportunity_id: rank_corr-3
+    opportunity: Cache the signed rank-correlation matrix on the Data object (as basic.py already does for covariance fits and xcorr) so spearmanr and spearmanr-sq (kendalltau and kendalltau-sq) are computed
+      once and the -sq identifier squares the cached values.
+    opp_type: cache-sharing
+    expected_speedup: ~2x
+    speedup_basis: 'complexity: family-warm at 118x1024 shows no sharing between the two identifiers (kendalltau-sq 4.52 s + kendalltau 4.52 s); a shared matrix makes the second identifier a cache read.
+      The ~2x applies to the configured pair of identifiers only: the EEG selection keeps kendalltau-sq alone (audit/env/retained_metrics.txt), so 1x (no
+      EEG gain) for the EEG selection. Ranked on the residual after rank_corr-2 (depends_on), the all-pairs tau-b kernel whose output this
+      would cache'
+    output_risk: unverified-bit-identical
+    risk_evidence: the -sq identifier is the square of the same per-pair scalar; it stays bit-identical only if squared through the same numpy scalar pow (array x*x differed by 1 ulp on 8 of 13924 entries
+      in opp_rank_corr-1)
+    effort: S
+    depends_on:
+    - rank_corr-2
+    eeg_applicable: false

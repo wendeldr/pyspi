@@ -1,0 +1,234 @@
+unit_id: distance.pdist.chebyshev
+status: profiled
+correctness:
+  metric_name_standard: Chebyshev / L-infinity / maximum-coordinate distance between z-scored series
+  canonical_ref: Deza & Deza 2016, Encyclopedia of Distances (4th ed., Springer), entry 'Chebyshev metric' (l_infinity-metric, lattice/king-move metric)
+  canonical_definition: d(x,y) = max_{t=1..T} |x_t - y_t|
+  documented_definition: 'GitBook distance-similarity.md ''Pairwise Distance'' (lines 297-321): "Pairwise distance between time-series, computed using sklearn''s
+    pairwise distance function using the following distance metrics: Euclidean, Cityblock, Cosine, Chebyshev, Canberra, Braycurtis"; keywords "undirected,
+    nonlinear, unsigned, unordered". No formula is given. pdist is absent from the supplement: supplement §1.2 ''Distance similarity (26 SPIs)'', p.5 (heading
+    line 209) lists SPIs 22-47 (dcorr, dcorrx, mgc, mgcx, hsic, hhg, dtw, lcss, softdtw, bary) and no pdist entry.'
+  delegate_lib: scipy==1.17.1 scipy.spatial.distance.pdist(X, 'chebyshev') (C++ _distance_pybind.pdist_chebyshev), reached through sklearn==1.9.1 pairwise_distances'
+    SciPy branch, then squareform
+  implemented_as: 'Rows z-scored (ddof=1) by default; sklearn forwards to scipy pdist + squareform: the largest absolute sample-wise difference of the two
+    standardised series.'
+  implementation_trace:
+  - pyspi/calculator.py:277 Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend) (Calculator defaults detrend=False, normalise=True,
+    calculator.py:48-50; lines at HEAD a1f20c7)
+  - pyspi/data.py:184-195 optional scipy.signal.detrend(axis=1), then zscore(data, axis=1, nan_policy='omit', ddof=1) per process
+  - pyspi/calculator.py:329-335 S = self._spis[spi].multivariate(self.dataset); np.fill_diagonal(S, np.nan); self._table[spi] = S (HEAD a1f20c7)
+  - 'pyspi/base.py:51-68 parse_multivariate: passes the Data object through unchanged'
+  - pyspi/statistics/distance.py:28-36 class PairwiseDistance(Undirected, Unsigned); __init__ stores metric, identifier 'pdist_<metric>'
+  - 'pyspi/statistics/distance.py:38-40 multivariate overrides Undirected.multivariate (base.py:132-138, never called): return pairwise_distances(data.to_numpy(squeeze=True),
+    metric=self._metric)'
+  - pyspi/data.py:108-118 to_numpy(squeeze=True) -> (M processes, T observations) float64; each row is one vector in R^T
+  - sklearn/metrics/pairwise.py:2309 pairwise_distances(X, Y=None, metric, n_jobs=None, ensure_all_finite=True) (scikit-learn 1.9.1)
+  - sklearn/metrics/pairwise.py:2472 else-branch (metric not precomputed, not in PAIRWISE_DISTANCE_FUNCTIONS, not callable); :2476 dtype = 'infer_float';
+    :2482-2484 check_pairwise_arrays(X, None, dtype=dtype, ensure_all_finite=...) (sklearn/metrics/pairwise.py:171-172 infer_float -> float64, :174-175
+    X = Y = check_array(X))
+  - sklearn/metrics/pairwise.py:2490-2491 n_jobs==1 and X is Y -> distance.squareform(distance.pdist(X, metric))
+  - scipy/spatial/distance.py:1816 pdist (scipy 1.17.1); scipy/spatial/distance.py:2133-2138 metric alias lookup -> metric_info.pdist_func
+  - scipy/spatial/distance.py:1674-1679 MetricInfo('chebyshev', pdist_func=_distance_pybind.pdist_chebyshev) (compiled scipy/spatial/_distance_pybind.cpython-312-x86_64-linux-gnu.so)
+  - 'scipy/spatial/distance.py:1041 chebyshev(u, v) Python reference: max(abs(u - v))'
+  - scipy/spatial/distance.py:2154 squareform (vector -> symmetric matrix, zero diagonal)
+  deviation_from_documented: 'None in substance: the code is sklearn.metrics.pairwise_distances with metric=''chebyshev'' as the GitBook page states. Not
+    stated on the page: inputs are z-scored per process (ddof=1) by Data by default (optionally detrended first), sklearn forwards this metric to scipy.spatial.distance.pdist,
+    and the Calculator sets the diagonal to NaN. No formula or normalisation (e.g. per-sample scaling) is documented.'
+  deviation_from_canonical: 'Formula: none (probe: max |A - scipy.spatial.distance.chebyshev loop| = 0.0, exactly symmetric). Domain: a single-sample extreme
+    statistic on z-scored data, so it is dominated by the largest outlier difference and grows slowly with T.'
+  units_and_range: Dimensionless (z-units); range [0, 2 max_t |x_t|] <= 2 (T-1)/sqrt(T) (Samuelson bound for ddof=1 z-scores); grows roughly like sqrt(2
+    log T) for Gaussian pairs; never negative.
+  direction_convention: 'A[i,j] = d(z_i, z_j) for rows i, j of the (z-scored) M x T data; the metric is symmetric so A[i,j] = A[j,i]; no direction is encoded;
+    diagonal NaN after Calculator.compute (confirmed in the check stage: sym runs).'
+  symmetry_expected: sym
+  already_documented: docs/storage_comparison/REVIEW.md M1 (PairwiseDistance overrides Undirected.multivariate; output exactly symmetric via squareform)
+  new_finding_candidates:
+  - 'Candidate (interpretation): a single-sample extreme statistic; for iid Gaussian pairs its expectation grows with T (E max of T half-normals), so values
+    are not comparable across window lengths and are driven by the largest outlier (e.g. contaminated dataset). It is a dissimilarity (larger = less coupled).
+    Not stated in the GitBook page.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - anm
+    path: kernel
+    reference: 'from-scratch numpy loop over row pairs: max(abs(x - y)) (no sklearn, no scipy.spatial)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: PairwiseDistance(metric).multivariate(Data(x, normalise=False)) equals the numpy reference off the diagonal to rel 1e-12 at every
+      T
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - iid_gaussian
+    path: pipeline
+    reference: A versus A.T (direction convention) and A[i,j] versus the numpy reference d(z_i, z_j) on the z-scored rows
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A[i,j] = A[j,i] = d(z_i, z_j): symmetric, no direction; diagonal NaN after Calculator; reciprocal entries bit-identical'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    path: pipeline
+    reference: pipeline output on scaled_offset compared with pipeline output on bivariate_gaussian (same draw; positive scale + offset removed by z-scoring)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'identical to rel 1e-12: default z-scoring makes every pdist metric invariant to positive per-channel scale and offset'
+  - datasets:
+    - trending
+    - bivariate_gaussian
+    path: pipeline-detrend
+    reference: pipeline-detrend output on trending compared with pipeline-detrend output on bivariate_gaussian; plain pipeline on trending for contrast
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: with detrend the two agree to rel 1e-10 (linear trend removed exactly by scipy detrend); without detrend trending values differ markedly
+      (trend dominates the distance)
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: same data with a common random permutation of the time index (numpy permutation)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'unchanged to rel 1e-12: every pdist metric is invariant to a joint reordering of samples (supports the ''unordered'' label; shows
+      no temporal structure is used)'
+  - datasets:
+    - delayed_noise
+    path: pipeline
+    reference: qualitative comparison of d(x0, x_k) for delays 1,3,5 against d on iid_gaussian pairs
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'delayed copies look as dissimilar as independent noise (e.g. cosine ~ 1): the metric is lag-0 only and cannot see delayed coupling'
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    path: pipeline
+    reference: 'population expectation of max of T iid |N(0, 2(1-rho))|: E = integral_0^inf (1 - erf(t / (2 sqrt(1-rho)))^T) dt (scipy.special.erf + scipy.integrate.quad),
+      ignoring sample-z-score effects'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pipeline value consistent with the population expectation (within the spread of a Monte-Carlo reference of 200 numpy draws at the
+      same T)
+  - datasets:
+    - contaminated
+    - bivariate_gaussian
+    path: pipeline
+    reference: qualitative comparison of pair (2,3) of bivariate_gaussian with the contaminated version of the same pair
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: outlier cluster at (6,-6) inflates chebyshev strongly (single-sample statistic)
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/pdist.py handlers run for this unit (run tag in parentheses): ref_def -> audit/checks/refs/_kernels_basic_misc.py:pdist_metric
+    (def); ref_cdist = same-lineage scipy==1.18.1 cdist (cdist); ref_scaleinv (scaleinv); ref_detrendinv (detrendinv); ref_trend_nodetrend
+    (trend-nodetrend); ref_perm (perm); ref_sym, bit-exact branch max|A-A.T| == 0 (sym, sym-wide64); ref_pop with population() chebyshev branch ->
+    chebyshev_pop (quad of 1 - erf(t/(2 sqrt(1-rho)))^T) and a 2000-pair Monte-Carlo se from mc_sample (pop, pop-negated); ref_delayed, Monte-Carlo rho=0
+    null band (delayed-null); ref_dup (dup); ref_near, stable_metric falls through to pdist_metric (near); ref_edge (edge); ref_contam (contam); probes
+    audit/checks/probes/pdist_derived.py (permuted, wide64, negated, near_identical, edge)'
+  check_data: 'kernel: bivariate_gaussian (T 64/1024/4096), iid_gaussian, nonlinear_dependence, anm (T 1024); pipeline: bivariate_gaussian (T 64/256/1024/4096),
+    scaled_offset (T 64/1024/4096), nonlinear_dependence, contaminated, sparse_precision, trending, var2_bivariate, gauss_ar1_pair, iid_gaussian (T 1024/4096),
+    delayed_noise, shared_envelope (T 64-4096); pipeline-detrend: bivariate_gaussian, trending; probe-derived inputs (probes/pdist_derived.py): joint time
+    permutation, 64-row mixture of iid_gaussian, negated rows (rho -> -rho), near-identical rows x0 + eps x1, edge rows (x, -x, shared zeros)'
+  agreement_criterion: 'exact rtol = atol = 1e-12 for from-definition runs (def, kernel/pipeline/pipeline-detrend), dup and edge; tolerance rtol 1e-10 /
+    atol 1e-12 for analytic identities and invariances (ident, scaleinv, detrendinv, perm); rtol 1e-6 / atol 1e-12 for near-identical rows (near); statistical
+    |pyspi - population| <= 2 se with se = Monte-Carlo sd x Bonferroni factor (1.319 for 6 pairs, 1.404 for 10 pairs: family-wise 5 %); qualitative pass_flag
+    for symmetry (bit-exact, euclidean last-bit), delayed-null band, signed/edge/downstream cases'
+  closeness: 'from-definition kernel and pipeline 14 runs bit-identical (max_abs 0.0), pipeline-detrend 3.9e-16; same-lineage cdist 0.0; scaleinv 4.2e-16,
+    detrendinv 4.7e-15, perm 9.9e-16; population E max_t |X_t - Y_t| (quadrature) pass 7/7, max_z 1.82 (family-wise Bonferroni band: 2 se = 2 x 1.319 sd
+    for 6 pairs, 2 x 1.404 sd for 10 pairs); the per-pair raw z exceeds 2 in three runs (2.56 on iid_gaussian T=4096, 2.22 on bivariate_gaussian T=4096
+    pop-negated, 2.01 on bivariate_gaussian T=256), so a per-pair 2-sd band would fail them; the pass rests on the family-wise band declared before the
+    runs; rel error 0.13-0.23 (large sd of an extreme statistic); population grows with T (rho=0: 3.67, 4.31, 4.87, 5.38 at T=64..4096); contaminated pair
+    4.718 vs 2.238 clean (ratio 2.11); dup and near exact'
+  verdict: matches
+  score_0_10: 10
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 10''s supplement clause fails because the supplement does not mention pdist. The numeric half holds: 14 from-definition kernel and pipeline
+    runs are bit-identical (max_abs 0.0).'
+  documentation_status: silent
+  verdict_adjusted: matches
+  score_adjusted: 10
+  score_adjustment_rules: R3
+  score_adjustment_reason: 'R3: the supplement does not mention pdist, so the GitBook page (sklearn pairwise distances, metric chebyshev) is the documented definition,
+    and pyspi agrees with it bit for bit in 14 from-definition runs.'
+  identifier_exceptions: ''
+  what_changed: 'None in the formula (canonical L-infinity distance, bit-identical). Interpretation: a single-sample extreme statistic whose expectation
+    grows with T and that a single outlier cluster doubles (contaminated); a dissimilarity. Documentation points only. new_finding is false: the confirmed
+    candidates are properties of the canonical definition (T-dependence, dissimilarity orientation, outlier sensitivity), i.e. documentation points, not
+    deviations or defects.'
+  new_finding: false
+  definition_under_review: false
+  check_cost: cheap (every pyspi run < 0.03 s; whole family incl. 2000-pair Monte-Carlo references < 1 min; T up to 4096)
+  symmetry_observed: 'self-consistency check (pyspi''s matrix against its own transpose; sym runs labelled same-lineage in results.json): sym: max|A - A.T|
+    = 0.0 (bit-exact) on var2_bivariate, gauss_ar1_pair, iid_gaussian (T=1024) and on the 64-row probe (...|iid_gaussian|1024|pipeline|sym-wide64: n_asym_pairs
+    0); diagonal NaN in every run'
+  direction_observed: 'A[i,j] = A[j,i] = d(z_i, z_j) on the z-scored rows; no direction is encoded: on var2_bivariate (x0 -> x1) the matrix is exactly symmetric,
+    and on delayed_noise the lagged copies x_k = x0(t - d_k) + noise sit inside the rho = 0 null band (...|delayed_noise|1024|pipeline|delayed-null pass),
+    so the metric is lag-0 only. Larger value = less similar (dissimilarity); anti-correlated pairs give the largest values (pop-negated runs).'
+  candidate_resolutions:
+  - candidate: 'single-sample extreme statistic: expectation grows with T, driven by outliers, dissimilarity orientation'
+    outcome: confirmed
+    evidence: 'distance.pdist.chebyshev|bivariate_gaussian|{64,256,1024,4096}|pipeline|pop pass against the quadrature expectation (rho=0: 3.67 -> 5.38
+      from T=64 to 4096); distance.pdist.chebyshev|contaminated|1024|pipeline|contam: 4.718 vs 2.238 clean (ratio 2.11)'
+  checks_run:
+  - run_ids:
+    - distance.pdist.chebyshev|*|kernel|def
+    - distance.pdist.chebyshev|*|pipeline|def
+    - distance.pdist.chebyshev|*|pipeline-detrend|def
+    reference: audit/checks/refs/pdist.py:ref_def -> _kernels_basic_misc.pdist_metric (independent-impl)
+    outcome: pass 15/15, bit-identical except detrend 3.9e-16
+  - run_ids:
+    - distance.pdist.chebyshev|bivariate_gaussian|1024|pipeline|cdist
+    reference: audit/checks/refs/pdist.py:ref_cdist -> scipy==1.18.1 scipy.spatial.distance.cdist (same-lineage)
+    outcome: pass, bit-identical (same-lineage)
+  - run_ids:
+    - distance.pdist.chebyshev|scaled_offset|*|pipeline|scaleinv
+    - distance.pdist.chebyshev|trending|1024|pipeline-detrend|detrendinv
+    - distance.pdist.chebyshev|trending|1024|pipeline|trend-nodetrend
+    - distance.pdist.chebyshev|bivariate_gaussian|1024|pipeline|perm
+    reference: audit/checks/refs/pdist.py:ref_scaleinv, ref_detrendinv, ref_trend_nodetrend, ref_perm (analytic invariances)
+    outcome: 'pass 6/6; trending without detrend: pair (1,3) 0.258 vs 4.544 untrended'
+  - run_ids:
+    - distance.pdist.chebyshev|var2_bivariate|1024|pipeline|sym
+    - distance.pdist.chebyshev|gauss_ar1_pair|1024|pipeline|sym
+    - distance.pdist.chebyshev|iid_gaussian|1024|pipeline|sym
+    - distance.pdist.chebyshev|iid_gaussian|1024|pipeline|sym-wide64
+    reference: 'audit/checks/refs/pdist.py:ref_sym (qualitative symmetry, NaN diagonal; self-consistency: pyspi''s matrix against its own transpose, reference_kind
+      same-lineage)'
+    outcome: pass 4/4, max|A-A.T| = 0.0
+  - run_ids:
+    - distance.pdist.chebyshev|bivariate_gaussian|*|pipeline|pop
+    - distance.pdist.chebyshev|iid_gaussian|4096|pipeline|pop
+    - distance.pdist.chebyshev|bivariate_gaussian|*|pipeline|pop-negated
+    reference: audit/checks/refs/pdist.py:ref_pop (analytic population value, Monte-Carlo se)
+    outcome: pass 7/7, max_z 1.82
+  - run_ids:
+    - distance.pdist.chebyshev|delayed_noise|1024|pipeline|delayed-null
+    reference: audit/checks/refs/pdist.py:ref_delayed (Monte-Carlo rho=0 null band)
+    outcome: 'pass: 4.743, 4.115, 4.394 inside [3.918, 6.556]'
+  - run_ids:
+    - distance.pdist.chebyshev|shared_envelope|*|pipeline|dup
+    reference: audit/checks/refs/pdist.py:ref_dup (identical rows -> 0)
+    outcome: pass 4/4, d(x0,x2) = 0.0
+  - run_ids:
+    - distance.pdist.chebyshev|iid_gaussian|1024|pipeline|near
+    reference: audit/checks/refs/pdist.py:ref_near (cancellation-free direct forms)
+    outcome: pass, bit-identical
+  - run_ids:
+    - distance.pdist.chebyshev|iid_gaussian|1024|kernel|edge
+    reference: audit/checks/refs/pdist.py:ref_edge (from-definition on (x, -x) and shared zeros)
+    outcome: 'pass: d(x,-x) = 7.117'
+  - run_ids:
+    - distance.pdist.chebyshev|contaminated|1024|pipeline|contam
+    reference: audit/checks/refs/pdist.py:ref_contam (qualitative)
+    outcome: 'pass: ratio 2.11 (4.718 vs 2.238)'
+optimisation:
+  complexity_P_T: 'O(P^2 T) in one call (pyspi/statistics/distance.py:PairwiseDistance.multivariate -> sklearn pairwise_distances, compiled scipy/sklearn
+    kernel), but at EEG sizes the fixed per-call cost dominates: measured 0.52 ms at 8x1024 and 3.44 ms at 118x1024 (P_exponent 0.02-0.45, T_exponent
+    about 0.1 between 8x256 and 8x1024).'
+  hotspot_1: 'sklearn/metrics/pairwise.py:check_pairwise_arrays -> sklearn/utils/validation.py:check_array (third-party:sklearn) 30.5% of the profiled SPI call at 8x1024 (1.08 ms profiled; called from pairwise_distances): fixed per-call input validation, the largest deep frame at 8x1024. Everything runs under the sklearn/utils/_param_validation.py:wrapper (about 95%, a wrapper). At 118x1024 the compute grows with P^2 and this fixed cost becomes a small share'
+  hotspot_2: 'scipy/spatial/distance.py:pdist (third-party:scipy) 16.6% (compiled pdist_chebyshev 2.8%, squareform 2.7% of the same call)'
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.311
+  profile_file: audit/profiles/distance.pdist.chebyshev__8x1024.pstats
+  no_opportunity_reason: 'No opportunity is listed: pdist is one compiled call per window, and the six pdist units together cost about 24 ms per 118x1024 window (about 14 core-seconds per 600-window patient). Calling scipy pdist + squareform directly would skip sklearn''s validation, a few percent of the call at 118x1024, and is not material at these walls (notes/pdist.md, Optimisation, Opportunities).'
+  opportunities: []

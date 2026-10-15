@@ -1,0 +1,228 @@
+unit_id: infotheory.te.kraskov_k-1_kt-1_l-1_lt-1
+status: profiled
+correctness:
+  metric_name_standard: transfer entropy T_{X→Y} in nats, KSG1 conditional MI (k=4 neighbours), fixed embedding k=1, kt=1, l=1, lt=1, u=1
+  canonical_ref: 'Schreiber 2000, Phys. Rev. Lett. 85, 461, Eq. (4) (supplement [35]); embedding delays and source-target delay u: Wibral et al. 2013, PLoS ONE 8, e55809; estimator: Frenzel & Pompe 2007,
+    Phys. Rev. Lett. 99, 204101 (KSG-type conditional MI) with Kraskov et al. 2004 algorithm 1; JIDT: Lizier 2014, Front. Robot. AI 1:11 (supplement [32]). Equation numbers from memory.'
+  canonical_definition: 'T_{X→Y} = I(Y_{t+1}; X_t^{(l,lt)} | Y_t^{(k,kt)}) = E[log p(y_{t+1} | y_t^{(k)}, x_t^{(l)}) / p(y_{t+1} | y_t^{(k)})], with y_t^{(k,kt)} = (y_t, y_{t−kt}, ..., y_{t−(k−1)kt}) and
+    source embedding ending at t+1−u (u = 1). KSG CMI (algorithm 1): Î = ψ(K) + ⟨ψ(n_z+1) − ψ(n_xz+1) − ψ(n_yz+1)⟩, ε from the K-th neighbour (max-norm) in the joint (x, y, z) space. Here k=1, kt=1, l=1,
+    lt=1, u=1.'
+  documented_definition: 'supplement §1.4.5, p.10-11 (pack lines 486-510): ''Transfer entropy [35] is a measure of information transfer from a source time series x to a target time series y, based on the
+    Takens time-delay embedding ... The embedding lengths are denoted by modifier''s l and k for the source, x, and target, y, respectively; the time delay is denoted lt and kt ... The fixed parameters
+    are minimal values, i.e., typically with a fixed target embedding length of 1 (denoted by k-1) or 2 (denoted by k-2). The optimized parameters are inferred by choosing the embedding parameters (up to
+    a maximum embedding length of 10, denoted by k-max-10, and maximum time delay of 2, tau-max-2) that maximize a univariate information-theoretic measure known as active information storage (see the MAX_CORR_AIS
+    method of [32] for details).'' Same text GitBook information-theory.md:206-226 (also ''tau-max-2''), which lists the five te_kraskov identifiers.'
+  delegate_lib: JIDT jar pyspi/lib/jidt/infodynamics.jar (labelled 1.6.1; contents match post-1.6.1 master a9b6b3e, see infotheory.est.ksg1) infodynamics.measures.continuous.kraskov.TransferEntropyCalculatorKraskov
+    (KSG algorithm 1 conditional MI ConditionalMutualInfoCalculatorMultiVariateKraskov1) .setObservations/.computeAverageLocalOfObservations, via jpype 1.7.1 on OpenJDK 21.0.12
+  implemented_as: 'For each ordered pair (i, j), src = x_i, targ = x_j (z-scored): KSG1 conditional MI I(x_t; y_{t+1} | y_t) on N = T − 1 samples (JIDT start time max((k−1)kt, (l−1)lt) = 0), each embedding
+    column standardised (ddof=1), 1e-8 jitter (seed 42), max-norm, ψ(4) + ⟨ψ(n_z+1) − ψ(n_xz+1) − ψ(n_yz+1)⟩, nats. No Theiler window.'
+  implementation_trace:
+  - 'pyspi/config.yaml:579-583 TransferEntropy config: kraskov, prop_k 4, k_history 1, l_history 1 (no DCE)'
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, ddof=1) when normalise=True (Calculator default normalise=True, detrend=False)'
+  - 'pyspi/calculator.py:295-355 Calculator.compute: S = spi.multivariate(dataset); any exception escaping multivariate turns the whole SPI matrix NaN (per-pair JIDT exceptions are caught earlier inside
+    bivariate and give a NaN entry)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: outer loop j, inner loop i != j, A[i, j] = self.bivariate(data, i=i, j=j) (no mirroring)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: identifier += ''_kraskov_NN-{prop_k}'', labels += [''nonlinear''], ''_DCE'' appended when dyn_corr_excl is truthy'
+  - 'pyspi/statistics/infotheory.py:84-93 JIDTBase._setup: setProperty(''k'', ''4''); setProperty(''BIAS_CORRECTION'', ''false'') (not a property of the Kraskov calculators: probe getProperty(''BIAS_CORRECTION'')
+    -> None, i.e. ignored); setProperty(''NOISE_SEED'', ''42'')'
+  - pyspi/statistics/infotheory.py:103-134 _getcalc('TransferEntropy') -> infodynamics.measures.continuous.kraskov.TransferEntropyCalculatorKraskov (:127-128), then _setup
+  - 'pyspi/statistics/infotheory.py:326-367 TransferEntropy.__init__ without auto-embedding: setProperty k_HISTORY, k_TAU, l_HISTORY, l_TAU (:358-362); identifier += ''_k-{k}_kt-{kt}_l-{l}_lt-{lt}''; DELAY
+    not set (JIDT default 1)'
+  - 'pyspi/statistics/infotheory.py:376-391 TransferEntropy.bivariate (docstring ''Compute transfer entropy from i->j''): _set_theiler_window, calc.initialise(), src, targ = data.to_numpy(squeeze=True)[[i,
+    j]], setObservations(src, targ), computeAverageLocalOfObservations; exception -> NaN with a warning'
+  - 'pyspi/statistics/infotheory.py:60-82 and :369-374, the two copy paths, which differ. Pickle: JIDTBase.__getstate__ (:60-69) drops _calc and _entropy_calc; TransferEntropy.__setstate__ (:369-374) rebuilds
+    _calc with self._getcalc(''TransferEntropy''), which applies only _setup (:84-93: k = prop_k, BIAS_CORRECTION, NOISE_SEED 42), so the AUTO_EMBED_METHOD, k_SEARCH_MAX, TAU_SEARCH_MAX, k_HISTORY, k_TAU,
+    l_HISTORY and l_TAU properties set in __init__ (:344-367) are lost but k and NOISE_SEED are kept. Deepcopy: JIDTBase.__deepcopy__ (:77-82) builds type(self)() and then sets every attribute to copy.deepcopy
+    of the original''s; copy.deepcopy of the JPype calculator returns a new Java object with JIDT constructor defaults and none of the properties pyspi set, so every pyspi property is lost: NOISE_SEED ''NONE''
+    (jitter unseeded), k = JIDT default 4 whatever prop_k is, AUTO_EMBED_METHOD ''NONE'', k_HISTORY 1 (probe scratchpad it_kraskov_fix/p_te_copy.py reads these back). _setup is not involved on this path.
+    CalculatorFrame.init_from_list deep-copies the base Calculator (pyspi/calculator.py:556-563, copy.deepcopy at :559). See new_finding_candidates.'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/TransferEntropyCalculatorKraskov.java#L118-L121 constructor:
+    super(COND_MI_CALCULATOR_KRASKOV1) -> ConditionalMutualInfoCalculatorMultiVariateKraskov1 (ALG_NUM=1, probe getProperty(''ALG_NUM'') = 1); :213-233 setProperty passes unknown names (k, BIAS_CORRECTION,
+    NOISE_SEED, DYN_CORR_EXCL) to TransferEntropyCalculatorViaCondMutualInfo.setProperty'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L435-L470 setProperty:
+    k_HISTORY, k_TAU, l_HISTORY, l_TAU, DELAY (default 1), AUTO_EMBED_METHOD, AUTO_EMBED_K_SEARCH_MAX, AUTO_EMBED_TAU_SEARCH_MAX handled here; everything else is forwarded to the CMI calculator and stored
+    in props (:462-465)'
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L323-L363 initialise()
+    re-uses the current k, k_tau, l, l_tau, delay fields
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L375-L385 computeStartTimeForFirstDestEmbedding
+    = max((k-1)*k_tau, (l-1)*l_tau + delay - 1)
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L505-L509 setObservations
+    -> startAddObservations/addObservations/finaliseAddObservations; :865-875 finaliseAddObservations runs preFinaliseAddObservations (auto-embedding, :701-855) then prepareCMICalculator
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L585-L619 addObservationsWithGivenParams:
+    destPast = delay embedding of dest (k, k_tau) ending at time n; destNext = dest[n+1]; sourcePast = embedding of source (l, l_tau) ending at n+1-delay; CMI var1 = sourcePast, var2 = destNext, cond =
+    destPast; N = T - start - 1 samples'
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L1067-L1068 computeAverageLocalOfObservations
+    returns condMiCalc.computeAverageLocalOfObservations()
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/ConditionalMutualInfoMultiVariateCommon.java#L705-L787 finaliseAddObservations:
+    per-column normalisation (NORMALISE default true, :158) and 1e-8 Gaussian jitter from java.util.Random seeded with NOISE_SEED, row by row over var1, var2, cond columns (:766-785)'
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/ConditionalMutualInfoCalculatorMultiVariateKraskov.java#L214-L219
+    constructor addNoise=true, noiseLevel=1e-8; :96 k=4 default; :101 NORM_MAX_NORM; :155 numThreads = availableProcessors(); :265-285 setProperty (k, NORM_TYPE, DYN_CORR_EXCL, NUM_THREADS); :312-325 finaliseAddObservations
+    throws if N <= k + 2*DYN_CORR_EXCL; :539-546 algorithm-1 result digamma(k) + averageDiGammas
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/ConditionalMutualInfoCalculatorMultiVariateKraskov1.java#L75-L270
+    partialComputeFromObservations: eps_t = k-th NN max-norm distance in the joint (x, y, z) space with the exclusion window (:102-108); n_xz, n_yz, n_z counted strictly within eps_t (option B/C code paths
+    :140-240); sum digamma(n_z+1) - digamma(n_xz+1) - digamma(n_yz+1) (:252-255)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/utils/KdTree.java#L751-L753 and utils/UnivariateNearestNeighbourSearcher.java#L497-L530:
+    exclusion of |dt| <= DYN_CORR_EXCL in k-NN search and counts (W=0 excludes only the sample itself)'
+  deviation_from_documented: 'Matches the documented fixed minimal embedding (k-1, l-1, delays 1). Undocumented: nats, 1e-8 jitter with seed 42, negative values despite ''unsigned'', source-target delay
+    fixed at u = 1, JIDT version (post-1.6.1 build).'
+  deviation_from_canonical: 'Schreiber TE with finite embedding estimated by KSG1 CMI (Frenzel-Pompe form); a from-scratch implementation reproduces pyspi to 12 decimals (probe p5, T=256, five datasets).
+    Finite k=1 history: for processes with longer memory (var2_bivariate is order 2) the quantity is the TE for this embedding, not the full-history TE. Autocorrelated samples treated as i.i.d. neighbours.'
+  units_and_range: nats; real, can be negative (probe p13 T=64 minimum -0.134 on logistic_maps); asymmetric; NaN only when JIDT raises (N <= 4 + 2W)
+  direction_convention: 'A[i, j] = TE(x_i -> x_j): row = source, column = target (infotheory.py:383-388; probe p5 T=256 delayed_noise, x0 leads x1 by 1: A[0,1] 1.616 vs A[1,0] -0.016). To be confirmed in
+    the check stage.'
+  symmetry_expected: asym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'CANDIDATE (scope note): under pickle and deepcopy this unit keeps its embedding only because the copy''s JIDT defaults are k_HISTORY = l_HISTORY = 1 (probe p10: identical in Calculator and CalculatorFrame
+    on var2_bivariate). Deepcopy, the path CalculatorFrame uses (calculator.py:559), still loses NOISE_SEED (copy reads ''NONE'') and prop_k, so on tied input the copied unit runs with unseeded jitter and
+    is not reproducible: logistic_maps T=256 pair 1->0 original 0.115063 on every run, three deep copies 0.113357/0.111490/0.114040 (probe scratchpad it_kraskov_fix/r6_tied.py; the review''s run of the
+    same probe gave 0.116042/0.111294/0.106424). Pickle keeps NOISE_SEED and reproduces the original. On tie-free data the deepcopy value is unchanged (var2_bivariate diff 0.0). See the copy candidate in
+    infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4.'
+  - 'CANDIDATE: the value depends on the machine''s core count at the 1e-14 level, because NUM_THREADS defaults to availableProcessors() (64 here) and per-thread digamma partial sums are added in thread
+    order. Probe p2 (bivariate_gaussian T=1024): max |A(default) - A(NUM_THREADS=1)| = 7.1e-15 mi, 1.1e-14 mi_DCE, 1.6e-14 tlmi, 2.4e-15 te_k1, 4.2e-15 te_auto; repeat runs on the same machine are bit-identical.'
+  - 'CANDIDATE: on tied or discrete-valued inputs the estimate is set by the 1e-8 jitter and its seed. Probe p12, logistic_maps T=256 (series 1 is the period-4 r=3.5 map, 4 distinct values): pair 1->0 for
+    NOISE_SEED 42/43/44 gives mi 0.226622/0.226587/0.230899, tlmi 0.278902/0.276961/0.281417, te_k1 0.115063/0.113329/0.107266, te_auto 0.101410 (l,lt=7,2) / 0.089128 (10,2) / 0.044229 (6,1); bivariate_gaussian
+    is identical for all seeds.'
+  - 'CANDIDATE (estimator property, not a pyspi bug): labelled ''unsigned'' but KSG estimates are negative on independent data. Probe p13 minima at T=64: mi -0.167 (nonlinear_dependence), tlmi -0.143 (iid_gaussian),
+    te_k1 -0.134 (logistic_maps), te_auto_DCE -0.178 (cointegrated); at T=256 iid_gaussian mi min -0.055.'
+  - 'CANDIDATE (no-op setting): pyspi sets BIAS_CORRECTION=false (infotheory.py:90) but neither Kraskov calculator defines that property; probe p1 getProperty(''BIAS_CORRECTION'') returns None for all nine
+    units, so the call has no effect and no bias correction exists for KSG here.'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - delayed_noise
+    - bivariate_gaussian
+    - logistic_maps
+    - narrowband_f0-0.1
+    path: kernel
+    reference: 'from-scratch brute-force KSG1 conditional MI (Frenzel-Pompe form, ψ(K) + ⟨ψ(n_z+1) − ψ(n_xz+1) − ψ(n_yz+1)⟩) in numpy (max-norm pairwise distance matrices, k-th neighbour by sort, strict
+      counts, |dt| <= W exclusion) + scipy.special.digamma, columns standardised with ddof=1 and the 1e-8 jitter regenerated by a pure-Python java.util.Random LCG (nextGaussian polar method, seed 42; matches
+      java.util.Random to 2e-16); does not import JIDT/jpype. Prototype: scratchpad it_kraskov/probes/ksg_ref.py on the JIDT sample layout (dest past ending at t, dest next t+1, source past ending at t,
+      start = max((k−1)kt, (l−1)lt)), k=1, kt=1, l=1, lt=1, u=1'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'agreement to <= 1e-12 on every ordered pair (prototype probe p5 at T=256: identical to 12 printed decimals)'
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    - gauss_ar1_pair
+    - logistic_maps
+    path: pipeline
+    reference: 'known coupling: delayed_noise x0 -> x1 (lag 1), x2 (lag 3), x3 (lag 5); var2_bivariate x0 -> x1 only; gauss_ar1_pair analytic Gaussian TE (k=l=1) 1->0 = 0.0524, 0->1 = 0.0271; logistic_maps
+      index 1 (y) -> index 0 (x) only'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A[i, j] = TE(x_i -> x_j): row = source, column = target. Expected A[0,1] > A[1,0] on var2_bivariate and delayed_noise (probe p5 te_k1 T=256: delayed_noise 1.616 vs -0.016; var2 0.134
+      vs -0.023), A[1,0] > A[0,1] on gauss_ar1_pair and logistic_maps; with u = 1 and l = 1, delayed_noise pairs with lag 3 or 5 are expected near 0 unless the source embedding reaches the lag'
+  - datasets:
+    - gauss_ar1_pair
+    - var2_bivariate
+    path: pipeline
+    reference: 'analytic Gaussian TE for the same embedding: ½ log(Var(y_{t+1}|y_t) / Var(y_{t+1}|y_t, x_t)) from the stationary autocovariances (gauss_ar1_pair: Σ_X and A Σ_X; var2_bivariate: Gamma0 and
+      Yule-Walker lag-1 covariance from A1, A2, Sigma)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: convergence towards 0.0524 (1->0) and 0.0271 (0->1) on gauss_ar1_pair as T grows (|Δ| < ~0.02 nats at T=4096); var2_bivariate 1->0 towards 0
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: analytic null TE = 0 for independent white processes
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: values centred near 0 with negative values present (probe p13 T=64 minimum -0.060)
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/it_kraskov.py:mi_jidt/cmi_jidt/te_jidt/te_auto_jidt (N-1 column z-score, pure-Python java.util.Random(42) jitter port in JIDT row/column order, then audit/checks/refs/_kernels_infotheory.py:mi_ksg1/cmi_ksg1
+    with normalise=False: cKDTree max norm, k=4, strict counts, Theiler |s-t|<=W, guard N<=k+2W -> NaN); DCE window audit/checks/refs/it_kraskov.py:window_raw (explicit lag-loop ACF); no JIDT/jpype; numpy
+    2.5.4, scipy 1.18.1 on the JIDT TE layout (audit/checks/refs/_kernels_infotheory.py:te_embedding, k=kt=l=lt=1, u=1) (audit/checks/refs/it_kraskov.py:chk_ksg, chk_seeds, chk_copy); audit/checks/refs/it_kraskov.py:chk_truth
+    (analytic population value + Monte Carlo mean/SD of the same estimator without jitter under the generating model) (Gaussian TE from the VAR autocovariances); audit/checks/refs/it_kraskov.py:chk_null
+    (mean over pairs vs Monte Carlo distribution on iid N(0,1) data); audit/checks/refs/it_kraskov.py:chk_direction (ground-truth coupling); audit/checks/refs/it_kraskov.py:chk_threads (same-lineage)'
+  check_data: var2_bivariate, gauss_ar1_pair, delayed_noise, bivariate_gaussian, narrowband_f0-0.1 T1024; logistic_maps T256; gauss_ar1_pair T256/1024/4096 and var2_bivariate, delayed_noise rows 0-1 T1024
+    (truth); iid_gaussian T256; logistic_maps_chaotic T1024
+  agreement_criterion: tolerance rtol 1e-10 / atol 1e-12; statistical |pyspi - MC mean| <= 2 MC SD; direction and null qualitative
+  closeness: 'from-scratch KSG1 CMI: 6/6 ksg runs max_abs <= 3.1e-15. Convergence on gauss_ar1_pair to 0.0271 (0->1) / 0.0524 (1->0): pyspi -0.0021 / 0.0630 (T=256), 0.0444 / 0.0601 (T=1024), 0.0253 / 0.0511
+    (T=4096), z 0.91 / 0.97 / 0.21; var2_bivariate 0.1642 / 0.0143 vs 0.1326 / 0.0105 (MC 0.1340 / 0.0111, z 1.26); delayed_noise (0,1) 2.0097 vs 0.5 ln 101 = 2.3076 (MC 2.0505: KSG bias at large MI, z
+    1.75). Null iid T=256: mean -0.0070 (MC 0.0002 +- 0.0072, z -0.99), min -0.061. Direction 4/4. Copy paths on tie-free var2_bivariate: all four 8.9e-16.'
+  verdict: matches
+  score_0_10: 10
+  score_rubric: 10
+  score_rubric_basis: anchor
+  score_rubric_note: A from-scratch KSG1 CMI with a jitter port agrees on 6/6 runs (<= 3.1e-15). The 'unsigned' keyword (values can be negative) and the JIDT version
+    are metadata only.
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 10
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'None in value: Schreiber TE with k=l=1, delays 1, u=1, by KSG1 CMI, fp-exact; finite-history TE as the identifier states. Conventions: seeded 1e-8 jitter (decides tied data), negative finite-sample
+    values.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: pyspi <= 2.6 s at T=1024, <= 0.7 s at T=4096 for one pair'
+  symmetry_observed: 'asym: max|A - A.T| = 1.987 (delayed_noise T1024), 0.150 (var2_bivariate), 0.016 (gauss_ar1_pair)'
+  direction_observed: 'A[i,j] = TE(x_i -> x_j), row = source: delayed_noise A[0,1] 2.010 vs A[1,0] 0.023 (lag-3/5 pairs |A| <= 0.016 with l=1, u=1); var2_bivariate 0.164 vs 0.014; gauss_ar1_pair 0.044 vs
+    0.060 (population 0.027 vs 0.052, stronger 1->0); logistic_maps_chaotic (x -> y) 0.565 vs -0.074'
+  candidate_resolutions:
+  - candidate: copies keep the k=l=1 embedding only by coincidence of JIDT defaults; deepcopy loses NOISE_SEED
+    outcome: confirmed
+    evidence: 'infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|var2_bivariate|256|pipeline|copy: all four paths 0.1336 (tie-free); |copyprops: deepcopy NOISE_SEED NONE, pickle 42; tied-data effect as in tied data:
+      mi_kraskov logistic_maps T=256 A[0,1] Calculator 0.2301, CalculatorFrame a non-reproducible draw, because deepcopy leaves the jitter unseeded (here 0.2300; an earlier run of the same check gave 0.2248),
+      pickle 0.2301 (infotheory.mi.kraskov|logistic_maps|256|pipeline|copy, frame_vs_calculator 1.3e-04 in this run)'
+  - candidate: core-count dependence at 1e-14
+    outcome: confirmed
+    evidence: 'infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|bivariate_gaussian|1024|pipeline|threads: 2.4e-15, repeat 0.0'
+  - candidate: 'tied inputs: value set by jitter seed'
+    outcome: confirmed
+    evidence: 'infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|logistic_maps|256|pipeline|seeds: 1->0 0.1151/0.1133/0.1073 (spread 0.0078), reproduced to 4.4e-16'
+  - candidate: negative values despite 'unsigned'
+    outcome: confirmed
+    evidence: 'infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|iid_gaussian|256|pipeline|null: min -0.061, 60% negative'
+  - candidate: BIAS_CORRECTION no-op
+    outcome: confirmed
+    evidence: infotheory.est.ksg1|iid_gaussian|64|kernel|props (TE calculator getProperty None)
+  checks_run:
+  - run_ids:
+    - infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|*|kernel|ksg
+    reference: audit/checks/refs/it_kraskov.py:chk_ksg
+    outcome: pass 6/6; max_abs <= 3.1e-15
+  - run_ids:
+    - infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|gauss_ar1_pair|{256,1024,4096}|pipeline|truth
+    - infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|var2_bivariate|1024|pipeline|truth
+    - infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|delayed_noise-p01|1024|pipeline|truth
+    reference: audit/checks/refs/it_kraskov.py:chk_truth
+    outcome: pass 5/5; max z 1.75
+  - run_ids:
+    - infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|iid_gaussian|256|pipeline|null
+    reference: audit/checks/refs/it_kraskov.py:chk_null
+    outcome: pass; z -0.99
+  - run_ids:
+    - infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|*|1024|pipeline|direction
+    reference: audit/checks/refs/it_kraskov.py:chk_direction
+    outcome: pass 4/4
+  - run_ids:
+    - infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|bivariate_gaussian|1024|pipeline|threads
+    - infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|logistic_maps|256|pipeline|seeds
+    - infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|var2_bivariate|256|pipeline|copy
+    reference: audit/checks/refs/it_kraskov.py:chk_threads (same-lineage), chk_seeds, chk_copy
+    outcome: pass 3/3
+  - run_ids:
+    - infotheory.te.kraskov_k-1_kt-1_l-1_lt-1|var2_bivariate|256|pipeline|copyprops
+    reference: audit/checks/refs/it_kraskov.py:chk_copyprops (same-lineage)
+    outcome: 'fail (finding): deepcopy NOISE_SEED NONE; pickle keeps it'
+optimisation:
+  complexity_P_T: 'O(P^2 N log N): TransferEntropy.bivariate (infotheory.py:376-389), one JIDT KSG conditional MI (ConditionalMutualInfoCalculatorMultiVariateKraskov, 3-4 dimensions) per ordered pair. JIDT
+    KSG1 per call: kd-tree build and k=4 max-norm neighbour search O(N log N d), split over NUM_THREADS = 64 threads by default (MutualInfoCalculatorMultiVariateKraskov.computeFromObservations). Measured
+    T exponent -0.03; 223 s projected at 118 (extrapolated-pairs-from-8).'
+  hotspot_1: pyspi/statistics/infotheory.py:TransferEntropy.bivariate (third-party:jidt KSG CMI, self time) 100.0% cum of the profiled SPI call at 8x1024 (profiled wall 6.98 s, contended)
+  hotspot_2: 'none visible inside Java. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0005
+  profile_file: audit/profiles/infotheory.te.kraskov_k-1_kt-1_l-1_lt-1__8x1024.pstats
+  # it_kraskov-1 (NUM_THREADS=1 per JIDT KSG calculator) is refuted as a per-window avenue for this unit and is not listed:
+  # audit/profiles/micro/opp_it_kraskov-1.json at 8x1024 (this identifier, three runs) gives single-thread 0.507 / 0.888 / 2.088 s
+  # against the quiet default wall of 0.91 s = 1.8x / 1.0x / 0.4x (~1x, no reliable single-process gain). The lower CPU per call
+  # (0.47-3.47 s single-thread vs 3.2-7.8 s default) matters only for throughput with windows in separate processes
+  # (xc-window-parallel). Output max_abs_diff 2.9e-15, NaN masks equal, in all three runs. See audit/notes/it_kraskov.md, Refuted or narrowed seed items.
+  no_opportunity_reason: 'No opportunity: it_kraskov-1 (NUM_THREADS=1 per JIDT KSG calculator) is refuted as a per-window avenue for this unit (audit/profiles/micro/opp_it_kraskov-1.json at 8x1024, three runs, single-thread 1.8x / 1.0x / 0.4x of the quiet default wall, no reliable single-process gain); its lower CPU per call matters only for throughput with windows in separate processes (xc-window-parallel). See the comment above and notes/it_kraskov.md, Refuted or narrowed seed items.'
+  opportunities: []

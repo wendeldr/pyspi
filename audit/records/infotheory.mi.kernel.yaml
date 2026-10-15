@@ -1,0 +1,228 @@
+unit_id: infotheory.mi.kernel
+status: profiled
+correctness:
+  metric_name_standard: Mutual information I(X;Y) of contemporaneous samples, box-kernel plug-in estimate, bits
+  canonical_ref: 'Shannon CE (1948); Cover & Thomas (2006) Ch. 8 (I(X;Y) = h(X)+h(Y)-h(X,Y)); box-kernel estimator: Kantz & Schreiber (1997); Moon Y-I, Rajagopalan B, Lall U (1995) Phys Rev E 52:2318 (kernel
+    MI)'
+  canonical_definition: I(X;Y) = E[log2 p(x,y)/(p(x)p(y))]; box-kernel plug-in I_hat = (1/N) sum_b log2[ N C_xy(b) / (C_x(b) C_y(b)) ] (volumes cancel)
+  documented_definition: 'supplement §1.4.3, p.10 (supplement.txt:459-466; pack lines 469-476): ''Mutual information [33] is an undirected measure of the (potentially nonlinear) dependence between paired observations of x and
+    y''; identifier 67 mi_kernel_W-0.25; keywords undirected, nonlinear, unsigned, bivariate, contemporaneous. supplement §1.4, p.9 (supplement.txt:405-443; pack lines 414-453): ''Kernel estimation (kernel) uses a box kernel method
+    with a specific kernel width (default width of 0.5 standard deviations (denoted by the modifier W-0.5))''; GitBook information-theory.md:14 same sentence (mi uses the non-default 0.25). GitBook information-theory.md:161-180.'
+  delegate_lib: 'JIDT jar pyspi/lib/jidt/infodynamics.jar (labelled 1.6.1 by pyspi/lib/jidt/version-1.6.1.txt; contents match post-1.6.1 master a9b6b3e, see infotheory.est.kernel): infodynamics.measures.continuous.kernel.MutualInfoCalculatorMultiVariateKernel.computeAverageLocalOfObservations'
+  implemented_as: 'config.yaml:514-515 sets kernel_width 0.25. For pair (i,j): src = z_i, targ = z_j (1-D, T samples), initialise(1,1) with width 0.25; three KernelEstimatorMultiVariate objects (source,
+    dest, joint) with half-widths 0.25*sampleSD of each column; I = mean_b log2[(C_xy/(N V_xy)) / ((C_x/(N V_x))(C_y/(N V_y)))] = mean_b log2(N C_xy / (C_x C_y)); closed boxes, self-included, no Theiler
+    window (dyn_corr_excl None for this config), no noise (NOISE_LEVEL_TO_ADD default 0), no bias correction. Any exception -> NaN with a warning.'
+  implementation_trace:
+  - pyspi/calculator.py:48-51 Calculator `__init__` defaults detrend=False, normalise=True
+  - pyspi/calculator.py:277 Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend)
+  - 'pyspi/data.py:193-195 scipy.stats.zscore(data, axis=1, nan_policy=''omit'', ddof=1) (each series: mean 0, sample SD 1)'
+  - pyspi/calculator.py:329 S = self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan)
+  - 'pyspi/base.py:85-94 Directed.multivariate: A[i,j] = self.bivariate(data, i=i, j=j) for every i != j'
+  - 'pyspi/base.py:132-138 Undirected.multivariate: calls Directed.multivariate then A[li] = A.T[li] (upper triangle mirrored to lower)'
+  - pyspi/base.py:27-47 parse_bivariate (Data objects pass through; raw arrays are wrapped by Data()/add_process)
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: estimator=''kernel'' -> identifier += ''_W-{kernel_width}'', labels += [''nonlinear'']; JIDTBase default kernel_width=0.5; _entropy_calc built
+    at :36'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: calc.setProperty(''KERNEL_WIDTH'', str(kernel_width)); also BIAS_CORRECTION=''false'' and NOISE_SEED=''42''. BIAS_CORRECTION is not a property of any kernel
+    class and is ignored; NOISE_SEED is stored by EntropyCalculatorMultiVariateKernel and MutualInfoCalculatorMultiVariateKernel but has no numerical effect because NOISE_LEVEL_TO_ADD stays 0, and TransferEntropyCalculatorKernel
+    ignores it (see infotheory.est.kernel)'
+  - pyspi/statistics/infotheory.py:113-115,134 _getcalc('MutualInfo') -> kernel.MutualInfoCalculatorMultiVariateKernel; config pyspi/config.yaml:514-515 kernel_width 0.25
+  - 'pyspi/statistics/infotheory.py:253-283 MutualInfo(JIDTBase, Undirected).bivariate: _set_theiler_window (no-op, :195-220 with _dyn_corr_excl None); initialise(1, 1); src, targ = data.to_numpy(squeeze=True)[[i,
+    j]]; setObservations(JArray src, JArray targ); computeAverageLocalOfObservations; bare except -> NaN (:279-283)'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/measures/continuous/kernel/MutualInfoCalculatorMultiVariateKernel.java (byte-identical to master a9b6b3e,
+    the shipped build; line numbers valid for both): initialise(int,int) L112-137 (source/dest/joint estimators with kernelWidth), finaliseAddObservations L139-164, normaliseData no-op L166-171 (normalisation
+    only via kernel widths), computeAverageLocalOfObservations L178-200 (mean ln(probJoint/(prob1*prob2))/ln 2), setProperty L655-692'
+  - 'JIDT master a9b6b3e java/source/infodynamics/measures/continuous/MutualInfoMultiVariateCommon.java (differs from the v1.6.1 tag): setProperty L245-280 stores TIME_DIFF, NORMALISE, NOISE_LEVEL_TO_ADD
+    (L255-264) and NOISE_SEED (L265-271) and ignores any other name such as BIAS_CORRECTION; getProperty L282-302 returns ''42'' for NOISE_SEED after pyspi''s setProperty; finaliseAddObservations L574-643
+    calls normaliseData when normalise (L622-624; a no-op for the kernel class, MutualInfoCalculatorMultiVariateKernel L166-171) and adds seeded Gaussian noise only when NOISE_LEVEL_TO_ADD was set (L627-642;
+    default 0, so no noise), timeDiff 0'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/measures/continuous/kernel/KernelEstimatorMultiVariate.java (byte-identical to master a9b6b3e, the shipped
+    build; line numbers valid for both): setObservations L189-242 kernelWidthsInUse[d] = width * MatrixUtils.stdDev(data, d) (normalise=true by default, L72), kernelVolumeInUse = prod_d 2*kernelWidthsInUse[d]
+    (L215-219); getProbability L388-394 -> getProbabilityFromBins L732-738 or getProbabilityComparingToAll L811-817 = count / N / kernelVolume; getCountFromBins L589-719 counts the query''s own bin (self
+    included) plus +-1 neighbour bins; stepKernel L959-967 returns 0 only when |dx_d| > w_d in some dimension (closed max-norm box)'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java (byte-identical to master a9b6b3e, the shipped build; line numbers valid for both):
+    stdDev(double[][], int) L2384-2393 -> stdDev(double[][], int, double) L2436-2447 divides by (n-1) (sample SD)'
+  deviation_from_documented: None in substance (width 0.25 is stated in the identifier; JIDT's own default is also 0.25). 'Width' is the box half-width.
+  deviation_from_canonical: 'Estimator properties only: resubstitution box-kernel plug-in, self-inclusion, no bias correction -> positive small-sample bias under independence (probe iid_gaussian mean 0.739/0.272/0.093/0.030
+    bits at T=64/256/1024/4096) and smoothing bias for strong dependence (bivariate_gaussian T=4096: rho=0.8 0.734 vs true 0.737 bits; rho=0.3 0.097 vs 0.068).'
+  units_and_range: bits; average of log-ratios, typically >= 0 but not guaranteed non-negative; <= log2 T; symmetric; NaN only on exception.
+  direction_convention: 'Undirected: A[i,j] = A[j,i]; estimator symmetric in its arguments and Undirected.multivariate mirrors (probe: exact symmetry on delayed_noise and var2_bivariate T=1024).'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (estimator bias magnitude): under independence mi_kernel_W-0.25 is clearly positive at small T (iid_gaussian means 0.739, 0.272, 0.093, 0.030 bits at T=64, 256, 1024, 4096), comparable to
+    or larger than a rho=0.3 Gaussian dependence (true 0.068 bits); values are not comparable across T.'
+  - 'Candidate (error handling): the bare ''except:'' at infotheory.py:279-283 converts any failure to NaN with a message about Cholesky factorisation, which is irrelevant to the kernel estimator.'
+  - 'Candidate (scope note, copy path): JIDTBase.__deepcopy__ (infotheory.py:77-82) resets the copied JIDT calculators to their defaults (see infotheory.est.kernel), but mi_kernel_W-0.25 is unchanged in
+    a CalculatorFrame only because its configured width 0.25 equals JIDT''s default kernel width. Probe it_kernel_fix/p1_frame_all.py: Calculator and CalculatorFrame A[0,1] and A[1,0] identical on bivariate_gaussian
+    and var2_bivariate T=256; the copied calculator reads KERNEL_WIDTH 0.25.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - delayed_noise
+    - contaminated
+    path: pipeline
+    reference: 'from-scratch numpy box-kernel MI: w = 0.25*std(ddof=1) per variable; C_x, C_y, C_xy closed max-norm counts incl. self; I = mean log2(N C_xy/(C_x C_y))'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: All off-diagonal entries agree to abs <= 1e-12 (probe 5.6e-17 on var2_bivariate T=256).
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic Gaussian MI -0.5*log2(1-rho^2) (true_mi_nats/ln2 in the dataset: 0.068, 0.737 bits)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: Converges towards truth as T grows; at T=4096 |MI(2,3) - 0.737| < 0.03 and MI(0,1) within 0.05 above 0.068 (probe 0.734, 0.097).
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: analytic null I = 0
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: Positive null bias decreasing roughly like 1/T (probe means 0.739, 0.272, 0.093, 0.030); documents the bias, not a pass/fail on zero.
+  - datasets:
+    - nonlinear_dependence
+    path: pipeline
+    reference: 'qualitative: x1 = x0^2 + noise and the circle pair have Pearson ~ 0 but strong dependence'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'MI(0,1) and MI(2,3) far above cross pairs (probe T=1024: 1.646 and 1.205 vs 0.016-0.032).'
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: analytic symmetry A vs A.T and fresh bivariate(i,j) vs bivariate(j,i)
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'Direction convention: undirected; exact equality both ways.'
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: kernel
+    reference: 'scale invariance of box counts when widths scale with the SD: raw-array bivariate(x, y) and normalise=False Data both equal the z-scored value'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: Equal to abs <= 1e-12 (MI is unaffected by the parse_bivariate single-array z-scoring quirk).
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_kernel.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:mi_box_kernel(z_i, z_j, 0.25) (separate x, y and joint boxes, bits); audit/checks/refs/it_kernel.py:chk_equals_d2
+    (pipeline and kernel path); audit/checks/refs/it_kernel.py:chk_sym_fresh; audit/checks/refs/it_kernel.py:chk_truth_pair (Monte Carlo, Gaussian population -0.5 log2(1-rho^2), box limit 2 h_box1 - h_box2);
+    audit/checks/refs/it_kernel.py:chk_null; audit/checks/refs/it_kernel.py:chk_nonlinear; audit/checks/refs/it_kernel.py:chk_frame
+  check_data: iid_gaussian T256 and processes 0-2 at T64/T256/T1024; bivariate_gaussian T1024 and pairs at T64/T256/T1024; var2_bivariate T1024 (pipeline, kernel); delayed_noise T256/T1024; nonlinear_dependence,
+    contaminated, logistic_maps T1024; scaled_offset T1024 (pipeline, kernel); trending T1024 (pipeline-detrend)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 (bits); statistical: |pyspi - Monte Carlo mean of the same box estimator under the generating model| <= 2 Monte Carlo SD, population values reported
+    as convergence information only; qualitative: stated rule; null: |mean over pairs - Monte Carlo mean| <= 2 Monte Carlo SD'
+  closeness: 'Numpy: 10/10 exact runs pass, max_abs <= 1.6e-15 (kernel path 7.8e-16, pipeline-detrend 7.8e-16); raw scaled_offset on the kernel path = MI of the unscaled D2 rows (6.7e-16). Symmetry: fresh
+    fills max|D - D.T| = 0.0. Convergence (bits): rho = 0.3: 0.777 / 0.297 / 0.122 at T = 64 / 256 / 1024 vs truth 0.0680 (box limit 0.0679); rho = 0.8: 1.297 / 0.898 / 0.775 vs truth 0.7370 (box limit
+    0.7338) (max_z <= 1.75). Null (iid, 3 pairs): 0.693 / 0.242 / 0.099 vs Monte Carlo 0.762 / 0.280 / 0.090 (|z| <= 1.58). nonlinear_dependence: MI(0,1) = 1.646, MI(2,3) = 1.205 vs cross pairs <= 0.032
+    (Pearson-based Gaussian MI 0.00015 / 0.0011 bits). CalculatorFrame identical to Calculator (0.0).'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 9 ddof and log-base clauses: widths are 0.25 x each column''s N-1 SD, output in bits; 10/10 exact runs agree with the numpy box kernel
+    to <= 1.6e-15.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Box-kernel MI <log2(N C_xy / (C_x C_y))> in bits with half-width 0.25 SD per variable (JIDT''s MI kernel: normaliseData is a no-op, widths follow each column''s N-1 SD), as documented by
+    the identifier; conventions only (anchor 9). Strong positive small-sample bias (0.69 bits under independence at T = 64, 0.10 at T = 1024), so values are not comparable across T; finite-sample bias is
+    not scored. new_finding is false: the copy path leaves this SPI unchanged only because 0.25 equals JIDT''s default width, and the bare except with a ''Cholesky'' message (infotheory.py:279-283) is an
+    error-message issue without value impact.'
+  new_finding: false
+  definition_under_review: false
+  check_cost: 'cheap: pyspi <= 5.5 s per SPI run and <= 12 s for the CalculatorFrame probe (P <= 5, T <= 1024); numpy references O(T^2) all-pairs counting, T <= 1024 (the box estimator is O(T^2) on both
+    sides; no T = 4096 runs)'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on all 10 numpy runs; fresh unmirrored fills max|D - D.T| = 0.0 (var2_bivariate T1024, delayed_noise T256): the estimator is symmetric'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = I(x_i; x_j) at zero lag (bits)'
+  candidate_resolutions:
+  - candidate: positive small-sample bias under independence comparable to real dependence
+    outcome: confirmed
+    evidence: 'infotheory.mi.kernel|iid_gaussian|64/256/1024|pipeline|null: 0.693 / 0.242 / 0.099 bits (Monte Carlo 0.762 / 0.280 / 0.090) vs rho = 0.3 truth 0.068; estimator property (README: finite-sample
+      bias is not incorrectness)'
+  - candidate: bare except returns NaN with an irrelevant 'Cholesky' message
+    outcome: confirmed
+    evidence: 'code reading at HEAD a42ebc1: pyspi/statistics/infotheory.py:279-283 ''except:'' -> logging.warning(''MI calcs failed. Maybe check input data for Cholesky factorisation?'') -> NaN; no check
+      run triggered it (no exception on any dataset); no value impact'
+  - candidate: copy path leaves mi unchanged only because 0.25 is JIDT's default width
+    outcome: confirmed
+    evidence: infotheory.mi.kernel|bivariate_gaussian|256|pipeline|frame (frame - Calculator 0.0, all slices = numpy) and infotheory.est.kernel|bivariate_gaussian|256|pipeline|copy-props (deepcopy width
+      0.25)
+  checks_run:
+  - run_ids:
+    - infotheory.mi.kernel|iid_gaussian|256|pipeline|numpy
+    - infotheory.mi.kernel|bivariate_gaussian|1024|pipeline|numpy
+    - infotheory.mi.kernel|var2_bivariate|1024|pipeline|numpy
+    - infotheory.mi.kernel|delayed_noise|1024|pipeline|numpy
+    - infotheory.mi.kernel|nonlinear_dependence|1024|pipeline|numpy
+    - infotheory.mi.kernel|contaminated|1024|pipeline|numpy
+    - infotheory.mi.kernel|logistic_maps|1024|pipeline|numpy
+    - infotheory.mi.kernel|scaled_offset|1024|kernel|numpy
+    - infotheory.mi.kernel|var2_bivariate|1024|kernel|numpy
+    - infotheory.mi.kernel|trending|1024|pipeline-detrend|numpy
+    reference: audit/checks/refs/it_kernel.py:chk_numpy
+    outcome: 10/10 pass (exact); max_abs <= 1.6e-15
+  - run_ids:
+    - infotheory.mi.kernel|scaled_offset|1024|pipeline|equals-d2
+    - infotheory.mi.kernel|scaled_offset|1024|kernel|equals-d2
+    reference: audit/checks/refs/it_kernel.py:chk_equals_d2
+    outcome: 2/2 pass (exact); max_abs <= 8.9e-16
+  - run_ids:
+    - infotheory.mi.kernel|bivariate_gaussian|64|pipeline|truth-p01
+    - infotheory.mi.kernel|bivariate_gaussian|256|pipeline|truth-p01
+    - infotheory.mi.kernel|bivariate_gaussian|1024|pipeline|truth-p01
+    reference: audit/checks/refs/it_kernel.py:chk_truth_pair / chk_truth_model
+    outcome: 3/3 pass (statistical); max_z 0.245, 0.748, 1.75
+  - run_ids:
+    - infotheory.mi.kernel|bivariate_gaussian|64|pipeline|truth-p23
+    - infotheory.mi.kernel|bivariate_gaussian|256|pipeline|truth-p23
+    - infotheory.mi.kernel|bivariate_gaussian|1024|pipeline|truth-p23
+    reference: audit/checks/refs/it_kernel.py:chk_truth_pair
+    outcome: 3/3 pass (statistical); max_z 1.01, 0.253, 0.223
+  - run_ids:
+    - infotheory.mi.kernel|iid_gaussian|64|pipeline|null
+    - infotheory.mi.kernel|iid_gaussian|256|pipeline|null
+    - infotheory.mi.kernel|iid_gaussian|1024|pipeline|null
+    reference: audit/checks/refs/it_kernel.py:chk_null
+    outcome: 3/3 pass (qualitative)
+  - run_ids:
+    - infotheory.mi.kernel|nonlinear_dependence|1024|pipeline|nonlinear
+    reference: audit/checks/refs/it_kernel.py:chk_nonlinear
+    outcome: 1/1 pass (qualitative)
+  - run_ids:
+    - infotheory.mi.kernel|var2_bivariate|1024|pipeline|sym-fresh
+    - infotheory.mi.kernel|delayed_noise|256|pipeline|sym-fresh
+    reference: audit/checks/refs/it_kernel.py:chk_sym_fresh (audit/checks/probes/it_kernel_probes.py:sym_fresh)
+    outcome: 2/2 pass (exact); max_abs <= 3.3e-16
+  - run_ids:
+    - infotheory.mi.kernel|bivariate_gaussian|256|pipeline|frame
+    reference: audit/checks/refs/it_kernel.py:chk_frame (audit/checks/probes/it_kernel_probes.py:frame)
+    outcome: 1/1 pass (exact); max_abs <= 7.8e-16
+optimisation:
+  complexity_P_T: 'O(P^2 T^1.80): MutualInfo.bivariate (pyspi/statistics/infotheory.py:267), one JIDT box-kernel call per ordered pair with 1-D inputs (no cache); Undirected mirrors the symmetric result.
+    Measured fresh T exponent 1.80, P exponent ~2.1. At 118x1024 the pair term is everything: 142 s measured fresh.'
+  hotspot_1: pyspi/statistics/infotheory.py:MutualInfo.bivariate (third-party:jidt box kernel via JPype, self time) 99.9% cum of the profiled SPI call at 8x1024
+  hotspot_2: 'none visible inside Java (1-D conversions are negligible). opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self
+    time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0007
+  profile_file: audit/profiles/infotheory.mi.kernel__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_kernel-2
+    opportunity: 'Replace JIDT''s box-kernel counting with per-(channel, width, lag window) neighbourhood bitsets: one T x T bit matrix marks |x(t) - x(s)| <= w_d (w_d = width x the column''s ddof=1 SD,
+      as KernelEstimatorMultiVariate sets it) and every joint count of je/ce/mi/tlmi/te/si/xme/cce/di is a popcount of ANDed rows, so the neighbourhood search is shared by all P-1 partners and all composed
+      terms.'
+    opp_type: algorithmic
+    expected_speedup: 10-50x
+    speedup_basis: 'profile:audit/profiles/infotheory.mi.kernel__8x1024.pstats pyspi/statistics/infotheory.py:267 MutualInfo.bivariate 99.9% (JIDT Java time booked as pyspi self time) + complexity: one
+      joint count over all t is T x T/64 = 16k word AND+popcount operations at T=1024 (~10-50 us) against the measured 6.6 ms per ordered pair (8x1024 fresh; T exponent 1.80); bitsets are built once per
+      channel and lag window (1-D marginals + 2-D joint at width 0.25)'
+    output_risk: unverified-within-tolerance
+    risk_evidence: max-norm box counts are products of per-dimension indicators, so integer counts are exact if the closed-box test and the per-column widths match JIDT; the log-sum order changes. The check
+      stage's all-pairs numpy counts (audit/checks/refs/_kernels_infotheory.py:entropy_box_kernel / mi_box_kernel / te_box_kernel) reproduce JIDT to <= 2.6e-13 (infotheory.est.kernel closeness)
+    effort: L
+    depends_on: []

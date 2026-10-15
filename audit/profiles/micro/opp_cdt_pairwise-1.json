@@ -1,0 +1,117 @@
+{
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "merged_runs": [
+  {
+   "argv": [
+    "--split118"
+   ],
+   "loadavg_end": [
+    1.7236328125,
+    1.67529296875,
+    2.7607421875
+   ],
+   "loadavg_start": [
+    1.53759765625,
+    1.630859375,
+    2.7763671875
+   ],
+   "note": "Workflow 4c: candidate math alone (prebuilt Data, min of 5) vs Data construction alone (min of 5); the summary.json basis times compute_spi on a prebuilt Data, so candidate_math_s is the like-for-like cost. Baseline = one fresh one-shot call; diff = baseline vs math-only candidate. Added at Workflow 4c close: here candidate_incl_data_s is its own timing (min of 5 of the candidate on a freshly built Data per repeat, 6.94 ms), not the sum of candidate_math_s and data_construction_s (3.10 + 3.19 ms); opp_it_gaussian-1.json's --split118 run defines it as that sum.",
+   "omp_num_threads": "1",
+   "shapes": [
+    "118x1024_split"
+   ],
+   "written_at": "2026-10-15T15:11:14-0400"
+  }
+ ],
+ "notes": "reci batched closed-form OLS on [1, x^3] after per-channel min-max scaling; candidate_s includes building a fresh Data (as the baseline's compute_spi does not), so the speedup is a lower bound. 118x1024 baseline is one timed call without the helper's warm-up. Agreement means the candidate matches the baseline output, not that either value is mathematically right.",
+ "opportunity_id": "cdt_pairwise-1",
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_cdt_pairwise-1.py",
+ "shapes": {
+  "118x1024": {
+   "baseline_repeats": 1,
+   "baseline_s": 22.120160485996166,
+   "bit_identical": false,
+   "candidate_s": 0.006108038011007011,
+   "max_abs_diff": 8.326672684688674e-17,
+   "max_rel_diff": 3.950695392123067e-15,
+   "n_entries": 13924,
+   "nan_mask_equal": true,
+   "speedup": 3621.4837638754793
+  },
+  "118x1024_split": {
+   "baseline_oneshot_s": 22.134802828004467,
+   "bit_identical": false,
+   "candidate_incl_data_s": 0.006939486003830098,
+   "candidate_math_s": 0.003102386006503366,
+   "data_construction_s": 0.0031916620064293966,
+   "max_abs_diff": 8.326672684688674e-17,
+   "max_rel_diff": 3.950695392123067e-15,
+   "n_entries": 13924,
+   "nan_mask_equal": true,
+   "speedup_incl_data": 3189.689094521935,
+   "speedup_math": 7134.767492376662,
+   "summary_118": {
+    "family-warm": {
+     "measure_mode": "extrapolated-pairs-from-8",
+     "window_s": 21.66412496695869
+    },
+    "fresh": {
+     "measure_mode": "measured",
+     "window_s": 21.516516460003913
+    }
+   }
+  },
+  "32x1024": {
+   "baseline_repeats": 3,
+   "baseline_s": 1.600422155999695,
+   "bit_identical": false,
+   "candidate_s": 0.002347451008972712,
+   "max_abs_diff": 5.204170427930421e-17,
+   "max_rel_diff": 2.1269585491682716e-15,
+   "n_entries": 1024,
+   "nan_mask_equal": true,
+   "speedup": 681.7702051639703
+  },
+  "7x100": {
+   "baseline_repeats": 3,
+   "baseline_s": 0.06523977100732736,
+   "bit_identical": false,
+   "candidate_s": 0.0008329530101036653,
+   "golden_vs_candidate": {
+    "bit_identical": false,
+    "max_abs_diff": 6.938893903907228e-17,
+    "max_rel_diff": 1.948964022102857e-15,
+    "n_entries": 49,
+    "nan_mask_equal": true
+   },
+   "max_abs_diff": 6.938893903907228e-17,
+   "max_rel_diff": 1.948964022102857e-15,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 78.32347109137397
+  },
+  "8x1024": {
+   "baseline_repeats": 3,
+   "baseline_s": 0.09154103499895427,
+   "bit_identical": false,
+   "candidate_s": 0.0014272499975049868,
+   "max_abs_diff": 2.0816681711721685e-17,
+   "max_rel_diff": 9.552389957550544e-16,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 64.13805230967213
+  }
+ },
+ "threads": {
+  "NUMBA_NUM_THREADS": "n/a (no numba)",
+  "OMP_NUM_THREADS": "1",
+  "jidt": "n/a"
+ },
+ "written_at": "2026-10-15T09:49:58-0400"
+}

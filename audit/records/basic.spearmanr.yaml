@@ -1,0 +1,355 @@
+unit_id: basic.spearmanr
+status: profiled
+correctness:
+  metric_name_standard: 'Spearman''s rank correlation coefficient rho_S (tie-corrected: Pearson correlation of mid-ranks); spearmanr-sq is its square'
+  canonical_ref: 'Spearman C. 1904, ''The proof and measurement of association between two things'', Am J Psychol 15(1):72-101; tie handling by mid-ranks: Kendall & Gibbons 1990, Rank
+    Correlation Methods, 5th ed., ch. 3'
+  canonical_definition: rho_S = Pearson correlation of R(x) and R(y), R = rank with ties given average rank; equals 1 - 6 sum d_i^2 / (n(n^2-1)) only without ties
+  documented_definition: 'supplement §1.1.3, p.4 (supplement.txt:172-178): ''Spearman''s rho is a nonparametric measure of rank correlation ... implemented via function spearmanr in SciPy [6], and has a value
+    in [-1, 1]''; keywords ''undirected, nonlinear, signed, bivariate, contemporaneous''. GitBook basic-statistics.md:126-140 same text; table-of-spis.md:35 lists identifiers spearmanr
+    and spearmanr-sq. The squared variant is not described in the supplement (only ''17. spearmanr'').'
+  delegate_lib: scipy==1.17.1 scipy.stats.spearmanr (rankdata method='average' + numpy==2.5.4 np.corrcoef)
+  implemented_as: 'Default pipeline z-scores (and optionally detrends) each channel; for each ordered pair i!=j, scipy.stats.spearmanr on the (T,1) columns: mid-ranks of each series,
+    Pearson correlation of ranks via np.corrcoef, clipped to [-1,1]; p-value discarded. -sq variant returns correlation**2. Lower triangle overwritten from upper (i<j). Zero lag only;
+    no multi-realisation handling (R=1 assumed).'
+  implementation_trace:
+  - pyspi/calculator.py:230-267 Calculator._load_yaml (HEAD a1f20c7) instantiates getattr(module, fcn)(**params) at :256 with configs squared True/False from pyspi/config.yaml:74-97;
+    the YAML 'labels' block is not read, so instance labels come from the class
+  - pyspi/calculator.py:329 Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan) (HEAD a1f20c7)
+  - 'pyspi/data.py:184-195 preprocessing before any SPI: optional scipy.signal.detrend(axis=1) then scipy.stats.zscore(axis=1, ddof=1, nan_policy=''omit''); :199-203 any NaN after this
+    raises ValueError (so constant channels, which z-score to NaN, never reach scipy)'
+  - 'pyspi/base.py:132-138 Undirected.multivariate calls Directed.multivariate then mirrors: li = np.tril_indices(P,-1); A[li] = A.T[li] (upper triangle i<j kept)'
+  - pyspi/base.py:88-94 Directed.multivariate loops over all ordered pairs i != j and calls self.bivariate(data, i=i, j=j), i.e. P(P-1) calls, each unordered pair computed twice
+  - 'pyspi/base.py:27-47 parse_bivariate: Data passes straight through; raw arrays are wrapped in Data() (first via set_data, z-scored; second via add_process data.py:230-234, appended
+    without preprocessing)'
+  - 'pyspi/statistics/basic.py:136-149 class SpearmanR(Undirected, Signed); __init__(squared=False): squared sets issigned->False, identifier ''spearmanr-sq'', labels += [''unsigned'']
+    (class-list mutation, bug 4)'
+  - 'pyspi/statistics/basic.py:151-157 bivariate: x, y = data.to_numpy()[[i, j]] (each shape (T,1)); returns stats.spearmanr(x, y).correlation, or its square when squared'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5168-5170 spearmanr(a, b, axis=0, nan_policy='propagate') (scipy 1.17.1)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5358 a = np.column_stack((a, b)) -> (T,2)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5364-5368 n_obs <= 1 -> NaN; :5370-5378 constant column -> ConstantInputWarning + NaN; :5389-5399
+    NaN with propagate -> NaN
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5405 a_ranked = np.apply_along_axis(rankdata, 0, a)  (rankdata default method='average', :9906,
+    :10011 -> _rankdata :10038-10075, tied values get mid-ranks :10068-10070)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py:5406 rs = np.corrcoef(a_ranked, rowvar=0); :5419-5422 returns rs[1, 0] as .correlation (p-value
+    from t-dist computed and discarded by pyspi)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py:2912 corrcoef; :3029 c = cov(...); :3036-3038 divide by sqrt of diagonal; :3043 np.clip(c.real,
+    -1, 1)
+  deviation_from_documented: 'Value: none (scipy.stats.spearmanr as documented, range [-1,1]). Metadata: class labels carry ''linear'' whereas supplement/config keywords say ''nonlinear''
+    (candidate); labels carry both ''signed'' and ''unsigned'' (bug 4). spearmanr-sq is listed in the GitBook table but its definition (rho^2, range [0,1]) is not documented in the supplement.'
+  deviation_from_canonical: 'none for the coefficient (mid-rank Pearson is the standard tie-corrected rho_S; probe on tied data matched a from-scratch mid-rank Pearson exactly: 0.35395114622767243).
+    spearmanr-sq (rho_S^2) is a pyspi-specific transform without a standard name. Detrending (if enabled) is a non-monotone transform applied before ranking, so the pipeline-detrend
+    value is rho_S of residuals, not of the raw series. Numerics: with ties the two mid-rank SDs differ and np.corrcoef divides by them in sequence (numpy _function_base_impl.py:3036-3038),
+    so spearmanr(x, y) and spearmanr(y, x) can differ in the last bits; continuous data give two permutations of 1..n with bit-identical SDs and no difference.'
+  units_and_range: dimensionless; spearmanr signed in [-1,1]; spearmanr-sq in [0,1]; symmetric in exact arithmetic (kernel reciprocal calls can differ by a few ulp with ties; pipeline
+    output exactly symmetric via the mirror, base.py:137); NaN on the diagonal; NaN only if a channel is constant, which the Data loader rejects earlier with ValueError (data.py:199-203)
+  direction_convention: 'undirected: A[i,j] = A[j,i] = rho_S(x_i, x_j) computed with i<j (upper triangle, base.py:136-137); no lag, no direction'
+  symmetry_expected: sym
+  already_documented: 'tests/README.md bug 4 (SpearmanR/KendallTau mutate class-level labels: instances carry both ''signed'' and ''unsigned''); REVIEW M8 (same label mutation); tests/README.md
+    line 131 records n1d0 == n0d0 for spearmanr/kendalltau (rank invariance under z-scoring, measured max difference 0); EEG_OPTIMIZATION_NOTES.md:132 (generic Undirected path computes
+    both ordered directions before one triangle is overwritten; optimisation candidate); tests/unit/test_data.py:74-88 locks Data.add_process appending later processes raw (the basis
+    of the parse_bivariate infrastructure item below). Related pattern, different SPIs: REVIEW M2 (last-bit reciprocal asymmetry in precision, Euclidean distance, envelope correlation).'
+  new_finding_candidates:
+  - 'CANDIDATE (metadata): class labels say ''linear'' (pyspi/statistics/basic.py:140 and :164 labels = [''basic'',''unordered'',''rank'',''linear'',''undirected'']) while the supplement
+    keywords and config.yaml:75-80 / :88-93 say ''nonlinear''; Calculator._load_yaml (calculator.py:230-267, instantiation at :256, HEAD a1f20c7) never reads the YAML labels, so every
+    instance carries ''linear''. Probe in a fresh interpreter: SpearmanR().labels and KendallTau().labels -> [''basic'',''unordered'',''rank'',''linear'',''undirected'',''signed''];
+    after a squared=True instance has been created in the same interpreter (bug 4 mutation) a new default instance carries [...,''signed'',''unsigned'',''signed''] (rank_corr_fix/p_labels.py).
+    ''linear'' is present in both states. Distinct from bug 4 (signed/unsigned).'
+  - 'CANDIDATE (efficiency quantification only; the double work itself is already documented at EEG_OPTIMIZATION_NOTES.md:132): for this unit, probe with P=4 bivariate_gaussian_T256
+    counted 12 bivariate calls where 6 suffice (base.py:91-93 loop, base.py:136-137 mirror), and the pipeline result is exactly symmetric. The discarded calls can differ from the kept
+    ones only at the last-bit level on tied data (see the numerics item), so for spearmanr values the discarded half is pure waste.'
+  - 'CANDIDATE (numerics, value-neutral in pipeline; shared with basic.kendalltau): np.corrcoef divides the rank covariance by stddev[:,None] then stddev[None,:] (numpy _function_base_impl.py:3036-3038);
+    with ties the mid-rank SDs of x and y differ (example n=379: 108.807 vs 108.908), so swapping x and y changes the rounding. Probe rank_corr_fix/p_recip.py, 2000 random pairs n in
+    [20,400) of np.round(N(0,9)): 691 reciprocal mismatches, max |diff| 5.55e-17 (at most 2 ulp of the smaller value); continuous data: 0/2000. The adversarial review probe found 602/2000,
+    max 1.11e-16 on similar data. Example: bivariate(i=0,j=1) = 0.019469842747388822 vs bivariate(i=1,j=0) = 0.01946984274738882, multivariate A[0,1] == A[1,0] True. Masked in the pipeline
+    by the Undirected mirror (base.py:137); matters only for reference comparisons with bit-exact criteria.'
+  - 'CANDIDATE (documentation): the ''nonlinear'' keyword covers only monotone dependence; for non-monotone dependence (nonlinear_dependence: x1 = x0^2, circle pair) rho_S is expected
+    near 0. To confirm in the check stage; the supplement text itself says ''non-linear (but monotonic)''.'
+  - 'CANDIDATE (robustness, hypothesis): with multiple realisations (Data with R>1) data.to_numpy()[[i,j]] gives (T,R) blocks and scipy.stats.spearmanr would return a 2R x 2R matrix
+    whose .correlation is not a scalar (basic.py:153-157). Probe confirmed the slice shape is (T,1) for R=1; R>1 not exercised by Calculator.'
+  - 'CANDIDATE (infrastructure consequence only, no effect on this unit''s values; the underlying Data.add_process behaviour is already locked by tests/unit/test_data.py:74-88 test_add_process_appends_raw_unnormalised,
+    owned by unit preproc.two_array_api): parse_bivariate with raw arrays (base.py:33-36) z-scores only the first array (Data.set_data) and appends the second raw (data.py:230-234).
+    Probe: row0 mean/std 0/1, row1 mean/std 4.38/4.763. Rank statistics are invariant, but other bivariate SPIs called on arrays would see unequal preprocessing.'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - contaminated
+    - iid_gaussian
+    path: kernel
+    reference: 'from-scratch numpy: average (mid) ranks via np.argsort + run-length tie grouping, then Pearson r = sum(rx_c*ry_c)/sqrt(sum rx_c^2 * sum ry_c^2); repeat on bivariate_gaussian
+      rounded to 1 decimal inside the check to exercise ties (no scipy.stats import)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: abs difference <= 1e-12 on every pair and T, with and without induced ties; tied case must match mid-rank Pearson and NOT the no-ties shortcut 1 - 6 sum d^2 / (n(n^2-1))
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic population Spearman for a bivariate normal: rho_S = (6/pi) arcsin(rho/2) (Pearson 1907; Kruskal 1958 JASA 53:814); rho = 0.3 -> 0.28756, rho = 0.8 -> 0.78594'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: at T = 4096, |r_S - rho_S| within 3 standard errors (Fisher-z SE approx sqrt(1.06/(T-3)), Fieller-Hartley-Pearson 1957); consistency improves with T over 64..4096
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'invariance: scaled_offset = positive scale * bivariate_gaussian + offset (same draw), so ranks are identical'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: spearmanr and spearmanr-sq matrices bit-identical between the two datasets, under both normalise=True and normalise=False
+  - datasets:
+    - trending
+    path: pipeline-detrend
+    reference: from-scratch mid-rank Pearson applied to series detrended by numpy least-squares line fit (np.linalg.lstsq on [1, t]) then z-scored
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'pipeline-detrend output matches reference to 1e-12; without detrending pair (2,3) is spuriously strongly negative (probe: -0.9826 at T=1024) and with detrending
+      near the clean value (probe: 0.7908), documenting that rank statistics are not detrend-invariant'
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    path: pipeline
+    reference: from-scratch mid-rank Pearson on z-scored rows i and j
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: at pipeline level A[i,j] == A[j,i] exactly (mirror), diagonal NaN, and A[i,j] equals reference statistic of (x_i, x_j) at zero lag (no direction); for delayed_noise
+      lag-shifted pairs show near-zero values despite strong lagged dependence (contemporaneous only)
+  - datasets:
+    - bivariate_gaussian
+    path: kernel
+    reference: 'reciprocity on tied data (bivariate_gaussian rounded to 1 decimal in-check): compare scipy-delegated bivariate(x,y) vs bivariate(y,x) and the pipeline matrix'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: reciprocal kernel calls may differ by a few ulp (observed at most 2 ulp of the smaller value; division order in np.corrcoef, _function_base_impl.py:3036-3038);
+      identical on continuous data; pipeline matrix exactly symmetric because of the mirror
+  - datasets:
+    - nonlinear_dependence
+    path: kernel
+    reference: 'analytic: x1 = x0^2 + noise with x0 ~ U(-1,1) symmetric and (x2,x3) on a circle have population Spearman 0 although dependent'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: '|r_S| small (within ~3/sqrt(T)) on both pairs, confirming that the ''nonlinear'' keyword means monotone-only dependence'
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic identity: spearmanr-sq = spearmanr ** 2 elementwise'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: bit-identical elementwise; spearmanr-sq in [0,1]
+  check_method: independent-impl
+  check_reference: 'refs/rank_corr.py:ref_run using refs/_kernels_basic_misc.py:spearman (from-scratch average ranks by np.sort/np.searchsorted, Pearson of ranks; no scipy.stats); analytic
+    bivariate-normal expectation refs/rank_corr.py:population (Moran 1948 Biometrika 35:203: E r_S = 6/(pi(n+1))[asin rho + (n-2) asin(rho/2)]) with SE refs/rank_corr.py:standard_error
+    (null 1/sqrt(n-1); Bonett & Wright 2000 Fisher-z variance); external R 4.6.1 stats::cor(method=''spearman'') via r/rank_corr.R; probes/rank_corr_probes.py for tied input, unmirrored
+    Directed calls, labels, call count, realisations, array input'
+  closeness: '67/67 runs pass (results/rank_corr.json). Exact: max_abs 2.2e-16 over 38 exact-criterion runs (kernel, pipeline, pipeline-detrend, tied, R); kernel continuous max_abs 1.1e-16,
+    tied max_abs 1.1e-16, R stats::cor vs pyspi max 5.6e-17. Tie handling: equals mid-rank Pearson, differs from the untied formula 1 - 6 sum d^2/(n(n^2-1)) by 2.09e-4 (dependent pairs,
+    T=1024) and up to 1.0e-2 (nonlinear_dependence tied). Statistical: max_z_1se 1.26/0.88/1.04/1.54 at T=64/256/1024/4096 vs Moran E r_S; pair (2,3) |error| 0.026/0.024/0.0054/0.0105
+    with SE 0.056/0.027/0.014/0.0068. Null iid_gaussian (P=5, 10 pairs, population 0): max_z_1se 2.94 at T=1024 and 1.96 at T=4096. T=1024 is a near-miss: pair (0,2) has r_S 0.09193 against null SD 0.03127, so it passes only because the declared band is 3 SE (2.94 vs 3.00). With 10 pairs treated as independent, P(max |z| > 2.94) is about 3%. The same pair has Pearson z = r sqrt(n-1) = 2.68 in the data, and pyspi equals the from-scratch kernel on this dataset (basic.spearmanr|iid_gaussian|1024|kernel|exact max_abs 6.9e-18), so the excursion belongs to the sample and does not come from pyspi. Invariance: pipeline bit-identical to kernel (5 runs, diff 0); scaled_offset bit-identical to bivariate_gaussian (kernel and pipeline). -sq: bit-identical
+    to signed^2.'
+  verdict: matches
+  score_0_10: 10
+  score_rubric: 10
+  score_rubric_basis: anchor
+  score_rubric_note: 'The Pearson correlation of mid-ranks equals a from-scratch kernel and R stats::cor to max_abs 2.2e-16 over 38 exact runs, as the supplement''s
+    ''spearmanr in SciPy'' text states. Only metadata disagrees: the ''linear'' class label vs the ''nonlinear'' keyword, the double ''signed''/''unsigned'' labels
+    (bug 4) and the undocumented spearmanr-sq.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 10
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Value: nothing; pyspi spearmanr is the canonical tie-corrected rho_S (Pearson of mid-ranks) to 2.2e-16 on independent and external references, as the supplement describes
+    (scipy spearmanr, range [-1,1]). spearmanr-sq is rho_S^2 (relabel, bit-identical to the signed value squared; not defined in the supplement). Metadata only: the class label ''linear''
+    contradicts the documented ''nonlinear'' keyword (confirmed, labels run); bug 4 (signed + unsigned on both Calculator instances) reproduced and already documented. Detrending (pipeline-detrend)
+    changes the value because it is not a monotone map: rank statistics are computed on residuals.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: pyspi time per SPI run <= 0.016 s at T=4096 (P=4-5); 67 runs total 2.7 s of which 2.4 s is the labels probe''s fresh interpreters; reference side < 2 s'
+  symmetry_observed: 'sym: max|A - A.T| = 0 in every Calculator-path run (ref_pyspi_max_asym 0, T=64-4096, continuous and tied). Unmirrored Directed.multivariate: 0/6 pairs differ on
+    continuous input (recip-continuous); on tied input 2/6 pairs differ by 5.55e-17 = 1 ulp (bivariate_gaussian T=1024) and 1/1 by 1.39e-17 = 1 ulp (contaminated T=4096); the Undirected
+    mirror removes it'
+  direction_observed: 'no direction: A[i,j] = A[j,i] = zero-lag rank correlation of x_i and x_j. var2_bivariate (x0 -> x1): A[0,1] = A[1,0] = 0.17152 with the sign of the zero-lag correlation
+    0.2107; delayed_noise (exact lagged copies): all pairs within 1.71 null SD of 0, so lagged dependence is invisible'
+  candidate_resolutions:
+  - candidate: class label 'linear' contradicts the documented/config 'nonlinear' keyword
+    outcome: confirmed
+    evidence: 'basic.spearmanr|iid_gaussian|64|kernel|labels: fresh SpearmanR() labels have ''linear'' (1) and no ''nonlinear'' (0); Calculator-built instances too (ref_fresh_has_linear
+      1, ref_fresh_has_nonlinear 0). Not in KNOWN_ISSUES (bug 4 is signed/unsigned only)'
+  - candidate: 'efficiency quantification: P(P-1) bivariate calls where P(P-1)/2 suffice (double work documented at EEG_OPTIMIZATION_NOTES.md:132)'
+    outcome: confirmed
+    evidence: 'basic.spearmanr|bivariate_gaussian|256|pipeline|call-count: 12 calls for P=4 (6 needed), output max|A-A.T| 0; already documented, quantification only'
+  - candidate: reciprocal kernel calls differ by a few ulp on tied data (np.corrcoef division order), masked by the mirror
+    outcome: confirmed
+    evidence: basic.spearmanr|bivariate_gaussian|1024|kernel|recip-ties (2/6 pairs, 5.55e-17, 1 ulp), basic.spearmanr|contaminated|4096|kernel|recip-ties (1/1, 1.39e-17), basic.spearmanr|bivariate_gaussian|1024|kernel|recip-continuous
+      (0/6); pipeline asymmetry 0 in every run
+  - candidate: '''nonlinear'' keyword covers monotone dependence only; rho_S near 0 on non-monotone dependence'
+    outcome: confirmed
+    evidence: 'basic.spearmanr|nonlinear_dependence|1024|kernel|monotone-only and |4096|: |r_S| <= 0.0295 (band 0.094) and <= 0.0103 (band 0.047) while rho_S(|x0|, x1) = 0.974 and rho_S(x2^2,
+      x3^2) = -1.0. The supplement text already says ''non-linear (but monotonic)'''
+  - candidate: 'R>1 realisations: spearmanr returns a 2R x 2R matrix, not a scalar'
+    outcome: confirmed
+    evidence: 'basic.spearmanr|bivariate_gaussian|1024|kernel|realisations: Data(dim_order=''psr'', R=2) -> bivariate returns ndim 2, size 16 (4x4); multivariate raises (ref_multivariate_raised
+      1). Not reachable from the Calculator''s 2-D input'
+  - candidate: parse_bivariate with raw arrays z-scores only the first array (infrastructure; no effect on ranks)
+    outcome: confirmed
+    evidence: 'basic.spearmanr|scaled_offset|256|kernel|array-input: row 0 mean 4.2e-17 std 1.0, row 1 mean 1.0117 std 1.9969 (raw); value 0.29354543373769737 identical to Data input
+      and reference. Owned by preproc.two_array_api; no effect on this unit'
+  check_data: bivariate_gaussian T=64/256/1024/4096 (kernel, pipeline, tied), nonlinear_dependence T=256/1024/4096, contaminated T=256/1024/4096 (incl. tied), iid_gaussian T=64/256/1024/4096
+    (null), scaled_offset T=256/1024, trending T=256/1024 (pipeline and pipeline-detrend), delayed_noise T=1024, var2_bivariate T=1024; tied variants = np.round(x, 1) applied identically
+    in probe and reference
+  agreement_criterion: 'exact: |pyspi - ref| <= 1e-12 (rtol 0) for every ordered pair (kernel, pipeline on raw-row reference, pipeline-detrend on lstsq-detrended rows, tied input, R
+    stats::cor); statistical: |pyspi - population expectation| <= 3 analytic SE (stored se = 1.5 SE, compare band 2 se; the SE is analytic, exact null SD 1/sqrt(n-1) at rho = 0 and the Bonett & Wright 2000 Fisher-z delta method var z = (1 + r_S^2/2)/(n-3) otherwise. proposed_checks[1] named the Fieller-Hartley-Pearson 1957 var z = 1.06/(n-3); Bonett-Wright gives a larger SE at rho_S = 0.786 (factor 1.11) and a slightly smaller one at rho_S = 0.288 (factor 0.99). With the FHP SE the largest z would be 1.71 (pair (2,3), T=4096) instead of 1.54, still inside the band. A scratch Monte Carlo (3000 replicates, n = 64/256/1024, rho = 0/0.3/0.8, scratchpad rank_corr_check/mc2.py) gave empirical SD / analytic SE 0.94-1.00. The 3-SE band was declared in proposed_checks before any run and was not changed afterwards); qualitative: bit-identity pipeline == kernel, scaled_offset ==
+    bivariate_gaussian, -sq == signed^2, reciprocal Directed calls <= 4 ulp, |r| <= 3 null SD on non-monotone pairs; direction: sign of the zero-lag correlation in both orientations'
+  checks_run:
+  - run_ids:
+    - basic.spearmanr|bivariate_gaussian|64|kernel|exact
+    - basic.spearmanr|bivariate_gaussian|256|kernel|exact
+    - basic.spearmanr|bivariate_gaussian|1024|kernel|exact
+    - basic.spearmanr|bivariate_gaussian|4096|kernel|exact
+    - basic.spearmanr|nonlinear_dependence|256|kernel|exact
+    - basic.spearmanr|nonlinear_dependence|1024|kernel|exact
+    - basic.spearmanr|nonlinear_dependence|4096|kernel|exact
+    - basic.spearmanr|contaminated|256|kernel|exact
+    - basic.spearmanr|contaminated|1024|kernel|exact
+    - basic.spearmanr|contaminated|4096|kernel|exact
+    - basic.spearmanr|iid_gaussian|256|kernel|exact
+    - basic.spearmanr|iid_gaussian|1024|kernel|exact
+    reference: refs/rank_corr.py:ref_run (tag exact) -> refs/_kernels_basic_misc.py:spearman
+    outcome: pass 12/12, exact atol 1e-12 rtol 0 on both orientations; max_abs 1.1e-16 over bivariate_gaussian T=64..4096, nonlinear_dependence, contaminated, iid_gaussian
+  - run_ids:
+    - basic.spearmanr|bivariate_gaussian|256|kernel|ties
+    - basic.spearmanr|bivariate_gaussian|1024|kernel|ties
+    - basic.spearmanr|bivariate_gaussian|4096|kernel|ties
+    - basic.spearmanr|contaminated|1024|kernel|ties
+    - basic.spearmanr|contaminated|4096|kernel|ties
+    - basic.spearmanr|nonlinear_dependence|1024|kernel|ties
+    - basic.spearmanr|bivariate_gaussian|1024|pipeline|ties
+    - basic.spearmanr|contaminated|1024|pipeline|ties
+    reference: probes/rank_corr_probes.py:ties_kernel/ties_pipeline (np.round(x, 1)) vs refs/rank_corr.py:ref_run (tag ties) -> _kernels_basic_misc.spearman on the identically rounded
+      input
+    outcome: pass 8/8, max_abs 1.1e-16 on input rounded to 1 decimal (13-80 distinct values per row); untied-formula vs tie-corrected differs by up to 1.0e-2 on the same input
+  - run_ids:
+    - basic.spearmanr|bivariate_gaussian|1024|kernel|ties-vs-untied-formula
+    - basic.spearmanr|bivariate_gaussian|4096|kernel|ties-vs-untied-formula
+    reference: refs/rank_corr.py:spearman_untied_formula vs the tie-corrected kernel
+    outcome: 'pass 2/2, pyspi equals mid-rank Pearson (max_abs 1.1e-16) and differs from 1 - 6 sum d^2/(n(n^2-1)) by >= 2.09e-4 on the dependent pairs (T=1024: pair (2,3) 0.79011 vs
+      0.79032)'
+  - run_ids:
+    - basic.spearmanr|bivariate_gaussian|1024|kernel|R-cor
+    - basic.spearmanr|bivariate_gaussian|1024|kernel|R-cor-ties
+    - basic.spearmanr|contaminated|1024|kernel|R-cor-ties
+    reference: r/rank_corr.R stats::cor(method='spearman'), R 4.6.1, via refs/rank_corr.py:run_r
+    outcome: pass 3/3, R vs pyspi max_abs 5.6e-17 (continuous), 3.5e-18 and 0 (tied); R vs from-scratch kernel max 1.1e-16
+  - run_ids:
+    - basic.spearmanr|bivariate_gaussian|64|pipeline|population
+    - basic.spearmanr|bivariate_gaussian|256|pipeline|population
+    - basic.spearmanr|bivariate_gaussian|1024|pipeline|population
+    - basic.spearmanr|bivariate_gaussian|4096|pipeline|population
+    - basic.spearmanr|iid_gaussian|1024|pipeline|null
+    - basic.spearmanr|iid_gaussian|4096|pipeline|null
+    reference: refs/rank_corr.py:population and standard_error (analytic, bivariate normal)
+    outcome: pass 6/6, max_z_1se 1.26/0.88/1.04/1.54 at T=64/256/1024/4096 against Moran's E r_S; |error| pair (0,1) 0.150/0.0071/0.0253/0.0065 with SE 0.120/0.059/0.029/0.015; null max_z_1se 2.94 (T=1024, pair (0,2); near-miss, 0.06 inside the 3-SE band, about 3% chance over 10 null pairs), 1.96 (T=4096). SE is analytic (exact null SD; Bonett & Wright 2000 delta method in place of the FHP 1.06/(n-3) named in proposed_checks[1]; with FHP the largest z is 1.71)
+  - run_ids:
+    - basic.spearmanr|bivariate_gaussian|1024|pipeline|exact
+    - basic.spearmanr|contaminated|1024|pipeline|exact
+    - basic.spearmanr|nonlinear_dependence|1024|pipeline|exact
+    - basic.spearmanr|bivariate_gaussian|256|pipeline|pipeline-eq-kernel
+    - basic.spearmanr|bivariate_gaussian|1024|pipeline|pipeline-eq-kernel
+    - basic.spearmanr|bivariate_gaussian|4096|pipeline|pipeline-eq-kernel
+    - basic.spearmanr|contaminated|1024|pipeline|pipeline-eq-kernel
+    - basic.spearmanr|nonlinear_dependence|1024|pipeline|pipeline-eq-kernel
+    reference: refs/rank_corr.py:ref_run (tag exact on RAW rows; tag pipeline-eq-kernel = pyspi kernel-path matrix)
+    outcome: pass 8/8, z-scored pipeline equals the raw-data reference (max_abs <= 5.6e-17) and is bit-identical to the kernel-path matrix (max_abs_pipeline_vs_kernel 0 in all 5)
+  - run_ids:
+    - basic.spearmanr|scaled_offset|1024|kernel|invariance-exact
+    - basic.spearmanr|scaled_offset|1024|pipeline|invariance-exact
+    - basic.spearmanr|scaled_offset|1024|kernel|invariance-bitid
+    - basic.spearmanr|scaled_offset|1024|pipeline|invariance-bitid
+    reference: refs/rank_corr.py:ref_run (tags invariance-exact on the unscaled bivariate_gaussian rows; invariance-bitid = pyspi bivariate_gaussian matrix)
+    outcome: pass 4/4, scaled_offset bit-identical to bivariate_gaussian on kernel and pipeline paths (max_abs_vs_unscaled 0)
+  - run_ids:
+    - basic.spearmanr|trending|256|pipeline-detrend|exact
+    - basic.spearmanr|trending|1024|pipeline-detrend|exact
+    - basic.spearmanr|trending|1024|pipeline|exact
+    reference: refs/rank_corr.py:lstsq_detrend_zscore + kernel (independent of scipy.signal.detrend)
+    outcome: pass 3/3, detrend matches lstsq reference (max_abs 2.2e-16); trending pair (2,3) -0.98255 raw vs 0.79084 detrended at T=1024
+  - run_ids:
+    - basic.spearmanr|delayed_noise|1024|pipeline|exact
+    - basic.spearmanr|delayed_noise|1024|pipeline|contemporaneous-null
+    - basic.spearmanr|var2_bivariate|1024|pipeline|exact
+    - basic.spearmanr|var2_bivariate|1024|pipeline|direction
+    reference: refs/rank_corr.py:ref_run (kernel on rows; null SD; sign of the Gamma0 zero-lag correlation)
+    outcome: pass 4/4, var2_bivariate A[0,1] = A[1,0] = 0.17152 (zero-lag correlation 0.2107, sign agreement 1.0); delayed_noise max_z_1se 1.71 vs 0 despite lagged copies
+  - run_ids:
+    - basic.spearmanr|nonlinear_dependence|1024|kernel|monotone-only
+    - basic.spearmanr|nonlinear_dependence|4096|kernel|monotone-only
+    reference: analytic population value 0 (symmetric non-monotone dependence), band 3 null SD; dependence witnesses via the kernel
+    outcome: pass 2/2, |r_S| 0.0077 and 0.0295 (T=1024, band 0.094), 0.0064 and 0.0103 (T=4096, band 0.047) while witnesses rho_S(|x0|, x1) = 0.974 and rho_S(x2^2, x3^2) = -1.0
+  - run_ids:
+    - basic.spearmanr|bivariate_gaussian|256|pipeline|sq-exact
+    - basic.spearmanr|bivariate_gaussian|1024|pipeline|sq-exact
+    - basic.spearmanr|iid_gaussian|1024|pipeline|sq-exact
+    - basic.spearmanr|bivariate_gaussian|1024|kernel|sq-ties
+    - basic.spearmanr|bivariate_gaussian|256|pipeline|sq-relabel
+    - basic.spearmanr|bivariate_gaussian|1024|pipeline|sq-relabel
+    - basic.spearmanr|iid_gaussian|1024|pipeline|sq-relabel
+    reference: refs/rank_corr.py:ref_run (kernel squared; sq-relabel = pyspi signed matrix squared, same-lineage)
+    outcome: pass 7/7, -sq equals the independent kernel squared (max_abs 2.2e-16) and is bit-identical to the signed matrix squared; range observed [1.2e-6, 0.653]
+  - run_ids:
+    - basic.spearmanr|bivariate_gaussian|1024|kernel|directed-ties
+    - basic.spearmanr|bivariate_gaussian|1024|kernel|recip-ties
+    - basic.spearmanr|contaminated|4096|kernel|recip-ties
+    - basic.spearmanr|bivariate_gaussian|1024|kernel|recip-continuous
+    reference: probes/rank_corr_probes.py:directed_ties/directed_kernel (Directed.multivariate, no mirror) vs kernel per orientation; reciprocal comparison
+    outcome: pass 4/4, Directed (unmirrored) per-orientation max_abs 1.1e-16; reciprocal calls differ on 2/6 pairs by 5.55e-17 (1 ulp) on tied bivariate_gaussian, 1/1 by 1.39e-17 (1
+      ulp) on tied contaminated T=4096, 0/6 on continuous data
+  - run_ids:
+    - basic.spearmanr|iid_gaussian|64|kernel|labels
+    - basic.spearmanr|bivariate_gaussian|256|pipeline|call-count
+    - basic.spearmanr|bivariate_gaussian|1024|kernel|realisations
+    - basic.spearmanr|scaled_offset|256|kernel|array-input
+    reference: probes/rank_corr_probes.py:labels_fresh/call_count/realisations/array_input (qualitative, reference side decides)
+    outcome: 'pass 4/4 (pass = candidate behaviour reproduced as described): labels: fresh SpearmanR() has ''linear'' and no ''nonlinear''; Calculator-built spearmanr and spearmanr-sq
+      share one list carrying ''signed'' and ''unsigned'' (bug 4); 12 bivariate calls for P=4 (6 needed); R=2 realisations -> bivariate returns a 4x4 matrix and multivariate raises;
+      array input row 1 left raw (mean 1.0117, std 1.9969) with identical value 0.29354543373769737'
+optimisation:
+  complexity_P_T: 'O(P^2 T log T): pyspi/base.py:Directed.multivariate (via Undirected.multivariate) calls pyspi/statistics/basic.py:SpearmanR.bivariate for all P(P-1) ordered pairs; each call runs scipy.stats.spearmanr,
+    which ranks both series (rankdata, argsort O(T log T)) and builds a 2x2 corrcoef (O(T)). Measured P_exponent 2.06, T_exponent 0.21 (per-call overhead dominates at T<=1024). At 118x1024 the pair term
+    is the whole cost (13806 calls x 0.36 ms). The rank-once candidate is O(P T log T + P^2 T).'
+  hotspot_1: scipy/stats/_stats_py.py:rankdata (third-party:scipy) 64.6% of the profiled SPI call at 8x1024 (112 calls for 56 ordered pairs; ndarray.argsort 15.6% self)
+  hotspot_2: numpy/lib/_function_base_impl.py:corrcoef (third-party:numpy) 13.1% at 8x1024 (one 2x2 per pair)
+  hotspot_owner: third-party:scipy
+  opaque_share: 0.317
+  profile_file: audit/profiles/basic.spearmanr__8x1024.pstats
+  basis_scope_note: 'the ranking basis is the family-warm projection (5,998 s per patient), which times both retained identifiers in sequence (spearmanr-sq 5.01 s + spearmanr 4.99 s per
+    window at 118x1024, no cache shared between them); the fresh projection (2,979 s) times one identifier only (spearmanr-sq), so the basis is not double counted against it.'
+  opportunities:
+  - opportunity_id: rank_corr-1
+    opportunity: 'Override SpearmanR.multivariate (basic.py:136-157): rank each channel once (scipy.stats.rankdata(X, axis=1)) and take one np.corrcoef of the P x T rank matrix, filling A[a,b] = A[b,a]
+      = C[b,a]; this also drops the discarded second triangle.'
+    opp_type: vectorise-batch
+    expected_speedup: 300-500x
+    speedup_basis: 'microbench:audit/profiles/micro/opp_rank_corr-1.json (118x1024: 5.10 s -> 0.010 s spearmanr, 5.07 s -> 0.014 s spearmanr-sq; 32x1024 ~100x; 8x1024 ~13x) + profile:audit/profiles/basic.spearmanr__8x1024.pstats
+      scipy/stats/_stats_py.py:rankdata 64.6%'
+    output_risk: bit-identical
+    risk_evidence: 'audit/profiles/micro/opp_rank_corr-1.json: bit_identical true, max_abs_diff 0 at 7x100, 8x1024, 32x1024, 118x1024 for both identifiers and against the 7x100 golden snapshot; the -sq
+      path must square each value as a numpy scalar (C pow): squaring the array (x*x) differed by 1 ulp on 8 of 13924 entries at 118x1024'
+    effort: S
+    depends_on: []
+  - opportunity_id: rank_corr-3
+    opportunity: Cache the signed rank-correlation matrix on the Data object (as basic.py already does for covariance fits and xcorr) so spearmanr and spearmanr-sq (kendalltau and kendalltau-sq) are computed
+      once and the -sq identifier squares the cached values.
+    opp_type: cache-sharing
+    expected_speedup: ~2x
+    speedup_basis: 'complexity: family-warm at 118x1024 shows no sharing between the two identifiers (spearmanr-sq 5.01 s + spearmanr 4.99 s; kendalltau-sq 4.52 s + kendalltau 4.52 s); a shared matrix makes
+      the second identifier a cache read. Ranked on the residual after rank_corr-1 (depends_on), which already computes the whole matrix in one
+      call (audit/profiles/micro/opp_rank_corr-1.json candidate 0.010 s spearmanr, 0.014 s spearmanr-sq at 118x1024), so on top of it this saves
+      about 10 ms per window'
+    output_risk: unverified-bit-identical
+    risk_evidence: the -sq identifier is the square of the same per-pair scalar; it stays bit-identical only if squared through the same numpy scalar pow (array x*x differed by 1 ulp on 8 of 13924 entries
+      in opp_rank_corr-1)
+    effort: S
+    depends_on:
+    - rank_corr-1

@@ -1,0 +1,248 @@
+unit_id: spectral.multitaper_csm
+status: profiled
+correctness:
+  metric_name_standard: 'multitaper (Thomson) estimate of the cross-spectral density matrix S(f): K=5 Slepian (DPSS) tapers with NW=3, equal-weight average of the taper eigen-cross-spectra, whole series as a single window (infrastructure shared by every multitaper spectral SPI)'
+  canonical_ref: 'Thomson 1982, Proc. IEEE 70(9):1055-1096, checked against a scanned copy with an OCR text layer (math.ucdavis.edu/~saito/data/ONR15/thomson_spect-est-harm-anal.pdf; the displayed equations are images and are not readable in that layer): section III Eigenestimates, p.1060-1061: eigencoefficients y_k(f) (eq. 3.2, p.1060); the estimate (3.7) is formed with "unit coefficient weights for the first K = [2NW] terms" (p.1060); the kth eigenspectrum is S_k(f) = |y_k(f)|^2 (eq. 3.8, p.1061); "the estimate (3.7) has about 2K degrees of freedom" (p.1061); section IV.B Distributions of Eigenspectrum Estimates, p.1064 (each eigenspectrum is chi^2 with 2 degrees of freedom for Gaussian data); section V Adaptive Weighting, p.1065; section XIV Estimation of Coherence and Polyspectra, p.1087 (cross-spectra and coherence). Percival & Walden 1993, Spectral Analysis for Physical Applications, Cambridge UP; chapter and section titles and pages checked against the authors'' table of contents (faculty.washington.edu/dbp/SAPA/sapatoc.html), section contents not checked: ch. 7 Multitaper Spectral Estimation, pp.331-377 (7.2 Multitapering of Gaussian White Noise, p.347); 3.9 Concentration Problem -- Discrete/Continuous Case, p.101 (DPSS); 8.3 Tridiagonal Formulation, p.386 (the tridiagonal matrix used by the library dpss_windows). Slepian 1978, Prolate spheroidal wave functions, Fourier analysis, and uncertainty V: the discrete case, Bell Syst. Tech. J. 57(5):1371-1430 (definition of the DPSS); citation details confirmed from bibliographic listings, text not checked. Walden 2000, A unified view of multitaper multivariate spectral estimation, Biometrika 87(4):767-788; citation and abstract checked (cross-spectral matrix estimators written as weighted averages of orthogonally tapered cross-periodograms, including the Thomson Slepian-taper estimator); full text not obtained, so no section or equation is cited. Mitra & Pesaran 1999, Biophys. J. 76(2):691-708, checked against the arXiv preprint q-bio/0309028v1, not the journal copy: section 4.1.5 eq. 6-7, the direct multitaper estimate S_MT(f) = (1/K) sum_k |x_k(f)|^2 with DPSS tapers, and "take the leading 2NW - 1 DPSS as data tapers"; section 4.3 eq. 25-26, transfer function and coherence from sums over the tapers (the "local frequency ensemble") of a single pair of series. K = 2NW - 1 is therefore sourced to Mitra & Pesaran section 4.1.5 and the 2K degrees of freedom to Thomson p.1061; neither is attributed to Percival & Walden.'
+  canonical_definition: J_{k,i}(f) = sqrt(dt) * sum_{t=0}^{T-1} h_k(t) (x_i(t) - mean(x_i)) exp(-i 2 pi f t dt), where h_k is the k-th unit-energy DPSS of length T with half-bandwidth W = NW/(T dt); S_ij(f) = (1/K) sum_{k=0}^{K-1} J_{k,i}(f) conj(J_{k,j}(f)). S is two-sided and Hermitian; S_ii(f) is the PSD, whose integral over [-fs/2, fs/2] is the variance. With K = 2NW-1, S_ii(f)/S_true,ii(f) is approximately chi^2_{2K}/(2K) away from 0 and Nyquist.
+  documented_definition: 'supplement §1.5, p.12-13 (pack lines 582-613; heading at supplement.txt line 570): "Unless otherwise stated, the frequency-domain (i.e., Fourier-based) measures are computed using the Spectral Connectivity Toolbox [56]. Each measure is based on the cross- and power-spectral densities at a given frequency and sampling rate, which is estimated via the multitaper technique." and (p.13, line 589) "we assume a sampling frequency fs = 1 throughout ... We use 125 uniformly sampled bins across the entire frequency range, f in [f0, fs/2], where fs/2 is the Nyquist frequency and f0 = 4/T is chosen as the minimal frequency for computational reasons." [56] = Denovellis et al., Eden-kramer-lab/spectral_connectivity v0.2.5.dev0 (2020) (supplement.txt:2135-2136). The same text is on GitBook spectral.md:14-16. Neither source states NW, the number or type of tapers, windowing, detrending or FFT length.'
+  delegate_lib: 'spectral_connectivity==1.1.2: Multitaper.fft (transforms._multitaper_fft with scipy.fftpack.fft; tapers from transforms.dpss_windows via scipy.linalg.eigvals_banded and tridiagonal inverse iteration) and Connectivity._expectation_cross_spectral_matrix / _power, imported through pyspi/_spectral_compat.py (which only gives connectivity.py an np.in1d shim); scipy==1.17.1, numpy==2.5.4'
+  implemented_as: 'Input is the Data array (P, T) after optional linear detrend and z-scoring with ddof=1, transposed to (T, P). The multivariate path takes all P channels; the bivariate path for directed SPIs takes only columns [i, j]. Multitaper(z, sampling_frequency=fs=1) uses the library defaults: NW = time_halfbandwidth_product = 3; n_tapers = floor(2*NW - 1) = 5; is_low_bias=True, which drops tapers with concentration <= 0.9 (probe: the 5th taper has 0.946 at every T, so all 5 are kept); the whole series is one window (n_windows = 1, step = T); detrend_type "constant" removes each window mean, which is a no-op after z-scoring; n_fft = scipy.fftpack.next_fast_len(T), a 5-smooth length that equals T for T in {64, 256, 1024, 4096} and zero-pads otherwise (probe: T=1009 -> 1024, T=63 -> 64). The tapers have unit energy and are scaled by sqrt(fs); the FFT is divided by fs, so J_k = sqrt(dt) * FFT(h_k x), which gives two-sided PSD scaling (probe: power scales as 1/fs). The Fourier coefficients have shape (1 window, 1 trial, 5 tapers, n_fft, P). The per-taper CSM is X_i conj(X_j) (matmul with the conjugate transpose), and expectation_type "trials_tapers" takes an equal-weight mean over the 5 tapers. There are no adaptive weights and no eigenvalue weights. n_observations is 5 (the tapers), and the debiased phase estimators and group-delay coherence_bias use it downstream. Each measure first builds the full two-sided CSM, then _non_negative_frequencies keeps indices 0..(n_fft+1)//2-1, i.e. f_k = k/n_fft: DC is kept and the Nyquist bin (fftfreq -0.5) is dropped for even n_fft. Results are cached per Data object and per measure key. Every distinct measure rebuilds the Multitaper, the FFT and the full CSM.'
+  implementation_trace:
+  - 'pyspi/data.py:184-195 Data.set_data: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, ddof=1) when normalise=True'
+  - pyspi/data.py:108-118 Data.to_numpy(squeeze=True) -> (P, T)
+  - pyspi/_spectral_compat.py:10-28 imports spectral_connectivity and replaces connectivity.np with a namespace whose in1d forwards to np.isin (no estimator change)
+  - pyspi/statistics/spectral.py:17-43 NonparametricSpectral.__init__ (fs, fmin, fmax, statistic; fs != 1 only warns; identifier suffix)
+  - 'pyspi/statistics/spectral.py:45-50 key property: (measure,) or (measure, fmin, fmax) for GroupDelay/PhaseSlopeIndex'
+  - 'pyspi/statistics/spectral.py:64-83 NonparametricSpectralMultivariate._get_cache: z = np.transpose(data.to_numpy(squeeze=True)) (T,P); sc.Multitaper(z, sampling_frequency=self._fs); sc.Connectivity.from_multitaper(m); getattr(conn, self.measure)() with TypeError fallback to _get_statistic (:72-75); cache insert by self.key (:79), but the first insert is keyed by the string self.measure (:81)'
+  - 'pyspi/statistics/spectral.py:106-126 NonparametricSpectralBivariate._get_cache: z = np.transpose(data.to_numpy(squeeze=True)[[i, j]]) (T,2); same Multitaper/Connectivity calls; cache key (measure, i, j)'
+  - 'pyspi/statistics/spectral.py:85-102 multivariate: A = statfn(adj_freq[0, freq_id, :, :], axis=0) (window 0; A[i,j] from S[i,j]); np.fill_diagonal(adj, nan)'
+  - 'pyspi/statistics/spectral.py:128-134 bivariate: statfn(bv_freq[0, freq_id, 0, 1]) (entry [0,1] of the 2-channel [i,j] result)'
+  - spectral_connectivity/transforms.py:26-30 CPU branch imports fft, fftfreq, next_fast_len from scipy.fftpack
+  - 'spectral_connectivity/transforms.py:74-102 Multitaper.__init__ defaults: time_halfbandwidth_product=3, detrend_type="constant", n_tapers=None, is_low_bias=True, n_fft_samples=None'
+  - spectral_connectivity/transforms.py:117-134 tapers property -> _make_tapers(n_time_samples_per_window, fs, NW, n_tapers, is_low_bias)
+  - spectral_connectivity/transforms.py:154-164 n_tapers = int(floor(2*NW - 1)) = 5
+  - spectral_connectivity/transforms.py:166-178 n_time_samples_per_window = time_series.shape[0] (whole series)
+  - spectral_connectivity/transforms.py:180-185 n_fft_samples = next_fast_len(n_time_samples_per_window)
+  - spectral_connectivity/transforms.py:187-190 frequencies = fftfreq(n_fft_samples, 1/fs)
+  - spectral_connectivity/transforms.py:192-205 n_time_samples_per_step = window size (single window)
+  - 'spectral_connectivity/transforms.py:238-260 Multitaper.fft: _add_axes -> _sliding_window(axis=0) -> detrend(type="constant") -> _multitaper_fft -> swapaxes(2,-1) => (windows, trials, tapers, n_fft, signals)'
+  - spectral_connectivity/transforms.py:263-271 _add_axes; :274-332 _sliding_window (as_strided copy)
+  - 'spectral_connectivity/transforms.py:335-354 _multitaper_fft: time_series[..., newaxis] * tapers, fft(n=n_fft, axis=-2) / sampling_frequency'
+  - 'spectral_connectivity/transforms.py:357-387 _make_tapers: dpss_windows(...)[0].T * sqrt(sampling_frequency)'
+  - 'spectral_connectivity/transforms.py:469-543 dpss_windows: half_bandwidth = NW/T; _find_tapers_from_optimization; _fix_taper_sign; _get_taper_eigenvalues; _get_low_bias_tapers'
+  - 'spectral_connectivity/transforms.py:575-629 _find_tapers_from_optimization: Percival-Walden tridiagonal matrix, scipy.linalg.eigvals_banded (top n_tapers), tridi_inverse_iteration (:431-466, tridisolve :390-428)'
+  - spectral_connectivity/transforms.py:632-657 _fix_taper_sign; :660-665 _auto_correlation; :668-673 _get_low_bias_tapers (eigenvalues > 0.9); :676-698 _get_taper_eigenvalues
+  - 'spectral_connectivity/transforms.py:701-748 detrend: type "constant" -> data - mean(data, axis=-1)'
+  - spectral_connectivity/connectivity.py:45-53 EXPECTATION["trials_tapers"] = partial(mean, axis=(1, 2))
+  - spectral_connectivity/connectivity.py:137-172 Connectivity.__init__ / from_multitaper (expectation_type="trials_tapers", blocks=None, dtype=complex128)
+  - 'spectral_connectivity/connectivity.py:73-89 _non_negative_frequencies: take indices arange(0, (n+1)//2) along the frequency axis'
+  - spectral_connectivity/connectivity.py:174-187 frequencies (non-negative) and all_frequencies
+  - spectral_connectivity/connectivity.py:189-193 _power = expectation(X * conj(X)).real
+  - spectral_connectivity/connectivity.py:195-208 _cross_spectral_matrix -> _complex_inner_product (:1187-1190, matmul(a, _conjugate_transpose(b)); :1485-1487 swapaxes(-1,-2).conjugate()) => S[i,j] = X_i conj(X_j)
+  - 'spectral_connectivity/connectivity.py:210-257 _expectation_cross_spectral_matrix: blocks None -> expectation(fcn(full per-taper CSM)) (:218-220)'
+  - spectral_connectivity/connectivity.py:276-287 _expectation and n_observations (= product of averaged axis sizes = 1 trial x 5 tapers = 5)
+  - 'spectral_connectivity/connectivity.py:295-313 coherency (example consumer): CSM / sqrt(P_i P_j), zero-norm -> NaN, diagonal set to NaN'
+  deviation_from_documented: '(1) Frequency grid. The documentation says "125 uniformly sampled bins ... f in [f0, fs/2] ... f0 = 4/T". The implementation uses the FFT grid f_k = k/n_fft, k = 0..(n_fft+1)//2-1. That gives 32/128/512/2048 bins at T=64/256/1024/4096, starting at DC (f=0, not 4/T) and ending at 0.5 - 1/n_fft (probe at T=64: "nfreq kept 32 first [0. 0.015625] last 0.484375"). The 125-bin figure matches pyspi''s wavelet path (pyspi/statistics/wavelet.py:54 cwt_freqs = np.linspace(0.2, 0.5, 125)), whose minimum frequency is 5/T (wavelet.py:62), not 4/T; where the text comes from remains a hypothesis (check stage: grid confirmed by the grid-n* runs). (2) The documented ranges are closed at fs/2, but the Nyquist bin is never available (already documented, REVIEW M4). (3) The supplement cites toolbox v0.2.5.dev0; 1.1.2 is executed. (4) NW=3, K=5, the single window, constant detrend and next_fast_len padding are not documented, so there is nothing to contradict.'
+  deviation_from_canonical: 'This is the simple (equal-weight) multitaper CSM estimator with NW=3 and K=2NW-1=5. It agrees with a from-scratch implementation to round-off (probe at T=256: max |S_lib - S_scratch| = 2.6e-14 over the two-sided CSM, reference built from scipy.signal.windows.dpss + numpy.fft). The tapers equal the eigenvectors of the dense Slepian sinc kernel to 2.3e-12 (T=64), 1.0e-12 (T=256) and 1.3e-12 (T=1024). Variants rather than errors: (a) no Thomson adaptive weighting; (b) the 5th taper (concentration 0.946) is included; (c) one window, so the "expectation" behind every downstream measure is an average over the 5 tapers only (n_observations = 5), not over trials or time segments; (d) two-sided PSD scaling with no doubling of positive frequencies, which cancels in every normalised measure; (e) S(0) is real (probe: max |Im S(0)| = 0.0) and is estimated after mean removal, so it is biased low within |f| < W = 3/T; (f) for T that is not 5-smooth, the series is zero-padded to next_fast_len(T), so the grid spacing is 1/n_fft instead of 1/T.'
+  units_and_range: 'Complex, Hermitian matrix per frequency (probe: max |S - S^H| = 0.0). The diagonal is real and >= 0, in units of x^2 per unit frequency (two-sided). With z-scored input and fs=1, the mean of the two-sided power over all n_fft bins equals sum_t (1/K sum_k h_k(t)^2) x_c(t)^2, close to 1 (Parseval; probe agreement 1.2e-15). The DC entries are real. Not a scalar SPI; the only NaNs are set by downstream measures (zero-power normalisation, diagonal).'
+  direction_convention: 'S[i,j](f) = mean_k X_{k,i}(f) conj(X_{k,j}(f)), with row i = process i (column i of the (T,P) input). Probe on delayed_noise T=1024 (x_j = x0 delayed by d_j): the slope of the unwrapped phase of S[0,j] over f in (0, 0.1), divided by 2 pi, is +1.019, +2.986 and +5.034 for d = 1, 3, 5. A positive phase slope therefore means the row process leads the column process. Every multivariate spectral SPI computes A[i,j] from S[i,j] (spectral.py:91). The bivariate path computes the 2-channel [i, j] result and reads entry [0,1], which has the same orientation. Multivariate and bivariate CSM entries are identical (probe: max |S_mv[2,0] - S_bv[0,1]| = 0.0).'
+  symmetry_expected: n/a
+  already_documented: 'tests/README.md dependency constraints (line 221: spectral-connectivity pinned at 1.1.2; 2.x changes input layout and frequency grid); tests/README.md worth knowing (line 224: the spectral cache first insert is keyed by self.measure, one redundant recompute); REVIEW M4 (DC bin included, Nyquist excluded for even n_fft); DEPENDENCY_COMPATIBILITY_REVIEW.md:74-82 (Nyquist inclusion in newer releases)'
+  new_finding_candidates:
+  - 'CANDIDATE: the documented 125-bin grid starting at f0 = 4/T is not what the multitaper path uses. The grid is k/n_fft from DC up to 0.5 - 1/n_fft (probe: 32, 128, 512 and 2048 bins at T = 64, 256, 1024 and 4096; at T=64 "first [0. 0.015625] last 0.484375"). Hypothesis: the 125 bins describe the wavelet path (wavelet.py:54 np.linspace(0.2, 0.5, 125)).'
+  - 'CANDIDATE (cross-family, route to spectral_phase_sync and spectral_psi_gd): the expectation domain is the 5 tapers of a single window (connectivity.py:45-53 "trials_tapers" with n_trials = 1; probe n_observations = 5). PLV, PPC, PLI, wPLI and the debiased squared variants are trial or epoch averages in their canonical definitions, but here they are averages over 5 tapers, and the debiasing in connectivity.py:621-624 and :690-695 treats the 5 tapers as independent observations. coherence_bias (statistics.py:135-159) gives 1/(2*5 - 2) = 0.125 for group delay.'
+  - 'CANDIDATE (efficiency, pack hypothesis confirmed): every distinct measure rebuilds the Multitaper, the FFT and the full two-sided CSM. A spy on Multitaper.fft, all on one Data with P=5 and T=256, counted: cohmag 1+1 (the second call is the documented first-insert recompute), then 0 for its other bands and statistics; icoh 1; each PSI band 1; GD 1; directed dcoh 20 (one 2-channel transform per ordered pair). In addition, the default-argument call of phase_slope_index evaluates self.coherency() (a full CSM) before _bandpass raises TypeError at connectivity.py:1329.'
+  - 'CANDIDATE: when T is not 5-smooth the series is zero-padded to scipy.fftpack.next_fast_len(T) (probe: T=1009 -> n_fft 1024, T=63 -> 64), which changes the grid and band membership. No dataset T in the manifest is affected, because all are powers of 2.'
+  - 'CANDIDATE (elaborates REVIEW M4 for the imaginary-part measures): S(0) is exactly real (probe max |Im S(0)| = 0.0), so every fmin=0 multivariate band includes one bin where icoh, pli and wpli are exactly 0. This pulls their band means toward 0 by a factor of (n_bins - 1)/n_bins.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    - delayed_noise
+    - narrowband_f0-0.1
+    - scaled_offset
+    path: kernel
+    reference: 'from-scratch numpy CSM: tapers from a dense eigendecomposition (numpy.linalg.eigh) of the Slepian sinc kernel A[m,n] = sin(2 pi W (m-n))/(pi (m-n)), A[m,m] = 2W, W = 3/T, top 5 eigenvectors; mean-removed series; numpy.fft.fft with n = scipy.fftpack.next_fast_len(T); S = mean_k X_i conj(X_j); compared with Connectivity._expectation_cross_spectral_matrix()[0] and power()[0] on the raw (T,P) array. Taper sign is irrelevant because it cancels in X_i conj(X_j). Secondary taper source: scipy.signal.windows.dpss, a separate LAPACK eigh_tridiagonal code path that shares the Percival-Walden formulation and NiTime/MNE comment lineage with the library dpss.'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'two-sided CSM agrees to <= 1e-12 relative to max |S| at every T (probe at T=256 with scipy dpss: 2.6e-14 absolute; taper agreement with the sinc-kernel eigenvectors 1-2e-12)'
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    - scaled_offset
+    path: kernel
+    reference: 'analytic Parseval identity: mean over all n_fft two-sided bins of the power = sum_t (1/K sum_k h_k(t)^2) (x(t) - mean x)^2; also Hermitian symmetry S[j,i] = conj(S[i,j]) and Im S(0) = 0 for real input'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: identity holds to <= 1e-13 relative (probe 1.2e-15); Hermitian residual 0.0; Im S(0) = 0.0
+  - datasets:
+    - var2_bivariate
+    - var2_chain
+    path: kernel
+    reference: 'analytic VAR spectral matrix S_true(f) = H(f) Sigma H(f)^H stored with each dataset (two-sided, same E[X_i conj X_j] convention); interpolate to the library grid; statistic: per-bin ratio S_hat_ii/S_true_ii on non-DC bins vs chi^2_10/10, and the mean phase error of S_hat_ij'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'mean power ratio within about 0.93-1.0 and fraction inside the chi^2_10/10 central 95% interval close to 0.95 (probe var2_bivariate: T=1024 ratio mean 0.97/0.98, coverage 0.96/0.96; T=4096 0.99/0.97, 0.95/0.96); mean phase error near 0 (-0.08 rad at T=1024, -0.05 at T=4096); DC ratio is not covered (mean removal); the mean MSC is positively biased with K=5 (probe 0.38 vs 0.25 true), which is a known small-K bias and not a defect'
+  - datasets:
+    - delayed_noise
+    path: kernel
+    reference: 'analytic: x_j(t) = x0(t - d_j) + noise with d = (0, 1, 3, 5), so E[X_0 conj X_j] has phase +2 pi f d_j under the S_ij = E[X_i conj X_j] convention; numpy.polyfit of the unwrapped phase of S[0,j] over 0 < f < 0.1'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: phase slope/(2 pi) = +d_j within about 0.05 at T=1024 (probe 1.019, 2.986, 5.034), and the negative of that for S[j,0]; establishes that positive phase in S[i,j] means row i leads column j, which is the orientation every multivariate A[i,j] inherits
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - var2_chain
+    path: pipeline
+    reference: from-scratch CSM (sinc-kernel tapers + numpy.fft) applied to Data(x).to_numpy() (z-scored, ddof=1); per-frequency MSC |S_ij|^2/(S_ii S_jj) averaged over the analytic inclusive bin set for fmin=0, fmax=0.5, compared with CoherenceMagnitude(fs=1).multivariate; and MV vs BV entries of the library CSM on the same Data
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5 agrees to <= 1e-12; multivariate S[i,j] equals the 2-channel [i,j] S[0,1] exactly (probe 0.0)
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic grid rule: n_fft = smallest 2^a 3^b 5^c >= T, f_k = k/n_fft for k = 0..(n_fft+1)//2 - 1; concentration ratios of the 5 tapers from the sinc-kernel eigenvalues; series truncated to T in {63, 64, 255, 256, 1000, 1009, 1024}'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: Connectivity.frequencies equals the analytic grid exactly; n_fft = 64, 64, 256, 256, 1000, 1024, 1024; all 5 taper eigenvalues > 0.9 (minimum 0.946), so the low-bias filter keeps 5 tapers; documented 125-bin grid from 4/T is not matched (32..2048 bins from 0)
+  - datasets:
+    - trending
+    - scaled_offset
+    path: pipeline-detrend
+    reference: qualitative comparison of pipeline vs pipeline-detrend low-frequency power fraction (sum of power over f < 6/T divided by total), from the from-scratch CSM on Data(..., detrend=True/False)
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: without detrend the linear trends of trending dominate the bins within a few W = 3/T of DC (constant detrend in the library removes only the mean); with detrend the low-frequency fraction returns to that of the underlying Gaussian draw; scaled_offset is invariant to scale/offset after z-scoring (coherence identical to bivariate_gaussian draw)
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/spectral_csm.py: h_csm / h_coh (_kernels_spectral.multitaper_fft + cross_spectral_matrix + coherency: scipy 1.18.1 signal.windows.dpss NW=3 K=5, eigenvalue > 0.9, constant detrend, n_fft = next_fast_len_235(T), two-sided, S_ij = mean_k X_i conj X_j; z-score ddof=1 and least-squares detrend re-implemented); h_tapers / h_eig / h_ident (dense scipy.linalg.eigh of the Slepian commuting tridiagonal matrix, sinc-kernel Rayleigh quotients, Parseval/Hermitian identities); h_cohmne / h_cohmnedef (mne_connectivity==0.9.0 spectral_connectivity_epochs method=''cohy'', mode=''multitaper'', mt_bandwidth=6/T, mt_adaptive=False, with and without its taper call patched to symmetric DPSS and unit weights); h_bandavg (analytic VAR S = H Sigma H^H, Monte-Carlo se); h_phslope / h_phdir (analytic delay phase); h_grid / h_gridsum (analytic grid rule). Library side: audit/checks/probes/spectral_csm_lib.py'
+  check_data: var2_bivariate, delayed_noise, narrowband_f0-0.25 at T = 64, 256, 1024, 4096 (kernel and pipeline paths); iid_gaussian (null) at 1024 and truncated to 63, 64, 75, 125, 243, 255, 256, 1000, 1009, 1024 samples; var2_chain 1024/4096; scaled_offset, bivariate_gaussian, trending (pipeline, pipeline-detrend) at 1024
+  agreement_criterion: 'two-sided CSM: tolerance rtol 1e-10, atol 1e-10 * max|S|; coherency (non-negative grid, NaN diagonal): rtol 1e-10, atol 1e-10; grid and grid summary: exact (rtol 1e-10, atol 1e-12); tapers: atol 1e-10 * max|taper|; concentrations: atol 1e-10; identities: exact; VAR band averages and delayed_noise phase slopes: statistical, pass if every |pyspi - analytic| <= 2 se with 2 se = Bonferroni z (family-wise 5%) times the Monte-Carlo sd of the same statistic (300 draws); direction: sign of d_j - d_i; mne defaults and trending detrend: qualitative (reference-decided)'
+  closeness: '114 runs, all pass. Two-sided CSM (31 runs, kernel and pipeline paths, odd n_fft 75/125/243 and padded 63 -> 64, 1009 -> 1024): max |pyspi - kernel| / max|S| <= 1.08e-12 (delayed_noise T=4096), 1.6e-13 at T=1024. Coherency (18 runs): max_abs <= 4.7e-12 (narrowband_f0-0.25 T=4096). mne_connectivity with its taper call patched to the reference''s own scipy symmetric DPSS (NW=3, K=5) and unit weights (13 runs, all ordered pairs; only mne''s rfft, mean removal, CSD assembly and coherency normalisation are external, the tapers are supplied by the reference): max_abs <= 4.7e-12. mne_connectivity defaults (periodic DPSS, sqrt(eigenvalue) weights; 3 runs at T=1024): pyspi differs by up to 0.0305 in complex coherency and 0.0200 in MSC (narrowband), 0.0244/0.0155 (var2_bivariate), 0.0058/0.0029 (delayed_noise); the scipy rebuild of mne''s estimator matches mne to 6.0e-16 and pyspi matches the equal-weight kernel to 5.1e-13, so the whole difference is the weighting/taper-symmetry choice. Grid (10 runs): exact (max_abs 5.6e-17); n_fft = 64, 64, 75, 125, 243, 256, 256, 1000, 1024, 1024 for T = 63, 64, 75, 125, 243, 255, 256, 1000, 1009, 1024; kept bins (n_fft+1)//2 (odd 243 -> 122 bins, top 121/243); 5 tapers and n_observations = 5 at every T. Tapers vs the commuting-matrix eigenvectors (4 runs): max_abs 1.3e-13; concentrations (4 runs): max_abs 2.3e-15, smallest 0.94659 (T=64) to 0.94614 (T=4096). Identities (4 runs): max|S - S^H| = 0.0, max|Im S(0)| = 0.0, Parseval max_abs 5.1e-13 (max_rel 9.2e-15). Statistical vs analytic S(f) (4 runs): max_z 1.30 and 1.39 (var2_bivariate 1024, 4096), 1.52 and 1.27 (var2_chain 1024, 4096), pass threshold 2; Monte-Carlo bias of the estimator <= 0.23 sd. delayed_noise phase slope (2 runs): max_z 0.53 (T=1024), 0.99 (T=4096); direction (3 runs): agreement 1.0. Pipeline cohmag full band (3 runs): max_abs <= 3.8e-15; scale/offset invariance (scaled_offset vs bivariate_gaussian): 2.9e-15. Low-frequency power fraction (f < 6/T, 3 runs): max_abs 2.8e-15; trending without detrend 0.979/0.956/0.982 on the sloped channels vs 0.0132/0.0095/0.0061 for the untrended draw, with pipeline-detrend 0.0103/0.0083/0.0059.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 10''s supplement clause fails: the supplement''s 125 bins on [4/T, fs/2] is not the grid used (k/n_fft from DC, 512 bins at T=1024). The
+    estimator agrees with the independent kernel to 1.08e-12 relative to max|S|, so 9 is the highest anchor cleared.'
+  documentation_status: misdescribed
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The estimator is the canonical equal-weight Thomson multitaper CSM (NW=3, K=5 symmetric DPSS, single window, mean removed, two-sided scaling); it reproduces an independent implementation to round-off, and mne_connectivity reproduces it to round-off when mne''s taper call is patched to the reference''s scipy symmetric DPSS with unit weights (so that comparison tests mne''s FFT, CSD assembly and normalisation, not its tapers; mne''s unpatched defaults differ by up to 0.0305, explained by the taper choice). Score 9 rather than 10 because the documented frequency grid does not describe this path: the supplement''s ''125 uniformly sampled bins ... f0 = 4/T'' is not used; the grid is k/n_fft from DC (included) to 0.5 - 1/n_fft (Nyquist dropped for even n_fft, REVIEW M4), i.e. 32/128/512/2048 bins at T = 64/256/1024/4096, and non-5-smooth T are zero-padded to next_fast_len(T). Variants of the canonical estimator that are not errors: no adaptive or eigenvalue weights (mne''s default would give |dC| up to 0.03), the 0.946-concentration taper is kept, the expectation is over the 5 tapers of one window (n_observations = 5).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: cheap (each library CSM < 1 s up to T=4096; the 114 pyspi-side runs of this unit take under a minute; references dominated by the 300-draw Monte-Carlo se and the dense T=4096 eigendecomposition, about 1.5 min for the family on 32 threads)
+  symmetry_observed: 'Hermitian: max|S - S^H| = 0.0 (ident runs) and, on every coh run, max|Re C - Re C^T| = 0.0 and max|Im C + Im C^T| = 0.0 (ref_pyspi_hermitian_residual 0.0); Im S(0) = 0.0, so the DC bin is exactly real'
+  direction_observed: 'S[i,j] = mean_k X_i conj X_j: on delayed_noise (x_k = x0 delayed by d_k = 0,1,3,5) the phase slope of S[i,j] / (2 pi) estimates d_j - d_i: row 0 = [1.016, 2.981, 5.030] at T=1024 and [0.994, 2.985, 5.025] at T=4096, S[j,i] the negatives (direction agreement 1.0 on kernel and pipeline paths). Positive phase slope in S[i,j] means row process i leads column process j; every multivariate A[i,j] and the bivariate [i,j] -> entry [0,1] inherit this orientation.'
+  candidate_resolutions:
+  - candidate: documented 125-bin grid from f0 = 4/T is not the multitaper grid
+    outcome: confirmed
+    evidence: 'spectral.multitaper_csm|iid_gaussian|*|kernel|grid-n* and gridsum-n* (exact): grid k/n_fft from 0, 32/128/512 bins at T=64/256/1024, 2048 at 4096 (masks runs); wavelet.py:54 uses np.linspace(0.2, 0.5, 125) with fmin = 5/T (:62), so the 125-bin count matches the wavelet path but f0 = 4/T matches neither path (provenance inconclusive)'
+  - candidate: expectation domain is the 5 tapers of one window (cross-family)
+    outcome: confirmed
+    evidence: 'gridsum-n* runs: n_tapers 5 and n_observations 5 at every T; whether this is acceptable for PLV/PPC/PLI/wPLI is for spectral_phase_sync'
+  - candidate: every measure rebuilds Multitaper, FFT and full CSM (efficiency)
+    outcome: confirmed
+    evidence: 'spectral.band_selection|delayed_noise|256|pipeline|fftcount (exact): Multitaper.fft calls [cohmag 1, cohmag low 1 (first-insert recompute, already documented), cohmag max 0, icoh 1, psi full 1, psi low 1, gd 1, dcoh 12 = P(P-1)]'
+  - candidate: non-5-smooth T are zero-padded to next_fast_len(T)
+    outcome: confirmed
+    evidence: gridsum-n63 [64, 32], gridsum-n1009 [1024, 512], gridsum-n1000 [1000, 500]; csm-n1009 and coh-n1009 match the padded kernel (1.2e-13, 2.3e-13); no manifest or EEG-workflow T (1024) is affected
+  - candidate: S(0) exactly real, so icoh (and pli, wpli) has an exact-zero DC bin in every fmin=0 band
+    outcome: confirmed
+    evidence: 'ident runs max|Im S(0)| = 0.0; band_selection icoh mean fmin=0 runs: ref_icoh_dc_bin_max 0.0 and |pyspi - (n-1)/n * mean without DC| <= 7.9e-15 (iid_gaussian 64, var2_chain 256, narrowband_f0-0.25 1024); elaborates REVIEW M4 (DC included)'
+  checks_run:
+  - run_ids:
+    - spectral.multitaper_csm|*|*|kernel|csm
+    - spectral.multitaper_csm|*|*|pipeline|csm
+    - spectral.multitaper_csm|trending|1024|pipeline-detrend|csm
+    - spectral.multitaper_csm|iid_gaussian|*|kernel|csm-n*
+    reference: audit/checks/refs/spectral_csm.py:h_csm
+    outcome: pass (31/31), max |dS|/max|S| 1.08e-12
+  - run_ids:
+    - spectral.multitaper_csm|*|*|kernel|coh
+    - spectral.multitaper_csm|iid_gaussian|*|kernel|coh-n*
+    reference: audit/checks/refs/spectral_csm.py:h_coh
+    outcome: pass (18/18), max_abs 4.7e-12
+  - run_ids:
+    - spectral.multitaper_csm|*|*|kernel|cohmne
+    reference: 'audit/checks/refs/spectral_csm.py:h_cohmne (mne_connectivity 0.9.0 with _compute_mt_params patched to the reference''s scipy symmetric DPSS NW=3 K=5 and unit weights; tapers supplied by the reference, mne''s FFT/CSD/normalisation external)'
+    outcome: 'pass (13/13), max_abs 4.7e-12 (tapers supplied by the reference)'
+  - run_ids:
+    - spectral.multitaper_csm|*|1024|kernel|cohmnedef
+    reference: audit/checks/refs/spectral_csm.py:h_cohmnedef
+    outcome: 'pass (3/3, qualitative): difference to mne defaults up to 0.0305 fully explained by eigenvalue weights and periodic tapers'
+  - run_ids:
+    - spectral.multitaper_csm|iid_gaussian|*|kernel|grid-n*
+    - spectral.multitaper_csm|iid_gaussian|*|kernel|gridsum-n*
+    reference: audit/checks/refs/spectral_csm.py:h_grid, h_gridsum
+    outcome: pass (20/20), exact
+  - run_ids:
+    - spectral.multitaper_csm|iid_gaussian|*|kernel|tapers
+    - spectral.multitaper_csm|iid_gaussian|*|kernel|eig
+    reference: audit/checks/refs/spectral_csm.py:slepian_tapers, sinc_concentration
+    outcome: pass (8/8), tapers 1.3e-13, concentrations 2.3e-15
+  - run_ids:
+    - spectral.multitaper_csm|*|1024|*|ident
+    reference: audit/checks/refs/spectral_csm.py:h_ident
+    outcome: pass (4/4), Hermitian 0.0, Im S(0) 0.0, Parseval rel 9.2e-15
+  - run_ids:
+    - spectral.multitaper_csm|var2_bivariate|*|kernel|bandavg
+    - spectral.multitaper_csm|var2_chain|*|kernel|bandavg
+    reference: audit/checks/refs/spectral_csm.py:h_bandavg
+    outcome: pass (4/4), max_z 1.52 (threshold 2)
+  - run_ids:
+    - spectral.multitaper_csm|delayed_noise|*|*|phslope
+    - spectral.multitaper_csm|delayed_noise|*|*|phdir
+    reference: audit/checks/refs/spectral_csm.py:h_phslope, h_phdir
+    outcome: pass (5/5), max_z 0.99, direction agreement 1.0
+  - run_ids:
+    - spectral.multitaper_csm|*|1024|pipeline|spi=cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5
+    - spectral.multitaper_csm|scaled_offset|1024|pipeline|invariance=cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5
+    reference: audit/checks/refs/spectral_csm.py:h_spi, h_invariance
+    outcome: pass (4/4), max_abs 3.8e-15
+  - run_ids:
+    - spectral.multitaper_csm|*|1024|*|lfq
+    - spectral.multitaper_csm|trending|1024|pipeline|lfqjudge
+    reference: audit/checks/refs/spectral_csm.py:h_lfq, h_lfqjudge
+    outcome: pass (4/4), trend puts 0.96-0.98 of the power below 6/T without detrend
+optimisation:
+  complexity_P_T: 'Per Data and per consumer: DPSS O(K*T) in pure-Python inverse iteration (P-independent, ~17-20 ms), FFT O(K*P*T log T), taper-level CSM O(K*n_fft*P^2) materialised two-sided as (1,1,5,n_fft,P,P) complex128 (1.14 GB at P=118, 5.1 GB at P=249). Infrastructure unit without its own timing: read from the consumers. At 8x1024 DPSS dominates (tridisolve 65.6% of the cohmag call); at 118x1024 the P^2 CSM term dominates (DPSS 1.9%). It is rebuilt once per measure, once more for the first spectral SPI on a Data, once per psi/gd band (twice per psi band) and once per ordered pair on the bivariate path.'
+  hotspot_1: .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:tridisolve (DPSS inverse iteration, pure Python; third-party:spectral_connectivity) 65.6% of the profiled cohmag call at 8x1024 (audit/profiles/spectral.cohmag__8x1024.pstats); dpss_windows 1.9% at 118x1024
+  hotspot_2: .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:_complex_inner_product (numpy matmul outer products) 9.5% of the cohmag call at 8x1024 and 38.5% at 118x1024 (audit/profiles/micro/prof_spectral.cohmag__118x1024.pstats), plus the taper mean 17.2% at 118x1024
+  hotspot_owner: third-party:spectral_connectivity
+  opaque_share: 0.111
+  profile_file: audit/profiles/spectral.cohmag__8x1024.pstats
+  opportunities:
+  - opportunity_id: spectral_csm-shared-csm
+    opportunity: Compute the multitaper Fourier coefficients once per Data and memoise the taper-averaged CSM, power and coherency on the Data under a key without measure or band (pyspi/statistics/spectral.py:46-50, 64-83; this also removes the first-insert string key at :81 that makes the first spectral SPI on a Data compute twice). Every undirected measure, every psi/gd band, the 2x2 blocks of the bivariate directed path and the sgc nonparametric pair loop read from it; the phase-sync measures take their per-taper products from the shared coefficients.
+    opp_type: cache-sharing
+    expected_speedup: ~2x
+    speedup_basis: 'microbench:audit/profiles/micro/opp_spectral_csm-shared-csm.json 2.14x at 118x1024 and 2.30x at 32x1024 (cohmag, phase, psi x3, gd x3 on one Data) + complexity: of the ~45 CSM builds per EEG window only the coherency-type ones collapse (phase, cohmag, icoh, the first-insert recompute, 22 psi and 10 gd evaluations -> 1); the 9 phase-sync per-taper builds are measure-specific (connectivity.py:512-516, 571, 596, 648-654) and remain, so the build count falls 45 -> ~10 (ceiling <4.5x) and the CSM-bound time about 96 s -> 43 s per window (~2.2x). No ranking basis on this row. This infrastructure unit has no SPI identifiers of its own, so profiles/summary.json holds no 118x1024 projection for it and rank_basis_s and projected_patient_s_after stay blank; its cost sits inside the timings of the units that call it. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README ''Optimisation columns'', rule 5).'
+    output_risk: bit-identical
+    risk_evidence: 'audit/profiles/micro/opp_spectral_csm-shared-csm.json: cohmag, phase, psi x3, gd x3 bit-identical with equal NaN masks at 32x1024 and 118x1024 (same library methods fed one memoised coherency)'
+    effort: M
+    depends_on: []
+  - opportunity_id: spectral_csm-1
+    opportunity: Form the taper-level products only on the (n_fft+1)//2 non-negative bins (slice the Fourier coefficients before connectivity.py:196-257 instead of dropping the negative bins afterwards), in frequency blocks so the per-taper temporaries stay small; for the linear measures (coherency, icoh, psi, gd) replace the (1,1,5,n_fft,N,N) complex128 tensor and its taper mean by one batched matmul over the taper axis.
+    opp_type: algorithmic
+    expected_speedup: 2-4x
+    speedup_basis: 'microbench:audit/profiles/micro/opp_spectral_csm-1.json at 118x1024, min of 3 repeats: cohmag sliced 1.95x, gemm 3.83x, plv sliced 2.45x (ratio of medians 2.88x; an earlier single-repeat 9.64x did not reproduce); traced numpy peak 1424 -> 713 MB (sliced) / 463 MB (gemm) for cohmag and 2730 -> 1374 MB for plv at 118x1024.
+      On this aggregate unit (no timing basis of its own, so unranked) it applies to the builds left after spectral_csm-shared-csm (depends_on), the one shared coherency build and the 9
+      measure-specific phase-sync per-taper builds per EEG window. No ranking basis on this row. This infrastructure unit has no SPI identifiers of its own, so profiles/summary.json holds no 118x1024 projection for it and rank_basis_s and projected_patient_s_after stay blank; its cost sits inside the timings of the units that call it. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README ''Optimisation columns'', rule 5).'
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_spectral_csm-1.json: cohmag sliced max_abs_diff 1.1-1.4e-16, gemm 1.7-2.2e-16, NaN masks equal; 7x100 golden max_abs 2.2e-16; plv sliced bit-identical at 32x1024, 118x1024 and the 7x100 golden set'
+    effort: M
+    depends_on:
+    - spectral_csm-shared-csm
+  - opportunity_id: spectral_csm-dpss-cache
+    opportunity: 'Cache the DPSS tapers by (n_time_samples, NW, n_tapers, is_low_bias) instead of recomputing them in every Multitaper (spectral_connectivity transforms.py:357-387 and 469-629: pure-Python tridiagonal inverse iteration, about 17-20 ms per call whatever the channel count).'
+    opp_type: cache-sharing
+    expected_speedup: 1-1.3x
+    speedup_basis: profile:audit/profiles/spectral.cohmag__8x1024.pstats dpss_windows 74.0% at 8x1024 but profile:audit/profiles/micro/prof_spectral.cohmag__118x1024.pstats dpss_windows 1.9% at 118x1024 (multivariate path); profile:audit/profiles/spectral.dtf__8x1024.pstats dpss_windows 25.1% per ordered pair on the bivariate path. No ranking basis on this row. This infrastructure unit has no SPI identifiers of its own, so profiles/summary.json holds no 118x1024 projection for it and rank_basis_s and projected_patient_s_after stay blank; its cost sits inside the timings of the units that call it. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README 'Optimisation columns', rule 5).
+    output_risk: unverified-bit-identical
+    risk_evidence: the same deterministic taper array is reused; nothing downstream changes
+    effort: S
+    depends_on: []

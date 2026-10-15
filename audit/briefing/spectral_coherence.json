@@ -1,0 +1,247 @@
+{
+ "family": "spectral_coherence",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/spectral.md"
+ ],
+ "hypotheses": [
+  "coherence_magnitude is |coherency|^2 (squared) despite the name 'magnitude'",
+  "coherence phase: arithmetic mean/max of principal angles over the band (M4), DC bin included in full/low bands",
+  "imaginary coherence is |Im S_xy|/sqrt(S_xx S_yy) (absolute value) whereas Nolte 2004 is signed"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/spectral.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    582,
+    613
+   ],
+   "section": "1.5",
+   "title": "Spectral (126 SPIs)"
+  },
+  {
+   "lines": [
+    614,
+    628
+   ],
+   "section": "1.5.1",
+   "title": "Coherence magnitude (cohmag)"
+  },
+  {
+   "lines": [
+    629,
+    642
+   ],
+   "section": "1.5.2",
+   "title": "Coherence phase (phase)"
+  },
+  {
+   "lines": [
+    684,
+    700
+   ],
+   "section": "1.5.5",
+   "title": "Imaginary coherence (icoh)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py (coherency, coherence_magnitude, coherence_phase, imaginary_coherence)"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [
+    "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+    "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+    "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+    "phase_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+    "phase_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+    "phase_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+    "phase_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+    "phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+    "phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+    "phase_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "CoherencePhase",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "CoherencePhase",
+   "representative": "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.phase"
+  },
+  {
+   "eeg_identifiers": [
+    "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+    "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+    "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+    "cohmag_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+    "cohmag_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+    "cohmag_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+    "cohmag_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+    "cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+    "cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+    "cohmag_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "cohmag_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "cohmag_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "CoherenceMagnitude",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "CoherenceMagnitude",
+   "representative": "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.cohmag"
+  },
+  {
+   "eeg_identifiers": [
+    "icoh_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+    "icoh_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+    "icoh_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+    "icoh_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+    "icoh_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+    "icoh_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+    "icoh_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+    "icoh_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+    "icoh_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+    "icoh_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+    "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "icoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "icoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "icoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "icoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "icoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "icoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "icoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "icoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "ImaginaryCoherence",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "ImaginaryCoherence",
+   "representative": "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.icoh"
+  }
+ ]
+}

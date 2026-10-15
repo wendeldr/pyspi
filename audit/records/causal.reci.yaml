@@ -1,0 +1,182 @@
+unit_id: causal.reci
+status: profiled
+correctness:
+  metric_name_standard: 'regression error based causal inference (RECI) score: mean squared error of regressing the min-max-scaled effect
+    on the min-max-scaled cause'
+  canonical_ref: Blobaum, Janzing, Washio, Shimizu & Scholkopf 2018, AISTATS (PMLR 84):900-909, §2.2 eq. (1) (E[(E - phi(C))^2] <= E[(C -
+    psi(E))^2] in the causal direction, variables scaled to [0, 1]), §4-5 (fit both directions, compare MSE; function classes LOG, MON a*x^n
+    + b with n in [2, 9], POLY degree 1-9, SVR, NN; random train/test splits, MSE averaged over runs)
+  canonical_definition: Rescale X and Y to [0, 1]; MSE_{X->Y} = E[(Y - phi(X))^2] with phi the (estimated) regression of Y on X, MSE_{Y->X}
+    likewise; infer X -> Y if MSE_{X->Y} < MSE_{Y->X}.
+  documented_definition: 'supplement §1.3.4, p.8: ''an estimate of the causal effect of x -> y by quantifying the error in a regression of
+    y on x with a monomial (power product) model. In the bivariate case, this statistic is the MSE of the linear regression of the cubic
+    (plus constant) of x with y''; keywords ''directed, nonlinear, unsigned''. GitBook causal-inference.md ''Regression Error-Based Causal
+    Inference'' repeats the text.'
+  delegate_lib: cdt==0.6.0 cdt.causality.pairwise.RECI(degree=3).b_fit_score(x, y) -> scikit-learn==1.9.1 minmax_scale, PolynomialFeatures,
+    LinearRegression (scipy.linalg.lstsq), mean_squared_error
+  implemented_as: 'A[i, j] = b_fit_score(x = z[i], y = z[j]): x and y min-max scaled to [0, 1]; design [1, 0, 0, x^3] (PolynomialFeatures(3)
+    columns x and x^2 zeroed); OLS with intercept; in-sample MSE = mean((y_hat - y)^2). Probe: equals numpy lstsq on [1, x^3] to <= 1.4e-17
+    on 6 dataset/T combinations.'
+  implementation_trace:
+  - 'pyspi/data.py:184-195 Data.set_data: detrend only if detrend=True (default False), then scipy.stats.zscore(axis=1, ddof=1) if normalise=True
+    (default); stored as (M, T, 1)'
+  - 'pyspi/calculator.py:251-267 Calculator._load_yaml: configs is empty for the four causal classes, so iterating None raises TypeError
+    and the class is instantiated with no arguments (261-267); labels come from the class attribute'
+  - 'pyspi/calculator.py:327-339 Calculator.compute: S = spi.multivariate(dataset) (329); fill_diagonal(S, nan) (332); any exception -> whole
+    matrix NaN (336-339) with a warning (354-355)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A[i, j] = self.bivariate(data, i=i, j=j) for every ordered pair i != j (no mirroring)'
+  - 'pyspi/base.py:27-49 parse_bivariate: two raw arrays are wrapped into a new Data object (base.py:33-36) and i, j = 0, 1 is set (base.py:41-43);
+    Data.add_process z-scores only the first array (data.py:238 set_data, normalise=True) and appends the second raw (data.py:230-234); the
+    Calculator/multivariate path passes the already z-scored Data through unchanged. Owned by unit preproc.two_array_api'
+  - pyspi/data.py:108-118 Data.to_numpy returns the (M, T, 1) array, so z[i] is a (T, 1) column
+  - 'pyspi/config.yaml:348-356 RegressionErrorCausalInference: configs empty'
+  - 'pyspi/statistics/causal.py:44-53 RegressionErrorCausalInference.bivariate: z = data.to_numpy(); return RECI().b_fit_score(z[i], z[j])'
+  - .venv/lib/python3.12/site-packages/cdt/causality/pairwise/RECI.py:77-79 __init__(degree=3)
+  - .venv/lib/python3.12/site-packages/cdt/causality/pairwise/RECI.py:104-105 x, y = minmax_scale(.) reshaped to (-1, 1)
+  - .venv/lib/python3.12/site-packages/sklearn/preprocessing/_data.py:631 minmax_scale(X, feature_range=(0, 1), axis=0)
+  - .venv/lib/python3.12/site-packages/cdt/causality/pairwise/RECI.py:106-110 PolynomialFeatures(degree=3).fit_transform(x) -> [1, x, x^2,
+    x^3]; columns 1 and 2 set to 0
+  - .venv/lib/python3.12/site-packages/cdt/causality/pairwise/RECI.py:112-116 LinearRegression().fit(poly_x, y); y_predict = predict(poly_x);
+    error = mean_squared_error(y_predict, y)
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:654-752 LinearRegression.fit: centring for the intercept, coef via
+    scipy.linalg.lstsq (752); the zero columns get coefficient 0 (minimum-norm solution)'
+  deviation_from_documented: 'none in substance: ''MSE of the linear regression of the cubic (plus constant) of x with y'' matches; undocumented
+    details are the [0, 1] min-max rescaling of both variables, in-sample (training) MSE, and that lower = more consistent with i -> j. Documented
+    cdt v0.5.23 vs installed 0.6.0 (already documented).'
+  deviation_from_canonical: (1) One fixed regression class (shifted monomial a*x^3 + b, one member of the paper's MON family n in [2, 9])
+    instead of a choice among function classes; (2) in-sample MSE on all samples, no train/test split or averaging over runs (paper §5 General
+    Remark); (3) only MSE_{i->j} is returned, the comparison with MSE_{j->i} (the actual RECI decision) is left to the user; (4) min-max
+    scaling is sensitive to single outliers (as in the paper).
+  units_and_range: 'MSE in squared [0, 1]-scaled units of y; >= 0 and <= var of the scaled y (<= 0.25) since OLS with intercept cannot exceed
+    the variance; invariant to positive affine rescaling of x or y (probe tests/README.md: reci differs between n1d0 and n0d0 by at most
+    3e-15); asymmetric.'
+  direction_convention: A[i, j] = MSE of predicting scaled z_j from (scaled z_i)^3; LOWER means more consistent with i -> j (Blobaum et al.
+    eq. (1)). Code-derived; to be confirmed empirically on the anm dataset.
+  symmetry_expected: asym
+  already_documented: 'partly: installed cdt 0.6.0 vs documented 0.5.23 (DEPENDENCY_MIGRATION.md CDT row); otherwise no'
+  new_finding_candidates:
+  - 'Candidate (fixed odd monomial only): RECI.py:109-110 zero the x and x^2 columns, so the regressor is a*x^3 + b on [0, 1]; for a linear
+    relation the fitted model is misspecified in both directions (probe delayed_noise_T256 linear copies: A[0,1] = 0.0358 vs A[1,0] = 0.0344,
+    no clear asymmetry) - expected behaviour of the cdt choice, not a bug; flagged so readers do not read reci as a general nonlinear regression
+    error.'
+  proposed_checks:
+  - datasets:
+    - anm
+    - nonlinear_dependence
+    - iid_gaussian
+    - delayed_noise
+    - contaminated
+    path: kernel
+    reference: numpy.linalg.lstsq on [1, x^3] after (v - min)/(max - min) scaling, in-sample MSE
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: agreement <= 1e-14 absolute (probe max 1.4e-17)
+  - datasets:
+    - anm
+    path: pipeline
+    reference: 'ground truth (x0 -> x1, x2 -> x3) and a from-scratch canonical RECI (Blobaum et al. 2018 §4-5: MON family n in 2..9 best
+      fit, held-out MSE averaged over 20 random 50/50 splits)'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'establishes the empirical convention: A[0,1] < A[1,0] (probe T=256: 0.0121 vs 0.0404); pair (2,3) close (0.0176 vs
+      0.0185) - record agreement with the canonical reference per T'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    - trending
+    path: pipeline-detrend
+    reference: 'analytic invariance: min-max scaling removes positive scale/offset, so scaled_offset (normalise=False) must equal bivariate_gaussian;
+      trending with detrend=True vs bivariate_gaussian shows the detrend effect'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: scaled_offset equals bivariate_gaussian to <= 1e-12; trending differs only through detrending residuals
+  check_method: independent-impl
+  check_reference: 'refs/cdt_pairwise.py:run_reci -> _kernels_distance.reci_ref (numpy lstsq on [1, x^3] after min-max scaling, no sklearn/cdt);
+    reci_canonical (Bloebaum et al. 2018: MON family n = 2..9, held-out MSE over 20 splits, written from recollection of the paper and
+    not re-checked against it, so the canonical direction values are those of the recalled form); probes/cdt_pairwise_probes.py:pairdiff'
+  check_data: 'kernel path: anm, nonlinear_dependence, iid_gaussian, delayed_noise, contaminated at T64/256/1024/4096; pipeline and pipeline-detrend:
+    anm, iid_gaussian T1024; direction anm T256/1024/4096; orientation var2_bivariate, logistic_maps_chaotic T1024; scaled_offset (kernel)
+    and trending (pipeline-detrend) T256/1024'
+  agreement_criterion: 'exact (rtol 1e-10, atol 1e-12) for replica, invariance and detrend runs; direction: sign of A.T - A vs ground truth
+    (anm) or the same-estimator reference (lagged)'
+  closeness: 'exact 24/24 runs (kernel, pipeline, pipeline-detrend), max abs 5.6e-17; invariance (raw scaled_offset vs the reference on the
+    unscaled draw) 2/2 max abs 6.9e-18; detrend 2/2 exact (detrending moves values by <= 1.0e-3); direction anm: T256 and T4096 agreement
+    1.0, T1024 0.5 (tanh pair D23 = -0.00026, while the recalled canonical MON-family held-out RECI gives +0.0007); cubic pair D01 = 0.0283/0.0291/0.0285
+    (canonical 0.0213/0.0237/0.0231); orientation 2/2 (var2_bivariate truth recovered, logistic_maps_chaotic not, identical in the reference)'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 7: 24/24 exact runs agree with a numpy OLS on [1, x^3] after [0, 1] min-max scaling, the supplement''s cubic-plus-constant MSE (max abs
+    5.6e-17). Canonical RECI differs: it uses a selected function class and held-out MSE.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: Matches the supplement ('MSE of the linear regression of the cubic (plus constant) of x with y') exactly; differs from canonical
+    RECI by using one fixed monomial a*x^3 + b instead of a selected function class, in-sample instead of held-out MSE, and returning only
+    MSE_{i->j} (the comparison with MSE_{j->i} is left to the user). The fixed cubic misranks the tanh anm pair at T1024 where the canonical
+    form (recalled, not re-checked against the paper) does not.
+  new_finding: false
+  definition_under_review: false
+  check_cost: 'cheap: 0.03 s for a P=4 matrix at T=4096'
+  symmetry_observed: 'asym: max|A - A.T| = 0.069 (nonlinear_dependence_T4096); values 0.0095-0.130 (within the 0.25 bound); no NaN or zero'
+  direction_observed: 'A[i, j] = in-sample MSE of predicting min-max-scaled z_j from (scaled z_i)^3, lower = more consistent with i -> j:
+    A[1,0] > A[0,1] on the cubic anm pair at every T; the tanh pair is a near-tie (wrong sign at T1024); var2_bivariate x -> y recovered
+    (D01 = 0.0024), logistic_maps_chaotic not (D01 = -0.040)'
+  candidate_resolutions:
+  - candidate: fixed odd monomial a*x^3 + b only (not a general nonlinear regression error)
+    outcome: confirmed
+    evidence: causal.reci|anm|1024|pipeline|direction (pyspi D23 = -0.00026 equals the cdt-form reference; canonical MON-family RECI +0.0007);
+      behaviour documented in supplement Sec. 1.3.4, so not counted as a new finding
+  checks_run:
+  - run_ids:
+    - causal.reci|*|exact
+    reference: refs/cdt_pairwise.py:run_reci -> _kernels_distance.reci_ref
+    outcome: pass 24/24 (max abs 5.6e-17)
+  - run_ids:
+    - causal.reci|*|invariance
+    - causal.reci|*|detrend
+    reference: refs/cdt_pairwise.py:run_reci (invariance = independent reci_ref on the unscaled draw, independent-impl)
+    outcome: pass 4/4 (exact)
+  - run_ids:
+    - causal.reci|anm|{256,1024,4096}|pipeline|direction
+    reference: refs/cdt_pairwise.py:reci_canonical (recalled Bloebaum et al. form, not re-checked against the paper)
+    outcome: 2/3 pass; T1024 fails on the tanh pair (D23 = -0.00026)
+  - run_ids:
+    - causal.reci|{var2_bivariate,logistic_maps_chaotic}|1024|pipeline|orientation
+    reference: refs/cdt_pairwise.py:run_reci
+    outcome: pass 2/2
+optimisation:
+  complexity_P_T: 'O(P^2 T): cdt RECI.b_fit_score per ordered pair (pyspi/statistics/causal.py:50-53): two minmax_scale calls, PolynomialFeatures, LinearRegression (lstsq on T x 4), mean_squared_error. Measured P_exponent 2.07, T_exponent 0.01: sklearn per-call overhead (about 1.5 ms per pair) dominates and the O(T) arithmetic is invisible up to T=1024. Pair term dominates; measured 21.5 s per window at 118x1024 (measured; the user''s historical EEG figure is 12.2 s, channel count unknown).'
+  hotspot_1: sklearn/utils/validation.py:check_array (third-party:sklearn) 44.9% of the profiled SPI call at 8x1024 (840 calls, 15 per pair; narwhals dataframe detection 19.4% and _assert_all_finite 10.8% inside), under sklearn/utils/_param_validation.py:wrapper 56.2%
+  hotspot_2: sklearn/preprocessing/_data.py:minmax_scale (third-party:sklearn) 37.8% of the profiled SPI call at 8x1024 (two per pair); LinearRegression.fit 20.6%, mean_squared_error 10.2%
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.204
+  profile_file: audit/profiles/causal.reci__8x1024.pstats
+  opportunities:
+  - opportunity_id: cdt_pairwise-1
+    opportunity: 'Replace the per-pair cdt RECI.b_fit_score call (minmax_scale, PolynomialFeatures, LinearRegression, mean_squared_error) by one batched closed-form OLS of y on [1, x^3] over all ordered pairs: min-max scale each channel once, then MSE[i, j] = var(y_j) - cov(x_i^3, y_j)^2 / var(x_i^3) from one P x P cross-moment matrix (pyspi/statistics/causal.py:50-53).'
+    opp_type: vectorise-batch
+    expected_speedup: ~3500x
+    speedup_basis: 'microbench:audit/profiles/micro/opp_cdt_pairwise-1.json (shapes 118x1024: 3621x, one-call baseline 22.1 s vs a 6.1 ms candidate that includes Data construction; 682x at 32x1024;
+      64x at 8x1024). The ranking basis (summary.json family-warm 21.66 s per window, extrapolated-pairs-from-8 because the family-warm run is infeasible above 8x1024, 12,998 s per patient; the fresh wall
+      measured at 118x1024 is 21.52 s, 0.7% lower) times compute_spi on a prebuilt Data (profile_units.py leaves Data construction untimed), so the like-for-like candidate cost is the math alone:
+      shapes 118x1024_split (Workflow 4c run) gives 3.10 ms for the math on a prebuilt Data and 3.19 ms for Data construction, so 21.66 s / 3.10 ms = 6983x like for like (7135x against that run''s
+      one-shot baseline of 22.13 s). With Data construction counted in the candidate the ratio moves with Data-construction time: 21.66 s / 6.11 ms = 3547x in the Workflow 3 run, 21.66 s / 6.94 ms
+      = 3122x in the 4c run. The lower bound 3500x is below the like-for-like ratio and is kept as a conservative figure (it understates the like-for-like ratio by about 2x); the rank does not depend
+      on it, since 12,998 s / k leaves 1.9-3.7 s per patient for any k from 6983x down to 3500x. Amdahl does not bind: the candidate replaces the whole pair loop (audit/profiles/causal.reci__8x1024.pstats
+      pyspi/statistics/causal.py:50 bivariate 99.9% cum, RECI.py:93 b_fit_score 99.7%)'
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_cdt_pairwise-1.json: max_abs_diff 8.3e-17, max_rel_diff 4.0e-15, nan_mask_equal true at 118x1024 (the same figures against a fresh one-shot baseline
+      in shapes 118x1024_split); max_rel 1.9e-15 against the 7x100 golden snapshot. The closed form fits the same model as cdt RECI.b_fit_score (OLS on [1, x^3] after min-max scaling, x and x^2 columns
+      zeroed). Its 0/0 case (a channel with zero range) does not arise with normalise=True (pyspi''s default, whose default detrend is False; the profiling ran normalise=True with detrend=True): a channel that is exactly constant when it is z-scored
+      gives NaN and Data.set_data raises before any SPI runs (pyspi/data.py:193-202). With detrend=False that holds for every constant channel (Workflow 4c close probe scratchpad/wf4c_close/flat2.py: a constant 5.0 or 0.0 channel
+      raises at T = 100, 256, 1024 and 4096). With detrend=True an exactly zero channel raises, while a constant nonzero channel either detrends to exact zeros and raises or leaves floating-point residue that z-scores to a channel of
+      nonzero range and reaches the SPI; which one happens depends on rounding, not on T alone (the same probe: a 5.0 channel passed at T = 100, 1024 and 4096 and raised at 256; the Workflow 4c recheck found a different T pattern on its
+      data). Either way a channel that reaches the SPI under normalise=True has nonzero range; with normalise=False a constant channel would give NaN in the candidate where sklearn''s minmax_scale gives a zero column, so the candidate would need
+      a guard there'
+    effort: S
+    depends_on: []

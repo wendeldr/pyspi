@@ -1,0 +1,298 @@
+unit_id: infotheory.mi.kraskov_DCE
+status: profiled
+correctness:
+  metric_name_standard: mutual information I(X;Y) in nats, KSG1 estimator (k=4, max-norm) with a Theiler window (dynamic correlation exclusion) of W_ij samples
+  canonical_ref: 'Kraskov, Stögbauer & Grassberger 2004, Phys. Rev. E 69, 066138, algorithm 1 (their Eq. 8; equation number from memory); MI definition: Cover & Thomas 2006, Elements of Information Theory,
+    2nd ed., §8.5. The supplement''s own reference for MI is [33] MacKay 2003. Theiler window: Theiler 1986, Phys. Rev. A 34, 2427 (supplement [36]); Kantz & Schreiber 2004, Nonlinear Time Series Analysis,
+    2nd ed. (section on the Theiler window, cited by the JIDT javadoc). Window heuristic: see infotheory.theiler_window (Bartlett 1946, supplement [37]).'
+  canonical_definition: 'I(X;Y) = ∫∫ p(x,y) log[p(x,y) / (p(x) p(y))] dx dy (nats). KSG1: Î = ψ(k) − ⟨ψ(n_x(i)+1) + ψ(n_y(i)+1)⟩_i + ψ(N), where ε(i) is the max-norm distance from z_i = (x_i, y_i) to its
+    k-th nearest neighbour (j ≠ i) and n_x(i), n_y(i) count j ≠ i with |x_j − x_i| < ε(i), |y_j − y_i| < ε(i); samples assumed i.i.d. With a Theiler window W, neighbours j with |t_j − t_i| <= W are excluded
+    from both the k-NN search and the marginal counts, so temporally correlated points do not count as independent neighbours.'
+  documented_definition: 'supplement §1.4.3, p.10 (pack lines 469-476): ''Mutual information [33] is an undirected measure of the (potentially nonlinear) dependence between paired observations of x and
+    y.'' Estimator: supplement §1.4, p.9 (pack lines 414-453): ''The Kraskov–Stögbauer-Grassberger (KSG) technique (ksg) combines nearest-neighbor estimators for mutual information based measures (default
+    of four nearest neighbors, indicated by modifier NN-4)''; ''We primarily use v1.5 of the Java Information Dynamics Toolkit [32]''. GitBook information-theory.md:11 says v1.6.1, :16 repeats the KSG text,
+    :160-180 lists mi_kraskov_NN-4 and mi_kraskov_NN-4_DCE. DCE: supplement §1.4, p.9-10: ''A common solution to reduce bias in nonlinear estimators (like the KSG technique) is to use dynamic correlation
+    exclusion (also known as a Theiler window) [35, 36], which excludes any data points within a given time window from the density estimate ... here, we set the window as the product of the autocorrelation
+    functions of both time series (a heuristic for the autocorrelation time based on Bartlett''s formula [10, 37]). The DCE modifier indicates that the Theiler window is used for the KSG estimator.'' Same
+    text GitBook information-theory.md:20.'
+  delegate_lib: JIDT jar pyspi/lib/jidt/infodynamics.jar (labelled 1.6.1 by pyspi/lib/jidt/version-1.6.1.txt, but its classes contain the NOISE_SEED property that JIDT master added after the v1.6.1 tag;
+    build date 2024-04-21 matches master a9b6b3e of 2024-04-20, whose source is cited below) infodynamics.measures.continuous.kraskov.MutualInfoCalculatorMultiVariateKraskov1.computeAverageLocalOfObservations,
+    called through jpype 1.7.1 on OpenJDK 21.0.12
+  implemented_as: As infotheory.mi.kraskov, but before each pair pyspi sets DYN_CORR_EXCL = int(2 · Σ_{k=0}^{T−1} r_i(k) r_j(k)) where r is the biased sample ACF of each z-scored channel over all T lags
+    (computed once per Data for all pairs and cached as data.theiler). JIDT then excludes every point with |t − t'| <= W from the joint k-NN search and both marginal counts, keeps ψ(N) with N = T, and raises
+    (-> NaN) if T <= 4 + 2W.
+  implementation_trace:
+  - pyspi/config.yaml:510-512 MutualInfo config estimator kraskov, prop_k 4, dyn_corr_excl AUTO
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, ddof=1) when normalise=True (Calculator default normalise=True, detrend=False)'
+  - 'pyspi/calculator.py:295-355 Calculator.compute: S = spi.multivariate(dataset); any exception escaping multivariate turns the whole SPI matrix NaN (per-pair JIDT exceptions are caught earlier inside
+    bivariate and give a NaN entry)'
+  - 'pyspi/base.py:84-94 Directed.multivariate (called via super): outer j, inner i != j, A[i, j] = bivariate(i, j)'
+  - 'pyspi/base.py:132-138 Undirected.multivariate: A = super().multivariate(data) (all ordered pairs i != j computed), li = tril_indices(-1); A[li] = A.T[li] (the upper triangle bivariate(i<j) is kept
+    and mirrored; the lower-triangle bivariate(i>j) values are computed and overwritten)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: identifier += ''_kraskov_NN-{prop_k}'', labels += [''nonlinear''], ''_DCE'' appended when dyn_corr_excl is truthy'
+  - 'pyspi/statistics/infotheory.py:84-93 JIDTBase._setup: setProperty(''k'', ''4''); setProperty(''BIAS_CORRECTION'', ''false'') (not a property of the Kraskov calculators: probe getProperty(''BIAS_CORRECTION'')
+    -> None, i.e. ignored); setProperty(''NOISE_SEED'', ''42'')'
+  - 'pyspi/statistics/infotheory.py:195-216 JIDTBase._set_theiler_window (dyn_corr_excl=''AUTO''): on the first call for a Data object computes, for every pair _i<_j, theiler[_i,_j] = theiler[_j,_i] = 2
+    * np.dot(utils.acf(z[_j]), utils.acf(z[_i])) and caches it as data.theiler; then setProperty(''DYN_CORR_EXCL'', str(int(data.theiler[i, j]))) on the calculator for the current pair'
+  - 'pyspi/utils.py:47-60 acf(x): x = scipy.stats.zscore(x) (ddof=0); acf = np.correlate(x, x, ''full''); acf /= acf[T-1]; returns lags 0..T-1 (biased sample ACF, divisor sum x^2 at every lag, no lag truncation)'
+  - pyspi/statistics/infotheory.py:103-134 _getcalc('MutualInfo') -> MutualInfoCalculatorMultiVariateKraskov1 (:116-119)
+  - 'pyspi/statistics/infotheory.py:267-283 MutualInfo.bivariate: _set_theiler_window(data, i, j) first (:270), then initialise(1,1), setObservations(x_i, x_j), computeAverageLocalOfObservations; bare except
+    -> NaN'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/MutualInfoMultiVariateCommon.java#L574-L643 MutualInfoMultiVariateCommon.finaliseAddObservations:
+    copies data, computes means and std (MatrixUtils.stdDevs, divisor N-1, MatrixUtils.java#L2490-L2502), normalises each column when NORMALISE=true (default true, :164; MatrixUtils.normalise :2663-2672),
+    then adds random.nextGaussian()*noiseLevel to every source then destination entry row by row from java.util.Random seeded with NOISE_SEED (:626-642; NOISE_SEED parsed at :265-271)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L180-L185 constructor:
+    addNoise=true, noiseLevel=1e-8; :74 k default 4; :79 normType = NORM_MAX_NORM; :133 numThreads = availableProcessors() (probe: 64 here)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L225-L250 setProperty:
+    k, NORM_TYPE, DYN_CORR_EXCL (dynCorrExcl = W > 0), NUM_THREADS; unknown names go to MutualInfoMultiVariateCommon.setProperty (unknown ignored)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L294-L308 finaliseAddObservations:
+    throws if totalObservations <= k + 2*DYN_CORR_EXCL; digammaK = digamma(k), digammaN = digamma(totalObservations) (N not reduced for the exclusion window)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L315-L330 computeAverageLocalOfObservations
+    -> computeFromObservations :427-526: splits time points over numThreads threads, sums per-thread partial digamma sums, returns digammaK - averageDiGammas + digammaN for algorithm 1 (:518-522)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L715-L738 ensureKdTreesConstructed:
+    joint KdTree over (source, dest) and per-marginal NearestNeighbourSearcher (UnivariateNearestNeighbourSearcher for 1-D), all max-norm, carrying observationTimePoints for the exclusion window'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov1.java#L60-L123 partialComputeFromObservations:
+    eps_t = distance of the k-th nearest neighbour in the joint space (kdTreeJoint.findKNearestNeighbours(k, t, dynCorrExclTime), :79-83); n_x, n_y = countPointsStrictlyWithinR(t, eps_t, dynCorrExclTime)
+    in each marginal (:88-91); sum digamma(n_x+1) + digamma(n_y+1) (:97-99)'
+  - 'JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/utils/KdTree.java#L751-L753 findKNearestNeighbours: a candidate is admissible only if it
+    comes from another observation set or |timePoint(candidate) - timePoint(sample)| > dynCorrExclTime (so W=0 excludes only the sample itself); https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/utils/UnivariateNearestNeighbourSearcher.java#L497-L530
+    countPointsWithinR skips |dt| <= dynCorrExclTime and counts norm < r strictly (allowEqualToR=false)'
+  deviation_from_documented: '(1) Window formula: documented as ''the product of the autocorrelation functions of both time series''; implemented as 2 × the inner product of the two full sample ACFs over
+    lags 0..T−1, truncated with int(). (2) Documented as a heuristic for the autocorrelation time from Bartlett''s formula; the implemented value equals Bartlett''s 1 + 2Σ_{k>=1} r_i(k) r_j(k) plus exactly
+    1 before truncation (probe p3: raw − Bartlett = 1.00 on every pair). (3) Because all T−1 lags are summed, W is not an autocorrelation time for oscillatory or trending inputs: it grows linearly with
+    T (narrowband ≈ T/3: 22/85/339/1353 at T=64/256/1024/4096). (4) Other undocumented details as in infotheory.mi.kraskov (jitter, seed, nats, negative values).'
+  deviation_from_canonical: 'KSG1 with Theiler window as implemented in JIDT (from-scratch KSG1 with |dt| <= W exclusion reproduces pyspi to <= 1e-12 at W = 2-85, probe p5). ψ(N) is not adjusted for the
+    excluded points (JIDT notes this as an open TODO, MutualInfoCalculatorMultiVariateKraskov1.java:102-104 at JIDT a9b6b3e). The window size rule is a pyspi heuristic (see infotheory.theiler_window); canonical practice
+    chooses W of the order of the autocorrelation time, whereas here W can exclude about two thirds of the series. Effect on values is large where W is large (narrowband_f0-0.1 T=256 pair (0,1): 1.448 without,
+    2.239 with DCE).'
+  units_and_range: nats; real, can be negative (probe iid_gaussian T=256 min -0.036); symmetric; NaN when T <= 4 + 2W (JIDT exception caught), not observed for MI on the audit datasets because W <= ~T/3
+  direction_convention: 'Undirected: A[i, j] = A[j, i]. Directed.multivariate (base.py:88-94, called via super) computes bivariate(i, j) for every ordered pair i != j, lower triangle included; Undirected.multivariate
+    (base.py:134-137) then overwrites the lower triangle with the transpose, so A[i, j] = A[j, i] = bivariate(min(i,j), max(i,j)) and the bivariate(max, min) result is computed and discarded. KSG1 itself
+    is symmetric (probe p2: bivariate(0,1) = bivariate(1,0) = 0.033251782902); the DCE window matrix is symmetric (infotheory.py:208-211)'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'CANDIDATE (pack hypothesis confirmed): window = int(2·dot(acf_i, acf_j)) = int(Bartlett + 1); probe p3 shows raw2dot − (1 + 2Σ_{k>=1}) = 1.00 for every pair, e.g. iid_gaussian T=256 W = 2 where Bartlett
+    gives 1.04; gauss_ar1_pair T=1024 W = 5 vs 4.14. The pair value is computed once per Data object and cached (infotheory.py:197-212), not recomputed per pair.'
+  - 'CANDIDATE: W scales with T for oscillatory, trending or slowly varying inputs because the inner product runs over all T lags: narrowband_f0-0.1 W = 22/85/339/1353 (T=64..4096), logistic_maps 14/39/208/665,
+    trending without detrend 1403 at T=4096 (2 with detrend), cointegrated 1277 at T=4096, shared_envelope 1084 at T=4096 (probe p3). A Theiler window of ~T/3 removes about 2/3 of candidate neighbours for
+    every point.'
+  - 'CANDIDATE: on these inputs DCE increases the estimate markedly instead of only removing a small bias: narrowband_f0-0.1 T=256 pair (0,1) 1.448 -> 2.239; narrowband_f0-0.25 T=64 min over pairs 0.329
+    -> 1.227; logistic_maps T=64 0.186 -> 0.720 (probes p5, p13).'
+  - 'CANDIDATE: the value depends on the machine''s core count at the 1e-14 level, because NUM_THREADS defaults to availableProcessors() (64 here) and per-thread digamma partial sums are added in thread
+    order. Probe p2 (bivariate_gaussian T=1024): max |A(default) - A(NUM_THREADS=1)| = 7.1e-15 mi, 1.1e-14 mi_DCE, 1.6e-14 tlmi, 2.4e-15 te_k1, 4.2e-15 te_auto; repeat runs on the same machine are bit-identical.'
+  - 'CANDIDATE: on tied or discrete-valued inputs the estimate is set by the 1e-8 jitter and its seed. Probe p12, logistic_maps T=256 (series 1 is the period-4 r=3.5 map, 4 distinct values): pair 1->0 for
+    NOISE_SEED 42/43/44 gives mi 0.226622/0.226587/0.230899, tlmi 0.278902/0.276961/0.281417, te_k1 0.115063/0.113329/0.107266, te_auto 0.101410 (l,lt=7,2) / 0.089128 (10,2) / 0.044229 (6,1); bivariate_gaussian
+    is identical for all seeds.'
+  - 'CANDIDATE (estimator property, not a pyspi bug): labelled ''unsigned'' but KSG estimates are negative on independent data. Probe p13 minima at T=64: mi -0.167 (nonlinear_dependence), tlmi -0.143 (iid_gaussian),
+    te_k1 -0.134 (logistic_maps), te_auto_DCE -0.178 (cointegrated); at T=256 iid_gaussian mi min -0.055.'
+  - 'CANDIDATE (new, confirmed by probe): a deep copy of this SPI loses NOISE_SEED and prop_k. JIDTBase.__deepcopy__ (infotheory.py:77-82) deep-copies the JPype calculator, which yields a fresh Java object
+    with JIDT constructor defaults (NOISE_SEED ''NONE'', k 4). CalculatorFrame.init_from_list deep-copies the base Calculator (calculator.py:556-563, deepcopy at :559), so CalculatorFrame runs this SPI
+    with unseeded jitter. On tie-free data the value is unchanged (var2_bivariate T=256 diff 0.0, probe scratchpad it_kraskov_fix/p_te_copy.py). On tied input it is not reproducible: logistic_maps T=256
+    pair 1->0 (channel 1 has 4 distinct values) mi_DCE 0.603752 on every run, three deep copies 0.592057/0.606156/0.603638 (probe scratchpad it_kraskov_fix/p_tied_dce.py). The k reset is harmless at NN-4
+    but changes any NN-k with k != 4: mi_kraskov_NN-6 on bivariate_gaussian T=256 (0,1) 0.039668 -> 0.028352 after deepcopy (probe scratchpad it_kraskov_fix/r4_deepcopy.py). Pickle (JIDTBase.__setstate__
+    via _getcalc/_setup) keeps NOISE_SEED and prop_k and reproduces the original.'
+  - 'CANDIDATE (efficiency, correctness-neutral): every unordered pair is estimated twice. Directed.multivariate (base.py:88-94) runs bivariate for all P(P−1) ordered pairs and Undirected.multivariate (base.py:134-137)
+    discards the lower triangle, so half of the KSG runs are thrown away; KSG1 MI is symmetric (probe p2), so computing i<j only would give the same matrix at half the cost.'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - delayed_noise
+    - iid_gaussian
+    - logistic_maps
+    - narrowband_f0-0.1
+    - gauss_ar1_pair
+    path: kernel
+    reference: 'from-scratch brute-force KSG1 MI in numpy (max-norm pairwise distance matrices, k-th neighbour by sort, strict counts, |dt| <= W exclusion) + scipy.special.digamma, columns standardised
+      with ddof=1 and the 1e-8 jitter regenerated by a pure-Python java.util.Random LCG (nextGaussian polar method, seed 42; matches java.util.Random to 2e-16); does not import JIDT/jpype. Prototype: scratchpad
+      it_kraskov/probes/ksg_ref.py, with the pair-specific Theiler window W_ij from infotheory.theiler_window, applied to the z-scored rows (i, j)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'agreement to <= 1e-12 absolute on every pair at T in {64, 256, 1024} (prototype probe p5 at T=256: |Δ| <= 3e-15, W up to 85); confirms the trace including jitter order and strict
+      counts'
+  - datasets:
+    - bivariate_gaussian
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'analytic Gaussian MI −½ log(1 − ρ²): bivariate_gaussian truth ''true_mi_nats'' = (0.0472, 0.5108) for pairs (0,1),(2,3); gauss_ar1_pair ρ from truth Sigma_X gives 0.1578 nats (computed in
+      this stage from Sigma_X)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'KSG1 converges to the analytic value as T grows: |Î − I| shrinking with T and below ~0.02 nats at T=4096 for bivariate_gaussian; for gauss_ar1_pair (autocorrelated) the DCE estimate
+      is compared with the non-DCE one to see whether the window reduces or increases the error (probe p5 T=256: non-DCE 0.1195, DCE 0.1688, analytic 0.1578)'
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: analytic null I = 0 for independent processes
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'off-diagonal values centred near 0 with spread shrinking with T; negative values expected (probe: T=64 min -0.096 (non-DCE), T=256 min -0.055)'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    path: pipeline
+    reference: 'invariance: scaled_offset is the same draw as bivariate_gaussian times a per-process scale plus offset; z-scoring (and the estimator) remove both'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: A(scaled_offset) equals A(bivariate_gaussian) to <= 1e-10 (residual only from floating-point differences in the z-scored inputs relative to the 1e-8 jitter)
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'symmetry: A == A.T and bivariate(i, j) == bivariate(j, i) evaluated fresh (KSG1 is symmetric in X, Y apart from jitter assignment)'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'A symmetric exactly (mirror); fresh bivariate(i,j) and bivariate(j,i) equal to <= 1e-14 (probe p2: 0.033251782902 both orders)'
+  - datasets:
+    - bivariate_gaussian
+    - nonlinear_dependence
+    path: kernel
+    reference: sklearn.feature_selection.mutual_info_regression(x[:,None], y, n_neighbors=4, discrete_features=False) (independent KSG implementation; it adds its own small noise and scales without centring,
+      so differences are expected)
+    reference_kind: external-pkg
+    criterion: tolerance
+    expected_outcome: close (|Δ| < 0.01 nats on continuous data at T >= 256); note sklearn clips negative estimates to 0, so compare only where both are positive
+  - datasets:
+    - narrowband_f0-0.1
+    - narrowband_f0-0.25
+    - shared_envelope
+    - cointegrated
+    - trending
+    path: pipeline
+    reference: 'analytic expectation of the window rule: W ≈ T/3 for a sinusoid (2 Σ_k (1−k/T)² cos²(ωk) ≈ T/3), and the JIDT guard N <= k + 2W raises'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'W grows linearly with T on oscillatory/trending inputs (probe p3: narrowband 22/85/339/1353 at T=64/256/1024/4096; trending without detrend 1403 at T=4096, 2 with detrend); MI is
+      still finite (no NaN in probe p13 at T=64, 256) but each sample excludes about 2/3 of the series; record DCE vs non-DCE values (probe narrowband T=256 pair (0,1): 1.448 -> 2.239)'
+  - datasets:
+    - trending
+    - cointegrated
+    path: pipeline-detrend
+    reference: same window rule on detrended input (Data(detrend=True))
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'trending: W collapses from 58-1403 to 1-2 after detrend (probe p3), cointegrated remains large (T=4096: 1093 with detrend); MI_DCE values change accordingly'
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/it_kraskov.py:mi_jidt/cmi_jidt/te_jidt/te_auto_jidt (N-1 column z-score, pure-Python java.util.Random(42) jitter port in JIDT row/column order, then audit/checks/refs/_kernels_infotheory.py:mi_ksg1/cmi_ksg1
+    with normalise=False: cKDTree max norm, k=4, strict counts, Theiler |s-t|<=W, guard N<=k+2W -> NaN); DCE window audit/checks/refs/it_kraskov.py:window_raw (explicit lag-loop ACF); no JIDT/jpype; numpy
+    2.5.4, scipy 1.18.1 (audit/checks/refs/it_kraskov.py:chk_ksg, chk_ordered, chk_invariance); audit/checks/refs/it_kraskov.py:chk_truth (analytic population value + Monte Carlo mean/SD of the same estimator
+    without jitter under the generating model); audit/checks/refs/it_kraskov.py:chk_null (mean over pairs vs Monte Carlo distribution on iid N(0,1) data); audit/checks/refs/it_kraskov.py:chk_threads (same-lineage);
+    window rule: see infotheory.theiler_window'
+  check_data: bivariate_gaussian T256/1024, nonlinear_dependence, delayed_noise, narrowband_f0-0.1, gauss_ar1_pair T1024, iid_gaussian T64/256, logistic_maps T256, narrowband_f0-0.25 T64, trending T1024
+    (pipeline-detrend), scaled_offset T1024
+  agreement_criterion: tolerance rtol 1e-10 / atol 1e-12; statistical |pyspi - MC mean| <= 2 MC SD; null qualitative
+  closeness: 'from-scratch KSG1 with the pair window: 10/10 ksg runs max_abs <= 7.1e-15 for W from 1 to 339 (narrowband_f0-0.1 W=339, logistic_maps W=39, narrowband_f0-0.25 T=64 W=22, trending detrended
+    W=2); ordered 3.6e-15 (asymmetry 0.0); invariance 3.6e-15. Statistical: bivariate_gaussian (0,1) 0.0381 vs MC 0.0550 (z 0.79), (2,3) 0.5050 vs 0.5210 (z 0.52); gauss_ar1_pair (W=5) 0.1475 vs population
+    0.1578, MC mean of the DCE estimator 0.1697 (non-DCE MC mean 0.1572): the window adds +0.012 expected bias here instead of removing one. Null iid T=256: mean 0.0008 (MC 0.0125 +- 0.0125, z -0.93), min
+    -0.036. Effect of the window: narrowband_f0-0.1 T=1024 A[0,1] 1.442 (no DCE) -> 2.254 (W=339); logistic_maps T=256 0.230 -> 0.606 (W=39).'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 6: the KSG part agrees to <= 7.1e-15 for W 1-339, but the window comes from the int(Bartlett + 1) all-lag rule, not the documented heuristic
+    (narrowband T=1024: 1.442 without DCE, 2.254 with W=339).'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'KSG1 with a Theiler window is computed exactly as JIDT defines it (|s-t| <= W excluded, psi(N) unadjusted), but the window comes from the pyspi rule int(Bartlett + 1) over all lags (infotheory.theiler_window),
+    which grows to about T/3 on oscillatory or trending input and then raises the estimate strongly (narrowband 1.44 -> 2.25 nats). Scored 6 (deviates from both the supplement and canonical in an interpretable
+    way), consistent with infotheory.theiler_window: the value is set by the window rule, which is not the documented autocorrelation-time heuristic (Bartlett + 1 over all lags, about T/3 on oscillatory
+    input, with a non-vanishing upward bias on cross-correlated pairs).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: pyspi <= 2.6 s at T=1024'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on every run; ordered matrix also exactly symmetric (W_ij = W_ji)'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = I(x_i; x_j) with Theiler window W_ij'
+  candidate_resolutions:
+  - candidate: window = int(Bartlett + 1), cached once per Data
+    outcome: confirmed
+    evidence: infotheory.theiler_window|*|bartlett and |lagloop (raw - Bartlett = 1.0000; whole matrix filled by one call)
+  - candidate: W scales with T on oscillatory/trending/slow input
+    outcome: confirmed
+    evidence: infotheory.theiler_window|narrowband_f0-0.1|*|growth (0.33 T); infotheory.mi.kraskov_DCE|narrowband_f0-0.1|1024|kernel|ksg W=339
+  - candidate: DCE raises the estimate markedly on these inputs
+    outcome: confirmed
+    evidence: infotheory.mi.kraskov|narrowband_f0-0.1|1024|kernel|ksg 1.442 vs infotheory.mi.kraskov_DCE|narrowband_f0-0.1|1024|kernel|ksg 2.254; logistic_maps T=256 0.230 vs 0.606; both reproduced to <=
+      2.7e-15
+  - candidate: core-count dependence at 1e-14
+    outcome: confirmed
+    evidence: 'infotheory.mi.kraskov_DCE|bivariate_gaussian|1024|pipeline|threads: 1.07e-14, repeat 0.0'
+  - candidate: 'tied inputs: value set by jitter seed'
+    outcome: confirmed
+    evidence: same calculator and jitter path as mi.kraskov (infotheory.mi.kraskov|logistic_maps|256|pipeline|seeds spread 0.0035); the DCE value on tied logistic_maps (0.606) is reproduced only with the
+      seeded jitter port (infotheory.mi.kraskov_DCE|logistic_maps|256|kernel|ksg 2.7e-15)
+  - candidate: negative values despite 'unsigned'
+    outcome: confirmed
+    evidence: 'infotheory.mi.kraskov_DCE|iid_gaussian|256|pipeline|null: min -0.036, 50% negative'
+  - candidate: deepcopy (CalculatorFrame) loses NOISE_SEED and prop_k
+    outcome: confirmed
+    evidence: 'same JIDTBase.__deepcopy__ as mi.kraskov: tied data: mi_kraskov logistic_maps T=256 A[0,1] Calculator 0.2301, CalculatorFrame a non-reproducible draw, because deepcopy leaves the jitter unseeded
+      (here 0.2300; an earlier run of the same check gave 0.2248), pickle 0.2301 (infotheory.mi.kraskov|logistic_maps|256|pipeline|copy, frame_vs_calculator 1.3e-04 in this run); prop_k loss shown at the
+      check stage on MutualInfo(kraskov, prop_k=6) = mi_kraskov_NN-6 (bivariate_gaussian rows 2-3 T=256, tie-free): Calculator and pickle equal the k=6 reference 0.5290 (<= 5.3e-15), CalculatorFrame and
+      deepcopy give 0.5379, the k=4 value (2.7e-15 from the k=4 reference); read-back k: original 6, deepcopy 4, pickle 6 (infotheory.mi.kraskov|bivariate_gaussian-p23|256|pipeline|copyk6, |copypropsk6)'
+  - candidate: 'efficiency: every unordered pair estimated twice'
+    outcome: confirmed
+    evidence: 'infotheory.mi.kraskov_DCE|bivariate_gaussian|1024|pipeline|ordered: max|O - O.T| = 0.0'
+  checks_run:
+  - run_ids:
+    - infotheory.mi.kraskov_DCE|*|kernel|ksg
+    - infotheory.mi.kraskov_DCE|bivariate_gaussian|256|pipeline|ksg
+    - infotheory.mi.kraskov_DCE|trending|1024|pipeline-detrend|ksg
+    reference: audit/checks/refs/it_kraskov.py:chk_ksg
+    outcome: pass 10/10; max_abs <= 7.1e-15
+  - run_ids:
+    - infotheory.mi.kraskov_DCE|bivariate_gaussian-p01|1024|pipeline|truth
+    - infotheory.mi.kraskov_DCE|bivariate_gaussian-p23|1024|pipeline|truth
+    - infotheory.mi.kraskov_DCE|gauss_ar1_pair|1024|pipeline|truth
+    reference: audit/checks/refs/it_kraskov.py:chk_truth
+    outcome: pass 3/3; max z 0.79
+  - run_ids:
+    - infotheory.mi.kraskov_DCE|iid_gaussian|256|pipeline|null
+    reference: audit/checks/refs/it_kraskov.py:chk_null
+    outcome: pass; z -0.93
+  - run_ids:
+    - infotheory.mi.kraskov_DCE|scaled_offset|1024|pipeline|invariance
+    - infotheory.mi.kraskov_DCE|bivariate_gaussian|1024|pipeline|ordered
+    - infotheory.mi.kraskov_DCE|bivariate_gaussian|1024|pipeline|threads
+    reference: audit/checks/refs/it_kraskov.py:chk_invariance, chk_ordered, chk_threads
+    outcome: pass 3/3; 3.6e-15; threads 1.07e-14
+optimisation:
+  complexity_P_T: 'O(P^2 N log N + P^2 T^2): as mi.kraskov plus a per-pair DYN_CORR_EXCL window; _set_theiler_window (infotheory.py:195-216) builds data.theiler once per Data with two utils.acf calls (np.correlate,
+    O(T^2)) per unordered pair. JIDT KSG1 per call: kd-tree build and k=4 max-norm neighbour search O(N log N d), split over NUM_THREADS = 64 threads by default (MutualInfoCalculatorMultiVariateKraskov.computeFromObservations).
+    Measured T exponent -0.02; 270 s projected at 118 (extrapolated-pairs-from-8).'
+  hotspot_1: pyspi/statistics/infotheory.py:MutualInfo.bivariate (third-party:jidt KSG, self time) 100.0% cum / 96.1% self of the profiled SPI call at 8x1024
+  hotspot_2: 'pyspi/statistics/infotheory.py:JIDTBase._set_theiler_window (pyspi) 3.8% cum, of which pyspi/utils.py:acf is 0.45% (56 calls, 0.023 s of the 5.13 s call; np.correlate 0.13%) and 3.3% is the
+    frame''s own self time (0.171 s: the loop and the 56 JIDT setProperty calls, which JPype dispatches without cProfile entries), not acf. A self time that large shows up in 2 of the 5 DCE profiles, here and
+    in te_kraskov_DCE_auto at 8x256 (0.299 s, 0.72%), against 0.06-0.08% in the tlmi_kraskov_DCE and te_kraskov_DCE k-1 / k-2 profiles at 8x1024. audit/profiles/micro/probe_theiler_window_calls.json times every
+    call without cProfile (3 fresh processes x 2 SPI calls per DCE unit, two runs): after the window-building first call (16-35 ms here, almost all acf) a call takes a median of 0.02-0.03 ms, apart from rare
+    single stalls, here one of 155 ms in 1 of 6 SPI calls in one run and none in the other. The stalls are not work of this frame: in the probe''s precall case (te_kraskov_DCE_auto) a trivial Java call timed
+    just before each _set_theiler_window call takes them over and the frame stays below 0.06 ms, so they land on the first Java call of a pair. opaque_share is a lower bound: JPype dispatches Java methods
+    without cProfile entries, so the JIDT (Java) time is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0023
+  profile_file: audit/profiles/infotheory.mi.kraskov_DCE__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_kraskov-1
+    opportunity: Set NUM_THREADS=1 on every JIDT KSG calculator (pyspi never sets it, so JIDT splits each call over availableProcessors() = 64 threads) and take throughput from running windows or pair blocks
+      in separate processes with one JVM each.
+    opp_type: parallel
+    expected_speedup: 1-7x
+    speedup_basis: microbench:audit/profiles/micro/opp_it_kraskov-1.json (mi_kraskov_NN-4_DCE at 8x1024, single-thread 0.155 / 0.427 / 1.491 s in three runs against the quiet default wall of 1.09 s = 7.0x
+      / 2.6x / 0.7x; same-run defaults 4.34 / 2.81 / 4.28 s; process CPU per call 0.37-1.28 s single-thread vs 5.4-6.3 s default); three runs of the script on the shared machine (top level + earlier_runs)
+      give single-thread walls that vary ~5x at 8x1024 with JVM background CPU, so the low end is the contended case and the high end the least contended (CPU ~ wall) + profile:audit/profiles/infotheory.mi.kraskov_DCE__8x1024.pstats
+      pyspi/statistics/infotheory.py:267 MutualInfo.bivariate 100.0% (the JIDT call; cProfile cannot split thread start-up from the KSG search).
+      Independent of xc-undirected-upper (independent_of), because that avenue halves the number of JIDT calls and this one lowers the CPU of each call (fewer calls times a cheaper
+      call), so the savings multiply
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_it_kraskov-1.json: max_abs_diff 1.6e-14 in all three runs, NaN masks equal (per-thread digamma partial sums are added in a different order); check stage threads
+      runs <= 1.6e-14'
+    effort: S
+    depends_on:
+    - xc-window-parallel
+    independent_of:
+    - xc-undirected-upper

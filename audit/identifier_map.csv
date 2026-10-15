@@ -1,0 +1,452 @@
+identifier,unit_id,module,source,in_config,in_extra,in_eeg_selection,params
+cov_EmpiricalCovariance,basic.cov.EmpiricalCovariance,basic,config,true,false,true,"{""estimator"": ""EmpiricalCovariance""}"
+cov-sq_EmpiricalCovariance,basic.cov.EmpiricalCovariance,basic,config,true,false,true,"{""estimator"": ""EmpiricalCovariance"", ""squared"": true}"
+cov_EllipticEnvelope,basic.cov.EllipticEnvelope,basic,config,true,false,false,"{""estimator"": ""EllipticEnvelope""}"
+cov-sq_EllipticEnvelope,basic.cov.EllipticEnvelope,basic,config,true,false,false,"{""estimator"": ""EllipticEnvelope"", ""squared"": true}"
+cov_GraphicalLasso,basic.cov.GraphicalLasso,basic,config,true,false,false,"{""estimator"": ""GraphicalLasso""}"
+cov-sq_GraphicalLasso,basic.cov.GraphicalLasso,basic,config,true,false,true,"{""estimator"": ""GraphicalLasso"", ""squared"": true}"
+cov_GraphicalLassoCV,basic.cov.GraphicalLassoCV,basic,config,true,false,true,"{""estimator"": ""GraphicalLassoCV""}"
+cov-sq_GraphicalLassoCV,basic.cov.GraphicalLassoCV,basic,config,true,false,true,"{""estimator"": ""GraphicalLassoCV"", ""squared"": true}"
+cov_LedoitWolf,basic.cov.LedoitWolf,basic,config,true,false,true,"{""estimator"": ""LedoitWolf""}"
+cov-sq_LedoitWolf,basic.cov.LedoitWolf,basic,config,true,false,true,"{""estimator"": ""LedoitWolf"", ""squared"": true}"
+cov_MinCovDet,basic.cov.MinCovDet,basic,config,true,false,true,"{""estimator"": ""MinCovDet""}"
+cov-sq_MinCovDet,basic.cov.MinCovDet,basic,config,true,false,true,"{""estimator"": ""MinCovDet"", ""squared"": true}"
+cov_OAS,basic.cov.OAS,basic,config,true,false,true,"{""estimator"": ""OAS""}"
+cov-sq_OAS,basic.cov.OAS,basic,config,true,false,true,"{""estimator"": ""OAS"", ""squared"": true}"
+cov_ShrunkCovariance,basic.cov.ShrunkCovariance,basic,config,true,false,true,"{""estimator"": ""ShrunkCovariance""}"
+cov-sq_ShrunkCovariance,basic.cov.ShrunkCovariance,basic,config,true,false,true,"{""estimator"": ""ShrunkCovariance"", ""squared"": true}"
+prec_EmpiricalCovariance,basic.prec.EmpiricalCovariance,basic,config,true,false,true,"{""estimator"": ""EmpiricalCovariance""}"
+prec-sq_EmpiricalCovariance,basic.prec.EmpiricalCovariance,basic,config,true,false,true,"{""estimator"": ""EmpiricalCovariance"", ""squared"": true}"
+prec_EllipticEnvelope,basic.prec.EllipticEnvelope,basic,config,true,false,true,"{""estimator"": ""EllipticEnvelope""}"
+prec-sq_EllipticEnvelope,basic.prec.EllipticEnvelope,basic,config,true,false,true,"{""estimator"": ""EllipticEnvelope"", ""squared"": true}"
+prec_GraphicalLasso,basic.prec.GraphicalLasso,basic,config,true,false,true,"{""estimator"": ""GraphicalLasso""}"
+prec-sq_GraphicalLasso,basic.prec.GraphicalLasso,basic,config,true,false,true,"{""estimator"": ""GraphicalLasso"", ""squared"": true}"
+prec_GraphicalLassoCV,basic.prec.GraphicalLassoCV,basic,config,true,false,true,"{""estimator"": ""GraphicalLassoCV""}"
+prec-sq_GraphicalLassoCV,basic.prec.GraphicalLassoCV,basic,config,true,false,true,"{""estimator"": ""GraphicalLassoCV"", ""squared"": true}"
+prec_LedoitWolf,basic.prec.LedoitWolf,basic,config,true,false,true,"{""estimator"": ""LedoitWolf""}"
+prec-sq_LedoitWolf,basic.prec.LedoitWolf,basic,config,true,false,true,"{""estimator"": ""LedoitWolf"", ""squared"": true}"
+prec_MinCovDet,basic.prec.MinCovDet,basic,config,true,false,true,"{""estimator"": ""MinCovDet""}"
+prec-sq_MinCovDet,basic.prec.MinCovDet,basic,config,true,false,true,"{""estimator"": ""MinCovDet"", ""squared"": true}"
+prec_OAS,basic.prec.OAS,basic,config,true,false,true,"{""estimator"": ""OAS""}"
+prec-sq_OAS,basic.prec.OAS,basic,config,true,false,true,"{""estimator"": ""OAS"", ""squared"": true}"
+prec_ShrunkCovariance,basic.prec.ShrunkCovariance,basic,config,true,false,true,"{""estimator"": ""ShrunkCovariance""}"
+prec-sq_ShrunkCovariance,basic.prec.ShrunkCovariance,basic,config,true,false,true,"{""estimator"": ""ShrunkCovariance"", ""squared"": true}"
+spearmanr-sq,basic.spearmanr,basic,config,true,false,true,"{""squared"": true}"
+spearmanr,basic.spearmanr,basic,config,true,false,true,"{""squared"": false}"
+kendalltau-sq,basic.kendalltau,basic,config,true,false,true,"{""squared"": true}"
+kendalltau,basic.kendalltau,basic,config,true,false,false,"{""squared"": false}"
+xcorr_max_sig-True,basic.xcorr.max_sig-True,basic,config,true,false,false,"{""statistic"": ""max""}"
+xcorr-sq_max_sig-True,basic.xcorr.max_sig-True,basic,config,true,false,false,"{""squared"": true, ""statistic"": ""max""}"
+xcorr_mean_sig-True,basic.xcorr.mean_sig-True,basic,config,true,false,false,"{""statistic"": ""mean""}"
+xcorr-sq_mean_sig-True,basic.xcorr.mean_sig-True,basic,config,true,false,false,"{""squared"": true, ""statistic"": ""mean""}"
+xcorr_mean_sig-False,basic.xcorr.mean_sig-False,basic,config,true,false,true,"{""sigonly"": false, ""statistic"": ""mean""}"
+xcorr-sq_mean_sig-False,basic.xcorr.mean_sig-False,basic,config,true,false,true,"{""sigonly"": false, ""squared"": true, ""statistic"": ""mean""}"
+pdist_euclidean,distance.pdist.euclidean,distance,config,true,false,true,"{""metric"": ""euclidean""}"
+pdist_cityblock,distance.pdist.cityblock,distance,config,true,false,true,"{""metric"": ""cityblock""}"
+pdist_cosine,distance.pdist.cosine,distance,config,true,false,true,"{""metric"": ""cosine""}"
+pdist_chebyshev,distance.pdist.chebyshev,distance,config,true,false,true,"{""metric"": ""chebyshev""}"
+pdist_canberra,distance.pdist.canberra,distance,config,true,false,true,"{""metric"": ""canberra""}"
+pdist_braycurtis,distance.pdist.braycurtis,distance,config,true,false,true,"{""metric"": ""braycurtis""}"
+dcorr,distance.dcorr.biased-False,distance,config,true,false,false,"{""biased"": false}"
+dcorr_biased,distance.dcorr.biased-True,distance,config,true,false,false,"{""biased"": true}"
+mgc,distance.mgc,distance,config,true,false,false,
+hsic,distance.hsic.biased-False,distance,config,true,false,false,"{""biased"": false}"
+hsic_biased,distance.hsic.biased-True,distance,config,true,false,false,"{""biased"": true}"
+hhg,distance.hhg,distance,config,true,false,false,
+mgcx_maxlag-1,distance.mgcx.maxlag-1,distance,config,true,false,false,"{""max_lag"": 1}"
+mgcx_maxlag-10,distance.mgcx.maxlag-10,distance,config,true,false,false,"{""max_lag"": 10}"
+dcorrx_maxlag-1,distance.dcorrx.maxlag-1,distance,config,true,false,false,"{""max_lag"": 1}"
+dcorrx_maxlag-10,distance.dcorrx.maxlag-10,distance,config,true,false,false,"{""max_lag"": 10}"
+dtw,distance.dtw.constraint-None,distance,config,true,false,false,"{""global_constraint"": null}"
+dtw_constraint-itakura,distance.dtw.constraint-itakura,distance,config,true,false,false,"{""global_constraint"": ""itakura""}"
+dtw_constraint-sakoe-chiba,distance.dtw.constraint-sakoe_chiba,distance,config,true,false,false,"{""global_constraint"": ""sakoe_chiba""}"
+softdtw,distance.softdtw,distance,config,true,false,false,"{""global_constraint"": null}"
+softdtw_constraint-itakura,distance.softdtw,distance,config,true,false,false,"{""global_constraint"": ""itakura""}"
+softdtw_constraint-sakoe-chiba,distance.softdtw,distance,config,true,false,false,"{""global_constraint"": ""sakoe_chiba""}"
+lcss,distance.lcss.constraint-None,distance,config,true,false,false,"{""global_constraint"": null}"
+lcss_constraint-itakura,distance.lcss.constraint-itakura,distance,config,true,false,false,"{""global_constraint"": ""itakura""}"
+lcss_constraint-sakoe-chiba,distance.lcss.constraint-sakoe_chiba,distance,config,true,false,false,"{""global_constraint"": ""sakoe_chiba""}"
+bary_euclidean_mean,distance.bary.euclidean,distance,config,true,false,true,"{""mode"": ""euclidean"", ""statistic"": ""mean""}"
+bary_euclidean_max,distance.bary.euclidean,distance,config,true,false,true,"{""mode"": ""euclidean"", ""statistic"": ""max""}"
+bary-sq_euclidean_mean,distance.bary.euclidean,distance,config,true,false,true,"{""mode"": ""euclidean"", ""squared"": true, ""statistic"": ""mean""}"
+bary-sq_euclidean_max,distance.bary.euclidean,distance,config,true,false,true,"{""mode"": ""euclidean"", ""squared"": true, ""statistic"": ""max""}"
+bary_dtw_mean,distance.bary.dtw,distance,config,true,false,false,"{""mode"": ""dtw"", ""statistic"": ""mean""}"
+bary_dtw_max,distance.bary.dtw,distance,config,true,false,false,"{""mode"": ""dtw"", ""statistic"": ""max""}"
+bary-sq_dtw_mean,distance.bary.dtw,distance,config,true,false,false,"{""mode"": ""dtw"", ""squared"": true, ""statistic"": ""mean""}"
+bary-sq_dtw_max,distance.bary.dtw,distance,config,true,false,false,"{""mode"": ""dtw"", ""squared"": true, ""statistic"": ""max""}"
+bary_sgddtw_mean,distance.bary.sgddtw,distance,config,true,false,false,"{""mode"": ""sgddtw"", ""statistic"": ""mean""}"
+bary_sgddtw_max,distance.bary.sgddtw,distance,config,true,false,false,"{""mode"": ""sgddtw"", ""statistic"": ""max""}"
+bary-sq_sgddtw_mean,distance.bary.sgddtw,distance,config,true,false,false,"{""mode"": ""sgddtw"", ""squared"": true, ""statistic"": ""mean""}"
+bary-sq_sgddtw_max,distance.bary.sgddtw,distance,config,true,false,false,"{""mode"": ""sgddtw"", ""squared"": true, ""statistic"": ""max""}"
+bary_softdtw_mean,distance.bary.softdtw,distance,config,true,false,false,"{""mode"": ""softdtw"", ""statistic"": ""mean""}"
+bary_softdtw_max,distance.bary.softdtw,distance,config,true,false,false,"{""mode"": ""softdtw"", ""statistic"": ""max""}"
+bary-sq_softdtw_mean,distance.bary.softdtw,distance,config,true,false,false,"{""mode"": ""softdtw"", ""squared"": true, ""statistic"": ""mean""}"
+bary-sq_softdtw_max,distance.bary.softdtw,distance,config,true,false,false,"{""mode"": ""softdtw"", ""squared"": true, ""statistic"": ""max""}"
+gwtau,distance.gwtau,distance,config,true,false,false,
+anm,causal.anm,causal,config,true,false,false,
+cds,causal.cds,causal,config,true,false,false,
+reci,causal.reci,causal,config,true,false,true,
+igci,causal.igci,causal,config,true,false,false,
+ccm_E-None_mean,causal.ccm.E-None,causal,config,true,false,false,"{""statistic"": ""mean""}"
+ccm_E-None_max,causal.ccm.E-None,causal,config,true,false,false,"{""statistic"": ""max""}"
+ccm_E-None_diff,causal.ccm.E-None,causal,config,true,false,false,"{""statistic"": ""diff""}"
+ccm_E-1_mean,causal.ccm.E-1,causal,config,true,false,false,"{""embedding_dimension"": 1, ""statistic"": ""mean""}"
+ccm_E-1_max,causal.ccm.E-1,causal,config,true,false,false,"{""embedding_dimension"": 1, ""statistic"": ""max""}"
+ccm_E-1_diff,causal.ccm.E-1,causal,config,true,false,false,"{""embedding_dimension"": 1, ""statistic"": ""diff""}"
+ccm_E-10_mean,causal.ccm.E-10,causal,config,true,false,false,"{""embedding_dimension"": 10, ""statistic"": ""mean""}"
+ccm_E-10_max,causal.ccm.E-10,causal,config,true,false,false,"{""embedding_dimension"": 10, ""statistic"": ""max""}"
+ccm_E-10_diff,causal.ccm.E-10,causal,config,true,false,false,"{""embedding_dimension"": 10, ""statistic"": ""diff""}"
+je_gaussian,infotheory.je.gaussian,infotheory,config,true,false,true,"{""estimator"": ""gaussian""}"
+je_kozachenko,infotheory.je.kozachenko,infotheory,config,true,false,false,"{""estimator"": ""kozachenko""}"
+je_kernel_W-0.5,infotheory.je.kernel,infotheory,config,true,false,false,"{""estimator"": ""kernel""}"
+ce_gaussian,infotheory.ce.gaussian,infotheory,config,true,false,true,"{""estimator"": ""gaussian""}"
+ce_kozachenko,infotheory.ce.kozachenko,infotheory,config,true,false,false,"{""estimator"": ""kozachenko""}"
+ce_kernel_W-0.5,infotheory.ce.kernel,infotheory,config,true,false,false,"{""estimator"": ""kernel""}"
+cce_gaussian,infotheory.cce.gaussian,infotheory,config,true,false,false,"{""estimator"": ""gaussian""}"
+cce_kozachenko,infotheory.cce.kozachenko,infotheory,config,true,false,false,"{""estimator"": ""kozachenko""}"
+cce_kernel_W-0.5,infotheory.cce.kernel,infotheory,config,true,false,false,"{""estimator"": ""kernel""}"
+xme_gaussian_k1,infotheory.xme.gaussian_k1,infotheory,config,true,false,false,"{""estimator"": ""gaussian"", ""history_length"": 1}"
+xme_kozachenko_k1,infotheory.xme.kozachenko_k1,infotheory,config,true,false,false,"{""estimator"": ""kozachenko"", ""history_length"": 1}"
+xme_kernel_W-0.5_k1,infotheory.xme.kernel_k1,infotheory,config,true,false,false,"{""estimator"": ""kernel"", ""history_length"": 1}"
+xme_gaussian_k10,infotheory.xme.gaussian_k10,infotheory,config,true,false,false,"{""estimator"": ""gaussian"", ""history_length"": 10}"
+xme_kozachenko_k10,infotheory.xme.kozachenko_k10,infotheory,config,true,false,false,"{""estimator"": ""kozachenko"", ""history_length"": 10}"
+xme_kernel_W-0.5_k10,infotheory.xme.kernel_k10,infotheory,config,true,false,false,"{""estimator"": ""kernel"", ""history_length"": 10}"
+di_gaussian,infotheory.di.gaussian,infotheory,config,true,false,false,"{""estimator"": ""gaussian""}"
+di_kozachenko,infotheory.di.kozachenko,infotheory,config,true,false,false,"{""estimator"": ""kozachenko""}"
+di_kernel_W-0.5,infotheory.di.kernel,infotheory,config,true,false,false,"{""estimator"": ""kernel""}"
+si_gaussian_k-1,infotheory.si.gaussian,infotheory,config,true,false,false,"{""estimator"": ""gaussian""}"
+si_kozachenko_k-1,infotheory.si.kozachenko,infotheory,config,true,false,false,"{""estimator"": ""kozachenko""}"
+si_kernel_W-0.5_k-1,infotheory.si.kernel,infotheory,config,true,false,false,"{""estimator"": ""kernel""}"
+mi_gaussian,infotheory.mi.gaussian,infotheory,config,true,false,true,"{""estimator"": ""gaussian""}"
+mi_kraskov_NN-4,infotheory.mi.kraskov,infotheory,config,true,false,false,"{""estimator"": ""kraskov"", ""prop_k"": 4}"
+mi_kraskov_NN-4_DCE,infotheory.mi.kraskov_DCE,infotheory,config,true,false,false,"{""dyn_corr_excl"": ""AUTO"", ""estimator"": ""kraskov"", ""prop_k"": 4}"
+mi_kernel_W-0.25,infotheory.mi.kernel,infotheory,config,true,false,false,"{""estimator"": ""kernel"", ""kernel_width"": 0.25}"
+tlmi_gaussian,infotheory.tlmi.gaussian,infotheory,config,true,false,true,"{""estimator"": ""gaussian""}"
+tlmi_kraskov_NN-4,infotheory.tlmi.kraskov,infotheory,config,true,false,false,"{""estimator"": ""kraskov"", ""prop_k"": 4}"
+tlmi_kraskov_NN-4_DCE,infotheory.tlmi.kraskov_DCE,infotheory,config,true,false,false,"{""dyn_corr_excl"": ""AUTO"", ""estimator"": ""kraskov"", ""prop_k"": 4}"
+tlmi_kernel_W-0.25,infotheory.tlmi.kernel,infotheory,config,true,false,false,"{""estimator"": ""kernel"", ""kernel_width"": 0.25}"
+te_kraskov_NN-4_k-max-10_tau-max-4,infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4,infotheory,config,true,false,false,"{""auto_embed_method"": ""MAX_CORR_AIS"", ""estimator"": ""kraskov"", ""k_search_max"": 10, ""prop_k"": 4, ""tau_search_max"": 4}"
+te_kraskov_NN-4_DCE_k-max-10_tau-max-4,infotheory.te.kraskov_DCE_auto-MAX_CORR_AIS_kmax-10_taumax-4,infotheory,config,true,false,false,"{""auto_embed_method"": ""MAX_CORR_AIS"", ""dyn_corr_excl"": ""AUTO"", ""estimator"": ""kraskov"", ""k_search_max"": 10, ""prop_k"": 4, ""tau_search_max"": 4}"
+te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1,infotheory.te.kraskov_DCE_k-2_kt-1_l-1_lt-1,infotheory,config,true,false,false,"{""dyn_corr_excl"": ""AUTO"", ""estimator"": ""kraskov"", ""k_history"": 2, ""l_history"": 1, ""prop_k"": 4}"
+te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1,infotheory.te.kraskov_DCE_k-1_kt-1_l-1_lt-1,infotheory,config,true,false,false,"{""dyn_corr_excl"": ""AUTO"", ""estimator"": ""kraskov"", ""k_history"": 1, ""l_history"": 1, ""prop_k"": 4}"
+te_kraskov_NN-4_k-1_kt-1_l-1_lt-1,infotheory.te.kraskov_k-1_kt-1_l-1_lt-1,infotheory,config,true,false,false,"{""estimator"": ""kraskov"", ""k_history"": 1, ""l_history"": 1, ""prop_k"": 4}"
+te_kernel_W-0.25_k-1,infotheory.te.kernel_k-1_kt-1_l-1_lt-1,infotheory,config,true,false,false,"{""estimator"": ""kernel"", ""k_history"": 1, ""kernel_width"": 0.25, ""l_history"": 1}"
+gc_gaussian_k-max-10_tau-max-2,infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2,infotheory,config,true,false,false,"{""auto_embed_method"": ""MAX_CORR_AIS"", ""estimator"": ""gaussian"", ""k_search_max"": 10, ""tau_search_max"": 2}"
+gc_gaussian_k-1_kt-1_l-1_lt-1,infotheory.te.gaussian_k-1_kt-1_l-1_lt-1,infotheory,config,true,false,true,"{""estimator"": ""gaussian"", ""k_history"": 1, ""l_history"": 1}"
+te_symbolic_k-1_kt-1_l-1_lt-1,infotheory.te.symbolic,infotheory,config,true,false,true,"{""estimator"": ""symbolic"", ""k_history"": 1, ""l_history"": 1}"
+te_symbolic_k-10_kt-1_l-1_lt-1,infotheory.te.symbolic,infotheory,config,true,false,true,"{""estimator"": ""symbolic"", ""k_history"": 10, ""l_history"": 1}"
+phi_star_t-1_norm-0,infotheory.phi.star_norm-0,infotheory,config,true,false,false,"{""phitype"": ""star""}"
+phi_star_t-1_norm-1,infotheory.phi.star_norm-1,infotheory,config,true,false,false,"{""normalization"": 1, ""phitype"": ""star""}"
+phi_Geo_t-1_norm-0,infotheory.phi.Geo_norm-0,infotheory,config,true,false,false,"{""phitype"": ""Geo""}"
+phi_Geo_t-1_norm-1,infotheory.phi.Geo_norm-1,infotheory,config,true,false,false,"{""normalization"": 1, ""phitype"": ""Geo""}"
+phase_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.phase,spectral,config,true,false,true,"{""fs"": 1}"
+phase_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.phase,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.phase,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+phase_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.phase,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+phase_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.phase,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.phase,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195,spectral.phase,spectral,eeg-band-variant,false,false,true,
+phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342,spectral.phase,spectral,eeg-band-variant,false,false,true,
+phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122,spectral.phase,spectral,eeg-band-variant,false,false,true,
+phase_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391,spectral.phase,spectral,eeg-band-variant,false,false,true,
+phase_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586,spectral.phase,spectral,eeg-band-variant,false,false,true,
+phase_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146,spectral.phase,spectral,eeg-band-variant,false,false,true,
+phase_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342,spectral.phase,spectral,eeg-band-variant,false,false,true,
+phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732,spectral.phase,spectral,eeg-band-variant,false,false,true,
+phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122,spectral.phase,spectral,eeg-band-variant,false,false,true,
+phase_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122,spectral.phase,spectral,eeg-band-variant,false,false,true,
+cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.cohmag,spectral,config,true,false,true,"{""fs"": 1}"
+cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.cohmag,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.cohmag,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.cohmag,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.cohmag,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+cohmag_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.cohmag,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195,spectral.cohmag,spectral,eeg-band-variant,false,false,true,
+cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342,spectral.cohmag,spectral,eeg-band-variant,false,false,true,
+cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122,spectral.cohmag,spectral,eeg-band-variant,false,false,true,
+cohmag_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391,spectral.cohmag,spectral,eeg-band-variant,false,false,true,
+cohmag_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586,spectral.cohmag,spectral,eeg-band-variant,false,false,true,
+cohmag_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146,spectral.cohmag,spectral,eeg-band-variant,false,false,true,
+cohmag_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342,spectral.cohmag,spectral,eeg-band-variant,false,false,true,
+cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732,spectral.cohmag,spectral,eeg-band-variant,false,false,true,
+cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122,spectral.cohmag,spectral,eeg-band-variant,false,false,true,
+cohmag_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122,spectral.cohmag,spectral,eeg-band-variant,false,false,true,
+icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.icoh,spectral,config,true,false,true,"{""fs"": 1}"
+icoh_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.icoh,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+icoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.icoh,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+icoh_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.icoh,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+icoh_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.icoh,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+icoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.icoh,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+icoh_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195,spectral.icoh,spectral,eeg-band-variant,false,false,true,
+icoh_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342,spectral.icoh,spectral,eeg-band-variant,false,false,true,
+icoh_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122,spectral.icoh,spectral,eeg-band-variant,false,false,true,
+icoh_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391,spectral.icoh,spectral,eeg-band-variant,false,false,true,
+icoh_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586,spectral.icoh,spectral,eeg-band-variant,false,false,true,
+icoh_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146,spectral.icoh,spectral,eeg-band-variant,false,false,true,
+icoh_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342,spectral.icoh,spectral,eeg-band-variant,false,false,true,
+icoh_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732,spectral.icoh,spectral,eeg-band-variant,false,false,true,
+icoh_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122,spectral.icoh,spectral,eeg-band-variant,false,false,true,
+icoh_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122,spectral.icoh,spectral,eeg-band-variant,false,false,true,
+psi_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.psi,spectral,config,true,false,true,"{""fmax"": 0.5, ""fmin"": 0}"
+psi_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.psi,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.psi,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+psi_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195,spectral.psi,spectral,eeg-band-variant,false,false,true,
+psi_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342,spectral.psi,spectral,eeg-band-variant,false,false,true,
+psi_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122,spectral.psi,spectral,eeg-band-variant,false,false,true,
+psi_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391,spectral.psi,spectral,eeg-band-variant,false,false,true,
+psi_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586,spectral.psi,spectral,eeg-band-variant,false,false,true,
+psi_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146,spectral.psi,spectral,eeg-band-variant,false,false,true,
+psi_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342,spectral.psi,spectral,eeg-band-variant,false,false,true,
+psi_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732,spectral.psi,spectral,eeg-band-variant,false,false,true,
+psi_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122,spectral.psi,spectral,eeg-band-variant,false,false,true,
+psi_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122,spectral.psi,spectral,eeg-band-variant,false,false,true,
+plv_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.plv,spectral,config,true,false,true,"{""fs"": 1}"
+plv_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.plv,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+plv_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.plv,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+plv_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.plv,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+plv_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.plv,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+plv_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.plv,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+plv_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195,spectral.plv,spectral,eeg-band-variant,false,false,true,
+plv_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342,spectral.plv,spectral,eeg-band-variant,false,false,true,
+plv_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122,spectral.plv,spectral,eeg-band-variant,false,false,true,
+plv_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391,spectral.plv,spectral,eeg-band-variant,false,false,true,
+plv_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586,spectral.plv,spectral,eeg-band-variant,false,false,true,
+plv_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146,spectral.plv,spectral,eeg-band-variant,false,false,true,
+plv_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342,spectral.plv,spectral,eeg-band-variant,false,false,true,
+plv_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732,spectral.plv,spectral,eeg-band-variant,false,false,true,
+plv_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122,spectral.plv,spectral,eeg-band-variant,false,false,true,
+plv_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122,spectral.plv,spectral,eeg-band-variant,false,false,true,
+pli_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.pli,spectral,config,true,false,true,"{""fs"": 1}"
+pli_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.pli,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+pli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.pli,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+pli_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.pli,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+pli_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.pli,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+pli_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.pli,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195,spectral.pli,spectral,eeg-band-variant,false,false,true,
+pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342,spectral.pli,spectral,eeg-band-variant,false,false,true,
+pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122,spectral.pli,spectral,eeg-band-variant,false,false,true,
+pli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391,spectral.pli,spectral,eeg-band-variant,false,false,true,
+pli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586,spectral.pli,spectral,eeg-band-variant,false,false,true,
+pli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146,spectral.pli,spectral,eeg-band-variant,false,false,true,
+pli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342,spectral.pli,spectral,eeg-band-variant,false,false,true,
+pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732,spectral.pli,spectral,eeg-band-variant,false,false,true,
+pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122,spectral.pli,spectral,eeg-band-variant,false,false,true,
+pli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122,spectral.pli,spectral,eeg-band-variant,false,false,true,
+wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.wpli,spectral,config,true,false,true,"{""fs"": 1}"
+wpli_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.wpli,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+wpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.wpli,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+wpli_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.wpli,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+wpli_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.wpli,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+wpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.wpli,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+wpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195,spectral.wpli,spectral,eeg-band-variant,false,false,true,
+wpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342,spectral.wpli,spectral,eeg-band-variant,false,false,true,
+wpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122,spectral.wpli,spectral,eeg-band-variant,false,false,true,
+wpli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391,spectral.wpli,spectral,eeg-band-variant,false,false,true,
+wpli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586,spectral.wpli,spectral,eeg-band-variant,false,false,true,
+wpli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146,spectral.wpli,spectral,eeg-band-variant,false,false,true,
+wpli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342,spectral.wpli,spectral,eeg-band-variant,false,false,true,
+wpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732,spectral.wpli,spectral,eeg-band-variant,false,false,true,
+wpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122,spectral.wpli,spectral,eeg-band-variant,false,false,true,
+wpli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122,spectral.wpli,spectral,eeg-band-variant,false,false,true,
+dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.dspli,spectral,config,true,false,true,"{""fs"": 1}"
+dspli_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.dspli,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+dspli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.dspli,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+dspli_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.dspli,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+dspli_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.dspli,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+dspli_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.dspli,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+dspli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195,spectral.dspli,spectral,eeg-band-variant,false,false,true,
+dspli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342,spectral.dspli,spectral,eeg-band-variant,false,false,true,
+dspli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122,spectral.dspli,spectral,eeg-band-variant,false,false,true,
+dspli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391,spectral.dspli,spectral,eeg-band-variant,false,false,true,
+dspli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586,spectral.dspli,spectral,eeg-band-variant,false,false,true,
+dspli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146,spectral.dspli,spectral,eeg-band-variant,false,false,true,
+dspli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342,spectral.dspli,spectral,eeg-band-variant,false,false,true,
+dspli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732,spectral.dspli,spectral,eeg-band-variant,false,false,true,
+dspli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122,spectral.dspli,spectral,eeg-band-variant,false,false,true,
+dspli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122,spectral.dspli,spectral,eeg-band-variant,false,false,true,
+dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.dswpli,spectral,config,true,false,true,"{""fs"": 1}"
+dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.dswpli,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+dswpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.dswpli,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+dswpli_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.dswpli,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+dswpli_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.dswpli,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+dswpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.dswpli,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+dswpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195,spectral.dswpli,spectral,eeg-band-variant,false,false,true,
+dswpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342,spectral.dswpli,spectral,eeg-band-variant,false,false,true,
+dswpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122,spectral.dswpli,spectral,eeg-band-variant,false,false,true,
+dswpli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391,spectral.dswpli,spectral,eeg-band-variant,false,false,true,
+dswpli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586,spectral.dswpli,spectral,eeg-band-variant,false,false,true,
+dswpli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146,spectral.dswpli,spectral,eeg-band-variant,false,false,true,
+dswpli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342,spectral.dswpli,spectral,eeg-band-variant,false,false,true,
+dswpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732,spectral.dswpli,spectral,eeg-band-variant,false,false,true,
+dswpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122,spectral.dswpli,spectral,eeg-band-variant,false,false,true,
+dswpli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122,spectral.dswpli,spectral,eeg-band-variant,false,false,true,
+ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.ppc,spectral,config,true,false,true,"{""fs"": 1}"
+ppc_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.ppc,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+ppc_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.ppc,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+ppc_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.ppc,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+ppc_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.ppc,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.ppc,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+ppc_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195,spectral.ppc,spectral,eeg-band-variant,false,false,true,
+ppc_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342,spectral.ppc,spectral,eeg-band-variant,false,false,true,
+ppc_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122,spectral.ppc,spectral,eeg-band-variant,false,false,true,
+ppc_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391,spectral.ppc,spectral,eeg-band-variant,false,false,true,
+ppc_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586,spectral.ppc,spectral,eeg-band-variant,false,false,true,
+ppc_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146,spectral.ppc,spectral,eeg-band-variant,false,false,true,
+ppc_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342,spectral.ppc,spectral,eeg-band-variant,false,false,true,
+ppc_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732,spectral.ppc,spectral,eeg-band-variant,false,false,true,
+ppc_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122,spectral.ppc,spectral,eeg-band-variant,false,false,true,
+ppc_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122,spectral.ppc,spectral,eeg-band-variant,false,false,true,
+dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.dtf,spectral,config,true,false,false,"{""fs"": 1}"
+dtf_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.dtf,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+dtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.dtf,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+dtf_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.dtf,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+dtf_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.dtf,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+dtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.dtf,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.dcoh,spectral,config,true,false,false,"{""fs"": 1}"
+dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.dcoh,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.dcoh,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.dcoh,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.dcoh,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+dcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.dcoh,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.pdcoh,spectral,config,true,false,false,"{""fs"": 1}"
+pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.pdcoh,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+pdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.pdcoh,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.pdcoh,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.pdcoh,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+pdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.pdcoh,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.gpdcoh,spectral,config,true,false,false,"{""fs"": 1}"
+gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.gpdcoh,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+gpdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.gpdcoh,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.gpdcoh,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.gpdcoh,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+gpdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.gpdcoh,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5,spectral.ddtf,spectral,config,true,false,false,"{""fs"": 1}"
+ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-25,spectral.ddtf,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+ddtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5,spectral.ddtf,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+ddtf_multitaper_max_fs-1_fmin-0_fmax-0-5,spectral.ddtf,spectral,config,true,false,false,"{""fs"": 1, ""statistic"": ""max""}"
+ddtf_multitaper_max_fs-1_fmin-0_fmax-0-25,spectral.ddtf,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+ddtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5,spectral.ddtf,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+gd_multitaper_delay_fs-1_fmin-0_fmax-0-5,spectral.gd,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""delay""}"
+gd_multitaper_delay_fs-1_fmin-0_fmax-0-25,spectral.gd,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""delay""}"
+gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5,spectral.gd,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""delay""}"
+gd_multitaper_delay_fs-1_fmin-0-000488_fmax-0-00195,spectral.gd,spectral,eeg-band-variant,false,false,true,
+gd_multitaper_delay_fs-1_fmin-0-000488_fmax-0-0342,spectral.gd,spectral,eeg-band-variant,false,false,true,
+gd_multitaper_delay_fs-1_fmin-0-000488_fmax-0-122,spectral.gd,spectral,eeg-band-variant,false,false,true,
+gd_multitaper_delay_fs-1_fmin-0-00195_fmax-0-00391,spectral.gd,spectral,eeg-band-variant,false,false,true,
+gd_multitaper_delay_fs-1_fmin-0-00391_fmax-0-00586,spectral.gd,spectral,eeg-band-variant,false,false,true,
+gd_multitaper_delay_fs-1_fmin-0-00586_fmax-0-0146,spectral.gd,spectral,eeg-band-variant,false,false,true,
+gd_multitaper_delay_fs-1_fmin-0-0146_fmax-0-0342,spectral.gd,spectral,eeg-band-variant,false,false,true,
+gd_multitaper_delay_fs-1_fmin-0-0342_fmax-0-0732,spectral.gd,spectral,eeg-band-variant,false,false,true,
+gd_multitaper_delay_fs-1_fmin-0-0342_fmax-0-122,spectral.gd,spectral,eeg-band-variant,false,false,true,
+gd_multitaper_delay_fs-1_fmin-0-0732_fmax-0-122,spectral.gd,spectral,eeg-band-variant,false,false,true,
+sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5,spectral.sgc.nonparametric,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0, ""method"": ""nonparametric"", ""statistic"": ""mean""}"
+sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-25,spectral.sgc.nonparametric,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""method"": ""nonparametric"", ""statistic"": ""mean""}"
+sgc_nonparametric_mean_fs-1_fmin-0-25_fmax-0-5,spectral.sgc.nonparametric,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""method"": ""nonparametric"", ""statistic"": ""mean""}"
+sgc_nonparametric_max_fs-1_fmin-0_fmax-0-5,spectral.sgc.nonparametric,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0, ""method"": ""nonparametric"", ""statistic"": ""max""}"
+sgc_nonparametric_max_fs-1_fmin-0_fmax-0-25,spectral.sgc.nonparametric,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""method"": ""nonparametric"", ""statistic"": ""max""}"
+sgc_nonparametric_max_fs-1_fmin-0-25_fmax-0-5,spectral.sgc.nonparametric,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""method"": ""nonparametric"", ""statistic"": ""max""}"
+sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None,spectral.sgc.parametric_order-None,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0, ""method"": ""parametric"", ""statistic"": ""mean""}"
+sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None,spectral.sgc.parametric_order-None,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""method"": ""parametric"", ""statistic"": ""mean""}"
+sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None,spectral.sgc.parametric_order-None,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""method"": ""parametric"", ""statistic"": ""mean""}"
+sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None,spectral.sgc.parametric_order-None,spectral,config,true,false,false,"{""fs"": 1, ""method"": ""parametric"", ""statistic"": ""max""}"
+sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None,spectral.sgc.parametric_order-None,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""method"": ""parametric"", ""statistic"": ""max""}"
+sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None,spectral.sgc.parametric_order-None,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""method"": ""parametric"", ""statistic"": ""max""}"
+sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1,spectral.sgc.parametric_order-1,spectral,config,true,false,false,"{""fs"": 1, ""method"": ""parametric"", ""order"": 1, ""statistic"": ""mean""}"
+sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1,spectral.sgc.parametric_order-1,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""method"": ""parametric"", ""order"": 1, ""statistic"": ""mean""}"
+sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1,spectral.sgc.parametric_order-1,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""method"": ""parametric"", ""order"": 1, ""statistic"": ""mean""}"
+sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1,spectral.sgc.parametric_order-1,spectral,config,true,false,false,"{""fs"": 1, ""method"": ""parametric"", ""order"": 1, ""statistic"": ""max""}"
+sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1,spectral.sgc.parametric_order-1,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""method"": ""parametric"", ""order"": 1, ""statistic"": ""max""}"
+sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1,spectral.sgc.parametric_order-1,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""method"": ""parametric"", ""order"": 1, ""statistic"": ""max""}"
+sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20,spectral.sgc.parametric_order-20,spectral,config,true,false,false,"{""fs"": 1, ""method"": ""parametric"", ""order"": 20, ""statistic"": ""mean""}"
+sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20,spectral.sgc.parametric_order-20,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""method"": ""parametric"", ""order"": 20, ""statistic"": ""mean""}"
+sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20,spectral.sgc.parametric_order-20,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""method"": ""parametric"", ""order"": 20, ""statistic"": ""mean""}"
+sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20,spectral.sgc.parametric_order-20,spectral,config,true,false,false,"{""fs"": 1, ""method"": ""parametric"", ""order"": 20, ""statistic"": ""max""}"
+sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20,spectral.sgc.parametric_order-20,spectral,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""method"": ""parametric"", ""order"": 20, ""statistic"": ""max""}"
+sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20,spectral.sgc.parametric_order-20,spectral,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""method"": ""parametric"", ""order"": 20, ""statistic"": ""max""}"
+psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean,wavelet.psi,wavelet,config,true,false,false,"{""fs"": 1}"
+psi_wavelet_mean_fs-1_fmin-0_fmax-0-25_mean,wavelet.psi,wavelet,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0}"
+psi_wavelet_mean_fs-1_fmin-0-25_fmax-0-5_mean,wavelet.psi,wavelet,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+psi_wavelet_max_fs-1_fmin-0_fmax-0-5_max,wavelet.psi,wavelet,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""max""}"
+psi_wavelet_max_fs-1_fmin-0_fmax-0-25_max,wavelet.psi,wavelet,config,true,false,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max,wavelet.psi,wavelet,config,true,false,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+lmfit_Ridge,misc.lmfit.Ridge,misc,config,true,false,true,"{""model"": ""Ridge""}"
+lmfit_Lasso,misc.lmfit.Lasso,misc,config,true,false,true,"{""model"": ""Lasso""}"
+lmfit_SGDRegressor,misc.lmfit.SGDRegressor,misc,config,true,false,true,"{""model"": ""SGDRegressor""}"
+lmfit_ElasticNet,misc.lmfit.ElasticNet,misc,config,true,false,true,"{""model"": ""ElasticNet""}"
+lmfit_BayesianRidge,misc.lmfit.BayesianRidge,misc,config,true,false,true,"{""model"": ""BayesianRidge""}"
+gpfit_DotProduct,misc.gpfit.DotProduct,misc,config,true,false,false,"{""kernel"": ""DotProduct""}"
+gpfit_RBF,misc.gpfit.RBF,misc,config,true,false,false,"{""kernel"": ""RBF""}"
+coint_johansen_max_eig_stat_order-0_ardiff-10,misc.coint.johansen_order-0_ardiff-10,misc,config,true,false,false,"{""det_order"": 0, ""k_ar_diff"": 10, ""method"": ""johansen"", ""statistic"": ""max_eig_stat""}"
+coint_johansen_trace_stat_order-0_ardiff-10,misc.coint.johansen_order-0_ardiff-10,misc,config,true,false,false,"{""det_order"": 0, ""k_ar_diff"": 10, ""method"": ""johansen"", ""statistic"": ""trace_stat""}"
+coint_johansen_max_eig_stat_order-0_ardiff-1,misc.coint.johansen_order-0_ardiff-1,misc,config,true,false,false,"{""det_order"": 0, ""k_ar_diff"": 1, ""method"": ""johansen"", ""statistic"": ""max_eig_stat""}"
+coint_johansen_trace_stat_order-0_ardiff-1,misc.coint.johansen_order-0_ardiff-1,misc,config,true,false,false,"{""det_order"": 0, ""k_ar_diff"": 1, ""method"": ""johansen"", ""statistic"": ""trace_stat""}"
+coint_johansen_max_eig_stat_order-1_ardiff-10,misc.coint.johansen_order-1_ardiff-10,misc,config,true,false,false,"{""det_order"": 1, ""k_ar_diff"": 10, ""method"": ""johansen"", ""statistic"": ""max_eig_stat""}"
+coint_johansen_trace_stat_order-1_ardiff-10,misc.coint.johansen_order-1_ardiff-10,misc,config,true,false,false,"{""det_order"": 1, ""k_ar_diff"": 10, ""method"": ""johansen"", ""statistic"": ""trace_stat""}"
+coint_johansen_max_eig_stat_order-1_ardiff-1,misc.coint.johansen_order-1_ardiff-1,misc,config,true,false,false,"{""det_order"": 1, ""k_ar_diff"": 1, ""method"": ""johansen"", ""statistic"": ""max_eig_stat""}"
+coint_johansen_trace_stat_order-1_ardiff-1,misc.coint.johansen_order-1_ardiff-1,misc,config,true,false,false,"{""det_order"": 1, ""k_ar_diff"": 1, ""method"": ""johansen"", ""statistic"": ""trace_stat""}"
+coint_aeg_tstat_trend-c_autolag-aic_maxlag-10,misc.coint.aeg,misc,config,true,false,false,"{""autolag"": ""aic"", ""maxlag"": 10, ""method"": ""aeg"", ""statistic"": ""tstat"", ""trend"": ""c""}"
+coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10,misc.coint.aeg,misc,config,true,false,false,"{""autolag"": ""aic"", ""maxlag"": 10, ""method"": ""aeg"", ""statistic"": ""tstat"", ""trend"": ""ct""}"
+coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10,misc.coint.aeg,misc,config,true,false,false,"{""autolag"": ""bic"", ""maxlag"": 10, ""method"": ""aeg"", ""statistic"": ""tstat"", ""trend"": ""ct""}"
+pec,misc.pec.orth-False_log-False,misc,config,true,false,true,"{""absolute"": false, ""log"": false, ""orth"": false}"
+pec_orth,misc.pec.orth-True_log-False,misc,config,true,false,true,"{""absolute"": false, ""log"": false, ""orth"": true}"
+pec_orth_abs,misc.pec.orth-True_log-False,misc,config,true,false,true,"{""absolute"": true, ""log"": false, ""orth"": true}"
+pec_log,misc.pec.orth-False_log-True,misc,config,true,false,true,"{""absolute"": false, ""log"": true, ""orth"": false}"
+pec_orth_log,misc.pec.orth-True_log-True,misc,config,true,false,true,"{""absolute"": false, ""log"": true, ""orth"": true}"
+pec_orth_log_abs,misc.pec.orth-True_log-True,misc,config,true,false,true,"{""absolute"": true, ""log"": true, ""orth"": true}"
+ids,misc.ids,misc,config,true,false,false,"{""bandwidth"": 0.5, ""pnorm"": ""max"", ""terms"": 6}"
+cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5,wavelet.cohmag,wavelet,extra,false,true,false,"{""fs"": 1}"
+cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-25,wavelet.cohmag,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0}"
+cohmag_wavelet_mean_fs-1_fmin-0-25_fmax-0-5,wavelet.cohmag,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+cohmag_wavelet_max_fs-1_fmin-0_fmax-0-5,wavelet.cohmag,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""max""}"
+cohmag_wavelet_max_fs-1_fmin-0_fmax-0-25,wavelet.cohmag,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+cohmag_wavelet_max_fs-1_fmin-0-25_fmax-0-5,wavelet.cohmag,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+phase_wavelet_mean_fs-1_fmin-0_fmax-0-5,wavelet.phase,wavelet,extra,false,true,false,"{""fs"": 1}"
+phase_wavelet_mean_fs-1_fmin-0_fmax-0-25,wavelet.phase,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0}"
+phase_wavelet_mean_fs-1_fmin-0-25_fmax-0-5,wavelet.phase,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+phase_wavelet_max_fs-1_fmin-0_fmax-0-5,wavelet.phase,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""max""}"
+phase_wavelet_max_fs-1_fmin-0_fmax-0-25,wavelet.phase,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+phase_wavelet_max_fs-1_fmin-0-25_fmax-0-5,wavelet.phase,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+icoh_wavelet_mean_fs-1_fmin-0_fmax-0-5,wavelet.icoh,wavelet,extra,false,true,false,"{""fs"": 1}"
+icoh_wavelet_mean_fs-1_fmin-0_fmax-0-25,wavelet.icoh,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0}"
+icoh_wavelet_mean_fs-1_fmin-0-25_fmax-0-5,wavelet.icoh,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+icoh_wavelet_max_fs-1_fmin-0_fmax-0-5,wavelet.icoh,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""max""}"
+icoh_wavelet_max_fs-1_fmin-0_fmax-0-25,wavelet.icoh,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+icoh_wavelet_max_fs-1_fmin-0-25_fmax-0-5,wavelet.icoh,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+plv_wavelet_mean_fs-1_fmin-0_fmax-0-5,wavelet.plv,wavelet,extra,false,true,false,"{""fs"": 1}"
+plv_wavelet_mean_fs-1_fmin-0_fmax-0-25,wavelet.plv,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0}"
+plv_wavelet_mean_fs-1_fmin-0-25_fmax-0-5,wavelet.plv,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+plv_wavelet_max_fs-1_fmin-0_fmax-0-5,wavelet.plv,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""max""}"
+plv_wavelet_max_fs-1_fmin-0_fmax-0-25,wavelet.plv,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+plv_wavelet_max_fs-1_fmin-0-25_fmax-0-5,wavelet.plv,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+ppc_wavelet_mean_fs-1_fmin-0_fmax-0-5,wavelet.ppc,wavelet,extra,false,true,false,"{""fs"": 1}"
+ppc_wavelet_mean_fs-1_fmin-0_fmax-0-25,wavelet.ppc,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0}"
+ppc_wavelet_mean_fs-1_fmin-0-25_fmax-0-5,wavelet.ppc,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+ppc_wavelet_max_fs-1_fmin-0_fmax-0-5,wavelet.ppc,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""max""}"
+ppc_wavelet_max_fs-1_fmin-0_fmax-0-25,wavelet.ppc,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+ppc_wavelet_max_fs-1_fmin-0-25_fmax-0-5,wavelet.ppc,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+pli_wavelet_mean_fs-1_fmin-0_fmax-0-5,wavelet.pli,wavelet,extra,false,true,false,"{""fs"": 1}"
+pli_wavelet_mean_fs-1_fmin-0_fmax-0-25,wavelet.pli,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0}"
+pli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5,wavelet.pli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+pli_wavelet_max_fs-1_fmin-0_fmax-0-5,wavelet.pli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""max""}"
+pli_wavelet_max_fs-1_fmin-0_fmax-0-25,wavelet.pli,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+pli_wavelet_max_fs-1_fmin-0-25_fmax-0-5,wavelet.pli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5,wavelet.dswpli,wavelet,extra,false,true,false,"{""fs"": 1}"
+dspli_wavelet_mean_fs-1_fmin-0_fmax-0-25,wavelet.dswpli,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0}"
+dspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5,wavelet.dswpli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+dspli_wavelet_max_fs-1_fmin-0_fmax-0-5,wavelet.dswpli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""max""}"
+dspli_wavelet_max_fs-1_fmin-0_fmax-0-25,wavelet.dswpli,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+dspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5,wavelet.dswpli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+wspli_wavelet_mean_fs-1_fmin-0_fmax-0-5,wavelet.wspli,wavelet,extra,false,true,false,"{""fs"": 1}"
+wspli_wavelet_mean_fs-1_fmin-0_fmax-0-25,wavelet.wspli,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0}"
+wspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5,wavelet.wspli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+wspli_wavelet_max_fs-1_fmin-0_fmax-0-5,wavelet.wspli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""max""}"
+wspli_wavelet_max_fs-1_fmin-0_fmax-0-25,wavelet.wspli,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+wspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5,wavelet.wspli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-5,wavelet.dwspli,wavelet,extra,false,true,false,"{""fs"": 1}"
+dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-25,wavelet.dwspli,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0}"
+dwspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5,wavelet.dwspli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25}"
+dwspli_wavelet_max_fs-1_fmin-0_fmax-0-5,wavelet.dwspli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0, ""statistic"": ""max""}"
+dwspli_wavelet_max_fs-1_fmin-0_fmax-0-25,wavelet.dwspli,wavelet,extra,false,true,false,"{""fmax"": 0.25, ""fmin"": 0, ""statistic"": ""max""}"
+dwspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5,wavelet.dwspli,wavelet,extra,false,true,false,"{""fmax"": 0.5, ""fmin"": 0.25, ""statistic"": ""max""}"
+xcorr_max_sig-False,basic.xcorr.max_sig-False,basic,retained,false,false,true,"{""sigonly"": false, ""statistic"": ""max""}"
+xcorr-sq_max_sig-False,basic.xcorr.max_sig-False,basic,retained,false,false,true,"{""sigonly"": false, ""squared"": true, ""statistic"": ""max""}"

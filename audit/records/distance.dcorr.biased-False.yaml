@@ -1,0 +1,339 @@
+unit_id: distance.dcorr.biased-False
+status: profiled
+correctness:
+  metric_name_standard: bias-corrected squared distance correlation (R*_n, energy::bcdcor); the unbiased (U-statistic) dCov^2 normalised
+    by the unbiased dVar^2 terms
+  canonical_ref: 'Szekely & Rizzo 2014, Ann. Statist. 42(6):2382-2412, Sec. 2-3 (U-centring, unbiased dCov^2 estimator, Prop. 1); bias-corrected
+    dCor R*_n in Szekely & Rizzo 2013, J. Multivariate Anal. 117:193-213; population dCor: Szekely, Rizzo & Bakirov 2007, Ann. Statist.
+    35(6):2769-2794, Theorem 7(ii) (bivariate-normal closed form; arXiv 0803.4101 text, p.18, checked against the paper)'
+  canonical_definition: 'U-centre a_ij=|x_i-x_j|: A~_ij = a_ij - a_i./(n-2) - a_.j/(n-2) + a_../((n-1)(n-2)) for i != j, 0 on the diagonal;
+    (X.Y)_n = 1/(n(n-3)) sum_{i!=j} A~_ij B~_ij (unbiased for dCov^2(X,Y)); R*_n = (X.Y)_n / sqrt((X.X)_n (Y.Y)_n), an estimator of
+    dCor^2 (squared scale), may be negative'
+  documented_definition: 'supplement §1.2.1, p.5: ''The sample distance correlation is computed by summing over the entry-wise product
+    of Euclidean distance matrices. This statistic is biased, however an unbiased estimator can be obtained by first double-centering
+    the distance matrices [14]. ... We compute both the biased and unbiased statistics from the hyppo package'' (identifier 22, dcorr).
+    GitBook distance-similarity.md ''Distance Correlation'' (same wording, ref arXiv 0803.4101). GitBook glossary-of-terms.md:21 (keyword
+    table, ''Signed'' row): ''Other SPIs, such as distance correlation (defined in the range [0,1]) are unsigned.'''
+  delegate_lib: hyppo==0.5.2 hyppo.independence.Dcorr(bias=False).statistic (numba 0.68.0 jit _dcorr / _center_distmat); distances via
+    scikit-learn==1.9.1 pairwise_distances('euclidean')
+  implemented_as: 'Default preprocessing: z-score each series (ddof=1), no detrend (irrelevant for the value: dCor is invariant to per-variable
+    positive scaling and shifts). The T time points are treated as T iid samples of a 1-D variable (time order ignored). Euclidean (=|x_i-x_j|)
+    distance matrices are U-centred (zero diagonal) and stat = sum(A~B~)/sqrt(sum(A~A~) sum(B~B~)) with NO square root, i.e. the bias-corrected
+    dCor^2 R*_n. Returns exactly 0 when either U-centred variance <= 0; negative values are returned unchanged. Both ordered pairs are
+    computed and the upper triangle (x = lower-index process) is mirrored.'
+  implementation_trace:
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend only if detrend=True (default False), then scipy.stats.zscore(axis=1,
+    ddof=1) if normalise=True (default); stored as (M, T, 1)'
+  - pyspi/calculator.py:329 Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, nan) (lines
+    at HEAD a42ebc1, unchanged since a1f20c7; the trace cited the pre-a1f20c7 lines 294/297)
+  - 'pyspi/base.py:132-138 Undirected.multivariate: A = Directed.multivariate(data); li = tril_indices(-1); A[li] = A.T[li] (lower triangle
+    overwritten by upper triangle)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for every ordered pair i != j, A[i, j] = self.bivariate(data, i=i, j=j) (both triangles
+    are computed)'
+  - 'pyspi/base.py:27-49 parse_bivariate: two raw arrays are wrapped into a Data object (which z-scores) and i, j = 0, 1'
+  - pyspi/data.py:108-118 Data.to_numpy returns the (M, T, 1) array, so x, y = data.to_numpy()[[i, j]] are (T, 1) column arrays (T samples
+    of a 1-D variable)
+  - 'pyspi/config.yaml:143-153 DistanceCorrelation configs: biased False / biased True'
+  - pyspi/statistics/distance.py:87-90 DistanceCorrelation.__init__ stores biased; identifier += '_biased'
+  - 'pyspi/statistics/distance.py:92-97 DistanceCorrelation.bivariate: x, y = data.to_numpy()[[i, j]]; stat = Dcorr(bias=self._biased).statistic(x,
+    y)'
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/dcorr.py:114-121 Dcorr.__init__: compute_distance=''euclidean'', is_fast=False
+    (the O(n log n) path is enabled only inside Dcorr.test, 231-237, never by statistic)'
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/dcorr.py:123-152 Dcorr.statistic: compute_dist(x, y, metric=''euclidean'')
+    (144-147) then _dcorr(distx, disty, bias=self.bias, is_fast=False) (149)'
+  - .venv/lib/python3.12/site-packages/hyppo/tools/common.py:436-503 compute_dist -> sklearn.metrics.pairwise_distances(mat, metric='euclidean')
+    for each input (497-501)
+  - '.venv/lib/python3.12/site-packages/sklearn/metrics/pairwise.py:268 euclidean_distances (dot-product expansion, diagonal forced
+    to 0; probe: max |D - |x_i-x_j|| = 4e-11 at T=4096, effect on the statistic <= 1.3e-15)'
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/dcorr.py:261-281 _center_distmat: bias=True subtracts row/column means (/n)
+    and adds grand mean (/n^2) = double centring (265-271); bias=False uses row/column sums /(n-2) and grand sum /((n-1)(n-2)) and zeroes
+    the diagonal = U-centring (272-280)'
+  - .venv/lib/python3.12/site-packages/hyppo/independence/dcorr.py:394-413 _dcov with only_dcov=False returns np.sum(A * B) only (402);
+    the 1/n^2 and 1/(n(n-3)) factors (406-411) are skipped and cancel in the ratio
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/dcorr.py:416-449 _dcorr: covar, varx, vary = sum(A*B), sum(A*A), sum(B*B)
+    (432-434); stat = 0 if varx <= 0 or vary <= 0 or (covar <= 0 and bias) (438-439); else stat = covar / sqrt(varx * vary) (443) and,
+    only when bias=True, stat = sqrt(stat) (446-447)'
+  deviation_from_documented: (1) The supplement says the unbiased estimator is obtained 'by first double-centering the distance matrices';
+    the code U-centres (n-2 and (n-1)(n-2) denominators, zero diagonal; dcorr.py:273-280), while the biased variant is the one that
+    double-centres. (2) It says the sample statistic is a sum over the product of 'Euclidean distance matrices'; the product is of centred
+    matrices. (3) The documentation does not say that this SPI is on the SQUARED scale (dCor^2) while dcorr_biased is on the root scale
+    (dCor), so the two 'biased/unbiased' SPIs are not estimators of the same quantity. (4) The unbiased-estimator citation [14] is Shen,
+    Priebe & Vogelstein (MGC), not Szekely & Rizzo 2013/2014. (5) Labelled 'unsigned' (config.yaml keywords; GitBook glossary-of-terms.md:21
+    gives distance correlation 'defined in the range [0,1]' as the example of an unsigned SPI) but returns negative values.
+  deviation_from_canonical: 'none for the estimator itself: matches the bias-corrected dCor^2 R*_n of Szekely & Rizzo (probe: hyppo
+    0.25339647074002397 vs from-scratch U-centred formula 0.25339647074002286). Convention notes: it estimates dCor^2, not dCor; clamps
+    to 0 when a U-centred variance is <= 0 (canonical R*_n is undefined there).'
+  units_and_range: 'dimensionless; in [-1, 1] (Cauchy-Schwarz in the U-centred inner-product space); negative values occur under independence
+    (probe: 64.5% of 200 iid N(0,1) pairs at T=64 negative, min -0.0297; pyspi matrix entry -0.005393 on an independent pair); exactly
+    0 if either series has non-positive U-centred variance; invariant to per-variable affine maps with nonzero scale; symmetric in (x,
+    y).'
+  direction_convention: 'undirected: A[i, j] = A[j, i] = bivariate(x = process min(i, j), y = process max(i, j)) via the mirror in base.py:136-137;
+    the kernel itself is symmetric (probe: bivariate(0,1) = bivariate(1,0) = 0.2180361011).'
+  symmetry_expected: sym
+  already_documented: 'partly: the class ''unsigned label on a legitimately negative bias-corrected estimator'' is documented for other SPIs in REVIEW M7 (docs/storage_comparison/REVIEW.md:189-193, negative debiased dspli/dswpli/ppc estimates are valid; metadata should separate an unsigned population target from the estimator range), REVIEW M8 (REVIEW.md:197, pec/pec_log negative despite unsigned) and EEG_OPTIMIZATION_NOTES.md:169 (review topic ''legitimate negative estimates''); none of them names dcorr. The double work of the generic Undirected path is EEG_OPTIMIZATION_NOTES.md:132. The scale mismatch, the double-centring wording and the zero clamp are not in KNOWN_ISSUES.md'
+  new_finding_candidates:
+  - 'Candidate (scale mismatch): dcorr returns the bias-corrected SQUARED distance correlation (no sqrt for bias=False, dcorr.py:446-447
+    ''only biased Dcov is square-rooted''), while dcorr_biased returns the unsquared dCor. Probe on one pair: dcorr = 0.2534 (from-scratch
+    R*_n 0.2534), dcorr_biased = 0.5145 (Szekely dCor 0.5145, dCor^2 0.2647). The documentation presents them as biased/unbiased versions
+    of one statistic.'
+  - 'Candidate (sign label): labelled ''unsigned'' (config.yaml; GitBook glossary-of-terms.md:21: ''distance correlation (defined in
+    the range [0,1]) are unsigned'') yet returns negative values under independence (probe: 64.5% of 200 iid pairs at T=64 negative,
+    min -0.0297; pyspi matrix entry -0.005393). Expected behaviour of an unbiased estimator; related in kind to REVIEW M7/M8 (other
+    SPIs), not documented for dcorr.'
+  - 'Candidate (documentation): the supplement describes the unbiased estimator as obtained ''by double-centering''; code uses U-centring
+    (dcorr.py:272-280); double centring is what the biased variant does (dcorr.py:265-271).'
+  - 'Candidate (edge case, low impact): _dcorr returns 0 when a U-centred variance is <= 0 (dcorr.py:438-439) rather than NaN; through
+    pyspi a constant series becomes NaN in zscore and Data raises first, so this is reachable only via near-degenerate inputs or normalise=False
+    with constant input.'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - anm
+    - contaminated
+    - iid_gaussian
+    path: kernel
+    reference: dcor==0.7 dcor.u_distance_correlation_sqr(x, y) (independent package, does not import hyppo) plus from-scratch numpy
+      U-centring of |x_i - x_j| (checks/refs/dcorr_hsic.py)
+    reference_kind: external-pkg
+    criterion: tolerance
+    expected_outcome: agreement to rtol 1e-10 / atol 1e-12 for every pair and every T in {64,256,1024,4096}, on the same (T,1) arrays
+      pyspi passes to hyppo
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'Szekely, Rizzo & Bakirov 2007 Theorem 7(ii) bivariate-normal closed form (confirmed against the paper text, arXiv 0803.4101
+      p.18): dCor^2(rho) = [rho*arcsin(rho) + sqrt(1-rho^2) - rho*arcsin(rho/2) - sqrt(4-rho^2) + 1] / [1 + pi/3 - sqrt(3)] (rho=0.3
+      -> 0.07236, rho=0.8 -> 0.56987; dCor = 0.26900, 0.75490)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pair (0,1) -> about 0.0724 and pair (2,3) -> about 0.5699 (the SQUARED scale, not 0.269 / 0.755), error shrinking
+      roughly as T^-1/2 from T=64 to T=4096; cross pairs (independent) -> about 0, sometimes negative
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic null: population dCor^2 = 0 for independent series'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: off-diagonal values centred on 0 (mean within a few standard errors of 0 at each T), a substantial fraction negative,
+      spread shrinking with T
+  - datasets:
+    - anm
+    - nonlinear_dependence
+    - bivariate_gaussian
+    path: pipeline
+    reference: from-scratch kernel on (x_i, x_j) and on (x_j, x_i) after pyspi preprocessing
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: A exactly symmetric; A[i,j] equals kernel(x_min(i,j), x_max(i,j)) and kernel(x_j, x_i) to 1e-12 (no order dependence);
+      reversing the process order permutes A without changing values
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'invariance property: dCor is invariant to per-variable positive scaling and shifts; scaled_offset is the same draw as
+      bivariate_gaussian'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: pyspi(scaled_offset) equals pyspi(bivariate_gaussian) to ~1e-12, also with normalise=False on the kernel path
+  - datasets:
+    - trending
+    - bivariate_gaussian
+    path: pipeline-detrend
+    reference: detrend(D2 + slope*t) equals detrend(D2), so pipeline-detrend on trending must equal pipeline-detrend on bivariate_gaussian
+      (same draw)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: agreement to ~1e-10; contrast run on the plain pipeline (no detrend) is expected to show inflated values on the
+      independent cross pairs with trends (e.g. (1,3), (2,3)) -- qualitative
+  - datasets:
+    - nonlinear_dependence
+    - anm
+    path: pipeline
+    reference: 'qualitative property: dCor detects non-monotone dependence where Pearson is about 0'
+    reference_kind: literature-only
+    criterion: qualitative
+    expected_outcome: (0,1) of nonlinear_dependence (x1 = x0^2) and the circle pair (2,3) clearly above the iid_gaussian null spread
+      at T >= 256
+  check_method: external-pkg
+  check_reference: audit/checks/refs/dcorr_hsic.py:chk_dcor (dcor==0.7 u_distance_correlation_sqr, method naive; does not import hyppo);
+    audit/checks/refs/dcorr_hsic.py:chk_scratch -> audit/checks/refs/_kernels_distance.py:dcorr / dcorr_from_dist (U-centring, Szekely
+    & Rizzo 2014 Sec. 3); audit/checks/refs/dcorr_hsic.py:chk_truth (Szekely, Rizzo & Bakirov 2007 Thm 7(ii) closed form dcor2_closed,
+    cross-checked by quadrature dcor2_quad and a 10 x 65536 U-statistic Monte Carlo in chk_popcheck; se = Monte Carlo SD at T); audit/checks/refs/dcorr_hsic.py:chk_null
+    / chk_null_trend (Monte Carlo null); audit/checks/refs/dcorr_hsic.py:chk_unmirrored (audit/checks/probes/dcorr_hsic_probes.py:unmirrored),
+    chk_reversed, chk_affine, chk_detrend, chk_trend_contrast, chk_detected (200-permutation null)
+  check_data: bivariate_gaussian T64/T256/T1024/T4096 (kernel), T1024 (pipeline), pairs (0,1)/(2,3) at T256/T1024/T4096; nonlinear_dependence
+    T256/T1024; anm T1024; contaminated T1024; iid_gaussian T64/T256/T1024/T4096; scaled_offset T1024 (kernel and pipeline); trending
+    T1024 (pipeline-detrend and pipeline)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 (kernel, pipeline, affine, unmirrored, reversed); tolerance 1e-10 for pipeline-detrend;
+    statistical: |pyspi - population dCor^2| <= 2 Monte Carlo SD at T; null: |mean over 10 pairs - Monte Carlo mean| <= 2 Monte Carlo
+    SD of that mean; detection: value > max of 200 time permutations and z > 5 against both nulls'
+  closeness: 'dcor package u_distance_correlation_sqr: 8/8 exact runs pass, max_abs <= 7.2e-14 (bivariate_gaussian|4096|kernel|dcor
+    7.18e-14, max_rel 1.2e-11); the unsquared form sqrt(R*_n) is 0.068-0.250 away (ref_maxabs_vs_other_form). From-scratch U-centring:
+    9/9 pass, max_abs <= 7.4e-14 (ref_maxabs_vs_dcor2 = max_abs, ref_maxabs_vs_dcor 0.067-0.250), so the stored value is the SQUARED
+    bias-corrected form R*_n. Population dCor^2 (rho=0.3 0.072362, rho=0.8 0.569869; closed form = quadrature to 3e-15, big Monte Carlo
+    0.073086 +- 0.000753 / 0.569129 +- 0.000753): pyspi (0,1)/(2,3) = 0.07474/0.59984 at T256, 0.05846/0.57756 at T1024, 0.07584/0.55453
+    at T4096; |pyspi - pop| 0.0024/0.0300, 0.0139/0.0077, 0.0035/0.0153; all 6 within 2 SD (max_z 1.63); Monte Carlo SD 0.031/0.039
+    -> 0.0069/0.0094. Null iid_gaussian: mean over 10 pairs -0.00802 (T64, z -1.03), -0.00368 (T256, z -2.03, FAIL), 1.3e-5 (T1024,
+    z -0.01), -3.6e-6 (T4096, z 0.04); 60-90% of null pairs negative (min -0.0277 at T64); null SD shrinks with log-log slope -0.91
+    (Monte Carlo -1.00). nonlinear_dependence (Pearson 0.015/-0.039): 0.2294/0.0390 at T1024 (z vs permutation null 175/25), 0.2480/0.0362
+    at T256 (48/8.1). Symmetry/order: unmirrored max|A - A.T| = 0.0, reversed order 1.7e-15. scaled_offset kernel (raw) = bivariate_gaussian
+    to 2.8e-14; detrend equality 2.6e-14.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 9 squared-vs-not: the SPI returns the bias-corrected dCor^2 (R*_n), matching dcor u_distance_correlation_sqr to <= 7.2e-14 in 8/8 runs,
+    while the sqrt form is 0.067-0.250 away.'
+  documentation_status: misdescribed
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Matches the bias-corrected squared distance correlation R*_n (Szekely & Rizzo 2013/2014) to <= 7.4e-14, external package
+    and from-scratch. Score 9 (anchor: squared vs not): the SPI returns dCor^2, not dCor, and this is not documented; together with
+    dcorr_biased (unsquared dCor_n) the biased/unbiased pair are on different scales: dcorr_biased^2 - dcorr = 0.00073/0.00038 on bivariate_gaussian
+    T4096 while dcorr_biased - dcorr = 0.20/0.19. Documentation: the supplement says the unbiased estimator is obtained by double-centring;
+    the code U-centres (the double-centred ratio is dcorr_biased^2, e.g. 0.08592 vs 0.07474 at T256). Labelled unsigned, returns negative
+    values (9 of 10 null pairs at T256). Constant input returns 0, not NaN (only reachable with normalise=False). Finite-sample spread,
+    not bias: the estimator is centred on the population value (Monte Carlo bias <= 0.0019).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'moderate: 0.9 s per pyspi run at P=4, T=1024; 22 s at T=4096 (O(T^2) dense distance matrices, both triangles computed);
+    iid_gaussian P=5 T=4096 39.5 s; family total 454 s on a shared machine'
+  symmetry_observed: 'sym: stored max|A - A.T| = 0.0 on every run; the kernel itself is exactly symmetric (unmirrored probe max|A -
+    A.T| = 0.0 on nonlinear_dependence, anm, raw scaled_offset)'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = bias-corrected dCor^2(x_i, x_j), independent of argument order and of process order
+    (reversed-order run equal to 1.7e-15); no directional content on anm (A[0,1] = A[1,0])'
+  candidate_resolutions:
+  - candidate: 'scale mismatch: dcorr is the squared bias-corrected R*_n while dcorr_biased is unsquared dCor_n'
+    outcome: confirmed
+    evidence: distance.dcorr.biased-False|bivariate_gaussian|4096|kernel|scratch (ref_maxabs_vs_dcor2 7.4e-14, ref_maxabs_vs_dcor 0.200);
+      distance.dcorr.biased-True|bivariate_gaussian|4096|kernel|scale (biased^2 - unbiased 0.00073/0.00038 vs biased - unbiased 0.201/0.190)
+      and |nonlinear_dependence|1024|kernel|scale (0.0021/0.0018 vs 0.252/0.163); counted as a finding here, not on dcorr_biased
+  - candidate: '''unsigned'' label but negative values'
+    outcome: confirmed
+    evidence: 'distance.dcorr.biased-False|iid_gaussian|{64,256,1024,4096}|pipeline|null: 90%/90%/80%/60% of null pairs negative, min
+      -0.0277 (T64), -0.0075 (T256); |nonlinear_dependence|1024|kernel|scratch 2 negative pairs (min -0.00092). Valid behaviour of an
+      unbiased estimator; the issue is the label/range description. Already-documented class: REVIEW M7 (docs/storage_comparison/REVIEW.md:189-193, negative debiased dspli/dswpli/ppc estimates are valid; metadata should separate an unsigned population target from the estimator range), REVIEW M8 (REVIEW.md:197, pec/pec_log negative despite unsigned) and EEG_OPTIMIZATION_NOTES.md:169 (review topic ''legitimate negative estimates''); dcorr is not named there, so this is a new instance of a documented class, not a new mechanism'
+  - candidate: 'documentation: unbiased estimator described as ''double-centering''; code U-centres'
+    outcome: confirmed
+    evidence: 'distance.dcorr.biased-False|*|kernel|scratch: U-centred formula matches to <= 7.4e-14; the double-centred ratio is dcorr_biased^2
+      (bivariate_gaussian T256 pair (0,1): 0.08592 = 0.293121^2 vs stored 0.07474)'
+  - candidate: 'edge case: returns 0 rather than NaN when a U-centred variance <= 0'
+    outcome: confirmed
+    evidence: '/tmp/claude-1000/-media-dan-Data-git-pyspi/5085b751-c4f7-4c35-9512-0b49510da359/scratchpad/dcorr_hsic_check/probe_edge.py:
+      hyppo Dcorr(bias=False).statistic(constant, y) = 0.0; pyspi DistanceCorrelation.bivariate with normalise=False and a constant
+      row = 0.0; with the default pipeline Data raises ValueError (NaN after z-scoring) first. Low impact'
+  checks_run:
+  - run_ids:
+    - distance.dcorr.biased-False|bivariate_gaussian|64|kernel|dcor
+    - distance.dcorr.biased-False|bivariate_gaussian|256|kernel|dcor
+    - distance.dcorr.biased-False|bivariate_gaussian|1024|kernel|dcor
+    - distance.dcorr.biased-False|bivariate_gaussian|4096|kernel|dcor
+    - distance.dcorr.biased-False|nonlinear_dependence|1024|kernel|dcor
+    - distance.dcorr.biased-False|anm|1024|kernel|dcor
+    - distance.dcorr.biased-False|contaminated|1024|kernel|dcor
+    - distance.dcorr.biased-False|iid_gaussian|256|kernel|dcor
+    reference: audit/checks/refs/dcorr_hsic.py:chk_dcor (dcor==0.7 u_distance_correlation_sqr)
+    outcome: 8/8 pass; max_abs <= 7.2e-14
+  - run_ids:
+    - distance.dcorr.biased-False|bivariate_gaussian|64|kernel|scratch
+    - distance.dcorr.biased-False|bivariate_gaussian|256|kernel|scratch
+    - distance.dcorr.biased-False|bivariate_gaussian|1024|kernel|scratch
+    - distance.dcorr.biased-False|bivariate_gaussian|4096|kernel|scratch
+    - distance.dcorr.biased-False|nonlinear_dependence|1024|kernel|scratch
+    - distance.dcorr.biased-False|anm|1024|kernel|scratch
+    - distance.dcorr.biased-False|contaminated|1024|kernel|scratch
+    - distance.dcorr.biased-False|iid_gaussian|256|kernel|scratch
+    - distance.dcorr.biased-False|bivariate_gaussian|1024|pipeline|scratch
+    reference: audit/checks/refs/dcorr_hsic.py:chk_scratch (audit/checks/refs/_kernels_distance.py:dcorr biased=False)
+    outcome: 9/9 pass; max_abs <= 7.4e-14; distance to unsquared form 0.067-0.250
+  - run_ids:
+    - distance.dcorr.biased-False|bivariate_gaussian|256|pipeline|truth-p01
+    - distance.dcorr.biased-False|bivariate_gaussian|256|pipeline|truth-p23
+    - distance.dcorr.biased-False|bivariate_gaussian|1024|pipeline|truth-p01
+    - distance.dcorr.biased-False|bivariate_gaussian|1024|pipeline|truth-p23
+    - distance.dcorr.biased-False|bivariate_gaussian|4096|pipeline|truth-p01
+    - distance.dcorr.biased-False|bivariate_gaussian|4096|pipeline|truth-p23
+    - distance.dcorr.biased-False|bivariate_gaussian|256|pipeline|popcheck
+    reference: audit/checks/refs/dcorr_hsic.py:chk_truth, chk_popcheck (Thm 7(ii) closed form, quadrature, big Monte Carlo)
+    outcome: 7/7 pass; max_z 1.63; closed form = quadrature to 3e-15
+  - run_ids:
+    - distance.dcorr.biased-False|iid_gaussian|64|pipeline|null
+    - distance.dcorr.biased-False|iid_gaussian|256|pipeline|null
+    - distance.dcorr.biased-False|iid_gaussian|1024|pipeline|null
+    - distance.dcorr.biased-False|iid_gaussian|4096|pipeline|null
+    - distance.dcorr.biased-False|iid_gaussian|64|pipeline|null-trend
+    reference: audit/checks/refs/dcorr_hsic.py:chk_null, chk_null_trend
+    outcome: '4/5 pass; T256 null fails (z -2.03): the same draw sits at the 0.15% lower tail of its own permutation null (scratchpad
+      probe_null256.py), so all four units fail it together; T64/T1024/T4096 z -1.03/-0.01/0.04; spread slope -0.91 vs Monte Carlo -1.00'
+  - run_ids:
+    - distance.dcorr.biased-False|nonlinear_dependence|1024|pipeline|unmirrored
+    - distance.dcorr.biased-False|anm|1024|pipeline|unmirrored
+    - distance.dcorr.biased-False|scaled_offset|1024|kernel|unmirrored
+    - distance.dcorr.biased-False|nonlinear_dependence|1024|pipeline|reversed
+    reference: audit/checks/refs/dcorr_hsic.py:chk_unmirrored (audit/checks/probes/dcorr_hsic_probes.py:unmirrored), chk_reversed
+    outcome: 4/4 pass; unmirrored asymmetry 0.0; reversed order 1.7e-15
+  - run_ids:
+    - distance.dcorr.biased-False|scaled_offset|1024|pipeline|affine
+    - distance.dcorr.biased-False|scaled_offset|1024|kernel|affine
+    - distance.dcorr.biased-False|trending|1024|pipeline-detrend|detrend
+    - distance.dcorr.biased-False|trending|1024|pipeline|trend-contrast
+    reference: audit/checks/refs/dcorr_hsic.py:chk_affine, chk_detrend, chk_trend_contrast
+    outcome: 4/4 pass; affine 2.8e-14 (raw) / 7.3e-15; detrend 2.6e-14; without detrending trended pairs read 0.96-0.99
+  - run_ids:
+    - distance.dcorr.biased-False|nonlinear_dependence|256|pipeline|detected
+    - distance.dcorr.biased-False|nonlinear_dependence|1024|pipeline|detected
+    reference: audit/checks/refs/dcorr_hsic.py:chk_detected (200 permutations + iid Monte Carlo null)
+    outcome: 2/2 pass; z_perm 48/8.1 (T256), 175/25 (T1024)
+optimisation:
+  complexity_P_T: 'O(P^2 T^2): every ordered pair (pyspi/base.py:Directed.multivariate called by Undirected.multivariate) builds two dense T x T Euclidean matrices (hyppo/tools/common.py:compute_dist -> sklearn euclidean_distances), centres both (hyppo dcorr.py:_center_distmat) and takes three T x T inner products (_dcov). Measured P_exponent 2.08 (8->32), T_exponent 2.62 (8x256->8x1024, above 2; a cache effect from the T x T temporaries is a plausible cause, not measured). At 118x1024 the P^2 T^2 pair term is everything (fit t_fixed 0, t_pair 66 ms).'
+  hotspot_1: 'hyppo/independence/dcorr.py:Dcorr.statistic (third-party:hyppo) 84.5% self time of the profiled SPI call at 8x1024: the numba _dcorr
+    kernel (_center_distmat x2, _dcov x3) is invisible to cProfile and accrues to this frame'
+  hotspot_2: hyppo/tools/common.py:compute_dist -> sklearn/metrics/pairwise.py:_euclidean_distances (third-party:sklearn) 14.6% (safe_sparse_dot
+    8.0%, _modify_in_place_if_numpy 3.1%)
+  hotspot_owner: third-party:hyppo
+  opaque_share: 0.0034
+  profile_file: audit/profiles/distance.dcorr.biased-False__8x1024.pstats
+  opportunities:
+  - opportunity_id: dcorr_hsic-1
+    opportunity: 'Per-channel cache shared by all pairs: compute each channel''s hyppo/sklearn Euclidean distance matrix, its centred form (hyppo
+      _center_distmat for this bias flag) and its self inner product (_dcov) once per window, leaving only the cross inner product _dcov(A_i,
+      A_j) per pair (pyspi/statistics/distance.py:DistanceCorrelation.bivariate today rebuilds both per pair). The distance matrix is the same
+      sklearn call used by dcorr_biased, hsic (l2), mgc, hhg and dcorrx/mgcx lag 0, so it can live on the Data object like the barycenter cache;
+      memory about 8 MB per channel per cached matrix at T=1024.'
+    opp_type: cache-sharing
+    expected_speedup: ~30x
+    speedup_basis: 'microbench:audit/profiles/micro/opp_dcorr_hsic-1.json (8x1024: 4.09 s -> 0.394 s, 10.4x; per-component times give about 39
+      ms per-channel setup and 1.5 ms per cross product, so at 118x1024 about 118 x 39 ms + 13806 x 1.5 ms = 25 s vs the 918 s projection, ~36x)
+      + profile:audit/profiles/distance.dcorr.biased-False__8x1024.pstats hyppo dcorr.py:statistic self 84.5% + compute_dist 14.6%'
+    output_risk: bit-identical
+    risk_evidence: 'audit/profiles/micro/opp_dcorr_hsic-1.json: bit_identical true, max_abs_diff 0.0 at 7x100 and 8x1024 (both bias flags, ordered
+      and upper-only variants); 7x100 golden snapshot also bit-identical'
+    effort: M
+    depends_on:
+    - xc-undirected-upper
+  - opportunity_id: dcorr_hsic-2
+    opportunity: 'Use hyppo''s own O(T log T) 1-D path: set Dcorr(bias=...).is_fast = True before statistic(x, y) so hyppo skips the T x T distance
+      matrices and calls _dcorr(..., is_fast=True) -> three _fast_1d_dcov calls (Chaudhuri & Hu 2019). Mapping: bias=False uses the U-statistic
+      denominators n(n-3), n(n-3)(n-2), n(n-3)(n-2)(n-1) and returns the unsquared ratio = bias-corrected dCor^2 R*_n, as today; bias=True uses
+      the V-statistic denominators n^2, n^3, n^4 and the same final sqrt = dCor_n, as today. Caching each channel''s _fast_1d_dcov(x, x) would
+      cut the per-pair work from three calls to one (not measured).'
+    opp_type: algorithmic
+    expected_speedup: ~16x
+    speedup_basis: 'microbench:audit/profiles/micro/opp_dcorr_hsic-2.json (8x1024: 3.89 s -> 0.230 s, 16.9x, every ordered pair; both sides are
+      per-pair costs so the ratio carries to 118x1024; it grows about as T / log T with T; ~45x more plausible with the per-channel variance cache,
+      complexity only).
+      Subsumed by dcorr_hsic-1 on this unit (subsumed_by), because the two are alternatives: the fast 1-D path builds no distance matrix for dcorr_hsic-1 to cache, and its measured
+      per-pair cost (8x1024, 0.230 s over 56 ordered pairs, about 4.1 ms) is above the about 1.5 ms cross product per pair that dcorr_hsic-1''s micro-benchmark leaves, so on the measured
+      figures it saves nothing on top of it (the per-channel variance cache that could lower it was not measured)'
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_dcorr_hsic-2.json: max_abs_diff 9.6e-15, max_rel_diff 2.1e-10 (largest on a near-zero entry) at 8x1024;
+      6.2e-15 at 7x100 and vs the 7x100 golden snapshot; NaN mask equal'
+    effort: S
+    depends_on:
+    - xc-undirected-upper
+    subsumed_by:
+    - dcorr_hsic-1

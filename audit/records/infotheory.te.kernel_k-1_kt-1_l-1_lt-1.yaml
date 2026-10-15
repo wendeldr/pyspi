@@ -1,0 +1,243 @@
+unit_id: infotheory.te.kernel_k-1_kt-1_l-1_lt-1
+status: profiled
+correctness:
+  metric_name_standard: Transfer entropy T_{X->Y} with target history k=1, source history l=1, lag 1, box-kernel (Schreiber) estimate, bits
+  canonical_ref: Schreiber T (2000) 'Measuring information transfer', Phys Rev Lett 85:461-464, Eq. (4) and the kernel estimator p_r(.) = (1/N) sum Theta(r - |.|) (max norm) described there; Kaiser A, Schreiber
+    T (2002) Physica D 166:43-62; Kantz & Schreiber (1997)
+  canonical_definition: 'T_{X->Y} = sum p(y_{t+1}, y_t^(k), x_t^(l)) log2[ p(y_{t+1} | y_t^(k), x_t^(l)) / p(y_{t+1} | y_t^(k)) ]; with k=l=1 and box kernel: mean_t log2[ (C_nps/C_ps) / (C_np/C_p) ] over
+    t = 1..T-1'
+  documented_definition: 'supplement §1.4.5, pp.10-11 (supplement.txt:476-499; pack lines 486-510): ''Transfer entropy [35] is a measure of information transfer from a source time series x to a target time series y, based on the
+    Takens time-delay embedding ... The embedding lengths are denoted by modifier''s l and k for the source, x, and target, y ... The fixed parameters are minimal values, i.e., typically with a fixed target
+    embedding length of 1 (denoted by k-1)''; identifier 77 te_kernel_W-0.25_k-1; keywords directed, nonlinear, unsigned, bivariate, time-dependent. GitBook information-theory.md:206-231 same; identifier
+    te_kernel_W-0.25_k-1.'
+  delegate_lib: 'JIDT jar pyspi/lib/jidt/infodynamics.jar (labelled 1.6.1 by pyspi/lib/jidt/version-1.6.1.txt; contents match post-1.6.1 master a9b6b3e, see infotheory.est.kernel): infodynamics.measures.continuous.kernel.TransferEntropyCalculatorKernel.computeAverageLocalOfObservations
+    with KernelEstimatorTransferEntropy'
+  implemented_as: 'config.yaml:593-596 (estimator kernel, kernel_width 0.25, k_history 1, l_history 1). Constructor sets only k_HISTORY=1 on the JIDT calculator (k_tau, l_history, l_tau are skipped for
+    kernel). bivariate(i,j): src = z_i, targ = z_j; initialise() -> teKernelEstimator.initialise(k=1, 0.25). JIDT builds destPast = y_{t-1} (rows t=1..T-1), destNext = y_t, source = x_{t-1} (source value
+    at the same time as the last past value; l=1, lag 1 fixed in this class). Half-widths: past 0.25*SD(y[0:T-1]); source 0.25*SD(x[0:T-1]); next uses the PAST width (kernelWidthsInUse[0]). Counts (closed
+    boxes, self included): C_p over past, then via callbacks C_ps, C_np, C_nps; TE = mean log2[(C_nps/C_ps)/(C_np/C_p)] over T-1 points. No Theiler window, no bias correction. A[i,j] = TE(i -> j).'
+  implementation_trace:
+  - pyspi/calculator.py:48-51 Calculator `__init__` defaults detrend=False, normalise=True
+  - pyspi/calculator.py:277 Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend)
+  - 'pyspi/data.py:193-195 scipy.stats.zscore(data, axis=1, nan_policy=''omit'', ddof=1) (each series: mean 0, sample SD 1)'
+  - pyspi/calculator.py:329 S = self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan)
+  - 'pyspi/base.py:85-94 Directed.multivariate: A[i,j] = self.bivariate(data, i=i, j=j) for every i != j'
+  - pyspi/base.py:27-47 parse_bivariate (Data objects pass through; raw arrays are wrapped by Data()/add_process)
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: estimator=''kernel'' -> identifier += ''_W-{kernel_width}'', labels += [''nonlinear'']; JIDTBase default kernel_width=0.5; _entropy_calc built
+    at :36'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: calc.setProperty(''KERNEL_WIDTH'', str(kernel_width)); also BIAS_CORRECTION=''false'' and NOISE_SEED=''42''. BIAS_CORRECTION is not a property of any kernel
+    class and is ignored; NOISE_SEED is stored by EntropyCalculatorMultiVariateKernel and MutualInfoCalculatorMultiVariateKernel but has no numerical effect because NOISE_LEVEL_TO_ADD stays 0, and TransferEntropyCalculatorKernel
+    ignores it (see infotheory.est.kernel)'
+  - pyspi/statistics/infotheory.py:124-126,134 _getcalc('TransferEntropy') -> kernel.TransferEntropyCalculatorKernel; pyspi/config.yaml:593-596 (kernel, 0.25, k_history 1, l_history 1); commented-out kernel
+    auto-embedding config :585-590
+  - 'pyspi/statistics/infotheory.py:326-367 TransferEntropy.__init__: auto_embed_method None -> setProperty(''k_HISTORY'', str(k_history)) at :358; for kernel the k_TAU/l_HISTORY/l_TAU setProperty calls
+    (:360-362) are skipped and the identifier gets only ''_k-{k_history}'' (:367)'
+  - 'pyspi/statistics/infotheory.py:376-391 TransferEntropy.bivariate: ''Compute transfer entropy from i->j''; _set_theiler_window no-op; self._calc.initialise(); src, targ = data.to_numpy(squeeze=True)[[i,
+    j]]; setObservations(src, targ); computeAverageLocalOfObservations; exception -> NaN'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/measures/continuous/kernel/TransferEntropyCalculatorKernel.java (byte-identical to master a9b6b3e, the
+    shipped build; line numbers valid for both): initialise() L161-166 (teKernelEstimator.initialise(k, kernelWidth)); setProperty L205-234 (KERNEL_WIDTH, NORMALISE, DYN_CORR_EXCL, FORCE_KERNEL_COMPARE_TO_ALL;
+    else super); finaliseAddObservations L254-292 (destPast = makeJointVectorForPast, destNext = destination[k..], source = source[k-1 .. T-2]); computeAverageLocalOfObservations L295-321 (log of (C_nps/C_ps)/(C_np/C_p),
+    skipped when C_nps = 0; mean / ln 2)'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/measures/continuous/TransferEntropyCommon.java (byte-identical to master a9b6b3e, the shipped build; line
+    numbers valid for both): setObservations L99-103; setProperty L316-336 (k_HISTORY accepted; k_TAU, l_HISTORY, l_TAU, DELAY throw ''Unsupported property''; unknown names ignored); makeJointVectorForPast
+    L265-275 (makeDelayEmbeddingVector(destination, k, k-1, T-k))'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/measures/continuous/kernel/KernelEstimatorTransferEntropy.java (byte-identical to master a9b6b3e, the
+    shipped build; line numbers valid for both): setObservations L80-97 (past widths via super.setObservations; source width = eps * MatrixUtils.stdDev(source)); getCount L111-133 (C_p from KernelEstimatorMultiVariate.getCount,
+    joint counts via callbacks); correlatedPointAddedCallback L145-159 (closed comparisons ''<=''; destNext compared with kernelWidthsInUse[0], the past-dimension width)'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/measures/continuous/kernel/KernelEstimatorMultiVariate.java (byte-identical to master a9b6b3e, the shipped
+    build; line numbers valid for both): getCountFromBins L589-719 (callback for every point of the query''s own bin and for neighbour-bin points passing stepKernel), stepKernel L959-967'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java (byte-identical to master a9b6b3e, the shipped build; line numbers valid for both):
+    stdDev(double[][], int) L2384-2393 -> stdDev(double[][], int, double) L2436-2447 divides by (n-1) (sample SD)'
+  deviation_from_documented: 'None for the configured values (k=1, l=1). The documented l/lt/kt modifiers cannot be honoured by this estimator: pyspi silently drops l_history, k_tau and l_tau for kernel
+    (JIDT would raise ''Unsupported property''), and the identifier records only k. ''Width 0.25'' is the box half-width.'
+  deviation_from_canonical: 'Matches Schreiber (2000) Eq. 4 with k=l=1, lag 1 and a max-norm box kernel. Minor: (a) the next-value box uses the past series'' SD (KernelEstimatorTransferEntropy L151-153 at the JIDT v1.6.1 tag, byte-identical at a9b6b3e;
+    comment ''epsilons ... should all be approximately equal, so just use the first one''); (b) resubstitution counts include the point itself and there is no bias correction (JIDT keeps the Grassberger-corrected
+    variant, TransferEntropyCalculatorKernel L338-396 at the v1.6.1 tag, for testing only), giving a large positive null bias (probe iid_gaussian means 1.440/1.045/0.522/0.196 bits at T=64/256/1024/4096).'
+  units_and_range: bits; mean of log count ratios, can be negative in principle, typically positive (null bias); asymmetric; NaN only on exception.
+  direction_convention: 'A[i,j] = TE(X_i -> X_j): row i = source, column j = target (docstring ''from i->j''). Probe delayed_noise T=1024: A[0,1] = 2.571 (x0 drives x1) vs A[1,0] = 0.501 (null level); var2_bivariate
+    T=4096 A[0,1] = 0.348 vs A[1,0] = 0.187; logistic_maps (y=1 drives x=0) T=4096 A[1,0] = 0.066 > A[0,1] = 0.016.'
+  symmetry_expected: asym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (parameter forwarding, confirms pack hypothesis): for estimator=''kernel'' pyspi forwards only k_HISTORY; l_history, k_tau and l_tau are dropped without warning and are absent from the identifier.
+    Evidence: infotheory.py:358-367; probe TransferEntropy(estimator=''kernel'', l_history=3, l_tau=2, k_tau=4) -> identifier te_kernel_W-0.25_k-1, k_HISTORY=1; JIDT v1.6.1 tag (byte-identical at a9b6b3e) TransferEntropyCommon.setProperty L320-327
+    throws ''Unsupported property'' for l_HISTORY/k_TAU/l_TAU/DELAY (probe confirmed). No numerical effect for the configured l_history=1.'
+  - 'Candidate (outside configured units): auto_embed_method with the kernel estimator is accepted silently (TransferEntropyCommon ignores unknown names; probe getProperty(''AUTO_EMBED_METHOD'') -> None,
+    k stays 1) while pyspi labels the SPI te_kernel_W-0.25_k-max-4; the config entry is commented out (config.yaml:585-590).'
+  - 'Candidate (estimator detail): the destination-next box uses the half-width of the destination-past column (kernelWidthsInUse[0]) rather than its own SD (JIDT v1.6.1 tag KernelEstimatorTransferEntropy.java L153, byte-identical at a9b6b3e). Evidence:
+    numpy reference with w_next = w_past matched pyspi exactly (diff 0.0 on var2_bivariate T=256).'
+  - 'Candidate (bias magnitude): null bias of te_kernel_W-0.25_k-1 is large relative to typical effects (iid_gaussian 1.44 bits at T=64, 0.52 at T=1024, 0.20 at T=4096 vs var2_bivariate T=4096 true-direction
+    value 0.348), so absolute values are dominated by T-dependent bias.'
+  - 'Candidate (scope note, copy path): JIDTBase.__deepcopy__ (infotheory.py:77-82) resets the copied JIDT calculators to their defaults (see infotheory.est.kernel), but te_kernel_W-0.25_k-1 is unchanged
+    in a CalculatorFrame only because its configured width 0.25 equals JIDT''s default kernel width. Probe it_kernel_fix/p1_frame_all.py: Calculator and CalculatorFrame A[0,1] and A[1,0] identical on bivariate_gaussian
+    and var2_bivariate T=256; the copied calculator reads KERNEL_WIDTH 0.25.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    - delayed_noise
+    - logistic_maps
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'from-scratch numpy Schreiber box-kernel TE (k=l=1): past=y[0:T-1], next=y[1:], src=x[0:T-1]; w_p=0.25*std(past,ddof=1), w_s=0.25*std(src,ddof=1), w_n=w_p; closed boxes incl. self; mean log2((C_nps/C_ps)/(C_np/C_p))'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: All off-diagonal entries agree to abs <= 1e-12 (probe diff 0.0). A variant with w_n = 0.25*std(next) quantifies deviation (a) (expected < 1e-2 bits).
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    - logistic_maps
+    path: pipeline
+    reference: 'ground-truth coupling direction of the generators (delayed_noise: x0 -> x1,x2,x3; var2_bivariate: x0 -> x1; logistic_maps: y (1) -> x (0))'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'Direction convention A[i,j] = TE(i -> j): A[0,1] > A[1,0] for delayed_noise and var2_bivariate, A[1,0] > A[0,1] for logistic_maps, at T >= 1024.'
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'analytic Gaussian TE with k=l=1 (bits): 0.5*log2( Var(y_t | y_{t-1}) / Var(y_t | y_{t-1}, x_{t-1}) ) from the stationary lag-0/lag-1 covariances (Barnett, Barrett & Seth 2009 PRL 103:238701
+      equivalence)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: Kernel estimate exceeds the Gaussian value by the null bias (~0.2 bits at T=4096); the difference true-direction minus reverse-direction is within 0.1 bits of the analytic difference
+      at T=4096.
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: analytic null 0
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: Positive null bias decreasing with T (probe means 1.440, 1.045, 0.522, 0.196 bits).
+  - datasets:
+    - var2_bivariate
+    path: kernel
+    reference: 'parameter forwarding: TransferEntropy(estimator=''kernel'', kernel_width=0.25, k_history=1, l_history in {1,3}, k_tau in {1,4}, l_tau in {1,2})'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: All variants give bit-identical values and the same identifier te_kernel_W-0.25_k-1 (documents the silent drop).
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_kernel.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:te_box_kernel(z_i, z_j, k=1, width=0.25) (next box reuses the past width; own-SD variant as extra);
+    audit/checks/refs/it_kernel.py:te_forwarding_ref and chk_forwarding_flags; audit/checks/refs/it_kernel.py:chk_direction; audit/checks/refs/it_kernel.py:chk_truth_model (Monte Carlo; Gaussian TE from
+    companion-form Lyapunov Gamma(h)); audit/checks/refs/it_kernel.py:chk_null; audit/checks/refs/it_kernel.py:chk_frame
+  check_data: iid_gaussian T256 and processes 0-2 at T64/T256/T1024; var2_bivariate T256/T1024 (pipeline, kernel); delayed_noise, gauss_ar1_pair, logistic_maps, logistic_maps_chaotic, logistic_maps_sugihara
+    T1024; scaled_offset T1024 (kernel); trending T1024 (pipeline-detrend); bivariate_gaussian T256 (frame)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 (bits); statistical: |pyspi - Monte Carlo mean of the same box estimator under the generating model| <= 2 Monte Carlo SD, population values reported
+    as convergence information only; qualitative: stated rule; null: |mean over pairs - Monte Carlo mean| <= 2 Monte Carlo SD'
+  closeness: 'Numpy: 10/10 exact runs pass, max_abs <= 1.3e-15; giving the next-value box its own SD would change values by <= 0.0049 bits. Forwarding: five (l_history, k_tau, l_tau) variants all equal
+    numpy k = l = 1 (3.3e-16), all five identifiers read te_kernel_W-0.25_k-1, setProperty raises for l_HISTORY / k_TAU / l_TAU, auto-embed gives identifier _k-max-4 with k_HISTORY 1 and the fixed-k value
+    (difference 0.0). Direction: delayed_noise 2.571 vs 0.501; var2_bivariate 0.577 vs 0.484 (T1024), 1.122 vs 0.851 (T256); logistic_maps_chaotic 0.134 vs 0.018; logistic_maps_sugihara 0.147 vs 0.031.
+    Convergence (bits): var2_bivariate population 0.191 / 0.015 vs pyspi 0.577 / 0.484 (T1024); gauss_ar1_pair 0.039 / 0.076 vs 0.348 / 0.390. Null (iid): 1.512 / 1.062 / 0.502 at T = 64 / 256 / 1024 vs
+    Monte Carlo 1.396 / 1.051 / 0.502. Statistical: 2/3 pass; var2_bivariate T256 fails at max_z 2.48 (family calibration 8/130 entries beyond 2 SD vs 5.92 expected, ref_calib_* on infotheory.est.kernel|iid_gaussian|1024|pipeline|entropy-1d-truth). CalculatorFrame identical to Calculator.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 10''s canonical clause fails on a JIDT layout choice: the next-value box reuses the past-value width, and giving it its own SD changes
+    values by up to 0.0049 bits. pyspi equals a reference with that layout to 1.3e-15 on 10/10 runs. Anchor 9 names log base and ddof, not this width reuse.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Schreiber transfer entropy with k = l = 1, lag 1, box kernel of half-width 0.25 SD, bits, as JIDT''s TransferEntropyCalculatorKernel computes it; conventions only (anchor 9), including
+    JIDT''s reuse of the past-value width for the next-value box (<= 0.005 bits). Null bias dominates at practical T (0.50 bits at T = 1024 vs the 0.19-bit population effect on var2_bivariate). Outside
+    the configured unit: for estimator=''kernel'' pyspi forwards only k_history; l_history, k_tau and l_tau are dropped silently and auto_embed_method is accepted but has no effect while the identifier
+    claims _k-max-4 (new finding; no effect on te_kernel_W-0.25_k-1).
+    Rubric reading is nearest-anchor 9 (score_rubric_note), because anchor 9 names log base and ddof, not the next-value width reuse; the ''conventions only (anchor 9)'' wording above is the original
+    reasoning for score_0_10.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: pyspi <= 5.5 s per SPI run and <= 12 s for the CalculatorFrame probe (P <= 5, T <= 1024); numpy references O(T^2) all-pairs counting, T <= 1024 (the box estimator is O(T^2) on both
+    sides; no T = 4096 runs)'
+  symmetry_observed: 'asym: max|A - A.T| = 2.07 (delayed_noise), 0.093 (var2_bivariate T1024), 0.042 (gauss_ar1_pair), 0.116 (logistic_maps_chaotic / sugihara), 0.122 (iid T256)'
+  direction_observed: 'A[i,j] = TE(x_i -> x_j): row source, column target. delayed_noise A[0,1] = 2.571 vs A[1,0] = 0.501 (A[0,2], A[0,3] at the null level: k = l = 1 sees only lag 1); var2_bivariate 0.577
+    > 0.484; logistic_maps_chaotic 0.134 > 0.018; logistic_maps_sugihara 0.147 > 0.031'
+  candidate_resolutions:
+  - candidate: kernel TE forwards only k_HISTORY; l_history, k_tau, l_tau dropped silently
+    outcome: confirmed
+    evidence: infotheory.te.kernel_k-1_kt-1_l-1_lt-1|var2_bivariate|256|pipeline|forwarding (5 variants = numpy k = l = 1, 3.3e-16) and |forwarding-flags (identifiers identical, setProperty raises for the
+      three names)
+  - candidate: auto_embed_method with the kernel estimator is accepted but ignored while the identifier reads _k-max-4
+    outcome: confirmed
+    evidence: 'infotheory.te.kernel_k-1_kt-1_l-1_lt-1|var2_bivariate|256|pipeline|forwarding-flags: identifier ends _k-max-4, k_HISTORY 1, value difference to fixed k = 1 0.0 (config entry commented out)'
+  - candidate: next-value box uses the past-value width
+    outcome: confirmed
+    evidence: 'infotheory.te.kernel_k-1_kt-1_l-1_lt-1|*|numpy: reference with w_next = w_past exact (<= 1.3e-15); own-SD variant differs by <= 0.0049 bits (ref_own_next_width_variant_maxabs_diff)'
+  - candidate: null bias large relative to typical effects
+    outcome: confirmed
+    evidence: 'infotheory.te.kernel_k-1_kt-1_l-1_lt-1|iid_gaussian|64/256/1024|pipeline|null: 1.512 / 1.062 / 0.502 bits (Monte Carlo 1.396 / 1.051 / 0.502); estimator property, not scored'
+  - candidate: copy path leaves te unchanged only because 0.25 is JIDT's default width
+    outcome: confirmed
+    evidence: infotheory.te.kernel_k-1_kt-1_l-1_lt-1|bivariate_gaussian|256|pipeline|frame (frame - Calculator 0.0); infotheory.est.kernel|bivariate_gaussian|256|pipeline|copy-props
+  checks_run:
+  - run_ids:
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|iid_gaussian|256|pipeline|numpy
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|var2_bivariate|1024|pipeline|numpy
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|delayed_noise|1024|pipeline|numpy
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|gauss_ar1_pair|1024|pipeline|numpy
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|logistic_maps|1024|pipeline|numpy
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|logistic_maps_chaotic|1024|pipeline|numpy
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|logistic_maps_sugihara|1024|pipeline|numpy
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|scaled_offset|1024|kernel|numpy
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|var2_bivariate|1024|kernel|numpy
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|trending|1024|pipeline-detrend|numpy
+    reference: audit/checks/refs/it_kernel.py:chk_numpy
+    outcome: 10/10 pass (exact); max_abs <= 1.3e-15
+  - run_ids:
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|iid_gaussian|64|pipeline|null
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|iid_gaussian|256|pipeline|null
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|iid_gaussian|1024|pipeline|null
+    reference: audit/checks/refs/it_kernel.py:chk_null
+    outcome: 3/3 pass (qualitative)
+  - run_ids:
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|var2_bivariate|256|pipeline|truth
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|var2_bivariate|1024|pipeline|truth
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|gauss_ar1_pair|1024|pipeline|truth
+    reference: audit/checks/refs/it_kernel.py:chk_truth_model
+    outcome: 2/3 pass (statistical); max_z 2.48, 0.88, 1.84
+  - run_ids:
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|var2_bivariate|1024|pipeline|direction
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|delayed_noise|1024|pipeline|direction
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|logistic_maps_chaotic|1024|pipeline|direction
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|logistic_maps_sugihara|1024|pipeline|direction
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|var2_bivariate|256|pipeline|direction
+    reference: audit/checks/refs/it_kernel.py:chk_direction
+    outcome: 5/5 pass (qualitative)
+  - run_ids:
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|var2_bivariate|256|pipeline|forwarding
+    reference: audit/checks/refs/it_kernel.py:te_forwarding_ref (audit/checks/probes/it_kernel_probes.py:te_forwarding)
+    outcome: 1/1 pass (exact); max_abs <= 3.3e-16
+  - run_ids:
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|var2_bivariate|256|pipeline|forwarding-flags
+    reference: audit/checks/refs/it_kernel.py:chk_forwarding_flags (audit/checks/probes/it_kernel_probes.py:te_forwarding_flags)
+    outcome: 1/1 pass (qualitative)
+  - run_ids:
+    - infotheory.te.kernel_k-1_kt-1_l-1_lt-1|bivariate_gaussian|256|pipeline|frame
+    reference: audit/checks/refs/it_kernel.py:chk_frame (audit/checks/probes/it_kernel_probes.py:frame)
+    outcome: 1/1 pass (exact); max_abs <= 1.1e-15
+optimisation:
+  complexity_P_T: 'O(P^2 T^1.88): TransferEntropy.bivariate (pyspi/statistics/infotheory.py:376), one JIDT box-kernel call per ordered pair with 1-D inputs (no cache). Measured fresh T exponent 1.88, P
+    exponent ~2.1. At 118x1024 the pair term is everything: 80.1 s measured fresh.'
+  hotspot_1: pyspi/statistics/infotheory.py:TransferEntropy.bivariate (third-party:jidt box kernel via JPype, self time) 99.9% cum of the profiled SPI call at 8x1024
+  hotspot_2: 'none visible inside Java (1-D conversions are negligible). opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self
+    time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0015
+  profile_file: audit/profiles/infotheory.te.kernel_k-1_kt-1_l-1_lt-1__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_kernel-2
+    opportunity: 'Replace JIDT''s box-kernel counting with per-(channel, width, lag window) neighbourhood bitsets: one T x T bit matrix marks |x(t) - x(s)| <= w_d (w_d = width x the column''s ddof=1 SD,
+      as KernelEstimatorMultiVariate sets it) and every joint count of je/ce/mi/tlmi/te/si/xme/cce/di is a popcount of ANDed rows, so the neighbourhood search is shared by all P-1 partners and all composed
+      terms.'
+    opp_type: algorithmic
+    expected_speedup: 10-50x
+    speedup_basis: 'profile:audit/profiles/infotheory.te.kernel_k-1_kt-1_l-1_lt-1__8x1024.pstats pyspi/statistics/infotheory.py:376 TransferEntropy.bivariate 99.9% (JIDT Java time booked as pyspi self time)
+      + complexity: one joint count over all t is T x T/64 = 16k word AND+popcount operations at T=1024 (~10-50 us) against the measured 4.7 ms per ordered pair (8x1024 fresh; T exponent 1.88); bitsets
+      are built once per channel and lag window (3-D next/past/source counts)'
+    output_risk: unverified-within-tolerance
+    risk_evidence: max-norm box counts are products of per-dimension indicators, so integer counts are exact if the closed-box test and the per-column widths match JIDT; the log-sum order changes. The check
+      stage's all-pairs numpy counts (audit/checks/refs/_kernels_infotheory.py:entropy_box_kernel / mi_box_kernel / te_box_kernel) reproduce JIDT to <= 2.6e-13 (infotheory.est.kernel closeness)
+    effort: L
+    depends_on: []

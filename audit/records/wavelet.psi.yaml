@@ -1,0 +1,663 @@
+unit_id: wavelet.psi
+status: profiled
+correctness:
+  metric_name_standard: phase slope index (PSI, Nolte et al. 2008), here a single-epoch, time-resolved Morlet-wavelet variant summarised by mean or max over a set of time samples
+  canonical_ref: 'Nolte G, Ziehe A, Nikulin VV, Schloegl A, Kraemer N, Brismar T, Mueller K-R (2008), Robustly estimating the flow direction of information in complex physical systems, Phys. Rev. Lett.
+    100, 234101; arXiv:0712.2352. Equation numbers as in the arXiv:0712.2352 text: eq. 3 (raw PSI, Psi_tilde_ij = Im sum_{f in F} C_ij*(f) C_ij(f+delta_f)), eq. 4 (coherency C_ij = S_ij/sqrt(S_ii S_jj)),
+    eq. 5 (equivalent weighted sum of sines with weights alpha_ij(f) = |C_ij(f)|, the ''weighted by the coherence'' form), eq. 6 (normalisation Psi = Psi_tilde/std(Psi_tilde), std estimated by the jackknife
+    over epochs); direction convention from eq. 2 and the text after it: S_12 = <y1 y2*>, a positive slope means y1 -> y2. Coherency C_ij(f) = S_ij(f)/sqrt(S_ii(f) S_jj(f)) with S an expectation (segment/epoch
+    average) of the cross-spectrum (Nolte et al. 2004, Clin. Neurophysiol. 115:2292). Morlet wavelet transform: Grossmann & Morlet 1984; Tallon-Baudry et al. 1997 J. Neurosci. 17:722 (normalisation used
+    by MNE). Note that unsmoothed, single-realisation wavelet coherency has unit modulus (Torrence & Webster 1999 J. Climate 12:2679, smoothing required). The Nolte 2008 equation numbers were checked against
+    the arXiv:0712.2352 text; the other citation details are from memory and were not checked against copies.'
+  canonical_definition: 'Psi_tilde_ij = Im( sum_{f in F} C_ij*(f) C_ij(f + delta_f) ), adjacent frequencies of the analysis grid within band F, C_ij the (expected) coherency; (Nolte eq. 3); normalised Psi
+    = Psi_tilde / std(Psi_tilde) with a jackknife std (eq. 6). Antisymmetric: Psi_ji = -Psi_ij. Positive Psi_ij (with S_ij = E[x_i x_j*]) means i leads j (i is the sender). No canonical time-resolved single-trial
+    version exists; time-resolved PSI requires coherency estimated across trials/epochs or with smoothing.'
+  documented_definition: 'supplement §1.5.4, p.14 (heading at supplement.txt file line 644; the briefing pack numbered it 658): "The phase slope index (PSI) [62] is a directed measure of information flow
+    computed using the complex-valued coherency ... evaluates the consistency of the changes in phase differences across a pre-specified frequency range, weighted by the coherence ... The time-frequency
+    decomposition is given by a Morlet wavelet, with spectral densities indexed by a time-frequency tuple ... we take the average (denoted by the mean modifier) or the maximum (max) PSI across all time
+    points. We use the same pre-specified frequency ranges as outlined at the beginning of this section (i.e., low, high or full)"; keywords "directed, linear/nonlinear, unsigned, bivariate, frequency-dependent
+    and time-frequency dependent". Band rule from supplement §1.5, p.12-13 (heading at file line 570, band bullets at lines 595-599; the briefing pack gives §1.5 as lines 582-613): fmin-0_fmax-0-5 = f in
+    [0, fs/2], fmin-0_fmax-0-25 = [0, fs/4], fmin-0-25_fmax-0-5 = [fs/4, fs/2], fs = 1. GitBook spectral.md:322-346 (Phase Slope Index) repeats the same text. [62] = Nolte et al. 2008.'
+  delegate_lib: mne-connectivity==0.9.0 mne_connectivity.phase_slope_index(mode='cwt_morlet') -> spectral_connectivity_epochs(method='cohy') -> _compute_psi; wavelets and CWT from mne==1.13.2 mne.time_frequency.tfr.morlet
+    / cwt; band/time selection, aggregation and mirroring are native pyspi
+  implemented_as: 'Input z-scored per channel (ddof=1; optional detrend first). The whole (N,T) dataset is passed as ONE epoch (1,N,T). MNE builds 10 complex Morlet wavelets at f = linspace(0.2, 0.5, 10)
+    (step 1/30, n_cycles = 7 default, zero_mean=True, sigma_t = 7/(2 pi f), support +-5 sigma_t, lengths 55..23 samples), computes the CWT by FFT linear convolution with zero padding, mode ''same'' (T samples
+    per frequency). For each lower-triangle pair (seed i > target j) the single-epoch coherency C(f,t) = W_i W_j* / (|W_i| |W_j|) has unit modulus, so PSI(t) = Im sum_{k=0..8} C*(f_k,t) C(f_{k+1},t) = sum_k
+    sin(dphi(f_{k+1},t) - dphi(f_k,t)) with dphi = phase_i - phase_j: a sum of 9 unweighted adjacent-frequency phase-difference increments, one band (all 10 frequencies), shape (N,N,1,T). The f = 0.5 (Nyquist)
+    wavelet is purely real, so dphi(0.5,t) is 0 or pi. pyspi then takes freq = freqs_computed[0] (the 10 wavelet frequencies), freq_id = indices with fmin <= f <= fmax, and indexes the LAST (time) axis
+    with these frequency indices: full band -> time samples t = 0..9, low band [0,0.25] -> t = 0,1, high band [0.25,0.5] -> t = 2..9. Statistic = np.nanmean or np.nanmax (signed) over axes (band, selected
+    time). Lower triangle copied to upper (symmetric matrix), diagonal NaN. mt_adaptive=True is passed but unused in cwt mode. For T < 25 the default fmin = 5/T drops wavelet frequencies and the index mapping
+    shifts (T=20: 8 frequencies, low band empty -> NaN).'
+  implementation_trace:
+  - 'pyspi/config.yaml:1234-1261 .statistics.wavelet PhaseSlopeIndex: labels undirected, unsigned, time/frequency dependent, bivariate; six configs (fs:1 | fmin 0 fmax 0.25 | fmin 0.25 fmax 0.5 | each band
+    with statistic max)'
+  - 'pyspi/data.py:184-195 Data.set_data: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, nan_policy=''omit'', ddof=1) when normalise=True (default)'
+  - 'pyspi/calculator.py:329-332 Calculator.compute: S = spi.multivariate(dataset); np.fill_diagonal(S, nan)'
+  - 'pyspi/statistics/wavelet.py:15-39 mne.__init__: fmax None -> fs/2 (17-18); statistic mean -> np.nanmean, max -> np.nanmax (25-30); identifier suffix _wavelet_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}
+    with ''.''->''-'' (34-39)'
+  - 'pyspi/statistics/wavelet.py:193-200 PhaseSlopeIndex(mne, Undirected): identifier ''psi'' + mne suffix + ''_{statistic}'' (hence ..._mean_..._mean); class labels [''unsigned'',''wavelet'',''undirected''];
+    MRO probe: PhaseSlopeIndex, mne, Unsigned, Undirected, Directed'
+  - 'pyspi/statistics/wavelet.py:202-227 PhaseSlopeIndex._get_cache: per-Data cache data.mne_psi (shared by all six identifiers, keyed only by AttributeError); z = np.moveaxis(data.to_numpy(), 2, 0) ->
+    (1, N, T) single epoch (207); freqs = np.linspace(0.2, 0.5, 10) (209); mnec.phase_slope_index(z, mode=''cwt_morlet'', sfreq=fs, mt_adaptive=True, cwt_freqs=freqs) with fmin/fmax/cwt_n_cycles NOT passed
+    (210-217); psi = get_data(''dense'') shape (N,N,1,T) (218); freq = attrs[''freqs_computed''][0] (221); freq_id = where(fmin <= freq <= fmax) (225)'
+  - 'pyspi/statistics/wavelet.py:229-237 multivariate: adj = statfn(np.real(adj_freq[..., freq_id]), axis=(2,3)) -- the ellipsis index hits the last axis = TIME, not frequency (232); adj[triu] = adj.T[triu]
+    copies lower (seed>target) values to the upper triangle (234-235); diagonal NaN (236)'
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/effective.py:21-41 phase_slope_index signature: fmin=None, fmax=np.inf, cwt_n_cycles=7 (37), mt_adaptive ignored for cwt'
+  - .venv/lib/python3.12/site-packages/mne_connectivity/effective.py:177-198 coherency via spectral_connectivity_epochs(method='cohy', faverage=False, ...)
+  - .venv/lib/python3.12/site-packages/mne_connectivity/effective.py:216-224 fmin None -> -inf; single band (-inf, inf); _compute_psi with freq_dim=-2 for SpectroTemporalConnectivity
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/effective.py:495-528 _compute_psi: freq_idx = freqs strictly inside (band[0], band[1]) (513); freqs_computed.append(freqs[freq_idx]) (514); acc +=
+    conj(cohy[f_i]) * cohy[f_{i+1}] over ADJACENT pairs zip(freq_idx, freq_idx[1:]) (518-523); psi = Im(acc) (526)'
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py:97-113 _check_freqs: fmin -inf -> 5 cycles / epoch duration = 5/T (sfreq 1)'
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py:116-138 _compute_freqs: cwt mode uses cwt_freqs; error if any > sfreq/2 (0.5 allowed)'
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py:141-153 _compute_freq_mask: freqs >= fmin & <= fmax (drops wavelet freqs < 5/T)'
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py:270-277 indices None (bivariate method) -> np.tril_indices(n, -1): seeds = row i, targets = col j, i > j'
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py:345-363 _assemble_spectral_params cwt_morlet: morlet(sfreq, freqs, n_cycles=cwt_n_cycles, zero_mean=True); mt_adaptive only used
+    in the multitaper branch (335-341)'
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py:443-457 _compute_spectra cwt branch: cwt(x, wavelets, use_fft=True, mode=''same''); psd = |W|^2 per time'
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py:647-655 cwt accumulation: csd = x_t[seed] * conj(x_t[target]) per frequency and time'
+  - .venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py:1472-1487 psd /= n_epochs (=1); compute_con(con_idx, n_epochs, psd_xx, psd_yy)
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs_bivariate.py:84-94 _CohyEst.compute_con: C = (acc / n_epochs) / sqrt(psd_xx * psd_yy) (unit modulus for one epoch; probe |C| in [1-3e-16,
+    1+4e-16])'
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py:1555-1571 indices None: lower-triangle results placed into an (n,n) zero matrix and raveled (upper triangle and diagonal = 0)'
+  - '.venv/lib/python3.12/site-packages/mne_connectivity/base.py:812 get_data(''dense''): data = self._data.reshape(new_shape) -> (N, N, n_bands=1, T)'
+  - '.venv/lib/python3.12/site-packages/mne/time_frequency/tfr.py:65,151-178 morlet: sigma_t = n_cycles/(2 pi f); t = arange(0, 5 sigma_t) mirrored; exp(2 pi i f t) - exp(-2 (pi f sigma_t)^2) (zero mean);
+    Gaussian envelope; W /= sqrt(0.5) * ||W||. At f = 0.5, sfreq = 1 the oscillation exp(i pi t) is real (probe max |Im W| = 1.2e-16)'
+  - '.venv/lib/python3.12/site-packages/mne/time_frequency/tfr.py:303-319 _get_nfft: wavelet longer than signal only warns when use_fft=True (probe: T=40 warns, still computes)'
+  - '.venv/lib/python3.12/site-packages/mne/time_frequency/tfr.py:322-400 _cwt_gen: FFT of zero-padded x and W (nfft >= T + len(W) - 1), linear convolution, _centered(ret, n_times) for mode ''same'''
+  - .venv/lib/python3.12/site-packages/mne/time_frequency/tfr.py:767-797 cwt -> _get_nfft -> _cwt_array
+  deviation_from_documented: '(1) Aggregation domain: documented ''mean or max PSI across all time points'' within the low/high/full frequency range; implemented: mean/max of the full-band (0.2-0.5) PSI(t)
+    over the time samples whose INDEX equals the index of a wavelet frequency in the requested range: t = 0..9 (full), t = 0,1 (low), t = 2..9 (high); the frequency band never restricts the frequencies
+    (all bands use the same 10-frequency PSI). All selected samples lie inside the cone of influence (wavelet half-lengths 27, 23, 20, 18, 16, 15, 13, 12, 11, 11 samples > 9). Probe delayed_noise T=256:
+    freqs_computed = [0.2, 0.2333, ..., 0.5]; pyspi A[1,0] = -1.5647 equals mean(psi[1,0,0,:10]) = -1.56467, while the all-time mean is -1.2219. Already documented as ''wavelet PSI axis selection'' (see
+    already_documented). (2) Frequency range: documented ranges start at 0 (or fs/4); the computed wavelet grid is linspace(0.2, 0.5, 10), so even indexing the frequency axis the low band would contain only 0.2
+    and 0.233, and 0.5 = Nyquist where the wavelet is real. (3) Directed vs output: documented as directed; config.yaml:1238 labels it undirected and the code mirrors lower to upper (wavelet.py:234-235),
+    so A is symmetric and A[i,j] = A[j,i] = PSI(seed max(i,j) -> target min(i,j)): the sign encodes a direction relative to channel ORDER, not an undirected strength. (4) ''Unsigned'' keyword/label: the
+    output is signed. Probe on delayed_noise T=256 (min, max over the matrix): psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean [-1.565, +2.752]; mean low band [-3.757, +5.024]; mean high band [-1.504, +2.338];
+    psi_wavelet_max_fs-1_fmin-0_fmax-0-5_max [-0.414, +5.640]; max low band [-3.269, +5.390]; max high band [-0.414, +5.640]. Every variant has negative entries. (5) ''Weighted by the coherence'': with
+    one epoch the coherency has unit modulus, so no coherence weighting occurs. (6) Supplement cites MNE v0.23.0; the executed code is mne-connectivity 0.9.0 / mne 1.13.2.'
+  deviation_from_canonical: '(a) Coherency is not an expectation: one epoch and no time/frequency smoothing, so |C| = 1 and PSI(t) = sum of sines of adjacent phase-difference increments (probe: mne PSI
+    equals sum sin(diff dphi) to 2.2e-15). Canonical PSI requires coherency averaged over segments/trials. (b) No normalisation by the jackknife std (raw Psi_tilde; MNE also returns raw, common practice).
+    (c) The adjacent-frequency kernel itself matches Nolte eq. 3 (unlike the multitaper all-pairs variant, REVIEW M5), on a 10-point Morlet grid with step 1/30 and the Nyquist frequency included; the Nyquist
+    wavelet is real so its phase difference is 0 or pi and the last increment is not a phase slope. (d) Aggregation over time samples 0..9 at the signal start (zero-padding edge) instead of a time-averaged
+    or band-limited quantity; observed effect: sign of pyspi output disagrees with the true lead/lag on delayed_noise and var2_bivariate (see candidates). (e) Canonical PSI is antisymmetric; output is symmetrised.
+    (f) max is the signed maximum, not a canonical summary.'
+  units_and_range: Dimensionless raw PSI per time point in [-9, 9] (9 adjacent pairs of unit-modulus coherency); mean/max over 2..10 time samples, so the output range is [-9, 9]; signed, can be negative
+    (despite 'unsigned' label). NaN if a band selects no sample (T < 25 low band) or for constant input. Symmetric matrix by construction; diagonal NaN.
+  direction_convention: 'MNE (docstring effective.py:52-53, and csd = seed * conj(target) at epochs.py:652): PSI for (seed, target) is positive when the seed leads. Seeds are rows of tril_indices (i > j),
+    so the raw dense value psi[i, j] (i > j) is positive when the higher-index channel i leads j. pyspi copies it to the upper triangle: A[i,j] = A[j,i] = PSI(max(i,j) -> min(i,j)). Probe (time samples
+    30..T-30, delayed_noise where x0 leads x1, x2, x3): psi[i,j] < 0 for every pair at every T (the higher index lags); var2_bivariate (x0 -> x1): psi[1,0] central mean -0.39/-0.39/-0.24/-0.18 at T = 64/256/1024/4096.
+    The pyspi output itself (first-10-sample window) does not preserve this sign reliably (see candidates). Confirmed in the check stage for the library step (raw psi[i, j] for i > j is negative on every
+    delayed_noise pair, rawpsi runs; the intended smoothed-coherency PSI has the truth sign on 100% of pairs, int runs); see direction_observed for what the stored value carries.'
+  symmetry_expected: sym
+  already_documented: 'EEG_OPTIMIZATION_NOTES.md §review (line 169 at a42ebc1, ''wavelet PSI axes''; line 168 at a1f20c7 read ''wavelet PSI axis selection''; KNOWN_ISSUES: ''pyspi indexes the time axis of the (N,N,1,T) PSI result with frequency indices'') and
+    DEPENDENCY_MIGRATION.md:84-85 (''The PSI wavelet wrapper''s existing selection indexes the last result axis using positions from that frequency vector''). tests/README.md ''Degenerate outputs in the
+    extra wavelet set'' (line 217) covers the nine OTHER wavelet classes and states the psi_wavelet SPIs are not degenerate; it does not discuss the unit-modulus single-epoch coherency inside PSI. REVIEW
+    M5 (all-pairs PSI) applies to the multitaper spectral PSI, NOT to this unit (MNE uses adjacent pairs). The symmetrisation, the Nyquist frequency and the direction loss are not in the documented list, nor is the undirected/unsigned label of this signed, directed unit (REVIEW M9 and EEG_OPTIMIZATION_NOTES.md §review ''parameter-specific/shared labels'' discuss label structure in general without naming wavelet PSI; REVIEW M5 concerns the multitaper spectral PSI).'
+  new_finding_candidates:
+  - 'CANDIDATE (new): an antisymmetric directed quantity is mirrored into a symmetric matrix. wavelet.py:234-235 ''ui = np.triu_indices(data.n_processes, 1); adj[ui] = adj.T[ui]'' with MNE computing only
+    seeds i > j (epochs.py:276 ''np.tril_indices(n_good_signals, -1)''). Consequences: the label ''undirected'' is produced by discarding the reverse-orientation value (which is exactly -PSI, so no information
+    is lost but the sign meaning is tied to channel order), and reversing the channel order flips every entry''s sign. Probe delayed_noise T=256: mean variant max|A(reversed, mapped back) + A| = 2.2e-16;
+    max variant A[1,0] = -0.414 vs 2.014 after reversal. Distinct from REVIEW M1 (tests/README.md bug 5 before b2f6d7e), which concerns classes where Undirected.multivariate is bypassed without mirroring.'
+  - 'CANDIDATE (new): the pyspi output does not reliably carry the true direction. delayed_noise (x0 leads x1, x2, x3 by 1, 3, 5): central-window psi[i,j] < 0 for all 6 pairs at all T, but pyspi A[3,0]
+    = +0.38, +1.67, +1.06, +1.23 at T = 64, 256, 1024, 4096 and A[2,0] = +1.26 at T = 4096. var2_bivariate (x0 -> x1): pyspi A[1,0] = +1.835, -1.588, +0.456, -0.695 at T = 64, 256, 1024, 4096 vs central
+    mean -0.39, -0.39, -0.24, -0.18; analytic Nolte eq.3 on S_true gives PSI_01 = +0.489 for band [0.2, 0.5] (x0 leads, i.e. PSI(1->0) < 0). Hypothesis: edge (zero-padding) dominated first-10-sample window.'
+  - 'CANDIDATE (new): single-epoch coherency has unit modulus, so the ''weighted by the coherence'' part of the documented definition is absent. Probe: |cohy| in [0.9999999999999997, 1.0000000000000004];
+    mne psi[1,0,:] equals sum_k sin(dphi_{k+1} - dphi_k) from the CWT phases to 2.2e-15. Pack hypothesis confirmed (more precisely: sum of sines of adjacent-frequency INCREMENTS of the phase difference).'
+  - 'CANDIDATE (new): the top wavelet frequency is the Nyquist frequency 0.5 where the Morlet wavelet exp(i pi t) is real (probe max |Im W(0.5)| = 1.17e-16, max |Im cohy(0.5)| = 7.6e-13), so dphi(0.5) is
+    0 or pi (probe: unique values mod pi = {0, 3.141593}); the 9th increment sin(dphi(0.5) - dphi(0.4667)) carries no phase-slope information yet has mean |.| = 0.35 on delayed_noise T=1024.'
+  - 'CANDIDATE (new, edge case): for T < 25 the MNE default fmin = 5/T drops wavelet frequencies, shifting freq_id; probe T=20: freqs_computed = [0.267 .. 0.5] (8 values), low band selects nothing -> ''Mean
+    of empty slice'', A = NaN; for 25 <= T < 55 MNE warns that wavelets are longer than the signal but still computes. Not reachable with the audit datasets (T >= 64).'
+  - 'CANDIDATE (minor): labels contradict the documentation and each other: supplement keywords ''directed ... unsigned'', config.yaml:1238-1239 ''undirected, unsigned'', class labels [''unsigned'',''wavelet'',''undirected''];
+    output is signed (negative values in every probe).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - var2_bivariate
+    - narrowband_f0-0.25
+    - shared_envelope
+    path: kernel
+    reference: 'from-scratch numpy re-implementation of the executed algorithm without mne/mne_connectivity: Morlet wavelets from the closed form (sigma_t = 7/(2 pi f), +-5 sigma_t support, zero-mean offset,
+      scale 1/(sqrt(0.5)||W||)), direct time-domain np.convolve(mode=''same'') per frequency, coherency W_i W_j*/(|W_i||W_j|), PSI(t) = Im sum_k C*(f_k,t) C(f_{k+1},t) over f = linspace(0.2,0.5,10); then
+      pyspi''s selection (time indices = indices of wavelet freqs in [fmin,fmax]), nanmean/nanmax, lower->upper mirror. Replicates MNE''s wavelet design, so it confirms the trace, not the definition.'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: agreement <= 1e-10 absolute for all six identifiers and all pairs at T in {64,256,1024,4096} (FFT vs direct convolution differ only by round-off); a mismatch would falsify the trace
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - var2_bivariate
+    path: kernel
+    reference: 'analytic identity for one epoch: |C| = 1 so PSI(t) = sum_k sin(dphi(f_{k+1},t) - dphi(f_k,t)), dphi from numpy.angle of the from-scratch CWT; plus the Nyquist property Im W(0.5) = 0'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: '|C| - 1 <= 1e-12 everywhere; PSI(t) equals the sum of sines to <= 1e-12; dphi(0.5, t) mod pi equals 0 to <= 1e-9 (confirms the coherence weight is absent and the Nyquist term is a
+      0/pi phase)'
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    - logistic_maps
+    path: kernel
+    reference: 'time-sample selection check: same raw PSI(t) (from the from-scratch kernel) averaged (a) over t = freq_id (pyspi rule), (b) over all t (documented ''across all time points''), (c) over t
+      outside the cone of influence (t in [27, T-28])'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'pyspi equals (a) to <= 1e-12; differences to (b) and (c) reported per pair and T (probe: delayed_noise T=256 A[1,0] -1.5647 vs all-time -1.2219); quantifies the documented axis-selection
+      deviation'
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    - var2_chain
+    path: kernel
+    reference: 'canonical Nolte 2008 eq. 3 PSI: for var2_bivariate/var2_chain analytic from S_true (coherency from the true spectral matrix, adjacent bins, bands [0,0.5], [0,0.25], [0.25,0.5] and [0.2,0.5]);
+      for delayed_noise the analytic phase slope of a pure delay d (dphi(f) = -2 pi f d, sign fixed by the lead) and a Welch-segment numpy coherency estimate (Hann window, 50% overlap, numpy.fft only) at
+      T = 1024, 4096'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'canonical PSI sign identifies the leader in every pair (probe: S_true PSI_01 = +0.489 for [0.2, 0.5], x0 leads). Expected (candidate): pyspi wavelet PSI sign disagrees with the canonical
+      sign in a substantial fraction of pairs/T (probe: delayed_noise A[3,0] > 0 at all T; var2_bivariate sign alternates with T); report agreement fraction per identifier'
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    path: pipeline
+    reference: 'empirical direction convention: known leader (x0 in both datasets). Compute (i) raw MNE-free kernel psi[i,j] for seed i > target j over t in [30, T-30], (ii) pyspi A[i,j] and A[j,i]'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: (i) psi[i,j] < 0 whenever the higher-index channel i lags (all delayed_noise pairs, var2_bivariate (1,0)), establishing raw PSI(seed -> target) > 0 = seed leads; (ii) A[i,j] == A[j,i]
+      exactly, and A carries the (max index -> min index) orientation, so A[i,j] > 0 would mean the higher-index channel leads; record how often pyspi's sign agrees with (i)
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    - var2_bivariate
+    path: pipeline
+    reference: 'channel-permutation self-consistency: run pyspi on X[::-1] and map back; analytic expectation from antisymmetry of PSI (C_ji = conj(C_ij) => PSI_ji = -PSI_ij) combined with the lower->upper
+      mirror'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: A(reversed) mapped back = -A(original) for every off-diagonal pair to <= 1e-12 (mean variants); for max variants A_rev = -min over the same samples (not simply -A). Demonstrates that
+      the symmetric output's sign depends on channel order
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'null distribution: canonical PSI of independent series has zero mean; compare pyspi values with the all-time mean of the kernel PSI(t) across the 10 pairs and 4 lengths'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pyspi mean variants centred near 0 but with spread that does not shrink with T (10 or fewer edge samples are averaged regardless of T), whereas the all-time mean shrinks roughly like
+      1/sqrt(T); max variants positive-biased
+  - datasets:
+    - trending
+    - scaled_offset
+    path: pipeline-detrend
+    reference: 'preprocessing invariance: same pipeline with detrend=True vs the D2 base draw; analytic expectation that coherency phase is invariant to per-channel positive scaling, and the zero-mean wavelet
+      suppresses offsets except near the edges'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'scaled_offset: identical to the base draw after z-scoring (exact); trending: detrend changes the first-10-sample values (edge window is sensitive to residual linear trends); report
+      magnitude'
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/wavelet_psi.py:replica (closed-form Morlet n_cycles 7 via _kernels_spectral.morlet_wavelet, direct np.convolve with mne same-centring, single-epoch coherency, _kernels_spectral.psi_adjacent,
+    pyspi time-index selection and lower->upper mirror; no mne import); audit/checks/refs/wavelet_psi.py:documented (supplement 1.5.4 read literally: per-time PSI on the band frequencies averaged over ALL
+    time points); audit/checks/refs/wavelet_psi.py:intended (Nolte 2008 eq. 3 via _kernels_spectral.psi_adjacent on the time-averaged coherency of _kernels_spectral.cwt_morlet, 7 cycles); audit/checks/refs/wavelet_psi.py:truth_sign
+    (delayed_noise analytic lag, var2_* population Nolte eq. 3 from make_data.var_spectral_matrix); audit/checks/refs/wavelet_psi.py:mc_null (own-kernel Monte Carlo, 4000 draws per T); audit/checks/refs/wavelet_psi.py:h_tsel/h_xsel/h_winperm/h_tailpert
+    (axis-selection probes, audit/checks/probes/wavelet_psi_probes.py:tsel/xsel/winperm/tailpert); audit/checks/refs/wavelet_psi.py:h_welch (delayed_noise: Nolte eq. 3 on the analytic pure-delay coherency, grid
+    k/64; numpy Welch estimate, periodic Hann, L = 64, 50% overlap); audit/checks/refs/wavelet_psi.py:h_popband (var2_*: population Nolte PSI over seven band/grid definitions); audit/checks/refs/wavelet_psi.py:h_fscache
+    (cache-key probe, replica at fs = 2); same-lineage display only: mne_connectivity==0.9.0 in the comparison venv (sl run)'
+  check_data: 'iid_gaussian T64/T256/T1024; delayed_noise T64/T256/T1024; var2_bivariate T64/T256/T1024; var2_chain T64/T256/T1024; logistic_maps_chaotic T64/T256/T1024; narrowband_f0-0.25 and shared_envelope
+    T64/T256/T1024; logistic_maps T256/T1024; trending T256 (pipeline and pipeline-detrend); scaled_offset T256; 300 fresh iid N(0,1) pairs per T (nullmc probe); delayed_noise x[:, :20] (T < 25 edge case);
+    delayed_noise T4096 for the Welch direction check only (cheap: about 0.1 s per pyspi call); tail perturbations of delayed_noise T1024 (kernel, pipeline, pipeline-detrend), var2_bivariate T1024 and iid_gaussian
+    T256. T <= 1024 for everything else (family budget).'
+  agreement_criterion: 'replica, raw library PSI, axis-selection and window-perturbation runs: tolerance rtol 1e-8, atol 1e-10 (library step: |C| = 1 exact 1e-12, Nyquist Im C / |C| atol 1e-9); documented
+    and intended quantities: same tolerance (expected to fail, the size of the miss is the evidence); direction: sign(pyspi) equals the true lead/lag sign on every off-diagonal entry; nullmc: [mean, SD]
+    of pyspi A[1,0] over 300 iid draws within 2 se of the own Monte Carlo, se scaled to a two-sided Bonferroni test at family-wise 0.05 over 36 numbers; head/mid window perturbation: qualitative, every
+    identifier changes by > 1e-6 and equals the replica within 1e-9; tail perturbations (tailpert): pyspi on the four inputs equals the replica, tolerance rtol 1e-8, atol 1e-10; Welch direction (welch):
+    sign(pyspi) equals the analytic population PSI sign of the pure delay on every off-diagonal entry; band robustness (popband): qualitative, pass iff the population PSI sign of every pair is the same
+    in all seven band/grid definitions and equals the dir-run truth; fs cache (fscache): qualitative, pass iff the fs = 2 SPI on the shared Data returns the fs = 1 value bitwise while a fresh fs = 2 Data
+    differs and matches the fs = 2 replica within 1e-9'
+  closeness: 'Trace confirmed: replica 106/106 rep runs pass, max_abs 1.0e-12 over six identifiers x five datasets x T 64/256/1024 (plus trending, scaled_offset); library raw PSI(t) vs own replica max_abs
+    2.3e-13 (rawpsi, 3/3); |C| - 1 <= 4.4e-16 (cohmod); PSI(t) equals the sum of sines of adjacent phase-difference increments to 3.6e-15; Im C(0.5, t) / |C| <= 1.2e-12 (nyq) and dphi(0.5) mod pi <= 5.9e-13.
+    Axis selection: perturbing the cached PSI(t) at one time index changes the stored value only for t in {0..9} (full), {0, 1} (low), {2..9} (high); max change outside the selection 0.0 (tsel, kernel and
+    pipeline). Input level: reversing x[:, 37:] (channel mean and SD unchanged) changes every stored value by exactly 0.0 on delayed_noise T1024, var2_bivariate T1024 and iid_gaussian T256 (winperm-tail,
+    3/3 pass), while reversing x[:, 0:10] changes them by 0.56-5.81 and x[:, 10:37] by 0.12-4.13 (winperm-head/mid); dependence horizon 36 (full/high) and 28 (low) = max selected t + 27 (f = 0.2 wavelet
+    half-length), max change beyond it 9.9e-14 (xsel, kernel path). Tail samples do reach the stored value through preprocessing (tailpert, 5/5 pass against the replica, max_abs <= 3.9e-13): on the pipeline
+    path, x[:, 37:] + 0.5 changes the six identifiers by up to 3.13 (delayed_noise T1024), 0.89 (var2_bivariate T1024) and 0.49 (iid_gaussian T256), and x[0, 37:] * 3 by 0.094 / 0.211 / 0.012; rescaling
+    the tail by 3 about its own mean (channel mean fixed, SD up to 2.95x) changes them by <= 2.9e-13; on the kernel path all three perturbations change them by <= 1.2e-13; with detrend (delayed_noise T1024)
+    they change them by 1.60 / 0.131 / 0.087, because the tail also sets the fitted line. Documented quantity (all time points, band frequencies): 0/36 pass, max_abs 0.07-6.06 (delayed_noise T1024 mean-full
+    1.76). Intended quantity (smoothed-coherency Nolte PSI): 0/12 pass on value, max_abs 0.51-5.55; it has the true sign on 12/12 runs (agreement 1.0), pyspi 0.0-0.67 on the same runs. Direction: 9/72 dir
+    runs pass; mean sign agreement with the truth over 12 runs per identifier mean-full 0.40, mean-high 0.50, mean-low 0.28, max-full 0.10, max-high 0.10, max-low 0.28; same statistic over an equally long
+    CENTRAL window 0.69 (mean-full), documented all-time mean 0.89, intended 1.0 (mean-full; ref_intended_whole_agree is 1.0 for every full and high variant and 0.86 for mean-low and max-low). Welch check (welch, delayed_noise T1024 / T4096, 0/12 pass): the numpy Welch PSI has the analytic pure-delay sign on 12/12
+    runs (for example mean-full lower triangle -2.89, -8.33, -5.62, -12.88, -10.66, -5.68 against analytic -2.91, -8.62, -5.74, -14.00, -11.25, -5.74 at T1024); pyspi agrees with it on 0.67 / 0.33 (mean-full),
+    0.50 / 0.33 (mean-low), 0.67 / 0.33 (mean-high), 0.0 / 0.0 (max-full), 0.50 / 0.33 (max-low), 0.0 / 0.17 (max-high) at T1024 / T4096. Band robustness (popband, 2/2 pass): population PSI(1 -> 0) on var2_bivariate
+    is -0.833, -0.521, -0.312, -0.465, -0.152 over [0, 0.5], [0, 0.25], [0.25, 0.5], [0.2, 0.5], [0.2, 0.25] (grid k/64) and -0.483, -0.113 over the wavelet grid in [0.2, 0.5] and [0.2, 0.25]; all three
+    var2_chain pairs are negative in all seven definitions. Null: SD of pyspi mean-full over 300 iid draws 1.286 / 1.267 / 1.280 at T 64 / 256 / 1024 (own MC 1.292 / 1.257 / 1.307, nullmc 3/3 pass, max_z
+    1.40) vs SD of the all-time mean 0.317 / 0.129 / 0.060 (ratio 4.1 / 9.8 / 21.4); pyspi max-full null mean 3.27 (positive bias); per-dataset null 17/18 (the one miss, max-high T64, p_emp 0.002, is within
+    the multiplicity of 180 dependent tests). Channel reversal (perm, 6/6 pass against the replica): mean-full max|A_rev + A| = 2.2e-16 (delayed_noise T256), 4.4e-16 (iid_gaussian T256), 0.0 (var2_bivariate
+    T256); max-full A[1,0] -0.414 -> 2.014, 0.374 -> 5.517, -0.358 -> 3.942. fs cache (fscache, 1/1 pass): an fs = 2 SPI on a Data that already holds the fs = 1 result returns the fs = 1 value bitwise,
+    while a fresh fs = 2 Data differs by 7.23 and equals the fs = 2 replica to 1.8e-15. Same-lineage display: mne_connectivity in the comparison venv reproduces pyspi to 0.0 (sl).'
+  verdict: degenerate
+  score_0_10: 0
+  score_rubric: 0
+  score_rubric_basis: anchor
+  score_rubric_note: 'Wrong-axis clause: frequency indices select time samples 0..9 (full), 0..1 (low) and 2..9 (high). In the tsel probe, changes outside the selection
+    are 0.0.'
+  documentation_status: misdescribed
+  verdict_adjusted: degenerate
+  score_adjusted: 0
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Rubric anchor 0 (wrong axis indexed; already documented as the wavelet PSI axis selection, EEG_OPTIMIZATION_NOTES.md §review / KNOWN_ISSUES). All six identifiers store the mean or signed
+    max of the same full-band (0.2-0.5, 10 Morlet frequencies) single-epoch PSI(t) over the first 10 (full), 2 (low) or 8 (high) TIME samples, because the frequency indices are applied to the time axis;
+    the band never restricts frequencies. On the kernel path and the default (no-detrend) pipeline path the temporal content of input samples t >= 37 cannot reach the stored value (winperm-tail change 0.0; kernel-path tail perturbations <= 1.2e-13); on the default
+    pipeline path those samples act only through the per-channel z-score mean (the SD is a positive rescaling that PSI ignores), and a tail offset of +0.5 moves the stored
+    values by up to 3.13 because the zero-mean Morlet transform of a constant is not zero inside the zero-padded edge window (tailpert). With detrend (pipeline-detrend) this horizon does not hold: the fitted line is a time-weighted sum of the tail, so the time order of the tail reaches the stored value (wavelet.psi|delayed_noise|1024|pipeline-detrend|tailpert: rescaling x[:, 37:] about its own mean changes it by 0.087; the review probe review_detrend_rev.py shows the same for a time reversal of x[:, 37:]). On top of that: one epoch gives unit-modulus coherency, so PSI(t)
+    is a sum of 9 unweighted sines (no coherence weighting, the documented and canonical weighting is absent); the 0.5 wavelet is real, so the last increment is a 0/pi phase; the antisymmetric quantity
+    is mirrored into a symmetric matrix whose sign follows channel order; labels say undirected/unsigned for a signed, directed quantity. Consequences measured: sign agreement with the true lead/lag 0.10-0.50
+    per identifier while the intended quantity scores 1.0 on the full and high variants and 0.86 on mean-low and max-low (ref_intended_whole_agree over the same 72 dir runs; 0.0 on logistic_maps_chaotic T64, 0.33 on var2_chain T64) and a numpy Welch PSI scores 1.0 (delayed_noise welch runs); null spread constant in T (SD about 1.28) instead of shrinking like the all-time mean (0.32 -> 0.06). The replica reproduces
+    the computation to 1e-12, so the code does what the trace says; the stored number does not describe the documented or canonical PSI.'
+  new_finding: true
+  definition_under_review: true
+  check_cost: 'cheap: about 5 ms per pyspi PhaseSlopeIndex call at T <= 1024 and about 0.1 s at T = 4096 (the six identifiers share one cached PSI); 297 runs including 900 pyspi null draws took 4 min 18
+    s wall-clock (pyspi side 12 s, the rest is the reference-side Monte Carlo); T <= 1024 except the 12 Welch direction runs at T = 4096'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on all 261 plain pyspi runs (lower triangle mirrored); the library dense output has an all-zero upper triangle and diagonal (rawpsi); the underlying quantity
+    is antisymmetric (channel reversal flips every mean-variant entry: max|A_rev + A| <= 4.4e-16 on delayed_noise, iid_gaussian and var2_bivariate T256, perm:mean-full)'
+  direction_observed: 'A[i,j] = A[j,i] = stored statistic of PSI(max(i,j) -> min(i,j)) over the first 2-10 time samples; positive should mean the higher-index channel leads (library convention, confirmed:
+    the intended PSI has the truth sign on 12/12 int runs). Empirically the stored sign matches the true lead/lag on 40% (mean-full), 50% (mean-high), 28% (mean-low), 10% (max-full/high), 28% (max-low)
+    of entries over delayed_noise, var2_bivariate, var2_chain and logistic_maps_chaotic at T 64/256/1024 (dir runs, 9/72 pass); against the analytic pure-delay PSI on delayed_noise T1024 / T4096 it agrees
+    on 0.0-0.67 (welch runs, 0/12 pass) while the numpy Welch PSI agrees on 1.0: the stored value does not carry direction reliably.'
+  candidate_resolutions:
+  - candidate: antisymmetric directed PSI is mirrored into a symmetric matrix; sign tied to channel order
+    outcome: confirmed
+    evidence: wavelet.psi|delayed_noise|256|pipeline|perm:mean-full (max|A_perm + A| 2.2e-16, replica 3.6e-15), wavelet.psi|delayed_noise|256|pipeline|perm:max-full (A[1,0] -0.414 vs 2.014 after reversal);
+      the same on wavelet.psi|iid_gaussian|256|pipeline|perm:{mean,max}-full (4.4e-16; 0.374 vs 5.517) and wavelet.psi|var2_bivariate|256|pipeline|perm:{mean,max}-full (0.0; -0.358 vs 3.942); max|A - A.T|
+      = 0.0 on 261 plain runs. Not in KNOWN_ISSUES (REVIEW M1, which was tests/README.md bug 5 before b2f6d7e, concerns other classes).
+  - candidate: the stored value does not reliably carry the true direction
+    outcome: confirmed
+    evidence: 'wavelet.psi|*|dir:* (72 runs, 9 pass; agreement mean-full 0.40, max-full 0.10) vs wavelet.psi|*|int:* (intended quantity truth agreement 1.0 on 12/12). Root cause is the documented axis selection
+      plus single-epoch coherency; the central-window control (central_window_agree 0.69 for mean-full) and the documented all-time mean (0.89) show the short window is the main cause and the edge an additional
+      one. The canonical sign is robust: wavelet.psi|delayed_noise|{1024,4096}|pipeline|welch:* (numpy Welch PSI agrees with the analytic pure-delay sign on 12/12, pyspi on 0.0-0.67) and wavelet.psi|var2_{bivariate,chain}|1024|pipeline|popband:mean-full
+      (population sign identical in seven band/grid definitions).'
+  - candidate: single-epoch coherency has unit modulus, so the coherence weighting is absent
+    outcome: confirmed
+    evidence: wavelet.psi|delayed_noise|256|kernel|cohmod (| |C| - 1 | <= 4.4e-16), wavelet.psi|delayed_noise|256|kernel|rawpsi, wavelet.psi|var2_bivariate|256|kernel|rawpsi, wavelet.psi|iid_gaussian|256|kernel|rawpsi
+      (PSI(t) = sum of sines to 3.6e-15). KNOWN_ISSUES covers the nine other wavelet classes only.
+  - candidate: the top wavelet frequency is Nyquist (0.5) where the Morlet wavelet is real; last increment is a 0/pi phase
+    outcome: confirmed
+    evidence: wavelet.psi|delayed_noise|1024|kernel|nyq (Im C / |C| <= 1.2e-12; own max |Im W(0.5)| 1.2e-16), rawpsi runs (dphi(0.5) mod pi <= 5.9e-13). The Nyquist item in DEPENDENCY_COMPATIBILITY_REVIEW.md
+      concerns the multitaper grid.
+  - candidate: for T < 25 the default fmin = 5/T drops wavelet frequencies and the low band selects nothing
+    outcome: confirmed
+    evidence: 'wavelet.psi|delayed_noise|64|kernel|short (x[:, :20]: freqs_computed 0.267..0.5, 8 values; mean-low NaN, max-low ValueError -> all-NaN; replica with the same frequency drop agrees to 5.4e-15).
+      Not reachable with T >= 64.'
+  - candidate: labels (undirected, unsigned) contradict the documentation (directed) and the signed output
+    outcome: confirmed
+    evidence: negative stored values in every variant, e.g. wavelet.psi|delayed_noise|1024|pipeline|int:mean-full pyspi_lower -1.38..+1.06; nullmc mean-full null mean about 0 with SD 1.28. Not documented for
+      this metric, so counted as new (harmonised with wavelet.icoh in Workflow 4b-2; new_finding was already true from the other new candidates). REVIEW M9 (docs/storage_comparison/REVIEW.md:203-205)
+      and EEG_OPTIMIZATION_NOTES.md §review (line 169, 'parameter-specific/shared labels') are general label-structure topics that name no metric; REVIEW M5 (:170) says signed/directed metadata
+      is appropriate for PSI, but its scope is the multitaper spectral PSI among the stored identifiers, and audit/env/retained_metrics.txt contains no wavelet identifier; KNOWN_ISSUES does not list it.
+  checks_run:
+  - run_ids:
+    - wavelet.psi|iid_gaussian|64|kernel|rep:mean-full
+    - wavelet.psi|iid_gaussian|64|kernel|rep:mean-low
+    - wavelet.psi|iid_gaussian|64|kernel|rep:mean-high
+    - wavelet.psi|iid_gaussian|64|kernel|rep:max-full
+    - wavelet.psi|iid_gaussian|64|kernel|rep:max-low
+    - wavelet.psi|iid_gaussian|64|kernel|rep:max-high
+    - wavelet.psi|iid_gaussian|256|kernel|rep:mean-full
+    - wavelet.psi|iid_gaussian|256|kernel|rep:mean-low
+    - wavelet.psi|iid_gaussian|256|kernel|rep:mean-high
+    - wavelet.psi|iid_gaussian|256|kernel|rep:max-full
+    - wavelet.psi|iid_gaussian|256|kernel|rep:max-low
+    - wavelet.psi|iid_gaussian|256|kernel|rep:max-high
+    - wavelet.psi|iid_gaussian|1024|kernel|rep:mean-full
+    - wavelet.psi|iid_gaussian|1024|kernel|rep:mean-low
+    - wavelet.psi|iid_gaussian|1024|kernel|rep:mean-high
+    - wavelet.psi|iid_gaussian|1024|kernel|rep:max-full
+    - wavelet.psi|iid_gaussian|1024|kernel|rep:max-low
+    - wavelet.psi|iid_gaussian|1024|kernel|rep:max-high
+    - wavelet.psi|delayed_noise|64|kernel|rep:mean-full
+    - wavelet.psi|delayed_noise|64|kernel|rep:mean-low
+    - wavelet.psi|delayed_noise|64|kernel|rep:mean-high
+    - wavelet.psi|delayed_noise|64|kernel|rep:max-full
+    - wavelet.psi|delayed_noise|64|kernel|rep:max-low
+    - wavelet.psi|delayed_noise|64|kernel|rep:max-high
+    - wavelet.psi|delayed_noise|256|kernel|rep:mean-full
+    - wavelet.psi|delayed_noise|256|kernel|rep:mean-low
+    - wavelet.psi|delayed_noise|256|kernel|rep:mean-high
+    - wavelet.psi|delayed_noise|256|kernel|rep:max-full
+    - wavelet.psi|delayed_noise|256|kernel|rep:max-low
+    - wavelet.psi|delayed_noise|256|kernel|rep:max-high
+    - wavelet.psi|delayed_noise|1024|kernel|rep:mean-full
+    - wavelet.psi|delayed_noise|1024|kernel|rep:mean-low
+    - wavelet.psi|delayed_noise|1024|kernel|rep:mean-high
+    - wavelet.psi|delayed_noise|1024|kernel|rep:max-full
+    - wavelet.psi|delayed_noise|1024|kernel|rep:max-low
+    - wavelet.psi|delayed_noise|1024|kernel|rep:max-high
+    - wavelet.psi|var2_bivariate|64|kernel|rep:mean-full
+    - wavelet.psi|var2_bivariate|64|kernel|rep:mean-low
+    - wavelet.psi|var2_bivariate|64|kernel|rep:mean-high
+    - wavelet.psi|var2_bivariate|64|kernel|rep:max-full
+    - wavelet.psi|var2_bivariate|64|kernel|rep:max-low
+    - wavelet.psi|var2_bivariate|64|kernel|rep:max-high
+    - wavelet.psi|var2_bivariate|256|kernel|rep:mean-full
+    - wavelet.psi|var2_bivariate|256|kernel|rep:mean-low
+    - wavelet.psi|var2_bivariate|256|kernel|rep:mean-high
+    - wavelet.psi|var2_bivariate|256|kernel|rep:max-full
+    - wavelet.psi|var2_bivariate|256|kernel|rep:max-low
+    - wavelet.psi|var2_bivariate|256|kernel|rep:max-high
+    - wavelet.psi|var2_bivariate|1024|kernel|rep:mean-full
+    - wavelet.psi|var2_bivariate|1024|kernel|rep:mean-low
+    - wavelet.psi|var2_bivariate|1024|kernel|rep:mean-high
+    - wavelet.psi|var2_bivariate|1024|kernel|rep:max-full
+    - wavelet.psi|var2_bivariate|1024|kernel|rep:max-low
+    - wavelet.psi|var2_bivariate|1024|kernel|rep:max-high
+    - wavelet.psi|narrowband_f0-0.25|64|kernel|rep:mean-full
+    - wavelet.psi|narrowband_f0-0.25|64|kernel|rep:mean-low
+    - wavelet.psi|narrowband_f0-0.25|64|kernel|rep:mean-high
+    - wavelet.psi|narrowband_f0-0.25|64|kernel|rep:max-full
+    - wavelet.psi|narrowband_f0-0.25|64|kernel|rep:max-low
+    - wavelet.psi|narrowband_f0-0.25|64|kernel|rep:max-high
+    - wavelet.psi|narrowband_f0-0.25|256|kernel|rep:mean-full
+    - wavelet.psi|narrowband_f0-0.25|256|kernel|rep:mean-low
+    - wavelet.psi|narrowband_f0-0.25|256|kernel|rep:mean-high
+    - wavelet.psi|narrowband_f0-0.25|256|kernel|rep:max-full
+    - wavelet.psi|narrowband_f0-0.25|256|kernel|rep:max-low
+    - wavelet.psi|narrowband_f0-0.25|256|kernel|rep:max-high
+    - wavelet.psi|narrowband_f0-0.25|1024|kernel|rep:mean-full
+    - wavelet.psi|narrowband_f0-0.25|1024|kernel|rep:mean-low
+    - wavelet.psi|narrowband_f0-0.25|1024|kernel|rep:mean-high
+    - wavelet.psi|narrowband_f0-0.25|1024|kernel|rep:max-full
+    - wavelet.psi|narrowband_f0-0.25|1024|kernel|rep:max-low
+    - wavelet.psi|narrowband_f0-0.25|1024|kernel|rep:max-high
+    - wavelet.psi|shared_envelope|64|kernel|rep:mean-full
+    - wavelet.psi|shared_envelope|64|kernel|rep:mean-low
+    - wavelet.psi|shared_envelope|64|kernel|rep:mean-high
+    - wavelet.psi|shared_envelope|64|kernel|rep:max-full
+    - wavelet.psi|shared_envelope|64|kernel|rep:max-low
+    - wavelet.psi|shared_envelope|64|kernel|rep:max-high
+    - wavelet.psi|shared_envelope|256|kernel|rep:mean-full
+    - wavelet.psi|shared_envelope|256|kernel|rep:mean-low
+    - wavelet.psi|shared_envelope|256|kernel|rep:mean-high
+    - wavelet.psi|shared_envelope|256|kernel|rep:max-full
+    - wavelet.psi|shared_envelope|256|kernel|rep:max-low
+    - wavelet.psi|shared_envelope|256|kernel|rep:max-high
+    - wavelet.psi|shared_envelope|1024|kernel|rep:mean-full
+    - wavelet.psi|shared_envelope|1024|kernel|rep:mean-low
+    - wavelet.psi|shared_envelope|1024|kernel|rep:mean-high
+    - wavelet.psi|shared_envelope|1024|kernel|rep:max-full
+    - wavelet.psi|shared_envelope|1024|kernel|rep:max-low
+    - wavelet.psi|shared_envelope|1024|kernel|rep:max-high
+    - wavelet.psi|delayed_noise|256|pipeline|rep:mean-full
+    - wavelet.psi|delayed_noise|256|pipeline|rep:mean-low
+    - wavelet.psi|delayed_noise|256|pipeline|rep:mean-high
+    - wavelet.psi|delayed_noise|256|pipeline|rep:max-full
+    - wavelet.psi|delayed_noise|256|pipeline|rep:max-low
+    - wavelet.psi|delayed_noise|256|pipeline|rep:max-high
+    - wavelet.psi|var2_bivariate|256|pipeline|rep:mean-full
+    - wavelet.psi|var2_bivariate|256|pipeline|rep:mean-low
+    - wavelet.psi|var2_bivariate|256|pipeline|rep:mean-high
+    - wavelet.psi|var2_bivariate|256|pipeline|rep:max-full
+    - wavelet.psi|var2_bivariate|256|pipeline|rep:max-low
+    - wavelet.psi|var2_bivariate|256|pipeline|rep:max-high
+    - wavelet.psi|trending|256|pipeline-detrend|rep:mean-full
+    - wavelet.psi|trending|256|pipeline|rep:mean-full
+    - wavelet.psi|trending|256|pipeline-detrend|rep:max-full
+    - wavelet.psi|trending|256|pipeline|rep:max-full
+    reference: audit/checks/refs/wavelet_psi.py:replica
+    outcome: pass 106/106; max_abs 1.0e-12 (iid_gaussian, delayed_noise, var2_bivariate, narrowband_f0-0.25, shared_envelope at T 64/256/1024 kernel; delayed_noise and var2_bivariate T256 pipeline; trending
+      T256 pipeline and pipeline-detrend)
+  - run_ids:
+    - wavelet.psi|delayed_noise|256|kernel|rawpsi
+    - wavelet.psi|var2_bivariate|256|kernel|rawpsi
+    - wavelet.psi|iid_gaussian|256|kernel|rawpsi
+    - wavelet.psi|delayed_noise|256|kernel|cohmod
+    - wavelet.psi|delayed_noise|1024|kernel|nyq
+    - wavelet.psi|delayed_noise|256|kernel|libinfo
+    - wavelet.psi|delayed_noise|64|kernel|libinfo
+    reference: audit/checks/refs/wavelet_psi.py:h_rawpsi, h_cohmod, h_nyq, h_libinfo
+    outcome: pass 7/7; library PSI(t) vs replica 2.3e-13; |C| - 1 4.4e-16; Nyquist Im C/|C| 1.2e-12; dense shape (N, N, 1, T)
+  - run_ids:
+    - wavelet.psi|delayed_noise|256|kernel|tsel
+    - wavelet.psi|delayed_noise|256|pipeline|tsel
+    - wavelet.psi|delayed_noise|256|kernel|xsel
+    - wavelet.psi|var2_bivariate|1024|kernel|xsel
+    reference: audit/checks/refs/wavelet_psi.py:h_tsel, h_xsel (probes/wavelet_psi_probes.py:tsel, xsel)
+    outcome: pass 4/4; stored value depends only on PSI(t) at t = freq_id; input horizon 36 (full/high), 28 (low)
+  - run_ids:
+    - wavelet.psi|delayed_noise|1024|pipeline|winperm-head
+    - wavelet.psi|delayed_noise|1024|pipeline|winperm-mid
+    - wavelet.psi|delayed_noise|1024|pipeline|winperm-tail
+    - wavelet.psi|var2_bivariate|1024|pipeline|winperm-head
+    - wavelet.psi|var2_bivariate|1024|pipeline|winperm-mid
+    - wavelet.psi|var2_bivariate|1024|pipeline|winperm-tail
+    - wavelet.psi|iid_gaussian|256|pipeline|winperm-head
+    - wavelet.psi|iid_gaussian|256|pipeline|winperm-mid
+    - wavelet.psi|iid_gaussian|256|pipeline|winperm-tail
+    reference: audit/checks/refs/wavelet_psi.py:h_winperm (probes/wavelet_psi_probes.py:winperm)
+    outcome: pass 9/9; tail x[:, 37:] reversed -> change 0.0 for all six identifiers; head x[:, :10] -> 0.56-5.81; mid x[:, 10:37] -> 0.12-4.13
+  - run_ids:
+    - wavelet.psi|delayed_noise|256|kernel|doc:mean-full
+    - wavelet.psi|delayed_noise|256|kernel|doc:mean-low
+    - wavelet.psi|delayed_noise|256|kernel|doc:mean-high
+    - wavelet.psi|delayed_noise|256|kernel|doc:max-full
+    - wavelet.psi|delayed_noise|256|kernel|doc:max-low
+    - wavelet.psi|delayed_noise|256|kernel|doc:max-high
+    - wavelet.psi|delayed_noise|1024|kernel|doc:mean-full
+    - wavelet.psi|delayed_noise|1024|kernel|doc:mean-low
+    - wavelet.psi|delayed_noise|1024|kernel|doc:mean-high
+    - wavelet.psi|delayed_noise|1024|kernel|doc:max-full
+    - wavelet.psi|delayed_noise|1024|kernel|doc:max-low
+    - wavelet.psi|delayed_noise|1024|kernel|doc:max-high
+    - wavelet.psi|var2_bivariate|256|kernel|doc:mean-full
+    - wavelet.psi|var2_bivariate|256|kernel|doc:mean-low
+    - wavelet.psi|var2_bivariate|256|kernel|doc:mean-high
+    - wavelet.psi|var2_bivariate|256|kernel|doc:max-full
+    - wavelet.psi|var2_bivariate|256|kernel|doc:max-low
+    - wavelet.psi|var2_bivariate|256|kernel|doc:max-high
+    - wavelet.psi|var2_bivariate|1024|kernel|doc:mean-full
+    - wavelet.psi|var2_bivariate|1024|kernel|doc:mean-low
+    - wavelet.psi|var2_bivariate|1024|kernel|doc:mean-high
+    - wavelet.psi|var2_bivariate|1024|kernel|doc:max-full
+    - wavelet.psi|var2_bivariate|1024|kernel|doc:max-low
+    - wavelet.psi|var2_bivariate|1024|kernel|doc:max-high
+    - wavelet.psi|logistic_maps|256|kernel|doc:mean-full
+    - wavelet.psi|logistic_maps|256|kernel|doc:mean-low
+    - wavelet.psi|logistic_maps|256|kernel|doc:mean-high
+    - wavelet.psi|logistic_maps|256|kernel|doc:max-full
+    - wavelet.psi|logistic_maps|256|kernel|doc:max-low
+    - wavelet.psi|logistic_maps|256|kernel|doc:max-high
+    - wavelet.psi|logistic_maps|1024|kernel|doc:mean-full
+    - wavelet.psi|logistic_maps|1024|kernel|doc:mean-low
+    - wavelet.psi|logistic_maps|1024|kernel|doc:mean-high
+    - wavelet.psi|logistic_maps|1024|kernel|doc:max-full
+    - wavelet.psi|logistic_maps|1024|kernel|doc:max-low
+    - wavelet.psi|logistic_maps|1024|kernel|doc:max-high
+    reference: audit/checks/refs/wavelet_psi.py:documented
+    outcome: fail 36/36 (expected); max_abs 0.07-6.06 vs the per-time PSI averaged over all time points
+  - run_ids:
+    - wavelet.psi|delayed_noise|256|pipeline|int:mean-full
+    - wavelet.psi|delayed_noise|256|pipeline|int:mean-low
+    - wavelet.psi|delayed_noise|256|pipeline|int:mean-high
+    - wavelet.psi|delayed_noise|1024|pipeline|int:mean-full
+    - wavelet.psi|delayed_noise|1024|pipeline|int:mean-low
+    - wavelet.psi|delayed_noise|1024|pipeline|int:mean-high
+    - wavelet.psi|var2_bivariate|1024|pipeline|int:mean-full
+    - wavelet.psi|var2_bivariate|1024|pipeline|int:mean-low
+    - wavelet.psi|var2_bivariate|1024|pipeline|int:mean-high
+    - wavelet.psi|var2_chain|1024|pipeline|int:mean-full
+    - wavelet.psi|var2_chain|1024|pipeline|int:mean-low
+    - wavelet.psi|var2_chain|1024|pipeline|int:mean-high
+    reference: audit/checks/refs/wavelet_psi.py:intended (_kernels_spectral.cwt_morlet 7 cycles + psi_adjacent)
+    outcome: fail 12/12 on value (expected); intended truth-sign agreement 1.0 on 12/12, pyspi 0.0-0.67
+  - run_ids:
+    - wavelet.psi|delayed_noise|64|pipeline|dir:mean-full
+    - wavelet.psi|delayed_noise|64|pipeline|dir:mean-low
+    - wavelet.psi|delayed_noise|64|pipeline|dir:mean-high
+    - wavelet.psi|delayed_noise|64|pipeline|dir:max-full
+    - wavelet.psi|delayed_noise|64|pipeline|dir:max-low
+    - wavelet.psi|delayed_noise|64|pipeline|dir:max-high
+    - wavelet.psi|delayed_noise|256|pipeline|dir:mean-full
+    - wavelet.psi|delayed_noise|256|pipeline|dir:mean-low
+    - wavelet.psi|delayed_noise|256|pipeline|dir:mean-high
+    - wavelet.psi|delayed_noise|256|pipeline|dir:max-full
+    - wavelet.psi|delayed_noise|256|pipeline|dir:max-low
+    - wavelet.psi|delayed_noise|256|pipeline|dir:max-high
+    - wavelet.psi|delayed_noise|1024|pipeline|dir:mean-full
+    - wavelet.psi|delayed_noise|1024|pipeline|dir:mean-low
+    - wavelet.psi|delayed_noise|1024|pipeline|dir:mean-high
+    - wavelet.psi|delayed_noise|1024|pipeline|dir:max-full
+    - wavelet.psi|delayed_noise|1024|pipeline|dir:max-low
+    - wavelet.psi|delayed_noise|1024|pipeline|dir:max-high
+    - wavelet.psi|var2_bivariate|64|pipeline|dir:mean-full
+    - wavelet.psi|var2_bivariate|64|pipeline|dir:mean-low
+    - wavelet.psi|var2_bivariate|64|pipeline|dir:mean-high
+    - wavelet.psi|var2_bivariate|64|pipeline|dir:max-full
+    - wavelet.psi|var2_bivariate|64|pipeline|dir:max-low
+    - wavelet.psi|var2_bivariate|64|pipeline|dir:max-high
+    - wavelet.psi|var2_bivariate|256|pipeline|dir:mean-full
+    - wavelet.psi|var2_bivariate|256|pipeline|dir:mean-low
+    - wavelet.psi|var2_bivariate|256|pipeline|dir:mean-high
+    - wavelet.psi|var2_bivariate|256|pipeline|dir:max-full
+    - wavelet.psi|var2_bivariate|256|pipeline|dir:max-low
+    - wavelet.psi|var2_bivariate|256|pipeline|dir:max-high
+    - wavelet.psi|var2_bivariate|1024|pipeline|dir:mean-full
+    - wavelet.psi|var2_bivariate|1024|pipeline|dir:mean-low
+    - wavelet.psi|var2_bivariate|1024|pipeline|dir:mean-high
+    - wavelet.psi|var2_bivariate|1024|pipeline|dir:max-full
+    - wavelet.psi|var2_bivariate|1024|pipeline|dir:max-low
+    - wavelet.psi|var2_bivariate|1024|pipeline|dir:max-high
+    - wavelet.psi|var2_chain|64|pipeline|dir:mean-full
+    - wavelet.psi|var2_chain|64|pipeline|dir:mean-low
+    - wavelet.psi|var2_chain|64|pipeline|dir:mean-high
+    - wavelet.psi|var2_chain|64|pipeline|dir:max-full
+    - wavelet.psi|var2_chain|64|pipeline|dir:max-low
+    - wavelet.psi|var2_chain|64|pipeline|dir:max-high
+    - wavelet.psi|var2_chain|256|pipeline|dir:mean-full
+    - wavelet.psi|var2_chain|256|pipeline|dir:mean-low
+    - wavelet.psi|var2_chain|256|pipeline|dir:mean-high
+    - wavelet.psi|var2_chain|256|pipeline|dir:max-full
+    - wavelet.psi|var2_chain|256|pipeline|dir:max-low
+    - wavelet.psi|var2_chain|256|pipeline|dir:max-high
+    - wavelet.psi|var2_chain|1024|pipeline|dir:mean-full
+    - wavelet.psi|var2_chain|1024|pipeline|dir:mean-low
+    - wavelet.psi|var2_chain|1024|pipeline|dir:mean-high
+    - wavelet.psi|var2_chain|1024|pipeline|dir:max-full
+    - wavelet.psi|var2_chain|1024|pipeline|dir:max-low
+    - wavelet.psi|var2_chain|1024|pipeline|dir:max-high
+    - wavelet.psi|logistic_maps_chaotic|64|pipeline|dir:mean-full
+    - wavelet.psi|logistic_maps_chaotic|64|pipeline|dir:mean-low
+    - wavelet.psi|logistic_maps_chaotic|64|pipeline|dir:mean-high
+    - wavelet.psi|logistic_maps_chaotic|64|pipeline|dir:max-full
+    - wavelet.psi|logistic_maps_chaotic|64|pipeline|dir:max-low
+    - wavelet.psi|logistic_maps_chaotic|64|pipeline|dir:max-high
+    - wavelet.psi|logistic_maps_chaotic|256|pipeline|dir:mean-full
+    - wavelet.psi|logistic_maps_chaotic|256|pipeline|dir:mean-low
+    - wavelet.psi|logistic_maps_chaotic|256|pipeline|dir:mean-high
+    - wavelet.psi|logistic_maps_chaotic|256|pipeline|dir:max-full
+    - wavelet.psi|logistic_maps_chaotic|256|pipeline|dir:max-low
+    - wavelet.psi|logistic_maps_chaotic|256|pipeline|dir:max-high
+    - wavelet.psi|logistic_maps_chaotic|1024|pipeline|dir:mean-full
+    - wavelet.psi|logistic_maps_chaotic|1024|pipeline|dir:mean-low
+    - wavelet.psi|logistic_maps_chaotic|1024|pipeline|dir:mean-high
+    - wavelet.psi|logistic_maps_chaotic|1024|pipeline|dir:max-full
+    - wavelet.psi|logistic_maps_chaotic|1024|pipeline|dir:max-low
+    - wavelet.psi|logistic_maps_chaotic|1024|pipeline|dir:max-high
+    reference: audit/checks/refs/wavelet_psi.py:truth_sign
+    outcome: fail 63/72, pass 9/72; sign agreement mean-full 0.40, mean-high 0.50, mean-low 0.28, max-full 0.10, max-high 0.10, max-low 0.28
+  - run_ids:
+    - wavelet.psi|iid_gaussian|64|pipeline|nullmc
+    - wavelet.psi|iid_gaussian|256|pipeline|nullmc
+    - wavelet.psi|iid_gaussian|1024|pipeline|nullmc
+    reference: audit/checks/refs/wavelet_psi.py:h_nullmc (own Monte Carlo 4000 draws per T)
+    outcome: pass 3/3, max_z 1.40; SD of mean-full 1.29 / 1.27 / 1.28 at T 64/256/1024 vs all-time-mean SD 0.32 / 0.13 / 0.06
+  - run_ids:
+    - wavelet.psi|iid_gaussian|64|pipeline|null:mean-full
+    - wavelet.psi|iid_gaussian|64|pipeline|null:mean-low
+    - wavelet.psi|iid_gaussian|64|pipeline|null:mean-high
+    - wavelet.psi|iid_gaussian|64|pipeline|null:max-full
+    - wavelet.psi|iid_gaussian|64|pipeline|null:max-low
+    - wavelet.psi|iid_gaussian|64|pipeline|null:max-high
+    - wavelet.psi|iid_gaussian|256|pipeline|null:mean-full
+    - wavelet.psi|iid_gaussian|256|pipeline|null:mean-low
+    - wavelet.psi|iid_gaussian|256|pipeline|null:mean-high
+    - wavelet.psi|iid_gaussian|256|pipeline|null:max-full
+    - wavelet.psi|iid_gaussian|256|pipeline|null:max-low
+    - wavelet.psi|iid_gaussian|256|pipeline|null:max-high
+    - wavelet.psi|iid_gaussian|1024|pipeline|null:mean-full
+    - wavelet.psi|iid_gaussian|1024|pipeline|null:mean-low
+    - wavelet.psi|iid_gaussian|1024|pipeline|null:mean-high
+    - wavelet.psi|iid_gaussian|1024|pipeline|null:max-full
+    - wavelet.psi|iid_gaussian|1024|pipeline|null:max-low
+    - wavelet.psi|iid_gaussian|1024|pipeline|null:max-high
+    reference: audit/checks/refs/wavelet_psi.py:h_null (Bonferroni over pairs within a run)
+    outcome: pass 17/18; iid_gaussian|64|pipeline|null:max-high p_emp 0.002 (multiplicity across 18 dependent runs)
+  - run_ids:
+    - wavelet.psi|delayed_noise|256|pipeline|perm:mean-full
+    - wavelet.psi|delayed_noise|256|pipeline|perm:max-full
+    - wavelet.psi|iid_gaussian|256|pipeline|perm:mean-full
+    - wavelet.psi|iid_gaussian|256|pipeline|perm:max-full
+    - wavelet.psi|var2_bivariate|256|pipeline|perm:mean-full
+    - wavelet.psi|var2_bivariate|256|pipeline|perm:max-full
+    reference: audit/checks/refs/wavelet_psi.py:h_perm (replica on X[::-1])
+    outcome: pass 6/6 (max_abs <= 1.3e-14); mean-full max|A_rev + A| 2.2e-16 / 4.4e-16 / 0.0 on delayed_noise / iid_gaussian / var2_bivariate T256; max-full A[1,0] -0.414 -> 2.014, 0.374 -> 5.517, -0.358
+      -> 3.942
+  - run_ids:
+    - wavelet.psi|delayed_noise|64|kernel|short
+    - wavelet.psi|scaled_offset|256|pipeline|base:mean-full
+    - wavelet.psi|scaled_offset|256|pipeline|base:max-full
+    reference: audit/checks/refs/wavelet_psi.py:h_short, h_base
+    outcome: pass 3/3; T=20 edge case 5.4e-15 (low band NaN / ValueError); scaled_offset equals the base draw to 3.1e-15
+  - run_ids:
+    - wavelet.psi|delayed_noise|256|kernel|sl:mean-full
+    reference: mne_connectivity==0.9.0 in the comparison venv (same-lineage, display only)
+    outcome: pass 1/1, max_abs 0.0
+  - run_ids:
+    - wavelet.psi|delayed_noise|1024|pipeline|tailpert
+    - wavelet.psi|delayed_noise|1024|kernel|tailpert
+    - wavelet.psi|delayed_noise|1024|pipeline-detrend|tailpert
+    - wavelet.psi|var2_bivariate|1024|pipeline|tailpert
+    - wavelet.psi|iid_gaussian|256|pipeline|tailpert
+    reference: audit/checks/refs/wavelet_psi.py:h_tailpert (probes/wavelet_psi_probes.py:tailpert)
+    outcome: 'pass 5/5 against the replica (max_abs <= 3.9e-13); pipeline: tail +0.5 changes the stored values by 3.13 / 0.89 / 0.49, x[0, 37:] * 3 by 0.094 / 0.211 / 0.012, SD-only tail rescaling by <=
+      2.9e-13; kernel: <= 1.2e-13 for all three; pipeline-detrend (delayed_noise): 1.60 / 0.131 / 0.087'
+  - run_ids:
+    - wavelet.psi|delayed_noise|1024|pipeline|welch:mean-full
+    - wavelet.psi|delayed_noise|1024|pipeline|welch:mean-low
+    - wavelet.psi|delayed_noise|1024|pipeline|welch:mean-high
+    - wavelet.psi|delayed_noise|1024|pipeline|welch:max-full
+    - wavelet.psi|delayed_noise|1024|pipeline|welch:max-low
+    - wavelet.psi|delayed_noise|1024|pipeline|welch:max-high
+    - wavelet.psi|delayed_noise|4096|pipeline|welch:mean-full
+    - wavelet.psi|delayed_noise|4096|pipeline|welch:mean-low
+    - wavelet.psi|delayed_noise|4096|pipeline|welch:mean-high
+    - wavelet.psi|delayed_noise|4096|pipeline|welch:max-full
+    - wavelet.psi|delayed_noise|4096|pipeline|welch:max-low
+    - wavelet.psi|delayed_noise|4096|pipeline|welch:max-high
+    reference: audit/checks/refs/wavelet_psi.py:h_welch (analytic pure-delay Nolte PSI; numpy Welch estimate as value)
+    outcome: fail 12/12 (expected); Welch PSI has the analytic sign on 12/12; pyspi direction_agreement 0.0-0.67 at T1024, 0.0-0.33 at T4096
+  - run_ids:
+    - wavelet.psi|var2_bivariate|1024|pipeline|popband:mean-full
+    - wavelet.psi|var2_chain|1024|pipeline|popband:mean-full
+    reference: audit/checks/refs/wavelet_psi.py:h_popband (population Nolte PSI, seven band/grid definitions)
+    outcome: 'pass 2/2; var2_bivariate PSI(1 -> 0) -0.833 / -0.521 / -0.312 / -0.465 / -0.152 (grid k/64: [0, 0.5], [0, 0.25], [0.25, 0.5], [0.2, 0.5], [0.2, 0.25]), -0.483 / -0.113 (wavelet grid); var2_chain
+      all three pairs negative in all seven'
+  - run_ids:
+    - wavelet.psi|iid_gaussian|256|pipeline|fscache
+    reference: audit/checks/refs/wavelet_psi.py:h_fscache (probes/wavelet_psi_probes.py:fscache)
+    outcome: pass 1/1; fs = 2 on the shared Data returns the fs = 1 value bitwise; fresh fs = 2 differs by 7.23 and equals the fs = 2 replica to 1.8e-15
+optimisation:
+  complexity_P_T: 'O(P F T log T) Morlet CWT with F = 10 wavelets of 23-55 samples (mne/time_frequency/tfr.py:cwt) + O(P^2/2 F T) per-connection csd accumulation (_CohEstBase.accumulate
+    / _CohyEst.compute_con) + O(P^2/2 F T) mne_connectivity/effective.py:_compute_psi + dense (P, P, 1, T) output; the P^2 terms dominate at 118x1024. summary.json: P_exponent 1.80 fresh
+    / 1.78 family-warm (8 -> 32, overhead-heavy at P=8), T_exponent 1.07 / 0.96, and a measured 118x1024 wall of 35.05 s fresh / 34.10 s family-warm (repeats 1, timed 13:31 UTC while
+    Workflow 3 groups were running), which would imply 3.65 from 32 to 118. That 118x1024 wall does not reproduce: isolated re-times gave 8.81 s (this stage) and 6.22 / 6.37 s (reviewer)
+    (audit/profiles/micro/prof_wavelet__index.json), so the 32 -> 118 exponent is about 2.3-2.6, close to the code''s P^2 (connections 496 -> 6903, 13.9x; wall 21-30x). The summary.json
+    projected_window_s_118 of 35.05 s is therefore about 4-5x high; the cause was not established. Peak RSS 3846 MB (summary) / 4178 MB (re-time process).'
+  hotspot_1: mne_connectivity/spectral/epochs.py:spectral_connectivity_epochs own time (third-party:mne_connectivity) 43.9% self of the profiled SPI call at 118x1024 (audit/profiles/micro/prof_wavelet.psi__118x1024.pstats;
+    75.4% cumulative)
+  hotspot_2: 'mne_connectivity/effective.py:_compute_psi 22.5% self; epochs_bivariate.py:_CohyEst.compute_con 15.5%; epochs.py:_epoch_spectral_connectivity 8.9% self; accumulate 3.1%;
+    tfr.py:cwt 0.45%; base.py:_prepare_xarray 0.16%, all at 118x1024. At 8x1024 (audit/profiles/wavelet.psi__8x1024.pstats, 46 ms call) accumulate was 19.9%, compute_con 16.0%, cwt 10.6%
+    and _prepare_xarray 9.1%: the 8x1024 profile is dominated by fixed costs'
+  hotspot_owner: third-party:mne_connectivity
+  opaque_share: 0.043
+  profile_file: 'audit/profiles/micro/prof_wavelet.psi__118x1024.pstats (118x1024; 8x1024: audit/profiles/wavelet.psi__8x1024.pstats, opaque_share 0.189)'
+  no_opportunity_reason: 'No opportunity, by the user''s decision: the wavelet family is not used (''i don''t think we use this though so its not a priority'', HANDOFF.md standing rules), and its definition is under review (cwt_n_cycles = freqs/7 makes every Morlet wavelet one sample long, wavelet.morlet_cwt; psi_wavelet aggregates over time indices). The optimisation block holds hotspot fields only (notes/wavelet_measures.md and notes/wavelet_psi.md, Optimisation).'
+  opportunities: []

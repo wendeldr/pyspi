@@ -1,0 +1,219 @@
+{
+ "P": 8,
+ "T": 1024,
+ "baseline_rss_mb": 393.0,
+ "budget_s": 120.0,
+ "data_kind": "synthetic",
+ "data_sha256": "8e7e5fadc565fde86c145bcd58801cc90799abd9427b553b966b0df36ab32ada",
+ "edf": null,
+ "entry_sources": {
+  "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5": "config"
+ },
+ "env": {
+  "java": null,
+  "omp_num_threads": "1",
+  "packages": {
+   "cdt": "0.6.0",
+   "hyppo": "0.5.2",
+   "jpype1": "1.7.1",
+   "mne": "1.13.2",
+   "nitime": "0.12.1",
+   "numpy": "2.5.4",
+   "pandas": "3.0.6",
+   "pyEDM": "1.15.2.0",
+   "pyyaml": "6.0.3",
+   "scikit-learn": "1.9.1",
+   "scipy": "1.17.1",
+   "sktime": "1.2.0",
+   "spectral-connectivity": "1.1.2",
+   "statsmodels": "0.15.0",
+   "torch": "2.14.1+cpu",
+   "tslearn": "0.9.0"
+  },
+  "platform": "linux",
+  "pyspi_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+  "pyspi_version": "2.0.2",
+  "python": "3.12.3"
+ },
+ "error": null,
+ "family": "spectral_phase_sync",
+ "finished_at": "2026-10-15T05:09:00+00:00",
+ "fit": null,
+ "git_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+ "hwm_reset": true,
+ "identifiers": [
+  "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+ ],
+ "jvm_requested": false,
+ "jvm_started": false,
+ "measure_mode": "measured",
+ "mode": "profile",
+ "n_pairs": null,
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)",
+ "opaque_share": 0.05302560178207121,
+ "opaque_share_by_owner": {
+  "builtin": 0.0007419823063136197,
+  "python": 5.669663119770864e-05,
+  "third-party:numpy": 0.029845540407193373,
+  "third-party:scipy": 0.014092768700981051,
+  "third-party:spectral_connectivity": 0.008288613736385458
+ },
+ "pair_basis": "multivariate",
+ "peak_rss_delta_mb": 7.7,
+ "peak_rss_mb": 400.6,
+ "process_peak_rss_mb": 400.6,
+ "pstats": "audit/profiles/spectral.wpli__8x1024.pstats",
+ "pyspi_dirty": false,
+ "reason": null,
+ "repeats": 1,
+ "repeats_extended": null,
+ "repeats_planned": null,
+ "representative": "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+ "result_status": "ok",
+ "ru_maxrss_mb": 394.8,
+ "schema": 1,
+ "self_time_share_by_owner": {
+  "builtin": 0.0007419823063136197,
+  "harness": 0.0005697546708884491,
+  "pyspi": 0.003554104231954286,
+  "python": 0.00031288485162057894,
+  "third-party:numpy": 0.04638809928416636,
+  "third-party:scipy": 0.05512777654711325,
+  "third-party:spectral_connectivity": 0.893305398107944
+ },
+ "shape": "8x1024",
+ "spi_seed": 42,
+ "started_at": "2026-10-15T05:09:00+00:00",
+ "status": "ok",
+ "synth_seed": 20261014,
+ "t_cold_s": 0.034815716004231945,
+ "t_per_pair_ms": null,
+ "threads": {
+  "affinity_cpus": 64,
+  "jvm_running": false,
+  "numba_threads": 64,
+  "omp_num_threads": "1",
+  "os_threads": 1,
+  "threadpools": [
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   }
+  ],
+  "torch_threads": 1
+ },
+ "timeout_s": 360.0,
+ "top10_cumulative": [
+  {
+   "cumtime_s": 0.032253101,
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "harness",
+   "tottime_s": 1.177e-05
+  },
+  {
+   "cumtime_s": 0.032220922,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 7.31e-06
+  },
+  {
+   "cumtime_s": 0.032213212000000005,
+   "function": "pyspi/statistics/spectral.py:multivariate",
+   "line": 85,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 6.8148e-05
+  },
+  {
+   "cumtime_s": 0.031990329000000005,
+   "function": "pyspi/statistics/spectral.py:_get_cache",
+   "line": 64,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 3.1019e-05
+  },
+  {
+   "cumtime_s": 0.02380289,
+   "function": "spectral_connectivity/connectivity.py:from_multitaper",
+   "line": 156,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:spectral_connectivity",
+   "tottime_s": 1.0199e-05
+  },
+  {
+   "cumtime_s": 0.023725553,
+   "function": "spectral_connectivity/transforms.py:fft",
+   "line": 238,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:spectral_connectivity",
+   "tottime_s": 2.5679000000000003e-05
+  },
+  {
+   "cumtime_s": 0.022987688000000003,
+   "function": "spectral_connectivity/transforms.py:tapers",
+   "line": 117,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:spectral_connectivity",
+   "tottime_s": 4.7e-06
+  },
+  {
+   "cumtime_s": 0.022979788,
+   "function": "spectral_connectivity/transforms.py:_make_tapers",
+   "line": 357,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:spectral_connectivity",
+   "tottime_s": 1.0150000000000001e-05
+  },
+  {
+   "cumtime_s": 0.022969638,
+   "function": "spectral_connectivity/transforms.py:dpss_windows",
+   "line": 469,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:spectral_connectivity",
+   "tottime_s": 1.3188000000000001e-05
+  },
+  {
+   "cumtime_s": 0.022468955000000002,
+   "function": "spectral_connectivity/transforms.py:_find_tapers_from_optimization",
+   "line": 575,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:spectral_connectivity",
+   "tottime_s": 0.000172303
+  }
+ ],
+ "total_tt_s": 0.032277049999999974,
+ "traceback_tail": null,
+ "unit_id": "spectral.wpli",
+ "wall_cv": null,
+ "wall_median_s": null,
+ "wall_profiled_s": 0.03232476799894357,
+ "wall_s": null,
+ "walls_s": null,
+ "warmup_error": null,
+ "warmup_shape": "8x1024"
+}

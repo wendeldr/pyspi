@@ -1,0 +1,278 @@
+unit_id: distance.hsic.biased-True
+status: profiled
+correctness:
+  metric_name_standard: square root of the normalised biased HSIC (V-statistic) with a Gaussian median-heuristic kernel, i.e. sqrt of
+    centred kernel alignment; kernel analogue of dCor_n
+  canonical_ref: 'Gretton, Bousquet, Smola & Scholkopf 2005, ALT, LNCS 3734:63-77 (HSIC_b); Gretton et al. 2007, NIPS 20 (= supplement
+    ref [15]; eq. (3) unbiased U-statistic estimator, eq. (4) biased HSIC_b = (1/m^2) tr(KHLH); Sec. 4 Gaussian kernel with ''kernel
+    size set to the median distance between points in input space'', whether per variable is not stated); normalisation: centred kernel
+    alignment, Cortes, Mohri & Rostamizadeh 2012, JMLR 13:795-828; equivalence with dCov: Sejdinovic et al. 2013, Ann. Statist. 41(5):2263-2291'
+  canonical_definition: HSIC_b(x,y) = (1/n^2) tr(K H L H), H = I - 11'/n, K_ij = exp(-|x_i-x_j|^2/(2 sigma_x^2)), L likewise with sigma_y,
+    sigma = median inter-sample distance (Gretton et al. 2007 Sec. 4; a separate median for each variable is the common reading, not
+    stated explicitly there); unnormalised, >= 0
+  documented_definition: 'supplement §1.2.5, p.6: ''HSIC yields a biased statistic, where the unbiased (and consistent) estimator can
+    be derived by double centering the kernel distance matrix [15]. Both biased and unbiased estimators are computed using hyppo'' (identifier
+    30, hsic_biased). GitBook distance-similarity.md ''Hilbert-Schmidt Independence Criterion'''
+  delegate_lib: hyppo==0.5.2 hyppo.independence.Hsic(bias=True).statistic -> compute_kern (median heuristic) -> scikit-learn==1.9.1
+    pairwise_kernels('rbf') -> Dcorr(bias=True, compute_distance=None).statistic (numba _dcorr)
+  implemented_as: 'Default preprocessing: z-score (ddof=1), no detrend. T time points as iid 1-D samples. sigma = median off-diagonal
+    distance of x (first argument) used for both kernels. D = 1 - K double-centred (equals -HKH, the constant vanishes), stat = sqrt(
+    tr(HKH HLH)/sqrt(tr(HKH HKH) tr(HLH HLH)) ) = sqrt of normalised HSIC_b (probe: 0.8773521262252134 vs from-scratch 0.8773521262252156;
+    raw HSIC_b 0.0577). Returns 0 if a variance or the covariance <= 0. Upper triangle mirrored.'
+  implementation_trace:
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend only if detrend=True (default False), then scipy.stats.zscore(axis=1,
+    ddof=1) if normalise=True (default); stored as (M, T, 1)'
+  - pyspi/calculator.py:329 Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, nan) (lines
+    at HEAD a42ebc1, unchanged since a1f20c7; the trace cited the pre-a1f20c7 lines 294/297)
+  - 'pyspi/base.py:132-138 Undirected.multivariate: A = Directed.multivariate(data); li = tril_indices(-1); A[li] = A.T[li] (lower triangle
+    overwritten by upper triangle)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for every ordered pair i != j, A[i, j] = self.bivariate(data, i=i, j=j) (both triangles
+    are computed)'
+  - 'pyspi/base.py:27-49 parse_bivariate: two raw arrays are wrapped into a Data object (which z-scores) and i, j = 0, 1'
+  - pyspi/data.py:108-118 Data.to_numpy returns the (M, T, 1) array, so x, y = data.to_numpy()[[i, j]] are (T, 1) column arrays (T samples
+    of a 1-D variable)
+  - 'pyspi/config.yaml:167-177 HilbertSchmidtIndependenceCriterion configs: biased False / biased True'
+  - pyspi/statistics/distance.py:54-57 HilbertSchmidtIndependenceCriterion.__init__ stores biased; identifier += '_biased'
+  - 'pyspi/statistics/distance.py:59-63 HilbertSchmidtIndependenceCriterion.bivariate: x, y = data.to_numpy()[[i, j]]; stat = Hsic(bias=self._biased).statistic(x,
+    y)'
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/hsic.py:83-92 Hsic.__init__: compute_kernel=''gaussian'', is_kernel=False,
+    bias stored'
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/hsic.py:113-119 Hsic.statistic: kernx, kerny = compute_kern(x, y, metric=''gaussian'');
+    distx = 1 - kernx/max(kernx); disty = 1 - kerny/max(kerny) (max = 1, the diagonal)'
+  - '.venv/lib/python3.12/site-packages/hyppo/tools/common.py:321-333 compute_kern: if ''gamma'' not in kwargs, med = median of the
+    off-diagonal entries of pairwise_distances(x, ''l2'') -- x ONLY; med = med if med else 1; kwargs[''gamma''] = 1/(2 med^2)'
+  - '.venv/lib/python3.12/site-packages/hyppo/tools/common.py:342-343 compute_kern: simx = pairwise_kernels(x, ''rbf'', gamma) and simy
+    = pairwise_kernels(y, ''rbf'', gamma) -- the same gamma (bandwidth of x) is used for y'
+  - '.venv/lib/python3.12/site-packages/sklearn/metrics/pairwise.py:1583-1627 rbf_kernel: K = exp(-gamma * ||x - y||^2) via euclidean_distances(squared=True)'
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/hsic.py:121-122 Hsic.statistic: stat = Dcorr(bias=self.bias, compute_distance=None).statistic(distx,
+    disty) -- the kernel-induced distances are fed to the distance-correlation code'
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/dcorr.py:141-149 Dcorr.statistic with is_distance=True: no distance computation,
+    straight to _dcorr'
+  - .venv/lib/python3.12/site-packages/hyppo/independence/dcorr.py:261-281 _center_distmat (double centring if bias, U-centring with
+    zero diagonal otherwise)
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/dcorr.py:416-449 _dcorr: stat = covar/sqrt(varx*vary) (443); sqrt only when
+    bias=True (446-447); 0 if a variance <= 0 (438-439)'
+  deviation_from_documented: '(a) The supplement and GitBook describe HSIC as ''an RKHS-based statistic'' with biased and unbiased estimators;
+    neither says that the returned value is NORMALISED (HSIC(x,y)/sqrt(HSIC(x,x) HSIC(y,y)), a correlation-like number), nor that the
+    Gaussian kernel bandwidth is the median heuristic computed from the first argument only and reused for the second. (b) ''the unbiased
+    (and consistent) estimator can be derived by double centering the kernel distance matrix [15]'': citing [15] for both estimators
+    is supported (Gretton et al. 2007 eq. (3) is the unbiased U-statistic estimator, eq. (4) the biased HSIC_b). The deviation is the
+    ''double centering'' wording: double centring of 1-K is what this biased variant computes, while the unbiased variant U-centres
+    (equal to Gretton 2007 eq. (3) / Song et al. 2012 eq. (5)). (c) Labelled ''undirected'' but the bivariate value depends on argument
+    order (made symmetric only by mirroring). (d) The square root (dcorr.py:446-447) is not mentioned; hsic_biased is on the root scale
+    while hsic is on the squared scale.'
+  deviation_from_canonical: '(1) Returns sqrt(HSIC_b(x,y)/sqrt(HSIC_b(x,x) HSIC_b(y,y))) rather than HSIC_b (probe: 0.8774 vs 0.0577);
+    (2) bandwidth from x only, reused for y (a separate median per variable, the common reading of Gretton et al. 2007 Sec. 4, would
+    give 0.8805 instead of 0.8774 on the probe pair); (3) hence asymmetric in (x, y) before pyspi mirrors it. The 1/n^2 vs 1/(n-1)^2
+    normalisation of HSIC_b is irrelevant after normalisation.'
+  units_and_range: 'dimensionless; [0, 1] (Gaussian Gram matrices are PSD, so the centred inner products are >= 0); positively biased
+    under independence; invariant to common positive scaling and shifts, not to rescaling y relative to x (probe, normalise=False: 0.890
+    -> 0.603 for y*10), default z-scoring removes pure scale differences.'
+  direction_convention: 'undirected by mirroring only: bivariate(0,1) = 0.5561200526 vs bivariate(1,0) = 0.5771289783 on z-scored x0
+    vs x0^2; the matrix keeps the upper triangle (base.py:136-137): A[i, j] = A[j, i] = bivariate(x = process min(i, j), y = process
+    max(i, j)).'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (order dependence): bandwidth computed from the first argument only (hyppo/tools/common.py:323-333, applied to both at
+    342-343); probe bivariate(0,1) = 0.5561 vs bivariate(1,0) = 0.5771; the pyspi matrix reports 0.55612, so the value depends on which
+    process has the lower index. Framed as a deviation from the usual per-variable median practice; Gretton et al. 2007 Sec. 4 does
+    not state per-variable medians explicitly.'
+  - 'Candidate (normalisation and square root not documented): hsic.py:118-122 + dcorr.py:443-447 return sqrt of normalised HSIC_b,
+    not HSIC_b (probe: 0.8774 vs raw 0.0577).'
+  - 'Candidate (relative-scale dependence when normalise=False): probe y*1 -> 0.8896, y*10 -> 0.6030, y*0.1 -> 0.8649 (dcorr_biased
+    constant at 0.9105).'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - anm
+    - contaminated
+    - iid_gaussian
+    path: kernel
+    reference: 'from-scratch numpy: Gaussian Gram matrices with sigma = median off-diagonal distance of the FIRST argument for both,
+      HSIC_b = (1/n^2) tr(KHLH), stat = sqrt(HSIC_b(K,L)/sqrt(HSIC_b(K,K) HSIC_b(L,L))) (checks/refs/dcorr_hsic.py; no hyppo import)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: agreement to rtol 1e-10; per-variable-median variant (common practice, not stated explicitly in Gretton 2007)
+      differs at the 1e-3..1e-2 relative level on pairs with different marginal shapes
+  - datasets:
+    - nonlinear_dependence
+    - anm
+    - contaminated
+    path: pipeline
+    reference: from-scratch kernel in both argument orders; pyspi on original and reversed process order
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: A[i,j] = A[j,i] = reference(x_min(i,j), x_max(i,j)); reversed process order changes the values for pairs with
+      different marginal shapes
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'square root of the population normalised HSIC for a standard bivariate normal (closed form as in distance.hsic.biased-False:
+      common sigma = 0.9539, HSIC(rho)/HSIC(1) from det(I + A Sigma)^-1/2 Gaussian integrals). AUDIT DERIVATION, NOT FROM THE LITERATURE
+      AND NOT YET CHECKED WHEN WRITTEN (the check stage re-derived them, notes/dcorr_hsic.md "Open questions: answered" item 2): rho=0.3 -> sqrt(0.04553) = 0.2134, rho=0.8 -> sqrt(0.47393) = 0.6884. The check stage must re-derive these
+      constants independently before using them as a reference'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'provisional, pending re-derivation of the constants: pair (0,1) -> about 0.21 and (2,3) -> about 0.69, approached
+      from above (positive V-statistic bias) as T grows'
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: analytic null HSIC = 0; V-statistic positive bias
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: all values > 0, mean decreasing with T
+  - datasets:
+    - trending
+    - bivariate_gaussian
+    path: pipeline-detrend
+    reference: detrend(D2 + slope*t) == detrend(D2)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: pipeline-detrend(trending) equals pipeline-detrend(bivariate_gaussian) to ~1e-10
+  check_method: external-pkg
+  check_reference: audit/checks/refs/dcorr_hsic.py:chk_dhsic + audit/checks/r/dcorr_hsic.R (dHSIC==2.2 dhsic(kernel gaussian.fixed,
+    bandwidth = median(dist(x)) for both); value sqrt(dhsic(x,y)/sqrt(dhsic(x,x) dhsic(y,y)))); audit/checks/refs/dcorr_hsic.py:chk_scratch
+    -> hsic_stats (HSIC_b = tr(KHLH)/n^2, Gretton et al. 2005, extended-precision reductions, x-only median bandwidth via audit/checks/refs/_kernels_distance.py:median_gamma);
+    audit/checks/refs/dcorr_hsic.py:chk_truth (sqrt of population normalised HSIC, chk_popcheck); audit/checks/refs/dcorr_hsic.py:chk_unmirrored,
+    chk_reversed, chk_null, chk_null_trend, chk_affine, chk_detrend, chk_trend_contrast, chk_detected, chk_scale
+  check_data: bivariate_gaussian T64/T256/T1024 (kernel), T1024 (pipeline), pairs (0,1)/(2,3) at T256/T1024; nonlinear_dependence T256/T1024;
+    anm T1024; contaminated T1024; iid_gaussian T64/T256/T1024; scaled_offset T1024 (kernel and pipeline); trending T1024 (pipeline-detrend
+    and pipeline). T <= 1024 (O(T^2) memory)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12; statistical: |pyspi - population normalised HSIC| <= 2 Monte Carlo SD at T; null
+    and detection as for dcorr; null additionally requires every value > 0'
+  closeness: 'dHSIC: 5/5 runs pass, max_abs <= 2.4e-14 (stored value rebuilt from dhsic(x,y), dhsic(x,x), dhsic(y,y)); dhsic raw HSIC_b
+    equals the python HSIC_b to <= 1.5e-16. From-scratch: 9/9 pass, max_abs <= 2.4e-14 (= hyppo-route replica). Stored value = sqrt
+    of normalised HSIC_b (bivariate_gaussian T1024 pipeline: 0.18913/0.69937, normalised 0.03577/0.48911, raw HSIC_b 0.00276/0.03782;
+    stored/raw 18-438). Order dependence: unmirrored A[0,1]/A[1,0] 0.5637/0.5783 (nonlinear_dependence), 0.6711/0.6515 (anm); reversed
+    process order changes stored values by up to 0.0146 / 0.0195 (anm 10% on pair (1,3)); raw scaled_offset 0.1198 vs 0.2375 (pair (0,1)),
+    z-scored 0.1891. Population sqrt normalised HSIC (rho=0.3 0.213374, rho=0.8 0.688429): pyspi 0.24371/0.71089 at T256, 0.18913/0.69937
+    at T1024; all 4 within 2 SD (max_z 1.02); Monte Carlo bias +0.019 (T256, rho 0.3). Null: every value > 0; means 0.1630 (T64, z -1.73),
+    0.0727 (T256, z -2.85, FAIL), 0.0456 (T1024, z -0.67); mean slope -0.46 (Monte Carlo -0.49). nonlinear_dependence z_perm 37/14 (T1024),
+    18.6/7.2 (T256).'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 6: returns sqrt of normalised HSIC_b with the x-only median bandwidth (0.18913 stored vs raw HSIC_b 0.00276 on bivariate_gaussian T1024);
+    the supplement describes raw HSIC.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Computes sqrt(HSIC_b(K,L)/sqrt(HSIC_b(K,K) HSIC_b(L,L))) (square root of centred kernel alignment) rather than HSIC_b,
+    with the Gaussian bandwidth of the first argument used for both kernels. The HSIC_b itself agrees with dHSIC::dhsic to 1.5e-16.
+    Score 6 (anchor: deviates from canonical HSIC and from the supplement description in an interpretable way): normalisation, square
+    root and the shared x-bandwidth are undocumented; the bandwidth rule makes the kernel asymmetric and the stored value process-order
+    dependent (up to 0.0195 absolute on anm after z-scoring). Positive V-statistic bias under independence (~T^-1/2) is estimator behaviour.'
+  new_finding: true
+  definition_under_review: true
+  check_cost: 'moderate: 2.8 s per pyspi run at P=4, T=1024 (dense T x T Gram matrices, O(T^2) memory; both triangles computed); family
+    runs kept at T <= 1024'
+  symmetry_observed: 'sym (stored): max|A - A.T| = 0.0 on every run; kernel asymmetric: unmirrored max|A - A.T| = 0.0146 (nonlinear_dependence
+    pipeline), 0.0195 (anm pipeline), 0.0011 (contaminated), 0.1177 (raw scaled_offset)'
+  direction_observed: 'undirected by mirroring only: A[i,j] = A[j,i] = f(x = process min(i,j), y = process max(i,j)) with the bandwidth
+    of the lower-index process (unmirrored/reversed runs match this rule to <= 4.1e-14); the asymmetry is a bandwidth artefact, not
+    a causal direction (anm cause->effect pair: A[0,1] 0.6711 > A[1,0] 0.6515, while on nonlinear_dependence A[0,1] 0.5637 < A[1,0]
+    0.5783)'
+  candidate_resolutions:
+  - candidate: 'order dependence: bandwidth from the first argument only'
+    outcome: confirmed
+    evidence: distance.hsic.biased-True|nonlinear_dependence|1024|pipeline|reversed (up to 0.0146), |anm|1024|pipeline|reversed (up
+      to 0.0195), |*|unmirrored; mechanism shown by distance.hsic.biased-False|*|gamma (shared hyppo compute_kern)
+  - candidate: normalisation and square root not documented
+    outcome: confirmed
+    evidence: 'distance.hsic.biased-True|bivariate_gaussian|1024|pipeline|scratch: stored 0.18913 = sqrt(normalised 0.03577), raw HSIC_b
+      0.00276 (max ratio stored/raw 431); |*|kernel|dhsic agrees with sqrt(dhsic(x,y)/sqrt(dhsic(x,x) dhsic(y,y))) to <= 2.3e-14'
+  - candidate: relative-scale dependence when normalise=False
+    outcome: confirmed
+    evidence: 'distance.hsic.biased-True|scaled_offset|1024|kernel|unmirrored: raw pair (0,1) 0.1198, (2,3) 0.6086 vs z-scored 0.1891
+      / 0.6994; |scaled_offset|1024|pipeline|affine equals bivariate_gaussian to 3.8e-15 (default pipeline removes it)'
+  checks_run:
+  - run_ids:
+    - distance.hsic.biased-True|bivariate_gaussian|1024|kernel|dhsic
+    - distance.hsic.biased-True|nonlinear_dependence|1024|kernel|dhsic
+    - distance.hsic.biased-True|anm|1024|kernel|dhsic
+    - distance.hsic.biased-True|contaminated|1024|kernel|dhsic
+    - distance.hsic.biased-True|scaled_offset|1024|kernel|dhsic
+    reference: audit/checks/refs/dcorr_hsic.py:chk_dhsic, audit/checks/r/dcorr_hsic.R (dHSIC==2.2 dhsic)
+    outcome: 5/5 pass; max_abs <= 2.4e-14
+  - run_ids:
+    - distance.hsic.biased-True|bivariate_gaussian|64|kernel|scratch
+    - distance.hsic.biased-True|bivariate_gaussian|256|kernel|scratch
+    - distance.hsic.biased-True|bivariate_gaussian|1024|kernel|scratch
+    - distance.hsic.biased-True|nonlinear_dependence|1024|kernel|scratch
+    - distance.hsic.biased-True|anm|1024|kernel|scratch
+    - distance.hsic.biased-True|contaminated|1024|kernel|scratch
+    - distance.hsic.biased-True|iid_gaussian|256|kernel|scratch
+    - distance.hsic.biased-True|bivariate_gaussian|1024|pipeline|scratch
+    - distance.hsic.biased-True|scaled_offset|1024|kernel|scratch
+    reference: audit/checks/refs/dcorr_hsic.py:chk_scratch (hsic_stats stored_b)
+    outcome: 9/9 pass; max_abs <= 2.4e-14
+  - run_ids:
+    - distance.hsic.biased-True|nonlinear_dependence|1024|pipeline|unmirrored
+    - distance.hsic.biased-True|anm|1024|pipeline|unmirrored
+    - distance.hsic.biased-True|contaminated|1024|pipeline|unmirrored
+    - distance.hsic.biased-True|scaled_offset|1024|kernel|unmirrored
+    - distance.hsic.biased-True|nonlinear_dependence|1024|pipeline|reversed
+    - distance.hsic.biased-True|anm|1024|pipeline|reversed
+    reference: audit/checks/refs/dcorr_hsic.py:chk_unmirrored (audit/checks/probes/dcorr_hsic_probes.py:unmirrored), chk_reversed
+    outcome: 6/6 pass; kernel asymmetry up to 0.0195 (pipeline), 0.118 (raw)
+  - run_ids:
+    - distance.hsic.biased-True|bivariate_gaussian|256|pipeline|truth-p01
+    - distance.hsic.biased-True|bivariate_gaussian|256|pipeline|truth-p23
+    - distance.hsic.biased-True|bivariate_gaussian|1024|pipeline|truth-p01
+    - distance.hsic.biased-True|bivariate_gaussian|1024|pipeline|truth-p23
+    - distance.hsic.biased-True|bivariate_gaussian|256|pipeline|popcheck
+    reference: audit/checks/refs/dcorr_hsic.py:chk_truth, chk_popcheck
+    outcome: 5/5 pass; max_z 1.02
+  - run_ids:
+    - distance.hsic.biased-True|iid_gaussian|64|pipeline|null
+    - distance.hsic.biased-True|iid_gaussian|256|pipeline|null
+    - distance.hsic.biased-True|iid_gaussian|1024|pipeline|null
+    - distance.hsic.biased-True|iid_gaussian|64|pipeline|null-trend
+    reference: audit/checks/refs/dcorr_hsic.py:chk_null, chk_null_trend
+    outcome: 3/4 pass; T256 fails (z -2.85, same draw); every value > 0; mean slope -0.46
+  - run_ids:
+    - distance.hsic.biased-True|scaled_offset|1024|pipeline|affine
+    - distance.hsic.biased-True|trending|1024|pipeline-detrend|detrend
+    - distance.hsic.biased-True|trending|1024|pipeline|trend-contrast
+    - distance.hsic.biased-True|nonlinear_dependence|256|pipeline|detected
+    - distance.hsic.biased-True|nonlinear_dependence|1024|pipeline|detected
+    - distance.hsic.biased-True|bivariate_gaussian|1024|pipeline|scale
+    - distance.hsic.biased-True|nonlinear_dependence|1024|kernel|scale
+    reference: audit/checks/refs/dcorr_hsic.py:chk_affine, chk_detrend, chk_trend_contrast, chk_detected, chk_scale
+    outcome: 7/7 pass; affine 3.8e-15; detrend 1.6e-14; z_perm >= 7.1; hsic_biased^2 - hsic <= 0.0024
+optimisation:
+  complexity_P_T: 'O(P^2 T^2): per ordered pair (pyspi/statistics/distance.py:HilbertSchmidtIndependenceCriterion.bivariate) two T x T l2/squared-distance
+    matrices, a median over T^2 entries (numpy partition), two RBF Gram matrices, then hyppo Dcorr on 1 - K/max(K) (two centrings, three products).
+    Measured P_exponent 2.09, T_exponent 2.44; the pair term dominates at 118x1024 (t_pair 102 ms, t_fixed 0).'
+  hotspot_1: hyppo/independence/dcorr.py:Dcorr.statistic called from hyppo/independence/hsic.py:Hsic.statistic (third-party:hyppo) 61.7% self
+    time of the profiled SPI call at 8x1024 (numba _dcorr centring and products hidden in it)
+  hotspot_2: 'hyppo/tools/common.py:compute_kern (third-party:hyppo -> sklearn/numpy) 29.0%: sklearn rbf_kernel 14.8%, numpy median/partition
+    9.5% (bandwidth of the first argument)'
+  hotspot_owner: third-party:hyppo
+  opaque_share: 0.112
+  profile_file: audit/profiles/distance.hsic.biased-True__8x1024.pstats
+  opportunities:
+  - opportunity_id: dcorr_hsic-3
+    opportunity: 'Per-channel cache for the parts of HSIC that depend on one channel: the l2 distances and median bandwidth gamma_x (hyppo/tools/common.py:compute_kern),
+      the squared distances that sklearn rbf_kernel exponentiates, and the x-side Gram, 1 - K/max(K), centred matrix and self inner product. The
+      y-side Gram uses the x channel''s bandwidth (the kernel is asymmetric, see symmetry_observed), so per pair exp(-gamma_x D2_y), its centring
+      and two inner products remain.'
+    opp_type: cache-sharing
+    expected_speedup: ~2x
+    speedup_basis: 'profile:audit/profiles/distance.hsic.biased-True__8x1024.pstats median 9.5% + x-side half of rbf_kernel (14.8%/2) + l2 distances
+      4% + x-side centring and self product (about half of the 61.7% numba share) + complexity: removable share about 0.55-0.6 per pair, Amdahl
+      2.2-2.5x; per-component costs as measured for dcorr in audit/profiles/micro/opp_dcorr_hsic-1.json (the dcorr_hsic-1
+      micro-benchmark, dcorr only; this avenue has no micro-benchmark of its own)'
+    output_risk: unverified-bit-identical
+    risk_evidence: same sklearn/numba calls on the same per-channel arrays (dcorr analogue bit-identical in audit/profiles/micro/opp_dcorr_hsic-1.json);
+      the y-side Gram must still use the x channel's gamma
+    effort: M
+    depends_on:
+    - xc-undirected-upper

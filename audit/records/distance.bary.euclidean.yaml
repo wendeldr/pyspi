@@ -1,0 +1,212 @@
+unit_id: distance.bary.euclidean
+status: profiled
+correctness:
+  metric_name_standard: Summary (time-mean or time-max) of the Euclidean Fréchet mean (pointwise average (x+y)/2) of two z-scored series; squared variant summarises ((x+y)/2)^2
+  canonical_ref: Fréchet 1948, Ann. Inst. Henri Poincaré 10(4):215-310 (Fréchet mean); for squared Euclidean distance the Fréchet mean of {x_k} is the arithmetic mean (e.g. Petitjean et al. 2011, Pattern Recognit. 44:678, §2). The scalar mean/max summary is a pyspi construction (Cliff et al. 2023, Nat. Comput. Sci., supplement §1.2.10) with no literature counterpart.
+  canonical_definition: 'b* = argmin_b sum_k ||b - x_k||^2 = (x + y)/2; SPI = mean_t b*(t) or max_t b*(t); squared: mean_t b*(t)^2 or max_t b*(t)^2'
+  documented_definition: 'supplement §1.2.10, p.7 (supplement.txt lines 321-335): "A barycenter (or Fréchet mean) [21, 22] is a (univariate) time series that minimizes the sum of squared distances between MTS ... For each pair of (bivariate) time series ... we compute the raw barycenters then summarize them by taking their mean (modifier mean) and maximum (max), yielding seven SPIs" (keywords: undirected, nonlinear, unsigned, bivariate, time-dependent). GitBook distance-similarity.md:41-75 repeats this, adds "timepoint at which the maximum occurs (max_time)" and lists 12 identifiers bary_{euclidean,dtw,softdtw,sgddtw}_{mean,max,max_time}; neither source documents the squared (bary-sq_*) variants.'
+  delegate_lib: tslearn==0.9.0 tslearn.barycenters.euclidean_barycenter (numpy.average over axis 0, uniform weights)
+  implemented_as: 'Each process z-scored (scipy zscore, ddof=1; detrend only if requested); b = numpy.average(z[[i,j]] as (2,T,1), axis=0) = (z_i + z_j)/2, shape (T,1); statistic = nanmean/nanmax of b or of b**2. Consequences on z-scored input: mean(b) = (mean z_i + mean z_j)/2 = 0 up to rounding; mean(b**2) = (1 + r)(T-1)/(2T) with r the Pearson correlation; max(b) = max_t (z_i+z_j)/2 >= 0; max(b**2) = (max_t |z_i+z_j|/2)^2. Cached per pair on the Data object and mirrored, so A is exactly symmetric.'
+  implementation_trace:
+  - pyspi/statistics/distance.py:4-9 imports euclidean_barycenter, dtw_barycenter_averaging, dtw_barycenter_averaging_subgradient, softdtw_barycenter from tslearn.barycenters
+  - pyspi/statistics/distance.py:211-215 class Barycenter(Directed, Signed); class labels ['distance','signed','undirected','temporal','nonlinear']
+  - pyspi/statistics/distance.py:218-219 mode 'euclidean' -> self._fn = euclidean_barycenter
+  - pyspi/statistics/distance.py:230-234 squared=True sets preproc x**2 and identifier prefix 'bary-sq'
+  - 'pyspi/statistics/distance.py:236-243 statistic: mean -> np.nanmean(preproc(bc)); max -> np.nanmax(preproc(bc)); max_time -> np.argmax(preproc(bc)) (not in any config)'
+  - pyspi/statistics/distance.py:245 identifier suffix _{mode}_{statistic}
+  - 'pyspi/statistics/distance.py:247-263 bivariate: looks up data.barycenter[mode][(i,j)]; on miss z = data.to_numpy(squeeze=True); bc = self._fn(z[[i, j]]) with library defaults; caches bc under (i,j) AND (j,i) (line 261); returns statfn(bc)'
+  - pyspi/base.py:27-48 parse_bivariate (wraps raw arrays in a Data object, default normalise=True)
+  - 'pyspi/base.py:85-94 Directed.multivariate: j outer, i inner, A[i,j] = bivariate(i, j); the first call for pair {a<b} is (i=b, j=a), so the cached barycenter is computed from z[[b, a]] and reused for A[a,b]'
+  - pyspi/data.py:59-71 Data defaults detrend=False, normalise=True; pyspi/data.py:184-195 optional scipy detrend then zscore(axis=1, ddof=1)
+  - pyspi/data.py:108-116 to_numpy(squeeze=True) -> (P, T) array
+  - pyspi/calculator.py:252-266 configs instantiated as Barycenter(**params); spi.labels come from the class (config labels at pyspi/config.yaml:256-261 are not applied); pyspi/calculator.py:329 every SPI's multivariate() receives the same self.dataset, so all statistics/squared variants of one mode share one cached barycenter per pair
+  - 'pyspi/config.yaml:255-311 Barycenter configs: 4 modes x {mean,max} x {squared False, True} = 16 identifiers'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/utils.py:7-13 _set_weights(None, 2) -> numpy.ones(2) (unnormalised uniform weights)
+  - '.venv/lib/python3.12/site-packages/tslearn/utils/utils.py:215 to_time_series_dataset: (2, T) -> (2, T, 1)'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/euclidean.py:9 euclidean_barycenter(X, weights=None)
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/euclidean.py:42-44 X_ = to_time_series_dataset(X); weights = _set_weights(weights, 2); return numpy.average(X_, axis=0, weights=weights)
+  deviation_from_documented: 'Documented keyword "unsigned", but the class is Signed (issigned() True, class label "signed"); the config labels (undirected, nonlinear, unsigned, bivariate, time-dependent) are never attached to the SPI (calculator.py:252-266 uses class labels). Documented "undirected", but the class inherits Directed; symmetry comes only from the per-Data cache writing (j,i) = (i,j) (distance.py:261), not from Undirected.multivariate mirroring. Supplement says "seven SPIs" (lists euclidean_max, dtw_mean/max, softdtw_mean/max, sgddtw_mean/max); config computes 16, including bary_euclidean_mean and all eight bary-sq_* variants, none of which are documented; GitBook lists max_time variants that exist in code (distance.py:240-241) but are absent from every config. bary_euclidean_mean (in config and in the EEG selection) is not among the supplement''s seven SPIs; on the default z-scored input it is structurally zero (probe: |A| <= 1.8e-17 on bivariate_gaussian T=256).'
+  deviation_from_canonical: 'Barycenter itself matches the canonical Euclidean Fréchet mean exactly (numpy.average with equal weights). The summaries are pyspi-defined: bary_euclidean_mean is identically 0 (degenerate) under normalise=True; bary-sq_euclidean_mean is an affine function of Pearson r, (1+r)(T-1)/(2T), i.e. a rescaled correlation rather than a distance; the max variants are extreme-value statistics of x+y and depend on tail behaviour and T.'
+  units_and_range: 'z-score units (dimensionless after normalisation). mean: 0 up to ~1e-16 rounding, either sign. max: >= 0 (max of a zero-mean series), grows with T for Gaussian data. sq-mean: in [0, (T-1)/T]. sq-max: >= sq-mean, >= 0. Never NaN for finite input. Labelled signed. Symmetric.'
+  direction_convention: 'undirected: A[i,j] = A[j,i] bit-identical (shared cached barycenter); the barycenter is computed once from z[[max(i,j), min(i,j)]] and the Euclidean average is order-invariant anyway'
+  symmetry_expected: sym
+  already_documented: tests/README.md:147 tolerance table notes "bary_euclidean_mean ~1e-16" rounding noise (atol absorbs it); not listed in KNOWN_ISSUES.md; label/config discrepancies otherwise no
+  new_finding_candidates:
+  - 'Candidate: bary_euclidean_mean is structurally zero (not merely small) on the default pipeline, so it carries no information although it is in config.yaml and the EEG selection. Evidence: probe1 on bivariate_gaussian T=256 gives off-diagonal values -1.04e-17 .. 1.73e-17; z-scored rows have mean ~1e-17; numpy.average of two zero-mean rows has zero mean. The supplement''s seven-SPI list omits it (hypothesis: deliberately).'
+  - 'Candidate: bary-sq_euclidean_mean equals (1+r)(T-1)/(2T) exactly, so it is a monotone transform of Pearson r and redundant with it. Evidence: probe1 pyspi matrix [0.647546, 0.479399, 0.477355, 0.489262, 0.465147, 0.907001] equals the formula to 6 decimals on bivariate_gaussian T=256.'
+  - 'Candidate: label inconsistency, class is Directed+Signed with label "signed" while supplement/GitBook/config say "unsigned"; signed is the accurate label for the mean statistic (values of either sign), max statistics are non-negative here. Evidence: probe1 prints labels [..., "signed", ...] and issigned() True.'
+  - 'Candidate: statistic "max_time" exists (distance.py:240-241) and is documented by GitBook but is absent from all configs; it returns numpy.int64 argmax (probe1: 229 for pair (0,1)), uses np.argmax not a nan-aware argmax, and is a time index rather than a dependence value.'
+  - 'Candidate: under normalise=False the mean statistic becomes (mean x + mean y)/2, i.e. it measures offsets, not coupling (follows from euclidean.py:44); to be shown on scaled_offset with normalise=False.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - scaled_offset
+    - trending
+    path: pipeline
+    reference: 'analytic: mean of (z_i + z_j)/2 with z from scipy-free numpy z-scoring (ddof=1) is 0'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: bary_euclidean_mean |A[i,j]| < 1e-12 for every pair, every T (degenerate constant zero)
+  - datasets:
+    - bivariate_gaussian
+    - sparse_precision
+    - iid_gaussian
+    - contaminated
+    path: pipeline
+    reference: 'analytic: (1 + r)(T-1)/(2T) with r = numpy.corrcoef of the raw rows'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: bary-sq_euclidean_mean matches the formula to rtol 1e-12 for all pairs and T
+  - datasets:
+    - bivariate_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    - nonlinear_dependence
+    path: kernel
+    reference: 'from-scratch numpy: z = (x - x.mean())/x.std(ddof=1); b = (z_i + z_j)/2; nanmax(b), nanmax(b**2), nanmean(b**2)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: all four identifiers agree with pyspi to rtol 1e-12 / atol 1e-14
+  - datasets:
+    - trending
+    - scaled_offset
+    path: pipeline-detrend
+    reference: 'from-scratch numpy: linear least-squares detrend then z-score (ddof=1), b = (z_i+z_j)/2'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: detrend=True results match the from-scratch detrend+z-score reference to rtol 1e-12 on both datasets
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic population value: E[sq_mean] -> (1 + rho)/2 with rho in {0.3, 0.8}'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: at T=4096 bary-sq_euclidean_mean within 3 standard errors of 0.65 (pair 0,1) and 0.90 (pair 2,3)
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    - logistic_maps
+    path: pipeline
+    reference: 'SELF-CONSISTENCY (pyspi vs pyspi): numpy comparison of A and A.T from Calculator-style Barycenter(mode=''euclidean'').multivariate(Data(x)) plus a cold-cache call bivariate(Data(x), i=0, j=1) vs bivariate(Data(x), i=1, j=0) on fresh Data objects (direction convention). Can establish symmetry/order-invariance only, not what A[i,j] means'
+    reference_kind: same-lineage
+    criterion: direction
+    expected_outcome: A[i,j] == A[j,i] bit-identically in multivariate (cache, distance.py:261); establishes that A[i,j] carries no direction; cold-cache swapped-order calls equal for deterministic modes (euclidean, dtw, softdtw) and possibly unequal for sgddtw
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    path: pipeline
+    reference: 'SELF-CONSISTENCY (pyspi vs pyspi): invariance of the z-scored Euclidean barycenter to per-variable positive scaling and offset; compares pyspi output on scaled_offset with pyspi output on bivariate_gaussian (same draw). Can establish invariance only, not what A[i,j] means'
+    reference_kind: same-lineage
+    criterion: tolerance
+    expected_outcome: scaled_offset output equals bivariate_gaussian output within 1e-10 for all four identifiers because z-scoring removes scale and offset
+  check_method: analytic
+  check_reference: audit/checks/refs/barycenters.py:h_zero, h_formula, h_offset, h_popstat (analytic); audit/checks/refs/barycenters.py:h_scratch, h_detrend, h_cold (from-scratch numpy z-score/detrend and (z_i+z_j)/2); h_invariance, h_sym (same-lineage self-consistency)
+  check_data: all 21 datasets at T=64/1024/4096 (pipeline) and T=1024 (pipeline-detrend) for bary_euclidean_mean; bivariate_gaussian, sparse_precision, iid_gaussian, contaminated (formula); bivariate_gaussian, delayed_noise, narrowband_f0-0.25, nonlinear_dependence (kernel T=256, pipeline T=1024); trending, scaled_offset (pipeline-detrend T=256/1024); scaled_offset kernel (offset); bivariate_gaussian T=256/1024/4096 (population); var2_bivariate, delayed_noise, logistic_maps_chaotic, anm (symmetry/direction)
+  agreement_criterion: 'analytic zero: atol 1e-12; analytic (1+r)(T-1)/(2T) and from-scratch statistics: exact (rtol 1e-10, atol 1e-12); detrend path: rtol 1e-9; population value (1+rho)/2 (T-1)/T: |pyspi - value| <= 2 se with se = sd(r)/2 inflated by 2.865/2, i.e. raw |z| <= 2.865 (two-sided Bonferroni over the 12 ordered off-diagonal entries compare.py tests, alpha 0.05: Phi^-1(1 - 0.05/24) = 2.865, equivalently alpha 0.025 over the 6 unordered pairs; compare.py max_z is reported on the inflated se, raw_max_z on the unscaled se); symmetry: max|A - A.T| == 0'
+  closeness: 'bary_euclidean_mean: max|A| = 2.52e-16 over all 84 zero runs (21 datasets x T 64/1024/4096 pipeline + T 1024 pipeline-detrend; worst distance.bary.euclidean|logistic_maps|1024|pipeline|zero|bary_euclidean_mean), all pass atol 1e-12. bary-sq_euclidean_mean vs (1+r)(T-1)/(2T): 12/12 pass, max_rel 1.36e-15. From-scratch statistics (all four identifiers, kernel T=256 and pipeline T=1024): 32/32 pass, max_abs 0. Detrend path: 16/16 pass, max_abs 4.97e-14 (bary-sq_euclidean_max on trending T=1024; the max_rel 12 entries are bary_euclidean_mean values of order 1e-17, inside atol). Kernel path offset: pyspi bary_euclidean_mean = (mean x_i + mean x_j)/2 to 4.4e-16 with sample means [0.0136, 0.987, -2.112, 4.678] for design offsets [0, 1, -2, 5]. Population: compare.py max_z 0.738 (T=256), 0.813 (T=1024), 0.720 (T=4096) is on the se scaled by 2.865/2 (Bonferroni), so it is not a raw z; on the unscaled delta-method se the largest |z| over the 6 pairs is raw_max_z 1.057 / 1.164 / 1.031, all below the Bonferroni critical value 2.865; max_abs 0.0329 / 0.0182 / 0.0081 (shrinking ~1/sqrt(T)). Invariance (same-lineage): scaled_offset equals bivariate_gaussian for the four identifiers within rtol 1e-10. Symmetry: max|A - A.T| = 0 on all four direction datasets; cold-cache bivariate(i,j) vs (j,i): 0.'
+  verdict: degenerate
+  score_0_10: 0
+  score_rubric: 0
+  score_rubric_basis: anchor
+  score_rubric_note: 'The representative bary_euclidean_mean is identically 0 on z-scored input: max|A| 2.52e-16 over 84 runs. Workflow 4c added the
+    identifier_exceptions entry because the other three identifiers have their own anchors (what_changed rates bary_euclidean_max 10 on its own, and the two bary-sq
+    identifiers square the barycenter before the time summary, so they are not -sq relabels); under R1 the row still describes bary_euclidean_mean, so score_adjusted
+    and verdict_adjusted stay 0 (degenerate).'
+  documentation_status: metadata-conflict
+  verdict_adjusted: degenerate
+  score_adjusted: 0
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: 'bary_euclidean_max=10 (matches): max_t of the exact Euclidean Frechet mean (z_i + z_j)/2, one of the seven SPIs of supplement §1.2.10;
+    from-scratch numpy 8/8 max_abs 0 (*|256|kernel|scratch| and *|1024|pipeline|scratch| runs), detrend path 4/4 max_abs 1.15e-14 | bary-sq_euclidean_mean=9 (matches):
+    not a -sq relabel, because the square is taken of the barycenter b(t) before the time mean (distance.py:230-239), so the value is (1 + r)(T - 1)/(2T) (formula 12/12
+    max_rel 1.36e-15; from-scratch 8/8 max_abs 0) and not a function of bary_euclidean_mean; it reproduces the record''s canonical_definition, but the supplement
+    summarises the raw barycenter by its mean and max, so a reader implementing from the supplement gets mean_t b(t), a different number, and anchor 10''s second clause
+    fails (the R4 reading, nearest anchor 9); R3 cannot restore 10 as it does for pdist, because the supplement mentions the unit and GitBook does not describe the
+    squared variants either; anchor 5''s second clause does not apply, because the barycenter is the literature Frechet mean and the squared summary is the same pyspi
+    summary construction, defined in canonical_definition, on which bary_euclidean_max is scored 10 | bary-sq_euclidean_max=9 (matches): not a -sq relabel for the same
+    reason, (max_t |z_i + z_j|/2)^2 against the supplement''s max_t b(t); from-scratch 8/8 max_abs 0, detrend path 4/4 max_abs 4.97e-14; anchor 10''s second clause fails
+    by the same R4 reading as bary-sq_euclidean_mean'
+  what_changed: 'The score 0 applies to the unit''s representative identifier bary_euclidean_mean (units.yaml representative; the CSV row carries that identifier next to the score), not to the barycenter calculation, which is fp-exact (bary_euclidean_max, the supplement''s SPI, rates 10 on its own). bary_euclidean_mean is in config.yaml and in the EEG selection and is identically zero on every pyspi preprocessing path that z-scores: mean_t (z_i + z_j)/2 = 0, observed |A| <= 2.52e-16 on all 21 datasets. The barycenter itself is the exact Euclidean Frechet mean (z_i + z_j)/2 and the other three identifiers are computed exactly as stated (fp-exact against independent numpy): bary-sq_euclidean_mean is the affine transform (1 + r)(T - 1)/(2T) of Pearson r (rtol 1.4e-15), so it duplicates Pearson correlation; bary-sq_euclidean_max is (max_t |z_i + z_j|/2)^2. With normalise=False the mean statistic becomes the average of the two offsets, not a coupling measure. Labels: the class is Signed while all documentation says unsigned. That mismatch is between the class label and the documents; whether the values take both signs does not decide it under the sign-meaning reading of the keyword that distance.softdtw adopts (GitBook glossary-of-terms.md:21, whether the sign indicates how A and B co-fluctuate; the same entry also mentions the range, so the glossary is mixed). Under README rule R1 the row''s score describes the representative identifier, which here is also the lowest-scoring one, and the other three identifiers are listed in identifier_exceptions (distance.softdtw has score_adjusted 9 on its representative under the same rule, with its constraint identifiers listed at 3). new_finding rests on the identification of the zero as structural and on the three other confirmed candidates (the Pearson affine duplicate, the Signed class, the offset average under normalise=False), not on the near-zero value itself, which tests/README.md:147 already records as rounding noise.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: cheap (every run < 0.1 s on the pyspi side, including T=4096)
+  symmetry_observed: 'sym: max|A - A.T| = 0 exactly on var2_bivariate, delayed_noise, logistic_maps_chaotic, anm (T=1024, bary_euclidean_max, *|sym|* runs); cold-cache ordered-pair matrix on delayed_noise T=1024 also has max|M - M.T| = 0 (the Euclidean average is order-invariant)'
+  direction_observed: 'none: A[i,j] = A[j,i] bit-identically on var2_bivariate (x0 -> x1), delayed_noise (x0 leads), logistic_maps_chaotic (x -> y) and anm; the statistic is a symmetric function of the pair and carries no direction'
+  candidate_resolutions:
+  - candidate: bary_euclidean_mean is structurally zero on the default pipeline
+    outcome: confirmed
+    evidence: '84 runs: distance.bary.euclidean|*|{64,1024,4096}|pipeline|zero|bary_euclidean_mean (63 runs, all 21 datasets x 3 T) and distance.bary.euclidean|*|1024|pipeline-detrend|zero|bary_euclidean_mean (21 runs, all 21 datasets): max|A| = 2.52e-16, all within atol 1e-12 of the analytic 0'
+  - candidate: bary-sq_euclidean_mean equals (1+r)(T-1)/(2T)
+    outcome: confirmed
+    evidence: '12 runs distance.bary.euclidean|{bivariate_gaussian,sparse_precision,iid_gaussian,contaminated}|{64,256,1024}|pipeline|formula|bary-sq_euclidean_mean: max_rel 1.36e-15'
+  - candidate: 'label inconsistency: Signed class vs documented unsigned'
+    outcome: confirmed
+    evidence: 'code: distance.py:211-215 (Directed, Signed; label ''signed''); values: bary_euclidean_mean takes both signs (zero runs, e.g. bivariate_gaussian T=1024 min -2.3e-17 max -6.9e-18; kernel-path offset run min -1.05) while the max statistics are >= 0 on z-scored data (sym runs min 1.17). These values describe the range only; the mismatch itself is the Signed class against the documented keyword, which the audit reads by the glossary''s sign-meaning sentence as for distance.softdtw'
+  - candidate: statistic max_time exists in code and GitBook but in no config
+    outcome: confirmed
+    evidence: 'static: pyspi/config.yaml has no ''max_time'' (grep); distance.py:240-241 defines it; not run numerically (no config identifier)'
+  - candidate: with normalise=False the mean statistic measures offsets
+    outcome: confirmed
+    evidence: 'distance.bary.euclidean|scaled_offset|1024|kernel|offset|bary_euclidean_mean: pyspi = (mean x_i + mean x_j)/2 to 4.4e-16; sample means [0.0136, 0.987, -2.112, 4.678] track the design offsets [0, 1, -2, 5]'
+  checks_run:
+  - run_ids:
+    - distance.bary.euclidean|*|*|pipeline|zero|bary_euclidean_mean
+    - distance.bary.euclidean|*|1024|pipeline-detrend|zero|bary_euclidean_mean
+    reference: audit/checks/refs/barycenters.py:h_zero (analytic)
+    outcome: pass 84/84; max|A| 2.52e-16
+  - run_ids:
+    - distance.bary.euclidean|*|*|pipeline|formula|bary-sq_euclidean_mean
+    reference: audit/checks/refs/barycenters.py:h_formula (analytic)
+    outcome: pass 12/12; max_rel 1.36e-15
+  - run_ids:
+    - distance.bary.euclidean|*|256|kernel|scratch|*
+    - distance.bary.euclidean|*|1024|pipeline|scratch|*
+    reference: audit/checks/refs/barycenters.py:h_scratch (independent-impl)
+    outcome: pass 32/32; max_abs 0
+  - run_ids:
+    - distance.bary.euclidean|{trending,scaled_offset}|{256,1024}|pipeline-detrend|detrend|*
+    reference: audit/checks/refs/barycenters.py:h_detrend (independent-impl)
+    outcome: pass 16/16; max_abs 4.97e-14
+  - run_ids:
+    - distance.bary.euclidean|scaled_offset|1024|kernel|offset|bary_euclidean_mean
+    reference: audit/checks/refs/barycenters.py:h_offset (analytic)
+    outcome: pass; max_abs 4.4e-16
+  - run_ids:
+    - distance.bary.euclidean|bivariate_gaussian|{256,1024,4096}|pipeline|popstat|bary-sq_euclidean_mean
+    reference: audit/checks/refs/barycenters.py:h_popstat (analytic, statistical)
+    outcome: pass 3/3; max_z 0.74 / 0.81 / 0.72 on the Bonferroni-scaled se (raw_max_z 1.06 / 1.16 / 1.03 on the unscaled se)
+  - run_ids:
+    - distance.bary.euclidean|scaled_offset|1024|pipeline|invariance|*
+    reference: audit/checks/refs/barycenters.py:h_invariance (same-lineage)
+    outcome: pass 4/4
+  - run_ids:
+    - distance.bary.euclidean|*|1024|pipeline|sym|bary_euclidean_max
+    - distance.bary.euclidean|delayed_noise|1024|pipeline|cold|bary_euclidean_max
+    reference: audit/checks/refs/barycenters.py:h_sym (same-lineage), h_cold (independent-impl)
+    outcome: pass 5/5; max|A - A.T| 0
+optimisation:
+  complexity_P_T: 'O(P^2 T): per unordered pair tslearn euclidean_barycenter = (z_i + z_j)/2 plus a nanmean/nanmax, dominated by per-call Python
+    overhead (to_time_series_dataset, backend sniffing). Measured P_exponent 2.04 (fit t_pair 0.21 ms), 118x1024 measured 1.52 s fresh; the T_exponent
+    (-1.57) is an artefact of a ~50 ms fixed cost seen at 8x256 in several units. The P^2 per-pair overhead dominates at 118.'
+  hotspot_1: tslearn/utils/utils.py:to_time_series_dataset (third-party:tslearn) 65.9% of the profiled SPI call at 8x1024 (16 ms total), of which
+    tslearn/backend/backend.py:instantiate_backend 50.6% (numpy arrayprint str() of the input 45.1%)
+  hotspot_2: numpy nanmean 13.4% and numpy average 12.7% (third-party:numpy), the actual arithmetic
+  hotspot_owner: third-party:tslearn
+  opaque_share: 0.2608
+  profile_file: audit/profiles/distance.bary.euclidean__8x1024.pstats
+  opportunities:
+  - opportunity_id: barycenters-2
+    opportunity: 'Vectorise over pairs: form (z_i + z_j)/2 for all i < j in one array and reduce each row with nanmean/nanmax (and of the square
+      for bary-sq_*), skipping tslearn''s per-pair dataset conversion. bary_euclidean_mean is degenerate (score 0: on z-scored rows it is (mean
+      z_i + mean z_j)/2, rounding noise around 0), so its optimisation is trivial.'
+    opp_type: vectorise-batch
+    expected_speedup: 30-100x
+    speedup_basis: 'profile:audit/profiles/distance.bary.euclidean__8x1024.pstats to_time_series_dataset 65.9% + per-pair pyspi/numpy call overhead
+      + complexity: P^2 T/2 = 7.1M element operations per statistic at 118x1024 (tens of ms) vs 1.52 s measured'
+    output_risk: unverified-bit-identical
+    risk_evidence: same element-wise (z_i + z_j)/2 and the same nanmean/nanmax over a contiguous length-T row; a constant 0 for bary_euclidean_mean
+      would instead be within-tolerance (differs by rounding noise)
+    effort: S
+    depends_on: []

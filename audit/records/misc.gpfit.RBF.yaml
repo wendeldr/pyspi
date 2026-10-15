@@ -1,0 +1,495 @@
+unit_id: misc.gpfit.RBF
+status: profiled
+correctness:
+  metric_name_standard: in-sample mean squared residual of the posterior mean of a Gaussian-process regression of y on x with a squared-exponential
+    (RBF) covariance plus constant and white-noise terms, hyperparameters chosen by type-II maximum likelihood (single L-BFGS-B start)
+  canonical_ref: "Williams & Rasmussen 1996, NIPS 8:514-520 (supplement ref [78], cited as 1995); Rasmussen & Williams 2006, Gaussian Processes\
+    \ for Machine Learning, MIT Press: Alg. 2.1 (p.19, posterior mean f_bar = K_*^T (K + sigma_n^2 I)^-1 y), eq. 2.31 (SE covariance with signal\
+    \ variance, k_y = sigma_f^2 exp(-(x - x')^2 / (2 l^2)) + sigma_n^2 delta), eq. 4.9 (SE kernel), \xA75.4.1 eqs. 5.8-5.9 (log marginal likelihood,\
+    \ ML-II, gradient; notes that multiple local optima exist and correspond to different interpretations of the data), \xA75.4.2 eq. 5.12 (leave-one-out\
+    \ predictive residual). There is no canonical pairwise \"GP fit MSE\" statistic; the canonical object is the GP posterior mean and its residual."
+  canonical_definition: With k(x, x') = c + sigma_f^2 exp(-(x - x')^2 / (2 l^2)) and noise variance s chosen by maximising log p(y | x, theta)
+    (the global maximum, in practice approximated by several starts), the posterior mean is f_bar = K_f (K_f + s I)^-1 y; the score would be (1/T)
+    sum_t (y_t - f_bar_t)^2, or the leave-one-out version r_t = [K^-1 y]_t / [K^-1]_tt if a predictive error is wanted.
+  documented_definition: "supplement \xA71.6.2, p.18: 'we also use Gaussian process [78] model fits as a nonparametric measure of influence of\
+    \ x on y. Here, we use a combination of kernels (with parameters chosen from default settings) from the scikit-learn package [2] and compute\
+    \ the MSE of their fit. The fits are computed for ... the radial basis function (RBF) kernel with length scale l = 1 (RBF). Each of these\
+    \ kernels are separately combined with the constant kernel (with a constant of 1.0) and the white kernel (with a noise level of 1)'; keywords\
+    \ 'directed, nonlinear, unsigned, bivariate, contemporaneous'. GitBook spi-descriptions/miscellaneous.md lines 46-63 repeat the text verbatim\
+    \ and cite Williams & Rasmussen (WilRas96.pdf)."
+  delegate_lib: scikit-learn==1.9.1 sklearn.gaussian_process.GaussianProcessRegressor.fit/predict with kernel ConstantKernel() + WhiteKernel()
+    + RBF(); hyperparameters by scipy==1.17.1 scipy.optimize.minimize(method='L-BFGS-B'); score by sklearn.metrics.mean_squared_error
+  implemented_as: 'A[i, j] = mean((f_bar - z_j)^2) where f_bar is the GP posterior mean at the training inputs z_i (in-sample, not held out),
+    on z-scored (ddof=1) data. Kernel = ConstantKernel(1.0) + WhiteKernel(1.0) + RBF(length_scale=1.0), k(x, x'') = c + w delta + exp(-(x - x'')^2
+    / (2 l^2)): the RBF amplitude is FIXED at 1 (the constant is added, not multiplied), so there is no signal-variance hyperparameter. c, w,
+    l have bounds (1e-5, 1e5); the documented values 1.0 are only the L-BFGS-B starting point theta = (0, 0, 0) in log space. One optimiser run
+    (n_restarts_optimizer=0), alpha = 1e-10 jitter, normalize_y=False, random_state=None (unused). The white term enters K(X, X) but not K(X_test,
+    X_train) (kernels.py:1419), so the prediction is the de-noised posterior mean; an RBF with l below the input spacing, however, has Gram ~
+    I and is counted as signal, so the posterior mean then interpolates y. Probes: independent pairs give l -> 2e3..1e5 (upper bound 1e5), w ~
+    1, A = (T-1)/T to 6 digits (0.996094 at T=256, 0.984375 at T=64); Gaussian pairs give l ~ 2-5 and A within 6.3e-2 relative of ((T-1)/T)(1
+    - r^2) at T=256; pyspi''s own value equals the MSE of a from-scratch posterior mean at sklearn''s fitted hyperparameters to <= 1.9e-15 absolute
+    (the posterior-mean vectors themselves differ elementwise by up to 4.3e-13, np.linalg.solve vs sklearn''s Cholesky; 24 RBF pairs). Fit warnings
+    are suppressed by pyspi.'
+  implementation_trace:
+  - 'pyspi/data.py:184-197 Data.set_data: detrend only if detrend=True (default False), then scipy.stats.zscore(axis=1, nan_policy=''omit'', ddof=1)
+    if normalise=True (default)'
+  - pyspi/data.py:108-118 Data.to_numpy returns the (M, T, 1) array, so z[i] is a (T, 1) column (the 2-D X sklearn requires)
+  - 'pyspi/config.yaml:1280-1290 GPModel: labels directed/nonlinear/unsigned/bivariate/contemporaneous; configs kernel: DotProduct, kernel: RBF'
+  - 'pyspi/calculator.py:230,251-267 Calculator._load_yaml (def at 230; config loop 251-267): spi = GPModel(**params) for each config (256); the
+    class attribute labels (misc.py:132) are reported'
+  - 'pyspi/calculator.py:295,327-339,354-355 Calculator.compute (def at 295): S = spi.multivariate(dataset) (329); np.fill_diagonal(S, nan) (332);
+    table store (335); any exception -> whole matrix NaN (except 336-339, NaN at 337, message at 339) with a warning raised at 354-355 (lines
+    confirmed at HEAD a42ebc1; calculator.py is unchanged since a1f20c7)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A[i, j] = self.bivariate(data, i=i, j=j) for every ordered pair i != j (no mirroring)'
+  - pyspi/base.py:27-49 parse_bivariate passes the Data object through (two raw arrays would be wrapped into a new, z-scored Data)
+  - pyspi/statistics/misc.py:7-8 imports sklearn.gaussian_process.kernels, GaussianProcessRegressor and sklearn.metrics.mean_squared_error
+  - pyspi/statistics/misc.py:129-132 class GPModel(Directed, Unsigned), identifier 'gpfit', labels ['misc', 'unsigned', 'unordered', 'normal',
+    'nonlinear', 'directed']
+  - 'pyspi/statistics/misc.py:134-137 __init__: identifier ''gpfit_RBF''; self._kernel = kernels.ConstantKernel() + kernels.WhiteKernel(), then
+    += kernels.RBF() (sum, not product: RBF amplitude fixed at 1)'
+  - 'pyspi/statistics/misc.py:139-147 bivariate: z = data.to_numpy(); warnings suppressed only around fit; gp = GaussianProcessRegressor(kernel=self._kernel).fit(z[i],
+    np.ravel(z[j])); y_predict = gp.predict(z[i]); return mean_squared_error(y_predict, np.ravel(z[j])) (arguments in (y_pred, y_true) order,
+    harmless for MSE)'
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/kernels.py:364-367 Kernel.__add__ returns Sum(self, b); :838-871 Sum.__call__
+    = k1(X, Y) + k2(X, Y), gradients stacked
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/kernels.py:1236 ConstantKernel(constant_value=1.0, bounds (1e-5, 1e5)); :1278
+    K = full(constant_value)
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/kernels.py:1366 WhiteKernel(noise_level=1.0, bounds (1e-5, 1e5)); :1405-1407 K
+    = noise_level * I when Y is None; :1418-1419 zeros when Y is given (so excluded from the predictive cross-covariance)
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/kernels.py:1511 RBF(length_scale=1.0, bounds (1e-5, 1e5)); :1558-1570 K = exp(-0.5
+    * sqeuclidean(X / l, Y / l)), diagonal set to 1; :1577 gradient K * d^2
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:211-231 __init__ defaults: alpha=1e-10, optimizer=''fmin_l_bfgs_b'',
+    n_restarts_optimizer=0, normalize_y=False, random_state=None'
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:249 kernel_ = clone(self.kernel) (pyspi's template kernel is never mutated;
+    probe shows it unchanged after multivariate); :251 RNG created but used only for restarts (:322-333)
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:275-285 normalize_y False -> y used as given
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:299-340 ML-II: one _constrained_optimization from kernel_.theta = (0,
+    0, 0) within kernel_.bounds (312-320); restarts skipped because n_restarts_optimizer = 0 (322); best (only) theta assigned (337); _check_bounds_params
+    warns at bounds (338, sklearn/gaussian_process/kernels.py:436)'
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:541-656 log_marginal_likelihood: K + alpha I (589), Cholesky (failure
+    -> -inf, 590-593), -0.5 y''alpha - sum log diag L - T/2 log 2 pi (613-615), gradient 0.5 tr((alpha alpha^T - K^-1) dK) (647-651, R&W eq. 5.9)'
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:658-674 _constrained_optimization: scipy.optimize.minimize(method=''L-BFGS-B'',
+    jac=True, bounds); _check_optimize_result (667)'
+  - .venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:346-368 final K + alpha I, Cholesky L_ (352, LinAlgError re-raised ->
+    pyspi NaN matrix), alpha_ = cho_solve(L_, y) (363)
+  - '.venv/lib/python3.12/site-packages/sklearn/gaussian_process/_gpr.py:444-454 predict: K_trans = kernel_(X, X_train_) (446, white term = 0),
+    y_mean = K_trans @ alpha_ (447), squeezed to (T,)'
+  - .venv/lib/python3.12/site-packages/sklearn/metrics/_regression.py:524 mean_squared_error; :586-588 average of (y_true - y_pred)^2
+  deviation_from_documented: (a) The documented values (l = 1, constant 1.0, noise level 1) are only the starting point; all three hyperparameters
+    are re-estimated per pair by maximising the log marginal likelihood within [1e-5, 1e5]. Fitted values range from l = 1e-5 to 1e5, c mostly
+    at its 1e-5 lower bound, w from 1e-5 to 1. (b) 'MSE of their fit' is the in-sample (training) MSE of the posterior mean; with a flexible kernel
+    this can be ~0 without any predictive skill (candidate below). (c) The values depend on which local optimum the single start reaches, which
+    the documentation does not mention.
+  deviation_from_canonical: "(1) No signal-variance hyperparameter: the RBF amplitude is fixed at 1 (R&W eq. 2.31 has sigma_f^2), because the\
+    \ constant kernel is added rather than multiplied. For z-scored data with no dependence the model cannot switch the RBF off; it can only make\
+    \ it a constant (l -> upper bound, acting as a random intercept) or a unit-variance white-noise-like term (l -> below the input spacing).\
+    \ The two modes have similar likelihood but opposite predictions (candidate below). (2) Hyperparameters from one L-BFGS-B start, not the ML-II\
+    \ maximum; probes find the single start below the best multi-start likelihood (iid_gaussian_T256 0->1: -365.5228 vs -362.6346). (3) Score\
+    \ is the training MSE of the posterior mean, not a held-out or leave-one-out predictive error (R&W \xA75.4.2) and not a likelihood. Given\
+    \ the hyperparameters, the posterior mean itself is standard (own implementation's MSE agrees to <= 1.9e-15; its f_bar agrees elementwise\
+    \ to <= 4.3e-13)."
+  units_and_range: 'squared units of the target (SD^2 after z-scoring); >= 0; under default z-scoring in [0, about (T-1)/T]: independent pairs
+    give (T-1)/T (0.996094 at T=256), interpolating fits give ~1e-10 ((w/(1+w))^2 (T-1)/T with w at the 1e-5 bound); scale-dependent when normalise=False
+    (scaled_offset_T256 raw: 0.036 to 97.3); asymmetric (|A - A^T| up to 0.99 on narrowband_f0-0.4 and 0.97 on nonlinear_dependence); NaN matrix
+    if the Cholesky fails.'
+  direction_convention: 'A[i, j] = MSE of predicting process j (target, np.ravel(z[j])) from process i (input, z[i]), from misc.py:145-147 and
+    base.py:91-93. Lower means i predicts j better. Probe: nonlinear_dependence_T256 (x1 = x0^2 + noise) A[0,1] = 0.026, A[1,0] = 0.996; anm_T256
+    A[0,1] = 0.2146 < A[1,0] = 0.3140 and A[2,3] = 0.0652 < A[3,2] = 0.0918. Confirmed in the check stage (misc.gpfit.RBF|*|direction runs).'
+  symmetry_expected: asym
+  already_documented: 'no (label structure in general: docs/storage_comparison/REVIEW.md M9)'
+  new_finding_candidates:
+  - 'Candidate (single-start local optimum; the ML-II optimum is degenerate): with 10-15 random restarts sklearn finds higher log marginal likelihood
+    than pyspi''s single start, and the better optimum interpolates. iid_gaussian_T256 0->1: pyspi fit ''0.00358**2 + WhiteKernel(noise_level=1)
+    + RBF(length_scale=1.06e+04)'', LML -365.5228, MSE 0.996094; restart winner ''0.00316**2 + WhiteKernel(noise_level=1e-05) + RBF(length_scale=0.000138)'',
+    LML -362.6346, MSE 9.98e-11. Same pattern on all 8 iid_gaussian_T256/delayed_noise_T256 pairs tested (restart MSE 9.96e-11 to 1.0e-10) and
+    on nonlinear_dependence_T256 (1,0) 0.996 -> 0.000588, (2,3) 0.981 -> 0.00093, (3,2) 0.996 -> 2.4e-7. The single start itself converges (scipy:
+    ''CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL'', nit 21), so pyspi''s value is a genuine local optimum that depends on the starting point
+    theta = 0. Survey (p7_opt.py, 10 restarts, LML gain > 1e-3): iid_gaussian 20/20 pairs at T=64 and 20/20 at T=256; delayed_noise 12/12 (T=64,
+    T=256); nonlinear_dependence 11/12 (T=64, T=256); bivariate_gaussian and anm 8/12 (T=64, T=256); var2_chain 6/6 (T=64), 2/6 (T=256); logistic_maps
+    1/2 (T=64), 0/2 (T=256); overall 144 of 188 ordered pairs over 9 datasets x T in {64, 256}. On pairs without dependence the better optimum
+    interpolates (w = 1e-5, l < 1e-3, MSE ~ 1e-10) while its leave-one-out MSE stays ~1 (iid_gaussian_T64 0->1: in-sample 9.84e-11, LOO 0.984).'
+  - 'Candidate (mechanism: fixed-amplitude RBF at tiny length scale acts as signal-labelled white noise): with l below the minimum input spacing
+    (2.2e-4 on iid_gaussian_T256) the RBF Gram is ~ I, so c + w I + RBF is likelihood-equivalent to a white-noise model of variance 1 + w, but
+    predict() uses the RBF part as signal and returns f_bar ~ y / (1 + w). With the sklearn jitter alpha = 1e-10 added to w, the in-sample MSE
+    is then (w'' / (1 + w''))^2 (T-1)/T with w'' = w + 1e-10: 9.960937e-11 for the fitted w = 1e-5 at T = 256, which matches the restart value
+    9.960938e-11 (delayed_noise_T256 0->1) to 1.1e-8 relative. Without the jitter the formula gives 9.960738e-11 (2.0e-5 relative).'
+  - 'Candidate (in-sample MSE ~ 0 without predictive skill, reached by pyspi''s own single start): shared_envelope_T64 0->1 pyspi fit ''WhiteKernel(noise_level=1e-05)
+    + RBF(length_scale=0.00726)'' gives A[0,1] = 1.1e-8 while the leave-one-out MSE of the same fit (R&W eq. 5.12) is 0.50; the reverse A[1,0]
+    = 0.106 (LOO 0.157). At T=256: A[0,1] = 5.3e-11 (LOO 0.374) vs A[1,0] = 0.539 (LOO 0.600). The large asymmetry is a property of which fit
+    interpolates, not of predictability. Here the interpolating fit is itself a LOCAL optimum: multi-start finds LML higher by 11.5 at ''WhiteKernel(noise_level=0.125)
+    + RBF(length_scale=0.132)'' with MSE 0.099, LOO 0.146. (This dataset is noise-free and exactly periodic with repeated (x0, x1) pairs, 75 near-duplicate
+    inputs at T=256.)'
+  - 'Candidate (single start misses genuine structure): narrowband_f0-0.1_T64 1->0 pyspi fit l = 1.94, w = 0.504, A = 0.483 (LOO 0.52); multi-start
+    optimum l = 0.162, w = 0.032 has LML higher by 58.4, MSE 0.023 and LOO 0.056 (similar for 1->2: 0.498 vs 0.027, LOO 0.078). The local-optimum
+    dependence therefore biases values in both directions: it hides degenerate interpolation on independent pairs and hides real, cross-validated
+    predictability on others.'
+  - 'Candidate (no dependence -> constant (T-1)/T): for independent z-scored pairs the fit sends l to the upper bound and predicts ~0, so A =
+    mean(z_j^2) = (T-1)/T to 6 digits (all iid_gaussian_T256 entries 0.9599-0.9961, 16 of 20 equal to 0.9961 at 4 decimals); the value carries
+    information only through the fits that leave this mode.'
+  - 'Candidate (hyperparameter bound warnings hidden): sklearn emits ''The optimal value found for dimension 0 of parameter k1__k1__constant_value
+    / k2__length_scale is close to the specified ... bound'' for most fits; misc.py:143-145 suppresses them, so users are not told that c sits
+    at 1e-5 and l at 1e-5 or 1e5.'
+  - 'Candidate (random_state is a no-op): n_restarts_optimizer=0, so the RNG at _gpr.py:251 is never drawn (used only at :322-333); the result
+    is deterministic given the data and BLAS.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - anm
+    - nonlinear_dependence
+    - shared_envelope
+    path: kernel
+    reference: 'from-scratch numpy/scipy GP: kernel c + w I + exp(-d^2/(2 l^2)) on log-hyperparameters with bounds [log 1e-5, log 1e5], jitter
+      1e-10, Cholesky log marginal likelihood and analytic gradient (R&W eqs. 5.8-5.9), scipy.optimize.minimize(L-BFGS-B) from theta = (0, 0,
+      0); posterior mean K_f (K_f + (w + 1e-10) I)^-1 y at the training inputs; MSE. No sklearn import.'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: relative difference <= 1e-6 for pairs where both land in the same basin (same l within 1%); any pair where the fitted l
+      differs by more than a factor 10 is reported as a basin disagreement rather than a numerical error
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - nonlinear_dependence
+    - shared_envelope
+    - anm
+    path: kernel
+    reference: 'from-scratch multi-start ML-II (the GP above, 20 log-uniform starts over the bounds plus theta = 0): best log marginal likelihood
+      and the MSE at the best hyperparameters; compare with the LML of pyspi''s fit'
+    reference_kind: independent-impl
+    criterion: optimality
+    expected_outcome: pyspi's fit is a local optimum (projected gradient ~ 0) but below the multi-start best on independent pairs, where the best
+      fit interpolates (w at 1e-5, l < min spacing, MSE ~ 1e-10); quantifies the fraction of pairs whose value would change by > 1e-3 under multi-start
+  - datasets:
+    - iid_gaussian
+    - shared_envelope
+    - nonlinear_dependence
+    path: kernel
+    reference: 'analytic identity for the in-sample residual: y - f_bar = (w + 1e-10) (K + (w + 1e-10) I)^-1 y, so MSE = (w + 1e-10)^2 ||alpha||^2
+      / T; and for l below the input spacing MSE = (w / (1 + w))^2 (T-1)/T; plus leave-one-out MSE r_t = alpha_t / [K^-1]_tt (R&W eq. 5.12), all
+      from numpy at the fitted hyperparameters'
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: identity holds to <= 1e-10 relative (hyperparameters are taken from the sklearn fit, hence same-lineage); LOO MSE / in-sample
+      MSE ratio documents interpolation (probe shared_envelope_T64 0->1 in-sample 1.1e-8 vs LOO 0.50)
+  - datasets:
+    - nonlinear_dependence
+    - anm
+    - logistic_maps
+    path: pipeline
+    reference: 'direction test against the generating mechanism: nonlinear_dependence x0 -> x1 = x0^2 + noise (x0 predicts x1, not vice versa);
+      anm x0 -> x1 (cubic), x2 -> x3 (tanh); the expected ordering comes from the from-scratch GP above (independent-impl)'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'establishes the convention A[i, j] = MSE of predicting j from i (lower = better prediction): A[0,1] << A[1,0] on nonlinear_dependence
+      (probe T=256: 0.026 vs 0.996); A[0,1] < A[1,0] and A[2,3] < A[3,2] on anm at T >= 256 (probe 0.215 vs 0.314, 0.065 vs 0.092). logistic_maps
+      is reported qualitatively (contemporaneous fit of a lagged coupling)'
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - sparse_precision
+    - gauss_ar1_pair
+    path: pipeline
+    reference: analytic Gaussian expectation ((T-1)/T)(1 - r_ij^2) (the best predictor of jointly Gaussian data is linear)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: relative difference <= 0.1 at T=256 and <= 0.05 at T=1024 for non-interpolating fits (probe max 6.3e-2 on bivariate_gaussian_T256,
+      3.6e-2 on iid_gaussian_T256); any value < 0.01 on these datasets flags an interpolating fit
+  - datasets:
+    - trending
+    - scaled_offset
+    path: pipeline-detrend
+    reference: from-scratch GP above on the detrended, z-scored rows; scaled_offset with normalise=True must equal bivariate_gaussian
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: detrending removes the shared-trend inflation (probe trending_T256 min 0.083 vs bivariate_gaussian_T256 0.328); z-scoring
+      makes scaled_offset identical to bivariate_gaussian (probe equal to 4 decimals); with normalise=False the values are in raw squared units
+      and the fixed kernel bounds and unit RBF amplitude interact with scale
+  check_method: independent-impl
+  check_reference: audit/checks/refs/gpfit.py:h_posterior and h_postmean -> audit/checks/refs/_kernels_basic_misc.py:gp_posterior_mean + gp_log_marginal_likelihood
+    (Cholesky, R&W Alg. 2.1 and eqs. 5.8-5.9, no sklearn) at sklearn's fitted theta (probes/gpfit_probes.py:params, :postmean); audit/checks/refs/gpfit.py:h_scratch
+    -> _kernels_basic_misc.gp_fit (own single L-BFGS-B start from theta = 0 in the sklearn box) + gp_posterior_mean; h_params (projected gradient
+    and tight polish under the independent LML); h_multistart (own multi-start ML-II, theta = 0 plus 20 log-uniform starts at every T, plus the
+    interpolation formula (w'/(1 + w'))^2 mean(y^2)); h_identity (residual identity w'^2 |K^-1 y|^2 / T and LOO R&W eq. 5.12, same-lineage theta);
+    h_gaussexp (analytic ((T-1)/T)(1 - r^2)); h_vsridge (analytic Ridge(alpha=1) MSE, cross-checked with pyspi's misc.lmfit.Ridge outputs); h_direction;
+    h_fixedhp (own posterior mean at the documented, fixed hyperparameters vs sklearn optimizer=None, probes/gpfit_probes.py:fixedhp); h_amplitude
+    (own numpy LML for ConstantKernel()*RBF() + WhiteKernel(), amp_lml/amp_fit, vs sklearn with 10 restarts, probes/gpfit_probes.py:amplitude);
+    h_affine, h_determinism, h_crossproc (probes/gpfit_probes.py:crossproc, fresh processes), h_warnings, h_scipy118 (same-lineage). The reference
+    process pins every BLAS to one thread (refs/gpfit.py top).
+  check_data: 'pipeline: iid_gaussian T64/T256 (P=3)/T1024 (P=2), delayed_noise T64/T256, nonlinear_dependence T64/T256, anm T256/T1024 (P=2),
+    bivariate_gaussian T256/T1024 (P=2), shared_envelope T64/T256, narrowband_f0-0.1 T64, sparse_precision T256 (P=3)/T1024 (P=2), gauss_ar1_pair
+    T256/T1024, logistic_maps_chaotic T256, scaled_offset T256, trending T256 (also pipeline-detrend); kernel (raw rows): iid_gaussian, bivariate_gaussian,
+    anm, nonlinear_dependence, shared_envelope at T64/T256, anm and iid_gaussian T1024 (P=2), scaled_offset T256; fixedhp: iid_gaussian T256 (P=3),
+    nonlinear_dependence T256, shared_envelope T64 (pipeline); amplitude: iid_gaussian and delayed_noise T256 (P=3), nonlinear_dependence T256
+    (pipeline); crossproc: shared_envelope T64/T256, iid_gaussian T256 (P=3)'
+  agreement_criterion: 'exact rtol 1e-8, atol 1e-12 at sklearn''s theta (posterior; postmean elementwise atol 1e-10); tolerance rtol 1e-6 vs an
+    own single start from theta = 0 (scratch); optimality: polish gain <= 1e-3 (params, local) and no multi-start optimum (21 starts) higher by
+    > 1e-3 in LML (multistart, global); same-lineage exact rtol 1e-10 for the residual identity; analytic Gaussian expectation rtol 0.1 (T256)
+    / 0.05 (T1024); exact rtol 1e-8 for the fixed-hyperparameter posterior (fixedhp); qualitative: RBF MSE <= Ridge MSE on every pair, orientation
+    and cause -> effect ordering, bit-identical in-process recomputation, cross-process bit-identity under the pipeline import order and rtol
+    1e-6 under every import mode (crossproc), warning counts, |LML(interpolating) - LML(white noise)| <= 1e-3 under C*RBF + W (amplitude); same-lineage
+    rtol 1e-6 for SciPy 1.18.1'
+  closeness: 'Posterior arithmetic: posterior 12/12 pass, max_rel 3.1e-11 (shared_envelope T64) and 5.3e-12 (T256), <= 1.7e-14 elsewhere; postmean
+    3/3, f_bar elementwise <= 1.9e-14, LML difference <= 2.1e-12. Single start: scratch 14/14 within rtol 1e-6, max_rel 2.1e-7 (shared_envelope
+    T64 kernel), 4.3e-9 (shared_envelope T256 kernel), <= 1.7e-11 elsewhere, raw data and trending (pipeline and detrended) included. Local optimality:
+    params 10/12 pass; anm T256 (gain 1.85e-3) and delayed_noise T256 (1.31e-3) fail, stopped on factr on a near-flat l -> 1e5 plateau with the
+    MSE moving <= 6.7e-6 relative; MSE change under polish <= 1.2e-4 over all 12 runs; n_restarts_optimizer 0 everywhere. Global optimality: multistart
+    0/11 pass. Own multi-start (21 starts) finds a higher LML (> 1e-3) on 100 of 128 ordered pairs (iid_gaussian T64 20/20, T256 6/6; delayed_noise
+    T64 and T256 12/12; nonlinear_dependence T64 and T256 11/12; anm T256 8/12; bivariate_gaussian T256 8/12; narrowband_f0-0.1 T64 4/6; shared_envelope
+    T64 2/12, T256 6/12), with the value changing by > 1e-3 on 99. Maximum LML gain 419.4 (shared_envelope T256), 58.4 (narrowband T64 1->0).
+    On 12 best fits with l <= 0.1 x min input spacing, the MSE equals (w''/(1 + w''))^2 mean(y^2) to <= 5.5e-11 relative. Identity (same-lineage)
+    4/4, max_rel 2.3e-11. Gaussian expectation: gaussexp 8/8, max_rel 0.063 (bivariate_gaussian T256) -> 5.1e-4 (T1024), sparse_precision 0.0157
+    -> 1.6e-3, gauss_ar1_pair 7.7e-3 -> 2.3e-4, iid_gaussian 1.1e-3 -> 4.5e-5. Versus linear Ridge: vsridge 1/6. RBF exceeds the Ridge(alpha=1)
+    MSE on iid_gaussian 6/6, bivariate_gaussian 10/12, nonlinear_dependence 8/12, anm T256 4/12 and sparse_precision 2/6 pairs (excess at most
+    0.0063 absolute on anm T256, 1.8% relative on bivariate_gaussian T256), and is lower by up to 0.970 on nonlinear_dependence. The Ridge values
+    equal pyspi''s misc.lmfit.Ridge output on the same data to <= 2.2e-15 (6 runs misc.lmfit.Ridge|anm|256|pipeline|closedform, misc.lmfit.Ridge|anm|1024|pipeline|closedform,
+    misc.lmfit.Ridge|bivariate_gaussian|256|pipeline|closedform, misc.lmfit.Ridge|iid_gaussian|256|pipeline|closedform, misc.lmfit.Ridge|nonlinear_dependence|256|pipeline|closedform,
+    misc.lmfit.Ridge|sparse_precision|256|pipeline|closedform). Documented values held fixed: fixedhp 3/3 (own vs sklearn
+    optimizer=None max_rel 0); fixed minus fitted up to 0.661 absolute on shared_envelope T64 (A[0,1] 0.661 vs 1.1e-8), 0.026 on iid_gaussian
+    T256 (fixed range 0.970-0.992 vs 0.996094), 0.0126 on nonlinear_dependence T256 (A[0,1] 0.0387 vs 0.0260). C*RBF + W (amplitude): 2/3 pass;
+    the interpolating and white-noise ends of the l = 1e-5 ridge tie to <= 2.3e-4 in LML on all 12 iid_gaussian and delayed_noise pairs and on
+    the 6 nonlinear_dependence pairs with input x0 or x1 (<= 6.2e-8), and differ by up to 11.2 on the 6 pairs with input x2 or x3, whose minimum
+    spacing (6.4e-6, 6.8e-6) is below the 1e-5 length-scale bound; under pyspi''s C + W + RBF the interpolating mode beats the flat mode by 2.7733
+    to 2.7735 on every iid_gaussian and delayed_noise pair (0.5 log T = 2.7726). Reproducibility: crossproc 3/3, two fresh processes with the
+    pipeline import order bit-identical to the stored output (12/12, 12/12, 6/6), SciPy''s OpenBLAS at 64 instead of 1 thread moves values by
+    2.8e-9 (shared_envelope T64), 4.1e-11 (T256), 1.0e-15 (iid_gaussian T256) relative; scipy118 5/5, max_rel 2.7e-11 at matched BLAS threads.
+    Other: affine 2.4e-12.'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 6: the code fits hyperparameters that the supplement fixes (fixed minus fitted up to 0.661, shared_envelope T64). The additive constant
+    kernel and the single start depart from ML-II GP regression (multistart 0/11 pass).'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Given its hyperparameters the posterior mean and MSE are standard (fp-exact on an independent GP), and an independent single
+    L-BFGS-B start from theta = 0 reproduces pyspi''s values to <= 2.1e-7 (<= 1.7e-11 outside shared_envelope). The statistic nevertheless deviates
+    from both references in an interpretable way (anchor 6). From the supplement: l, the constant and the noise are fitted, not fixed at 1. From
+    canonical GP regression: (1) The constant kernel is added, not multiplied, so the RBF amplitude is fixed at 1. With that kernel the ML-II
+    maximum is degenerate on pairs without strong dependence. The better optimum interpolates (w at 1e-5, l below the input spacing, MSE (w''/(1
+    + w''))^2 (T-1)/T about 1e-10) with no predictive skill. (2) pyspi uses a single start, not the ML-II maximum. The value is the fit reached
+    from theta = 0, which is below the multi-start optimum on 100 of 128 pairs. That fit either sends l to the 1e5 bound and returns (T-1)/T for
+    independent pairs, or misses cross-validated structure (narrowband_f0-0.1 T64 1->0: 0.483 against 0.023, LOO 0.520 against 0.056). (3) On
+    noise-free periodic data, the single start itself lands in an interpolating optimum (shared_envelope T64 0->1: A = 1.1e-8, LOO 0.50). (4)
+    The score is an in-sample MSE, so it is not bounded by the linear fit: on Gaussian and independent pairs it exceeds Ridge by up to 0.0063.
+    Score 6, not 7: the optimiser unit fails the global optimality check, and local optimality fails marginally on 2 of 12 runs.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'expensive: one sklearn fit takes 0.44 s at T=256 and 5.6 s at T=1024 under concurrent load (O(T^3) per LML evaluation, 6-33 L-BFGS-B
+    iterations). A P=2 matrix at T=1024 took 14-43 s; the 3-fit params probe at T=1024, P=2 took 36-71 s; the crossproc probe (five fresh processes)
+    took 18-34 s. Checks used T <= 1024 with P = 2 at T=1024; T=4096 was not run. Own multi-start references (21 starts per pair) were run at
+    T <= 256 only. Deviation from the proposed multi-start check: it was run on the pipeline (z-scored) path, pyspi''s default, instead of the
+    kernel (raw) path, and on 11 dataset/T combinations including bivariate_gaussian and narrowband_f0-0.1; the proposed 20 log-uniform starts
+    plus theta = 0 are used at every T. Full family re-run (pyspi side and references): about 18 minutes wall time.'
+  symmetry_observed: 'asym: max|A - A^T| = 0.970 (nonlinear_dependence T256), 0.552 (nonlinear_dependence T64), 0.539 (shared_envelope T256),
+    0.099 (anm T256), 0.117 (anm T1024, P=2); 9.3e-9 on iid_gaussian T256, where every entry is (T-1)/T; 97.29 on raw scaled_offset T256'
+  direction_observed: 'A[i, j] = MSE of predicting x_j from x_i (lower means x_i predicts x_j better at zero lag). nonlinear_dependence T256 (x1
+    = x0^2 + noise): A[0,1] = 0.0260, A[1,0] = 0.9961. anm T256: A[0,1] = 0.2146 < A[1,0] = 0.3140 and A[2,3] = 0.0652 < A[3,2] = 0.0918. anm
+    T1024: 0.2424 < 0.3595. Raw scaled_offset T256: A[i, j] scales with var(x_j) (A[0,3] = 97.33, A[3,0] = 0.0392). Own oriented fits agree on
+    every distinguishable pair (anm 12/12, nonlinear_dependence 8/8, scaled_offset 12/12, logistic_maps_chaotic 2/2). The asymmetry is contemporaneous
+    predictability, not causal direction: on logistic_maps_chaotic T256 (x0 -> x1, lagged) A[1,0] = 0.913 < A[0,1] = 0.975.'
+  candidate_resolutions:
+  - candidate: single-start local optimum; the ML-II optimum is degenerate and the better optimum interpolates
+    outcome: confirmed
+    evidence: 'misc.gpfit.RBF|*|pipeline|multistart (11 runs, 21 starts per pair): higher LML on 100/128 pairs, value change > 1e-3 on 99; the
+      best fit interpolates on 71 pairs (e.g. iid_gaussian T256 0->2: 0.996094 -> 9.96e-11, LML +2.773, LOO 0.9961). The single start converges
+      locally (|params runs, 10/12 pass the polish test). Not in KNOWN_ISSUES.md.'
+  - candidate: 'mechanism: fixed-amplitude RBF at tiny length scale acts as signal-labelled white noise, MSE (w''/(1 + w''))^2 (T-1)/T'
+    outcome: confirmed
+    evidence: 'misc.gpfit.RBF|iid_gaussian|64|pipeline|multistart (7 pairs), |iid_gaussian|256| (1), |nonlinear_dependence|64| (4): own multi-start
+      optima with l <= 0.1 x min input spacing match (w''/(1 + w''))^2 mean(y^2) to <= 5.5e-11 relative (interp_formula_max_rel). Why the fixed
+      amplitude matters: |iid_gaussian|256|pipeline|amplitude and |delayed_noise|256|pipeline|amplitude: under pyspi''s C + W + RBF the interpolating
+      mode beats the flat no-signal mode by 2.7733 to 2.7735 in LML on all 12 pairs (0.5 log T = 2.7726, the Occam cost of the forced unit-amplitude
+      constant), so interpolation is strictly preferred; under C*RBF + W the interpolating end (MSE 1.0e-10) and the white-noise end (MSE 0.996)
+      of the l = 1e-5 ridge tie to <= 2.3e-4, so the amplitude turns the mode into an LML tie rather than removing it (|nonlinear_dependence|256|pipeline|amplitude
+      fails this tie on the 6 pairs whose input has spacings below 1e-5).'
+  - candidate: in-sample MSE ~ 0 without predictive skill, reached by pyspi's own single start (shared_envelope)
+    outcome: confirmed
+    evidence: 'misc.gpfit.RBF|shared_envelope|64|pipeline|identity: A[0,1] = 1.106e-8, LOO 0.4995; |shared_envelope|256|pipeline|identity: 5.26e-11,
+      LOO 0.374; |shared_envelope|64|pipeline|multistart: a better optimum (LML +11.49) gives MSE 0.0990, LOO 0.146; |shared_envelope|64|pipeline|postmean
+      reproduces the 1.106e-8 fit (w = 1e-5, l = 0.00726) to 2.4e-13.'
+  - candidate: single start misses genuine structure (narrowband_f0-0.1 T64)
+    outcome: confirmed
+    evidence: 'misc.gpfit.RBF|narrowband_f0-0.1|64|pipeline|multistart: 1->0 pyspi 0.4828 (LOO 0.5197) vs best 0.02304 (LOO 0.0564), LML +58.44;
+      1->2 0.4983 vs 0.02744 (LOO 0.0776), LML +55.7.'
+  - candidate: independent pairs collapse to (T-1)/T
+    outcome: confirmed
+    evidence: 'misc.gpfit.RBF|iid_gaussian|256|pipeline|identity: all 6 entries 0.996094 (min 0.9960937, max|A - A^T| 9.3e-9); |iid_gaussian|64|pipeline|postmean:
+      0.98437499997 with l at the 1e5 bound; |iid_gaussian|1024|pipeline|gaussexp within 4.5e-5 of ((T-1)/T)(1 - r^2). Not every T64 entry: iid_gaussian
+      T64 minimum 0.884.'
+  - candidate: hyperparameter bound warnings hidden
+    outcome: confirmed
+    evidence: 'misc.gpfit.RBF|anm|256|pipeline|warnings: sklearn emits 11 bound warnings on 10/12 pairs, 0 escape GPModel.bivariate'
+  - candidate: random_state is a no-op; deterministic given data and BLAS
+    outcome: confirmed
+    evidence: 'misc.gpfit.RBF|iid_gaussian|256|pipeline|determinism and |shared_envelope|64|pipeline|determinism: bit-identical over 5 recomputations
+      within one process (random_state 0 and 12345, reseeded numpy/random); params runs: 0 draws from gp._rng, n_restarts_optimizer 0. Across
+      processes (|shared_envelope|64|, |shared_envelope|256|, |iid_gaussian|256|pipeline|crossproc): fresh processes with the pipeline import
+      order, with pyspi imported first, or with OPENBLAS_NUM_THREADS=1 reproduce the stored output bit for bit; ''given BLAS'' includes the thread
+      count of SciPy''s OpenBLAS, which pyspi/__init__.py:4 (OMP_NUM_THREADS=1) sets only if scipy.linalg is not loaded before ''import pyspi''.
+      With SciPy loaded first (64 threads) values move by up to 2.8e-9 relative (shared_envelope T64), no basin change.'
+  checks_run:
+  - run_ids:
+    - misc.gpfit.RBF|iid_gaussian|64|pipeline|posterior
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|posterior
+    - misc.gpfit.RBF|delayed_noise|64|pipeline|posterior
+    - misc.gpfit.RBF|delayed_noise|256|pipeline|posterior
+    - misc.gpfit.RBF|nonlinear_dependence|64|pipeline|posterior
+    - misc.gpfit.RBF|nonlinear_dependence|256|pipeline|posterior
+    - misc.gpfit.RBF|anm|256|pipeline|posterior
+    - misc.gpfit.RBF|bivariate_gaussian|256|pipeline|posterior
+    - misc.gpfit.RBF|shared_envelope|64|pipeline|posterior
+    - misc.gpfit.RBF|shared_envelope|256|pipeline|posterior
+    - misc.gpfit.RBF|narrowband_f0-0.1|64|pipeline|posterior
+    - misc.gpfit.RBF|anm|1024|pipeline|posterior
+    - misc.gpfit.RBF|anm|256|pipeline|postmean
+    - misc.gpfit.RBF|iid_gaussian|64|pipeline|postmean
+    - misc.gpfit.RBF|shared_envelope|64|pipeline|postmean
+    reference: audit/checks/refs/gpfit.py:h_posterior, h_postmean (_kernels_basic_misc.gp_posterior_mean, gp_log_marginal_likelihood)
+    outcome: 15/15 pass; max_rel 3.1e-11 (shared_envelope), <= 1.7e-14 elsewhere
+  - run_ids:
+    - misc.gpfit.RBF|iid_gaussian|64|kernel|scratch
+    - misc.gpfit.RBF|iid_gaussian|256|kernel|scratch
+    - misc.gpfit.RBF|bivariate_gaussian|64|kernel|scratch
+    - misc.gpfit.RBF|bivariate_gaussian|256|kernel|scratch
+    - misc.gpfit.RBF|anm|64|kernel|scratch
+    - misc.gpfit.RBF|anm|256|kernel|scratch
+    - misc.gpfit.RBF|nonlinear_dependence|64|kernel|scratch
+    - misc.gpfit.RBF|nonlinear_dependence|256|kernel|scratch
+    - misc.gpfit.RBF|shared_envelope|64|kernel|scratch
+    - misc.gpfit.RBF|shared_envelope|256|kernel|scratch
+    - misc.gpfit.RBF|anm|1024|kernel|scratch
+    - misc.gpfit.RBF|iid_gaussian|1024|kernel|scratch
+    - misc.gpfit.RBF|trending|256|pipeline-detrend|scratch
+    - misc.gpfit.RBF|trending|256|pipeline|scratch
+    reference: audit/checks/refs/gpfit.py:h_scratch (_kernels_basic_misc.gp_fit single start + gp_posterior_mean)
+    outcome: 14/14 pass; max_rel 2.1e-7 (shared_envelope T64 raw), 4.3e-9 (T256 raw), <= 1.7e-11 elsewhere
+  - run_ids:
+    - misc.gpfit.RBF|iid_gaussian|64|pipeline|params
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|params
+    - misc.gpfit.RBF|delayed_noise|64|pipeline|params
+    - misc.gpfit.RBF|delayed_noise|256|pipeline|params
+    - misc.gpfit.RBF|nonlinear_dependence|64|pipeline|params
+    - misc.gpfit.RBF|nonlinear_dependence|256|pipeline|params
+    - misc.gpfit.RBF|anm|256|pipeline|params
+    - misc.gpfit.RBF|bivariate_gaussian|256|pipeline|params
+    - misc.gpfit.RBF|shared_envelope|64|pipeline|params
+    - misc.gpfit.RBF|shared_envelope|256|pipeline|params
+    - misc.gpfit.RBF|narrowband_f0-0.1|64|pipeline|params
+    - misc.gpfit.RBF|anm|1024|pipeline|params
+    reference: audit/checks/refs/gpfit.py:h_params (projected gradient, tight polish)
+    outcome: 10/12 pass; anm T256 gain 1.85e-3 and delayed_noise T256 1.31e-3 fail (MSE change <= 6.7e-6)
+  - run_ids:
+    - misc.gpfit.RBF|iid_gaussian|64|pipeline|multistart
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|multistart
+    - misc.gpfit.RBF|delayed_noise|64|pipeline|multistart
+    - misc.gpfit.RBF|delayed_noise|256|pipeline|multistart
+    - misc.gpfit.RBF|nonlinear_dependence|64|pipeline|multistart
+    - misc.gpfit.RBF|nonlinear_dependence|256|pipeline|multistart
+    - misc.gpfit.RBF|anm|256|pipeline|multistart
+    - misc.gpfit.RBF|bivariate_gaussian|256|pipeline|multistart
+    - misc.gpfit.RBF|shared_envelope|64|pipeline|multistart
+    - misc.gpfit.RBF|shared_envelope|256|pipeline|multistart
+    - misc.gpfit.RBF|narrowband_f0-0.1|64|pipeline|multistart
+    reference: audit/checks/refs/gpfit.py:h_multistart (own multi-start ML-II)
+    outcome: 0/11 pass; 21 starts per pair; higher LML on 100/128 pairs, max gain 419.4; interpolation formula 5.5e-11
+  - run_ids:
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|identity
+    - misc.gpfit.RBF|shared_envelope|64|pipeline|identity
+    - misc.gpfit.RBF|shared_envelope|256|pipeline|identity
+    - misc.gpfit.RBF|nonlinear_dependence|256|pipeline|identity
+    reference: audit/checks/refs/gpfit.py:h_identity (same-lineage residual identity + LOO)
+    outcome: 4/4 pass; max_rel 2.3e-11; LOO 0.4995 at in-sample 1.1e-8 (shared_envelope T64)
+  - run_ids:
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|gaussexp
+    - misc.gpfit.RBF|iid_gaussian|1024|pipeline|gaussexp
+    - misc.gpfit.RBF|bivariate_gaussian|256|pipeline|gaussexp
+    - misc.gpfit.RBF|bivariate_gaussian|1024|pipeline|gaussexp
+    - misc.gpfit.RBF|sparse_precision|256|pipeline|gaussexp
+    - misc.gpfit.RBF|sparse_precision|1024|pipeline|gaussexp
+    - misc.gpfit.RBF|gauss_ar1_pair|256|pipeline|gaussexp
+    - misc.gpfit.RBF|gauss_ar1_pair|1024|pipeline|gaussexp
+    reference: audit/checks/refs/gpfit.py:h_gaussexp (analytic Gaussian expectation)
+    outcome: 8/8 pass; max_rel 0.063 (T256), <= 1.6e-3 (T1024)
+  - run_ids:
+    - misc.gpfit.RBF|anm|256|pipeline|vsridge
+    - misc.gpfit.RBF|nonlinear_dependence|256|pipeline|vsridge
+    - misc.gpfit.RBF|bivariate_gaussian|256|pipeline|vsridge
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|vsridge
+    - misc.gpfit.RBF|sparse_precision|256|pipeline|vsridge
+    - misc.gpfit.RBF|anm|1024|pipeline|vsridge
+    reference: audit/checks/refs/gpfit.py:h_vsridge (analytic Ridge, each run cites the closedform run with its own dataset and T,
+      i.e. the 6 runs misc.lmfit.Ridge|anm|256|pipeline|closedform, misc.lmfit.Ridge|anm|1024|pipeline|closedform, misc.lmfit.Ridge|bivariate_gaussian|256|pipeline|closedform,
+      misc.lmfit.Ridge|iid_gaussian|256|pipeline|closedform, misc.lmfit.Ridge|nonlinear_dependence|256|pipeline|closedform, misc.lmfit.Ridge|sparse_precision|256|pipeline|closedform)
+    outcome: 1/6 pass; RBF > Ridge on 30/50 pairs, excess <= 0.0063
+  - run_ids:
+    - misc.gpfit.RBF|anm|256|pipeline|direction
+    - misc.gpfit.RBF|nonlinear_dependence|256|pipeline|direction
+    - misc.gpfit.RBF|logistic_maps_chaotic|256|pipeline|direction
+    - misc.gpfit.RBF|anm|1024|pipeline|direction
+    - misc.gpfit.RBF|scaled_offset|256|kernel|direction
+    - misc.gpfit.RBF|scaled_offset|256|pipeline|affine
+    reference: audit/checks/refs/gpfit.py:h_direction (gp_fit oriented fits), h_affine (same-lineage)
+    outcome: 6/6 pass; cause -> effect lower on anm (3/3 pairs) and nonlinear_dependence; orientation agreement 1.0
+  - run_ids:
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|determinism
+    - misc.gpfit.RBF|shared_envelope|64|pipeline|determinism
+    - misc.gpfit.RBF|anm|256|pipeline|warnings
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|scipy118
+    - misc.gpfit.RBF|delayed_noise|256|pipeline|scipy118
+    - misc.gpfit.RBF|shared_envelope|64|pipeline|scipy118
+    - misc.gpfit.RBF|shared_envelope|256|pipeline|scipy118
+    - misc.gpfit.RBF|narrowband_f0-0.1|64|pipeline|scipy118
+    reference: audit/checks/refs/gpfit.py:h_determinism, h_warnings, h_scipy118 (same-lineage)
+    outcome: 8/8 pass; bit-identical within the process; 11 bound warnings, 0 escape; SciPy 1.18.1 max_rel 2.7e-11 at matched BLAS threads (shared_envelope
+      T64, 6/12 entries bit-identical)
+  - run_ids:
+    - misc.gpfit.RBF|shared_envelope|64|pipeline|crossproc
+    - misc.gpfit.RBF|shared_envelope|256|pipeline|crossproc
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|crossproc
+    reference: audit/checks/refs/gpfit.py:h_crossproc (same-lineage, five fresh project-venv processes vs the stored output)
+    outcome: 3/3 pass; pipeline import order bit-identical across processes; SciPy OpenBLAS at 64 threads moves values by <= 2.8e-9 relative
+  - run_ids:
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|fixedhp
+    - misc.gpfit.RBF|nonlinear_dependence|256|pipeline|fixedhp
+    - misc.gpfit.RBF|shared_envelope|64|pipeline|fixedhp
+    reference: audit/checks/refs/gpfit.py:h_fixedhp (_kernels_basic_misc.gp_posterior_mean at theta = 0; probes/gpfit_probes.py:fixedhp)
+    outcome: 3/3 pass (max_rel 0); fixed minus fitted up to 0.661 (shared_envelope T64), 0.026 (iid_gaussian T256), 0.0126 (nonlinear_dependence
+      T256)
+  - run_ids:
+    - misc.gpfit.RBF|iid_gaussian|256|pipeline|amplitude
+    - misc.gpfit.RBF|delayed_noise|256|pipeline|amplitude
+    - misc.gpfit.RBF|nonlinear_dependence|256|pipeline|amplitude
+    reference: audit/checks/refs/gpfit.py:h_amplitude (own LML for C*RBF + W, amp_lml/amp_fit; probes/gpfit_probes.py:amplitude)
+    outcome: 2/3 pass; tie <= 2.3e-4 on 18/24 pairs; fails on the 6 nonlinear_dependence pairs with input spacing < 1e-5 (up to 11.2); pyspi-model
+      interpolation advantage 2.7733-2.7735 (0.5 log T = 2.7726)
+optimisation:
+  complexity_P_T: 'O(P^2 n_eval T^3): one sklearn GaussianProcessRegressor fit per ordered pair (pyspi/statistics/misc.py:139-147) with Constant + White + RBF, 1,748 L-BFGS-B evaluations for 56 pairs at 8x256 (about 31 per pair). Measured T_exponent 2.69 (8x256 -> 8x1024: 6.08 s -> 254.4 s); P not measured (infeasible above 8x1024). The O(T^3) term dominates; projected 62,711 s per window at 118x1024 (extrapolated-pairs-from-8).'
+  hotspot_1: scipy/linalg/_decomp_cholesky.py:_cho_solve (third-party:scipy, from sklearn _gpr.py:log_marginal_likelihood) 29.7% of the profiled SPI call at 8x256 (3,552 calls; log_marginal_likelihood 94.7% cumulative over 1,748 evaluations)
+  hotspot_2: sklearn/gaussian_process/kernels.py:__call__ (Sum kernel, line 838; third-party:sklearn) 30.9% of the profiled SPI call at 8x256 (RBF __call__ 16.2%, squareform 8.2%); scipy _cholesky 13.7%, numpy dstack 10.3%
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.239
+  profile_file: audit/profiles/misc.gpfit.RBF__8x256.pstats
+  opportunities:
+  - opportunity_id: gpfit-2
+    opportunity: Run the ordered-pair sklearn GaussianProcessRegressor fits (anm, gpfit) in a process pool with one BLAS thread per worker.
+    opp_type: parallel
+    speedup_kind: throughput
+    expected_speedup: 10-30x alone (at most ~4x inside a window worker)
+    speedup_basis: 'profile:audit/profiles/misc.gpfit.RBF__8x256.pstats base.py:multivariate 100.0% is the pair loop (sklearn _gpr.py:fit 98.9%) + complexity: 13,806 independent O(T^3) fits per window at P=118; the speedup is at most the number of physical cores (32 on the Threadripper 3970X, 64 logical CPUs; SMT adds little to Cholesky/BLAS-bound fits, and 32 concurrent 8 MB kernel matrices exceed the shared L3), per-window latency only with no core-hour saving; window-level parallelism (xc-window-parallel) competes for the same cores; the two are alternatives for those cores, not factors that multiply, so xc-window-parallel is not in depends_on: with the ~8 memory-bounded window workers running, about 4 physical cores per worker remain, so inside a window worker this pool lowers the unit''s latency by at most about 4x'
+    output_risk: unverified-bit-identical
+    risk_evidence: each pair is an independent deterministic fit (n_restarts_optimizer=0, random_state fixed or unused); keeping one BLAS thread per worker keeps the ~1e-6 thread sensitivity recorded for anm unchanged
+    effort: S
+    depends_on: []
+  - opportunity_id: gpfit-3
+    opportunity: 'Pass a custom objective to the same L-BFGS-B run: log marginal likelihood and gradient with K^-1 from LAPACK dpotri on the existing Cholesky factor (instead of cho_solve(L, eye)) and gradient traces as elementwise sums, avoiding the dstack/squareform gradient tensor.'
+    opp_type: replace-library
+    expected_speedup: ~1.3x
+    speedup_basis: 'profile:audit/profiles/misc.gpfit.RBF__8x256.pstats _cho_solve 29.7% (about a third removable with dpotri), dstack 10.3%, squareform 8.2%, c_einsum 8.1% -> removable share about 0.25, Amdahl ~1.35x + complexity: still O(T^3) per evaluation'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'same objective with a different factorisation and float order for K^-1 and the gradient; the RBF ML-II surface is degenerate on weakly dependent pairs (check stage: independent single-start runs agree with pyspi only to <= 2.1e-7), so the optimiser end point can move at that level'
+    effort: M
+    depends_on: []

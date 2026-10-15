@@ -1,0 +1,53 @@
+{
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "machine_load": "five other audit groups ran concurrently; per-call times are min over 3 blocks and vary about 2x between runs",
+ "notes": "Measurement only, no candidate implementation. T=16 sequence = per-pair JNI/marshalling floor; projection_118 multiplies it by 13806 ordered pairs per infotheory SPI.",
+ "opportunity_id": "xc-jni-overhead",
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_xc-jni-overhead.py",
+ "settings": {
+  "NUMBA_NUM_THREADS": "1",
+  "OMP_NUM_THREADS": "1",
+  "OPENBLAS_NUM_THREADS": "1",
+  "jidt": "NUM_THREADS=1 set",
+  "jidt_calculator": "MutualInfoCalculatorMultiVariateGaussian"
+ },
+ "shapes": {
+  "8x1024_pyspi_mi_gaussian": {
+   "baseline_s": 0.00963863699871581,
+   "bivariate_per_call_s": 0.0007329563399980543,
+   "n_pairs": 56,
+   "note": "baseline_s: whole SPI incl. Data construction (make) inside the timed call; bivariate_per_call_s: pyspi MutualInfo.bivariate on rows 0,1 (T=1024), min over 3 blocks of 1000",
+   "per_pair_s": 0.0001721185178342109
+  },
+  "T1024": {
+   "compute_only_s": 1.1429074947955088e-06,
+   "initialise_plus_setObservations_s": 0.0005520806690037716,
+   "initialise_s": 1.4881590032018721e-06,
+   "n_calls": 2000,
+   "sequence_s": 0.0007326388154979213,
+   "two_jarray_s": 2.0868544997938442e-05
+  },
+  "T16": {
+   "compute_only_s": 1.1221327513339929e-06,
+   "initialise_plus_setObservations_s": 6.179073498060461e-06,
+   "initialise_s": 9.477547500864603e-07,
+   "n_calls": 4000,
+   "sequence_s": 1.493941199805704e-05,
+   "two_jarray_s": 5.971331000182545e-06
+  },
+  "projection_118": {
+   "floor_per_ordered_spi_s": 0.2062535220451755,
+   "floor_per_sequence_s": 1.493941199805704e-05,
+   "ordered_pairs": 13806,
+   "seq_T1024_per_ordered_spi_s": 10.114811486764301,
+   "unordered_pairs": 6903
+  }
+ },
+ "written_at": "2026-10-15T09:52:44-0400"
+}

@@ -1,0 +1,1103 @@
+{
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "merged_runs": [
+  {
+   "loadavg_end": [
+    2.47412109375,
+    2.10009765625,
+    2.296875
+   ],
+   "loadavg_start": [
+    1.0859375,
+    1.72607421875,
+    2.2734375
+   ],
+   "mode": "--paired",
+   "note": "--paired mode (Workflow 4c), results under the top-level key 'paired' (the 'shapes' entries are kept). Each repeat, on a fresh Data each: psi's 3 config bands in sequence (pyspi), gd's 3 bands (pyspi, with the per-pair callback drivers timed by wrapping np.ma.apply_along_axis and np.apply_along_axis, no profiler), phase's 3 bands (pyspi: first build, first-insert duplicate, read), phase's 3 bands with the first insert also stored under the tuple key (candidate for the key fix at spectral.py:81), then one shared Multitaper + coherency read by phase, psi and gd (segment walls). ratios: psi_later_consumer = psi bands / psi segments without the build; psi_first_consumer adds the build; gd_later_consumer likewise; gd_callback_amdahl_base = 1/(1 - callback share of the pyspi gd bands); phase_first_insert_fixed = pyspi phase bands / key-fixed bands; phase_shared_first_consumer = pyspi phase bands / (build + phase from shared). Run while other audit agents shared the machine (loadavg recorded). Agreement with the baseline means the candidate reproduces current output, nothing more.",
+   "shapes": [
+    "8x1024",
+    "32x1024",
+    "118x1024"
+   ],
+   "written_at": "2026-10-15T15:24:36-0400"
+  }
+ ],
+ "notes": "Baseline = 8 pyspi identifiers (cohmag, phase full band; psi and gd x 3 config bands) in sequence on one Data through harness.compute_spi; candidate = one Multitaper/Connectivity and one coherency per Data feeding the same library methods. candidate_segments_s = wall of each candidate segment (Multitaper + Connectivity + the one coherency; then each psi and gd band reading it) in the fastest candidate repeat. Timings are single passes at 118x1024 (min of 3 below). Agreement means the candidate reproduces the current output, nothing more.",
+ "opportunity_id": "spectral_csm-shared-csm",
+ "paired": {
+  "118x1024": {
+   "all_bit_identical": true,
+   "all_nan_mask_equal": true,
+   "diffs": {
+    "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5__shared": {
+     "all_nan": true,
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25__shared": {
+     "all_nan": true,
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5__shared": {
+     "all_nan": true,
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5__first_insert_fixed": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25__first_insert_fixed": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5__first_insert_fixed": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    }
+   },
+   "ratio_range": {
+    "gd_callback_amdahl_base": [
+     1.2830012408611973,
+     1.4144718425990734
+    ],
+    "gd_callback_share_base": [
+     0.22057752701099217,
+     0.29302233534567007
+    ],
+    "gd_later_consumer": [
+     2.783943397921513,
+     3.6643781122410144
+    ],
+    "phase_first_insert_fixed": [
+     1.876018149807598,
+     2.460128914006982
+    ],
+    "phase_shared_first_consumer": [
+     1.9165582419190321,
+     2.185286443543037
+    ],
+    "phase_shared_later_consumer": [
+     25.282018523344117,
+     38.33890254281294
+    ],
+    "psi_first_consumer": [
+     3.323781630169591,
+     6.41348444203099
+    ],
+    "psi_later_consumer": [
+     6.468088201037395,
+     40.16258276328517
+    ]
+   },
+   "reps": [
+    {
+     "gd_base": [
+      6.435470429001725,
+      5.750064551000833,
+      6.3434377719968325
+     ],
+     "gd_base_callbacks": [
+      1.5384690999926534,
+      1.319500406010775,
+      1.3285283180011902
+     ],
+     "phase_base": [
+      4.60821413800295,
+      5.028677064998192,
+      0.021724692996940576
+     ],
+     "phase_first_insert_fixed": [
+      5.09515311398718,
+      0.025866472991765477,
+      0.027446538995718583
+     ],
+     "psi_base": [
+      11.716783815994859,
+      10.507757579995086,
+      10.509876754003926
+     ],
+     "ratios": {
+      "gd_callback_amdahl_base": 1.291895077036745,
+      "gd_callback_share_base": 0.22594333102210803,
+      "gd_later_consumer": 3.5877136014585025,
+      "phase_first_insert_fixed": 1.876018149807598,
+      "phase_shared_first_consumer": 1.9165582419190321,
+      "phase_shared_later_consumer": 38.33890254281294,
+      "psi_first_consumer": 3.323781630169591,
+      "psi_later_consumer": 6.468088201037395
+     },
+     "shared": {
+      "build": 4.787635651999153,
+      "gd": [
+       2.0319322629948147,
+       1.553378819997306,
+       1.5792518699890934
+      ],
+      "gd_callbacks": [
+       1.5247836709895637,
+       1.3005182799970498,
+       1.3293688999983715
+      ],
+      "phase_3_bands": 0.25192729200352915,
+      "psi": [
+       2.0563919929991243,
+       1.439255282006343,
+       1.5652636360027827
+      ]
+     }
+    },
+    {
+     "gd_base": [
+      6.445034494012361,
+      6.621490486999392,
+      6.18322172499029
+     ],
+     "gd_base_callbacks": [
+      1.5479918269993505,
+      1.3530106649996014,
+      1.3450590319989715
+     ],
+     "phase_base": [
+      5.0512603130046045,
+      4.732154281009571,
+      0.027298742992570624
+     ],
+     "phase_first_insert_fixed": [
+      3.9456102160038427,
+      0.020952888997271657,
+      0.02132276599877514
+     ],
+     "psi_base": [
+      12.793157553998753,
+      11.762227731000166,
+      10.63345201300399
+     ],
+     "ratios": {
+      "gd_callback_amdahl_base": 1.2830012408611973,
+      "gd_callback_share_base": 0.22057752701099217,
+      "gd_later_consumer": 3.6643781122410144,
+      "phase_first_insert_fixed": 2.460128914006982,
+      "phase_shared_first_consumer": 2.185286443543037,
+      "phase_shared_later_consumer": 38.309593941442216,
+      "psi_first_consumer": 5.6364169789363014,
+      "psi_later_consumer": 17.508874403190543
+     },
+     "shared": {
+      "build": 4.233350195994717,
+      "gd": [
+       2.0785239260003436,
+       1.5732039110007463,
+       1.6014818800031208
+      ],
+      "gd_callbacks": [
+       1.5600246279791463,
+       1.3178810190001968,
+       1.3435120780050056
+      ],
+      "phase_3_bands": 0.25609024600998964,
+      "psi": [
+       1.3430523150018416,
+       0.3945168969949009,
+       0.2722023180103861
+      ]
+     }
+    },
+    {
+     "gd_base": [
+      5.113683488001698,
+      4.57908213500923,
+      4.687850039001205
+     ],
+     "gd_base_callbacks": [
+      1.5437482120032655,
+      1.317823581994162,
+      1.352269790993887
+     ],
+     "phase_base": [
+      3.188164320003125,
+      3.4889919920096872,
+      0.021872748009627685
+     ],
+     "phase_first_insert_fixed": [
+      3.0966850529948715,
+      0.02126273899921216,
+      0.02162401599343866
+     ],
+     "psi_base": [
+      9.066391321000992,
+      7.507228086993564,
+      6.262691449999693
+     ],
+     "ratios": {
+      "gd_callback_amdahl_base": 1.4144718425990734,
+      "gd_callback_share_base": 0.29302233534567007,
+      "gd_later_consumer": 2.783943397921513,
+      "phase_first_insert_fixed": 2.1337397166642744,
+      "phase_shared_first_consumer": 2.056780076173099,
+      "phase_shared_later_consumer": 25.282018523344117,
+      "psi_first_consumer": 6.41348444203099,
+      "psi_later_consumer": 40.16258276328517
+     },
+     "shared": {
+      "build": 2.9920747650030535,
+      "gd": [
+       2.0378212570067262,
+       1.5552948530094,
+       1.5724399399914546
+      ],
+      "gd_callbacks": [
+       1.528773313984857,
+       1.3068669790081913,
+       1.322667572996579
+      ],
+      "phase_3_bands": 0.264972081000451,
+      "psi": [
+       0.23525643099856097,
+       0.1670766960014589,
+       0.16626354400068521
+      ]
+     }
+    }
+   ]
+  },
+  "32x1024": {
+   "all_bit_identical": true,
+   "all_nan_mask_equal": true,
+   "diffs": {
+    "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5__shared": {
+     "all_nan": false,
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25__shared": {
+     "all_nan": true,
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5__shared": {
+     "all_nan": false,
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5__first_insert_fixed": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25__first_insert_fixed": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5__first_insert_fixed": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    }
+   },
+   "ratio_range": {
+    "gd_callback_amdahl_base": [
+     2.112767075548535,
+     2.1230144143444227
+    ],
+    "gd_callback_share_base": [
+     0.5266870581366044,
+     0.5289716389849405
+    ],
+    "gd_later_consumer": [
+     1.5761051048930874,
+     1.596649037121096
+    ],
+    "phase_first_insert_fixed": [
+     1.9258699337047362,
+     1.9442245442681674
+    ],
+    "phase_shared_first_consumer": [
+     1.9343574699942276,
+     1.9645377949403584
+    ],
+    "phase_shared_later_consumer": [
+     12.004458318811002,
+     12.111234909955783
+    ],
+    "psi_first_consumer": [
+     3.511980313449104,
+     3.725558876808136
+    ],
+    "psi_later_consumer": [
+     9.44327010774806,
+     10.201305970964933
+    ]
+   },
+   "reps": [
+    {
+     "gd_base": [
+      0.21632496399979573,
+      0.19192477100295946,
+      0.19570205399941187
+     ],
+     "gd_base_callbacks": [
+      0.11480976501479745,
+      0.09925513400230557,
+      0.10402869198878761
+     ],
+     "phase_base": [
+      0.09111099000438116,
+      0.08440678800980095,
+      0.0005133420054335147
+     ],
+     "phase_first_insert_fixed": [
+      0.0901251439936459,
+      0.0005662509938701987,
+      0.00046562399074900895
+     ],
+     "psi_base": [
+      0.1589085809973767,
+      0.14513156800239813,
+      0.143983867004863
+     ],
+     "ratios": {
+      "gd_callback_amdahl_base": 2.112767075548535,
+      "gd_callback_share_base": 0.5266870581366044,
+      "gd_later_consumer": 1.596649037121096,
+      "phase_first_insert_fixed": 1.931075873176451,
+      "phase_shared_first_consumer": 1.9343574699942276,
+      "phase_shared_later_consumer": 12.004458318811002,
+      "psi_first_consumer": 3.725558876808136,
+      "psi_later_consumer": 10.201305970964933
+     },
+     "shared": {
+      "build": 0.07633856100437697,
+      "gd": [
+       0.14400195599591825,
+       0.11353230000531767,
+       0.12072782599716447
+      ],
+      "gd_callbacks": [
+       0.11336731600749772,
+       0.09776568500092253,
+       0.10426614400057588
+      ],
+      "phase_3_bands": 0.014663812005892396,
+      "psi": [
+       0.0162468189955689,
+       0.013144984011887573,
+       0.014526496990583837
+      ]
+     }
+    },
+    {
+     "gd_base": [
+      0.21421352599281818,
+      0.18868614100210834,
+      0.1933068850048585
+     ],
+     "gd_base_callbacks": [
+      0.11298916800296865,
+      0.09820195799693465,
+      0.10287062199495267
+     ],
+     "phase_base": [
+      0.09088771800452378,
+      0.08778967200487386,
+      0.0005210230010561645
+     ],
+     "phase_first_insert_fixed": [
+      0.09201744000893086,
+      0.0005702909984393045,
+      0.000460303999716416
+     ],
+     "psi_base": [
+      0.14497008400212508,
+      0.14178163099859376,
+      0.14055073300551157
+     ],
+     "ratios": {
+      "gd_callback_amdahl_base": 2.113122565210768,
+      "gd_callback_share_base": 0.5267666833607176,
+      "gd_later_consumer": 1.5761051048930874,
+      "phase_first_insert_fixed": 1.9258699337047362,
+      "phase_shared_first_consumer": 1.9645377949403584,
+      "phase_shared_later_consumer": 12.111234909955783,
+      "psi_first_consumer": 3.511980313449104,
+      "psi_later_consumer": 9.44327010774806
+     },
+     "shared": {
+      "build": 0.07642052898881957,
+      "gd": [
+       0.14554830400447827,
+       0.11305668600834906,
+       0.11967343199648894
+      ],
+      "gd_callbacks": [
+       0.11476752698945347,
+       0.09783291300118435,
+       0.10336144499888178
+      ],
+      "phase_3_bands": 0.014796047995332628,
+      "psi": [
+       0.016243619000306353,
+       0.013741593997110613,
+       0.015264201996615157
+      ]
+     }
+    },
+    {
+     "gd_base": [
+      0.21414527800516225,
+      0.18914255600247998,
+      0.1933838620025199
+     ],
+     "gd_base_callbacks": [
+      0.11387932699290104,
+      0.0984821199963335,
+      0.10326095798518509
+     ],
+     "phase_base": [
+      0.0931687700067414,
+      0.08406857900263276,
+      0.0005160629953024909
+     ],
+     "phase_first_insert_fixed": [
+      0.09034959599375725,
+      0.0006002800073474646,
+      0.00047650400665588677
+     ],
+     "psi_base": [
+      0.1451752459979616,
+      0.13985887699527666,
+      0.1395447879913263
+     ],
+     "ratios": {
+      "gd_callback_amdahl_base": 2.1230144143444227,
+      "gd_callback_share_base": 0.5289716389849405,
+      "gd_later_consumer": 1.5846855438809746,
+      "phase_first_insert_fixed": 1.9442245442681674,
+      "phase_shared_first_consumer": 1.9561103913534508,
+      "phase_shared_later_consumer": 12.098758553331148,
+      "psi_first_consumer": 3.522011721180468,
+      "psi_later_consumer": 9.568808673249936
+     },
+     "shared": {
+      "build": 0.07617897700401954,
+      "gd": [
+       0.14409354300005361,
+       0.11413431899563875,
+       0.11829585800296627
+      ],
+      "gd_callbacks": [
+       0.11384907898900565,
+       0.09783263098506723,
+       0.1030881229962688
+      ],
+      "phase_3_bands": 0.014691871998365968,
+      "psi": [
+       0.01613640300638508,
+       0.013467233002302237,
+       0.014767499989829957
+      ]
+     }
+    }
+   ]
+  },
+  "8x1024": {
+   "all_bit_identical": true,
+   "all_nan_mask_equal": true,
+   "diffs": {
+    "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5__shared": {
+     "all_nan": false,
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25__shared": {
+     "all_nan": false,
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5__shared": {
+     "all_nan": false,
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5__first_insert_fixed": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25__first_insert_fixed": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5__first_insert_fixed": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5__shared": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 64,
+     "nan_mask_equal": true
+    }
+   },
+   "ratio_range": {
+    "gd_callback_amdahl_base": [
+     1.379630824098102,
+     1.384334969257
+    ],
+    "gd_callback_share_base": [
+     0.2751684127862798,
+     0.277631482113957
+    ],
+    "gd_later_consumer": [
+     3.1804920306050617,
+     3.207076052034588
+    ],
+    "phase_first_insert_fixed": [
+     1.9370090081277163,
+     2.008112876579892
+    ],
+    "phase_shared_first_consumer": [
+     1.9724769508706999,
+     2.0395233603094214
+    ],
+    "phase_shared_later_consumer": [
+     38.88229455002599,
+     40.40630589413973
+    ],
+    "psi_first_consumer": [
+     3.224450668521558,
+     3.515008354938722
+    ],
+    "psi_later_consumer": [
+     47.9862238571205,
+     53.24122465146989
+    ]
+   },
+   "reps": [
+    {
+     "gd_base": [
+      0.02932877499551978,
+      0.02708594199793879,
+      0.028712875995552167
+     ],
+     "gd_base_callbacks": [
+      0.008201141012250446,
+      0.006836289001512341,
+      0.00843587500276044
+     ],
+     "phase_base": [
+      0.019727710998267867,
+      0.01963830400200095,
+      9.348700405098498e-05
+     ],
+     "phase_first_insert_fixed": [
+      0.020185834990115836,
+      9.622599463909864e-05,
+      8.929600880946964e-05
+     ],
+     "psi_base": [
+      0.026190542004769668,
+      0.022685881005600095,
+      0.022592733992496505
+     ],
+     "ratios": {
+      "gd_callback_amdahl_base": 1.380724614433921,
+      "gd_callback_share_base": 0.2757426140259062,
+      "gd_later_consumer": 3.1804920306050617,
+      "phase_first_insert_fixed": 1.9370090081277163,
+      "phase_shared_first_consumer": 1.9724769508706999,
+      "phase_shared_later_consumer": 38.88229455002599,
+      "psi_first_consumer": 3.515008354938722,
+      "psi_later_consumer": 53.24122465146989
+     },
+     "shared": {
+      "build": 0.01899020600831136,
+      "gd": [
+       0.009812996999244206,
+       0.0076305509865051135,
+       0.009321994002675638
+      ],
+      "gd_callbacks": [
+       0.008171622001100332,
+       0.006684312989818864,
+       0.00838392500008922
+      ],
+      "phase_3_bands": 0.0010148449946427718,
+      "psi": [
+       0.0005127430049469694,
+       0.0004310549993533641,
+       0.00039856700459495187
+      ]
+     }
+    },
+    {
+     "gd_base": [
+      0.028971307998290285,
+      0.027251986000919715,
+      0.02909727299993392
+     ],
+     "gd_base_callbacks": [
+      0.008177783020073548,
+      0.006763900993973948,
+      0.008535840985132381
+     ],
+     "phase_base": [
+      0.020160925996606238,
+      0.02037452900549397,
+      9.126700751949102e-05
+     ],
+     "phase_first_insert_fixed": [
+      0.02004140999633819,
+      9.425700409337878e-05,
+      9.562700870446861e-05
+     ],
+     "psi_base": [
+      0.022013573005096987,
+      0.021805850003147498,
+      0.021561998990364373
+     ],
+     "ratios": {
+      "gd_callback_amdahl_base": 1.379630824098102,
+      "gd_callback_share_base": 0.2751684127862798,
+      "gd_later_consumer": 3.207076052034588,
+      "phase_first_insert_fixed": 2.008112876579892,
+      "phase_shared_first_consumer": 2.0395233603094214,
+      "phase_shared_later_consumer": 40.40630589413973,
+      "psi_first_consumer": 3.224450668521558,
+      "psi_later_consumer": 47.9862238571205
+     },
+     "shared": {
+      "build": 0.01891425899520982,
+      "gd": [
+       0.009699561996967532,
+       0.007615971990162507,
+       0.00928831500641536
+      ],
+      "gd_callbacks": [
+       0.008059526007855311,
+       0.00666123500559479,
+       0.008356846999959089
+      ],
+      "phase_3_bands": 0.0010054549929918721,
+      "psi": [
+       0.0005264520004857332,
+       0.0004402449994813651,
+       0.00039580700104124844
+      ]
+     }
+    },
+    {
+     "gd_base": [
+      0.028953588000149466,
+      0.026978336012689397,
+      0.0288528519886313
+     ],
+     "gd_base_callbacks": [
+      0.008181373021216132,
+      0.0067579410097096115,
+      0.008599608991062269
+     ],
+     "phase_base": [
+      0.02004348099580966,
+      0.02025343300192617,
+      9.279599180445075e-05
+     ],
+     "phase_first_insert_fixed": [
+      0.02032589100417681,
+      9.32669936446473e-05,
+      8.66170012159273e-05
+     ],
+     "psi_base": [
+      0.022290573993814178,
+      0.02203478300361894,
+      0.022067092009820044
+     ],
+     "ratios": {
+      "gd_callback_amdahl_base": 1.384334969257,
+      "gd_callback_share_base": 0.277631482113957,
+      "gd_later_consumer": 3.1809012622246375,
+      "phase_first_insert_fixed": 1.9696748838527838,
+      "phase_shared_first_consumer": 2.003988057623235,
+      "phase_shared_later_consumer": 39.78047178753125,
+      "psi_first_consumer": 3.235646738984122,
+      "psi_later_consumer": 48.12040812673809
+     },
+     "shared": {
+      "build": 0.01913935100310482,
+      "gd": [
+       0.009706860990263522,
+       0.007734247003099881,
+       0.009213216995703988
+      ],
+      "gd_callbacks": [
+       0.008066305992542766,
+       0.006767680999473669,
+       0.008279368994408287
+      ],
+      "phase_3_bands": 0.0010153150069527328,
+      "psi": [
+       0.0005202429892960936,
+       0.0004599250096362084,
+       0.00039954700332600623
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_spectral_csm-shared-csm.py",
+ "shapes": {
+  "118x1024": {
+   "all_bit_identical": true,
+   "all_nan_mask_equal": true,
+   "baseline_s": 14.553909209003905,
+   "candidate_s": 6.795518801009166,
+   "candidate_segments_s": {
+    "fourier_and_coherency_once": 0.7743673010118073,
+    "gd_band_0-25_0-5": 1.5935670870094327,
+    "gd_band_0_0-25": 1.552715628000442,
+    "gd_band_0_0-5": 2.0364036949904403,
+    "psi_band_0-25_0-5": 0.19438410698785447,
+    "psi_band_0_0-25": 0.16496783900947776,
+    "psi_band_0_0-5": 0.2033460649981862
+   },
+   "identifiers": [
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5",
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25",
+    "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "per_identifier": {
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 13924,
+     "nan_mask_equal": true
+    }
+   },
+   "speedup": 2.1416921408329532
+  },
+  "32x1024": {
+   "all_bit_identical": true,
+   "all_nan_mask_equal": true,
+   "baseline_s": 1.1785926369921071,
+   "candidate_s": 0.513544704997912,
+   "candidate_segments_s": {
+    "fourier_and_coherency_once": 0.07837380400451366,
+    "gd_band_0-25_0-5": 0.11980271300126333,
+    "gd_band_0_0-25": 0.11415228999976534,
+    "gd_band_0_0-5": 0.14160785399144515,
+    "psi_band_0-25_0-5": 0.014140348008368164,
+    "psi_band_0_0-25": 0.014465593005297706,
+    "psi_band_0_0-5": 0.015066686013597064
+   },
+   "identifiers": [
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5",
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25",
+    "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "per_identifier": {
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    },
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "bit_identical": true,
+     "max_abs_diff": 0.0,
+     "max_rel_diff": 0.0,
+     "n_entries": 1024,
+     "nan_mask_equal": true
+    }
+   },
+   "speedup": 2.2950146803614673
+  }
+ },
+ "threads": {
+  "JIDT": "n/a",
+  "NUMBA_NUM_THREADS": "n/a (no numba code)",
+  "OMP_NUM_THREADS": 1
+ },
+ "written_at": "2026-10-15T10:19:52-0400"
+}

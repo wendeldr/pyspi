@@ -1,0 +1,172 @@
+unit_id: base.pair_handling
+status: profiled
+correctness:
+  metric_name_standard: 'Assembly of the matrix of pairwise interactions (MPI) from a bivariate statistic: ordered-pair loop for directed SPIs, triangle mirroring for undirected SPIs'
+  canonical_ref: 'Cliff et al. 2023, Nature Computational Science 3:883-893 (pyspi), supplement §1 (line 95-104), p.3 and §3.1 (line 1437-1449), p.29: an M-by-M MPI with s(x, y) per pair; undirected statistics satisfy f(x, y) = f(y, x)'
+  canonical_definition: 'Directed SPI: A[i, j] = s(x_i -> x_j) for all i != j, diagonal undefined. Undirected SPI: A[i, j] = A[j, i] = s(x_i, x_j) with s symmetric, so one evaluation per unordered pair suffices'
+  documented_definition: 'supplement §3.1, p.29: ''undirected statistics have repeated entries in the upper and lower diagonals of the MPIs''. GitBook spis/glossary-of-terms.md:27: ''entry calc.table[\''di_gaussian\''][0,1] will be the directed information from process 0 to process 1. The rows in this table reflect the sources while the columns reflect the targets''. GitBook development/development/incorporating-new-spis.md:376-378: Undirected ''Only entries below the diagonal (lower triangle) will be computed'' and the base class ''overrides the multivariate method to ensure that the resulting matrix is symmetric by copying the lower triangular values to the upper triangle''.'
+  delegate_lib: pyspi (base.Directed.multivariate, base.Undirected.multivariate, calculator.Calculator.compute)
+  implemented_as: 'Directed.multivariate allocates a P x P NaN matrix and, for j in 0..P-1 (outer) and i != j (inner), sets A[i, j] = self.bivariate(data, i=i, j=j); P(P-1) calls. SPI bivariate methods read src, targ = z[[i, j]] (e.g. TransferEntropy, pyspi/statistics/infotheory.py:383), so A[i, j] = i -> j (row = source). Undirected.multivariate calls the same loop (all P(P-1) ordered pairs) and then sets A[tril] = A.T[tril], i.e. it keeps the upper triangle (values from bivariate(i, j) with i < j) and overwrites the lower triangle; the P(P-1)/2 lower-triangle evaluations are discarded, and because j is the outer loop several of them run before the kept ones. Classes that override multivariate bypass this (285 identifiers: 50 Undirected-mirror, 108 Undirected with an override, 91 Directed loop, 36 Directed with own multivariate; probe p4_classes.py). Calculator.compute then forces the diagonal to NaN and, if multivariate raises, stores an all-NaN matrix for that SPI. Probe p5_pairs.py: toy Undirected SPI returning 10i+j gives [[nan 1 2 3] [1 nan 12 13] [2 12 nan 23] [3 13 23 nan]] with 12 bivariate calls for P=4, first calls (1,0), (2,0), (3,0). Three mirror classes cache each pair under both (i, j) and (j, i) on the shared Data: CrossCorrelation (basic.py:109-113), Cointegration (misc.py:62-97) and JointEntropy (infotheory.py:160-177). For them the kept call bivariate(i<j) is a cache hit that returns the value computed by the first-visited call bivariate(j, i). Probe p10_cache_order.py: for xcorr_max_sig-True, coint_aeg_tstat_trend-c_autolag-aic_maxlag-10 and je_kozachenko, loop A[0,1] equals an isolated bivariate(1,0) exactly and differs from an isolated bivariate(0,1).'
+  implementation_trace:
+  - 'pyspi/base.py:70-94 class Directed; base.py:84-94 multivariate: A = NaN (P, P); for j: for i != j: A[i, j] = self.bivariate(data, i=i, j=j)'
+  - 'pyspi/base.py:121-138 class Undirected; base.py:132-138 multivariate: A = super().multivariate(data); li = np.tril_indices(P, -1); A[li] = A.T[li]'
+  - pyspi/base.py:27-49 parse_bivariate passes a Data object through unchanged (inplace=True), so per-pair caches attach to the shared Data
+  - 'pyspi/statistics/infotheory.py:376-391 TransferEntropy.bivariate (docstring ''Compute transfer entropy from i->j''): infotheory.py:383 src, targ = data.to_numpy(squeeze=True)[[i, j]] (i = source)'
+  - pyspi/statistics/distance.py:211-215 Barycenter(Directed, Signed) with labels containing 'undirected'; distance.py:248-263 caches (i, j) and copies it to (j, i)
+  - pyspi/statistics/basic.py:46-55 Estimators.multivariate (Covariance/Precision) overrides Undirected.multivariate (mirror bypass example)
+  - 'pyspi/calculator.py:295-358 compute (HEAD a1f20c7): calculator.py:329 S = spi.multivariate(dataset); :332 np.fill_diagonal(S, nan); :335 table[spi] = S; :336-339 any exception -> whole SPI NaN'
+  - 'pyspi/statistics/basic.py:95-113 CrossCorrelation.bivariate: cache data.xcorr[(i, j)], copied to data.xcorr[(j, i)] at :113'
+  - 'pyspi/statistics/misc.py:62-97 Cointegration._from_cache: computes stattools.coint(z[i], z[j]) or coint_johansen(z[[i, j]].T), stores under (i, j) and copies to (j, i) at :95'
+  - 'pyspi/statistics/infotheory.py:160-177 _compute_joint_entropy: stores data.joint_entropy[key][i, j] and copies to [j, i] at :175'
+  deviation_from_documented: '(1) The developer guide says only the lower triangle is computed and lower values are copied to the upper triangle; the code computes every ordered pair and copies the UPPER triangle into the lower (probe p5_pairs.py). (2) 108 identifiers in Undirected classes override multivariate and so are not symmetrised by the base class (REVIEW M1, which was tests/README.md bug 5 before b2f6d7e; elaborated here with counts only). (3) Barycenter (16 identifiers) is labelled ''undirected'' but inherits Directed; its matrix is symmetric only through its own (i, j)/(j, i) cache. The glossary''s row = source convention matches the Directed loop for TransferEntropy (probe: gc_gaussian on delayed_noise rows 0-1 gives A[0,1] = 2.259, A[1,0] = 0.003, x0 leads).'
+  deviation_from_canonical: 'For symmetric bivariate statistics the result is the canonical MPI but with twice the bivariate calls. For bivariate statistics that are numerically asymmetric, the Undirected mirror keeps the value returned by the bivariate(i<j) call. For the three classes that cache both orderings (xcorr, coint, je), that call returns the cached i>j evaluation (probe p10_cache_order.py). Probe p9_mirror_rng.py found no random-number consumption that couples calls: see the RNG candidate.'
+  units_and_range: Not a statistic; preserves the units of the bivariate statistic; diagonal always NaN after Calculator.compute; an exception in any pair makes the whole SPI matrix NaN in Calculator.
+  direction_convention: 'A[i, j] = bivariate(data, i=i, j=j); pyspi bivariate implementations read (source, target) = (row i, column j), so A[i, j] = i -> j, rows are sources and columns targets (glossary-of-terms.md:27). STATUS: established empirically for one SPI only, gc_gaussian_k-1_kt-1_l-1_lt-1 (TransferEntropy, gaussian estimator) on delayed_noise rows 0-1 (A[0,1] = 2.259, A[1,0] = 0.003; probe p5_pairs.py). It is a code reading for every other directed SPI; the check stage must not inherit it as established and each directed family must confirm its own SPI. Undirected: A[i, j] = A[j, i] = the value returned by bivariate(i=min, j=max), which for xcorr, coint and je is the cached bivariate(i=max, j=min) evaluation (probe p10_cache_order.py).'
+  symmetry_expected: n/a
+  already_documented: REVIEW M1 (generic Undirected mirror bypassed by spectral/cov/pdist/pec classes); the same bypass was the earlier wording of tests/README.md bug 5, whose current wording (tests/README.md:206, tests/unit/test_known_bugs.py:169-183) is PLI signed antisymmetry (KNOWN_ISSUES.md item 5 records both); REVIEW M2 (last-bit reciprocal asymmetry); REVIEW M3/M4 (signed PLI/wPLI, coherence phase antisymmetry); EEG_OPTIMIZATION_NOTES.md:132 (generic Undirected path computes both ordered directions of each pair before one triangle is overwritten; optimisation candidate), so the double work is already documented and the first candidate below only quantifies it; tests/README.md:134, :145-146 (MinCovDet/EllipticEnvelope and sgddtw draw from the global RNG; Calculator-order dependence). The docs' triangle description, the Barycenter label/base mismatch and the cache visiting-order dependence of coint/je are not in KNOWN_ISSUES.md (xcorr's is in the basic.xcorr.* records).
+  new_finding_candidates:
+  - 'CANDIDATE (efficiency quantification only; the double work itself is already documented at EEG_OPTIMIZATION_NOTES.md:132): pyspi/base.py:134 computes all P(P-1) ordered pairs and base.py:136-137 then overwrites the lower triangle, discarding P(P-1)/2 bivariate evaluations; probe p5_pairs.py: ''Undirected: n bivariate calls 12'' for P=4. Affects the 50 Undirected-mirror identifiers (p4_classes.py), e.g. dcorr, hsic, mgc, dtw/lcss/softdtw, mi_*, je_*, si_*, phi_*, coint_*, spearmanr, kendalltau, xcorr, gwtau. Probe p8_rng_cache.py (P=4, 12 ordered pairs) counted 6 scipy.signal.correlate calls for xcorr and 6 statsmodels coint calls for coint_aeg, so for these classes the underlying computation already runs once per unordered pair; je also caches (infotheory.py:175). The cost of the remaining cache-hit calls was not timed; whether removing the extra calls saves time for these classes is a hypothesis for the optimisation stage.'
+  - 'CANDIDATE (developer documentation describes the wrong triangle): incorporating-new-spis.md:376-378 says only the lower triangle is computed and copied to the upper; probe p5_pairs.py shows A[1,0] = A[0,1] = 1 = bivariate(i=0, j=1) and 12 calls for P=4.'
+  - 'CANDIDATE (call-order coupling through the cache, replaces the earlier RNG-stream hypothesis): probe p9_mirror_rng.py ran all 50 Undirected-mirror identifiers on P=3, T=100 Gaussian data. None advanced the global numpy RNG state, none changed output between np.random.seed(0) and seed(12345), and every identifier gave an identical matrix on rerun; mi_kraskov_NN-4 (JIDT KSG with noise, NOISE_SEED=42 at infotheory.py:91) gave isolated bivariate(0,1) == loop A[0,1]. So no RNG-stream coupling was found at this size (not tested for other P, T or for SPIs outside the mirror group). However, 17 of the 50 (6 xcorr, 10 coint, je_kozachenko) gave isolated bivariate(0,1) != loop A[0,1], because the cache returns the first-visited (j, i) evaluation (probe p10_cache_order.py: xcorr_max_sig-True loop A[0,1] = 0.2013 = isolated bivariate(1,0), isolated bivariate(0,1) = 0.1266; coint_aeg_tstat_trend-c_autolag-aic_maxlag-10 -9.3894 vs -9.0604; je_kozachenko differs by 8.5e-8). Changing the loop order or skipping the j > i calls would change these 17 values. The xcorr order dependence is already recorded in basic.xcorr.* records; the coint and je cases are not.'
+  - 'CANDIDATE (label/base mismatch): Barycenter labels include ''undirected'' (pyspi/statistics/distance.py:215) but the class inherits Directed (distance.py:211); probe p4_classes.py ''Barycenter Directed Directed undirected 16 LABEL-UNDIRECTED-BUT-DIRECTED-BASE''. Symmetry comes from the cache at distance.py:261 and the stored value is the first-visited ordering (i > j), opposite to Undirected''s i < j.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic: toy Directed and Undirected subclasses whose bivariate returns 10*i + j and records each call'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'Directed: A[i,j] = 10i + j off-diagonal, NaN diagonal, P(P-1) = 20 calls for P=5. Undirected: A[i,j] = A[j,i] = 10*min(i,j) + max(i,j), 20 calls (10 discarded), first call (1,0)'
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    - logistic_maps
+    path: pipeline
+    reference: from-scratch numpy OLS Granger statistic G[i,j] = log(var(e_j | past of j) / var(e_j | past of j and i)) with lag order 2 (var2), 5 (delayed_noise), 1 (logistic_maps); compared with gc_gaussian_k-1_kt-1_l-1_lt-1 routed through Directed.multivariate
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'establishes the empirical meaning of A[i,j]: var2_bivariate (process 0 -> 1; the MANIFEST VAR matrix uses the opposite row = target convention) gives A[0,1] > A[1,0]; delayed_noise (x0 leads x1, x2, x3) gives A[0,k] > A[k,0]; logistic_maps (y = process 1 drives x = process 0) gives A[1,0] > A[0,1]; signs of A[i,j] - A[j,i] agree with G[i,j] - G[j,i] in every case'
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic: symmetry definition max|A - A.T| over off-diagonal entries for every identifier, grouped by multivariate owner (p4_classes.py grouping)'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: '0 exactly for the 50 Undirected-mirror identifiers and for bary_* (cache); nonzero allowed for bypass classes (REVIEW M1/M2: cov/prec, pdist, pec, spectral phase measures); directed identifiers asymmetric in general'
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic: count bivariate invocations per identifier with a call-counting wrapper on the class'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: P(P-1) calls for every Directed-loop and Undirected-mirror identifier; for Undirected-mirror identifiers the values of A computed from only the i < j calls (fresh Data, no cache) equal the current output exactly for the 33 identifiers that matched in p9_mirror_rng.py and differ for the 17 cached-ordering identifiers (xcorr, coint, je_kozachenko); confirm on iid_gaussian at the audit P and T, which p9 did not use.
+  check_method: analytic
+  check_reference: refs/preprocessing_base.py:toy_expected (analytic values and call order), r_calls (kernels _kernels_basic_misc.spearman, _kernels_infotheory.gaussian_te on numpy z-scores), r_direction (dataset construction + glossary convention), r_sym / r_upper / r_grp / r_rng (pyspi vs pyspi under transpose, visiting order, variant order, RNG offset; same-lineage); pyspi side probes/preprocessing_base_probes.py:toy_pairs, call_order_real, class_matrices, upper_only, cache_order, rng_sensitivity, direction
+  check_data: iid_gaussian T=64 (toy) and T=256 (calls, symmetry of all 31 Undirected classes plus Barycenter, upper-only for the 15 mirror classes, cache order of 8 groups, sgddtw RNG); var2_bivariate T=1024 and delayed_noise rows 0-1 T=1024 (direction table, 11 SPIs; ccm at T=256); logistic_maps_chaotic T=256 (ccm); anm rows (0,1) and (2,3) T=1024 (anm)
+  agreement_criterion: 'toy: exact (0); calls: tolerance rtol 1e-9 against kernels, call positions exact; symmetry: bit-exact for mirror classes and Barycenter, 1e-12 for bypass classes; upper-only and cache order: bit-exact; direction: sign of A[0,1] - A[1,0] against ''row = source, larger = stronger'' (glossary-of-terms.md:27), differences <= 1e-12 relative counted as unresolvable'
+  closeness: 'toy pass (max abs 0): Directed A[i,j] = 10i+j, Undirected A[i,j] = 10 min + max, 20 calls for P=5, first calls (1,0), (2,0), (3,0), (4,0). calls-spearmanr pass (20 calls, max abs 1.4e-17); calls-gc_gaussian pass on iid (max rel 5.3e-10) and var2 (A[0,1] = 0.148325 = kernel TE(0 -> 1), A[1,0] = 0.012653 = TE(1 -> 0), max rel 3.0e-14). Symmetry: all 15 mirror classes and Barycenter bit-exact (max|A - A.T| = 0); bypass: Covariance, PairwiseDistance, PEC, coherence magnitude, icoh, PLV, dsPLI, dswPLI, PPC and wavelet PSI exactly 0, Precision 9.7e-17, IDS 2.8e-17; CoherencePhase (1.60), PLI (0.40), wPLI (0.39) and multitaper PSI (24.1) antisymmetric (min|A + A.T| = 0). Upper-only vs loop: 32 of 50 mirror identifiers bit-identical; xcorr 6/6 differ (up to 0.081), coint_aeg 3/3 (up to 7.41), je_kozachenko 1.6e-7, coint_johansen 8/8 at <= 2.6e-13. Cache order (forward vs reversed variants on one Data): xcorr, coint, spectral coherence, spectral phase-sync, barycenter, ccm, je/ce/cce gaussian identical; cov/prec: EllipticEnvelope and MinCovDet differ (up to 0.0364). sgddtw after one extra RNG draw: differs by 1.8e-3. Direction table: see direction_observed.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: No anchor-9 clause names the deviation. Anchor 10's canonical clause fails for the three caching classes. For xcorr, coint and je the kept A[i,j]
+    is the cached bivariate(j, i) value, so upper-only runs differ by up to 0.081 (xcorr) and 7.41 (coint_aeg). The supplement's 'repeated entries' sentence holds (max|A
+    - A.T| = 0 on 15 mirror classes). The developer-guide triangle mismatch the record also cites is GitBook text, which anchor 10 does not name.
+  documentation_status: described
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The loop itself is as documented in the supplement (repeated entries for undirected statistics) and follows the glossary orientation A[i,j] = bivariate(i, j). It differs from the developer guide: every ordered pair is computed and the UPPER triangle (bivariate(i<j)) is kept, P(P-1)/2 evaluations are discarded. For the three classes that cache both orientations (xcorr, coint, je) the kept value is the first-visited bivariate(j, i), so the stored value depends on the visiting order (10 identifiers beyond rounding). What A[i,j] means is SPI-specific (direction table): only TE-type, PSI and group delay follow ''row = source, larger = stronger''.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'moderate: most runs 1-25 s at T=256/1024; ccm direction and cache-order runs limited to T=256 and P=2 (about 25 s each). Scope narrowed from the trace proposals (not done): proposed check 2 (from-scratch OLS Granger on var2_bivariate, delayed_noise, logistic_maps) ran as the kernel Gaussian-TE comparison on var2_bivariate and iid_gaussian only (calls-gc_gaussian); delayed_noise has a direction-only run (dir-gc_gaussian, no kernel value comparison) and gc_gaussian was not run on logistic_maps (ccm on logistic_maps_chaotic was used for the driven-map direction instead). Proposed check 4 (call counts for every Directed-loop and Undirected-mirror identifier) ran for spearmanr, gc_gaussian and the toy SPI; the 50 mirror identifiers were covered by the upper-only value runs (upper-*), not by call counts.'
+  symmetry_observed: 'Undirected mirror classes (15) and Barycenter: max|A - A.T| = 0 bit-exact on iid_gaussian T=256. Bypass classes: 0 for cov, pdist, pec, cohmag, icoh, plv, dspli, dswpli, ppc, wavelet psi; 9.7e-17 precision, 2.8e-17 ids (REVIEW M2 last-bit); antisymmetric: coherence phase 1.60, pli 0.40, wpli 0.39, multitaper psi 24.1 (REVIEW M1/M3/M4/M5; tests/README.md bug 5 covers pli only). Runs base.pair_handling|iid_gaussian|256|pipeline|sym-*.'
+  direction_observed: 'A[i,j] = bivariate(i, j) for the generic loop (toy run; calls-gc_gaussian on var2 matches the kernel TE(i -> j) to 3e-14). Empirical meaning on var2_bivariate / delayed_noise rows 0-1 (process 0 drives 1): gc_gaussian (TE) A[0,1] > A[1,0] on both (0.148 vs 0.013; 2.27 vs 1.3e-5): row = source. psi_multitaper: A[0,1] = -A[1,0] > 0 (136, 694): positive = row leads. gd_multitaper: delayed A[0,1] = +1.011 samples (row leads column); var2 all-NaN (REVIEW M6). dtf_multitaper: var2 A[1,0] = 0.269 > A[0,1] = 0.143 (row = target, as the spectral_directed family found) but delayed A[0,1] = 0.817 > 0.171 (the innovation-variance effect described in that family''s note). dcorrx_maxlag-1: A[1,0] > A[0,1] on both (0.195 vs 0.027; 0.974 vs -0.001): A[i,j] measures j -> i, row = target. xme_gaussian_k10 and _k1: A[0,1] < A[1,0] on both (1.238 vs 1.411; -0.857 vs 1.418): a conditional entropy, LOWER = row informs column. ccm_E-1_mean: logistic_maps_chaotic (x -> y) A[1,0] = 0.218 > A[0,1] = 0.182, i.e. high A[i,j] when j drives i (CCM convention, row = target); on var2/delayed T=256 the gap is small (0.037, 0.050) and of the other sign. anm: no consistent orientation (anm cubic pair A[0,1] > A[1,0], tanh pair and delayed_noise A[1,0] > A[0,1], var2 A[0,1] > A[1,0]). coint_aeg: mirrored, A symmetric (no direction); its kernel is asymmetric (isolated bivariate 0->1 -24.85 vs 1->0 -25.18 on var2). lmfit_Ridge: contemporaneous regression, A[0,1] - A[1,0] = 2e-16 (no direction).'
+  candidate_resolutions:
+  - candidate: efficiency quantification of the already documented double work (EEG_OPTIMIZATION_NOTES.md:132)
+    outcome: confirmed
+    evidence: base.pair_handling|iid_gaussian|64|pipeline|toy (20 calls for P=5, 10 overwritten); base.pair_handling|iid_gaussian|256|pipeline|calls-spearmanr (20 calls). Quantification only; the double work itself is already documented, so not a new finding.
+  - candidate: developer documentation describes the wrong triangle
+    outcome: confirmed
+    evidence: 'base.pair_handling|iid_gaussian|64|pipeline|toy: Undirected A[1,0] = A[0,1] = 1 = bivariate(0, 1) (upper kept, lower overwritten), all 20 ordered calls made; incorporating-new-spis.md:376-378 says only the lower triangle is computed and copied up'
+  - candidate: call-order coupling through the (i, j)/(j, i) caches
+    outcome: confirmed
+    evidence: 'base.pair_handling|iid_gaussian|256|pipeline|upper-basic.CrossCorrelation, base.pair_handling|iid_gaussian|256|pipeline|upper-misc.Cointegration and base.pair_handling|iid_gaussian|256|pipeline|upper-infotheory.JointEntropy fail: xcorr 6/6 (max 0.081), coint_aeg 3/3 (max 7.41), je_kozachenko 1.6e-7; coint_johansen 8/8 differ only at <= 2.6e-13 (column-order rounding); the other 32 mirror identifiers are bit-identical. Refines the trace count (17) to 18 bitwise / 10 beyond rounding. No RNG coupling: variant-order runs grp-xcorr, grp-coint, grp-je_ce_gaussian identical.'
+  - candidate: Barycenter labelled undirected but inherits Directed
+    outcome: confirmed
+    evidence: 'base.pair_handling|iid_gaussian|256|pipeline|sym-directed-distance.Barycenter: 16 identifiers bit-exact symmetric only through the cache; pyspi/statistics/distance.py:211 (Directed base) and :215 (label ''undirected''); toy call order shows the Directed loop visits (b, a) before (a, b) for a < b, so the cached barycenter is computed from z[[b, a]]'
+  checks_run:
+  - run_ids:
+    - base.pair_handling|iid_gaussian|64|pipeline|toy
+    reference: refs/preprocessing_base.py:r_toy
+    outcome: pass (max abs 0, 20 calls)
+  - run_ids:
+    - base.pair_handling|iid_gaussian|256|pipeline|calls-spearmanr
+    - base.pair_handling|iid_gaussian|256|pipeline|calls-gc_gaussian
+    - base.pair_handling|var2_bivariate|1024|pipeline|calls-gc_gaussian
+    reference: refs/preprocessing_base.py:r_calls
+    outcome: pass 3/3 (max rel 5.3e-10)
+  - run_ids:
+    - base.pair_handling|iid_gaussian|256|pipeline|sym-mirror-*
+    - base.pair_handling|iid_gaussian|256|pipeline|sym-directed-distance.Barycenter
+    reference: refs/preprocessing_base.py:r_sym
+    outcome: pass 16/16 (max|A - A.T| = 0)
+  - run_ids:
+    - base.pair_handling|iid_gaussian|256|pipeline|sym-bypass-*
+    reference: refs/preprocessing_base.py:r_sym
+    outcome: pass 12/16; fail CoherencePhase, PhaseLagIndex, WeightedPhaseLagIndex, spectral PhaseSlopeIndex (antisymmetric; already documented)
+  - run_ids:
+    - base.pair_handling|iid_gaussian|256|pipeline|upper-*
+    reference: refs/preprocessing_base.py:r_upper
+    outcome: pass 12/15; fail CrossCorrelation, Cointegration, JointEntropy (visiting-order dependence)
+  - run_ids:
+    - base.pair_handling|iid_gaussian|256|pipeline|grp-*
+    reference: refs/preprocessing_base.py:r_grp
+    outcome: pass 7/8; fail covprec (EllipticEnvelope/MinCovDet global RNG, already documented)
+  - run_ids:
+    - base.pair_handling|iid_gaussian|256|pipeline|rng-sgddtw
+    reference: refs/preprocessing_base.py:r_rng
+    outcome: fail (1.8e-3 after one extra RNG draw; already documented)
+  - run_ids:
+    - base.pair_handling|delayed_noise|1024|pipeline|dir-anm
+    - base.pair_handling|delayed_noise|1024|pipeline|dir-coint_aeg_tstat_trend-c_autolag-aic_maxlag-10
+    - base.pair_handling|delayed_noise|1024|pipeline|dir-dcorrx_maxlag-1
+    - base.pair_handling|delayed_noise|1024|pipeline|dir-dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5
+    - base.pair_handling|delayed_noise|1024|pipeline|dir-gc_gaussian_k-1_kt-1_l-1_lt-1
+    - base.pair_handling|delayed_noise|1024|pipeline|dir-gd_multitaper_delay_fs-1_fmin-0_fmax-0-5
+    - base.pair_handling|delayed_noise|1024|pipeline|dir-lmfit_Ridge
+    - base.pair_handling|delayed_noise|1024|pipeline|dir-psi_multitaper_mean_fs-1_fmin-0_fmax-0-5
+    - base.pair_handling|delayed_noise|1024|pipeline|dir-xme_gaussian_k1
+    - base.pair_handling|delayed_noise|1024|pipeline|dir-xme_gaussian_k10
+    - base.pair_handling|delayed_noise|256|pipeline|dir-ccm_E-1_mean
+    - base.pair_handling|var2_bivariate|1024|pipeline|dir-anm
+    - base.pair_handling|var2_bivariate|1024|pipeline|dir-coint_aeg_tstat_trend-c_autolag-aic_maxlag-10
+    - base.pair_handling|var2_bivariate|1024|pipeline|dir-dcorrx_maxlag-1
+    - base.pair_handling|var2_bivariate|1024|pipeline|dir-dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5
+    - base.pair_handling|var2_bivariate|1024|pipeline|dir-gc_gaussian_k-1_kt-1_l-1_lt-1
+    - base.pair_handling|var2_bivariate|1024|pipeline|dir-gd_multitaper_delay_fs-1_fmin-0_fmax-0-5
+    - base.pair_handling|var2_bivariate|1024|pipeline|dir-lmfit_Ridge
+    - base.pair_handling|var2_bivariate|1024|pipeline|dir-psi_multitaper_mean_fs-1_fmin-0_fmax-0-5
+    - base.pair_handling|var2_bivariate|1024|pipeline|dir-xme_gaussian_k1
+    - base.pair_handling|var2_bivariate|1024|pipeline|dir-xme_gaussian_k10
+    - base.pair_handling|var2_bivariate|256|pipeline|dir-ccm_E-1_mean
+    - base.pair_handling|logistic_maps_chaotic|256|pipeline|dir-ccm_E-1_mean
+    - base.pair_handling|anm|1024|pipeline|dir-anm
+    - base.pair_handling|anm|1024|pipeline|dir-anm-tanh
+    reference: refs/preprocessing_base.py:r_direction
+    outcome: 'pass 10/25 against ''row = source, larger = stronger'': gc_gaussian and psi pass on both datasets, gd on delayed_noise (var2 all-NaN); dtf (delayed only), ccm (var2, delayed) and anm (anm cubic pair, var2) pass by sign but are contradicted on another dataset; the rest record a different convention or no direction (direction_observed)'
+optimisation:
+  complexity_P_T: 'P(P-1) bivariate calls per SPI: Directed.multivariate loops all ordered pairs (pyspi/base.py:84-94); Undirected.multivariate runs the same loop and mirrors the upper
+    triangle (base.py:132-138), discarding P(P-1)/2 results. 13806 calls per SPI at P=118; the loop''s own cost is per-call Python overhead, the pair work belongs to the SPI'
+  hotspot_1: pyspi/base.py:parsed_function (bivariate wrapper, line 28, pyspi) 96.2-100% cumulative of the profiled SPI call in the 26 Undirected-mirror units at 8x1024 (basic.spearmanr
+    99.4%), half of it discarded at base.py:136-137
+  hotspot_2: pyspi/base.py:Directed.multivariate + Undirected.multivariate + parse_bivariate own time 0.0005-1.86% (median 0.065%) of the profiled call over the 84 loop-unit profiles
+    at 8x1024 (basic.spearmanr 0.48%, distance.gwtau 1.86%)
+  hotspot_owner: pyspi
+  opaque_share: 0.317
+  profile_file: 'audit/profiles/basic.spearmanr__8x1024.pstats; audit/profiles/basic.kendalltau__8x1024.pstats; audit/profiles/distance.dcorr.biased-False__8x1024.pstats; audit/profiles/distance.dcorr.biased-True__8x1024.pstats; audit/profiles/distance.mgc__8x1024.pstats; audit/profiles/distance.hsic.biased-False__8x1024.pstats; audit/profiles/distance.hsic.biased-True__8x1024.pstats; audit/profiles/distance.dtw.constraint-None__8x1024.pstats; audit/profiles/distance.dtw.constraint-itakura__8x1024.pstats; audit/profiles/distance.dtw.constraint-sakoe_chiba__8x1024.pstats; audit/profiles/distance.softdtw__8x1024.pstats; audit/profiles/distance.lcss.constraint-None__8x1024.pstats; audit/profiles/distance.lcss.constraint-itakura__8x1024.pstats; audit/profiles/distance.lcss.constraint-sakoe_chiba__8x1024.pstats; audit/profiles/distance.gwtau__8x1024.pstats; audit/profiles/infotheory.si.gaussian__8x1024.pstats; audit/profiles/infotheory.si.kozachenko__8x1024.pstats; audit/profiles/infotheory.si.kernel__8x1024.pstats; audit/profiles/infotheory.mi.gaussian__8x1024.pstats; audit/profiles/infotheory.mi.kraskov__8x1024.pstats; audit/profiles/infotheory.mi.kraskov_DCE__8x1024.pstats; audit/profiles/infotheory.mi.kernel__8x1024.pstats; audit/profiles/infotheory.phi.star_norm-0__8x1024.pstats; audit/profiles/infotheory.phi.star_norm-1__8x1024.pstats; audit/profiles/infotheory.phi.Geo_norm-0__8x1024.pstats; audit/profiles/infotheory.phi.Geo_norm-1__8x1024.pstats'
+  no_opportunity_reason: 'No unit opportunity: the only avenue is the i<j-only loop in Undirected.multivariate (pyspi/base.py:132-138), recorded once as the cross-cutting xc-undirected-upper in profiles/crosscutting.yaml (CSV rows family:undirected-upper/*) so that it is not counted twice (notes/preprocessing_base.md, Optimisation).'
+  opportunities: []

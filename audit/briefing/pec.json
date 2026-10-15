@@ -1,0 +1,172 @@
+{
+ "family": "pec",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/miscellaneous.md"
+ ],
+ "hypotheses": [
+  "mne envelope_correlation: scipy hilbert with next_fast_len padding, envelope |analytic|, log uses log(|.|^2), pairwise orthogonalisation Im(x conj(y)/|y|) (Hipp 2012), absolute only acts when orth; symmetrised (C+C^T)/2 when orth",
+  "pec/pec_log can be negative (M8); last-bit reciprocal asymmetry (M2)"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/misc.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    934,
+    2330
+   ],
+   "section": "1.6.4",
+   "title": "Power envelope correlation (pec)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py (envelope_correlation)"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [
+    "pec"
+   ],
+   "hyperparameters": {
+    "log": false,
+    "orth": false
+   },
+   "identifier_params": {
+    "pec": {
+     "absolute": false,
+     "log": false,
+     "orth": false
+    }
+   },
+   "identifiers": [
+    "pec"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "misc",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "mne_connectivity envelope_correlation",
+   "module": "misc",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PowerEnvelopeCorrelation",
+   "representative": "pec",
+   "source": "config",
+   "unit_id": "misc.pec.orth-False_log-False"
+  },
+  {
+   "eeg_identifiers": [
+    "pec_orth",
+    "pec_orth_abs"
+   ],
+   "hyperparameters": {
+    "log": false,
+    "orth": true
+   },
+   "identifier_params": {
+    "pec_orth": {
+     "absolute": false,
+     "log": false,
+     "orth": true
+    },
+    "pec_orth_abs": {
+     "absolute": true,
+     "log": false,
+     "orth": true
+    }
+   },
+   "identifiers": [
+    "pec_orth",
+    "pec_orth_abs"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "misc",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "mne_connectivity envelope_correlation",
+   "module": "misc",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PowerEnvelopeCorrelation",
+   "representative": "pec_orth",
+   "source": "config",
+   "unit_id": "misc.pec.orth-True_log-False"
+  },
+  {
+   "eeg_identifiers": [
+    "pec_log"
+   ],
+   "hyperparameters": {
+    "log": true,
+    "orth": false
+   },
+   "identifier_params": {
+    "pec_log": {
+     "absolute": false,
+     "log": true,
+     "orth": false
+    }
+   },
+   "identifiers": [
+    "pec_log"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "misc",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "mne_connectivity envelope_correlation",
+   "module": "misc",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PowerEnvelopeCorrelation",
+   "representative": "pec_log",
+   "source": "config",
+   "unit_id": "misc.pec.orth-False_log-True"
+  },
+  {
+   "eeg_identifiers": [
+    "pec_orth_log",
+    "pec_orth_log_abs"
+   ],
+   "hyperparameters": {
+    "log": true,
+    "orth": true
+   },
+   "identifier_params": {
+    "pec_orth_log": {
+     "absolute": false,
+     "log": true,
+     "orth": true
+    },
+    "pec_orth_log_abs": {
+     "absolute": true,
+     "log": true,
+     "orth": true
+    }
+   },
+   "identifiers": [
+    "pec_orth_log",
+    "pec_orth_log_abs"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "misc",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "mne_connectivity envelope_correlation",
+   "module": "misc",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PowerEnvelopeCorrelation",
+   "representative": "pec_orth_log",
+   "source": "config",
+   "unit_id": "misc.pec.orth-True_log-True"
+  }
+ ]
+}

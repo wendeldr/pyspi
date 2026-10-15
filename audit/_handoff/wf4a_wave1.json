@@ -1,0 +1,276 @@
+{
+ "clusters": [
+  {
+   "cluster": "w1-spectral-undirected",
+   "families": [
+    "preprocessing_base",
+    "spectral_csm",
+    "spectral_coherence",
+    "spectral_phase_sync",
+    "spectral_psi_gd"
+   ],
+   "ok": true,
+   "fixed": 37,
+   "false_positives": 42,
+   "external_checked": [
+    "GitBook /media/dan/Data/git/pyspiDocumentation information-about-pyspi/spis/spi-descriptions/spectral.md: 14-16, 14-20, 16-20, 24-45, 49-70, 130-148, 152-173, 177-198, 233-254, 233-280, 241, 269-280, 282-293, 297-316, 322-338 all match their sentences",
+    "GitBook spis/glossary-of-terms.md:27 (rows = sources), development/development/incorporating-new-spis.md:357 and :376-378 (lower-triangle wording), api-reference/pyspi.calculator.calculator.md:19, api-reference/pyspi.data.data.md:29, usage/walkthrough-tutorials/finance-stock-price-time-series.md:47: all confirmed",
+    "supplement/supplement.txt: 95-104, 101, 136-139, 1437-1449, 1445-1446, 570, 570-599, 582-599, 589, 601-614, 616-628, 630, 644, 644-668, 670-682, 686-699, 701-713, 715-750, 2135-2136 confirmed; heading cited as :715 is at 716 (fixed in the note)",
+    "DEPENDENCY_COMPATIBILITY_REVIEW.md: :51 (np.in1d) and :74/:84 confirmed; old :71-83/:73-83/:81 shifted by +3 since 36ac45a (fixed)",
+    "docs/storage_comparison/REVIEW.md: :16, :164, :174, :189-193 confirmed at HEAD",
+    "tests/README.md: :134, :145-146, :206, :249 confirmed; 'line 202'/'line 205' were wrong (fixed to 221/224); spectral_psi_gd.md:249 ':220' is a correction-log entry (history, left)",
+    "tests/unit/test_known_bugs.py:169-183 confirmed",
+    "EEG_OPTIMIZATION_NOTES.md (changed in a42ebc1): :23, :40, :42-43, :132 unchanged and confirmed; :169 and :246-247 moved (fixed to 208-209 and 414-415)",
+    "pyspi/workflow/retained185.yaml (unchanged in a42ebc1): 1-5, 4, 338-367, 368-517, 338-517 confirmed; 227-247 is CoherencePhase (cohmag record fixed to 257-277)",
+    "pyspi/workflow/_config.py (changed in a42ebc1): 143-148 -> 229-234",
+    "examples/workflow/preflight.yaml: sampling_rate_hz 2048 (line 8), length_seconds 0.5 (line 19), preset retained185 confirmed at HEAD",
+    "pyspi/calculator.py: all 30 citations in my files already use HEAD numbers (48-56, 230-258, 269-277, 295-355/358, 327-339, 329, 336-339); none stale",
+    "spectral_connectivity 1.1.2 connectivity.py/transforms.py and pyspi statistics/base/data/infotheory/basic/misc/distance/wavelet line ranges behind every flagged item read and confirmed",
+    "PhiToolbox: no citations in this cluster"
+   ],
+   "leftovers_applied": [
+    "HEAD moved a1f20c7 -> a42ebc1 (still_open item 5): for this cluster, the only citations into files that changed in a42ebc1 (pyspi/workflow/_config.py, EEG_OPTIMIZATION_NOTES.md) now give HEAD a42ebc1 lines, with the a1f20c7 line in brackets where the old one was quoted. calculator.py 'HEAD a1f20c7' labels are left as they are because calculator.py is identical in both commits.",
+    "wf2bB_leftovers.json does not exist yet. No other still_open_for_synthesis item is a text fix for these families."
+   ],
+   "claim_problems": [
+    "audit/notes/spectral_coherence.md:240 says 'The resampling stage is not built yet, so this is settled only once it exists.' That is out of date at HEAD a42ebc1: pyspi/workflow/_prepare.py:105 resamples mismatched native rates with mne.filter.resample(method='polyphase') before windowing (EEG_OPTIMIZATION_NOTES.md:208-209, 419-420). Only the citation was changed; the claim needs rewording at synthesis.",
+    "audit/records/spectral.plv.yaml:44 (EEG candidate) and audit/notes/spectral_phase_sync.md:44 (EEG bands hypothesis) argue that the same identifier means 0.5-2 Hz for 1024 Hz recordings. That holds for the historical stored runs (REVIEW.md:164, patient 004). For new runs at HEAD a42ebc1, the workflow resamples to the configured 2048 Hz first, so it no longer holds for them. The claims should say which runs they mean; only the citations were refreshed.",
+    "audit/notes/spectral_phase_sync.md:243 (check-stage correction log) still reads 'the working-copy line moves as the uncommitted file changes' for EEG_OPTIMIZATION_NOTES.md:246-247. The file is now committed at a42ebc1 and the line is 414-415. This is a history entry and was left unchanged; decide at synthesis whether to annotate it."
+   ],
+   "not_done": [
+    "preprocessing_base: 86 pyspi npz were rewritten after the last ref/compare, so run_checks --family preprocessing_base --force is needed in final verification (computation, not done here)."
+   ],
+   "refutations": [
+    {
+     "file": "audit/notes/spectral_phase_sync.md",
+     "line": 14,
+     "problem": "The agent changed the supplement heading citation ':715 (PLI family)' to ':716'. The original 715 was correct, so this edit introduces an error. Its stated reason, '715 is blank', is false.",
+     "evidence": "In /media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt, line 715 is '1.5.8   Phase lag index (pli)' and line 716 is 'Keywords: undirected, linear, unsigned, ...'. This holds with plain newline numbering (cat -n, sed, Python split('\\n')), the same numbering that puts the PLV heading at :686 and the PPC heading at :701 in this sentence. Python splitlines() moves all three headings by +15, so no line-counting convention gives 686/701/716. The records still say ':715' and 'supplement.txt:715-750' (spectral.plv/pli/wpli/dspli/dswpli/ppc.yaml:7), and the agent's own external_checked entry confirms 715-750. The note now contradicts the records. Revert to :715."
+    },
+    {
+     "file": "audit/notes/spectral_phase_sync.md",
+     "line": 270,
+     "problem": "Same wrong edit as line 14: 'and :715.' was changed to 'and :716.'. The heading for section 1.5.8 is at supplement.txt:715, and 716 is the Keywords line.",
+     "evidence": "cat -n supplement.txt shows 715 '1.5.8   Phase lag index (pli)' and 716 'Keywords: ...'. Revert to :715."
+    },
+    {
+     "file": "audit/records/spectral.plv.yaml",
+     "line": 44,
+     "problem": "The citation pyspi/workflow/_config.py:229-234 is off by one. The old :143-148 at a1f20c7 maps to 230-235 at HEAD. Line 229 is 'preset = metrics[\"preset\"]', and the line that actually 'resolves the retained185 preset to that file' (metric_config = Path(__file__).resolve().parents[1] / presets[preset]) is 235. The new range leaves that line out, although the old range included it (148).",
+     "evidence": "At a1f20c7 (git show a1f20c7:pyspi/workflow/_config.py), 143-145 is the presets dict, 146-147 the unknown-preset check and 148 the metric_config resolution. At HEAD the same lines are 230-232 (dict), 233-234 (check) and 235 (resolution), and 229 is the preset lookup. The fix should read :230-235."
+    },
+    {
+     "file": "audit/notes/spectral_phase_sync.md",
+     "line": 252,
+     "problem": "Same off-by-one: '_config.py:229-234 at HEAD a42ebc1' should be 230-235. The sentence says the file resolves the preset, and that happens at line 235, which falls outside the cited range.",
+     "evidence": "pyspi/workflow/_config.py:235 is 'metric_config = Path(__file__).resolve().parents[1] / presets[preset]'. Lines 230-232 are the presets dict, which maps 'retained185' to 'workflow/retained185.yaml'."
+    }
+   ],
+   "missed": [
+    {
+     "file": "audit/records/spectral.band_selection.yaml",
+     "line": 36,
+     "problem": "Low severity, consistency only. The agent prefixed some bare basenames to remove ambiguity (connectivity.py:370 became spectral_connectivity/connectivity.py:370, spectral.py:300 became pyspi/statistics/spectral.py:300), but left others bare in the same sentences or nearby lines: connectivity.py:1329 and :1357 here; connectivity.py:1095-1102 at band_selection.yaml:37; connectivity.py:1329-1331, connectivity.py:1060-1113, spectral.py:92-100 and connectivity.py:1329 at spectral_csm.md:113 and :116. The line numbers are correct at HEAD and in spectral_connectivity 1.1.2 (1329 is _bandpass, 1110-1111 is _inner_combination), and citations.py resolves them, so nothing points to the wrong place. Prefix them only if the cluster should use one consistent style."
+    }
+   ],
+   "sampled": 77,
+   "resolved": [
+    "audit/notes/spectral_phase_sync.md:14 - reverted ':716 (PLI family)' to ':715'. sed shows supplement.txt:715 is '1.5.8   Phase lag index (pli)' and 716 is the Keywords line, matching :686 (PLV) and :701 (PPC) and the records' 715-750.",
+    "audit/notes/spectral_phase_sync.md:270 - reverted 'and :716.' to 'and :715.' for the same reason.",
+    "audit/records/spectral.plv.yaml:44 - changed _config.py:229-234 to :230-235 (HEAD a42ebc1; :143-148 at a1f20c7). git show a1f20c7 puts 143-148 at the presets dict through metric_config resolution. At HEAD those are 230-232 (dict), 233-234 (check) and 235 (resolution); 229 is the preset lookup.",
+    "audit/notes/spectral_phase_sync.md:252 - changed `pyspi/workflow/_config.py:229-234` at HEAD a42ebc1 to :230-235, the same off-by-one fix.",
+    "Re-ran citations.py --only-problems: it flags no _config.py or supplement citation in spectral_phase_sync.md or spectral.plv.yaml."
+   ],
+   "disputed": [
+    "audit/records/spectral.band_selection.yaml:36 (and band_selection.yaml:37, spectral_csm.md:113/116), bare connectivity.py/spectral.py basenames: left unchanged. The reviewer agrees every line number is correct at HEAD and in spectral_connectivity 1.1.2, and citations.py resolves them without an ambiguity flag. Prefixes were added only where the scanner reported 'ambiguous'. Bare connectivity.py:/spectral.py: citations appear dozens of times across spectral_csm.md and the cluster records, so prefixing only the reviewer's sample would not make the style consistent. A cluster-wide restyle is cosmetic, outside a citation-freshness fix, and would touch many lines a concurrent Workflow 3 analyst may be editing. No citation points to the wrong place."
+   ],
+   "remaining": [],
+   "validator_clean": true
+  },
+  {
+   "cluster": "w1-basic",
+   "families": [
+    "cov_prec_simple",
+    "cov_prec_robust",
+    "cov_prec_glasso",
+    "rank_corr",
+    "xcorr"
+   ],
+   "ok": true,
+   "fixed": 7,
+   "false_positives": 60,
+   "external_checked": [
+    "GitBook /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/basic-statistics.md: cited lines 15-45, 17, 21-25, 55-57, 81-97, 101-122, 107, 126-140 all checked and correct (34 unresolved citations in 22 records and 4 notes)",
+    "GitBook information-about-pyspi/spis/table-of-spis.md:35 (single-line HTML table; contains spearmanr, spearmanr-sq, kendalltau, kendalltau-sq): correct",
+    "supplement/supplement.txt: 136-157 (1.1.1 Covariance), 137 (keyword line), 153-156 and 167-170 (identifier lists), 158-171 (1.1.2 Precision), 192 (1.1.5 heading), 197-198 (truncation text with [9,10]), 1987-1988 (ref [8]), 1990-1995 (refs [9],[10]): all correct",
+    "tests/README.md: 125, 131, 134, 135, 145, 120, 130, 249, bug 4 at 205: correct after the cov_prec_robust note fixes",
+    "docs/storage_comparison/REVIEW.md:200 (xcorr metadata) and M8 heading (195-199): correct",
+    "EEG_OPTIMIZATION_NOTES.md:132 (generic Undirected computes both directions): correct",
+    "pyspi/calculator.py HEAD lines in all 22 records and 5 notes (230-267, 239, 251-264, 256, 327-339, 329, 332, 335, 336-339): confirmed by reading HEAD; no stale-calculator items remained in this cluster",
+    "Site-packages sources read for the token-miss items: sklearn _graph_lasso.py (178-201, 193, 206), _elliptic_envelope.py:183-184, _robust_covariance.py (129, 399-618, 476, 770-822), _empirical_covariance.py (104-107, 196-215, 213), utils/validation.py:1477-1478, linear_model/_cd_fast.pyx (1092, 1173-1182), scipy linalg/_basic.py:2006-2023, scipy signal/_signaltools.py (258-259, 591, 706-708, 1165-1182, 1236-1374, 1371, 1377, 1490-1494), scipy stats/_stats_py.py (5405-5406, 5419-5422, 5701), numpy _function_base_impl.py (2912, 3029, 3036-3038, 3043); all cited lines matched their sentences",
+    "Not checkable locally, left as is: sklearn 0.24.1 _cd_fast.pyx:470-621 / 571-610 and 0.24.1 _shrunk_covariance.py:487-492 (each already carries the 0.24.1 tag qualifier)"
+   ],
+   "leftovers_applied": [
+    "wf2bA_leftovers_status.json still_open_for_synthesis has no item specific to cov_prec_simple, cov_prec_robust, cov_prec_glasso, rank_corr or xcorr; the cov_prec_simple and cov_prec_robust calculator.py items are listed under applied and were confirmed at HEAD in all 22 records and 5 notes",
+    "The 2b-A cov_prec_robust note left stale tests/README.md line numbers in its own text (126/115/116/106), although its correction log at :317 says they were moved to 145/134/135/125. Those lines were fixed (see fixed)",
+    "audit/_handoff/wf2bB_leftovers.json does not exist, so there was nothing to apply from it"
+   ],
+   "claim_problems": [],
+   "not_done": [
+    "Cross-cutting still_open item 'HEAD moved a1f20c7 -> a42ebc1; synthesis should state both commits are identical outside pyspi/workflow/'. This needs one global statement, for example in audit/README.md or the synthesis, which is outside this cluster's files. The records here keep their '(HEAD a1f20c7)' labels.",
+    "Not in still_open_for_synthesis, noted only for visibility: wf2bA_leftovers.json remaining_issues[4] (basic.cov.MinCovDet freshbasic value 0.0765 changes after any --force re-run; suggested rewording to 'nonzero (differs between fresh processes)'). This is a closeness/evidence-text decision and was left alone under the never-change-closeness rule.",
+    "The 2b-A not_done items for these families (sklearn 0.24.1 not executed, P>T pinvh sub-claim, EEG ties, the Brockwell & Davis locator, AR(1) null) need computation, installs or external material, and are left for later stages"
+   ],
+   "refutations": [],
+   "missed": [
+    {
+     "file": "audit/records/basic.xcorr.mean_sig-False.yaml",
+     "line": 235,
+     "problem": "This is not a citation problem and the 4a agent did not cause it: the record was last modified 2026-10-14 20:42, before the 4a run. The record has score_0_10: 6, and audit/notes/xcorr.md:187 also gives 'Anchor 6'. But audit/_handoff/wf2bA_verdicts.json and the HANDOFF.md verdict table both list basic.xcorr.mean_sig-False as 'variant 5'. All other 21 units in the cluster match the snapshot on both verdict and score. Synthesis should settle which number is current before it builds the CSV or histograms. I did not change anything."
+    }
+   ],
+   "sampled": 57,
+   "resolved": [
+    "Reviewer 'missed' item basic.xcorr.mean_sig-False score 6 vs snapshot 5: no edit, because this is a score question and not a citation, and 4a may not change scores. The current files agree with each other. audit/records/basic.xcorr.mean_sig-False.yaml:234-235 gives verdict variant, score_0_10 6. audit/notes/xcorr.md:187 gives 'Anchor 6' and says 'This was scored 5 before review'; the review asked for the same 'no literature definition' argument used for max_sig-False to be applied here. The value 5 in audit/_handoff/wf2bA_verdicts.json and audit/HANDOFF.md:102 is the score from before the review, so those snapshots are stale. Synthesis should treat 6 (the record) as current and refresh both snapshots before building the CSV or histograms. The fix belongs in HANDOFF/_handoff, which are outside this cluster's edit scope."
+   ],
+   "disputed": [],
+   "remaining": [
+    "Not a 4a citation defect, so it goes to synthesis: basic.xcorr.mean_sig-False is scored 6 in audit/records/basic.xcorr.mean_sig-False.yaml:235 and audit/notes/xcorr.md:187 (the notes say it was 5 before review). The stale snapshots audit/HANDOFF.md:102 and audit/_handoff/wf2bA_verdicts.json:257 still say 5. Refresh both before building the CSV or histograms."
+   ],
+   "validator_clean": true
+  },
+  {
+   "cluster": "w1-pdist-bary-cdt-itg",
+   "families": [
+    "pdist",
+    "barycenters",
+    "cdt_pairwise",
+    "it_gaussian"
+   ],
+   "ok": true,
+   "fixed": 10,
+   "false_positives": 66,
+   "external_checked": [
+    "GitBook /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/distance-similarity.md:41-75 (Barycenter section; all four bary records and barycenters.md:19): correct",
+    "GitBook information-theory.md section ranges 24-42 cce, 46-64 ce, 68-86 di, 90-107 gc, 139-157 je, 161-180 mi, 184-202 si, 206-231 te, 235-254 tlmi, 11-13 overview (v1.6.1), 243 ('a directed measure'): all correct",
+    "GitBook information-about-pyspi/spis/table-of-spis.md:73 (the one-line table holding the Cross-Map Entropy / xme row; xme records and it_gaussian.md:136): correct",
+    "supplement/supplement.txt line ranges in it_gaussian records: 405-415, 444-449, 451-457, 459-465, 467-474, 476-493, 487-491, 492-497, 500-511, 513-524, 526-537, 539-548, 405-565: all correct. Supplement sections \u00a71.2.10, \u00a71.3.1-1.3.4 and \u00a71.4.x headings match",
+    "tests/README.md:134, :146, :147 (barycenters records and notes) and bug 1 / bug 3 references (lines 202, 204): correct. barycenters.md:129 cites tests/README.md:115/127/128 only as the historical trace-stage numbers, as stated",
+    "DEPENDENCY_COMPATIBILITY_REVIEW.md: the CDT row is at 43 and the CDT section at 88-92 (fixed in causal.cds). DEPENDENCY_MIGRATION.md:50 has the CDT 0.6.0 row (cited by name only)",
+    "JIDT .java citations in all 13 it_gaussian records: each carries a v1.6.1 tag URL with the bundled-jar note, an a9b6b3e commit URL, or an inline a9b6b3e/v1.6.1 qualifier. Two bare ones were qualified (est.gaussian:70, te auto:76). Line numbers were left unchanged",
+    "Installed delegate sources in .venv site-packages (tslearn dba.py/_dtw.py/soft_dtw_fast.py, sklearn pairwise.py/validation.py, scipy distance.py/_minimize.py, cdt CDS.py/IGCI.py) for the flagged token-miss items: cited lines match the sentences"
+   ],
+   "leftovers_applied": [
+    "notes/it_gaussian.md:426 (Changes after the adversarial review, Timing entry): kept the history entry and appended '(Superseded: after the review-stage forced re-run the record's check_cost quotes four timings of the T = 4096 params probe and about 270\u00d7 at P=5, T=1024.)'. This matches the current check_cost in infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2.yaml"
+   ],
+   "claim_problems": [
+    "audit/notes/it_gaussian.md:124 says estimator='symbolic' 'skips identifier and label handling (infotheory.py:45-52)'. In the code, JIDTBase.__init__ still appends '_symbolic' to the identifier (infotheory.py:37) and adds the 'symbolic' label (:50). The early return only skips the trailing DCE suffix block (:57-58). The record infotheory.te.symbolic.yaml:14 states this correctly. Only the note's wording is imprecise; I did not rewrite it because it is a claim"
+   ],
+   "not_done": [
+    "barycenters leftover: the stored ref npz and results/barycenters.json still carry the old popstat notes string (2.638 comment). Clearing it needs a forced popstat re-run (run_checks/refs, cache keyed on VERSION + run spec). That is computation and is deferred to final verification",
+    "Cross-family leftover (HEAD moved a1f20c7 -> a42ebc1, package identical outside pyspi/workflow/): records in these families still label calculator.py citations 'HEAD a1f20c7'. The line numbers are valid at a42ebc1. The one-line statement that both commits are identical belongs to the synthesis summary, not to per-family records, so I left the labels alone"
+   ],
+   "refutations": [
+    {
+     "file": "audit/records/infotheory.te.symbolic.yaml",
+     "line": 14,
+     "problem": "The agent changed the citation to '(infotheory.py:37, 45-52)', but line 37 is blank. The identifier suffix ('te' + '_symbolic') is appended at infotheory.py:38. The added line number is off by one and should read 'infotheory.py:38, 45-52'.",
+     "evidence": "At HEAD a42ebc1, and identically at a1f20c7 and 36ac45a: line 36 is `self._entropy_calc = self._getcalc(\"entropy\")`, line 37 is empty, and line 38 is `self.identifier = self.identifier + \"_\" + estimator`. The same cluster's infotheory.est.gaussian.yaml:26 already cites `identifier += '_gaussian' (:38)`."
+    },
+    {
+     "file": "audit/notes/it_gaussian.md",
+     "line": 124,
+     "problem": "The agent's claim_problems entry uses the same wrong line: it says JIDTBase.__init__ appends '_symbolic' at 'infotheory.py:37'. The append is at :38. The substance of the claim problem holds: the note's 'skips identifier and label handling (infotheory.py:45-52)' is imprecise, because the identifier suffix (:38) and the 'symbolic' label (:50) are still applied and only the DCE suffix block (:57-58) is skipped. Anyone acting on the report should use :38.",
+     "evidence": "pyspi/statistics/infotheory.py lines 37 (blank), 38 (identifier += '_' + estimator), 50 (labels += ['symbolic']), 52 (return), 57-58 (_DCE suffix)."
+    }
+   ],
+   "missed": [],
+   "sampled": 39,
+   "resolved": [
+    "audit/records/infotheory.te.symbolic.yaml:14: changed the citation from '(infotheory.py:37, 45-52)' to '(infotheory.py:38, 45-52)'. At HEAD, line 37 is blank and line 38 is `self.identifier = self.identifier + \"_\" + estimator`.",
+    "audit/notes/it_gaussian.md:124 claim_problems entry: line number corrected to :38. The corrected entry reads: the note says estimator='symbolic' 'skips identifier and label handling (infotheory.py:45-52)', but JIDTBase.__init__ still appends '_symbolic' at infotheory.py:38 and adds the 'symbolic' label at :50. The early return at :52 only skips the DCE suffix block at :57-58. The note is not edited because this is a claim; it stays under claim_problems."
+   ],
+   "disputed": [],
+   "remaining": [],
+   "validator_clean": true
+  },
+  {
+   "cluster": "w1-lmfit-pec",
+   "families": [
+    "lmfit",
+    "pec"
+   ],
+   "ok": true,
+   "fixed": 9,
+   "false_positives": 28,
+   "external_checked": [
+    "GitBook /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/miscellaneous.md:92-113: the Power Envelope Correlation section lists all six pec identifiers. Correct in the 4 pec records and in notes/pec.md:13.",
+    "Supplement supplement/supplement.txt: section 1.6.1 lmfit runs 856-868, the 'Ride' typo is at 863 and the Bayesian prior sentence at 864. Section 1.6.4 pec has its heading at 915. All cited lines are correct.",
+    "Historical MNE 0.23 /home/dan/anaconda3/envs/pyspi/lib/python3.9/site-packages/mne/connectivity/envelope.py: 15-152 is envelope_correlation and 140-151 is the row-wise store plus symmetrisation. Correct (cited as unresolved in notes/pec.md:38 and the records).",
+    "DEPENDENCY_COMPATIBILITY_REVIEW.md:69: three envelope-correlation cases matched to about 1e-15. Correct.",
+    "DEPENDENCY_MIGRATION.md:78-79: dense conversion plus the explicit combine of epochs with mean. Correct.",
+    "pyspi/calculator.py at HEAD: 252-259, 256, 329, 332, 336-337, 327-339 and the compute block were checked. All correct after the 230-262 -> 230-267 fix.",
+    "sklearn 1.9.1 in the project venv: _coordinate_descent.py:884-894 and 1334, _cd_fast.pyx:138-159 and 391-400, _base.py:188-199, 291-316 and 318-334, _bayes.py:154-160, 270-282 and 343-349, _ridge.py:1022 and 1229-1263, _stochastic_gradient.py:1802, metrics/_regression.py:586-588.",
+    "mne_connectivity 0.9.0: envelope.py:146-188 and 210-212, base.py:802-810. scipy: signal/_signaltools.py:2519-2526 (hilbert). audit/checks/refs/_kernels_basic_misc.py:528."
+   ],
+   "leftovers_applied": [
+    "still_open_for_synthesis 'HEAD moved a1f20c7 -> a42ebc1': applied for my families. notes/lmfit.md:268 and notes/pec.md:210 now say the package code at a42ebc1 is identical outside pyspi/workflow/. The record citations keep the 'HEAD a1f20c7' label, which remains accurate. A family-independent statement still belongs in the synthesis.",
+    "wf2bA pec 'notes/pec.md:169 three -> four': confirmed already applied (line 169 reads 'let four runs pass'). No edit made.",
+    "wf2bB_leftovers.json does not exist, so there was nothing to apply from it."
+   ],
+   "claim_problems": [],
+   "not_done": [
+    "pec: one statistical run (misc.pec.orth-True_log-True|bivariate_gaussian|4096|pipeline|pec_orth_log_abs-stat, raw z 2.642) needs a second independent draw to settle. Requires computation.",
+    "pec: a single-sample exact zero of the analytic signal (the log(0) hypothesis) has not been constructed. Requires computation.",
+    "pec: whether the EEG recordings contain bridged or duplicate channels needs the EEG data. Whether Khan et al. 2018 used absolute=True with log power is unchecked because the paper's Methods were not read.",
+    "pec: the trace probe's pre-mirror asymmetry figure (5.2e-16) and the 2-channel-subset bivariateness probe have not been re-run as manifest runs. Requires computation.",
+    "lmfit: SGDRegressor stability across scikit-learn versions is untested (only 1.9.1 is installed, and installing others is out of scope). Multi-realisation R > 1 input was not probed.",
+    "lmfit: other families' briefing packs have not been checked for the same 18-line supplement offset (this is a synthesis-level text check outside my families)."
+   ],
+   "refutations": [],
+   "missed": [
+    {
+     "file": "audit/records/misc.lmfit.SGDRegressor.yaml",
+     "line": 58,
+     "problem": "The trace cites `sklearn/linear_model/_base.py:291-302 LinearModel._decision_function / predict` (line 58) and `_base.py:318-334 _set_intercept` (line 59). SGDRegressor does not use either: `BaseSGDRegressor(RegressorMixin, BaseSGD)` (`_stochastic_gradient.py:1430`) does not inherit LinearModel, and `_set_intercept` is never called in `_stochastic_gradient.py`. The code SGDRegressor actually runs is `predict` at `_stochastic_gradient.py:1697-1710`, which returns `_decision_function` at `:1678-1695` (safe_sparse_dot(X, coef_.T) + intercept_). Its intercept is learned by SGD (`_sgd_fast.pyx.tp:549-554`) and stored at `_stochastic_gradient.py:1794`. Both citations point at the wrong code, and the token heuristic passed them."
+    },
+    {
+     "file": "audit/records/misc.lmfit.Ridge.yaml",
+     "line": 55,
+     "problem": "The agent corrected notes/lmfit.md:28 on the grounds that `_base.py:291-302` was off for `predict` (predict is at 301-316). It left the same `_base.py:291-302 LinearModel._decision_function / predict` citation in all five lmfit records: Ridge:55, Lasso:55, ElasticNet:63, BayesianRidge:58 and SGDRegressor:58. The records should read `_decision_function` 291-299 and `predict` 301-316, to match the note. Two units also override parts of this path. BayesianRidge has its own `predict` at `_bayes.py:374-403`, which calls `_decision_function` at :396. ElasticNet and Lasso override `_decision_function` at `_coordinate_descent.py:1301-1317`, and its dense branch calls super."
+    },
+    {
+     "file": "audit/notes/lmfit.md",
+     "line": 25,
+     "problem": "This is a claim problem, so it is not fixed here. The heading '4. sklearn common path' says `_preprocess_data` (`_base.py:188-199`), `_set_intercept` (`_base.py:318-334`) and `predict` (`_base.py:301-316`) are shared by all five units. That is false for SGDRegressor, which uses none of the three: it has no `_preprocess_data` or `_set_intercept` call, and its `predict` is at `_stochastic_gradient.py:1697`. It is also false for BayesianRidge's `predict`, which is overridden at `_bayes.py:374`. The agent rewrote line 28 inside this list and reported claim_problems: []."
+    },
+    {
+     "file": "audit/records/misc.lmfit.ElasticNet.yaml",
+     "line": 55,
+     "problem": "Parenthetical line numbers in the `ElasticNet.fit` trace are off by one or two. `self.path(...)` is cited as (1246-1270) but starts at 1248. `_set_intercept` is cited as (1282) but is at `_coordinate_descent.py:1283`. The same pair appears in `misc.lmfit.Lasso.yaml:49`. The scanner skips these because they are bare numbers in parentheses."
+    },
+    {
+     "file": "audit/notes/lmfit.md",
+     "line": 11,
+     "problem": "This is a quotation problem, not a line problem. The supplement quote reads '...(ordinary least squares fit) function (SGDRegressor);'. supplement.txt:862 reads 'fit) function (denoted by modifier SGDRegressor);'. The record `documented_definition` fields carry the same omission, for example `misc.lmfit.Ridge.yaml:12`. The cited line range 856-868 is right."
+    }
+   ],
+   "sampled": 59,
+   "resolved": [
+    "misc.lmfit.SGDRegressor.yaml:58-59 (missed item 1, confirmed): the _base.py:291-302 decision_function/predict and _base.py:318-334 _set_intercept citations pointed at code SGDRegressor never runs. BaseSGDRegressor(RegressorMixin, BaseSGD) at _stochastic_gradient.py:1430, with BaseSGD at :87, does not inherit LinearModel. Line 58 now reads `_stochastic_gradient.py:1697-1710 BaseSGDRegressor.predict -> _decision_function (1678-1695): safe_sparse_dot(X, coef_.T) + intercept_`. Line 59 now reads `_stochastic_gradient.py:1794 intercept_ = np.atleast_1d(intercept)`, with the intercept learned by SGD at _sgd_fast.pyx.tp:549-554 and no _preprocess_data or _set_intercept call.",
+    "Records Ridge:55, Lasso:55, ElasticNet:63 and BayesianRidge:58 (missed item 2, confirmed): replaced `_base.py:291-302 LinearModel._decision_function / predict` with each unit's actual path. Ridge: `_ridge.py:1265-1279 Ridge.predict -> super().predict, _base.py:301-316 -> _decision_function (_base.py:291-299)`. Lasso and ElasticNet: `_base.py:301-316 LinearModel.predict -> _coordinate_descent.py:1301-1317 ElasticNet._decision_function (dense input: super()._decision_function, _base.py:291-299)`. BayesianRidge: `_bayes.py:374-403 BayesianRidge.predict -> self._decision_function (396; _base.py:291-299)`. Also found that Ridge overrides predict at _ridge.py:1265, which the reviewer did not mention.",
+    "notes/lmfit.md:25-28 (missed item 3, claim problem): not edited, as the rules require. The '4. sklearn common path' list claims that _preprocess_data (_base.py:188-199), _set_intercept (_base.py:318-334) and LinearModel.predict (_base.py:301-316) are shared by all five units. That is false for SGDRegressor, which uses none of the three: its predict is _stochastic_gradient.py:1697-1710 and its intercept is learned by SGD. BayesianRidge overrides predict at _bayes.py:374-403, and Ridge (_ridge.py:1265) and ElasticNet/Lasso (_decision_function at _coordinate_descent.py:1301-1317) override parts of the path. This needs a claim rewrite by the synthesis owner; the MSE conclusions are not affected because the computed quantity is still X @ coef_ + intercept_.",
+    "misc.lmfit.ElasticNet.yaml:55 and misc.lmfit.Lasso.yaml:49 (missed item 4, confirmed): self.path(...) changed from (1246-1270) to (1248-1270), _set_intercept from (1282) to (1283), and zero coef init from (1232-1236) to (1233-1236), since line 1232 is blank. Also fixed the ElasticNet.fit range from 1097-1285 to 1096-1294 (def fit is at 1096, return self at 1294) in both records and in notes/lmfit.md:65. In misc.lmfit.ElasticNet.yaml, changed dual_gap_formulation_A from (138-157) to (138-159) to match the earlier note fix (gap = primal - dual; return gap at 158-159).",
+    "notes/lmfit.md:11 and documented_definition in all five lmfit records (missed item 5, confirmed): supplement.txt:861-862 reads 'fit) function (denoted by modifier SGDRegressor);'. The quotes now read 'function (denoted by modifier SGDRegressor);' instead of 'function (SGDRegressor);'.",
+    "Re-ran citations.py --only-problems after the edits: no new lmfit or pec flags. The remaining lmfit token-miss items (ElasticNet:8,52,87; Ridge:42; SGDRegressor:47; notes/lmfit.md:26,85) are the false positives already reviewed by the fix agent (_coordinate_descent.py:884-894, _cd_fast.pyx:391-400, _ridge.py:1022, _stochastic_gradient.py:1802, _base.py:188-199)."
+   ],
+   "disputed": [],
+   "remaining": [
+    "audit/records/misc.lmfit.ElasticNet.yaml:24 (implemented_as) still cites dual_gap_formulation_A as _cd_fast.pyx:138-157. The same record's trace (line 60) and notes/lmfit.md:85 now cite 138-159, because gap = primal - dual is at 158 and return gap at 159. Change line 24 to 138-159 to match. This is a citation-only fix.",
+    "notes/lmfit.md:25-28 still has the claim problem that the fix agent correctly left unedited. The '4. sklearn common path' list says _preprocess_data (_base.py:188-199), _set_intercept (_base.py:318-334) and LinearModel.predict (_base.py:301-316) are shared by all five units. That is false for SGDRegressor, which has no _preprocess_data or _set_intercept call; its predict is at _stochastic_gradient.py:1697-1710 and its intercept is learned by SGD and stored at :1794. BayesianRidge overrides predict at _bayes.py:374-403, Ridge.predict at _ridge.py:1265-1279 calls super, and ElasticNet and Lasso override _decision_function at _coordinate_descent.py:1301-1317. The synthesis owner needs to rewrite this claim. The MSE conclusions are unaffected.",
+    "Minor wording slip in the fix report, no edit needed: it says 'def fit is at 1096', but _coordinate_descent.py:1096 is the @_fit_context decorator and def fit is at 1097. The cited range 1096-1294 in the ElasticNet and Lasso records and in notes/lmfit.md:65 still covers the method correctly. Confirmed in the files: SGDRegressor:58-59, the predict paths at Ridge:55, Lasso:55, ElasticNet:63 and BayesianRidge:58, the ElasticNet:55 and Lasso:49 values 1233-1236, 1248-1270 and 1283, and the supplement quote 'denoted by modifier SGDRegressor' (supplement.txt:861-862) in notes/lmfit.md:11 and all five documented_definition fields. citations.py still flags lmfit and pec items, and all of them are false positives. I spot-checked the pec items envelope.py:151,178,210-212, mne_connectivity/base.py:802-810 and scipy _signaltools.py:2520-2525: each cited line holds the code described."
+   ],
+   "validator_clean": true
+  }
+ ]
+}

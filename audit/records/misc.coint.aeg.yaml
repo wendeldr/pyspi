@@ -1,0 +1,317 @@
+unit_id: misc.coint.aeg
+status: profiled
+correctness:
+  metric_name_standard: 'Engle-Granger two-step (augmented Engle-Granger, AEG) residual-based cointegration test statistic: ADF t-ratio on the residuals of the cointegrating regression (with constant, or
+    constant + linear trend), lag order chosen by AIC or BIC up to 10'
+  canonical_ref: Engle R.F. & Granger C.W.J. 1987, Econometrica 55(2):251-276 (two-step test, ADF on residuals, Table II); Said S.E. & Dickey D.A. 1984, Biometrika 71(3):599-607 (augmented DF); MacKinnon
+    J.G. 1991/2010 (response-surface critical values, N=2); Phillips P.C.B. & Ouliaris S. 1990, Econometrica 58(1):165-193 (normalisation dependence of residual-based tests)
+  canonical_definition: 'Step 1: OLS y0_t = alpha (+ delta t) + beta y1_t + u_t. Step 2: OLS Delta u_t = rho u_(t-1) + sum_(i=1..p) gamma_i Delta u_(t-i) + e_t (no deterministic term); statistic = t-ratio
+    rho_hat / se(rho_hat); reject no-cointegration for values below the Engle-Granger/MacKinnon critical value (more negative = stronger evidence). The statistic depends on which variable is the regressand.'
+  documented_definition: 'supplement §1.6.3, p.19 (heading supplement.txt line 885, text 886-899): "If two time series are individually integrated but some linear combination of them has a lower order of
+    integration, then the series are said to be cointegrated [79]. We implement statistics for quantifying the cointegration of bivariate time series from two tests included in v0.12.0 of statsmodels [75]:
+    the Augmented Engle-Granger (AEG, modifier aeg) [80] two-step test and the Johansen test (johansen) [81]." Keywords: "undirected, linear, unsigned, bivariate, time-dependent". [80] = Engle & Granger
+    1987 Econometrica 55, 251; [81] = Pesaran & Shin 1999 (ARDL bounds approach), not Johansen. GitBook spi-descriptions/miscellaneous.md:13-41 has the same text (Key References link to JSTOR 1913236 =
+    Engle & Granger 1987 and to the Pesaran-Shin ARDL chapter). AEG bullet (supplement.txt:892-894): "For the AEG test, we use a lag that is inferred via either AIC (modifier aic) or BIC (bic), with a maximum
+    lag of 10 and obtain a t-statistic (tstat) of the unit-root test on the residuals. The time series is first detrended by assuming either a constant (c) or a constant and linear trend (ct)." Listed as
+    SPIs 229-231; keyword "undirected".'
+  delegate_lib: statsmodels==0.15.0 statsmodels.tsa.stattools.coint (method "aeg") -> adfuller(regression="n") -> OLS
+  implemented_as: 'Default pipeline z-scores (optionally detrends) each channel. For each unordered pair a<b the first call is bivariate(i=b, j=a), so coint(y0 = z_b, y1 = z_a): OLS of the HIGHER-index
+    channel on the lower-index channel plus constant (c) or constant + trend (ct); ADF without deterministic terms on the residuals with lag p in 0..10 chosen by min AIC/BIC on the common sample T-11, then
+    re-fit on T-1-p rows; returns the t-ratio on u_(t-1). R^2 >= 1-100*sqrt(eps) returns -inf. Cache stores the value for both (b,a) and (a,b), and the Undirected mirror copies it, so A[a,b] = A[b,a] =
+    EG(dependent = z_max(a,b), regressor = z_min(a,b)). The p-value and critical values are discarded; the value is returned with its sign (no negation despite the comment at misc.py:99).'
+  implementation_trace:
+  - pyspi/calculator.py:252-259 Calculator._load_yaml instantiates Cointegration(**params) per config; the YAML labels block (config.yaml:1294-1299, "linear") is not read, so instance labels come from the
+    class
+  - 'pyspi/calculator.py:295 (def) and :327-339 compute: S = spi.multivariate(dataset); fill_diagonal NaN; any exception -> the whole matrix for that SPI set to NaN (:336-337), a MetricReport with status=failed
+    recorded, and a warning built at :339 and emitted at :355'
+  - 'pyspi/data.py:184-195 preprocessing: optional scipy.signal.detrend(axis=1), then zscore(axis=1, ddof=1) by default'
+  - 'pyspi/base.py:132-138 Undirected.multivariate -> Directed.multivariate (base.py:85-94: outer loop j, inner loop i != j, A[i,j] = bivariate(i=i, j=j)); then A[tril] = A.T[tril]. For a pair a<b the FIRST
+    call is bivariate(i=b, j=a)'
+  - pyspi/statistics/misc.py:22-26 class Cointegration(Undirected, Unsigned); labels = ["misc","unsigned","temporal","undirected","nonlinear"]
+  - 'pyspi/config.yaml:1342-1358 three configs: (trend c, autolag aic), (ct, aic), (ct, bic), maxlag 10, statistic tstat; pyspi/sonnet_config.yaml:166-181 keeps only (ct, aic, 10) (GitBook miscellaneous.md:39
+    marks it as the "cointegration" representative)'
+  - 'pyspi/statistics/misc.py:28-37, :46-52 __init__ else-branch (method != "johansen"): stores _autolag, _maxlag, _trend; identifier coint_aeg_tstat_trend-<trend>_autolag-<autolag>_maxlag-<maxlag>'
+  - pyspi/statistics/misc.py:54-60 key = ("aeg", autolag, maxlag, trend)
+  - 'pyspi/statistics/misc.py:62-67 _from_cache: try data.coint[self.key][(i, j)]; on miss z = data.to_numpy(squeeze=True) (shape P x T)'
+  - 'pyspi/statistics/misc.py:69-78 stattools.coint(z[i], z[j], autolag, maxlag, trend) -> ci = {"tstat": stats[0]}; z[i] is the DEPENDENT variable y0'
+  - 'pyspi/statistics/misc.py:89-95 store ci under (i, j) AND (j, i): the first-computed orientation is reused for the reverse pair'
+  - pyspi/statistics/misc.py:99-103 bivariate returns ci[self._statistic] (comment at :99 says "Return the negative t-statistic", no negation is applied)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py:2571-2579 coint(y0, y1, trend="c", method="aeg", maxlag=None, autolag="aic") (statsmodels 0.15.0)
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py:2683-2688 xx = add_trend(y1, trend) (c: constant; ct: constant + linear trend); res_co = OLS(y0,
+    xx).fit() (first-stage cointegrating regression)'
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py:2690-2706 if R^2 < 1 - 100*sqrt(eps) (SQRTEPS :84): adfuller(resid, maxlag, autolag, regression="n");
+    else CollinearityWarning and tstat = -inf'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py:2708-2717 MacKinnon critical values and p-value (computed, discarded by pyspi)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py:352-363 adfuller input checks (constant series -> ValueError); :380-385 maxlag must be <= nobs//2
+    - 1 for regression "n" (T >= 22 for maxlag 10)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py:386-391 xdall = lagmat(diff(u), maxlag, trim="both", original="in"), column 0 replaced by the lagged
+    level u_(t-1); common sample of T-1-maxlag rows
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py:395-407 autolag: _autolag(OLS, xdshort, xdall, startlag=1, maxlag, ic) on the common sample'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py:147-154 _autolag fits lags 0..maxlag and picks min aic / bic
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/regression/linear_model.py:2143-2174 info_criteria: aic = -2 llf + 2 k, bic = -2 llf + ln(n) k, k = df_model + k_constant (number
+    of regressors; no constant here)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py:420-427 re-run with the chosen lag p on the LARGEST sample for that lag (T-1-p rows)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/stattools/_stattools.py:433-436 resols = OLS(Delta u_t, [u_(t-1), Delta u_(t-1..t-p)]) (no deterministic term); adfstat =
+    tvalues[0]
+  deviation_from_documented: '(1) Asymmetry hidden: the documentation calls the SPI undirected and does not say which series is the regressand; the code uses the higher channel index as y0 under multivariate
+    (cache + loop order) but z[i] (the first argument) under a direct bivariate call. (2) Sign: labelled "unsigned" (class Unsigned -> issigned() False, base.py:146-150) and the code comment says "Return
+    the negative t-statistic" (misc.py:99), but the raw t-statistic is returned: typically negative, more negative = more cointegrated, opposite orientation to the Johansen identifiers. (3) "The time series
+    is first detrended" is implemented as including the deterministic terms in the cointegrating regression (equivalent by Frisch-Waugh for the residuals). (4) Metadata: class label "nonlinear" vs documented
+    "linear". (5) statsmodels v0.12.0 documented, 0.15.0 installed.'
+  deviation_from_canonical: 'Value: none against the Engle-Granger two-step ADF t-ratio with constant/trend in step 1, no deterministic term in step 2, IC lag search on a common sample and refit on the
+    largest sample. Probe: from-scratch numpy implementation reproduces pyspi to <= 4.2e-13 over cointegrated, iid_gaussian, trending, var2_bivariate, delayed_noise at T=64..4096 for all three configs;
+    a variant that does not refit on the larger sample differs by up to 2.27, so the refit convention matters for references (e.g. R urca ur.df). Canonical EG requires a normalisation choice; pyspi fixes
+    it by channel index rather than by a substantive rule.'
+  units_and_range: dimensionless t-ratio, real-valued, unbounded below, can be positive; -inf (with CollinearityWarning) for (almost) collinear pairs (shared_envelope x2==x0); on stationary independent
+    inputs it scales like -sqrt(T) (iid_gaussian c/aic off-diagonal range [-17.6,-10.0] at T=256, [-66.0,-45.8] at T=4096); pipeline matrix symmetric by caching/mirroring, kernel asymmetric; NaN diagonal
+  direction_convention: 'undirected output, asymmetric kernel: A[i,j] = A[j,i] = coint(y0 = z_max(i,j), y1 = z_min(i,j)) (higher index regressed on lower index). Probe trending T=4096 pair (0,3): A[0,3]
+    = -0.3646 = scratch EG(dep z3, reg z0), reverse orientation -61.2392; a direct bivariate(data_2ch) call (i=0, j=1) returns the reverse orientation (-61.2392) for the same pair'
+  symmetry_expected: sym
+  already_documented: no (tests/README.md:529-531 lists run status/timing only; nothing in KNOWN_ISSUES.md concerns coint)
+  new_finding_candidates:
+  - 'CANDIDATE (definition, index-order dependence): the reported value depends on channel ORDER. Undirected loop order (base.py:91-93, j outer) makes the first call bivariate(i=hi, j=lo), and misc.py:95
+    caches it for the reverse pair, so the higher index is always the dependent variable (pack hypothesis; the probes below are consistent with it, confirmation is for the check stage). Probes: cointegrated
+    T=256 c/aic pair (0,2) -1.1141 (pyspi) vs -2.2943 reverse; pair (2,3) -2.4740 vs -1.7498; trending T=4096 c/aic pairs (0,1),(0,2),(0,3) about -0.37/-0.40 vs -61.24 reverse; iid_gaussian T=4096 (0,4)
+    -66.05 vs -27.69 (AIC picks lag 0 vs 5). Permuting channels can change values by up to 60.9 (probe max).'
+  - 'CANDIDATE (API inconsistency): the same pair gives different values through the two entry points. Probe trending T=4096 channels (0,3) as a 2-channel Data: Cointegration(aeg c aic).bivariate(D) (i=0,
+    j=1, y0=z0) = -61.2392, while .multivariate(D)[0,1] = -0.3646; within one Data object the first call fixes the cached value for both orders.'
+  - 'CANDIDATE (sign/metadata): Unsigned class and comment "Return the negative t-statistic" (misc.py:99) vs returned raw t-statistic (misc.py:103); all probed values are negative or near zero, and stronger
+    cointegration = more negative, opposite to the Johansen identifiers of the same family.'
+  - 'CANDIDATE (conceptual): on stationary inputs the statistic measures stationarity of the regression residual, not coupling: independent white noise (iid_gaussian T=256) gives [-17.6, -10.0], comparable
+    to the truly cointegrated pair (cointegrated T=256 (0,1): -16.25).'
+  - 'CANDIDATE (robustness): exactly collinear pairs return -inf (statsmodels _stattools.py:2700-2706; probe shared_envelope A[0,2] = -inf at T=256/1024, z vs 3z+1 -> -inf); -inf then enters downstream
+    normalisation/averaging unless filtered.'
+  - 'CANDIDATE (metadata): class label "nonlinear" (misc.py:26) while the supplement keyword and config.yaml:1294-1299 say "linear".'
+  - 'CANDIDATE (robustness, latent): __init__ branches on == "johansen" (misc.py:40), _from_cache on == "aeg" (misc.py:69): a misspelt method (e.g. "AEG") builds an AEG identifier and then fails in the
+    Johansen path. Probe: Cointegration(method="AEG").bivariate(...) -> AttributeError: no attribute "_det_order".'
+  proposed_checks:
+  - datasets:
+    - cointegrated
+    - iid_gaussian
+    - trending
+    - var2_bivariate
+    - delayed_noise
+    path: kernel
+    reference: 'from-scratch numpy Engle-Granger: lstsq of y0 on [y1, 1(, t)], ADF design on residuals without deterministic term, lags 0..10 on the common sample, Gaussian llf aic/bic with k = #regressors,
+      refit on the largest sample, t = b0/se (probe5.py eg/adf_t; no statsmodels import)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: abs difference <= 1e-10 for all pairs, T in {64,256,1024,4096} and all three configs (probe max 4.2e-13), with y0 = higher-index channel
+  - datasets:
+    - cointegrated
+    - iid_gaussian
+    path: kernel
+    reference: R urca::ur.df(residuals(lm(y0 ~ y1 [+ t])), type="none", lags=10, selectlags="AIC"/"BIC"), t-statistic tau1
+    reference_kind: external-pkg
+    criterion: tolerance
+    expected_outcome: 'same selected lag in most pairs; values agree to ~1e-8 only where urca''s sample convention equals the statsmodels refit (urca keeps the maxlag-trimmed sample: hypothesis, record
+      the gap otherwise)'
+  - datasets:
+    - trending
+    - cointegrated
+    - iid_gaussian
+    path: pipeline
+    reference: 'direction convention: from-scratch EG in both orientations (y0 = z_i and y0 = z_j) for every pair; channel-permuted dataset (reverse row order) through the pipeline'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'A == A.T exactly; A[i,j] equals EG(dep = z_max(i,j)) within 1e-10 and differs from EG(dep = z_min(i,j)) (trending T=4096 (0,3): -0.3646 vs -61.2392); after reversing channel order
+      the matrix changes (expected failure of order invariance)'
+  - datasets:
+    - cointegrated
+    path: pipeline
+    reference: 'analytic truth matrix is_cointegrated (pair (0,1) cointegrated, others independent random walks) with MacKinnon 2010 N=2 asymptotic 5% critical values (c: about -3.34, ct: about -3.78; literature
+      constants to be re-checked) and an in-check Monte Carlo of independent random walks using the from-scratch reference'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'pair (0,1) below the 5% critical value at T >= 64 (probe T=64: -8.24 c/aic); non-cointegrated pairs reject at about the nominal 5% rate in the Monte Carlo; values for (0,1) the most
+      negative entry of the matrix'
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - var2_bivariate
+    path: pipeline
+    reference: 'qualitative stationarity confound: values on independent stationary pairs vs the cointegrated pair'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'independent white-noise pairs give strongly negative values scaling ~ -sqrt(T) (T=256: [-17.6,-10.0]; T=4096: [-66.0,-45.8]), i.e. "cointegrated" by the test regardless of coupling'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    - cointegrated
+    path: pipeline
+    reference: invariance of the EG t-ratio under per-channel positive affine maps (scaled_offset vs bivariate_gaussian; normalise True vs False)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: equal within 1e-10 (probe raw vs z-scored max abs diff 2e-13)
+  - datasets:
+    - trending
+    path: pipeline-detrend
+    reference: from-scratch EG on lstsq-detrended, z-scored series
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: match within 1e-10; ct configs unchanged by pipeline detrend (probe 1.8e-14), c config changes (probe up to 32.5 on trending T=1024)
+  - datasets:
+    - shared_envelope
+    path: pipeline
+    reference: degenerate input (x2 bit-identical to x0)
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: A[0,2] = A[2,0] = -inf with CollinearityWarning; other entries finite
+  check_method: independent-impl
+  check_reference: audit/checks/refs/coint.py:handle_aeg own -> audit/checks/refs/_kernels_basic_misc.py:engle_granger_tstat (numpy OLS + ADF, statsmodels lag rule mirrored); audit/checks/r/coint.R df (R
+    lm + urca 1.3.3 ur.df, external-pkg); MacKinnon (2010) values via audit/checks/probes/coint_probes.py:crit (literature-only)
+  check_data: cointegrated T64/256/1024/4096 (kernel, pipeline, reversed channels); iid_gaussian T256/1024/4096; trending T1024/4096; var2_bivariate, delayed_noise, scaled_offset T1024; shared_envelope
+    T256/1024; 400 simulated independent random-walk pairs per T (size probe)
+  agreement_criterion: 'exact rtol 1e-10 / atol 1e-12 (kernel); tolerance rtol 1e-8 (urca at the selected lag); tolerance 1e-9 for the reverse-orientation and visiting-order runs (expected to differ: the
+    gap is the measurement); qualitative propositions for truth, confound, degenerate input and API'
+  closeness: '36/36 exact pass (cointegrated T64-4096, iid_gaussian T256-4096, trending/var2_bivariate/delayed_noise T1024, pipeline and pipeline-detrend), max_rel 1.6e-13 (max_abs 4.0e-13); 12/12 pass
+    vs R lm residuals + urca ur.df(type=''none'', selectlags=''Fixed'') at the lag the statsmodels rule selects, max_rel 6.5e-14; urca''s own selectlags AIC/BIC differs from pyspi by up to 10.63 (iid T=1024)
+    and picks another lag in 2-10 of the 6-10 pairs, because ur.df searches lags 1..10 only (never 0) on the common sample and does not re-fit; reverse orientation (y0 = lower index) differs from the stored
+    value: cointegrated T=256 max_abs 1.53 / 1.10 / 0.93 (c / ct-aic / ct-bic), T=1024 1.04 / 1.23 / 1.23; iid_gaussian T=256 7.414 / 7.415 / 1.710 (the values base.pair_handling measured); trending T=4096
+    60.87 / 27.17 / 3.19; var2_bivariate 0.33; delayed_noise 0.32; channel order reversed on cointegrated: pyspi(reversed) vs pyspi relabelled max_abs 1.53 / 1.10 / 0.93 at T=256 and 1.04 / 1.23 / 1.23
+    at T=1024, all 6 pairs differ; cointegrated (0,1) c: -8.24 / -16.25 / -30.22 / -63.63 at T = 64 / 256 / 1024 / 4096 vs MacKinnon 5% values -3.43 / -3.36 / -3.34 / -3.34; ct: -8.34 / -15.92 / -30.05
+    / -63.65 vs -3.93 / -3.82 / -3.79 / -3.78; 12/12 pass (the (0,1) entry is the most negative; null pairs rejecting at 5%: up to 2 of 5 at T <= 256, none at T >= 1024); driftless walks, 400 reps: rejection
+    at the MacKinnon 5% value 0.0525 / 0.0525 (c), 0.075 / 0.040 (ct-aic), 0.065 / 0.040 (ct-bic) at T = 256 / 1024 (se 0.011); per-replicate values exact (max_rel 3.2e-13); iid_gaussian c: median -11.24
+    / -28.14 / -63.10 at T = 256 / 1024 / 4096 (median / sqrt(T) = -0.70 / -0.88 / -0.99), every pair below the 5% value (least negative -9.97 / -20.12 / -45.85), vs the cointegrated (0,1) entry -16.25
+    / -30.22 / -63.63; delayed_noise median -32.93 (more negative than the cointegrated pair), var2_bivariate -25.18; trending T=4096 channels (0,3): bivariate(D) -61.239 (y0 = z0) vs multivariate(D)[0,1]
+    = [1,0] -0.3646 (y0 = z3), gap 60.875; after bivariate on the same Data, multivariate returns -61.239'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: The Engle-Granger t-ratio is reproduced (36/36, max_rel 1.6e-13; urca 12/12). The undirected value takes the higher channel index as regressand,
+    which the supplement does not state. Reversing the orientation changes entries by up to 1.53 (cointegrated T=256) and 60.87 (trending T=4096). Anchor 6's 'deviates
+    from the supplement' half holds only through the 'undirected' keyword, a metadata conflict. So 6 is the nearest anchor, as for phi Geo.
+  documentation_status: metadata-conflict
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The kernel is the canonical Engle-Granger ADF t-ratio (fp-exact against the numpy kernel and R urca at the selected lag; lag search on the common sample with re-fit, as statsmodels). The
+    SPI is documented and labelled undirected, but EG is asymmetric and pyspi fixes the regressand by channel index (the higher index is y0 under multivariate, the first argument under bivariate). Reordering
+    channels changes entries by up to 1.53 on cointegrated data (T=256), 7.41 on iid data and 60.9 on trending data (trend ''c''). The raw t-statistic is returned (negative, more negative = stronger) although
+    the class is Unsigned and the comment says ''negative t-statistic''. Interpretation limit: stationary unrelated pairs score like or beyond the cointegrated pair. Collinear pairs give -inf.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.6 s per plain pyspi run at T=4096 (3 configs); probes <= 10 s'
+  symmetry_observed: 'sym (by mirroring): max|A - A.T| = 0.0 over every plain SPI run (107 runs, -inf pairs excluded), NaN diagonal; the underlying statistic is asymmetric (rev-* runs: up to 60.87 between
+    orientations)'
+  direction_observed: 'A[i,j] = A[j,i] = EG t-statistic with y0 = z_max(i,j) regressed on z_min(i,j); the orientation follows the channel index, not causality: var2_bivariate (x0 -> x1) stored -25.18 (y0
+    = x1) vs reverse -24.85; delayed_noise (x0 leads x1) stored -31.99 vs reverse -32.06 (rev-c runs), i.e. no consistent directional meaning'
+  candidate_resolutions:
+  - candidate: 'index-order dependence: the higher index is the dependent variable (loop order + two-key cache), so the value depends on channel order'
+    outcome: confirmed
+    evidence: 'misc.coint.aeg|cointegrated|{256,1024}|pipeline|orderdep-{c,cta,ctb}-p3210: channel order reversed on cointegrated: pyspi(reversed) vs pyspi relabelled max_abs 1.53 / 1.10 / 0.93 at T=256
+      and 1.04 / 1.23 / 1.23 at T=1024, all 6 pairs differ; misc.coint.aeg|cointegrated|{256,1024}|pipeline|perm-{c,cta,ctb}-p3210 pass exactly with the rule ''y0 = higher permuted index'' (max_rel 4.7e-15);
+      misc.coint.aeg|*|kernel|rev-*: reverse orientation (y0 = lower index) differs from the stored value: cointegrated T=256 max_abs 1.53 / 1.10 / 0.93 (c / ct-aic / ct-bic), T=1024 1.04 / 1.23 / 1.23;
+      iid_gaussian T=256 7.414 / 7.415 / 1.710 (the values base.pair_handling measured); trending T=4096 60.87 / 27.17 / 3.19; var2_bivariate 0.33; delayed_noise 0.32; first measured by base.pair_handling|iid_gaussian|256|pipeline|upper-misc.Cointegration
+      (max_abs 7.41)'
+  - candidate: 'API inconsistency: bivariate(D) and multivariate(D)[0,1] give different values for the same pair'
+    outcome: confirmed
+    evidence: 'misc.coint.aeg|trending|4096|pipeline|api-c-p03 (exact pass of the reference vector): trending T=4096 channels (0,3): bivariate(D) -61.239 (y0 = z0) vs multivariate(D)[0,1] = [1,0] -0.3646
+      (y0 = z3), gap 60.875; after bivariate on the same Data, multivariate returns -61.239'
+  - candidate: 'sign/metadata: Unsigned class and ''negative t-statistic'' comment vs the raw (negative) t-statistic returned; orientation opposite to Johansen'
+    outcome: confirmed
+    evidence: 'misc.coint.aeg|cointegrated|256|pipeline|meta: issigned() = 0; misc.coint.aeg|*|kernel|own-*: pyspi equals the raw ADF t-ratio (no sign flip), all observed values negative (cointegrated T=1024
+      c: -30.22 to -1.65), more negative = stronger evidence'
+  - candidate: 'stationarity confound: on stationary inputs the statistic reflects residual stationarity, not coupling'
+    outcome: confirmed
+    evidence: 'misc.coint.aeg|iid_gaussian|{256,1024,4096}|pipeline|confound-c, |delayed_noise|1024|pipeline|confound-c, |var2_bivariate|1024|pipeline|confound-c: iid_gaussian c: median -11.24 / -28.14
+      / -63.10 at T = 256 / 1024 / 4096 (median / sqrt(T) = -0.70 / -0.88 / -0.99), every pair below the 5% value (least negative -9.97 / -20.12 / -45.85), vs the cointegrated (0,1) entry -16.25 / -30.22
+      / -63.63; delayed_noise median -32.93 (more negative than the cointegrated pair), var2_bivariate -25.18. Interpretation note, not a finding: this is the standard behaviour of the Engle-Granger test applied to I(0) series (the regression residual of two stationary series is stationary, so the ADF test rejects a unit root); it is an applicability limit of the method, not a value defect, and does not support new_finding, which rests on the orientation dependence and the -inf output for collinear pairs.'
+  - candidate: exactly collinear pairs return -inf
+    outcome: confirmed
+    evidence: 'misc.coint.aeg|shared_envelope|{256,1024}|pipeline|degen-{c,cta,ctb}: A[0,2] = A[2,0] = -inf, all other entries finite (6/6); misc.coint.aeg|cointegrated|256|pipeline|collinear-{c,cta,ctb}:
+      16/16 cases of [z, 3z+1] return -inf without raising'
+  - candidate: class label 'nonlinear' vs documented/config 'linear'
+    outcome: confirmed
+    evidence: 'misc.coint.aeg|cointegrated|256|pipeline|meta: [1, 0, 0, 1, 1]'
+  - candidate: misspelt method (e.g. 'AEG') builds an AEG identifier and then fails in the Johansen path
+    outcome: confirmed
+    evidence: 'misc.coint.aeg|cointegrated|256|pipeline|meta: Cointegration(method=''AEG'').bivariate -> AttributeError naming _det_order (code 1); not reachable from the shipped configs'
+  checks_run:
+  - run_ids:
+    - misc.coint.aeg|{cointegrated,iid_gaussian}|{256,1024,4096}|kernel|own-{c,cta,ctb}
+    - misc.coint.aeg|cointegrated|64|kernel|own-{c,cta,ctb}
+    - misc.coint.aeg|{trending,var2_bivariate,delayed_noise}|1024|kernel|own-*
+    - misc.coint.aeg|cointegrated|1024|pipeline|own-*
+    - misc.coint.aeg|trending|1024|pipeline-detrend|own-*
+    reference: audit/checks/refs/coint.py:handle_aeg own -> audit/checks/refs/_kernels_basic_misc.py:engle_granger_tstat
+    outcome: pass 36/36; 36/36 exact pass (cointegrated T64-4096, iid_gaussian T256-4096, trending/var2_bivariate/delayed_noise T1024, pipeline and pipeline-detrend), max_rel 1.6e-13 (max_abs 4.0e-13)
+  - run_ids:
+    - misc.coint.aeg|{cointegrated,iid_gaussian}|{256,1024}|kernel|urca-{c,cta,ctb}
+    reference: audit/checks/r/coint.R df (urca 1.3.3 ur.df)
+    outcome: pass 12/12; 12/12 pass vs R lm residuals + urca ur.df(type='none', selectlags='Fixed') at the lag the statsmodels rule selects, max_rel 6.5e-14; urca's own selectlags AIC/BIC differs from pyspi
+      by up to 10.63 (iid T=1024) and picks another lag in 2-10 of the 6-10 pairs, because ur.df searches lags 1..10 only (never 0) on the common sample and does not re-fit
+  - run_ids:
+    - misc.coint.aeg|{cointegrated|256,cointegrated|1024,iid_gaussian|256,trending|4096,var2_bivariate|1024,delayed_noise|1024}|kernel|rev-{c,cta,ctb}
+    reference: audit/checks/refs/coint.py:handle_aeg rev
+    outcome: 'fail 18/18 (expected; the gap is the asymmetry); reverse orientation (y0 = lower index) differs from the stored value: cointegrated T=256 max_abs 1.53 / 1.10 / 0.93 (c / ct-aic / ct-bic),
+      T=1024 1.04 / 1.23 / 1.23; iid_gaussian T=256 7.414 / 7.415 / 1.710 (the values base.pair_handling measured); trending T=4096 60.87 / 27.17 / 3.19; var2_bivariate 0.33; delayed_noise 0.32'
+  - run_ids:
+    - misc.coint.aeg|cointegrated|{256,1024}|pipeline|orderdep-{c,cta,ctb}-p3210
+    - misc.coint.aeg|cointegrated|{256,1024}|pipeline|perm-{c,cta,ctb}-p3210
+    reference: audit/checks/refs/coint.py:handle_aeg orderdep (same-lineage) / perm (independent)
+    outcome: 'orderdep fail 6/6 (expected), perm pass 6/6; channel order reversed on cointegrated: pyspi(reversed) vs pyspi relabelled max_abs 1.53 / 1.10 / 0.93 at T=256 and 1.04 / 1.23 / 1.23 at T=1024,
+      all 6 pairs differ'
+  - run_ids:
+    - misc.coint.aeg|cointegrated|{64,256,1024,4096}|pipeline|stat-{c,cta,ctb}
+    - misc.coint.aeg|cointegrated|256|pipeline|crit-{c,cta,ctb}
+    reference: audit/checks/refs/coint.py:handle_aeg stat (make_data is_cointegrated + MacKinnon 2010 via probe crit)
+    outcome: 'pass 15/15; cointegrated (0,1) c: -8.24 / -16.25 / -30.22 / -63.63 at T = 64 / 256 / 1024 / 4096 vs MacKinnon 5% values -3.43 / -3.36 / -3.34 / -3.34; ct: -8.34 / -15.92 / -30.05 / -63.65
+      vs -3.93 / -3.82 / -3.79 / -3.78; 12/12 pass (the (0,1) entry is the most negative; null pairs rejecting at 5%: up to 2 of 5 at T <= 256, none at T >= 1024)'
+  - run_ids:
+    - misc.coint.aeg|cointegrated|{256,1024}|pipeline|size-{c,cta,ctb}
+    reference: audit/checks/refs/coint.py:handle_aeg size
+    outcome: 'pass 6/6; driftless walks, 400 reps: rejection at the MacKinnon 5% value 0.0525 / 0.0525 (c), 0.075 / 0.040 (ct-aic), 0.065 / 0.040 (ct-bic) at T = 256 / 1024 (se 0.011); per-replicate values
+      exact (max_rel 3.2e-13)'
+  - run_ids:
+    - misc.coint.aeg|iid_gaussian|{256,1024,4096}|pipeline|confound-c
+    - misc.coint.aeg|{delayed_noise,var2_bivariate}|1024|pipeline|confound-c
+    reference: audit/checks/refs/coint.py:handle_aeg confound
+    outcome: 'pass 5/5 (proposition holds); iid_gaussian c: median -11.24 / -28.14 / -63.10 at T = 256 / 1024 / 4096 (median / sqrt(T) = -0.70 / -0.88 / -0.99), every pair below the 5% value (least negative
+      -9.97 / -20.12 / -45.85), vs the cointegrated (0,1) entry -16.25 / -30.22 / -63.63; delayed_noise median -32.93 (more negative than the cointegrated pair), var2_bivariate -25.18'
+  - run_ids:
+    - misc.coint.aeg|scaled_offset|1024|kernel|affine-{c,cta,ctb}
+    - misc.coint.aeg|trending|1024|kernel|trendinv-{c,cta,ctb}
+    reference: audit/checks/refs/coint.py:handle_aeg affine / trendinv
+    outcome: 'affine pass 3/3 (max_abs 1.1e-13); trendinv ct pass 2/2 (4.4e-16), c fail (expected, gap 32.45: trend ''c'' has no trend term)'
+  - run_ids:
+    - misc.coint.aeg|shared_envelope|{256,1024}|pipeline|degen-{c,cta,ctb}
+    - misc.coint.aeg|cointegrated|256|pipeline|collinear-{c,cta,ctb}
+    - misc.coint.aeg|trending|4096|pipeline|api-c-p03
+    - misc.coint.aeg|cointegrated|256|pipeline|meta
+    reference: audit/checks/refs/coint.py:handle_aeg degen / collinear / api / meta
+    outcome: 'pass 11/11; trending T=4096 channels (0,3): bivariate(D) -61.239 (y0 = z0) vs multivariate(D)[0,1] = [1,0] -0.3646 (y0 = z3), gap 60.875; after bivariate on the same Data, multivariate returns
+      -61.239'
+optimisation:
+  complexity_P_T: 'O(P^2 maxlag (maxlag^2 T)) per identifier: one statsmodels coint per unordered pair (cached for (j, i)) = a first-stage OLS plus adfuller with autolag over maxlag+1 = 11 nested candidate regressions and a re-fit, 13 statsmodels OLS fits per pair; three identifiers with different (trend, autolag) keys each recompute everything. Measured P_exponent 2.10, T_exponent 0.37. Pair term dominates; measured 37.0 s (fresh, one identifier) and 110.8 s (family-warm, all three identifiers) per window at 118x1024 (measured).'
+  hotspot_1: statsmodels/regression/linear_model.py:__init__ (OLS, third-party:statsmodels) 52.5% of the profiled SPI call at 8x1024 (364 fits = 13 per pair; statsmodels/base/data.py:_handle_constant 45.5% runs numpy matrix_rank/svd on every design), inside stattools._autolag 81.6%
+  hotspot_2: statsmodels/regression/linear_model.py:fit (OLS, third-party:statsmodels) 35.7% of the profiled SPI call at 8x1024 (pinv_extended 22.2%); numpy svd 42.5% in total across both
+  hotspot_owner: third-party:statsmodels
+  opaque_share: 0.208
+  profile_file: audit/profiles/misc.coint.aeg__8x1024.pstats
+  opportunities:
+  - opportunity_id: coint-2
+    opportunity: 'Engle-Granger ADF lag search from one factorisation: the 11 candidate regressions of statsmodels adfuller(autolag) are nested in the lag order on a common sample, so one QR of the maxlag design gives every candidate''s RSS and AIC/BIC; do the first-stage OLS and the re-fit at the chosen lag with plain numpy instead of statsmodels OLS objects.'
+    opp_type: algorithmic
+    expected_speedup: 3-8x
+    speedup_basis: 'profile:audit/profiles/misc.coint.aeg__8x1024.pstats stattools.coint 99.7% (adfuller 92.7%, _autolag 81.6%; statsmodels OLS __init__ 52.5% with _handle_constant/matrix_rank svd 45.5%, OLS.fit 35.7%, over 364 fits = 13 per pair) -> removable share about 0.88, Amdahl 8.3x + complexity: 13 OLS per pair become one QR plus O(maxlag) updates'
+    output_risk: unverified-within-tolerance
+    risk_evidence: QR instead of statsmodels pinv changes float order of the ICs and the t-ratio; a near-tie of AIC/BIC between two lags could select a different lag, a discrete change in the returned t-statistic
+    effort: M
+    depends_on: []
+  - opportunity_id: coint-3
+    opportunity: 'Share the trend=''ct'' work between coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10 and coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10: run the first-stage OLS and the 11 candidate ADF fits once (adfuller(..., regresults=True) keeps every candidate fit) and read both criteria from them; today Cointegration.key includes autolag, so each identifier recomputes everything (misc.py:54-60).'
+    opp_type: cache-sharing
+    expected_speedup: ~1.35x
+    speedup_basis: 'complexity: family-warm 118x1024 increments 37.1 s (c-aic), 37.3 s (ct-aic), 36.4 s (ct-bic) = 110.8 s per window; _autolag is 81.6% of one identifier in audit/profiles/misc.coint.aeg__8x1024.pstats, so about 0.82 x 36.4 s of 110.8 s is shared -> Amdahl ~1.37x.
+      Independent of coint-2 (independent_of), because coint-2 makes each OLS fit cheaper and this avenue removes the repeated trend-ct fits of the second identifier (fewer calls times a
+      cheaper call), so the savings multiply. The lower bound 1.35x is at or below the 1.37x above'
+    output_risk: unverified-bit-identical
+    risk_evidence: both identifiers run the same first-stage OLS and the same candidate ADF fits on the same residuals; only the criterion read off each fit and the final re-fit at the chosen lag differ
+    effort: M
+    depends_on: []
+    independent_of:
+    - coint-2

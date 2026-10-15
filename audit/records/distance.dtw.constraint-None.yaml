@@ -1,0 +1,296 @@
+unit_id: distance.dtw.constraint-None
+status: profiled
+correctness:
+  metric_name_standard: Dynamic time warping distance (Euclidean-over-path DTW, symmetric1 step pattern)
+  canonical_ref: Sakoe H, Chiba S 1978, IEEE Trans. Acoust. Speech Signal Process. 26(1):43-49, symmetric DP-equation (Table I / eq. for P=0)
+    and adjustment window |i-j| <= r; global path constraints also in Itakura F 1975, IEEE Trans. ASSP 23(1):67-72 (slope limits 1/2..2)
+  canonical_definition: g(1,1)=2d(1,1); g(i,j)=min{g(i,j-1)+d(i,j), g(i-1,j-1)+2d(i,j), g(i-1,j)+d(i,j)}; D(A,B)=g(I,J)/(I+J), with d(i,j)=||a_i-b_j||
+    a (non-squared) distance; constrained variants restrict (i,j) to a window/parallelogram
+  documented_definition: 'supplement §1.2.7, p.6-7 (pack lines 286-301) and GitBook distance-similarity.md ''Dynamic Time Warping'': "DTW finds
+    the minimum distance between two time series through alignment (shifting and dilating of the sequences)... the Sakoe-Chiba band [17] and the
+    Itakura parallelogram [18] global constraints... computed using the tslearn package for the three global constraints"; keywords undirected,
+    nonlinear, unsigned, bivariate, time-dependent. No constraint width/slope is documented.'
+  delegate_lib: tslearn==0.9.0 tslearn.metrics.dtw (_dtw.py:30) -> numba _njit_dtw
+  units_and_range: Same units as the (z-scored, hence dimensionless) input; >= 0; 0 iff an admissible warping aligns the series exactly; unnormalised,
+    grows with T; symmetric in its two arguments for equal-length inputs; finite for finite input (an infeasible Itakura mask raises instead of
+    returning NaN). Diagonal of the pyspi matrix is NaN.
+  direction_convention: 'Undirected: A[i,j] = A[j,i] = dtw(z_min(i,j), z_max(i,j)) (Undirected.multivariate mirrors the upper triangle); both
+    orders are computed and the function is argument-symmetric, so the copy only removes last-bit differences; diagonal NaN.'
+  symmetry_expected: sym
+  implemented_as: 'z-score each row (ddof=1, Calculator default; optional detrend first), then for each pair: unconstrained DTW over the full
+    T x T grid with squared pointwise cost, three equal-weight moves (match, insertion, deletion), result sqrt(accumulated cost at (T,T)); trailing
+    NaN rows stripped by tslearn (none present after pyspi''s NaN check).'
+  implementation_trace:
+  - pyspi/calculator.py:329 Calculator.compute calls self._spis[spi].multivariate(self.dataset)
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend(axis=1) only if detrend=True (default False), then scipy.stats.zscore(axis=1, nan_policy=''omit'',
+    ddof=1) if normalise=True (default True)'
+  - 'pyspi/base.py:132-138 Undirected.multivariate: A = Directed.multivariate(data); A[tril(-1)] = A.T[tril(-1)] (lower triangle overwritten by
+    the upper triangle, so A[i,j] = bivariate(min(i,j), max(i,j)))'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A filled with NaN, bivariate(data, i, j) for every ordered pair i != j (both orders computed,
+    diagonal stays NaN)'
+  - 'pyspi/base.py:27-49 parse_bivariate: a raw (x, y) call builds Data() and add_process(x), add_process(y) (pyspi/data.py:219-240)'
+  - 'pyspi/statistics/distance.py:154-163 TimeWarping.__init__: identifier += ''_constraint-'' + global_constraint.replace(''_'',''-''); self._global_constraint
+    stored'
+  - 'pyspi/statistics/distance.py:174-177 TimeWarping.bivariate: z = data.to_numpy(squeeze=True) (pyspi/data.py:108-118); return self._simfn(z[i],
+    z[j], global_constraint=self._global_constraint)'
+  - 'pyspi/statistics/distance.py:180-187 DynamicTimeWarping: self._simfn = tslearn.metrics.dtw'
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/__init__.py:20-27 tslearn.metrics.dtw is tslearn.metrics._dtw.dtw (tslearn==0.9.0 per tslearn/__init__.py:2)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:30-37 dtw(s1, s2, global_constraint=None, sakoe_chiba_radius=None, itakura_max_slope=None,
+    be=None)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:145-147 instantiate_backend (numpy for ndarray inputs); to_time_series(remove_nans=True)
+    reshapes to (T,1) and strips trailing all-NaN rows (.venv/lib/python3.12/site-packages/tslearn/utils/utils.py:154-212, _ts_size 511-518)
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:157-163 global_constraint mapped via GLOBAL_CONSTRAINT_CODE (.venv/lib/python3.12/site-packages/tslearn/metrics/_masks.py:10:
+    None->0, itakura->1, sakoe_chiba->2) and passed to _njit_dtw'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:383-412 __make_dtw/_dtw_generic: mask = _njit_compute_mask(sz1, sz2, code, radius,
+    slope); cum_sum = _njit_accumulated_matrix(s1, s2, mask); return sqrt(cum_sum[-1, -1]) (line 400)'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_masks.py:310-361 _compute_mask_generic: code 2 -> radius None replaced by 1 (339-341);
+    code 1 -> max_slope None replaced by 2.0 (346-348); code 0 -> all-True mask (350)'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:324-344 _njit_accumulated_matrix: cell cost = sum_d (s1[i,d]-s2[j,d])**2; cum[i+1,j+1]
+    = cost + min(cum[i,j+1], cum[i+1,j], cum[i,j]) (equal weights on all three moves, masked cells stay +inf)'
+  deviation_from_documented: none in substance (tslearn, no constraint); the documentation does not say that the cost is squared+sqrt or that
+    the value is unnormalised by length.
+  deviation_from_canonical: 'Three convention differences from the Sakoe-Chiba 1978 symmetric form: (1) local cost is the SQUARED difference and the
+    result is sqrt of the minimal accumulated squared cost (Euclidean-over-path DTW), not the sum of |a_i-b_j|; (2) step pattern is ''symmetric1''
+    (diagonal move weight 1, not 2); (3) no normalisation by I+J (or by path length), so the value grows with T (about sqrt(T) for independent noise).
+    Probe (T=50 iid N(0,1)): tslearn 6.5668 == from-scratch sqrt(min sum sq) 6.5668; abs-cost unweighted DP 36.674. This is the convention of most ML
+    libraries (tslearn docstring _dtw.py:41-46; dtaidistance 2.5.1 dtw.distance(use_c=False), audit comparison venv without tslearn, gives the
+    identical value on the same T=50 seed-0 pair, 6.566820109835115, and on a second pair, T=80 seed 5, 5.972081410007747 for both (difference 0.0);
+    dtaidistance window=2 equals tslearn sakoe_chiba radius 1 on both pairs, 8.061528067978553 and 8.12914957772889).'
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (interpretation, low discriminative range on noise): on z-scored independent noise unconstrained DTW barely separates independent
+    from anti-correlated pairs. Probe (seeded, single draws): T=256 dtw(x,y)=11.02 vs dtw(x,-x)=12.31; T=1024 21.95 vs 22.24; Euclidean distance
+    21.90 / 45.63. Hypothesis: with unconstrained warping any two noise series align closely, so the SPI mostly reflects T and marginal shape.
+    To be quantified on iid_gaussian vs bivariate_gaussian.'
+  - 'Cross-family (infrastructure) candidate, affects direct two-array calls only: parse_bivariate (pyspi/base.py:33-36) builds Data() (normalise=True)
+    and calls add_process(x) then add_process(y); the first call goes through set_data and is z-scored, the second is np.append-ed raw (pyspi/data.py:230-234).
+    Probe with x, y ~ 5 + 3 N(0,1), T=64: stored means [0.0, 4.783], stds [1.0, 2.995]. So spi.bivariate(x, y) compares z-scored x with raw y.
+    Calculator/multivariate paths are unaffected.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    - logistic_maps
+    path: kernel
+    reference: 'from-scratch numpy DP: R[0,0]=0, R[i,j]=(x_i-y_j)^2+min(R[i-1,j-1],R[i-1,j],R[i,j-1]), value sqrt(R[T,T]) (anti-diagonal vectorised
+      for T=4096)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: max relative difference <= 1e-12 at T in {64,256,1024} (4096 optional, O(T^2))
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    path: kernel
+    reference: dtaidistance==2.5.1 dtw.distance(x, y, use_c=False) in the audit comparison venv (no tslearn import; squared cost + sqrt convention)
+    reference_kind: external-pkg
+    criterion: tolerance
+    expected_outcome: relative difference <= 1e-12 (seeded probes T=50 seed 0 and T=80 seed 5 gave identical values)
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    path: kernel
+    reference: Sakoe-Chiba 1978 symmetric form from scratch (|a-b| cost, diagonal weight 2, divide by 2T)
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: 'Documents the convention gap: pyspi value is NOT equal to the 1978 normalised form; report the ratio and rank correlation
+      across pairs (expected high rank agreement, different scale).'
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    - narrowband_f0-0.25
+    path: kernel
+    reference: 'analytic bounds: dtw(x,x)=0; dtw(x,y) <= ||x-y||_2 (identity path admissible); dtw >= sqrt(sum_i min_j (x_i-y_j)^2)'
+    reference_kind: analytic
+    criterion: optimality
+    expected_outcome: all bounds hold exactly; on delayed_noise dtw(x0, x_k) << ||x0-x_k|| for k=1,3,5 because warping absorbs the delay
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: pyspi output on bivariate_gaussian (same draw; z-scoring removes per-process scale and offset)
+    reference_kind: same-lineage
+    criterion: tolerance
+    expected_outcome: A(scaled_offset) == A(bivariate_gaussian) to <= 1e-10 relative
+  - datasets:
+    - trending
+    path: pipeline-detrend
+    reference: from-scratch DP on scipy.signal.detrend then zscore(ddof=1) rows
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: matches reference to 1e-12; values differ from the non-detrended pipeline (trend dominates DTW)
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: from-scratch numpy DTW DP applied to the ddof=1 z-scored rows z_i, z_j (no tslearn import)
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'Direction/symmetry convention: A == A.T exactly (np.array_equal with equal_nan), diagonal all NaN, and A[i,j] == A[j,i]
+      == reference(z_min(i,j), z_max(i,j)) within tolerance; reference(z_i, z_j) and reference(z_j, z_i) agree to <= 1e-12 relative, so the undirected
+      label carries no hidden order.'
+  check_method: independent-impl
+  check_reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:dtw_dp (anti-diagonal numpy DP, squared cost, sqrt); dtaidistance==2.5.1
+    dtw.distance (external package, C and pure-python paths); audit/checks/refs/_kernels_distance.py:dtw_dp(squared_cost=False) for the Sakoe-Chiba 1978 form;
+    audit/checks/refs/dtw_family.py:mc_null (Monte Carlo null, batched DP); analytic bounds in audit/checks/refs/dtw_family.py:handle('bounds')
+  check_data: iid_gaussian, delayed_noise, narrowband_f0-0.25, logistic_maps (kernel, T 64/256/1024); iid_gaussian, delayed_noise, bivariate_gaussian, shared_envelope
+    (pipeline T1024); scaled_offset T1024 (pipeline and kernel), trending T1024 (pipeline and pipeline-detrend); iid_gaussian T256/T1024 null; scaled_offset
+    T256 raw-array call
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 on every ordered pair; dtaidistance tolerance rtol 1e-10; null: every pair within z_(1-0.025/m) Monte
+    Carlo SD of the Monte Carlo mean; bounds: optimality flags'
+  closeness: 'All 16 dp runs (kernel T64/256/1024 on 4 datasets, pipeline T1024 on 4) agree with the from-scratch DP with max_abs 0.0 (bit-identical). dtaidistance
+    (4 runs, iid_gaussian/delayed_noise T256/T1024) max_abs 0.0; dtaidistance C vs python path 0.0 at T256. Canonical 1978 form differs as expected: iid_gaussian
+    T1024 pair (0,1) pyspi 22.50 vs 1978 form 0.417 vs |.|-cost weight-1 sum 623.8; pyspi/1978 ratio 23.96-55.18 across the 4 canon runs, Spearman 0.77-0.96.
+    Bounds hold on every pair (dtw/||x-y|| 0.48-0.51 on iid, 0.084-0.122 on delayed_noise). Null (iid_gaussian): T256 mean over pairs 11.19 vs Monte Carlo
+    11.24 +- 0.31 (max_z 1.32); T1024 22.04 vs 21.84 +- 0.25 (max_z 1.51). scaled_offset pipeline vs z-scored bivariate_gaussian 3.6e-15; trending pipeline-detrend
+    vs own detrend+z-score 4.6e-14.'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: anchor
+  score_rubric_note: 'Equal to the tslearn form the supplement names: 16/16 dp runs bit-identical, and dtaidistance gives max_abs 0.0. The Sakoe-Chiba 1978 form differs
+    by a ratio of 23.96-55.18, with Spearman 0.77-0.96.'
+  documentation_status: described
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: tslearn's DTW is sqrt(min over warping paths of sum (x_i - y_j)^2) with weight-1 steps and no length normalisation. Sakoe & Chiba 1978 (symmetric
+    form, P = 0) uses |x_i - y_j| with diagonal weight 2 and divides by n + m. On this unit's 4 canon runs the two disagree in scale by a factor 23.96-55.18 (pyspi / 1978 form) and in ranking (Spearman 0.77-0.96 over the 6 pairs of a dataset), so this is a value-changing convention rather than a constant factor. pyspi documents only 'computed with tslearn', so
+    it matches the supplement variant (rubric 7). The value grows with T (null mean 11.2 at T256, 21.8 at T1024, about sqrt(T)). Without z-scoring the value
+    scales with amplitude (scaled_offset kernel/z-scored ratio 3.0-15.5) and a linear trend changes it by up to 279% (trending pipeline without detrend).
+    On z-scored noise it barely separates an anti-correlated pair from independent pairs (see candidate 1).
+  new_finding: false
+  definition_under_review: true
+  check_cost: 'cheap: <= 0.1 s per pyspi run at T=1024 (numba); reference DP 0.27 s per pair at T=1024; all checks at T <= 1024'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on every pyspi matrix (mirrored by Undirected.multivariate); the unmirrored probe (Directed.multivariate, tslearn
+    computes both orders) also gives max|B - B.T| = 0.0 at T=1024 on iid_gaussian and delayed_noise, so the function itself is argument-symmetric; diagonal
+    NaN'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = f(z_i, z_j); on delayed_noise (x_k = x0 delayed by 0/1/3/5) the matrix carries no lead/lag sign, only
+    how well warping absorbs the delay: dtw(z0, zk)/||z0 - zk|| = 0.084 / 0.098 / 0.104 for delays 1 / 3 / 5 (all delays absorbed).'
+  candidate_resolutions:
+  - candidate: 'low discriminative range on z-scored noise: dtw barely separates independent from anti-correlated pairs'
+    outcome: confirmed
+    evidence: 'distance.dtw.constraint-None|iid_gaussian|1024|pipeline|null-neg: dtw(x,-x) 22.25 vs mean over independent pairs 22.09 (+0.7%; Euclidean gap
+      +41.5%); |256|pipeline|null-neg +2.7%; Monte Carlo null at T1024 21.84 +- 0.25 (|1024|pipeline|null), so the anti-correlated pair sits 1.6 null SD above
+      the null mean. This is a property of unconstrained DTW on noise, not a deviation of the code, so new_finding stays false.'
+  - candidate: parse_bivariate z-scores only the first of two raw arrays
+    outcome: confirmed
+    evidence: 'Confirmed, but it belongs to preproc.two_array_api (preprocessing_base family, already checked; run preproc.two_array_api|scaled_offset|256|pipeline|spi-dtw),
+      so it is not a finding of this unit. Re-measured here on the direct-array API: distance.dtw.constraint-None|scaled_offset|256|pipeline|rawcall: pyspi
+      bivariate(x0, x1) 23.85 and bivariate(x1, x0) 13.44 equal f(zscore(first), raw second) exactly (max_abs 0.0); both z-scored 10.50.'
+  checks_run:
+  - run_ids:
+    - distance.dtw.constraint-None|bivariate_gaussian|1024|pipeline|dp
+    - distance.dtw.constraint-None|delayed_noise|1024|kernel|dp
+    - distance.dtw.constraint-None|delayed_noise|1024|pipeline|dp
+    - distance.dtw.constraint-None|delayed_noise|256|kernel|dp
+    - distance.dtw.constraint-None|delayed_noise|64|kernel|dp
+    - distance.dtw.constraint-None|iid_gaussian|1024|kernel|dp
+    - distance.dtw.constraint-None|iid_gaussian|1024|pipeline|dp
+    - distance.dtw.constraint-None|iid_gaussian|256|kernel|dp
+    - distance.dtw.constraint-None|iid_gaussian|64|kernel|dp
+    - distance.dtw.constraint-None|logistic_maps|1024|kernel|dp
+    - distance.dtw.constraint-None|logistic_maps|256|kernel|dp
+    - distance.dtw.constraint-None|logistic_maps|64|kernel|dp
+    - distance.dtw.constraint-None|narrowband_f0-0.25|1024|kernel|dp
+    - distance.dtw.constraint-None|narrowband_f0-0.25|256|kernel|dp
+    - distance.dtw.constraint-None|narrowband_f0-0.25|64|kernel|dp
+    - distance.dtw.constraint-None|shared_envelope|1024|pipeline|dp
+    reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:dtw_dp / lcss_dp / soft_dtw_dp (every ordered pair separately)
+      [exact rtol 1e-10 atol 1e-12 (soft-DTW tolerance rtol/atol 1e-10)]
+    outcome: 'pass: 16/16 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.dtw.constraint-None|delayed_noise|1024|kernel|bounds
+    - distance.dtw.constraint-None|iid_gaussian|1024|kernel|bounds
+    - distance.dtw.constraint-None|narrowband_f0-0.25|1024|kernel|bounds
+    reference: audit/checks/refs/dtw_family.py:handle 'bounds' (analytic bounds + nesting) [optimality]
+    outcome: 'pass: 3/3 pass'
+  - run_ids:
+    - distance.dtw.constraint-None|delayed_noise|1024|kernel|canon
+    - distance.dtw.constraint-None|delayed_noise|256|kernel|canon
+    - distance.dtw.constraint-None|iid_gaussian|1024|kernel|canon
+    - distance.dtw.constraint-None|iid_gaussian|256|kernel|canon
+    reference: audit/checks/refs/_kernels_distance.py:dtw_dp(squared_cost=False) (Sakoe-Chiba 1978 symmetric form) [tolerance rtol 1e-8 (expected to differ)]
+    outcome: 'fail: 0/4 pass; max_abs <= 22.1, max_rel <= 54.2'
+  - run_ids:
+    - distance.dtw.constraint-None|delayed_noise|1024|kernel|dtai
+    - distance.dtw.constraint-None|delayed_noise|256|kernel|dtai
+    - distance.dtw.constraint-None|iid_gaussian|1024|kernel|dtai
+    - distance.dtw.constraint-None|iid_gaussian|256|kernel|dtai
+    reference: dtaidistance==2.5.1 dtw.distance (window None / 2) [tolerance rtol 1e-10]
+    outcome: 'pass: 4/4 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.dtw.constraint-None|delayed_noise|1024|pipeline|delay
+    reference: audit/checks/refs/dtw_family.py:handle 'delay' (delayed_noise truth delays 1/3/5) [qualitative]
+    outcome: 'pass: 1/1 pass'
+  - run_ids:
+    - distance.dtw.constraint-None|delayed_noise|1024|pipeline|unmirrored
+    - distance.dtw.constraint-None|iid_gaussian|1024|pipeline|unmirrored
+    reference: audit/checks/refs/dtw_family.py:matrix vs probes/dtw_family_probes.py:unmirrored (Directed.multivariate) [exact]
+    outcome: 'pass: 2/2 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.dtw.constraint-None|iid_gaussian|1024|pipeline|null
+    - distance.dtw.constraint-None|iid_gaussian|256|pipeline|null
+    reference: audit/checks/refs/dtw_family.py:mc_null (400 independent z-scored Gaussian pairs, batched DP) [statistical, Bonferroni 2 se]
+    outcome: 'pass: 2/2 pass; max_z 1.51, 1.32'
+  - run_ids:
+    - distance.dtw.constraint-None|iid_gaussian|1024|pipeline|null-neg
+    - distance.dtw.constraint-None|iid_gaussian|256|pipeline|null-neg
+    reference: audit/checks/refs/dtw_family.py:handle 'null-neg' (rows x0, -x0, x1, x2) [qualitative]
+    outcome: 'pass: 2/2 pass'
+  - run_ids:
+    - distance.dtw.constraint-None|iid_gaussian|256|pipeline|ident
+    reference: audit/checks/refs/dtw_family.py:matrix on rows (x0, x0, x1) / same-lineage pyspi softdtw bit identity [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.dtw.constraint-None|scaled_offset|1024|kernel|scale-raw
+    reference: audit/checks/refs/dtw_family.py:matrix on raw scaled_offset rows [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.dtw.constraint-None|scaled_offset|1024|pipeline|scaleinv
+    reference: audit/checks/refs/dtw_family.py:matrix on z-scored bivariate_gaussian [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 3.55e-15, max_rel <= 2.12e-16'
+  - run_ids:
+    - distance.dtw.constraint-None|scaled_offset|1024|pipeline|scaleinv-self
+    reference: pyspi matrix on bivariate_gaussian (same-lineage) [rtol 1e-10]
+    outcome: 'pass: 1/1 pass; max_abs <= 3.55e-15, max_rel <= 2.12e-16'
+  - run_ids:
+    - distance.dtw.constraint-None|scaled_offset|256|pipeline|rawcall
+    reference: 'audit/checks/refs/dtw_family.py: f(zscore(first), raw second) vs probes/dtw_family_probes.py:raw_call [exact]'
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.dtw.constraint-None|trending|1024|pipeline-detrend|detrend
+    reference: audit/checks/refs/dtw_family.py:matrix on z-score(LS-detrend(trending)) [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 4.62e-14, max_rel <= 2.09e-15'
+  - run_ids:
+    - distance.dtw.constraint-None|trending|1024|pipeline|trend
+    reference: audit/checks/refs/dtw_family.py:matrix on z-scored trending rows [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+optimisation:
+  complexity_P_T: 'O(P^2 T^2): tslearn dtw per ordered pair (TimeWarping is Undirected over Directed.multivariate, both orders computed, pyspi/statistics/distance.py:TimeWarping.bivariate),
+    a T x T mask plus a numba DP over the full grid. Measured P_exponent 2.09, T_exponent 0.79 (8x256 -> 8x1024; a fixed per-call cost of tens
+    of microseconds and a ~50 ms 8x256 overhead flatten it); 118x1024 measured (47.5 s per window). The P^2 pair term dominates.'
+  hotspot_1: 'tslearn/metrics/_dtw.py:dtw (third-party:tslearn) 92.5% self time of the profiled SPI call at 8x1024 (numba _njit_dtw: mask and
+    _njit_accumulated_matrix hidden in it)'
+  hotspot_2: tslearn/backend/backend.py:instantiate_backend (third-party:tslearn) 5.6%, of which numpy arrayprint (str() of the input array) 4.6%
+  hotspot_owner: third-party:tslearn
+  opaque_share: 0.0184
+  profile_file: audit/profiles/distance.dtw.constraint-None__8x1024.pstats
+  opportunities:
+  - opportunity_id: dtw_family-1
+    opportunity: 'One batched numba kernel over the unordered pairs: call tslearn''s njit accumulated-matrix kernels directly (_njit_accumulated_matrix
+      / njit_lcss_accumulated_matrix) from a loop over i < j, build the global-constraint mask once per window (it depends only on T and the constraint)
+      and skip the per-call Python layer (instantiate_backend, which formats each input array with str() to sniff the backend; to_time_series;
+      compute_mask). A prange over pairs adds thread parallelism (the kernels are nogil).'
+    opp_type: vectorise-batch
+    expected_speedup: ~1.1x
+    speedup_basis: profile:audit/profiles/distance.dtw.constraint-None__8x1024.pstats instantiate_backend 5.6% + to_time_series/pyspi glue ~1%
+      removable serially (Amdahl ~1.07x); the rest of the gain is prange parallelism, counted under xc-window-parallel
+    output_risk: unverified-bit-identical
+    risk_evidence: same njit kernel and per-cell arithmetic; only the Python call layer and loop placement change
+    effort: M
+    depends_on:
+    - xc-undirected-upper
+    - xc-window-parallel

@@ -1,0 +1,271 @@
+unit_id: misc.lmfit.ElasticNet
+status: profiled
+correctness:
+  metric_name_standard: in-sample mean squared error of an elastic-net regression (sklearn alpha = 1, l1_ratio = 0.5, i.e. naive elastic net with lambda1 = 0.5 and
+    lambda2 = 0.5 on the 1/(2T) loss scale) of y = x_j on x = x_i
+  canonical_ref: 'Zou & Hastie 2005, J. R. Stat. Soc. B 67(2):301-320 (naive elastic net, eq. 3; their recommended estimator rescales by (1 + lambda2), section 3.2);
+    coordinate descent solution: Friedman, Hastie & Tibshirani 2010, J Stat Softw 33(1):1-22 (supplement ref [76]); scikit-learn objective (1/(2T)) ||y - Xw||^2 +
+    alpha l1_ratio ||w||_1 + 0.5 alpha (1 - l1_ratio) ||w||^2 (_coordinate_descent.py:884-894)'
+  canonical_definition: 'single centred predictor: w = S(sum(xc*yc)/T, alpha*l1_ratio) / (sum(xc^2)/T + alpha*(1 - l1_ratio)); MSE = (1/T) sum (y - b - w x)^2. For
+    z-scored inputs with c = (T-1)/T: w = sign(r) max(|r| c - 0.5, 0) / (c + 0.5) and MSE = c (1 - 2 w r + w^2); the exact minimiser has w = 0 and MSE = (T-1)/T only
+    for |r| <= 0.5 T/(T-1). This is the exact minimiser; sklearn''s stopped solver returns w = 0 over a wider band (see implemented_as).'
+  documented_definition: 'supplement §1.6.1, p.18 (supplement.txt lines 856-868; the briefing pack gives 874-887, which is off by 18 lines): "we use a number of linear
+    models and record the mean squared error (MSE) of a regression of y on x. The following models (with the default parameters) from scikit-learn [2] are included:
+    stochastic gradient descent regression with a squared loss (ordinary least squares fit) function (denoted by modifier SGDRegressor); Ridge regression, which uses l2-norm regularization
+    (Ride); the Elastic-Net model [76, 77], which uses both l1 and l2-norm regularization (ElasticNet); and the Bayesian Ridge regressor uses a gamma distribution
+    prior (with lambda1 = lambda2 = 1e-6) for the l2-norm regularizor in Ridge regression (BayesianRidge). This yields four SPIs: 215. lmfit_SGDRegressor 216. lmfit_Ridge
+    217. lmfit_ElasticNet 218. lmfit_BayesianRidge"; keywords "directed, linear, unsigned, bivariate, contemporaneous"; rationale "Linear regression is commonly used
+    for establishing independence through model fits (e.g., see additive noise models in Sec. 1.3.1)". GitBook spi-descriptions/miscellaneous.md "Linear Model Fit"
+    repeats the text verbatim (including the typo "Ride") and lists the same four identifiers.'
+  delegate_lib: scikit-learn==1.9.1 sklearn.linear_model.ElasticNet(random_state=42).fit -> enet_path -> _cd_fast.enet_coordinate_descent (Cython); sklearn.metrics.mean_squared_error;
+    numpy==2.5.4
+  implemented_as: 'A[i, j] = in-sample MSE of the sklearn ElasticNet(alpha=1.0, l1_ratio=0.5, fit_intercept=True, max_iter=1000, tol=1e-4, selection="cyclic", random_state=42)
+    fit of z_j on z_i. Coordinate descent starts at w = 0 and first evaluates the duality gap there (_cd_fast.pyx:391-400). With one z-scored feature, l1_reg = 0.5
+    T and s = x.y = r (T-1), that gap is 0.5 y.y (1 - min(1, 0.5 T/|s|))^2 (dual_gap_formulation_A, _cd_fast.pyx:138-159), and the solver returns w = 0 with n_iter_
+    0 whenever it is <= tol*y.y = 1e-4 (T-1), i.e. whenever |r| <= 0.5 T/((T-1)(1 - sqrt(2e-4))) (0.51522 at T=64, 0.50916 at 256, 0.50767 at 1024, 0.50730 at 4096).
+    Otherwise one cyclic update reaches the closed form above and the next gap check stops (n_iter_ 2). So pyspi returns (T-1)/T for |r| up to that tol bound, which
+    is wider than the exact-minimiser threshold 0.5 T/(T-1) (0.50794 / 0.50196 / 0.50049 / 0.50012); in the band between them the exact minimiser has w between 0
+    and ~0.0048 and an MSE up to ~4.8e-3 below (T-1)/T, so the SPI jumps by ~4.8e-3 at the tol bound. Probe (lmfit_fix/fix1.py, 14 datasets x 4 T, 552 ordered pairs):
+    max |A - closed form| = 3.50e-3 (6 pairs fall in the band, e.g. sparse_precision T=64 pair (1,0) r=0.5130: closed form 0.981006, pyspi 0.984375 = 63/64); max
+    |A - closed form with the modelled tol exit| = 2.8e-16. Synthetic sweep (fix2.py, r step 1e-5 around the bound) places sklearn''s switch from w = 0 to w != 0
+    at the modelled bound (1 boundary point of 1604 misclassified, at T=4096). Consequences on z-scored data: every pair with |r| <= ~0.51 gets the constant (T-1)/T
+    (probe: iid_gaussian, delayed_noise, nonlinear_dependence all constant; bivariate_gaussian rho=0.3 pair constant); a perfectly dependent pair (r = 1) gives c
+    (1 - w)^2 with w = (c - 0.5)/(c + 0.5) -> about 4/9 (probe shared_envelope identical pair: 0.4468 at T=64, 0.4445 at T=4096). random_state is inert (selection="cyclic").'
+  implementation_trace:
+  - 'pyspi/config.yaml:1264-1278 .statistics.misc LinearModel: labels directed/linear/unsigned/bivariate/contemporaneous; configs model: Ridge, Lasso, SGDRegressor,
+    ElasticNet, BayesianRidge (Lasso is the fifth, undocumented config)'
+  - 'pyspi/calculator.py:230-267 Calculator._load_yaml (HEAD a1f20c7): for params in configs (252): spi = getattr(module, fcn)(**params) (256), i.e. LinearModel(model=...);
+    self._spis[spi.identifier] = spi (257); the class attribute labels (misc.py:109) are what the calculator reports'
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend(axis=1) only if detrend=True (default False) (187), then scipy.stats.zscore(axis=1, nan_policy="omit",
+    ddof=1) if normalise=True (default) (195); stored as (M, T, 1)'
+  - 'pyspi/calculator.py:329-339 Calculator.compute (HEAD a1f20c7): S = self._spis[spi].multivariate(self.dataset) (329); np.fill_diagonal(S, np.nan) (332); any exception
+    -> self._table[spi] = np.nan (336-337), so one failing pair makes the whole matrix NaN'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for j (outer), for i != j (inner): A[i, j] = self.bivariate(data, i=i, j=j); no mirroring'
+  - 'pyspi/base.py:27-49 parse_bivariate: Data passed through unchanged (two raw arrays would be wrapped into a new z-scored Data with i, j = 0, 1)'
+  - 'pyspi/data.py:108-118 Data.to_numpy(): returns the (M, T, 1) array, so z[i] is a (T, 1) design matrix with one feature'
+  - pyspi/statistics/misc.py:106-109 class LinearModel(Directed, Unsigned); labels ["misc", "unsigned", "unordered", "normal", "linear", "directed"]
+  - 'pyspi/statistics/misc.py:111-113 __init__: identifier "lmfit_<model>", self._model = getattr(sklearn.linear_model, model)'
+  - 'pyspi/statistics/misc.py:117-124 bivariate: z = data.to_numpy(); warnings suppressed; if "random_state" in inspect.signature(model).parameters: model(random_state=42).fit(z[i],
+    ravel(z[j])) else model().fit(z[i], ravel(z[j])) -> predictor = process i, target = process j'
+  - pyspi/statistics/misc.py:125-126 y_predict = mdl.predict(z[i]); return mean_squared_error(y_predict, ravel(z[j])) -> in-sample (training) MSE on the same T samples
+    used for fitting (argument order swapped, harmless because MSE is symmetric)
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:884-894 class ElasticNet docstring objective; defaults alpha=1.0, l1_ratio=0.5,
+    max_iter=1000, tol=1e-4, selection="cyclic", random_state=None (probe inspect.signature)
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:1096-1294 ElasticNet.fit: _pre_fit (1212-1221), zero coef init (1233-1236), self.path(...)
+    (1248-1270), _set_intercept (1283)'
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:832 _pre_fit -> _preprocess_data (188-199) centring
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:477 enet_path; 781-784 l1_reg = alpha*l1_ratio*n_samples (= 0.5 T), l2_reg = alpha*(1-l1_ratio)*n_samples
+    (= 0.5 T); 841-853 cd_fast.enet_coordinate_descent
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_cd_fast.pyx:392 tol *= y@y (centred y, = T-1 on z-scored data); 394-400 duality gap at the initial w
+    = 0 via gap_enet (162-) / dual_gap_formulation_A (138-159): with |x.y| > l1_reg the gap is 0.5 y.y (1 - l1_reg/|x.y|)^2, and if gap <= tol the solver returns
+    w = 0 with n_iter 0 (400); 402-422 gap-safe screening; 425-448 cyclic coordinate update w_j = sign(tmp) max(|tmp| - l1_reg, 0) / (||x_j||^2 + l2_reg); 471 convergence
+    on gap <= tol*y@y. _coordinate_descent.py:864 reports dual_gap_ = gap / n_samples (so dual_gap_ is compared with tol*y.y/T, not tol*y.y)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:301-316 LinearModel.predict -> _coordinate_descent.py:1301-1317 ElasticNet._decision_function (dense input: super()._decision_function, _base.py:291-299): X @ coef_ + intercept_'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:318-334 _set_intercept: intercept_ = y_offset - X_offset @ coef_ (unpenalised intercept)'
+  - '.venv/lib/python3.12/site-packages/sklearn/metrics/_regression.py:524-600 mean_squared_error: _average((y_true - y_pred) ** 2, axis=0) (586-588), divisor T'
+  deviation_from_documented: '(a) Documented as "the Elastic-Net model [76, 77], which uses both l1 and l2-norm regularization" with default parameters: matches the
+    code (alpha=1, l1_ratio=0.5); but ref [77] (Andersen et al., interior-point methods for cone programming) is not the algorithm used (coordinate descent, ref [76]).
+    (b) Not stated: with these defaults the l1 threshold plus the solver''s tol-based initial exit zero the coefficient for every pair with |r| <= ~0.51 (0.5 T/((T-1)(1
+    - sqrt(2e-4)))), so the SPI is the constant (T-1)/T for weak and moderate dependence. (c) "directed": symmetric on z-scored data.'
+  deviation_from_canonical: 'The estimator is the naive elastic net of Zou & Hastie 2005 (no (1 + lambda2) rescaling of the coefficients, which Zou & Hastie recommend
+    to undo double shrinkage), in sklearn''s 1/(2T) loss scaling. It equals the exact minimiser except in a band just above the l1 threshold: sklearn''s initial duality-gap
+    exit (tol = 1e-4 relative to y.y) returns w = 0 for 0.5 T/(T-1) < |r| <= 0.5 T/((T-1)(1 - sqrt(2e-4))) where the exact minimiser has w > 0, an MSE overstatement
+    of up to ~4.8e-3 (probe max 3.50e-3 on the audit datasets). The SPI (in-sample MSE at a fixed, large penalty) is a pyspi construction: it saturates at (T-1)/T
+    for |r| up to ~0.51, jumps by ~4.8e-3 at that bound, and cannot fall below ~4/9 even for identical series, so it is a heavily censored, monotone (non-increasing
+    in |r|) function of |r| with one jump discontinuity.'
+  units_and_range: 'units of the target variance; on z-scored data in [~0.444, (T-1)/T]: (T-1)/T for |r| <= 0.5 T/((T-1)(1 - sqrt(2e-4))) (0.5152 at T=64, 0.5073
+    at T=4096; the exact-minimiser threshold 0.5 T/(T-1) is lower), then a jump down by ~4.8e-3 and a decrease to c (1 - w)^2 ~ 4/9 at |r| = 1 (probe shared_envelope
+    identical pair 0.4468 at T=64); symmetric under default preprocessing; asymmetric and scale dependent with normalise=False; unsigned, >= 0.'
+  direction_convention: 'A[i, j] = in-sample MSE of the linear prediction of process j (target, column) from process i (predictor, row), per misc.py:122-126; LOWER
+    = j better linearly predicted from i. Code-derived; with the default z-scoring the matrix is symmetric (see units_and_range), so the direction is only empirically
+    identifiable with normalise=False, where column j scales with var(x_j) (probe on scaled_offset_T1024: column means of A track std_j^2 = 0.0395, 4.058, 24.78,
+    97.89).'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (censored / partly degenerate SPI): with alpha=1, l1_ratio=0.5 the exact minimiser has w = 0 for |r|(T-1)/T <= 0.5, and sklearn''s initial duality-gap
+    exit (_cd_fast.pyx:391-400, tol*y.y = 1e-4 (T-1)) widens this to |r| <= 0.5 T/((T-1)(1 - sqrt(2e-4))) (~0.507-0.515), so A[i, j] = (T-1)/T over that range; evidence
+    probe1.py: ElasticNet range [0.9961, 0.9961] on iid_gaussian, delayed_noise and nonlinear_dependence at T=256 (constant), and on bivariate_gaussian only the rho=0.8
+    pair departs (range [0.6935, 0.9961]); lmfit_fix/fix1.py: 6 of 552 ordered pairs lie in the widened band (e.g. sparse_precision T=64 (1,0) r=0.5130 returns 63/64
+    where the exact minimiser gives 0.981006).'
+  - 'Candidate (floor at ~4/9): identical series give c(1 - (c - 0.5)/(c + 0.5))^2 -> 4/9, probe4.py "ElasticNet A[0,2]=4.468e-01" (T=64) and 4.445e-01 (T=4096) for
+    shared_envelope x2 = x0, so the SPI cannot distinguish r = 0.9 from r = 1 on the scale other lmfit SPIs use.'
+  - 'Candidate (direction label is nominal under default preprocessing): after ddof=1 z-scoring every process has sum x^2 = T-1 and mean ~0, so the fit and its in-sample
+    MSE are functions of (r_ij, T) only and A is symmetric; probe max |A - A.T| = 7.8e-16 across 24 dataset/T combinations although the class is Directed (misc.py:106)
+    and labelled "directed". Asymmetry appears only with normalise=False, where A[i, j] is in units of var(x_j).'
+  - 'Candidate (citation): supplement ref [77] (Andersen, Dahl, Liu et al., interior-point methods for large-scale cone programming) is cited for the Elastic-Net
+    model but sklearn uses coordinate descent (ref [76]); the canonical elastic-net reference (Zou & Hastie 2005) is not cited.'
+  - 'Candidate (solver-tolerance artefact, jump discontinuity): because of the tol-based initial exit, the SPI is not the elastic-net MSE for 0.5 T/(T-1) < |r| <=
+    0.5 T/((T-1)(1 - sqrt(2e-4))) and jumps by ~4.8e-3 at the upper bound (fix1.py analytic gap 4.83e-3 to 4.88e-3 for T = 4096..64; fix2.py sweep confirms the switch
+    point to 1e-5 in r). The value in that band depends on sklearn''s tol default and gap formula, not on the documented model.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - anm
+    - contaminated
+    - shared_envelope
+    - sparse_precision
+    - logistic_maps
+    path: kernel
+    reference: 'from-scratch numpy closed form with the solver''s initial exit modelled: s = xc@yc, yy = yc@yc, a = 0.5 T; if 0.5 yy (1 - min(1, a/|s|))^2 <= 1e-4
+      yy then w = 0, else w = sign(s) max(|s| - a, 0) / (xc@xc + 0.5 T); b = mean(y) - w mean(x); MSE = mean((y - b - w x)^2) on the z-scored arrays (no sklearn import).
+      Report separately the deviation from the pure closed form (no exit) to quantify the tol artefact.'
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: 'max |A - ref (tol exit modelled)| <= 1e-12 (probe fix1.py: 2.8e-16 over 552 pairs); max |A - pure closed form| up to ~4.8e-3, non-zero only
+      for pairs with 0.5 T/(T-1) < |r| <= 0.5 T/((T-1)(1 - sqrt(2e-4))) (probe 3.50e-3, 6 of 552 pairs); all pairs with |r| <= 0.5 T/((T-1)(1 - sqrt(2e-4))) equal
+      (T-1)/T exactly'
+  - datasets:
+    - bivariate_gaussian
+    - trending
+    path: pipeline-detrend
+    reference: same closed form with the tol exit modelled, after detrend + zscore(ddof=1)
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: max |A - ref| <= 1e-12
+  - datasets:
+    - scaled_offset
+    path: kernel
+    reference: from-scratch closed form on raw (normalise=False) data, with the initial exit modelled on the raw scale (gap at w = 0 = 0.5 yy (1 - min(1, a/|s|))^2
+      <= 1e-4 yy)
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: relative difference <= 1e-8 (gap-based stopping); documents scale dependence of the fixed penalty
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - anm
+    path: pipeline
+    reference: 'analytic: A[i, j] depends only on (r_ij, T) after z-scoring, so A must equal A.T; compute max |A - A.T| off the diagonal'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'max |A - A.T| <= 1e-12 at every T (probe: <= 7.8e-16 on iid_gaussian, bivariate_gaussian, delayed_noise, nonlinear_dependence, anm, scaled_offset);
+      confirms that the "directed" label carries no directional information under default preprocessing'
+  - datasets:
+    - scaled_offset
+    - var2_bivariate
+    - anm
+    path: kernel
+    reference: 'analytic direction test: run LinearModel.multivariate on Data(x, normalise=False); compare A[i, j] with var0(x_j) * (1 - r_ij^2) (target-variance
+      scaling) and with var0(x_i) * (1 - r_ij^2) (predictor-variance scaling), numpy only'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A[i, j] tracks var0(x_j) (column = target) and not var0(x_i); establishes the empirical convention A[i, j] = MSE of predicting j from i. '
+  check_method: independent-impl
+  check_reference: audit/checks/refs/lmfit.py:enet_sklearn_tol (l1_ratio = 0.5; exact single-coordinate minimiser with sklearn's initial duality-gap exit modelled,
+    numpy only) and refs/_kernels_basic_misc.py:elasticnet_1d_mse (pure exact minimiser, no exit); refs/lmfit.py:h_pure, h_params, h_grid, h_direction
+  check_data: 'pipeline: all 21 datasets x T in {64, 256, 1024, 4096} (exitmodel); pure: sparse_precision 64 and 1024, logistic_maps 4096 (band pairs), bivariate_gaussian
+    256 and iid_gaussian 1024 (controls); pipeline-detrend: iid_gaussian, bivariate_gaussian, trending, cointegrated x {64, 1024, 4096}; raw: scaled_offset, cointegrated,
+    var2_bivariate, anm, bivariate_gaussian x {64, 1024, 4096}; probes: probes/lmfit_params.py:enet_params (5 runs), probes/lmfit_grid.py:enet_grid (synthetic r grid
+    built from iid_gaussian, T=256 and 4096); direction (raw) T=1024'
+  agreement_criterion: exact (rtol 1e-10, atol 1e-12) against the exit-modelled minimiser and against the pure minimiser (the latter is expected to fail only for
+    band pairs); params exact on (n_iter_, coef_, intercept_); qualitative raw-scale direction test
+  closeness: 'exitmodel 96/96 pass, max_abs 2.8e-16 (default path) and 2.2e-16 (detrend); pure 2/5 pass: max_abs 3.50e-3 (logistic_maps|4096, r = -0.5053), 3.37e-3
+    (sparse_precision|64, r = 0.5130), 1.38e-3 (sparse_precision|1024, r = 0.5025), every mismatch inside the band 0.5T/(T-1) < |r| <= 0.5T/((T-1)(1 - sqrt(2e-4)))
+    (max_abs_outside_band <= 1.1e-16); grid 2/2 exact (<= 4.4e-16): last constant r 0.50915 (tol_exit_bound 0.509161) and jump 4.87e-3 at T=256, last constant r 0.50725
+    (bound 0.507296) and jump 4.83e-3 at T=4096, pyspi minus pure minimiser up to 4.83e-3; params 5/5 (n_iter_ in {0, 2} as modelled); raw 15/15 (max_rel 5.4e-16);
+    540 of 696 default-path entries equal (T-1)/T and 36 of 84 default-path runs are entirely constant; identical-pair floor 0.4468 (T=64) to 0.4445 (T=4096)'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: Anchor 7's optimiser clause fails. sklearn's initial duality-gap exit returns w = 0 in a band just above the l1 threshold, up to 3.5e-3 from the
+    exact minimiser on audit data (jump 4.8e-3 on the r grid). Anchor 6's 'deviates from the supplement' half does not hold literally, because the code runs the documented
+    default ElasticNet. A numpy minimiser with the exit modelled agrees on 96/96 runs, max_abs 2.8e-16. So 6 is the nearest anchor, as for phi Geo.
+  documentation_status: metadata-conflict
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The SPI is the in-sample MSE of sklearn''s naive elastic net at alpha = 1, l1_ratio = 0.5 (the documented defaults). Two departures from the exact
+    elastic-net minimiser: (1) a solver-tolerance artefact, where the initial duality-gap exit (tol = 1e-4 relative to y.y) returns w = 0 for 0.5T/(T-1) < |r| <=
+    0.5T/((T-1)(1 - sqrt(2e-4))) (about 0.502-0.515), overstating the MSE by up to 4.8e-3 and producing a jump of 4.8e-3 at the bound; (2) heavy censoring inherent
+    in the fixed penalty on standardised data: every pair with |r| below about 0.51 returns the constant (T-1)/T (36 of 84 default-path runs entirely constant, including
+    all four direction datasets), and r = 1 gives only about 4/9. The matrix is symmetric under the default preprocessing.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.018 s per pyspi run; grid probes about 2 s each; all 132 ElasticNet runs about 5 s of pyspi time'
+  symmetry_observed: 'sym on the default (z-scored) path: max|A - A.T| <= 6.7e-16 over the 84 pipeline runs (iid_gaussian|64|pipeline|exitmodel) and <= 4.9e-15 on
+    pipeline-detrend (trending|4096|pipeline-detrend|exitmodel); asym on raw (kernel) data, where A[i, j] is in units of var0(x_j) (max|A - A.T| 3.88e3 on cointegrated|4096|kernel|raw)'
+  direction_observed: 'A[i, j] = in-sample MSE of predicting process j (target, column) from process i (predictor, row); lower = more linearly predictable. Raw-scale
+    direction runs (misc.lmfit.ElasticNet|{scaled_offset,var2_bivariate,anm,cointegrated}|1024|kernel|direction, 4/4 pass): pyspi equals the from-scratch f(x_i ->
+    x_j) to max_rel <= 3.7e-16 and differs from f(x_j -> x_i) by max_rel 0.0375 (var2_bivariate) to 2477 (scaled_offset). On the default z-scored path the matrix
+    is symmetric, so on the direction datasets (delayed_noise, var2_bivariate, logistic_maps_chaotic, anm) A[i, j] = A[j, i] to <= 7.8e-16 and the value carries no
+    causal direction. On var2_bivariate and logistic_maps_chaotic every default-path entry is the constant (T-1)/T at every T.'
+  candidate_resolutions:
+  - candidate: 'Censored / partly degenerate SPI: (T-1)/T for |r| up to about 0.51'
+    outcome: confirmed
+    evidence: 'misc.lmfit.ElasticNet|*|*|pipeline|exitmodel: n_const 540 of 696 entries; 36 of 84 runs entirely constant (e.g. iid_gaussian, delayed_noise, var2_bivariate,
+      logistic_maps_chaotic at every T); grid runs: last constant r 0.50915 (T=256), 0.50725 (T=4096)'
+  - candidate: Floor at about 4/9 for identical series
+    outcome: confirmed
+    evidence: misc.lmfit.ElasticNet|shared_envelope|{64,256,1024,4096}|pipeline|exitmodel min_offdiag 0.44676, 0.44502, 0.44459, 0.44448; grid value_at_r1 0.44502
+      (T=256), 0.44448 (T=4096)
+  - candidate: Direction label nominal under default preprocessing (A symmetric although the class is Directed)
+    outcome: confirmed
+    evidence: misc.lmfit.ElasticNet|*|*|pipeline|exitmodel asym_max <= 6.7e-16; pipeline-detrend <= 4.9e-15
+  - candidate: 'Citation: supplement ref [77] (interior-point cone programming) is not the algorithm used; Zou & Hastie 2005 not cited'
+    outcome: confirmed
+    evidence: supplement.txt:2198-2203 ([76] Friedman et al. 2010 coordinate descent; [77] Andersen et al. 2011 interior-point methods); sklearn path _cd_fast.enet_coordinate_descent
+      (params runs n_iter_ in {0, 2} match the coordinate-descent model)
+  - candidate: 'Solver-tolerance artefact: w = 0 returned in the band above the exact threshold, jump of about 4.8e-3'
+    outcome: confirmed
+    evidence: misc.lmfit.ElasticNet|<sparse_precision|64, sparse_precision|1024, logistic_maps|4096>|pipeline|pure fail with max_abs 3.37e-3, 1.38e-3, 3.50e-3 (band
+      pairs only); |iid_gaussian|{256,4096}|pipeline|grid jump_at_switch 4.87e-3, 4.83e-3; exit-modelled reference exact on 96/96 runs
+  checks_run:
+  - run_ids:
+    - misc.lmfit.ElasticNet|*|*|pipeline|exitmodel
+    - misc.lmfit.ElasticNet|*|*|pipeline-detrend|exitmodel
+    reference: refs/lmfit.py:enet_sklearn_tol(l1_ratio=0.5)
+    outcome: pass 96/96, max_abs 2.8e-16
+  - run_ids:
+    - misc.lmfit.ElasticNet|*|*|pipeline|pure
+    reference: refs/_kernels_basic_misc.py:elasticnet_1d_mse via refs/lmfit.py:h_pure
+    outcome: fail 3/5 (band pairs only, max_abs 3.50e-3); pass 2/5 controls
+  - run_ids:
+    - misc.lmfit.ElasticNet|*|*|kernel|raw
+    reference: refs/lmfit.py:enet_sklearn_tol(l1_ratio=0.5) on raw data
+    outcome: pass 15/15, max_rel 5.4e-16
+  - run_ids:
+    - misc.lmfit.ElasticNet|*|*|pipeline|params
+    reference: refs/lmfit.py:h_params (probes/lmfit_params.py:enet_params)
+    outcome: pass 5/5, n_iter_ in {0, 2}
+  - run_ids:
+    - misc.lmfit.ElasticNet|iid_gaussian|256|pipeline|grid
+    - misc.lmfit.ElasticNet|iid_gaussian|4096|pipeline|grid
+    reference: refs/lmfit.py:h_grid (probes/lmfit_grid.py:enet_grid)
+    outcome: pass 2/2 exact; jump 4.87e-3 / 4.83e-3 at the tol-exit bound
+  - run_ids:
+    - misc.lmfit.ElasticNet|*|1024|kernel|direction
+    reference: refs/lmfit.py:h_direction
+    outcome: pass 4/4
+optimisation:
+  complexity_P_T: 'O(P^2 T) for the arithmetic, but a T-independent per-call overhead dominates: one sklearn ElasticNet fit + predict + mean_squared_error per ordered pair (pyspi/statistics/misc.py:115-126, inspect.signature per pair at line 120). Measured P_exponent 2.06, T_exponent 0.02. Pair term dominates; measured 11.2 s per window at 118x1024 (family-warm, measured).'
+  hotspot_1: sklearn/utils/validation.py:check_array (third-party:sklearn) 36.3% of the profiled SPI call at 8x1024 (input validation incl. narwhals dataframe detection and finite checks); coordinate-descent enet_path is 9.8%
+  hotspot_2: 'sklearn/metrics/_regression.py:mean_squared_error (third-party:sklearn) 20.9% of the profiled SPI call at 8x1024; inspect.signature (Python stdlib) 12.0% in all, of which 6.2% is called per pair from pyspi/statistics/misc.py:bivariate (line 120), 3.7% sits inside sklearn base._validate_params (get_params -> _get_param_names) and 2.1% inside the validate_params wrapper of mean_squared_error'
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.197
+  profile_file: audit/profiles/misc.lmfit.ElasticNet__8x1024.pstats
+  opportunities:
+  - opportunity_id: lmfit-2
+    opportunity: Lasso and ElasticNet with one regressor as a batched soft-threshold closed form from the same Gram matrix as lmfit-1, reproducing sklearn's initial duality-gap exit at w = 0 (on z-scored data Lasso returns the constant (T-1)/T and ElasticNet is censored below |r| ~ 0.51).
+    opp_type: vectorise-batch
+    expected_speedup: 1000-3000x
+    speedup_basis: 'profile:audit/profiles/misc.lmfit.ElasticNet__8x1024.pstats base.py:multivariate 99.968% (the ordered-pair loop, replaced as a whole; misc.py:bivariate 99.75%: enet_path 9.8%, inspect.signature 12.0%, mean_squared_error 20.9%, the rest sklearn validation) -> Amdahl bound 3,160x at 8x1024; the remainder is a fixed cost (summary.json family-warm pairs fit t_fixed 1.15 ms of 11.2 s at 118x1024), so the bound at 118x1024 is about 1e4x + complexity: the replacement has the one-Gram-matrix structure of lmfit-1, measured at 3.5-3.8 ms per 118x1024 window (audit/profiles/micro/opp_lmfit-1.json and the reviewer re-runs); allowing an estimated 4-11 ms (not a timing; no candidate code exists) for the soft threshold and the duality-gap test gives 1000-3000x'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'the closed form must reproduce sklearn''s gap test at w = 0 (_cd_fast.pyx, exit band recorded in the ElasticNet check: |r| <= 0.5T/((T-1)(1 - sqrt(2e-4)))); outside it one cyclic update reaches the closed form, so only float-order differences are expected, but a pair at the band edge would jump by up to 4.8e-3'
+    effort: M
+    depends_on: []
+  - opportunity_id: lmfit-4
+    opportunity: 'Strip per-call overhead around the unchanged sklearn fit: hoist inspect.signature(self._model) to __init__ (misc.py:120 runs it per pair), run fit/predict under sklearn.config_context(skip_parameter_validation=True, assume_finite=True), and compute the in-sample MSE with numpy instead of sklearn.metrics.mean_squared_error.'
+    opp_type: replace-library
+    expected_speedup: ~1.8x
+    speedup_basis: 'profile:audit/profiles/misc.lmfit.ElasticNet__8x1024.pstats inspect.signature 12.0% (6.2% called from misc.py:120, the part the hoist removes; the other 5.8% sits inside _validate_params and the mean_squared_error validation wrapper, so it is already in those shares), mean_squared_error 20.9%, sklearn base._validate_params 10.9% (containing validate_parameter_constraints 7.6%), _assert_all_finite 8.2% (overlapping cProfile shares, inflated by profiling) + complexity: per-call constant overhead, T-independent (T_exponent 0.02); an unprofiled throwaway check at 8x1024 (56 ordered pairs, same arrays, OMP_NUM_THREADS=1) gave 1.78x per pair with max_abs_diff 0.0 (not saved as a micro-benchmark); contained in lmfit-2, which replaces the sklearn fit whose per-call overhead this avenue strips, so on this unit it saves nothing on top of lmfit-2 (subsumed_by; README ''Optimisation columns'', ranking rule 4) and remains the fallback that keeps sklearn''s solver if lmfit-2 is not taken'
+    output_risk: unverified-bit-identical
+    risk_evidence: the same sklearn solver code runs on the same arrays; validation and signature inspection do not modify the data; for one output mean_squared_error is numpy mean((y_true - y_pred)**2), the same operations as an explicit numpy mean; assume_finite=True skips the finite-value check, so on input with NaN or inf sklearn raises today while the stripped call would proceed, and the bit-identical claim covers finite input only
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - lmfit-2

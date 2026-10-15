@@ -1,0 +1,108 @@
+{
+ "family": "rank_corr",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/basic-statistics.md"
+ ],
+ "hypotheses": [
+  "kendalltau is tau-b (tie-corrected); spearman is Pearson on ranks; both symmetric so the Undirected double computation is pure waste"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/basic.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    176,
+    183
+   ],
+   "section": "1.1.3",
+   "title": "Spearman\u2019s rank-correlation coefficient (spearmanr)"
+  },
+  {
+   "lines": [
+    184,
+    196
+   ],
+   "section": "1.1.4",
+   "title": "Kendall\u2019s rank-correlation coefficient (kendalltau)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_stats_py.py (spearmanr, kendalltau)"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [
+    "spearmanr",
+    "spearmanr-sq"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "spearmanr": {
+     "squared": false
+    },
+    "spearmanr-sq": {
+     "squared": true
+    }
+   },
+   "identifiers": [
+    "spearmanr-sq",
+    "spearmanr"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "rank",
+    "signed",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "SpearmanR",
+   "module": "basic",
+   "pair_basis": "ordered",
+   "pyspi_class": "SpearmanR",
+   "representative": "spearmanr-sq",
+   "source": "config",
+   "unit_id": "basic.spearmanr"
+  },
+  {
+   "eeg_identifiers": [
+    "kendalltau-sq"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "kendalltau": {
+     "squared": false
+    },
+    "kendalltau-sq": {
+     "squared": true
+    }
+   },
+   "identifiers": [
+    "kendalltau-sq",
+    "kendalltau"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "rank",
+    "signed",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "KendallTau",
+   "module": "basic",
+   "pair_basis": "ordered",
+   "pyspi_class": "KendallTau",
+   "representative": "kendalltau-sq",
+   "source": "config",
+   "unit_id": "basic.kendalltau"
+  }
+ ]
+}

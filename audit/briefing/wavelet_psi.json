@@ -1,0 +1,92 @@
+{
+ "family": "wavelet_psi",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/spectral.md"
+ ],
+ "hypotheses": [
+  "n_cycles=7 default (real wavelets, 10 freqs linspace(0.2,0.5,10)); mne computes adjacent-pair slope per time point; result shape (N,N,1,T) and pyspi indexes the TIME axis with frequency indices (EEG notes), so band variants average the first <=10 time samples",
+  "single-epoch coherency has unit modulus so PSI(t) = sum sin(delta phi)"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/wavelet.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    582,
+    613
+   ],
+   "section": "1.5",
+   "title": "Spectral (126 SPIs)"
+  },
+  {
+   "lines": [
+    658,
+    683
+   ],
+   "section": "1.5.4",
+   "title": "Phase slope index (psi)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/effective.py (phase_slope_index, _compute_psi)",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/spectral/epochs.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "psi_wavelet_max_fs-1_fmin-0_fmax-0-25_max": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "psi_wavelet_max_fs-1_fmin-0_fmax-0-5_max": {
+     "fmax": 0.5,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "psi_wavelet_mean_fs-1_fmin-0-25_fmax-0-5_mean": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "psi_wavelet_mean_fs-1_fmin-0_fmax-0-25_mean": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean",
+    "psi_wavelet_mean_fs-1_fmin-0_fmax-0-25_mean",
+    "psi_wavelet_mean_fs-1_fmin-0-25_fmax-0-5_mean",
+    "psi_wavelet_max_fs-1_fmin-0_fmax-0-5_max",
+    "psi_wavelet_max_fs-1_fmin-0_fmax-0-25_max",
+    "psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "undirected",
+    "unsigned",
+    "wavelet"
+   ],
+   "method_or_estimator": "PhaseSlopeIndex",
+   "module": "wavelet",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PhaseSlopeIndex",
+   "representative": "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean",
+   "source": "config",
+   "unit_id": "wavelet.psi"
+  }
+ ]
+}

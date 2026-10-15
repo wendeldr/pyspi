@@ -1,0 +1,226 @@
+unit_id: infotheory.di.gaussian
+status: profiled
+correctness:
+  metric_name_standard: Directed information I(X^n -> Y^n) (Massey), block length n = 5, Gaussian model (pyspi variant)
+  canonical_ref: Massey J. 1990, Proc. Int. Symp. Inf. Theory Appl. (ISITA), 'Causality, feedback and directed information', eq. (6)-(7); Kramer G. 1998 PhD thesis ETH Zurich (I(X^N->Y^N) = H(Y^N) - H(Y^N||X^N));
+    Amblard & Michel 2011, J Comput Neurosci 30:7-16
+  canonical_definition: I(X^N -> Y^N) = sum_{n=1}^{N} I(X^n; Y_n | Y^{n-1}) = H(Y^N) - H(Y^N || X^N), with H(Y^N) = sum_n H(Y_n | Y^{n-1})
+  documented_definition: 'supplement §1.4.8, p.11-12 (supplement.txt:526-537): ''Directed information [42, 45] is a measure of information flow from a source time series x to a target time series y that
+    is related to transfer entropy, but has no time lag between source and target [46, App. C]. The directed information can be computed as a difference between the conditional entropy of y given its own
+    past, and causally conditioned entropy [42-44]. For the same reasons as for causally conditioned entropy, we restrict its computation up to a history length of 10.'' Keywords ''directed, nonlinear,
+    unsigned, bivariate, time-dependent''. GitBook information-theory.md:68-86 same text.'
+  delegate_lib: JIDT infodynamics.jar bundled at pyspi/lib/jidt (labelled 1.6.1 by version-1.6.1.txt, but its class inventory includes EntropyCalculatorMultiVariateCommon, added upstream in commit 3d1f3fe
+    on 2024-04-20; between tag v1.6.1 and commit a9b6b3e the Gaussian MI/CMI/TE/AIS leaf classes, MatrixUtils, MathsUtils and ChiSquareMeasurementDistribution are byte-identical, their MultiVariateCommon/Via
+    parents differ only in observation-ID/noise-seed bookkeeping, and EntropyCalculatorMultiVariateGaussian was refactored onto EntropyCalculatorMultiVariateCommon with its value path unchanged; details
+    in infotheory.est.gaussian) via JPype1==1.7.1 on OpenJDK 21; gaussian.EntropyCalculatorMultiVariateGaussian (block entropies and the CausalEntropy terms)
+  implemented_as: A[i,j] = sum_{m=1}^{5} H(Y^m)/m - cce(i,j), where H(Y^m) is the Gaussian entropy of the m-dimensional delay vector of x_j (T-m+1 samples, z-scored, ddof=1) and cce(i,j) is the CausalEntropy
+    value (5-term sum, shared cache). The first term is a sum of block-entropy-per-symbol estimates, not H(Y^5) = sum_m H(Y_m | Y^{m-1}). Since H(Y^m)/m >= H(Y_m|Y^{m-1}) for every m, the code value exceeds
+    Massey's DI by sum_{m=1}^{5} H(Y^m)/m - H(Y^5) >= 0, a quantity that depends only on the target's autocorrelation (for an AR(1) target with coefficient phi it equals 0.6417*(-ln(1-phi^2)) nats).
+  implementation_trace:
+  - pyspi/calculator.py:329 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 fill_diagonal NaN; :336-339 any exception from any pair -> the whole SPI entry becomes NaN (:337) and the error is recorded, warning issued at :354-355
+  - 'pyspi/data.py:184-195 preprocessing in Data.set_data: optional scipy.signal.detrend(axis=1), then (default normalise=True) scipy.stats.zscore(axis=1, ddof=1)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for every ordered pair i != j, A[i,j] = self.bivariate(data, i=i, j=j)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: _entropy_calc = _getcalc(''entropy'') (:36); identifier += ''_gaussian'' (:38); estimator ''gaussian'' -> labels += [''linear''], _dyn_corr_excl
+    = None (:53-55)'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: every calculator gets setProperty(''BIAS_CORRECTION'',''false'') and setProperty(''NOISE_SEED'',''42''); no NORMALISE property is set'
+  - 'pyspi/statistics/infotheory.py:103-134 _getcalc: ''gaussian'' (and any unrecognised estimator) falls to the else branches -> gaussian.EntropyCalculatorMultiVariateGaussian (:111-112), gaussian.MutualInfoCalculatorMultiVariateGaussian
+    (:120-123), gaussian.TransferEntropyCalculatorGaussian (:129-130)'
+  - 'pyspi/statistics/infotheory.py:477-485 DirectedInfo(CausalEntropy, Directed).__init__(n=5): self._n = 5'
+  - 'pyspi/statistics/infotheory.py:487-501 _compute_entropy_rates(targ): for i = 1..n: Yi = makeDelayEmbeddingVector(targ, i); entropy_rate_sum += H(Yi)/i'
+  - 'pyspi/statistics/infotheory.py:503-510 bivariate: entropy_rates of z[j] minus CausalEntropy.bivariate(data, i, j) (cached, same key as cce_gaussian)'
+  - pyspi/statistics/infotheory.py:429-437 CausalEntropy(JIDTBase, Directed).__init__(n=5) -> self._n = 5 (config passes no n)
+  - 'pyspi/statistics/infotheory.py:439-454 _compute_causal_entropy(src, targ): for i = 1..n: Yp = MatrixUtils.makeDelayEmbeddingVector(targ, i-1)[:-1] (targ lags 1..i-1), Xp = makeDelayEmbeddingVector(src,
+    i) (src lags 0..i-1, i.e. including the present x(t)), Yf = targ[i-1:]; sum of _compute_conditional_entropy(Yf, [Yp, Xp]) = H(y(t) | y(t-1..t-i+1), x(t..t-i+1)) on T-i+1 samples'
+  - pyspi/statistics/infotheory.py:180-193 _compute_conditional_entropy(X, Y) = H(X,Y) - H(Y) with the Gaussian entropy calculator
+  - pyspi/statistics/infotheory.py:456-457 _getkey adds n to the cache key; :459-474 bivariate caches data.causal_entropy[(estimator, n)][i,j] = _compute_causal_entropy(z[i], z[j]) (src = i, targ = j)
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] makeDelayEmbeddingVector(double[], k) :2084-2092 -> (data, k, k-1, T-k+1) :2140-2158, rows [x(t), x(t-1),
+    ..., x(t-k+1)] for t = k-1..T-1; k = 0 yields T+1 zero-width rows (probe-consistent)
+  - 'pyspi/config.yaml:466-478 DirectedInfo configs: estimator gaussian (no n)'
+  - 'https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/gaussian/EntropyCalculatorMultiVariateGaussian.java EntropyCalculatorMultiVariateGaussian
+    (extends EntropyCalculatorMultiVariateCommon, :53-54): finaliseAddObservations :87-96 computes means and MatrixUtils.covarianceMatrix(observations, means); setCovariance :110-123 takes MatrixUtils.CholeskyDecomposition
+    (throws on non-PD); computeAverageLocalOfObservations :162-175 returns 0.5*(d*(1+ln 2pi) + ln det(Sigma)) in nats'
+  - https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/EntropyCalculatorMultiVariateCommon.java :66 normalise = true by default, but
+    finaliseAddObservations :178-212 only stacks observations and adds noise if addNoise (default false, :70); no normalisation is applied for the Gaussian estimator; NOISE_SEED handled :133-139 (no effect
+    without addNoise)
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] covarianceMatrix(double[][], double[]) :3426-3439 -> covarianceTwoColumns :3370-3377 divides by (n-1) (ddof=1);
+    CholeskyDecomposition :4496-4498 (tol 10e-10 = 1e-9) / :4528-4560 throws NonPositiveDefiniteMatrixException when a pivot <= tol; determinantViaCholeskyResult :4673-4680
+  deviation_from_documented: (1) First term is sum_m H(Y^m)/m, not 'the conditional entropy of y given its own past' (sum_m H(Y_m | Y^{m-1}) = H(Y^5)). (2) n = 5, not 10. (3) Includes the contemporaneous
+    term (consistent with the docs' 'no time lag').
+  deviation_from_canonical: 'Not Massey''s directed information: value = Massey DI_5 + [sum_{m=1}^{5} H(Y^m)/m - H(Y^5)]. Probe var2_bivariate_T1024: pyspi A[0,1] = 0.77460407 and A[1,0] = 0.19588843 reproduce
+    the code-form numpy reference exactly, whereas canonical DI_5 = 0.64825 and 0.03690. Probe with an independent white source and AR(1) target (T=4096): phi=0.5 -> di 0.1803 (predicted excess 0.1846),
+    phi=0.9 -> di 1.0553 (predicted 1.0656), phi=0 -> 0.0061, reverse direction approx 0.'
+  units_and_range: nats; population value >= 0 and larger than Massey DI by a target-only term; asymmetric; scale invariant (shifts cancel); raises on singular embeddings
+  direction_convention: 'A[i,j] = DI from x_i (source) to x_j (target): entropy term from z[j] (infotheory.py:507), cce(src=i, targ=j). Probe var2_bivariate_T1024: A[0,1]=0.775 > A[1,0]=0.196'
+  symmetry_expected: asym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'CANDIDATE (formula, hypothesis confirmed): _compute_entropy_rates sums block entropies divided by block length (infotheory.py:493-499 ''entropy_rate_sum + H(Yi)/i'') instead of H(Y^n) = sum H(Y_m|Y^{m-1}),
+    so di_gaussian = Massey DI + sum_m H(Y^m)/m - H(Y^5). Evidence: numpy code-form reference reproduces pyspi exactly (0.7746040739304512) while canonical DI_5 is 0.6482541289427077 on var2_bivariate_T1024
+    0->1.'
+  - 'CANDIDATE (spurious directed information): because the excess depends only on the target''s autocorrelation, an independent source gives large positive di for autocorrelated targets. Probe (independent
+    white source, AR(1) target, T=4096): phi=0.9 -> di[src->y] = 1.0553 vs reverse 0.0008; analytic excess 0.641667*(-ln(1-phi^2)) = 1.0656.'
+  - 'CANDIDATE (documented parameter mismatch): n = 5 (infotheory.py:483) vs documented 10 (same as cce).'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: 'from-scratch numpy code-form: sum_{m=1}^{5} H(Y^m)/m - CCE_5 (ddof=1 slogdet entropies) AND the canonical Massey form sum_{m=1}^{5} H(Y_m | Y^{m-1}) - CCE_5 (same stationary sliding-window
+      estimates)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: pyspi equals the code-form reference to 1e-10 and differs from the canonical form by exactly sum_m H(Y^m)/m - H(Y^5) (sample identity)
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic: for serially white targets both forms equal 5*MI = -2.5*ln(1-rho^2): rho=0.3 -> 0.2357767, rho=0.8 -> 2.5541281'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: within 3 sampling SDs at T=4096, both directions (symmetric for these pairs)
+  - datasets:
+    - var2_bivariate
+    - iid_gaussian
+    path: pipeline
+    reference: constructed independent pair (row 0 of var2_bivariate = AR(2) target, row 0 of iid_gaussian at the same T = independent source); analytic excess sum_{m=1}^{5} h(Y^m)/m - h(Y^5) from the AR(2)
+      population autocovariance (Gamma0 and A1, A2 in the dataset)
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pyspi di(source -> AR target) approx equals the analytic excess (> 0) while canonical DI approx 0; reverse direction approx 0
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    path: pipeline
+    reference: known ground truth (x0 drives x1)
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A[0,1] > A[1,0]; establishes A[i,j] = DI(i -> j)
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_gaussian.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:gaussian_di(form='pyspi') (sum_m H(Y^m)/m - CCE_5); audit/checks/refs/it_gaussian.py:chk_massey
+    (audit/checks/refs/_kernels_infotheory.py:gaussian_di(form='massey'), Massey 1990 eq. 6) and chk_massey_identity (audit/checks/refs/_kernels_infotheory.py:di_block_term); audit/checks/refs/it_gaussian.py:chk_truth_pair;
+    audit/checks/refs/it_gaussian.py:chk_indep_numpy / chk_indep_truth with audit/checks/probes/it_gaussian_probes.py:di_independent_pair (analytic block-entropy excess of the AR(2) target, Monte Carlo
+    SE); audit/checks/refs/it_gaussian.py:chk_n10 with audit/checks/probes/it_gaussian_probes.py:di_n10
+  check_data: var2_bivariate T1024/T4096; gauss_ar1_pair T1024; delayed_noise T256/T1024; iid_gaussian T256; bivariate_gaussian T1024 and pairs at T4096; constructed independent pair [iid_gaussian row 0,
+    var2_bivariate row 0] at T4096
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 against the code form; tolerance rtol 1e-6, atol 1e-8 against Massey''s form (expected to fail: it quantifies the deviation); statistical: |pyspi -
+    Monte Carlo mean| <= 2 Monte Carlo SD'
+  closeness: 'Code form: 7/7 exact runs pass, max_abs <= 2.3e-14 (incl. n = 10 probe 1.8e-15 and independent pair 8.9e-16). Massey''s directed information on var2_bivariate T1024 (di|var2_bivariate|1024|pipeline|massey,
+    fails by design): 0.64825 (0->1) / 0.03690 (1->0) vs pyspi 0.77460 / 0.19589, max_abs 0.159; pyspi - Massey = block term B(target) (0.12635 for target x1, 0.15899 for target x0) to 8.9e-16. Independent
+    white source -> AR(2) target (T=4096): pyspi A[0,1] = 0.1742 vs population excess B = 0.17660 (max_z 1.72), Massey form 0.0017; reverse -8.8e-5 (population 0). White pairs at T=4096: population 5 MI
+    = 0.23578 / 2.55413, |pyspi - population| 0.0153 / 0.0565 (max_z <= 0.95). n = 10: 1.6751 / 0.3133 vs n = 5: 0.7746 / 0.1959.'
+  verdict: related-quantity
+  score_0_10: 4
+  score_rubric: 4
+  score_rubric_basis: anchor
+  score_rubric_note: Anchor 4 names DI with block-entropy rate. pyspi equals Massey DI_5 plus the target block term B to 8.9e-16 on var2_bivariate T1024 (0.7746 vs
+    Massey 0.6483).
+  documentation_status: misdescribed
+  verdict_adjusted: related-quantity
+  score_adjusted: 4
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: First term is sum_{m=1..5} H(Y^m)/m (block entropy per symbol), not H(Y^5) = sum_m H(Y_m | Y^{m-1}); the value equals Massey's DI_5 plus B(target) = sum_m H(Y^m)/m - H(Y^5) >= 0, which depends
+    only on the target's autocorrelation. An independent source therefore gets positive DI into any autocorrelated target (0.174 nats for the var2_bivariate AR(2) row). Also n = 5 instead of the documented
+    10.
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap (pyspi time_s in out/pyspi/index/it_gaussian.json, single runs of the review-stage forced re-run, made under machine load: the slowest runs are the var2_bivariate T = 1024 n10 probe 0.95 s,
+    var2_bivariate|4096|pipeline|indep-truth 0.89 s, bivariate_gaussian|1024|pipeline|numpy (P = 4) 0.73 s and delayed_noise|1024|pipeline|direction 0.60 s; every other run <= 0.59 s; 14 runs, 5.6 s
+    in total; an earlier run quoted <= 0.77 s per pyspi run at P = 5, T = 256 (not stored in the index or results files))'
+  symmetry_observed: 'asym: max|A - A.T| = 0.579 (var2_bivariate T1024), 9.01 (delayed_noise T256), 0.208 (gauss_ar1_pair), 0.0117 (bivariate_gaussian), 0.062 (iid_gaussian)'
+  direction_observed: 'A[i,j] = DI(x_i -> x_j) as pyspi defines it (block term of the target j minus cce(i -> j)). var2_bivariate T1024: A[0,1] = 0.775 > A[1,0] = 0.196; delayed_noise T1024: A[0,1] = 9.093
+    > A[1,0] = 0.012. The reverse entry on var2_bivariate is mostly the target block term (0.159 of 0.196).'
+  candidate_resolutions:
+  - candidate: _compute_entropy_rates sums block entropies divided by block length instead of H(Y^n)
+    outcome: confirmed
+    evidence: infotheory.di.gaussian|var2_bivariate|1024|pipeline|massey (pyspi 0.7746 vs Massey 0.6483, max_abs 0.159) and |massey-identity (pyspi - Massey = B to 8.9e-16)
+  - candidate: spurious directed information from an independent source into an autocorrelated target
+    outcome: confirmed
+    evidence: 'infotheory.di.gaussian|var2_bivariate|4096|pipeline|indep-truth: pyspi 0.1742 vs analytic excess 0.1766 (max_z 1.72), Massey form 0.0017 (|indep-numpy)'
+  - candidate: n = 5 vs documented 10
+    outcome: confirmed
+    evidence: infotheory.cce.gaussian|var2_bivariate|64|pipeline|configured-n (di_n = 5); infotheory.di.gaussian|var2_bivariate|1024|pipeline|n10 (1.675 vs 0.775)
+  checks_run:
+  - run_ids:
+    - infotheory.di.gaussian|var2_bivariate|1024|pipeline|numpy
+    - infotheory.di.gaussian|delayed_noise|256|pipeline|numpy
+    - infotheory.di.gaussian|gauss_ar1_pair|1024|pipeline|numpy
+    - infotheory.di.gaussian|iid_gaussian|256|pipeline|numpy
+    - infotheory.di.gaussian|bivariate_gaussian|1024|pipeline|numpy
+    reference: audit/checks/refs/it_gaussian.py:chk_numpy (audit/checks/refs/_kernels_infotheory.py:gaussian_di form='pyspi')
+    outcome: 5/5 pass; max_abs <= 2.3e-14
+  - run_ids:
+    - infotheory.di.gaussian|var2_bivariate|1024|pipeline|massey
+    reference: audit/checks/refs/it_gaussian.py:chk_massey (audit/checks/refs/_kernels_infotheory.py:gaussian_di form='massey')
+    outcome: 0/1 pass; fails by design, max_abs 0.159
+  - run_ids:
+    - infotheory.di.gaussian|var2_bivariate|1024|pipeline|massey-identity
+    reference: audit/checks/refs/it_gaussian.py:chk_massey_identity
+    outcome: 1/1 pass; identity to 8.9e-16
+  - run_ids:
+    - infotheory.di.gaussian|bivariate_gaussian|4096|pipeline|truth-p01
+    - infotheory.di.gaussian|bivariate_gaussian|4096|pipeline|truth-p23
+    reference: audit/checks/refs/it_gaussian.py:chk_truth_pair (analytic + Monte Carlo SE)
+    outcome: 2/2 pass; max_z <= 0.95
+  - run_ids:
+    - infotheory.di.gaussian|var2_bivariate|4096|pipeline|indep-numpy
+    - infotheory.di.gaussian|var2_bivariate|4096|pipeline|indep-truth
+    reference: audit/checks/refs/it_gaussian.py:chk_indep_numpy / chk_indep_truth (audit/checks/probes/it_gaussian_probes.py:di_independent_pair)
+    outcome: 2/2 pass; exact 8.9e-16; max_z 1.72
+  - run_ids:
+    - infotheory.di.gaussian|var2_bivariate|1024|pipeline|direction
+    - infotheory.di.gaussian|delayed_noise|1024|pipeline|direction
+    reference: audit/checks/refs/it_gaussian.py:chk_direction
+    outcome: 2/2 pass; A[0,1] > A[1,0] on both
+  - run_ids:
+    - infotheory.di.gaussian|var2_bivariate|1024|pipeline|n10
+    reference: audit/checks/refs/it_gaussian.py:chk_n10 (audit/checks/probes/it_gaussian_probes.py:di_n10)
+    outcome: 1/1 pass; max_abs 1.8e-15
+optimisation:
+  complexity_P_T: 'O(P^2 n T n): DirectedInfo.bivariate (infotheory.py:503-509) = target entropy-rate sum (5 JIDT entropy calls on Java embeddings, recomputed for every pair) minus the cce causal entropy
+    (shared with cce through data.causal_entropy). Measured fresh P exponent 2.08, T exponent 1.02; family-warm after cce only the entropy rates remain (0.020 s at 8x1024). At 118x1024 fresh the causal-entropy
+    pairs dominate (378 s projected, extrapolated-pairs-from-32); family-warm 10.2 s projected.'
+  hotspot_1: pyspi/statistics/infotheory.py:CausalEntropy._compute_causal_entropy (third-party:jpype, self time 28.0%) 94.0% cum of the profiled SPI call at 8x1024; inside it _compute_conditional_entropy
+    58.9%
+  hotspot_2: 'pyspi/statistics/infotheory.py:DirectedInfo._compute_entropy_rates (third-party:jidt, self time) 5.9%; jpype/_jarray.py:__next__ 6.9%. opaque_share is a lower bound: JPype dispatches Java
+    methods without cProfile entries, so the JIDT (Java) time is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jpype
+  opaque_share: 0.0042
+  profile_file: audit/profiles/infotheory.di.gaussian__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_gaussian-2
+    opportunity: 'Closed-form numpy for the composite Gaussian SPIs, batched over pairs: si from one lag-1 covariance (three conditional entropies as log-det ratios), xme from the source-lag block with
+      and without the target sample, cce/di from one lagged covariance per term m = 1..5 (each term has its own sample window), and the gc auto MAX_CORR_AIS search from Gaussian AIS of every (k, tau) candidate
+      per channel; replaces 2-10 JIDT entropy calls per pair, each with a 2-D JArray conversion.'
+    opp_type: replace-library
+    expected_speedup: 20-100x
+    speedup_basis: 'profile:audit/profiles/infotheory.di.gaussian__8x1024.pstats pyspi/statistics/infotheory.py:503 DirectedInfo.bivariate 100.0% + complexity: per pair the JIDT path costs ~1 ms per 2-D
+      entropy call (component timings in audit/profiles/micro/opp_it_gaussian-1.json: a 1023x4 JArray(JDouble, 2) conversion 1.01 ms of a 1.05 ms 4-D JIDT entropy call; the entropy itself on a prebuilt
+      array 0.043 ms) while a batched slogdet of a <= 11x11 sub-matrix costs microseconds; the measured closed forms of it_gaussian-1 ran 271-643x faster than the same-run pyspi baseline at 32x1024
+      in the latest run (te_symbolic_k-10 224x; 399-454x and 174x in the first)'
+    output_risk: unverified-within-tolerance
+    risk_evidence: same Gaussian log-det quantities on the same samples with different float operations; the check stage's numpy closed forms reproduce pyspi to <= 2.3e-14 (7/7 numpy runs of the code form)
+    effort: M
+    depends_on: []
+  - opportunity_id: it_gaussian-4
+    opportunity: 'Cut JPype marshalling of the 2-D observations in the JIDT entropy paths (Gaussian and box-kernel estimators alike): pass them with jpype.JArray.of(ndarray) (one buffer copy) instead
+      of JArray(JDouble, 2)(ndarray) (row-by-row conversion, ~1 ms per call at T=1024 whatever the column count) in JIDTBase._compute_joint_entropy, JIDTBase._compute_conditional_entropy and
+      CrossmapEntropy.bivariate, and build the cce/di delay embeddings in numpy instead of MatrixUtils.makeDelayEmbeddingVector followed by np.concatenate over the returned Java double[][]
+      (CausalEntropy._compute_causal_entropy). Which of these calls a unit makes is named in its speedup_basis.'
+    opp_type: vectorise-batch
+    expected_speedup: 3-5x
+    speedup_basis: profile:audit/profiles/infotheory.di.gaussian__8x1024.pstats pyspi/statistics/infotheory.py:439 _compute_causal_entropy self 28.0% + jpype __next__ 6.6% + _compute_conditional_entropy
+      58.9% + component timings in audit/profiles/micro/opp_it_gaussian-1.json, components block (1023x4 conversion 1.01 ms -> 0.17 ms with JArray.of, conversion_2d_by_shape;
+      4-D Gaussian entropy call including the conversion 1.05 ms -> 0.22 ms; written by the it_gaussian-1 script, and no it_gaussian-4 candidate was run on this unit, so this is not a microbench basis);
+      scope here = the 2-D conversions in JIDTBase._compute_conditional_entropy and the di delay embeddings (CausalEntropy._compute_causal_entropy).
+      Subsumed_by it_gaussian-2 on this unit, whose closed-form numpy replaces every JIDT entropy call and with it every 2-D JArray conversion and Java delay embedding, so build_csv credits this
+      avenue no saving on top of it
+    output_risk: unverified-bit-identical
+    risk_evidence: 'the same doubles reach JIDT: the component check in audit/profiles/micro/opp_it_gaussian-1.json gives a bitwise-equal 4-D entropy with JArray.of; numpy delay embeddings are copies of
+      the same samples in the same column order'
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - it_gaussian-2

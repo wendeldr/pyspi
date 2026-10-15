@@ -1,0 +1,131 @@
+{
+ "unit_id": "misc.pec.orth-False_log-False",
+ "identifier": "pec",
+ "shape": "118x1024",
+ "warmup_shape": "8x256",
+ "wall_profiled_s": 0.08354878899990581,
+ "result_status": "ok",
+ "pstats": "audit/profiles/micro/misc.pec.orth-False_log-False__118x1024.pstats",
+ "env": {
+  "omp_num_threads": "1",
+  "numba_num_threads": "1"
+ },
+ "written_by": "Workflow 3 causal-misc analyst (cProfile around harness.compute_spi, one call, after one untimed warm-up call at warmup_shape)",
+ "total_tt_s": 0.08352432900000005,
+ "top10_cumulative": [
+  {
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "tottime_s": 7.690000000000001e-06,
+   "cumtime_s": 0.083513479,
+   "owner": "harness",
+   "opaque": false
+  },
+  {
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 1,
+   "tottime_s": 3.0300000000000002e-06,
+   "cumtime_s": 0.083489779,
+   "owner": "pyspi",
+   "opaque": false
+  },
+  {
+   "function": "pyspi/statistics/misc.py:multivariate",
+   "line": 167,
+   "ncalls": 1,
+   "tottime_s": 0.000135007,
+   "cumtime_s": 0.083486529,
+   "owner": "pyspi",
+   "opaque": false
+  },
+  {
+   "function": "mne_connectivity/base.py:combine",
+   "line": 135,
+   "ncalls": 1,
+   "tottime_s": 2.3820000000000002e-05,
+   "cumtime_s": 0.066935465,
+   "owner": "third-party:mne_connectivity",
+   "opaque": false
+  },
+  {
+   "function": "xarray/computation/apply_ufunc.py:apply_ufunc",
+   "line": 896,
+   "ncalls": 1,
+   "tottime_s": 2.1879000000000002e-05,
+   "cumtime_s": 0.062486297,
+   "owner": "third-party:xarray",
+   "opaque": false
+  },
+  {
+   "function": "xarray/computation/apply_ufunc.py:apply_dataarray_vfunc",
+   "line": 276,
+   "ncalls": 1,
+   "tottime_s": 2.2638000000000002e-05,
+   "cumtime_s": 0.062411858,
+   "owner": "third-party:xarray",
+   "opaque": false
+  },
+  {
+   "function": "xarray/computation/apply_ufunc.py:apply_variable_ufunc",
+   "line": 707,
+   "ncalls": 1,
+   "tottime_s": 3.342e-05,
+   "cumtime_s": 0.062325710000000006,
+   "owner": "third-party:xarray",
+   "opaque": false
+  },
+  {
+   "function": "numpy/lib/_function_base_impl.py:__call__",
+   "line": 2525,
+   "ncalls": 1,
+   "tottime_s": 4.67e-06,
+   "cumtime_s": 0.062150873,
+   "owner": "third-party:numpy",
+   "opaque": false
+  },
+  {
+   "function": "numpy/lib/_function_base_impl.py:_call_as_normal",
+   "line": 2495,
+   "ncalls": 1,
+   "tottime_s": 3.9300000000000005e-06,
+   "cumtime_s": 0.062146203000000004,
+   "owner": "third-party:numpy",
+   "opaque": false
+  },
+  {
+   "function": "numpy/lib/_function_base_impl.py:_vectorize_call",
+   "line": 2601,
+   "ncalls": 1,
+   "tottime_s": 4.6300000000000006e-06,
+   "cumtime_s": 0.062142273000000005,
+   "owner": "third-party:numpy",
+   "opaque": false
+  }
+ ],
+ "opaque_share": 0.2573124532374272,
+ "opaque_share_by_owner": {
+  "third-party:numpy": 0.20660124069958097,
+  "third-party:xarray": 0.024815081124446973,
+  "third-party:scipy": 0.021306211271688264,
+  "python": 0.002136790587087505,
+  "third-party:pandas": 0.0013362214499202975,
+  "third-party:mne_connectivity": 0.0006489007532164667,
+  "harness": 0.00033810508073641614,
+  "builtin": 0.00012990227075035819
+ },
+ "self_time_share_by_owner": {
+  "third-party:numpy": 0.7440873544760829,
+  "third-party:mne_connectivity": 0.10484296138434107,
+  "third-party:mne": 0.052689378683904144,
+  "third-party:xarray": 0.04123023843747369,
+  "third-party:scipy": 0.023147315556405115,
+  "third-party:pandas": 0.022795094827999157,
+  "python": 0.008963795446952942,
+  "pyspi": 0.0016567268681679551,
+  "harness": 0.00045723204792222843,
+  "builtin": 0.00012990227075035819
+ },
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)"
+}

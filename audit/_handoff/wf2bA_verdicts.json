@@ -1,0 +1,527 @@
+[
+ {
+  "unit_id": "preproc.detrend",
+  "verdict": "matches",
+  "score": 10,
+  "check_method": "independent-impl",
+  "headline": "pyspi detrend equals the closed-form OLS residual: 12/12 detonly runs pass, max abs 8.53e-14. Truncate -> detrend -> zscore matches numpy: 12/12 pass, max abs 1.39e-13. Historical order differs from the current one by a per-row factor c: cov changes by c_i c_j (up to 0.792), spearman not at all (0.0). Flat or linear channels are accepted at every T (4/4 flat runs fail)."
+ },
+ {
+  "unit_id": "preproc.zscore",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "independent-impl",
+  "headline": "ddof=1 z-score matches numpy: 12/12 pass, max abs 4.4e-16. cov_EmpiricalCovariance equals (T-1)/T * r to 5.5e-15. The supplement's 'equivalent' claim is off by a relative error of exactly 1/T. The constant-channel error message talks about NaNs, and nan_policy='omit' has no effect."
+ },
+ {
+  "unit_id": "preproc.two_array_api",
+  "verdict": "wrong",
+  "score": 3,
+  "check_method": "independent-impl",
+  "headline": "Only the first array is z-scored; row 1 reaches the SPI bit-identical to the raw input. Direct raw path vs kernel on z-scored data: dtw 159.48 vs 8.714, lmfit_Ridge 31.71 vs 0.3245, cov via list 8.085 vs 0.818. The Data path and the z-scored direct path agree to <= 2.2e-16. Unset i/j gives 0 warnings over 285 identifiers: cds and igci return finite values, 10 infotheory identifiers return NaN."
+ },
+ {
+  "unit_id": "base.pair_handling",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "analytic",
+  "headline": "Toy SPI matches exactly: 20 calls for P=5, 10 of them overwritten, upper triangle kept. gc_gaussian A[i,j] equals kernel TE(i->j) to 3e-14. 15 mirror classes and Barycenter are bit-exactly symmetric. 4 bypass spectral classes are antisymmetric (already documented). 18 of 50 mirror identifiers depend on visiting order, 10 of them beyond rounding (xcorr up to 0.081, coint_aeg up to 7.41, je_kozachenko 1.6e-7). Only TE, PSI and gd follow 'row = source'."
+ },
+ {
+  "unit_id": "spectral.multitaper_csm",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "independent-impl (also analytic and external-pkg mne_connectivity 0.9.0)",
+  "headline": "Two-sided CSM vs independent kernel: max|dS|/max|S| <= 1.08e-12 over 31 runs (T 64-4096, kernel and pipeline paths, odd and padded n_fft). Coherency: 4.7e-12. mne_connectivity with symmetric DPSS and unit weights: 4.7e-12. mne defaults differ by up to 0.0305, fully explained by eigenvalue weights. Tapers 1.3e-13, concentrations 2.3e-15 (min 0.946). Hermitian residual 0.0 and Im S(0) = 0.0. Statistical check against analytic VAR S(f): max_z 1.52 (threshold 2). Phase-slope direction agreement 1.0. Score is 9, not 10, because the documented 125-bin grid from f0 = 4/T is not the grid this path uses."
+ },
+ {
+  "unit_id": "spectral.band_selection",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "analytic (also independent-impl cohmag/icoh; same-lineage dcoh/DTF aggregation)",
+  "headline": "pyspi's own reducers, instrumented, select inclusive bins on the multivariate path and strict bins on the bivariate path (exact, 5 runs). cohmag/icoh match the inclusive set to 1.5e-13; the strict set would differ by up to 0.515. dcoh/DTF match the strict set to 1.1e-15; the inclusive set would differ by 0.0017-0.129. The f = 0.25 bin is counted twice under the inclusive rule (residual <= 4.8e-13) and not at all under the strict rule (1.4e-13). PSI sums over 47/43/43 bins at T=1024. EEG bands at T=1024: PSI raises IndexError and GD is all-NaN for 0.5-2, 2-4 and 4-6 /1024."
+ },
+ {
+  "unit_id": "spectral.cohmag",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "analytic",
+  "headline": "The independent re-implementation passes 120/120 runs (max_abs 7.6e-13 kernel, 8.9e-14 pipeline, 1.3e-13 detrend), the EEG bands agree to 1.0e-13, and the identical pair gives exactly 1. The value is |C|^2: the unsquared |C| differs by 0.212 on bivariate T=4096 (0.2647 vs 0.4766). mne coh^2 agrees to 7.9e-5, while mne coh differs by 0.204. Because K is fixed at 5, the null level stays at 0.20 for every T, and the var2 value at T=4096 is 0.3648 against a population MSC of 0.2465 (pop max_z 12.53; within the Monte Carlo spread of the estimator, max_z 0.60)."
+ },
+ {
+  "unit_id": "spectral.phase",
+  "verdict": "related-quantity",
+  "score": 4,
+  "check_method": "analytic",
+  "headline": "The arithmetic mean and max of principal angles, DC included, are reproduced exactly in 120/120 runs (max_abs 1.3e-11). The sign convention holds: A[i,j] > 0 means i leads j (delayed_noise low band +0.7768 vs analytic +0.7854; direction agreement 1.0; f0 bin within 1.7e-3 of phi_i - phi_j). Against the circular mean: delayed_noise A[3,0] -0.320 vs -1.565 (max_abs 2.879), and var2 T=4096 high band 1.1765 vs population 2.4658 (max_z 10.88). The DC identity A + A.T = 2 pi [Re S(0) < 0] / n_bins holds exactly. The max statistic saturates near pi (null 3.1413 at T=4096)."
+ },
+ {
+  "unit_id": "spectral.icoh",
+  "verdict": "variant",
+  "score": 8,
+  "check_method": "analytic",
+  "headline": "|Im C| per bin, then the band statistic, is reproduced exactly in 120/120 runs (max_abs 7.4e-13). The f0 bin is within 1.1e-3 of |sin dphi|. Against Nolte's signed Im C: delayed_noise A01 = A10 = 0.6293 vs +/-0.6283 (max_abs 1.2575), and pair (0,3) 0.6315 vs a signed band mean of 0.1262. mne |imcoh| agrees to 7.1e-5, while signed imcoh differs by 0.700. The null level is 0.26 for every T, and a zero-lag bivariate pair gives 0.2437 against a population value of 0 (max_z 27.49)."
+ },
+ {
+  "unit_id": "spectral.plv",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "rep 150/150 (max abs 1.5e-11), per-bin 15/15 (8.5e-11), mne 14/14 (<=8.2e-12); null 0.4143/0.3976/0.3952/0.4019 at T=64..4096 vs analytic 0.401632 (|z|<=1.73), not falling with T; plv_max null mean 0.833->0.980; population z 0.28"
+ },
+ {
+  "unit_id": "spectral.pli",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "independent-impl",
+  "headline": "signed estimator exact (max abs 0.0); |per-bin| = mne unsigned exactly; canonical band form mean_f|PLI| fails by design: delayed_noise d=5 pyspi 0.1801 vs 0.9371 (M3); direction agreement 1.0; narrowband signs (0,1)=-1,(0,2)=+1,(1,2)=+1; pli_max=1 in 0.53/0.96/1/1 of null entries"
+ },
+ {
+  "unit_id": "spectral.wpli",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "independent-impl",
+  "headline": "signed estimator exact (1.9e-13); mne |wPLI| 2.6e-12; canonical band form fails by design (0.1992 vs 0.9781); eps floor: normalise=False A01 0.9536 at s=1,1e-6 but 6.2e-17 at 1e-8, 6.2e-21 at 1e-10 (canonical-invariance run fails by 0.954)"
+ },
+ {
+  "unit_id": "spectral.dspli",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "closed form exact (0.0) and identical to mne pli2_unbiased; pairwise Vinck estimator agrees off DC to 5.6e-17 but differs by 0.25 at DC and on identical channels (-0.25 vs 0); null |z|<=1.61; dspli_max=1 in 0.78/1/1/1"
+ },
+ {
+  "unit_id": "spectral.dswpli",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "exact with equal NaN masks (1.9e-13), pairwise double loop 2.2e-13, mne 8.6e-12 (DC 0-vs-NaN convention aligned); DC and identical channels NaN; population z 0.04 (re-simulated bias 0.0026, z 2.03 borderline)"
+ },
+ {
+  "unit_id": "spectral.ppc",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "exact (3.3e-11, rel 7.1e-10), pairwise cosine 2.0e-12, mne 1.4e-11; null mean ~0 at every T (|z|<=1.92); ppc_max null 0.630->0.950; population 0.1587 vs 0.1641 (z 0.54)"
+ },
+ {
+  "unit_id": "spectral.psi",
+  "verdict": "related-quantity",
+  "score": 2,
+  "check_method": "independent-impl",
+  "headline": "pyspi exactly matches an independent all-pairs replica: rep/alone/base 101/101 and EEG 31/31, max_abs 5.87e-10 at |A| up to about 800, max relative 3.9e-11, NaN masks identical. Nolte 2008 eq. 3 is a different quantity. On delayed_noise the ratio pyspi/Nolte is 9-275 (median 34-143) and the Spearman rank correlation across pairs is -0.94 to -1.0. Signs agree with Nolte in 17/30 runs; the fails come from noise in the sample Nolte value, and pyspi agrees with the population sign on the VAR datasets. MNE adjacent-pair PSI agrees with our Nolte reference to 2.5e-3. The REVIEW M5 example is reproduced: library +1.1168, adjacent -1.3070. Long delays of 55/60/80 samples get the reversed sign (direction agreement 0.7). Three of the 10 EEG bands raise IndexError and come out all-NaN at T=1024. Rubric anchor 2."
+ },
+ {
+  "unit_id": "spectral.gd",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "independent-impl",
+  "headline": "pyspi exactly matches an independent replica of the library pipeline: rep/alone/base 125/125 and EEG 37/37, max_abs 4.2e-11, NaN masks identical. On delayed_noise the direction check passes 9/9 and the delay error is at most 0.081 samples. It agrees with plain OLS to 0.033. Adding channels changes results (6/8 embed fails, from pooled Benjamini-Hochberg). White noise gives spurious delays at T=64: 4/20 entries in the full band and 6/20 in the high band, with step 1. The VAR population delay of +1.13 comes out with the wrong sign (-0.47) at T=256 and as NaN at T>=1024. EEG bands with 0 bins raise ValueError and bands with 1-2 bins come out all-NaN. Rubric anchor 6 (group-delay significance machinery)."
+ },
+ {
+  "unit_id": "basic.cov.EmpiricalCovariance",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "independent-impl",
+  "headline": "33/33 value runs vs Xc Xc^T/T, max abs 1.22e-15; np.cov(bias=True) diff 0.0; pipeline pyspi/r = 0.984375 (T=64) / 0.9990234 (T=1024) = (T-1)/T on every pair; cov-sq bitwise square; bitwise symmetric (51 runs); MC truth 13/14 (sparse_precision T=1024 draw outlier, MC familywise p 0.014)"
+ },
+ {
+  "unit_id": "basic.cov.LedoitWolf",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "independent-impl",
+  "headline": "33/33 value runs vs literal LW 2004 kernel, max abs 3.67e-15, max rel 2.24e-12; fitted shrinkage_ 26/26 max abs 4.4e-16 (P=4,5,19, T=64-4096); pipeline pyspi/r = (1-s)(T-1)/T (0.8030 at T=64, 0.9849 at T=1024); exact zeros on iid_gaussian (s=1) at all T"
+ },
+ {
+  "unit_id": "basic.cov.OAS",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "pyspi = sklearn no-2/p variant (33/33, max abs 1.22e-15; shrinkage 26/26 max abs 1.1e-16); vs Chen Eq. 23 shrinkage +14.4% (P=4), +9.6-10.3% (P=5), +0.61-0.71% (P=19); off-diagonals 2.9% (P=4,T=64), 0.19% (P=4,T=1024), <=1.07% (P=19,T=64), 0.055% (P=19,T=1024); bound 1/(p-1)"
+ },
+ {
+  "unit_id": "basic.cov.ShrunkCovariance",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "independent-impl",
+  "headline": "33/33 value runs vs 0.9S+0.1 tr(S)/p I, max abs 1.11e-15; pipeline pyspi/r = 0.9(T-1)/T (0.8859 T=64, 0.8991 T=1024); bitwise symmetric"
+ },
+ {
+  "unit_id": "basic.prec.EmpiricalCovariance",
+  "verdict": "matches",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "34/34 value runs vs LU inverse, max abs 1.3e-11 (rtol 1e-10, atol 1e-12 max|Theta|); opposite sign to partial correlation on 100% of pairs ((2,3): -2.193 vs +0.7972; cointegrated max 95.34); singular input = numpy pinv (4.1e-14); avg-ref = pseudo-inverse; pipeline = D1 Theta_kernel D1 (3.0e-14); last-bit asymmetry max 5.68e-14 (REVIEW M2)"
+ },
+ {
+  "unit_id": "basic.prec.LedoitWolf",
+  "verdict": "matches",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "34/34 value runs, max abs 4.28e-12; (2,3) -2.061 vs pcorr +0.7859, opposite sign 100%, cointegrated max 61.5; duplicated pair -27.81/-100.8; exact zeros on iid; asym max 1.42e-14"
+ },
+ {
+  "unit_id": "basic.prec.OAS",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "independent-impl",
+  "headline": "34/34 value runs, max abs 3.2e-12; vs inverse of Eq. 23 estimate off-diag median/max 5.1%/12.7% (P=4,T=64), 0.44%/1.7% (T=1024); (2,3) -2.057 vs pcorr +0.7856, cointegrated max 49.12"
+ },
+ {
+  "unit_id": "basic.prec.ShrunkCovariance",
+  "verdict": "matches",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "34/34 value runs, max abs 3.02e-14; (2,3) -1.482 vs pcorr +0.7174, opposite sign 100%, cointegrated max 4.258; asym max 8.88e-16"
+ },
+ {
+  "unit_id": "basic.cov.MinCovDet",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "external-pkg",
+  "headline": "Reweighted FAST-MCD covariance, computed exactly as sklearn 1.9.1 defines it. Given the same raw subset, robustbase covMcd agrees to max_rel 3.51e-15 on 7/8 rdet runs; the 8th differs by one reweighting point in the band created by the h-1 vs h raw-divisor convention. rrcov's own search agrees within the combined seed range on 5/6. The fail is contaminated|256: 0.00576 vs atol 0.00373, because rrcov reaches raw log det -6.4858 and sklearn only -6.4630. Analytic stat runs pass 11/12 (the iid|1024 null draw fails at raw z 3.65). sklearn's seed-42 subset is the best found in only 3/14 optimality runs. 20-seed spread is 0.155-0.257 at T=64 and 0.0027-0.0044 at T=4096. The documented range [-1,1] is violated (1.141)."
+ },
+ {
+  "unit_id": "basic.cov.EllipticEnvelope",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "external-pkg",
+  "headline": "Bitwise equal to cov_MinCovDet under the same seed (eeqmcd 8/8). Same external picture: rdet 5/6, rrcov 5/6 (same contaminated|256 fail), stat 2/2, robust correlation 0.8071 vs 0.8. In a Calculator pass it differs from cov_MinCovDet only through RNG position (up to 0.111 at T=64)."
+ },
+ {
+  "unit_id": "basic.prec.MinCovDet",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "external-pkg",
+  "headline": "Inverse of the reweighted FAST-MCD scatter. robustbase plus a numpy inverse agrees to max_rel 2.97e-13 on 7/8 runs; rrcov agrees 6/6. Analytic Omega*s*s target: 10/11. It is not the documented partial correlation: -2.480 where the partial correlation is +0.8 (max_z 18.0). Values are unbounded (368.3 on narrowband|64). Singular input returns a finite pseudo-inverse (prec(0,2) = 0.446, input rank 3 of 4)."
+ },
+ {
+  "unit_id": "basic.prec.EllipticEnvelope",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "external-pkg",
+  "headline": "Bitwise equal to prec_MinCovDet under the same seed (8/8). rdet 5/6, rrcov 6/6, stat 2/2, pcorr 0/2, silent pseudo-inverse on singular input. In a Calculator pass it differs from prec_MinCovDet only by RNG position (0.134 at T=64). The EEG selection keeps both as separate features."
+ },
+ {
+  "unit_id": "basic.cov.GraphicalLasso",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "analytic",
+  "headline": "P=2 closed form 16/19 (converged <= 2.25e-12; var2_bivariate T4096 pipeline stall 8.652e-4 = 0.95*S12 start); ADMM 17/17 (<= 5.64e-5); R glasso 1.11 10/11 (<= 7.86e-5); W-based KKT 34/37 <= 1e-4; 13/36 fits non-converged silently; one FloatingPointError -> all-NaN (trending T4096)"
+ },
+ {
+  "unit_id": "basic.prec.GraphicalLasso",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "analytic",
+  "headline": "closed form 16/19 (<= 3.32e-13; stall 9.852e-4); ADMM 17/17 (<= 2.36e-4); R glasso 8/11 (fails 0.149 shared_envelope T1024, 0.101 narrowband_f0-0.25 T256); Theta-based KKT only 16/37 (up to 0.212, max|Theta-Theta_opt| 0.267); documented partial correlation 0/4 (opposite sign on 100% of entries, max diff 3.21)"
+ },
+ {
+  "unit_id": "basic.cov.GraphicalLassoCV",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "independent-impl",
+  "headline": "independent CV re-scoring selects sklearn's alpha_ 6/6; alpha_ 3.05e-8..0.2069 (=alpha_max, constant all-zero output on 4 inputs); closed form 16/19 (logistic_maps_bidir T1024 stall 7.06e-3); R glasso 8/8 (<= 5.64e-5); KKT 32/37; 17/35 final refits non-converged silently; FloatingPointError on shared_envelope T256/T1024 (also with detrend) and narrowband_f0-0.1 T64"
+ },
+ {
+  "unit_id": "basic.prec.GraphicalLassoCV",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "independent-impl",
+  "headline": "same alpha_ evidence; closed form 15/19 (stall 2.28e-2); R glasso 8/8 (<= 2.53e-4); Theta-based KKT 16/37 (up to 0.232; max|Theta-Theta_opt| 0.336 with |Theta| up to 75); partial correlation 0/4 (opposite sign 83-100%)"
+ },
+ {
+  "unit_id": "basic.spearmanr",
+  "verdict": "matches",
+  "score": 10,
+  "check_method": "independent-impl",
+  "headline": "67/67 pass. Against from-scratch mid-rank Pearson on both orientations: max_abs 2.2e-16 over 38 exact runs, including input rounded to 1 decimal (13-80 distinct values per row). R stats::cor(spearman) vs pyspi max 5.6e-17. Differs from the untied 1-6\u03a3d\u00b2/(n(n\u00b2-1)) shortcut by >= 2.09e-4 on tied data. Against Moran's exact E r_S, max_z_1se = 1.26/0.88/1.04/1.54 at T=64/256/1024/4096. Pipeline output is bit-identical to kernel output, and scaled_offset to bivariate_gaussian. -sq is bit-identical to signed^2. max|A-A.T| = 0 at pipeline level."
+ },
+ {
+  "unit_id": "basic.kendalltau",
+  "verdict": "matches",
+  "score": 10,
+  "check_method": "independent-impl",
+  "headline": "67/67 pass. Against from-scratch O(n^2) tau-b on both orientations: max_abs 1.7e-16 over 38 exact runs, including tied input. R stats::cor(kendall) vs pyspi max 1.1e-16. On tied bivariate_gaussian T=1024, pyspi = tau-b (0.18134/0.61192) and not tau-a (0.17628/0.59470). Against (2/pi)asin(rho), max_z_1se = 1.27/0.79/1.06/1.41 at T=64..4096. Pipeline bit-identical to kernel. -sq bit-identical to signed^2. Pipeline output exactly symmetric."
+ },
+ {
+  "unit_id": "basic.xcorr.max_sig-False",
+  "verdict": "variant",
+  "score": 8,
+  "check_method": "analytic",
+  "headline": "Replica: 52/52 exact (max_abs 6.7e-16). Equals T/(T-1) x the Brockwell-Davis max over |h|<=T//4: gap_d1 <= 6.7e-16 on every pipeline run, while gap_d0 has max_rel 1/(T-1). Matches the population peak CCF within 2 se in 12/12 runs (max_z 1.08). Identical series give T/(T-1) (1.0159 at T=64). Channel reversal changes nothing (16/16, <= 2.2e-16). Raw input (normalise=False) is non-centred: 0.597 vs 0.797."
+ },
+ {
+  "unit_id": "basic.xcorr.mean_sig-False",
+  "verdict": "variant",
+  "score": 5,
+  "check_method": "analytic",
+  "headline": "Replica: 52/52 exact. The deviation is exactly the T/(T-1) factor plus the one-lag-asymmetric window (gap_d2 <= 6.1e-18; gap_d0 up to 8.5e-4 abs, 0.54 rel). The zero-sum identity holds in 18/18 runs (4.1e-16), so the value is -(out-of-window mass)/(2L): about 0 for short-memory data (the rho=0.8 pair scores -0.0002) and 0.46-0.63 for cointegrated/trending data. Channel-order gap up to 1.6e-3 (same-lineage, 0/16 pass)."
+ },
+ {
+  "unit_id": "basic.xcorr.max_sig-True",
+  "verdict": "related-quantity",
+  "score": 4,
+  "check_method": "analytic",
+  "headline": "Replica, crafted and errsweep all pass. The gap to the documented rule closes only with the literal mirrored cut (gap_d4 <= 6.7e-16; gap_d0 up to 0.91). On delayed_noise T=1024, A[0,3] = 0.0808 although lag 5 is 0.993 (window -254..0); reversed channel order gives 0.993. IndexError makes the whole matrix NaN on narrowband 0.25, logistic, cointegrated, shared_envelope (T>=1024) and trending. Threshold 1.96/sqrt(T//4): 0 null exceedances vs 3.7%."
+ },
+ {
+  "unit_id": "basic.xcorr.mean_sig-True",
+  "verdict": "wrong",
+  "score": 3,
+  "check_method": "analytic",
+  "headline": "Replica exact. The kept window is 254-256 lags at T=1024 with at most 0.39% significant. The rho=0.8 pair scores 0.0010 against 0.80 under the contiguous reading, and the rho=0.3 pair scores 0.0012. Crafted case A gives 0.3214 vs 0.9. The sign can differ (delayed_noise (0,3) -0.0028) and flips under channel reversal at T=256. Same IndexError sweep as max_sig-True; an empty window returns NaN."
+ },
+ {
+  "unit_id": "distance.pdist.euclidean",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "analytic",
+  "headline": "from-definition 15/15 max_rel 2.27e-15; identity sqrt(2(T-1)(1-r)) max_rel 1.21e-15; pop 7/7 max_z 1.41; FAIL dup d(x0,x2)=1.19e-07/4.13e-07/9.54e-07 (T=64/256/4096) vs 0, FAIL near rel err 4.9e-02 at eps 1e-7 and 1.0 at 1e-9; M2 asym 7.1e-15 on 64-row probe"
+ },
+ {
+  "unit_id": "distance.pdist.cityblock",
+  "verdict": "matches",
+  "score": 10,
+  "check_method": "independent-impl",
+  "headline": "from-definition 15/15 max_rel 3.55e-15; cdist bit-identical; pop T*2sqrt((1-rho)/pi) 7/7 max_z 1.64, rel err 0.131 (T=64) -> 0.017 (4096); dup 0.0"
+ },
+ {
+  "unit_id": "distance.pdist.cosine",
+  "verdict": "matches",
+  "score": 10,
+  "check_method": "analytic",
+  "headline": "identity 1-r 5/5 max_abs 4.44e-16; from-definition 15/15 max_rel 6.5e-15; pop 7/7 max_z 1.40; rho=-0.8 pair 1.797 (>1 encodes negative correlation)"
+ },
+ {
+  "unit_id": "distance.pdist.chebyshev",
+  "verdict": "matches",
+  "score": 10,
+  "check_method": "independent-impl",
+  "headline": "from-definition bit-identical (14 runs); pop quadrature 7/7 max_z 1.82; expectation grows 3.67->5.38 (T 64->4096, rho 0); contaminated 4.718 vs clean 2.238"
+ },
+ {
+  "unit_id": "distance.pdist.canberra",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "independent-impl",
+  "headline": "from-definition 15/15 max_rel 1.69e-15; pop 7/7 max_z 1.45 (rho=0 per-sample 0.72064); d(x,-x)=T exactly; 0/0:=0 confirmed; signed-data domain caveat"
+ },
+ {
+  "unit_id": "distance.pdist.braycurtis",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "SciPy form sum|x-y|/sum|x+y| fp-exact (15/15 max_rel 5.28e-15); pop sqrt((1-rho)/(1+rho)) 7/7; on z-scored data unbounded (rho=-0.8: 3.054), +inf silently for (x,-x), 2.66e16 for (-x,2x+1); inf survives Calculator.compute/_rmmin, Spearman SPI-SPI stays finite"
+ },
+ {
+  "unit_id": "distance.bary.euclidean",
+  "verdict": "degenerate",
+  "score": 0,
+  "check_method": "analytic",
+  "headline": "Scored on the representative bary_euclidean_mean, which is identically 0: max|A| = 2.52e-16 over 84 runs (21 datasets x T 64/1024/4096 pipeline + T 1024 pipeline-detrend). The barycenter and the other 3 identifiers are fp-exact: from-scratch max_abs 0 (32/32), detrend 4.97e-14 (16/16). bary-sq_euclidean_mean = (1+r)(T-1)/(2T), max_rel 1.36e-15 (12/12). Population check max_z 0.74/0.81/0.72 at T 256/1024/4096. max|A-A.T| = 0. bary_euclidean_max on its own would score 10."
+ },
+ {
+  "unit_id": "distance.bary.dtw",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "independent-impl",
+  "headline": "Matches from-scratch DBA (_kernels_distance.dba): 52/52 statistic runs max_rel 4.2e-14; barycenters 4.4e-16; DBA(x,x)=x exact. But a single mean-initialised run is a poor local minimiser: F(pyspi)/F(best of 8 starts)-1 = 0.12-0.56 on bivariate_gaussian and 1.85-44.5 on delayed_noise (F 49.1 vs 1.08). Narrowband pair (0,1) stays at the Euclidean init, a strict local minimum. bary_dtw_mean <= 0.09."
+ },
+ {
+  "unit_id": "distance.bary.sgddtw",
+  "verdict": "variant",
+  "score": 5,
+  "check_method": "independent-impl",
+  "headline": "From-scratch SSG that replays the global RNG stream reproduces pyspi: 33/33 runs max_rel 9.6e-14; after-consumer run max_abs 0; 50 seeds x 2 at 2.2e-16. The last-sample stopping rule stops after 3-5 epochs, giving F 2-43% above DBA on bivariate_gaussian (up to 3.6x on delayed copies). Another SPI's RNG use shifts the value by 0.0278. Input-order asymmetry 0.0486/0.379 is hidden by the cache."
+ },
+ {
+  "unit_id": "distance.bary.softdtw",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "independent-impl",
+  "headline": "From-scratch soft-DTW + L-BFGS-B matches: 19/19 statistic runs max_rel 2.4e-13; objective/gradient 2.8e-13; finite differences 2.4e-8. The optimality check fails 7/10 runs: objective gap up to 0.0138 (T=64), 0.0058 (T=256), >=0.0031 (T=1024), >=0.0010 (T=4096); statistics move by up to 0.05. gamma=1 shrinkage: barycenter of (x,x) has var 0.73 vs 1.02 (iid) and 0.0036 vs 0.51 (sinusoid)."
+ },
+ {
+  "unit_id": "causal.anm",
+  "verdict": "related-quantity",
+  "score": 4,
+  "check_method": "independent-impl",
+  "headline": "Replica at sklearn's exported theta: exact (<= 1.6e-15) on 8/9 runs, 9th 7.5e-8 is a scipy 1.18 vs 1.17 LAPACK difference (the project-venv replica gives 6.6e-16). Own L-BFGS-B fit: 9.5e-7 to 4.7e-6, but 1.17e-2 on iid_gaussian_T256, where sklearn stops 0.215 nats below the optimum. GP collapses in 7/7 runs (std(r)/std(y) <= 1.3e-9), so the score = m*HSIC_b(x, (K+aI)^-1 y), close to raw-pair HSIC in 12/15 runs. Direction vs ground truth fails on anm_T256 (tanh pair) and anm_T1024 (cubic pair); canonical C*RBF+White ANM recovers both."
+ },
+ {
+  "unit_id": "causal.cds",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "Exact 23/23 (max abs 2.8e-17). Direction on anm 3/3 at T256-4096, agreement 1.0. Zero predicate confirmed 6/6, including an exact 0.0 at T1024 on a spike input. The paper parameters (sfactor 3, ddof 1) change values by 36-58% and flip the ordering of non-causal pairs only."
+ },
+ {
+  "unit_id": "causal.reci",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "Exact 24/24 (max abs 5.6e-17) on kernel, pipeline and pipeline-detrend; affine invariance exact. Direction on anm right at T256/4096; at T1024 the tanh pair is reversed (D23=-0.00026) where canonical MON-family held-out RECI gives +0.0007."
+ },
+ {
+  "unit_id": "causal.igci",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "analytic",
+  "headline": "Exact 22/22 (max abs 3.0e-14); antisymmetry bit-exact 5/5; analytic U(0,1)->x^3 mean 0.874 vs -C^G 0.8832 within 2 se at T256/1024/4096 (|z| <= 1.51). Sign convention is -C (positive = i->j). Signed output labelled unsigned. The noisy anm cubic pair is reversed in pyspi and the reference alike (method limit)."
+ },
+ {
+  "unit_id": "misc.lmfit.Ridge",
+  "verdict": "matches",
+  "score": 10,
+  "check_method": "analytic",
+  "headline": "Analytic closed form ((T-1)/T)(1 - r^2 (T^2-1)/T^2): 84/84 exact (max_abs 2.19e-15). From-scratch ridge on raw data: 33/33 (max_rel 3.5e-14). Detrend path: 12/12. Direction runs: 4/4. Pipeline symmetry: asym 7.8e-16."
+ },
+ {
+  "unit_id": "misc.lmfit.Lasso",
+  "verdict": "degenerate",
+  "score": 0,
+  "check_method": "analytic",
+  "headline": "Exactly (T-1)/T on 864 of 864 entries across all 21 datasets x 4 T plus the detrend path (96/96 runs, max dev 3.55e-15). Never non-constant, even for the identical pair (|r|(T-1)/T = 0.99976 < alpha). n_iter_ is 0 everywhere. On raw data the fit is active only when |cov0| > 1."
+ },
+ {
+  "unit_id": "misc.lmfit.ElasticNet",
+  "verdict": "variant",
+  "score": 6,
+  "check_method": "independent-impl",
+  "headline": "Exact (96/96, 2.8e-16) against the from-scratch minimiser with sklearn's initial duality-gap exit modelled. The pure exact minimiser fails 3/5 runs, only on band pairs: up to 3.50e-3 (logistic_maps|4096), 3.37e-3 (sparse_precision|64). Grid jump of 4.87e-3 at r = 0.50915 (T=256). 540 of 696 entries equal (T-1)/T; 36 of 84 runs are entirely constant. Floor 0.4445 at r = 1."
+ },
+ {
+  "unit_id": "misc.lmfit.BayesianRidge",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "independent-impl",
+  "headline": "Recursion exact on 96/96 runs (2.2e-16), with identical n_iter_ (5/5 params runs). Distance from the MSE at the evidence maximiser is 8.5e-4 (T=64), 3.1e-4 (256), 6.3e-5 (1024) and 1.0e-5 (4096); 15/20 runs pass the 1e-4 bound. Not monotone in r: up to 1.39e-5 increases at n_iter switches."
+ },
+ {
+  "unit_id": "misc.lmfit.SGDRegressor",
+  "verdict": "variant",
+  "score": 5,
+  "check_method": "independent-impl",
+  "headline": "Against OLS at atol 1/(10T): 24/48 pass. Excess up to 2.93e-3 (T=64) and 1.98e-3 (T=4096). Optimality A >= OLS: 54/54. Entries above (T-1)/T: 0, 2, 11 and 30 of 120 at T = 64 to 4096. Deterministic across global seeds (0.0). Spread across random_state values up to 1.78e-3. Asymmetry up to 1.43e-3."
+ },
+ {
+  "unit_id": "infotheory.est.gaussian",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "independent-impl",
+  "headline": "72 direct JIDT entropy/MI/CMI calls (dims up to 10) = numpy closed forms to <=5.5e-15; ddof=1 (ddof=0 would differ by up to 0.0199); univariate entropy 1.4189385332 to <=4.4e-16; NORMALISE entropy true / MI,TE false, H(10x)-H(x)=ln10 exactly; jar superclass EntropyCalculatorMultiVariateCommon (not v1.6.1)"
+ },
+ {
+  "unit_id": "infotheory.je.gaussian",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "independent-impl",
+  "headline": "numpy max_abs <=3.6e-15 (6 runs); je = 2*H1 - mi to 4.4e-16; T4096 analytic |err| 0.0029/0.0116 (max_z 0.85)"
+ },
+ {
+  "unit_id": "infotheory.ce.gaussian",
+  "verdict": "matches",
+  "score": 9,
+  "check_method": "independent-impl",
+  "headline": "numpy <=3.6e-15; A[i,j]=H(x_j|x_i) (raw scaled_offset A01-A10 = ln(sd1/sd0) = 2.3159931, err 1.3e-15); exactly symmetric under z-scoring (<=2e-15), ce = H1 - mi to 3.3e-16"
+ },
+ {
+  "unit_id": "infotheory.mi.gaussian",
+  "verdict": "matches",
+  "score": 10,
+  "check_method": "independent-impl",
+  "headline": "Gaussian MI closed form vs JIDT max_abs 1.6e-16 (mi|var2_bivariate|1024|pipeline|numpy), all 10 exact runs <=4.7e-15; true_mi_nats convergence T256/1024/4096 |err| 5.6e-5/0.0060/0.0029 (rho .3), 0.050/0.0055/0.0116 (rho .8), max_z<=1.07; null mean consistent with 1/(2N)"
+ },
+ {
+  "unit_id": "infotheory.tlmi.gaussian",
+  "verdict": "matches",
+  "score": 10,
+  "check_method": "independent-impl",
+  "headline": "numpy <=5.8e-14; delayed_noise T4096 vs 0.5 ln101=2.30756 |err|<=0.0158 (z 0.96); gauss_ar1_pair |err|<=0.016 (z 1.48); A[i,j]=I(x_i(t);x_j(t+1))"
+ },
+ {
+  "unit_id": "infotheory.te.gaussian_k-1_kt-1_l-1_lt-1",
+  "verdict": "variant",
+  "score": 8,
+  "check_method": "independent-impl",
+  "headline": "cov form <=5.7e-14 (9 runs); OLS log-ratio = cov form to 1e-15/4e-14; pyspi/Geweke F = 0.5 exactly (F/2); VAR(2) population TE k=l=1 0.1326/0.0105, |err| 0.006 (z 0.77)"
+ },
+ {
+  "unit_id": "infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "from-scratch MAX_CORR_AIS reproduces JIDT selections bitwise (9 probe runs) and values <=5.3e-14; selections unstable: AR(2) x0 k=3,10,9,8 at T=64..4096, white channels k=1..10; value is F/2"
+ },
+ {
+  "unit_id": "infotheory.te.symbolic",
+  "verdict": "wrong",
+  "score": 1,
+  "check_method": "independent-impl",
+  "headline": "k-1 bitwise = gc_gaussian_k-1 and = Gaussian TE (<=5.7e-14); k-10 = Gaussian TE with 10 target lags (<=8.9e-14); from-scratch STE invariant under exp (0.0) while pyspi changes up to 185%; known bug 1"
+ },
+ {
+  "unit_id": "infotheory.xme.gaussian_k1",
+  "verdict": "related-quantity",
+  "score": 5,
+  "check_method": "independent-impl",
+  "headline": "H(x_j(t)|x_i(t-1)) exact (<=5.5e-14); delayed_noise analytic -0.88862 |err| 0.0159; k=2 equals k=1 minus one sample (6.7e-16): 1.25161 vs 1.25208"
+ },
+ {
+  "unit_id": "infotheory.xme.gaussian_k10",
+  "verdict": "related-quantity",
+  "score": 4,
+  "check_method": "independent-impl",
+  "headline": "lags 1..9 exact (<=8.5e-14); shift test u->u(t-9) -0.8957 vs u->u(t-10) 1.4146 (~H1): lag 10 invisible; raises on noise-free narrowband sources"
+ },
+ {
+  "unit_id": "infotheory.cce.gaussian",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "Kramer H(Y^5||X^5) exact (<=2.3e-14); white-pair analytic z<=0.99, gauss_ar1 population z 1.75; configured n=5 vs documented 10 (n=10: 11.95 vs 6.12 on var2 0->1)"
+ },
+ {
+  "unit_id": "infotheory.di.gaussian",
+  "verdict": "related-quantity",
+  "score": 4,
+  "check_method": "independent-impl",
+  "headline": "code form exact (<=2.3e-14); vs Massey DI_5 on var2_bivariate 0.7746/0.1959 vs 0.6483/0.0369 (max_abs 0.159), difference = target block term to 8.9e-16; independent source -> AR(2) target gives 0.1742 vs analytic 0.1766 (Massey 0.0017)"
+ },
+ {
+  "unit_id": "infotheory.si.gaussian",
+  "verdict": "matches",
+  "score": 10,
+  "check_method": "independent-impl",
+  "headline": "numpy <=8.9e-16; gauss_ar1_pair population 0.09992 |err| 0.0021 (z 0.45); white pairs SI = contemporaneous MI (z<=0.98); null mean 0.00132 vs 3/(2N)=0.00147"
+ },
+ {
+  "unit_id": "misc.pec.orth-False_log-False",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "pec-kern 12/12 exact (max_abs 3.1e-14 narrowband, <=1.1e-15 elsewhere); pipeline paths 7/7; analytic amplitude-envelope stat 4/4 (bivariate T4096 (2,3) 0.6274 vs 0.6141, sd 0.0133); amplitude not power (power-envelope Pearson differs 0.0011-0.156); constant envelopes give -1071.2, -5.35e9, 1.31e14 (pipeline); broadband, so variant of the band-limited AEC"
+ },
+ {
+  "unit_id": "misc.pec.orth-False_log-True",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "kern 12/12 exact (7.8e-16); pipeline 7/7; analytic 6 Li2(rho^2)/pi^2 stat 4/4 (T4096 (2,3) 0.5078 vs 0.4803); pipeline constant-envelope values 296.6, 1.25e8, -1.41e13 (kernel path bounded); an all-zero channel gives a NaN row"
+ },
+ {
+  "unit_id": "misc.pec.orth-True_log-False",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "non-degenerate pairs exact to <=1.1e-16 against the definitional-order Hipp kernel; a bit-identical copy gives 0.130/0.304/0.342/0.332 (kernel) and 0.218/0.360/0.326/0.314 (pipeline) at T64/256/1024/4096 instead of 0; [a,2a] gives 0.387; mne-order reference reproduces these to <=2.2e-16; abs = (|c_ij|+|c_ji|)/2 to <=1.1e-16; stat 8/8"
+ },
+ {
+  "unit_id": "misc.pec.orth-True_log-True",
+  "verdict": "variant",
+  "score": 7,
+  "check_method": "independent-impl",
+  "headline": "non-degenerate pairs exact to <=1.2e-14; duplicate copy 0.114/0.363/0.283/0.261 (kernel), 0.181/0.339/0.294/0.241 (pipeline); [a,2a] 0.443; mne-order reproduces to <=2.2e-16; abs per direction to <=2.2e-16; stat 7/8 (one single-draw exceedance: pec_orth_log_abs bivariate T4096 (2,3) raw z 2.642 vs z* 2.638, MC fraction above 0.0175); closest to Hipp 2012 but broadband"
+ }
+]

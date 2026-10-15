@@ -1,0 +1,84 @@
+{
+ "family": "preprocessing_base",
+ "gitbook_pages": [],
+ "hypotheses": [
+  "Data: truncate -> detrend (optional, scipy linear) -> zscore(ddof=1); the historical patient stores used z-score THEN detrend",
+  "two raw arrays to parse_bivariate: only the first is z-scored (data.py:230-238)",
+  "Undirected.multivariate computes every ordered pair then overwrites the lower triangle (double work); classes overriding multivariate bypass the mirror (bug 5 / M1)",
+  "parse_bivariate builds Warning(...) without raising when i, j unset"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/base.py",
+  "pyspi/data.py"
+ ],
+ "supplement_sections": [],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "pyspi/data.py",
+  "pyspi/base.py",
+  "pyspi/calculator.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "scipy.signal.detrend (linear, axis=1)",
+   "module": "data",
+   "pair_basis": "n/a",
+   "pyspi_class": "Data",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "preproc.detrend"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "scipy.stats.zscore(ddof=1, axis=1) after truncation and detrend",
+   "module": "data",
+   "pair_basis": "n/a",
+   "pyspi_class": "Data",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "preproc.zscore"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "Data() + add_process twice (second array not z-scored)",
+   "module": "base",
+   "pair_basis": "n/a",
+   "pyspi_class": "parse_bivariate",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "preproc.two_array_api"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "Directed loops all ordered pairs; Undirected then mirrors the upper triangle",
+   "module": "base",
+   "pair_basis": "n/a",
+   "pyspi_class": "Directed/Undirected",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "base.pair_handling"
+  }
+ ]
+}

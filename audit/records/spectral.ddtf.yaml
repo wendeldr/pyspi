@@ -1,0 +1,348 @@
+unit_id: spectral.ddtf
+status: profiled
+correctness:
+  metric_name_standard: Direct directed transfer function (dDTF), band mean / band max, bivariate nonparametric estimate
+  canonical_ref: Korzeniewska A, Manczak M, Kaminski M, Blinowska KJ, Kasicki S (2003) Determination of information flow direction among brain structures by a modified directed transfer function (dDTF)
+    method. J Neurosci Methods 125:195-207 (the PDF was not opened, so no equation numbers are given. The canonical form below, chi^2_ij = ffDTF^2_ij x kappa^2_ij with ffDTF^2 normalised over frequencies and inflows and kappa the partial coherence from the inverse spectral matrix, was checked against the docstring and code of direct_directed_transfer_function in upstream spectral_connectivity master 138f3f7f0f (unreleased), which cites this paper; that docstring also notes that SCoT and ConnectiviPy report the square root |ffDTF| |kappa|)
+  canonical_definition: full-frequency DTF F^2_ij(f) = |H_ij(f)|^2 / sum_f sum_m |H_im(f)|^2 (sum over the analysed frequency range); partial coherence C_ij(f) = M_ij(f) / sqrt(M_ii(f) M_jj(f)) from the
+    minors (equivalently the inverse) of the full multivariate spectral matrix; dDTF chi^2_ij(f) = F^2_ij(f) C^2_ij(f), flow j -> i, nonzero only for direct coupling
+  documented_definition: 'supplement §1.5.9, p.16 (line 757-759): ''we include direct-DTF (ddtf) [70], which extends DTF by conditioning out the influence of other signals (using the partialized cross-spectrum)'';
+    same text GitBook spectral.md:107. Band rule, supplement §1.5, p.12-13 (supplement.txt lines 570-599 in this checkout; the pack''s line numbers are offset by about 12-16): ''We use 125 uniformly sampled
+    bins across the entire frequency range, f in [f0, fs/2] ... f0 = 4/T'' and bands ''fmin-0_fmax-0-5: f in [0, fs/2]; fmin-0_fmax-0-25: f in [0, fs/4]; fmin-0-25_fmax-0-5: f in [fs/4, fs/2]'', summary
+    = mean or max over the band. Directed measures ''are nonparametrically estimated through spectral matrix factorization [57, 58]'' (§1.5, p.12). Row/column meaning of the MPI: GitBook glossary-of-terms.md:27
+    ''The rows in this table reflect the sources while the columns reflect the targets''. Section keywords for dtf/ddtf (supplement.txt:753): ''directed, linear, unsigned, bivariate, frequency-dependent''.'
+  delegate_lib: spectral_connectivity==1.1.2 Connectivity.direct_directed_transfer_function (numpy 2.5.4, scipy 1.17.1)
+  implemented_as: 'Same per-pair multitaper + Wilson pipeline; ffDTF = H / sqrt(sum over columns AND over all T/2 non-negative frequency bins of |H|^2) (modulus); value = |ffDTF| * sqrt(PDC^2) = |ffDTF_ij|
+    * |PDC_ij| (product of MODULI, PDC in place of partial coherence). Kernel probe p2_kernel.py: library equals |F_ij| |pi_ij| to 6.2e-17 and differs from Korzeniewska F^2 C^2 by up to 0.048. The ffDTF
+    normalisation is over the whole grid regardless of fmin/fmax, so values scale like 1/sqrt(T/2) (the canonical squared form on the same grid scales like 1/(T/2), see deviation (d)). A[i, j] = nanmean/nanmax of L[f, 0, 1] over fmin < f < fmax.'
+  implementation_trace:
+  - pyspi/data.py:184-195 optional scipy detrend then zscore(axis=1, ddof=1) per process (Data default normalise=True, detrend=False)
+  - pyspi/statistics/spectral.py:278-285 DirectDirectedTransferFunction(NonparametricSpectralBivariate, Directed), _measure 'direct_directed_transfer_function'
+  - 'pyspi/calculator.py:325-339 Calculator.compute (HEAD a42ebc1): :329 S = self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan); :336-337 except Exception -> self._table[spi] = np.nan (whole SPI matrix NaN), error recorded :338-339'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for j, for i != j: A[i, j] = self.bivariate(data, i=i, j=j) (P(P-1) ordered pairs)'
+  - 'pyspi/statistics/spectral.py:20-43 NonparametricSpectral.__init__: fmax=None -> fs/2; statistic ''mean'' -> np.nanmean, ''max'' -> np.nanmax; identifier suffix _multitaper_<stat>_fs-1_fmin-.._fmax-..'
+  - 'pyspi/statistics/spectral.py:106-126 NonparametricSpectralBivariate._get_cache: key (measure, i, j); z = data.to_numpy(squeeze=True)[[i, j]].T (column 0 = x_i, column 1 = x_j); m = sc.Multitaper(z,
+    sampling_frequency=fs); conn = sc.Connectivity.from_multitaper(m); res = getattr(conn, measure)(); cached in data.spectral_bv'
+  - 'pyspi/statistics/spectral.py:128-134 bivariate: freq_id = where((freq > fmin) * (freq < fmax)) (STRICT inequalities, unlike the multivariate path at :88 which uses >= / <=); returns statfn(res[0, freq_id,
+    0, 1])'
+  - pyspi/_spectral_compat.py:15-28 replaces the numpy namespace of spectral_connectivity.connectivity only (np.in1d shim); minimum_phase_decomposition.py keeps the real numpy
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:74-100 Multitaper defaults: time_halfbandwidth_product=3, detrend_type=''constant'', n_tapers=None, is_low_bias=True; :155-164
+    n_tapers = floor(2*NW-1) = 5'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:167-178 single window = whole series; :181-185 n_fft = next_fast_len(T) (no zero padding; = T for T in {64,256,1024,4096}); :188-190
+    frequencies = fftfreq(n_fft, 1/fs)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:238-260 fft: detrend(constant) -> taper (dpss, :357-387) -> FFT / fs (:335-354)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:156-172 Connectivity.from_multitaper (expectation_type 'trials_tapers' -> mean over trials and the 5 tapers, :45-53)
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:195-208 _cross_spectral_matrix S[a, b] = X_a conj(X_b); :210-220 _expectation_cross_spectral_matrix
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:259-261 _minimum_phase_factor (plain property, NOT cached: every access re-runs Wilson) -> minimum_phase_decomposition.py:161-222'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:263-266 _transfer_function = _estimate_transfer_function(Psi) restricted to the first (n_fft+1)//2 bins (decorator :73-89); :1145-1170
+    H = Psi @ inv(A0), A0 = ifft(Psi)[lag 0].real
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:268-270 _noise_covariance -> :1116-1142 Sigma = A0 @ A0^T
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:876-900 direct_directed_transfer_function: full_frequency_DTF = H / _total_inflow(H, axis=(-1, -3)); return abs(full_frequency_DTF)
+    * sqrt(self.partial_directed_coherence(keep_cupy=True)) (2 + 2 = 4 Wilson runs)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:1222-1231 _total_inflow with axis=(-1, -3): sum over source columns and over the frequency axis (non-negative bins only, since
+    _transfer_function is already trimmed)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:807-843 partial_directed_coherence (squared PDC; its sqrt gives |PDC|)
+  deviation_from_documented: '(i) Direction: documented ''from x -> y'' with rows = sources; implemented A[i, j] = flow x_j -> x_i (row = target), probe p3_pipeline.py var2_bivariate A[1,0] = 0.0055 > A[0,1]
+    = 0.0025 for x0 -> x1. (ii) ''nonparametrically estimated through spectral matrix factorization'' holds, but each ordered pair is factorised on its own 2-channel spectrum (bivariate, unconditioned on
+    the other P-2 channels); the section keyword ''bivariate'' (supplement.txt:753) documents the pairwise fit, but the ddtf sentence promises conditioning on other signals, which a 2-channel fit cannot provide (rubric anchor 3 example ''dDTF bivariate''). (iii) Band rule: documented 125 bins from f0 = 4/T with closed bands; implemented: the multitaper grid k/n_fft (n_fft = T for power-of-two T, so T/2 non-negative bins, DC included,
+    Nyquist absent) with open bands (fmin < f < fmax): DC is always dropped and the f = 0.25 bin belongs to neither half-band (p6_misc.py T=64: full band 31 bins 0.0156-0.4844, low band 15 bins ending 0.2344,
+    high band 15 bins starting 0.2656). (iv) ''conditioning out the influence of other signals (using the partialized cross-spectrum)'': no partialised cross-spectrum/partial coherence is computed; the
+    conditioning factor is the PDC of a 2-channel model, so nothing is conditioned out.'
+  deviation_from_canonical: '(a) Uses |PDC| where Korzeniewska et al. use partial coherence; (b) returns the product of moduli |F||PDC| instead of the product of squares F^2 C^2 (p2_kernel.py: equals |F||pi|
+    to 6e-17, differs from F^2 C^2 by 0.048); (c) bivariate 2-channel model, so for P > 2 nothing is partialised, and in 2x2 |PDC_ij| = sqrt(DTF_ij), i.e. the pyspi value is |F_ij| sqrt(DTF_ij); canonical
+    bivariate dDTF would use the ordinary coherence (partial coherence with no third signal), which is symmetric; (d) length and band dependence: the ffDTF normalisation over the frequency grid is part
+    of the canonical definition, so on an n_fft = T grid the canonical ffDTF^2 x pcoh^2 itself scales as about T^-1 (check run ddtfscale: slopes -1.007, -1.002, -1.000 on the exact var2_bivariate
+    spectrum); the library-specific parts are only the exponent T^-1/2 (a consequence of the moduli in (b); p5_bias_T.py true direction 0.084, 0.044, 0.022, 0.011, 0.005 at T = 64..16384) and the normalisation
+    over all T/2 non-negative bins for the half-band identifiers (fmin-0_fmax-0-25, fmin-0-25_fmax-0-5), where a band-restricted canonical analysis would normalise over the analysed band only. Values are
+    not comparable across series lengths in either form.'
+  units_and_range: dimensionless, non-negative, per-frequency in [0, 1] but O(1/sqrt(n_fft/2)) in practice (pipeline values about 0.002-0.018 at T=4096); asymmetric; diagonal NaN; magnitude depends on T
+  direction_convention: 'A[i, j] = statfn over the band of L[0, 1] where L is the library measure on the ordered 2-channel array [x_i, x_j]; the library''s [a, b] entry is the flow from channel b to channel
+    a (H[a, b] maps innovation b into signal a; kernel probe p2_kernel.py on the exact var2_bivariate spectrum: x0 -> x1 appears at L[1, 0], L[0, 1] = 0). Hence A[i, j] = estimated flow x_j -> x_i: ROW
+    = TARGET, COLUMN = SOURCE. Confirming evidence: exact-spectrum toy VAR(1) with x0 -> x1 gives library DTF L[1,0] = 0.1608, L[0,1] = 0 (review probe pD_kernel_directed.py); pipeline probe p3_pipeline.py
+    (T=4096, z-scored) var2_bivariate A[1,0] = 0.2617 > A[0,1] = 0.1281 (x0 -> x1). logistic_maps (y = process 1 drives x = process 0, audit/checks/make_data.py:207 (beta_xy = 0.1, beta_yx = 0) and :309-310 (update equations)) shows A[0,1] > A[1,0] in the pipeline,
+    but the Wilson factorisation does not converge on that dataset at T >= 1024 (60 iterations, residual 0.32-0.38; p7_wilson.py, review pF_wilson.py), so it is not used as confirming evidence. This is
+    the opposite of the glossary''s row = source convention. On delayed_noise the DTF/PDC/dcoh/ddtf matrices look row = source only because the estimator fails there (see candidates); gpdcoh on delayed_noise
+    follows row = target.'
+  symmetry_expected: asym
+  already_documented: 'DEPENDENCY_COMPATIBILITY_REVIEW.md (ddtf depends internally on the whole frequency grid: differed by 7.20e-4 after changing only the aggregation boundary); tests/README.md (ddtf goldens
+    are slow-tier only); DEPENDENCY_COMPATIBILITY_REVIEW.md (Nyquist handling / frequency grid of spectral-connectivity 1.1.2 vs 2.x; pinned at 1.1.2 per tests/README.md dependency constraints)'
+  new_finding_candidates:
+  - 'CANDIDATE (PDC used instead of partial coherence; moduli instead of squares): connectivity.py:895-900 ''return xp.abs(full_frequency_DTF) * xp.sqrt(self.partial_directed_coherence(keep_cupy=True))''
+    while the docstring (:878-880) says ''partial coherence''; p2_kernel.py ''dDTF lib vs K2003 ff^2*pcoh^2 0.048'', ''dDTF lib vs |ff|*|PDC| hyp 6.2e-17''.'
+  - 'CANDIDATE (degenerate in the bivariate setting; pack hypothesis 1): with 2 channels |PDC_ij| = sqrt(DTF_ij) exactly, so ddtf = |ffDTF_ij| * sqrt(DTF_ij) carries no conditioning; on var2_chain pyspi
+    ddtf A[2,0] = 0.0041 for a pair without direct coupling (p3_pipeline.py) whereas the 3-channel library value is 0.0 (p2_kernel.py var2_chain).'
+  - 'CANDIDATE (length dependence; check stage: the T dependence itself is shared with canonical ffDTF, see deviation (d)): normalisation over all n_fft/2 bins (_total_inflow axis=(-1, -3)) makes ddtf scale like T^{-1/2}: p5_bias_T.py s=1.0 true-direction means 0.084, 0.044, 0.022, 0.011,
+    0.005 for T = 64, 256, 1024, 4096, 16384; also the band identifiers (fmin-0-25 etc.) are normalised by full-band energy.'
+  - 'CANDIDATE (direction reversed vs documentation and estimator inversion on delayed copies): p3_pipeline.py var2_bivariate ddtf [[nan, 0.0025], [0.0055, nan]] (row = target); delayed_noise A[0,k] ~0.0177
+    > A[k,0] ~0.0023 (inverted by estimator, as for dtf).'
+  - 'CANDIDATE (cost): 4 Wilson runs per call (p6_misc.py ''wilson calls direct_directed_transfer_function 4''); P=3 multivariate: 24 Wilson runs.'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - var2_chain
+    path: kernel
+    reference: 'analytic: true VAR(2) transfer matrix from the MANIFEST coefficients (Abar(f) = I - A1 e^{-i2pi f} - A2 e^{-i4pi f}, H = inv(Abar), S = H Sigma H^H on fftfreq(1024)) fed into spectral_connectivity.Connectivity
+      via a subclass overriding _expectation_cross_spectral_matrix (only the factorisation + measure formula are under test); canonical measure computed in numpy from (Abar, H, Sigma); canonical dDTF =
+      F^2 C^2 with C from inv(S) and F normalised over the non-negative bins'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: library value equals |F_ij||PDC_ij| within 1e-12 and differs from F^2 C^2 by > 1e-2 at some bins (probe 0.048)
+  - datasets:
+    - var2_chain
+    path: pipeline
+    reference: from-scratch numpy OLS VAR(2) on all 3 channels; canonical multivariate dDTF (F^2 from H, C from the inverse model spectrum) band mean
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: reference dDTF(0 -> 2) ~ 0 (no direct link) while pyspi ddtf A[2,0] > 0 (probe 0.0041 at T=4096); report ratio to the direct links A[1,0], A[2,1]
+  - datasets:
+    - var2_bivariate
+    - logistic_maps
+    path: pipeline
+    reference: 'analytic ground truth from the generating model (var2_bivariate: x0 -> x1 only; var2_chain: 0 -> 1 -> 2; logistic_maps: process 1 (y) drives process 0 (x)) plus a from-scratch numpy OLS
+      VAR(p) fit (p = 2 for var2_*, BIC-chosen <= 10 for logistic_maps) with the canonical measure computed from the fitted coefficients; reference does not import spectral_connectivity'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'establishes A[i,j] meaning: A[1,0] > A[0,1] (var2_bivariate), A[0,1] > A[1,0] (logistic_maps): row = target; logistic_maps is reported but not decisive unless the Wilson factorisation
+      converges on it (it does not at T >= 1024 in p7_wilson.py)'
+  - datasets:
+    - var2_bivariate
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic scaling argument: ffDTF ~ (n_fft/2)^{-1/2} from _total_inflow(axis=(-1, -3)) (connectivity.py:895-897); tested (a) deterministically on the exact var2_bivariate spectrum with n_fft
+      in {64, 256, 1024, 4096}, (b) on the pipeline as a statistical observation'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: '(a) exact spectrum: band-mean ddtf[1,0] x sqrt(n/2) constant within 1.5% over n = 64..4096 (pT_ddtf_exact.py: 0.21680, 0.21515, 0.21475, 0.21466, a 0.98% spread driven by n = 64;
+      0.23% over n = 256..4096) and log-log slope -0.50 +/- 0.01 (slopes -0.506, -0.501, -0.500). (b) pipeline (z-scored, single realisation per T): slope only approximately -0.5 because the estimated |PDC|
+      and H also change with T and with the realisation; the band [-0.70, -0.40] applies to var2_bivariate entry [1,0] and to the var2_bivariate off-diagonal mean, per consecutive T step over T = 64..4096
+      (cleanup probe ddtf_slope_entries.py: [1,0] -0.44, -0.62, -0.52; off-diagonal mean -0.50, -0.52, -0.53); the null entry var2_bivariate [0,1] (-0.68, -0.24, -0.55) and all of iid_gaussian (3 channels;
+      off-diagonal mean -0.78, -0.44, -0.49; per-entry -0.07 to -1.10 at T = 64->256) are report-only. Report all slopes, averaging several seeds per T if a tighter bound is wanted (review pF_wilson.py
+      var2_bivariate mean ddtf[1,0] 0.02700 / 0.01137 / 0.00553 at T = 256 / 1024 / 4096, slopes -0.62 and -0.52, overall -0.57; pS_ddtf_factor.py: the ffDTF factor alone has slopes -0.51, -0.56, -0.51
+      over T = 64..4096, so isolating it does not remove the realisation noise)'
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    path: kernel
+    reference: 'independent-impl: from-scratch numpy multitaper (scipy.signal.windows.dpss(T, NW=3, Kmax=5), constant detrend, FFT, mean over tapers) and from-scratch numpy Wilson (1972) factorisation following
+      Dhamala et al. 2008 (same plus operator: half zero-lag, upper-triangular, zero lags >= n/2), then the canonical formula; does not import spectral_connectivity; reference implements both |F||PDC| and
+      F^2 C^2'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: from-scratch |F||PDC| matches the library per bin within 1e-6
+  check_method: analytic
+  check_reference: audit/checks/refs/spectral_directed.py:h_exactbin / h_ddtfscale (analytic H, _kernels_spectral.ddtf_library_as_coded and ddtf = Korzeniewska ffDTF^2 x partial coherence^2), audit/checks/refs/spectral_directed.py:h_formula,
+    audit/checks/refs/spectral_directed.py:h_rep / h_indep / h_ddtfslope, audit/checks/refs/spectral_directed.py:h_chain / h_truth / h_mc / h_dir; probes audit/checks/probes/spectral_directed_probes.py;
+    upstream master 138f3f7f0f via gh api
+  check_data: var2_bivariate T64/T256/T1024/T4096 (pipeline), var2_chain T256 (pipeline-detrend)/T1024, iid_gaussian processes 0-2 T256/T1024/T4096 (kernel), gauss_ar1_pair T1024/T4096, delayed_noise T1024/T4096,
+    logistic_maps_chaotic T1024/T4096, logistic_maps T4096, scaled_offset vs bivariate_gaussian T1024 (kernel); exact VAR(2) spectra of var2_bivariate and var2_chain on fftfreq(1024); exact var2_bivariate
+    spectrum at n = 64, 256, 1024, 4096; var2_bivariate and iid_gaussian at T = 64-4096 (pipeline)
+  agreement_criterion: 'tolerance rtol 1e-6 / atol 1e-8 for the replication of every identifier (rep, indep), rtol 1e-9 / atol 1e-12 for the formula on the library''s own factors, atol 1e-10 (gpdcoh 1e-8)
+    on the exact spectrum; statistical: |pyspi - value| <= 2 se with se = Monte Carlo SD x z_Bonferroni(m)/2 over the m off-diagonal entries (familywise 5% per run); direction: sign of A - A.T equals the
+    population sign; qualitative as stated per run'
+  closeness: 'Library = |ffDTF_ij| |PDC_ij| with ffDTF normalised over all n_fft/2 non-negative bins: reproduced on the library''s own factors to 4.2e-17 (formula 6/6) and on the exact spectra to 6.9e-17
+    (exactbin 2/2); in 2x2 it equals sqrt(ffDTF^2) sqrt(DTF) to 1.4e-17 and the 2x2 partial coherence equals the ordinary coherence to 1.1e-15. Versus Korzeniewska''s ffDTF^2 x partial coherence^2: up to
+    0.042 per bin (var2_bivariate p01), 0.096 (delayed_noise), 0.0196 on the exact spectrum. Independent chain: rep 21/21 (<= 3.6e-15), indep 11/11 (<= 1.3e-13 at T256/T1024/T4096; the T1024/T256 subset <= 3.0e-14). Length scaling: exact spectrum band mean x
+    sqrt(n/2) = 0.21680, 0.21515, 0.21475, 0.21466 (spread 1.0% over n = 64-4096, 0.23% over 256-4096; slopes -0.506, -0.501, -0.500; ddtfscale pass 2.3e-11; the canonical Korzeniewska form on the same spectra has slopes -1.007, -1.002, -1.000 and mean x n/2 = 0.0733, 0.0726, 0.0725, 0.0724); pipeline slopes var2_bivariate [1,0] -0.44,
+    -0.62, -0.52, off-diagonal mean -0.50, -0.52, -0.53 (inside [-0.70, -0.40]); null [0,1] -0.68, -0.24, -0.55 and iid off-diagonal mean -0.78, -0.43, -0.49 report-only (ddtfslope 2/2 pass vs the independent
+    chain). Chain: conditioned dDTF(0->2) 0.0 vs bivariate population 0.0042, pyspi 0.0091. Truth 0/8, mc 6/7 (var2_chain max |z| 2.82 vs bound 2.64, empirical two-sided tail 0.01).'
+  verdict: wrong
+  score_0_10: 3
+  score_rubric: 3
+  score_rubric_basis: anchor
+  score_rubric_note: Anchor 3 names 'dDTF bivariate'. On var2_chain the indirect 0 -> 2 gets 0.0091 where the conditioned value is 0.
+  documentation_status: misdescribed
+  verdict_adjusted: wrong
+  score_adjusted: 3
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The delegate computes |ffDTF| x |PDC| instead of the dDTF of Korzeniewska et al. 2003 (ffDTF^2 x squared partial coherence): PDC replaces the partial coherence and moduli replace squares.
+    Upstream master (138f3f7f0f, unreleased) now computes ffDTF^2 x partial coherence^2; v2.0.1 still has the 1.1.2 formula. In the bivariate setting nothing is conditioned out (the value is |ffDTF_ij|
+    sqrt(DTF_ij); a canonical 2-channel dDTF would use the ordinary coherence), so on var2_chain the indirect 0 -> 2 gets 0.0091 where the conditioned value is 0. Values depend on the series length: the full-frequency normalisation runs over every
+    non-negative bin, so the library value scales as (T/2)^-1/2. Canonical ffDTF on a T-dependent grid has the same property (the Korzeniewska form scales as T^-1 on the same exact spectrum, ddtfscale
+    slopes -1.007/-1.002/-1.000), so only the exponent and the normalisation of the half-band identifiers by full-band energy are library-specific. Rubric anchor 3 (dDTF bivariate: the label does not describe the computation). Anchor 2 was checked and is not supported: in 3961 random stable 2-channel VAR(1) systems with unequal innovation variances, the band-mean sign of A - A.T from the library formula never differed from the canonical 2-channel dDTF (ffDTF^2 x coherence^2) on the exact spectrum (scratchpad wf4b_low-spectral/probe_ddtf_sign.py, numpy only; re-run in Workflow 4b-2, flips 0/3961).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: one pyspi run <= 0.9 s at P=2-3, T<=4096 (var2_bivariate T4096: dtf 0.52 s, dcoh 0.68 s, pdcoh 0.51 s, gpdcoh 0.69 s, ddtf 0.87 s); T=4096 used for the analytic convergence runs and for the per-bin independent runs (indep at T256/T1024/T4096; pyspi probe <= 0.77 s, reference Wilson 21-29 iterations); Monte
+    Carlo (100-400 draws) runs in the reference'
+  symmetry_observed: 'asym: max|A - A.T| between 0.0026 and 0.039 over the 21 rep runs (var2_bivariate T1024 mean-full 0.006); diagonal NaN'
+  direction_observed: 'row = target, column = source: A[i, j] estimates flow x_j -> x_i. var2_bivariate (x0 -> x1): A[1,0] - A[0,1] = +0.006 at T1024 and +0.003 at T4096; var2_chain: A[1,0] > A[0,1], A[2,1]
+    > A[1,2], A[2,0] > A[0,2] (dir runs pass); delayed_noise inverted (A[0,k] - A[k,0] = 0.031, 0.030, 0.027; estimator mean 0.035 vs 0.004-0.006, population 0 vs 0.022); logistic_maps_chaotic inverted
+    (0.025 / 0.013) on an unreliable factorisation. This is the opposite of the glossary''s row = source convention.'
+  candidate_resolutions:
+  - candidate: PDC used instead of partial coherence; moduli instead of squares
+    outcome: confirmed
+    evidence: 'spectral.ddtf|*|formula~p*: lib == sqrt(ff) sqrt(DTF) to 1.4e-17, vs ffDTF^2 x pcoh^2 0.042 (var2_bivariate p01); spectral.ddtf|var2_bivariate|1024|kernel|exactbin 0.0196; upstream master
+      138f3f7f0f direct_directed_transfer_function returns full_frequency_dtf * squared_partial_coherence'
+  - candidate: degenerate in the bivariate setting
+    outcome: confirmed
+    evidence: 'formula extras: 2x2 partial coherence = coherence (<= 1.1e-15), lib = |ffDTF| sqrt(DTF); spectral.ddtf|var2_chain|1024|pipeline|chain:mean-full: conditioned 0.0 vs bivariate 0.0042, pyspi
+      0.0091'
+  - candidate: length dependence T^-1/2
+    outcome: confirmed
+    evidence: 'spectral.ddtf|var2_bivariate|1024|kernel|ddtfscale (library slopes -0.506/-0.501/-0.500, spread 1.0%), spectral.ddtf|var2_bivariate|4096|pipeline|ddtfslope ([1,0] -0.44/-0.62/-0.52).
+      Scope: the T dependence itself is not a library deviation. Canonical ffDTF is normalised over the analysed frequency grid, so on the same exact spectrum the Korzeniewska ffDTF^2 x pcoh^2 band mean
+      scales as T^-1 (ddtfscale extras: slopes -1.007/-1.002/-1.000, mean x n/2 = 0.0733, 0.0726, 0.0725, 0.0724). Library-specific are only the exponent -1/2 (moduli instead of squares) and the
+      normalisation over all non-negative bins for the half-band identifiers.'
+  - candidate: direction reversed vs documentation; inversion on delayed copies
+    outcome: confirmed
+    evidence: 'spectral.ddtf|var2_bivariate|1024|pipeline|dir:mean-full (+0.006); spectral.ddtf|delayed_noise|1024|pipeline|dir:mean-full fails; mc run: estimator 0.035 (null) vs 0.004-0.006 (true)'
+  - candidate: 'cost: 4 Wilson runs per call'
+    outcome: confirmed
+    evidence: 'spectral.wilson_factorisation|var2_chain|256|pipeline|calls: 24 runs at P=3'
+  checks_run:
+  - run_ids:
+    - spectral.ddtf|var2_bivariate|1024|pipeline|rep:mean-full
+    - spectral.ddtf|var2_bivariate|1024|pipeline|rep:mean-low
+    - spectral.ddtf|var2_bivariate|1024|pipeline|rep:mean-high
+    - spectral.ddtf|var2_bivariate|1024|pipeline|rep:max-full
+    - spectral.ddtf|var2_bivariate|1024|pipeline|rep:max-low
+    - spectral.ddtf|var2_bivariate|1024|pipeline|rep:max-high
+    - spectral.ddtf|var2_chain|1024|pipeline|rep:mean-full
+    - spectral.ddtf|var2_chain|1024|pipeline|rep:mean-low
+    - spectral.ddtf|var2_chain|1024|pipeline|rep:mean-high
+    - spectral.ddtf|var2_chain|1024|pipeline|rep:max-full
+    - spectral.ddtf|var2_chain|1024|pipeline|rep:max-low
+    - spectral.ddtf|var2_chain|1024|pipeline|rep:max-high
+    - spectral.ddtf|iid_gaussian|256|kernel|rep:mean-full~p012
+    - spectral.ddtf|iid_gaussian|256|kernel|rep:max-high~p012
+    - spectral.ddtf|var2_bivariate|64|pipeline|rep:mean-full
+    - spectral.ddtf|var2_bivariate|64|pipeline|rep:max-low
+    - spectral.ddtf|var2_chain|256|pipeline-detrend|rep:mean-full
+    - spectral.ddtf|gauss_ar1_pair|1024|pipeline|rep:mean-full
+    - spectral.ddtf|delayed_noise|1024|pipeline|rep:mean-full
+    - spectral.ddtf|logistic_maps_chaotic|1024|pipeline|rep:mean-full
+    - spectral.ddtf|scaled_offset|1024|kernel|rep:mean-full
+    reference: audit/checks/refs/spectral_directed.py:h_rep (independent multitaper + Wilson, library formula transcribed, strict band)
+    outcome: 21/21 pass; max_abs 3.6e-15
+  - run_ids:
+    - spectral.ddtf|var2_bivariate|1024|pipeline|formula~p01
+    - spectral.ddtf|var2_bivariate|1024|pipeline|formula~p10
+    - spectral.ddtf|var2_chain|1024|pipeline|formula~p02
+    - spectral.ddtf|gauss_ar1_pair|1024|pipeline|formula~p01
+    - spectral.ddtf|delayed_noise|1024|pipeline|formula~p03
+    - spectral.ddtf|iid_gaussian|256|kernel|formula~p01
+    reference: audit/checks/refs/spectral_directed.py:h_formula (formula on the library's own H/Sigma, probe audit/checks/probes/spectral_directed_probes.py:perbin)
+    outcome: 6/6 pass; max_abs 4.2e-17
+  - run_ids:
+    - spectral.ddtf|var2_bivariate|1024|pipeline|indep~p01
+    - spectral.ddtf|var2_bivariate|1024|pipeline|indep~p10
+    - spectral.ddtf|var2_chain|1024|pipeline|indep~p02
+    - spectral.ddtf|gauss_ar1_pair|1024|pipeline|indep~p01
+    - spectral.ddtf|delayed_noise|1024|pipeline|indep~p03
+    - spectral.ddtf|iid_gaussian|256|kernel|indep~p01
+    - spectral.ddtf|gauss_ar1_pair|4096|pipeline|indep~p01
+    - spectral.ddtf|iid_gaussian|1024|kernel|indep~p01
+    - spectral.ddtf|iid_gaussian|4096|kernel|indep~p01
+    - spectral.ddtf|var2_bivariate|256|pipeline|indep~p01
+    - spectral.ddtf|var2_bivariate|4096|pipeline|indep~p01
+    reference: audit/checks/refs/spectral_directed.py:h_indep (whole chain independent, per bin)
+    outcome: 11/11 pass; max_abs 1.3e-13 (T4096 runs <= 1.3e-13, T256 <= 1.4e-14; Wilson reconstruction error of the independent kernel 0.0015-0.024)
+  - run_ids:
+    - spectral.ddtf|var2_bivariate|1024|kernel|exactbin
+    - spectral.ddtf|var2_chain|1024|kernel|exactbin
+    reference: audit/checks/refs/spectral_directed.py:h_exactbin (analytic VAR(2) H, library Wilson on the exact spectrum via audit/checks/probes/spectral_directed_probes.py:exact_perbin)
+    outcome: 2/2 pass; max_abs 6.9e-17 (as coded); Korzeniewska form differs by 0.0196
+  - run_ids:
+    - spectral.ddtf|var2_bivariate|1024|pipeline|dir:mean-full
+    - spectral.ddtf|var2_bivariate|4096|pipeline|dir:mean-full
+    - spectral.ddtf|var2_chain|1024|pipeline|dir:mean-full
+    - spectral.ddtf|gauss_ar1_pair|1024|pipeline|dir:mean-full
+    - spectral.ddtf|delayed_noise|1024|pipeline|dir:mean-full
+    - spectral.ddtf|logistic_maps_chaotic|1024|pipeline|dir:mean-full
+    - spectral.ddtf|logistic_maps_chaotic|4096|pipeline|dir:mean-full
+    reference: audit/checks/refs/spectral_directed.py:h_dir (population sign of the bivariate quantity / generating model)
+    outcome: 4/7 pass; delayed_noise and logistic_maps_chaotic inverted
+  - run_ids:
+    - spectral.ddtf|var2_bivariate|256|pipeline|truth:mean-full
+    - spectral.ddtf|var2_bivariate|1024|pipeline|truth:mean-full
+    - spectral.ddtf|var2_bivariate|4096|pipeline|truth:mean-full
+    - spectral.ddtf|var2_bivariate|4096|pipeline|truth:mean-low
+    - spectral.ddtf|var2_bivariate|4096|pipeline|truth:mean-high
+    - spectral.ddtf|iid_gaussian|256|kernel|truth:mean-full~p012
+    - spectral.ddtf|iid_gaussian|1024|kernel|truth:mean-full~p012
+    - spectral.ddtf|iid_gaussian|4096|kernel|truth:mean-full~p012
+    reference: audit/checks/refs/spectral_directed.py:h_truth (analytic population value, se = Monte Carlo SD x z_Bonf/2)
+    outcome: 0/8 pass; max |z| 3.7 -> 20.6
+  - run_ids:
+    - spectral.ddtf|var2_bivariate|1024|pipeline|mc:mean-full
+    - spectral.ddtf|var2_bivariate|4096|pipeline|mc:mean-full
+    - spectral.ddtf|var2_chain|1024|pipeline|mc:mean-full
+    - spectral.ddtf|delayed_noise|1024|pipeline|mc:mean-full
+    - spectral.ddtf|iid_gaussian|256|kernel|mc:mean-full~p012
+    - spectral.ddtf|iid_gaussian|1024|kernel|mc:mean-full~p012
+    - spectral.ddtf|iid_gaussian|4096|kernel|mc:mean-full~p012
+    reference: audit/checks/refs/spectral_directed.py:h_mc (Monte Carlo mean of the independent estimator)
+    outcome: 6/7 pass; var2_chain max |z| 2.82 (bound 2.64; empirical tail 0.01 > 0.05/6)
+  - run_ids:
+    - spectral.ddtf|var2_chain|1024|pipeline|chain:mean-full
+    reference: audit/checks/refs/spectral_directed.py:h_chain (multivariate 3-channel truth vs bivariate marginal population vs Monte Carlo)
+    outcome: 'fail (qualitative): bivariate 0.0042 vs conditioned 0.0'
+  - run_ids:
+    - spectral.ddtf|scaled_offset|1024|kernel|scale:mean-full
+    reference: audit/checks/refs/spectral_directed.py:h_scale
+    outcome: 'pass: not invariant (0.034)'
+  - run_ids:
+    - spectral.ddtf|logistic_maps|4096|pipeline|range:max-full
+    - spectral.ddtf|logistic_maps_chaotic|4096|pipeline|range:max-full
+    - spectral.ddtf|delayed_noise|4096|pipeline|range:max-full
+    - spectral.ddtf|var2_bivariate|4096|pipeline|range:max-full
+    - spectral.ddtf|iid_gaussian|1024|kernel|range:max-full~p012
+    reference: audit/checks/refs/spectral_directed.py:h_range (canonical range [0, 1])
+    outcome: 5/5 pass; max 0.40
+  - run_ids:
+    - spectral.ddtf|var2_bivariate|1024|kernel|ddtfscale
+    reference: audit/checks/refs/spectral_directed.py:h_ddtfscale (analytic)
+    outcome: pass; max_abs 2.3e-11; spread 1.0% (0.23% for n >= 256); canonical Korzeniewska form on the same spectra (extras) slopes -1.007/-1.002/-1.000 (low band renormalised
+      over the band only, -1.043/-1.011/-1.003)
+  - run_ids:
+    - spectral.ddtf|var2_bivariate|4096|pipeline|ddtfslope
+    - spectral.ddtf|iid_gaussian|4096|pipeline|ddtfslope~p012
+    reference: audit/checks/refs/spectral_directed.py:h_ddtfslope (independent chain at T = 64-4096)
+    outcome: 2/2 pass; max_abs 3.0e-16; part (b) slopes in band for [1,0] and the off-diagonal mean
+  - run_ids:
+    - spectral.wilson_factorisation|var2_chain|256|pipeline|calls
+    reference: audit/checks/refs/spectral_directed.py:h_calls
+    outcome: pass; 24 Wilson runs for ddtf at P=3
+optimisation:
+  complexity_P_T: 'P(P-1) ordered pairs x [2-channel Multitaper (DPSS O(K*T) pure Python + FFT O(K*T log T)) + 4 Wilson factorisations of a 2x2 x n_fft spectrum (~28 iterations of FFT O(n_fft log n_fft) and n_fft 2x2 solves each)]; O(P^2 * T log T) with a large per-pair constant (57-99 ms per pair at T=1024). Measured T exponent 0.81; never run above 8x1024 (infeasible list): the 118x1024 projection is a pair-count scaling of the 8x1024 wall (extrapolated-pairs-from-8), consistent with the per-pair loop having no shared term.'
+  hotspot_1: .venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:minimum_phase_decomposition (third-party:spectral_connectivity) 83.5% of the profiled SPI call at 8x1024 (4 calls per ordered pair), of which numpy/linalg/_linalg.py:solve on 2x2 stacks 56.5%
+  hotspot_2: .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:dpss_windows 14.3% (inside connectivity.py:from_multitaper 14.5%, one Multitaper per ordered pair)
+  hotspot_owner: third-party:spectral_connectivity
+  opaque_share: 0.084
+  profile_file: audit/profiles/spectral.ddtf__8x1024.pstats
+  opportunities:
+  - opportunity_id: spectral_directed-1
+    opportunity: 'Memoise the Wilson factor (H, Sigma) per ordered pair on the Data and serve every property access and all five directed units from it: the library recomputes minimum_phase_decomposition on each access of _transfer_function / _noise_covariance / _MVAR_Fourier_coefficients (connectivity.py:260-275), i.e. 2, 3, 2, 3 and 4 factorisations per pair for dtf, dcoh, pdcoh, gpdcoh and ddtf (14 per ordered pair for the five units).'
+    opp_type: cache-sharing
+    expected_speedup: ~2.7x
+    speedup_basis: profile:audit/profiles/spectral.ddtf__8x1024.pstats minimum_phase_decomposition 83.5% over 4 calls per pair, 3 removable
+    output_risk: unverified-bit-identical
+    risk_evidence: the factorisation is deterministic (Cholesky start, fixed tolerance); reusing it repeats no arithmetic and changes none
+    effort: S
+    depends_on: []
+  - opportunity_id: spectral_directed-2
+    opportunity: Run one batched Wilson factorisation over all pairs with the pairs on the leading axis (the library checks convergence per leading index, minimum_phase_decomposition.py:102-125, 161-222) and replace np.linalg.solve on stacks of 2x2 matrices (_get_linear_predictor, :128-158) by the closed-form 2x2 inverse, removing the per-pair Python loop (pyspi/base.py:85-94 for the directed units, spectral_connectivity/connectivity.py:722-743 for sgc).
+    opp_type: vectorise-batch
+    expected_speedup: 2-6x
+    speedup_basis: 'profile:audit/profiles/spectral.ddtf__8x1024.pstats minimum_phase_decomposition 83.5% (solve 56.5%) + complexity: a closed-form 2x2 inverse is a few flops per matrix against LAPACK gesv per matrix plus Python per pair'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'closed-form 2x2 inverse rounds differently and the 1e-8 stop rule can shift by an iteration; a batch must also keep two failure paths: on the sgc path the library pair loop catches np.linalg.LinAlgError per pair and writes NaN (spectral_connectivity/connectivity.py:724-743; a closed-form inverse does not raise, so singular pairs must be detected and set to NaN explicitly; on the directed path pyspi''s pair loop (pyspi/base.py:85-94) has no such handler, so today a raising pair fails the whole SPI in the Calculator''s per-SPI exception handler, and a batch must keep that behaviour or record the change), and a failed Cholesky initial condition fails the whole SPI on both paths: the handler at minimum_phase_decomposition.py:48 names xp.linalg.linalg.LinAlgError, which numpy 2.5.4 does not have, so the failure raises AttributeError, which neither the library pair loop (LinAlgError only) nor pyspi catches, and the Calculator sets the whole SPI to NaN (pyspi/calculator.py:336-337); no RNG is drawn (probes recorded in notes/spectral_directed.md Checks "NumPy-2 fallback" and notes/sgc.md "Error path"). A batch must keep that whole-SPI failure or record the change. The random start from the global numpy RNG (minimum_phase_decomposition.py:54-63), which in a batched call would hit every pair, is reachable only under a numpy that still has the deprecated numpy.linalg.linalg shim (numpy < 2.4 as checked: 2.2.6 and 2.3.3 resolve xp.linalg.linalg.LinAlgError with a DeprecationWarning, 2.4.6 and 2.5.4 raise AttributeError) or a spectral_connectivity release whose handler catches xp.linalg.LinAlgError (v2.0.1 does, notes/spectral_directed.md); that rng-stream risk is conditional on such a numpy or library version and does not apply in this environment (pyproject.toml pins numpy>=2.5.4,<2.6)'
+    effort: L
+    depends_on:
+    - spectral_directed-1
+  - opportunity_id: spectral_csm-shared-csm
+    opportunity: Compute the multitaper Fourier coefficients once per Data and memoise the taper-averaged CSM, power and coherency on the Data under a key without measure or band (pyspi/statistics/spectral.py:46-50, 64-83; this also removes the first-insert string key at :81 that makes the first spectral SPI on a Data compute twice). Every undirected measure, every psi/gd band, the 2x2 blocks of the bivariate directed path and the sgc nonparametric pair loop read from it; the phase-sync measures take their per-taper products from the shared coefficients.
+    opp_type: cache-sharing
+    expected_speedup: ~1.2x
+    speedup_basis: 'profile:audit/profiles/spectral.ddtf__8x1024.pstats connectivity.py:from_multitaper 14.5% (DPSS 14.3%) per ordered pair + complexity: the 2x2 CSM block of a pair is a slice of the shared P-channel CSM.
+      Independent of spectral_directed-1 and spectral_directed-2 (independent_of), because those avenues cut the Wilson factorisation (minimum_phase_decomposition) and this one the
+      per-pair Multitaper and DPSS build (from_multitaper), disjoint frames; in their residual the from_multitaper share is larger, so this avenue''s standalone figure stacked there is a
+      lower figure'
+    output_risk: unverified-bit-identical
+    risk_evidence: multivariate and bivariate CSM entries are bit-identical (spectral_csm.md trace, Direction convention)
+    effort: M
+    depends_on: []
+    independent_of:
+    - spectral_directed-1
+    - spectral_directed-2

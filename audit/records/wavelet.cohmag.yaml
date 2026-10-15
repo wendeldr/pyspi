@@ -1,0 +1,281 @@
+unit_id: wavelet.cohmag
+status: profiled
+correctness:
+  metric_name_standard: magnitude coherence (|coherency|) from Morlet-wavelet cross-spectra, summarised by mean/max over a frequency band and time
+  canonical_ref: 'Coherence/coherency: Nolte et al. 2004, Clin Neurophysiol 115:2292, eqs. 1-2 (C_ij(f) = S_ij(f)/sqrt(S_ii S_jj), S = expectation over trials); Bastos & Schoffelen 2016, Front Syst Neurosci
+    9:175, coherence section (supplement ref [59]). Single-trial wavelet coherence: Lachaux et al. 2002, Neurophysiol Clin 32:157 (cross-spectrum integrated over a time window of n_co cycles before normalising);
+    Torrence & Webster 1999, J Climate 12:2679; Grinsted et al. 2004, Nonlin Proc Geophys 11:561 (smoothing in time and scale). Equation numbers from memory, not re-checked.'
+  canonical_definition: '|C_xy(f,t)| = |<W_x(f,t) W_y*(f,t)>| / sqrt(<|W_x|^2> <|W_y|^2>) where <.> is an average over trials (or a smoothing window in time/scale for a single trial) taken BEFORE the normalisation;
+    with no averaging the quantity is identically 1. Supplement describes it as ''the frequency domain equivalent of the squared time-domain cross correlation'' (magnitude-squared coherence |C|^2).'
+  documented_definition: 'Not documented as such: the nine wavelet classes are absent from pyspi/config.yaml (tests/README.md:155 ''run today but are absent from pyspi/config.yaml''), from the supplement
+    SPI list and from the GitBook page. Supplement §1.5.4, p.14 (supplement.txt heading line 644) states the opposite: PSI ''is the only spectral measure that is computed in the time-frequency domain (denoted by
+    modifier wavelet)''; same on GitBook spectral.md:330. The closest documented text is the multitaper version: supplement §1.5.1, p.13 (supplement.txt heading line 601) / GitBook spectral.md:24-35: ''The coherence
+    (also known as coherence magnitude and ordinary coherence ... ) is an undirected frequency-dependent measure of linear association ... the frequency domain equivalent of the squared time-domain cross
+    correlation ... mean (mean) and maximum (max) summary statistics of the coherence for the three frequency ranges''. Shared band rule, supplement §1.5 preamble, p.13 (supplement.txt heading line 570, text lines 589-599;
+    GitBook spectral.md:14-20): ''We use 125 uniformly sampled bins across the entire frequency range, f in [f0, fs/2] ... f0 = 4/T ... the mean (mean) and the maximum (max) values of each measure over
+    three ranges ... fmin-0_fmax-0-5 ... [0, fs/2]; fmin-0_fmax-0-25 ... [0, fs/4]; fmin-0-25_fmax-0-5 ... [fs/4, fs/2]''.'
+  delegate_lib: mne-connectivity==0.9.0 mne_connectivity.spectral_connectivity_epochs(mode='cwt_morlet', method='coh') -> mne==1.13.2 mne.time_frequency.tfr.morlet + cwt (scipy 1.17.1 scipy.fft, numpy 2.5.4);
+    band mask, mean/max over (freq, time), lower->upper mirror and NaN diagonal are native pyspi (pyspi/statistics/wavelet.py)
+  implemented_as: 'Input z-scored per channel (ddof=1, Data default; optional detrend first). pyspi hands mne-connectivity ONE epoch (z = moveaxis(data (P,T,1), 2, 0) -> (1,P,T)) with cwt_freqs = linspace(0.2,
+    0.5, 125) and cwt_n_cycles = cwt_freqs/7 (0.029..0.071 cycles). mne.morlet sets sigma_t = n_cycles/(2 pi f) = 1/(14 pi) = 0.0227 samples for every f, so the time grid arange(0, 5 sigma_t, 1) = [0] and
+    every wavelet is the single sample W = sqrt(2)+0j (probe: 125 wavelets, length 1, value 1.41421356). The ''CWT'' is X(f,t) = sqrt(2) x(t) for all 125 f up to FFT round-off (probe: max|Re X - sqrt2 x|
+    2.7e-15, max|Im X| 7.2e-16, ~2-5% of Im exactly 0). csd(f,t) = X_hi(f,t) conj(X_lo(f,t)) = 2 x_hi(t) x_lo(t) + i*roundoff (hi = higher channel index, lower-triangular connections), psd = |X|^2 = 2 x^2.
+    n_epochs = 1, so every across-epoch average in the estimator is a single term. pyspi then keeps the frequencies with fmin <= f <= fmax on the 0.2..0.5 grid (21 bins for fmin-0_fmax-0-25: 0.2..0.2476;
+    104 for fmin-0-25_fmax-0-5; all 125 for 0..0.5), applies np.nanmean or np.nanmax over (freq, time) jointly, mirrors the lower triangle to the upper, sets the diagonal NaN. Estimator coh (mne_connectivity/spectral/epochs_bivariate.py:71-81):
+    |csd/1| / sqrt(psd_x psd_y) = |2 x_hi x_lo| / (2 |x_hi| |x_lo|) = 1 at every (f,t) where x_hi x_lo != 0. Output: 1.0 for every pair and band (mean identifiers exactly 1.0; max identifiers 1 + 2^-52
+    = 1.0000000000000002, check stage) (probe: all 19 datasets at T=64 and T=1024, every off-diagonal entry 1.0).'
+  implementation_trace:
+  - 'pyspi/statistics/wavelet.py:15-39 mne.__init__: fmax default fs/2; statistic ''mean'' -> np.nanmean, ''max'' -> np.nanmax; identifier suffix _wavelet_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}
+    with ''.''->''-'''
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, ddof=1) when normalise=True (default); pyspi/data.py:108-118 to_numpy returns
+    the (P, T, R) array'
+  - 'pyspi/statistics/wavelet.py:48-53 _get_cache: cache lookup data.mne[self.measure] (keyed by measure only); on miss z = np.moveaxis(data.to_numpy(), 2, 0) -> (R=1, P, T): a single epoch for an ordinary
+    Data'
+  - pyspi/statistics/wavelet.py:54-55 cwt_freqs = np.linspace(0.2, 0.5, 125); cwt_n_cycles = cwt_freqs / 7.0
+  - pyspi/statistics/wavelet.py:56-67 mnec.spectral_connectivity_epochs(data=z, method=self.measure, mode='cwt_morlet', sfreq=fs, mt_adaptive=True, fmin=5/n_observations, fmax=fs/2, cwt_freqs, cwt_n_cycles)
+  - pyspi/statistics/wavelet.py:68-74 conn = connectivity.get_data(output='dense') (shape P x P x 125 x T), freq = connectivity.freqs; stored in data.mne[measure]
+  - pyspi/statistics/wavelet.py:76 freq_id = np.where((freq >= fmin) * (freq <= fmax)) (inclusive both ends)
+  - 'pyspi/statistics/wavelet.py:100-107 CoherenceMagnitude(mne, Undirected): identifier ''cohmag'', _measure ''coh'''
+  - 'pyspi/statistics/wavelet.py:80-90 multivariate: adj = statfn(adj_freq[..., freq_id, :], axis=(2, 3)) (frequency AND time); ui = triu_indices(P, 1); adj[ui] = adj.T[ui] (lower -> upper); fill_diagonal
+    NaN. The class MRO puts mne.multivariate before Undirected.multivariate (pyspi/base.py:132-138), so pyspi''s own mirror in wavelet.py:87-88 is the one that runs'
+  - mne_connectivity/spectral/epochs.py:770 spectral_connectivity_epochs; :1143-1154 fmin/fmax to arrays (fmin = 5/T, fmax = 0.5)
+  - 'mne_connectivity/spectral/epochs.py:216 -> :97-113 _check_freqs: fmin = 5/T only warns if below 5 cycles; :219 -> :116-138 _compute_freqs cwt branch (124-135): freqs_all = cwt_freqs, raises if any
+    > sfreq/2'
+  - 'mne_connectivity/spectral/epochs.py:222 -> :141-153 _compute_freq_mask: (freqs >= fmin) & (freqs <= fmax); for T >= 25 all 125 cwt freqs are kept (probe: T=16 keeps 78, T=24 keeps 121)'
+  - 'mne_connectivity/spectral/epochs.py:262-276 indices=None and bivariate method -> np.tril_indices(n_signals, -1): connections (row i > col j) only; :1373 idx_map = searchsorted(sig_idx, indices)'
+  - 'mne_connectivity/spectral/epochs.py:1332-1344 -> :320-367 _assemble_spectral_params cwt branch (345-365): cwt_n_cycles[freq_mask] (357); wavelets = morlet(sfreq, freqs, n_cycles=cwt_n_cycles, zero_mean=True)
+    (361); mt_adaptive is only used in the multitaper branch (337-341) and is returned unchanged'
+  - mne/time_frequency/tfr.py:65 morlet; :159 sigma_t = n_cycles/(2 pi f) = 1/(14 pi) = 0.0227; :165-166 t = arange(0, 5 sigma_t, 1/sfreq) = [0] -> single sample; :167-172 oscillation = 1 - exp(-2 (pi f
+    sigma_t)^2) (zero_mean offset, 4.1e-4..2.5e-3); :173-174 envelope 1; :178 W /= sqrt(0.5) * norm(W) -> W = [sqrt(2)]
+  - 'mne_connectivity/spectral/epochs.py:443-457 _compute_spectra cwt branch: this_x_t = cwt(x, wavelets, use_fft=True, mode=''same'') (451); psd = (X * conj X).real (457)'
+  - 'mne/time_frequency/tfr.py:766-794 cwt -> :303-319 _get_nfft (next_fast_len(T), called at 793) -> :797-806 _cwt_array (called at 794; calls _cwt_gen at 799) -> :322-401 _cwt_gen: fft_Ws (366), ret = ifft(fft_x * fft_Ws[ii]) (377), _centered(ret, n_times) (400): real input times
+    real constant, imaginary part is FFT round-off'
+  - 'mne_connectivity/spectral/epochs.py:647-656 cwt accumulation: csd = x_t[idx_map[0]] * conj(x_t[idx_map[1]]) (652) = X_hi conj(X_lo); this_method.accumulate(con_idx, csd)'
+  - mne_connectivity/spectral/epochs.py:1472-1474 n_epochs = epoch_idx = 1; psd /= 1; :1477-1493 compute_con(con_idx, n_epochs[, psd_xx, psd_yy])
+  - 'mne_connectivity/spectral/epochs.py:1555-1567 dense assembly: zeros (P,P,...) then this_con[indices_use] = values (lower triangle only; upper and diagonal 0); :1621 SpectroTemporalConnectivity; mne_connectivity/base.py:721-790
+    get_data(output=''dense'') reshape to (P, P, n_freqs, n_times)'
+  - mne_connectivity/spectral/epochs_bivariate.py:55-68 _CohEstBase.accumulate (csd sum), :71-81 _CohEst.compute_con con = |csd_mean| / sqrt(psd_xx psd_yy); :352 'coh' -> _CohEst
+  deviation_from_documented: '(a) Frequency grid: documented 125 bins over [4/T, fs/2]; implemented 125 bins over [0.2, 0.5] for every T (wavelet.py:54), so the ''low'' band [0, 0.25] contains only 21 bins
+    in [0.2, 0.248] and frequencies below 0.2 are never analysed; the mne fmin argument is 5/T, not 4/T (it only masks cwt freqs when T < 25). (b) No time-frequency decomposition: n_cycles = f/7 makes every
+    Morlet wavelet one sample long (W = sqrt(2)), so X(f,t) = sqrt(2) x(t) at all 125 frequencies; the band choice changes nothing except which round-off pattern is averaged. (c) Aggregation runs over frequency
+    AND time (axis=(2,3)) of per-(f,t) single-epoch values; the documentation for the multitaper versions describes a summary over frequency only. (d) Not in the documented SPI set at all (extra classes).
+    (e) Output is the constant 1 on any input (probe), so it is not a ''measure of linear association''. mne ''coh'' is |C| (magnitude), while the documentation''s ''equivalent of the squared ... cross
+    correlation'' suggests |C|^2; irrelevant here because the value is 1.'
+  deviation_from_canonical: Canonical coherence normalises a cross-spectrum averaged over trials or over a time/scale window; pyspi normalises each single-epoch, single-time-point cross-spectrum (|z|/|z|
+    = 1) and only afterwards averages over time and frequency, so the result is identically 1 (degenerate). Additionally the wavelet carries no frequency resolution (1 sample) so even a time-averaged
+    version would be the broadband lag-0 quantity |sum_t x_i x_j| / sqrt(sum x_i^2 sum x_j^2) = |Pearson r| (hypothesis for the time-averaged variant, not probed), identical in all bands.
+  units_and_range: Dimensionless, nominally [0,1]; implemented output is 1.0 off the diagonal (max identifiers 1 + 2^-52) (NaN if some x_i(t) x_j(t) = 0 at every point of the band, practically never); diagonal
+    NaN; symmetric by the mirror.
+  direction_convention: Undirected. A[i,j] = A[j,i] = nanmean/nanmax over (f,t) of conn[max(i,j), min(i,j)] (mne computes lower-triangular connections only, mne_connectivity/spectral/epochs.py:276; pyspi mirrors lower->upper, wavelet.py:87-88).
+    Magnitude is order-invariant.
+  symmetry_expected: sym
+  already_documented: 'tests/README.md ''Degenerate outputs in the extra wavelet set'' (tests/README.md:217 and :157: ''cohmag and plv are exactly 1.0 everywhere ... likely cause ... a single epoch'').
+    The constant value itself is documented; the one-sample wavelet cause and the frequency grid are not.'
+  new_finding_candidates:
+  - 'CANDIDATE (pack hypothesis confirmed, cause not in tests/README): cwt_n_cycles = freqs/7 (wavelet.py:55) gives sigma_t = 1/(14 pi) = 0.0227 samples, so every Morlet wavelet is a single sample of value
+    sqrt(2) (probe: ''n wavelets 125 lengths [1]'', ''W values unique (real,imag): [1.41421356] [0.]''); the CWT is sqrt(2)*x (max|Re C - sqrt2 x| 2.7e-15). The degeneracy therefore has two independent
+    causes: one epoch (documented) and no time-frequency decomposition (new). Even with n_cycles=7 a single epoch gives coh = 1 (probe: ''n_cycles=7, 1 epoch, coh : mean 1 min 1 max 1'').'
+  - 'CANDIDATE (hypothesis about origin, supported): the pattern ''cwt_n_cycles = cwt_freqs / 7.0'' is the mne-connectivity example examples/cwt_sensor_connectivity.py (''cwt_freqs = np.arange(7, 30, 2);
+    cwt_n_cycles = cwt_freqs / 7.0'', fetched from GitHub main), written for frequencies in Hz (1..4.1 cycles at sfreq ~600 Hz); with fs=1 and f <= 0.5 it yields 0.029..0.071 cycles.'
+  - 'CANDIDATE: frequency grid linspace(0.2, 0.5, 125) is fixed for every T, so the documented [4/T, fs/2] grid and the ''low'' band [0, fs/4] are not honoured (21 bins in 0.2..0.2476; probe ''n in [0,0.25]
+    21 n in [0.25,0.5] 104'').'
+  - 'CANDIDATE: mt_adaptive=True (wavelet.py:61) has no effect in cwt_morlet mode (epochs.py:337-341 uses it only for multitaper; probe: outputs bitwise identical with mt_adaptive=False).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    - var2_bivariate
+    - shared_envelope
+    - trending
+    - logistic_maps
+    path: pipeline
+    reference: 'analytic: single epoch and 1-sample wavelet imply |csd|/sqrt(psd psd) = 1 at every (f,t)'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: every off-diagonal entry equals 1.0 exactly for all six identifiers at T in {64,256,1024,4096}; documents degeneracy (verdict degenerate)
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    path: kernel
+    reference: 'from-scratch numpy implementation of the literal pyspi pipeline without mne/mne_connectivity: Morlet built from the Tallon-Baudry/MNE formula (sigma_t = n/(2 pi f), t = arange(0, 5 sigma_t,
+      1) mirrored, zero-mean offset exp(-2 (pi f sigma_t)^2), scale 1/(sqrt(0.5)||W||)) with n = f/7 on linspace(0.2,0.5,125); CWT by direct numpy.convolve(mode=''same'') (no FFT); csd = X_hi conj(X_lo),
+      psd = |X|^2, single-epoch estimator formula; band mask fmin<=f<=fmax; np.nanmean/np.nanmax over (f,t); mirror lower->upper'
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: from-scratch output 1.0 everywhere, identical to pyspi; confirms the trace (wavelet length 1, single epoch)
+  - datasets:
+    - bivariate_gaussian
+    - narrowband_f0-0.1
+    - narrowband_f0-0.25
+    - narrowband_f0-0.4
+    - delayed_noise
+    - iid_gaussian
+    - var2_bivariate
+    path: pipeline
+    reference: 'canonical single-trial wavelet coherence in numpy/scipy: Morlet with n_cycles = 7 (Tallon-Baudry 1997 f/sigma_f = 7), cross- and auto-spectra averaged over all time points (and, as a second
+      variant, over a sliding window of n_co = 6 cycles, Lachaux 2002) before forming |S_xy|/sqrt(S_xx S_yy); band mean/max over the documented bands'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'disagree: canonical |C| ~ rho (0.3/0.8) flat for bivariate_gaussian, ~1 near f0 for narrowband (only the f0-0.25 and f0-0.4 sets fall inside the 0.2..0.5 grid), ~1 for delayed_noise,
+      small (finite-sample bias) for iid_gaussian; pyspi returns 1.0 everywhere; record per-dataset abs differences'
+  - datasets:
+    - iid_gaussian
+    - narrowband_f0-0.1
+    - narrowband_f0-0.4
+    path: pipeline
+    reference: 'analytic band rule: freq grid linspace(0.2,0.5,125); bins in [0,0.25] = 21 (0.2..0.2476), in [0.25,0.5] = 104; documented grid would be 125 bins over [4/T, 0.5]; compare the six band/statistic
+      identifiers of the unit against each other'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: all six cohmag identifiers give the identical matrix (1.0); the low band uses 21 bins starting at 0.2 rather than the documented [0, 0.25]
+  - datasets:
+    - narrowband_f0-0.25
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: 'self-consistency under channel permutation: A(X[::-1])[::-1, ::-1] vs A(X); plus orientation: compare the raw cached conn[hi, lo] with the from-scratch csd X_hi conj(X_lo) and confirm A[i,j]
+      = A[j,i] = statistic of conn[max(i,j), min(i,j)]'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A symmetric and invariant to channel reversal (value 1.0); raw conn upper triangle is 0 before the mirror
+  check_method: independent-impl
+  check_reference: audit/checks/refs/wavelet_measures.py:h_six (analytic constant on audit/checks/probes/wavelet_measures_probes.py:six), audit/checks/refs/wavelet_measures.py:h_rep, audit/checks/refs/wavelet_measures.py:direct_cwt
+    + pipeline_value (closed-form Morlet n_cycles f/7, np.convolve, no FFT, no mne), audit/checks/refs/wavelet_measures.py:canonical (Morlet n_cycles 7 via _kernels_spectral.cwt_morlet; time-averaged single
+    trial or K=8 epochs), audit/checks/refs/wavelet_measures.py:h_perm, audit/checks/refs/wavelet_measures.py:canonical_window (Morlet n_cycles 7; sliding window of n_co = 6 cycles, Lachaux 2002; NaN where
+    the window does not fit)
+  check_data: six identifiers on iid_gaussian, bivariate_gaussian, delayed_noise, narrowband_f0-0.25, var2_bivariate, shared_envelope, trending, logistic_maps at T 64 and 1024 (pipeline); iid_gaussian T256
+    pipeline, trending T256 pipeline-detrend, scaled_offset T256 kernel (representative identifier); iid_gaussian, delayed_noise, narrowband_f0-0.25 T256 kernel (from-scratch); bivariate_gaussian, delayed_noise,
+    iid_gaussian, narrowband_f0-0.1, narrowband_f0-0.25, narrowband_f0-0.4, var2_bivariate T1024 (canonical; also sliding window n_co = 6); channel reversal on narrowband_f0-0.25, delayed_noise, iid_gaussian
+    T256
+  agreement_criterion: exact (rtol 1e-10, atol 1e-12) against the analytic constant 1.0 and the from-scratch pipeline; canonical comparison tolerance atol 0.05 (illustration, expected to disagree)
+  closeness: 'six: 16/16 pass, max_abs 2.2e-16 (the max identifiers are 1 + 2^-52, mean identifiers exactly 1.0), no NaN/inf; rep 3/3 and from-scratch direct convolution 3/3 pass with max_abs 0.0; perm
+    3/3 pass (1.0 in both channel orders); canonical (n_cycles 7) disagrees: bivariate_gaussian: max_abs 0.9442; delayed_noise: max_abs 0.4596; iid_gaussian: max_abs 0.9415; narrowband_f0-0.1: max_abs 0.9292;
+    narrowband_f0-0.25: max_abs 0.3424; narrowband_f0-0.4: max_abs 0.3228; var2_bivariate: max_abs 0.498; canonical sliding window (n_co = 6): bivariate_gaussian: max_abs 0.447; delayed_noise: max_abs 0.3764;
+    iid_gaussian: max_abs 0.4549; narrowband_f0-0.1: max_abs 0.4618; narrowband_f0-0.25: max_abs 0.2076; narrowband_f0-0.4: max_abs 0.1974; var2_bivariate: max_abs 0.3424; narrowband_f0-0.1: canonical coherence
+    on the documented grid [4/T, 0.5] peaks at 0.9998 (f = 0.0959) but reaches only 0.1488 on pyspis 0.2..0.5 grid (ref keys doc_grid_coh10_max, pyspi_grid_coh10_max)'
+  verdict: degenerate
+  score_0_10: 0
+  score_rubric: 0
+  score_rubric_basis: anchor
+  score_rubric_note: 'Constant clause: mean identifiers are exactly 1.0 and max identifiers 1 + 2^-52 on 16/16 six runs, on every dataset, band and T.'
+  documentation_status: silent
+  verdict_adjusted: degenerate
+  score_adjusted: 0
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Degenerate (rubric 0: constant). Every off-diagonal entry is 1.0 (mean identifiers) or 1 + 2^-52 (max identifiers, 1.0000000000000002: the per-point |csd|/sqrt(psd psd) exceeds 1 by one
+    ulp at some points) on every dataset, band and T; already documented (tests/README.md:217, KNOWN_ISSUES "tests/README.md flagged: wavelet degenerate"). The check stage adds the second cause: the Morlet
+    wavelet is one sample long, so even a coherence averaged over the right axis would carry no frequency resolution (counted on wavelet.morlet_cwt). A canonical time-averaged coherence with n_cycles = 7 gives 0.6576
+    on narrowband_f0-0.25, 0.9691 on delayed_noise, 0.2975 on bivariate_gaussian and 0.0763 on iid_gaussian for pair (1,0). Trace correction: implemented_as said "exactly 1.0 for every ... statistic"; the
+    max statistic is 1 + 2^-52.'
+  new_finding: false
+  definition_under_review: false
+  check_cost: 'cheap: <= 1.5 s per pyspi run at T = 1024 (T <= 1024 only, extra-config unit; no convergence runs; canonical illustrations on all 7 proposed datasets at T = 1024 plus the proposed sliding-window
+    variant)'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on every (P,P) run of the unit (six/ident, rep, scratch, canon, perm; ref key sym_maxabs), from pyspis lower -> upper mirror'
+  direction_observed: 'undirected by construction: A[i,j] = A[j,i] = statistic of conn[max(i,j), min(i,j)], conn[hi,lo] = X_hi conj(X_lo) (wavelet.morlet_cwt orient7: delayed_noise T256 library angle of
+    pair (1,0) -1.2541 at f=0.2 vs -2 pi f = -1.2566, x1 lags; narrowband_f0-0.25 pair (1,0) +0.7837 vs +pi/4, pair (2,0) -1.5761 vs -pi/2); with the one-sample wavelet no lead/lag information reaches the
+    output'
+  candidate_resolutions:
+  - candidate: one-sample Morlet wavelet (n_cycles = f/7) is a second, undocumented cause; CWT = sqrt(2) x
+    outcome: confirmed
+    evidence: wavelet.morlet_cwt|iid_gaussian|64|kernel|wavelets (125 wavelets of length 1, W within 2 ulp of sqrt(2)); wavelet.morlet_cwt|*|256|kernel|cwtx (max |Re X - sqrt2 x| <= 2.7e-15, max |Im X|
+      <= 7.0e-16); counted as a finding on wavelet.morlet_cwt
+  - candidate: 'origin: cwt_n_cycles = cwt_freqs / 7.0 copied from the mne-connectivity example written for Hz'
+    outcome: confirmed
+    evidence: mne-connectivity v0.9.0 examples/cwt_sensor_connectivity.py (raw.githubusercontent.com, fetched in the check stage) contains "cwt_freqs = np.arange(7, 30, 2)" and "cwt_n_cycles = cwt_freqs
+      / 7.0" with sfreq = raw.info["sfreq"]; the textual match is confirmed, the authors intent is not verifiable
+  - candidate: fixed grid linspace(0.2, 0.5, 125) ignores the documented [4/T, fs/2] grid; low band has 21 bins
+    outcome: confirmed
+    evidence: 'wavelet.morlet_cwt|iid_gaussian|{64,256,1024}|pipeline|freqs (exact; n_low_band 21, n_high_band 104; documented low band would hold 54/61/62 bins); wavelet.cohmag|narrowband_f0-0.1|1024|pipeline|canon:mean-full
+      (0.1 oscillation invisible on the pyspi grid: 0.1488 vs 0.9998 on the documented grid); counted on wavelet.morlet_cwt'
+  - candidate: mt_adaptive=True has no effect in cwt_morlet mode
+    outcome: confirmed
+    evidence: 'wavelet.morlet_cwt|iid_gaussian|256|pipeline|mtadapt: all nine measures bitwise identical with mt_adaptive True/False (0 differing entries); harmless no-op, not a value finding'
+  checks_run:
+  - run_ids:
+    - wavelet.cohmag|bivariate_gaussian|1024|pipeline|six
+    - wavelet.cohmag|bivariate_gaussian|64|pipeline|six
+    - wavelet.cohmag|delayed_noise|1024|pipeline|six
+    - wavelet.cohmag|delayed_noise|64|pipeline|six
+    - wavelet.cohmag|iid_gaussian|1024|pipeline|six
+    - wavelet.cohmag|iid_gaussian|64|pipeline|six
+    - wavelet.cohmag|logistic_maps|1024|pipeline|six
+    - wavelet.cohmag|logistic_maps|64|pipeline|six
+    - wavelet.cohmag|narrowband_f0-0.25|1024|pipeline|six
+    - wavelet.cohmag|narrowband_f0-0.25|64|pipeline|six
+    - wavelet.cohmag|shared_envelope|1024|pipeline|six
+    - wavelet.cohmag|shared_envelope|64|pipeline|six
+    - wavelet.cohmag|trending|1024|pipeline|six
+    - wavelet.cohmag|trending|64|pipeline|six
+    - wavelet.cohmag|var2_bivariate|1024|pipeline|six
+    - wavelet.cohmag|var2_bivariate|64|pipeline|six
+    reference: audit/checks/refs/wavelet_measures.py:h_six
+    outcome: 16/16 pass; all six identifiers 1.0 (max_abs 2.2e-16)
+  - run_ids:
+    - wavelet.cohmag|iid_gaussian|256|pipeline|rep:mean-full
+    - wavelet.cohmag|scaled_offset|256|kernel|rep:mean-full
+    - wavelet.cohmag|trending|256|pipeline-detrend|rep:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:h_rep
+    outcome: 3/3 pass; analytic 1.0, max_abs 0.0
+  - run_ids:
+    - wavelet.cohmag|delayed_noise|256|kernel|scratch:mean-full
+    - wavelet.cohmag|iid_gaussian|256|kernel|scratch:mean-full
+    - wavelet.cohmag|narrowband_f0-0.25|256|kernel|scratch:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:direct_cwt + pipeline_value (closed-form Morlet n_cycles f/7, np.convolve, no FFT, no mne)
+    outcome: 3/3 pass; from-scratch 1.0, max_abs 0.0
+  - run_ids:
+    - wavelet.cohmag|bivariate_gaussian|1024|pipeline|canon:mean-full
+    - wavelet.cohmag|delayed_noise|1024|pipeline|canon:mean-full
+    - wavelet.cohmag|iid_gaussian|1024|pipeline|canon:mean-full
+    - wavelet.cohmag|narrowband_f0-0.1|1024|pipeline|canon:mean-full
+    - wavelet.cohmag|narrowband_f0-0.25|1024|pipeline|canon:mean-full
+    - wavelet.cohmag|narrowband_f0-0.4|1024|pipeline|canon:mean-full
+    - wavelet.cohmag|var2_bivariate|1024|pipeline|canon:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:canonical (Morlet n_cycles 7 via _kernels_spectral.cwt_morlet; time-averaged single trial or K=8 epochs)
+    outcome: 0/7 pass; illustration, expected to disagree; bivariate_gaussian pyspi 1 vs canonical 0.2975; delayed_noise pyspi 1 vs canonical 0.9691; iid_gaussian pyspi 1 vs canonical 0.07627; narrowband_f0-0.1
+      pyspi 1 vs canonical 0.08673; narrowband_f0-0.25 pyspi 1 vs canonical 0.6576; narrowband_f0-0.4 pyspi 1 vs canonical 0.7176; var2_bivariate pyspi 1 vs canonical 0.502 (pair (1,0))
+  - run_ids:
+    - wavelet.cohmag|bivariate_gaussian|1024|pipeline|canonwin:mean-full
+    - wavelet.cohmag|delayed_noise|1024|pipeline|canonwin:mean-full
+    - wavelet.cohmag|iid_gaussian|1024|pipeline|canonwin:mean-full
+    - wavelet.cohmag|narrowband_f0-0.1|1024|pipeline|canonwin:mean-full
+    - wavelet.cohmag|narrowband_f0-0.25|1024|pipeline|canonwin:mean-full
+    - wavelet.cohmag|narrowband_f0-0.4|1024|pipeline|canonwin:mean-full
+    - wavelet.cohmag|var2_bivariate|1024|pipeline|canonwin:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:canonical_window (Morlet n_cycles 7; sliding window of n_co = 6 cycles, Lachaux 2002; NaN where the window does not fit)
+    outcome: 0/7 pass; illustration, expected to disagree; bivariate_gaussian pyspi 1 vs canonical 0.5897; delayed_noise pyspi 1 vs canonical 0.9687; iid_gaussian pyspi 1 vs canonical 0.5634; narrowband_f0-0.1
+      pyspi 1 vs canonical 0.5382; narrowband_f0-0.25 pyspi 1 vs canonical 0.7924; narrowband_f0-0.4 pyspi 1 vs canonical 0.8253; var2_bivariate pyspi 1 vs canonical 0.6576 (pair (1,0))
+  - run_ids:
+    - wavelet.cohmag|delayed_noise|256|pipeline|perm:mean-full
+    - wavelet.cohmag|iid_gaussian|256|pipeline|perm:mean-full
+    - wavelet.cohmag|narrowband_f0-0.25|256|pipeline|perm:mean-full
+    reference: audit/checks/refs/wavelet_measures.py:h_perm (probe perm)
+    outcome: 3/3 pass; constant in both orders
+optimisation:
+  complexity_P_T: 'O(P F T log T) Morlet CWT (mne/time_frequency/tfr.py:cwt, F = 125) + O(P^2/2 F T) per-connection _CohEst.accumulate/compute_con (mne_connectivity/spectral/epochs_bivariate.py)
+    + O(P^2 F T) dense (P, P, 125, T) output and pyspi''s nan-statistic over (freq, time) (pyspi/statistics/wavelet.py:mne._get_cache / multivariate). The P^2 F T terms dominate at 118x1024,
+    where the dense real tensor alone is 14.3 GB. summary.json gives P_exponent 3.83 fresh / 3.57 family-warm (8 -> 32) and T_exponent 0.90 / 0.91, from 32x1024 walls of 41.96 s fresh
+    / 39.03 s family-warm (all nine fresh units and the family-warm pass ran in one subprocess per (family, shape) at P <= 32, profile_units.py:136 and 1060-1063, a probable but unconfirmed
+    cause; repeats 1-3, peak RSS 4864 MB fresh). Those 32x1024 walls do not reproduce: isolated re-times of the representative identifier at 32x1024 gave 14.35 s (this stage) and 15.29
+    / 15.35 s (reviewer) (audit/profiles/micro/prof_wavelet__index.json), 2.7-2.9x lower, while the 8x1024 walls the reviewer re-timed (cohmag 0.27 s vs 0.21 s, pli 0.168 s vs 0.163
+    s) roughly reproduce. With the re-times the 8 -> 32 exponent is about 3.05-3.10. Still above P^2: in the 8x1024 -> 32x1024 profiles the self time of _CohEst.compute_con grows 148x
+    (0.053 s -> 7.85 s) for 17.7x more connections, i.e. the excess sits in mne''s per-connection temporaries (psd_xx * psd_yy, abs, divide over (n_cons, 125, T)), not in pyspi''s nan-statistic
+    (4.7% at 32x1024); attributing it to cache/memory effects is an inference. The summary.json 118x1024 projections (6184 s fresh / 4110 s family-warm, extrapolated-power-from-32, 118
+    skipped-budget) are therefore inflated and should not be used; scaling the re-timed 32x1024 wall by (118/32)^2 to (118/32)^3.10 gives about 200-900 s per identifier build (order
+    of magnitude only, not measured). A 118x1024 run would probably not fit in 31 GB (the dense tensor plus mne''s per-connection complex accumulators of about 14 GB; inference from
+    array sizes, not run).'
+  hotspot_1: mne_connectivity/spectral/epochs_bivariate.py:_CohEst.compute_con (third-party:mne_connectivity) 70.5% self of the profiled SPI call at 32x1024 (audit/profiles/micro/prof_wavelet.cohmag__32x1024.pstats);
+    22.6% at 8x1024 (audit/profiles/wavelet.cohmag__8x1024.pstats)
+  hotspot_2: ndarray.conjugate called from mne_connectivity/spectral/epochs.py:_epoch_spectral_connectivity 10.5% (19.1% cumulative for that frame); numpy nanmean 4.7% (_replace_nan
+    3.1%); _compute_spectra 1.2% (tfr.py:cwt 1.0%), all at 32x1024. At 8x1024 the shares were cwt 13.4% and nanmean 14.9%, so the 8x1024 profile does not describe the cost at larger
+    P
+  hotspot_owner: third-party:mne_connectivity
+  opaque_share: 0.145
+  profile_file: 'audit/profiles/micro/prof_wavelet.cohmag__32x1024.pstats (32x1024; 8x1024: audit/profiles/wavelet.cohmag__8x1024.pstats, opaque_share 0.23)'
+  no_opportunity_reason: 'No opportunity, by the user''s decision: the wavelet family is not used (''i don''t think we use this though so its not a priority'', HANDOFF.md standing rules), and its definition is under review (cwt_n_cycles = freqs/7 makes every Morlet wavelet one sample long, wavelet.morlet_cwt; psi_wavelet aggregates over time indices). The optimisation block holds hotspot fields only (notes/wavelet_measures.md and notes/wavelet_psi.md, Optimisation).'
+  opportunities: []

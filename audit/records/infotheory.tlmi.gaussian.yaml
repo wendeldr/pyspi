@@ -1,0 +1,161 @@
+unit_id: infotheory.tlmi.gaussian
+status: profiled
+correctness:
+  metric_name_standard: Lag-1 time-lagged (cross) mutual information I(X_t; Y_{t+1}) under a Gaussian model
+  canonical_ref: Fraser A.M. & Swinney H.L. 1986, Phys Rev A 33:1134 (time-delayed mutual information); supplement cites Schreiber 2000, Phys Rev Lett 85:461; Gaussian form Cover T.M. & Thomas J.A. 2006,
+    Elements of Information Theory, 2nd ed., Wiley, Example 8.5.1
+  canonical_definition: I(X_t; Y_{t+1}) = -0.5*ln(1 - corr(X_t, Y_{t+1})^2) nats for jointly Gaussian stationary processes
+  documented_definition: 'supplement §1.4.4, p.10 (supplement.txt:467-474): ''Time-lagged mutual information [35] is an undirected measure of the dependence between time series x and a time-lagged instance
+    of the series y. We include statistics for only lag-one mutual information''; keywords ''undirected, nonlinear, unsigned, bivariate, time-dependent''. GitBook information-theory.md:235-254 calls it
+    ''a directed measure''.'
+  delegate_lib: JIDT infodynamics.jar bundled at pyspi/lib/jidt (labelled 1.6.1 by version-1.6.1.txt, but its class inventory includes EntropyCalculatorMultiVariateCommon, added upstream in commit 3d1f3fe
+    on 2024-04-20; between tag v1.6.1 and commit a9b6b3e the Gaussian MI/CMI/TE/AIS leaf classes, MatrixUtils, MathsUtils and ChiSquareMeasurementDistribution are byte-identical, their MultiVariateCommon/Via
+    parents differ only in observation-ID/noise-seed bookkeeping, and EntropyCalculatorMultiVariateGaussian was refactored onto EntropyCalculatorMultiVariateCommon with its value path unchanged; details
+    in infotheory.est.gaussian) via JPype1==1.7.1 on OpenJDK 21; gaussian.MutualInfoCalculatorMultiVariateGaussian on (x_i[:-1], x_j[1:])
+  implemented_as: 'For each ordered pair: src = x_i[0:T-1], targ = x_j[1:T] (z-scored, squeezed), Gaussian MI with ddof=1 covariance on the T-1 aligned samples = -0.5*ln(1 - r(x_i(t), x_j(t+1))^2). No bias
+    correction, no Theiler window. Bare except -> NaN.'
+  implementation_trace:
+  - pyspi/calculator.py:329 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 fill_diagonal NaN; :336-339 any exception from any pair -> the whole SPI entry becomes NaN (:337) and the error is recorded, warning issued at :354-355
+  - 'pyspi/data.py:184-195 preprocessing in Data.set_data: optional scipy.signal.detrend(axis=1), then (default normalise=True) scipy.stats.zscore(axis=1, ddof=1)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for every ordered pair i != j, A[i,j] = self.bivariate(data, i=i, j=j)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: _entropy_calc = _getcalc(''entropy'') (:36); identifier += ''_gaussian'' (:38); estimator ''gaussian'' -> labels += [''linear''], _dyn_corr_excl
+    = None (:53-55)'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: every calculator gets setProperty(''BIAS_CORRECTION'',''false'') and setProperty(''NOISE_SEED'',''42''); no NORMALISE property is set'
+  - 'pyspi/statistics/infotheory.py:103-134 _getcalc: ''gaussian'' (and any unrecognised estimator) falls to the else branches -> gaussian.EntropyCalculatorMultiVariateGaussian (:111-112), gaussian.MutualInfoCalculatorMultiVariateGaussian
+    (:120-123), gaussian.TransferEntropyCalculatorGaussian (:129-130)'
+  - pyspi/statistics/infotheory.py:286-299 TimeLaggedMutualInfo(JIDTBase, Directed); _calc = _getcalc('MutualInfo')
+  - 'pyspi/statistics/infotheory.py:301-317 bivariate: initialise(1,1); src, targ = data.to_numpy(squeeze=True)[[i, j]]; src = src[:-1]; targ = targ[1:]; setObservations; computeAverageLocalOfObservations;
+    bare except -> NaN'
+  - 'pyspi/config.yaml:518-530 TimeLaggedMutualInfo configs: estimator gaussian'
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/measures/continuous/gaussian/MutualInfoCalculatorMultiVariateGaussian.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] constructor :123-125 normalise = false; setProperty BIAS_CORRECTION
+    :160-174; finaliseAddObservations :204-220 -> MatrixUtils.covarianceMatrix(source, dest) (ddof=1); setCovariance :269-329 Cholesky of source, dest (redundant components pruned) and joint (L=null on
+    joint linear redundancy); computeAverageLocalOfObservations :384-424 returns 0.5*ln|detS*detD/detJoint| (0 if a marginal is fully redundant, +Infinity if L==null; bias correction :418-421 off because
+    pyspi sets BIAS_CORRECTION=false)
+  - https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/MutualInfoMultiVariateCommon.java finaliseAddObservations :574-630 (timeDiff
+    = 0 default, normalise only if flag true :622, which the Gaussian constructor turned off)
+  deviation_from_documented: Value matches 'lag-one MI between x and a lagged y' with x = source i (earlier) and y = target j (later). The supplement keyword 'undirected' conflicts with the code (Directed,
+    asymmetric) and with GitBook ('directed'); REVIEW M8 already notes tlmi is asymmetric by construction.
+  deviation_from_canonical: 'none (plug-in Gaussian lagged MI; probe var2_bivariate_T1024: A[0,1] = 0.16664117, A[1,0] = 0.00276225, both equal to -0.5*ln(1-r^2) of the lagged pairs to machine precision).'
+  units_and_range: nats; [0, +inf]; asymmetric; scale invariant
+  direction_convention: 'A[i,j] = I(x_i(t); x_j(t+1)): row i leads by one sample, column j lags (infotheory.py:306-308). Probe var2_bivariate (x0 drives x1): A[0,1]=0.1666 > A[1,0]=0.0028'
+  symmetry_expected: asym
+  already_documented: REVIEW M8 (tlmi is asymmetric by construction)
+  new_finding_candidates:
+  - 'CANDIDATE (documentation): supplement §1.4.4 keywords/text say ''undirected'' while GitBook information-theory.md:243 says ''directed'' and the implementation is Directed with A[i,j] = I(x_i(t); x_j(t+1));
+    the documentation is internally inconsistent (value behaviour itself is covered by REVIEW M8).'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    - gauss_ar1_pair
+    - iid_gaussian
+    path: pipeline
+    reference: 'from-scratch numpy: -0.5*ln(1 - np.corrcoef(x_i[:-1], x_j[1:])[0,1]**2) on z-scored rows'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: abs difference <= 1e-12 on every ordered pair
+  - datasets:
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic: x1(t) = x0(t-1) + 0.1 noise with x0 white unit variance -> I(x0(t); x1(t+1)) = 0.5*ln(1 + 1/0.01) = 2.3075603; reverse I(x1(t); x0(t+1)) = 0'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A[0,1] near 2.3076 (statistical, T=4096) and A[1,0] near 0; establishes A[i,j] = I(x_i(t); x_j(t+1)) (row leads)
+  - datasets:
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'analytic population lagged correlation from Sigma_X and Sigma_XY = A Sigma_X stored in the dataset: rho(x_i(t), x_j(t+1)) = Sigma_XY[j,i]/sqrt(Sigma_X[i,i] Sigma_X[j,j])'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: both ordered pairs within 3 sampling SDs at T=4096
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_gaussian.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:gaussian_tlmi (gaussian_mi(x_i[:-1], x_j[1:])); audit/checks/refs/it_gaussian.py:chk_tlmi_truth
+    (analytic 0.5 ln 101 on delayed_noise, Sigma_XY-based lagged correlation on gauss_ar1_pair, Monte Carlo SE); audit/checks/refs/it_gaussian.py:chk_direction
+  check_data: var2_bivariate T1024; delayed_noise T1024 and pair (0,1) T4096; gauss_ar1_pair T1024/T4096; iid_gaussian T256
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12; statistical: |pyspi - Monte Carlo mean| <= 2 Monte Carlo SD; direction: A[0,1] > A[1,0] for x0 -> x1'
+  closeness: 'Numpy closed form: 4/4 exact runs pass, max_abs <= 5.8e-14. delayed_noise T=4096 (tlmi|delayed_noise|4096|pipeline|truth-p01): population I(x0(t); x1(t+1)) = 0.5 ln 101 = 2.30756 and 0 in
+    reverse, |pyspi - population| <= 0.0158 (max_z 0.96). gauss_ar1_pair T=4096: population 0.12664 (0->1) / 0.17382 (1->0), |pyspi - population| <= 0.0160 (max_z 1.48). Direction: delayed_noise T1024 A[0,1]
+    = 2.2707 vs A[1,0] = 1.6e-5; var2_bivariate A[0,1] = 0.1666 vs A[1,0] = 0.0028.'
+  verdict: matches
+  score_0_10: 10
+  score_rubric: 10
+  score_rubric_basis: anchor
+  score_rubric_note: 4/4 exact runs agree with the numpy lagged closed form to <= 5.8e-14; the supplement's 'undirected' keyword is metadata.
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 10
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'None: lag-one Gaussian MI I(x_i(t); x_j(t+1)) on T-1 aligned samples, fp-exact, converging to the analytic population values.'
+  new_finding: false
+  definition_under_review: false
+  check_cost: 'cheap (pyspi time_s in out/pyspi/index/it_gaussian.json, single runs of the review-stage forced re-run, made under machine load: every run <= 0.004 s, slowest delayed_noise|1024|pipeline|numpy
+    0.0040 s; 8 runs, 0.02 s in total; an earlier run took 0.49 s for its first run (warm-up) (not stored in the index or results files))'
+  symmetry_observed: 'asym: max|A - A.T| = 0.164 (var2_bivariate T1024), 2.27 (delayed_noise T1024), 0.077 (gauss_ar1_pair T1024), 0.0042 (iid_gaussian T256)'
+  direction_observed: 'A[i,j] = I(x_i(t); x_j(t+1)): row i leads by one sample. delayed_noise (x1 = x0 delayed by 1): A[0,1] = 2.2707 vs A[1,0] = 1.6e-5; var2_bivariate (x0 -> x1): A[0,1] = 0.1666 vs A[1,0]
+    = 0.0028 (tlmi|*|1024|pipeline|direction)'
+  candidate_resolutions:
+  - candidate: 'documentation is internally inconsistent: supplement 1.4.4 says ''undirected'', GitBook says ''directed'', the code is Directed and asymmetric'
+    outcome: confirmed
+    evidence: supplement.txt:467-474 ('an undirected measure', keyword 'undirected') vs GitBook information-theory.md:243 ('a directed measure'); asymmetry measured in tlmi|*|numpy (max|A - A.T| up to 2.27).
+      The asymmetry itself is REVIEW M8 ('tlmi is asymmetric by construction'), so this is recorded as an elaboration of an already documented issue, not a new finding.
+  checks_run:
+  - run_ids:
+    - infotheory.tlmi.gaussian|var2_bivariate|1024|pipeline|numpy
+    - infotheory.tlmi.gaussian|delayed_noise|1024|pipeline|numpy
+    - infotheory.tlmi.gaussian|gauss_ar1_pair|1024|pipeline|numpy
+    - infotheory.tlmi.gaussian|iid_gaussian|256|pipeline|numpy
+    reference: audit/checks/refs/it_gaussian.py:chk_numpy (audit/checks/refs/_kernels_infotheory.py:gaussian_tlmi)
+    outcome: 4/4 pass; max_abs <= 5.8e-14
+  - run_ids:
+    - infotheory.tlmi.gaussian|delayed_noise|4096|pipeline|truth-p01
+    - infotheory.tlmi.gaussian|gauss_ar1_pair|4096|pipeline|truth
+    reference: audit/checks/refs/it_gaussian.py:chk_tlmi_truth (analytic + Monte Carlo SE)
+    outcome: 2/2 pass; max_z 0.96 / 1.48
+  - run_ids:
+    - infotheory.tlmi.gaussian|delayed_noise|1024|pipeline|direction
+    - infotheory.tlmi.gaussian|var2_bivariate|1024|pipeline|direction
+    reference: audit/checks/refs/it_gaussian.py:chk_direction
+    outcome: 2/2 pass; A[0,1] > A[1,0] on both
+optimisation:
+  complexity_P_T: 'O(P^2 T): TimeLaggedMutualInfo.bivariate (infotheory.py:301-317), one JIDT Gaussian MI call per ordered pair on (x_i[:-1], x_j[1:]) with two 1-D JArray conversions. Measured fresh P exponent
+    2.10, T exponent 0.71 (per-call overhead dominates at T <= 1024). At 118x1024 the pair term is everything: 17.2 s measured fresh (single repeat; the 8x1024 fresh wall_cv is 1.57) against 2.0 s projected
+    family-warm.'
+  hotspot_1: pyspi/statistics/infotheory.py:TimeLaggedMutualInfo.bivariate (third-party:jidt via JPype, self time) 97.7% cum / 92.6% self of the profiled SPI call at 8x1024
+  hotspot_2: 'jpype/_jarray.py:JArray.__new__ (third-party:jpype, 112 calls) 4.2%. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked
+    as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0425
+  profile_file: audit/profiles/infotheory.tlmi.gaussian__8x1024.pstats
+  basis_scope_note: 'The ranking uses the family-warm projection, 1.996 s per window (extrapolated-pairs-from-32: the 0.143 s minimum of three family-warm 32x1024 repeats,
+    0.143-0.146 s, times 13,806/992 pairs; 1,197 s per patient), because README ''Optimisation columns'' rule 1 takes family-warm when present; the fresh 118x1024 wall (17.21 s,
+    single repeat, 10,328 s per patient) is not used. That wall is 1.25 ms per ordered pair against 0.145 ms in the family-warm 32x1024 repeats. The per-pair work (one JIDT
+    Gaussian MI on T-1 samples) does not depend on P, so the gap is not superlinear work, and JVM start and class loading happen in the 8x1024 warm-up before the timed calls. The
+    per-pair cost of this JIDT call sequence varies between repeats inside one process and between processes, and its cause was not identified: the fresh 32x1024 record has walls
+    0.149 s, then 0.28-0.31 s (median 0.301 s, 0.30 ms per pair; summary.json keeps the 0.149 s minimum), the fresh 8x1024 record holds one 0.126 s repeat (2.2 ms per pair) among
+    0.008 s ones, and mi.gaussian (the same calculator) took 0.33 ms per pair at 118x1024 fresh in the same family job 8 s earlier. A throwaway re-measurement on 2026-10-15
+    (profile_units.py, fresh mode, written to scratchpad/wf4c_tlmi_diag/remeasure/, not to audit/profiles) put tlmi and mi.gaussian at 1.41-1.44 s and 1.29-1.43 s per 992 pairs at
+    32x1024 (3 repeats each, about 1.3-1.45 ms per pair), a whole process near the 118x1024 fresh rate. The bare per-pair call sequence (scratchpad/wf4c_tlmi_diag/diag_jidt.py, 11
+    fresh processes; outputs in diag_runs.txt and recheck_diag_runs*.txt beside it) did not reproduce that: its first 992-pair block took 0.45-1.09 s (JIT warm-up), later blocks
+    0.15-0.30 s (median about 0.15-0.16 ms per pair), and spi.multivariate afterwards 0.18-0.25 s. Each block that records a Java garbage collection also holds a call of 25-93
+    ms, while blocks without one have no call above 3 ms; the GC MXBean reports 0-7 ms of collection time per collection, so the stall coincides with a collection but is not Java
+    collection time. The remeasure JSONs and diag outputs are data and are not in the probe archive, which keeps scripts only. So the basis is the fastest per-pair rate measured
+    (0.145 ms, also the 8x1024 rate), the fresh records show 2x (32x1024 median) to 8.6x (118x1024) that rate, and the basis understates this unit by up to about 8.6x in a run that
+    stays at the slower rates'
+  opportunities:
+  - opportunity_id: it_gaussian-1
+    opportunity: Compute the pairwise Gaussian SPIs for all pairs at once in numpy from one ddof=1 covariance of the z-scored rows (lag blocks x(t-m) and x(t+1) for tlmi and TE), with a batched slogdet
+      over the pair sub-matrices, instead of one JIDT calculator call per pair through JPype (infotheory.py:JIDTBase._compute_joint_entropy, MutualInfo.bivariate, TimeLaggedMutualInfo.bivariate, TransferEntropy.bivariate).
+    opp_type: replace-library
+    expected_speedup: ~400x (fresh ~3600x, against the single fresh 118x1024 repeat; see basis_scope_note)
+    speedup_basis: 'microbench:audit/profiles/micro/opp_it_gaussian-1.json (tlmi_gaussian: candidate alone at 118x1024 4.7 ms including Data construction (2.9 ms), against the quiet summary.json 118x1024
+      walls 17.21 s fresh (measured) and 2 s family-warm (extrapolated-pairs-from-32) = 3656x / 424x, so the lower bound 400x is the ratio against the family-warm ranking basis rounded
+      down; same-run speedups against the pyspi baseline on the shared machine 9x at 8x1024 and 513x at 32x1024
+      in the latest run (9x / 399x in the first; the 32x1024 same-run baselines are noisy)) + profile:audit/profiles/infotheory.tlmi.gaussian__8x1024.pstats pyspi/statistics/infotheory.py:301 TimeLaggedMutualInfo.bivariate
+      97.7% (the candidate replaces the whole multivariate call; its own cost is one (k+1)P-square covariance plus O(P^2) small slogdets, milliseconds at 118x1024)'
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_it_gaussian-1.json: max_abs_diff 3.3e-16 (8x1024) and 3.3e-16 (32x1024); max_rel_diff 8.2e-11 (8x1024) and 3.8e-9 (32x1024), the relative figure on a near-zero entry
+      (|value| <= max_abs/max_rel ~ 8.7e-8 at 32x1024), NaN masks equal, not bit-identical (np.cov + slogdet instead of JIDT''s covariance + Cholesky)'
+    effort: M
+    depends_on: []

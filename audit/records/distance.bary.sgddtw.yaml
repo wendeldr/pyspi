@@ -1,0 +1,191 @@
+unit_id: distance.bary.sgddtw
+status: profiled
+correctness:
+  metric_name_standard: Summary (time-mean or time-max) of the DTW barycenter of two z-scored series estimated by stochastic subgradient descent; squared variant summarises its square
+  canonical_ref: 'Schultz & Jain 2018, Pattern Recognit. 74:340-358 (stochastic subgradient mean algorithm; Alg. 3 in arXiv:1701.06393v1, where Alg. 1 is the batch subgradient mean and Alg. 2 the majorize-minimize mean) for the DTW Fréchet function; Petitjean et al. 2011, Pattern Recognit. 44:678 (DBA). Mean/max summary: pyspi construction.'
+  canonical_definition: 'b* in argmin_b F(b) = (1/n) sum_k DTW(b, x_k)^2; SSG: for k in a random order, b <- b - eta * 2 (V_k b - W_k x_k) with (V_k, W_k) from the optimal warping path of x_k to b, step size decreasing; SPI = mean_t b(t) or max_t b(t) (squared: of b(t)^2).'
+  documented_definition: 'supplement §1.2.10, p.7 (supplement.txt lines 321-335): "A barycenter (or Fréchet mean) [21, 22] is a (univariate) time series that minimizes the sum of squared distances between MTS ... For each pair of (bivariate) time series ... we compute the raw barycenters then summarize them by taking their mean (modifier mean) and maximum (max), yielding seven SPIs" (keywords: undirected, nonlinear, unsigned, bivariate, time-dependent). GitBook distance-similarity.md:41-75 repeats this, adds "timepoint at which the maximum occurs (max_time)" and lists 12 identifiers bary_{euclidean,dtw,softdtw,sgddtw}_{mean,max,max_time}; neither source documents the squared (bary-sq_*) variants. Mode sgddtw is documented as "alignment via a subgradient descent algorithm".'
+  delegate_lib: tslearn==0.9.0 tslearn.barycenters.dtw_barycenter_averaging_subgradient (defaults max_iter=30, initial_step_size=0.05, final_step_size=0.005, tol=1e-5, random_state=None -> numpy global RandomState via sklearn 1.9.1 check_random_state)
+  implemented_as: 'z-scored pair (ddof=1). Init b0 = (x+y)/2. Each epoch: rng.permutation(2) from the global numpy RNG; for each series k: DTW path b->x_k, b <- b - 2*eta*(V_k*b - W_k x_k) (wi.sum() = 1). eta decreases by (0.05-0.005)/2 after each sample during epoch 0 only, then stays 0.005. After each epoch the variable "cost" holds only the LAST processed series'' dist^2 * weights[0]/sum(weights) (half its squared DTW); stop if |cost_prev - cost| < 1e-5 or cost > cost_prev (ConvergenceWarning). Result depends on the global numpy RNG state and on input order; within a Calculator run the four sgddtw identifiers share one cached barycenter per pair. Then nanmean/nanmax of b or b**2.'
+  implementation_trace:
+  - pyspi/statistics/distance.py:4-9 imports euclidean_barycenter, dtw_barycenter_averaging, dtw_barycenter_averaging_subgradient, softdtw_barycenter from tslearn.barycenters
+  - pyspi/statistics/distance.py:211-215 class Barycenter(Directed, Signed); class labels ['distance','signed','undirected','temporal','nonlinear']
+  - pyspi/statistics/distance.py:222-223 mode 'sgddtw' -> self._fn = dtw_barycenter_averaging_subgradient (no random_state passed)
+  - pyspi/statistics/distance.py:230-234 squared=True sets preproc x**2 and identifier prefix 'bary-sq'
+  - 'pyspi/statistics/distance.py:236-243 statistic: mean -> np.nanmean(preproc(bc)); max -> np.nanmax(preproc(bc)); max_time -> np.argmax(preproc(bc)) (not in any config)'
+  - pyspi/statistics/distance.py:245 identifier suffix _{mode}_{statistic}
+  - 'pyspi/statistics/distance.py:247-263 bivariate: looks up data.barycenter[mode][(i,j)]; on miss z = data.to_numpy(squeeze=True); bc = self._fn(z[[i, j]]) with library defaults; caches bc under (i,j) AND (j,i) (line 261); returns statfn(bc)'
+  - pyspi/base.py:27-48 parse_bivariate (wraps raw arrays in a Data object, default normalise=True)
+  - 'pyspi/base.py:85-94 Directed.multivariate: j outer, i inner, A[i,j] = bivariate(i, j); the first call for pair {a<b} is (i=b, j=a), so the cached barycenter is computed from z[[b, a]] and reused for A[a,b]'
+  - pyspi/data.py:59-71 Data defaults detrend=False, normalise=True; pyspi/data.py:184-195 optional scipy detrend then zscore(axis=1, ddof=1)
+  - pyspi/data.py:108-116 to_numpy(squeeze=True) -> (P, T) array
+  - pyspi/calculator.py:252-266 configs instantiated as Barycenter(**params); spi.labels come from the class (config labels at pyspi/config.yaml:256-261 are not applied); pyspi/calculator.py:329 every SPI's multivariate() receives the same self.dataset, so all statistics/squared variants of one mode share one cached barycenter per pair
+  - 'pyspi/config.yaml:255-311 Barycenter configs: 4 modes x {mean,max} x {squared False, True} = 16 identifiers'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/utils.py:7-13 _set_weights(None, 2) -> numpy.ones(2) (unnormalised uniform weights)
+  - '.venv/lib/python3.12/site-packages/tslearn/utils/utils.py:215 to_time_series_dataset: (2, T) -> (2, T, 1)'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:740-752 signature (max_iter=30, initial_step_size=.05, final_step_size=.005, tol=1e-5, random_state=None)
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:838 rng = check_random_state(random_state)
+  - .venv/lib/python3.12/site-packages/sklearn/utils/validation.py:1455,1477-1478 check_random_state(None) returns np.random.mtrand._rand (global RNG)
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:841-846 to_time_series_dataset, _set_weights, init b0 = _init_avg (Euclidean mean)
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:857-858 epoch loop, shuffled_indices = rng.permutation(n)
+  - '.venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:860-863 _mm_assignment(Xi, barycenter, weights, metric_params): single series but full weights vector, cost = dist^2*weights[0]/weights.sum()'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:864-868 _subgradient_valence_warping(list_p_k, T, wi)
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:871-873 _subgradient_update_barycenter(Xi, V, W, wi.sum(), barycenter, eta)
+  - '.venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:437-482 update: delta = V_k*b - W_k x_k; b -= (2*eta/weights_sum)*delta (in place)'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:874-875 step size decreases only while it == 0
+  - '.venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:876-883 stopping on last-sample cost: abs change < tol -> break; increase -> ConvergenceWarning and break'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:229-305 _mm_assignment; .venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:325-344, 415-443 DTW path (squared local cost)
+  deviation_from_documented: 'Documented keyword "unsigned", but the class is Signed (issigned() True, class label "signed"); the config labels (undirected, nonlinear, unsigned, bivariate, time-dependent) are never attached to the SPI (calculator.py:252-266 uses class labels). Documented "undirected", but the class inherits Directed; symmetry comes only from the per-Data cache writing (j,i) = (i,j) (distance.py:261), not from Undirected.multivariate mirroring. Supplement says "seven SPIs" (lists euclidean_max, dtw_mean/max, softdtw_mean/max, sgddtw_mean/max); config computes 16, including bary_euclidean_mean and all eight bary-sq_* variants, none of which are documented; GitBook lists max_time variants that exist in code (distance.py:240-241) but are absent from every config. Not stated in the supplement or GitBook: results are stochastic (global numpy RNG, no seed exposed); the RNG dependence itself is documented in tests/README.md:134/146. bary-sq_sgddtw_* undocumented.'
+  deviation_from_canonical: 'Update rule is SSG (Schultz & Jain 2018; arXiv:1701.06393v1 Alg. 3, line 8) except that tslearn steps by 2*eta where Alg. 3 steps by eta, with a step size falling 0.05 -> 0.005 over the first epoch then constant. The stopping rule is not a test on F(b): it compares the per-sample cost of whichever series happened to be processed last in two consecutive epochs, so any increase in that noisy quantity stops the descent. Probe4: bivariate_gaussian T=256 stops after 4 epochs (last-sample costs 35.05, 28.16, 27.89, 31.23) with F(b)=57.77, while 30 uninterrupted epochs reach 50.26 and MM-DBA reaches 44.69; delayed_noise T=1024 stops with F=331.46 vs 185.01 uninterrupted and 135.86 for MM-DBA. The barycenter is therefore an under-converged estimate of the DTW Fréchet mean. Mean/max summaries are pyspi-defined.'
+  units_and_range: 'z-score units. mean: near 0, either sign; the trace-stage bound 0.0162 held only for the nine single pairs of trace probe2. Check runs (max over pairs of |bary_sgddtw_mean|): 0.0012-0.0128 on the z-scored pipeline at T=1024 (bivariate_gaussian 0.0012, iid_gaussian 0.0048, delayed_noise 0.0079, logistic_maps 0.0128), and on raw (kernel-path) input up to 0.126 (bivariate_gaussian T=64) and 0.242 (delayed_noise T=64), where the series are not zero-mean. max: typically positive. sq variants >= 0. Run-to-run variability without seeding (probe3: unseeded repeat max|ΔA| = 1.1e-3 for the mean statistic; probe2 seed 0 vs seed 1 barycenters differ by up to 1.18 pointwise). Symmetric within one call.'
+  direction_convention: 'undirected: A[i,j] = A[j,i] bit-identical via the cache; the underlying routine is NOT order-invariant for a fixed RNG draw (probe3: swapped input order, same seed, max|Δb| = 0.177), the cache hides this'
+  symmetry_expected: sym
+  already_documented: 'tests/README.md:134 and :146 (bary*_sgddtw_* draw from the global numpy RNG, marked stochastic and skipped in the end-to-end Calculator comparison); not listed in KNOWN_ISSUES.md; stopping-rule under-convergence: no'
+  new_finding_candidates:
+  - 'Candidate: premature stopping makes sgddtw an under-converged DTW barycenter. Evidence: dba.py:862-863 computes cost for the single series Xi; dba.py:876-883 compares that last-sample cost across epochs and breaks on any increase; probe4 F(b) 57.77 (tslearn stop) vs 50.26 (30 epochs, no stop) vs 44.69 (MM-DBA) on bivariate_gaussian T=256 pair (1,0); 331.46 vs 185.01 vs 135.86 on delayed_noise T=1024. Probe2 shows ConvergenceWarning "DBA loss is increasing" in all 9 probe runs (one of them only after reaching max_iter=30).'
+  - 'Candidate: cache/ordering effect: whichever sgddtw identifier runs first in a Calculator run fixes the barycenter for the other three (they reuse the cached barycenter per pair, so they consume no RNG draws), and the Directed loop computes pair {a<b} from z[[b, a]]. Evidence: distance.py:247-263 cache under (i,j) and (j,i); base.py:85-94 loop order; probe3 cache keys [''sgddtw''] with 12 cached pairs after the mean SPI and no RNG consumption by the max SPI. The dependence on the global numpy RNG (dba.py:838, validation.py:1477-1478), and hence on RNG draws consumed by SPIs computed earlier, is already documented (tests/README.md:134/146) and is not part of this candidate.'
+  - 'Candidate: input-order dependence for a fixed RNG draw (probe3: max|Δb| = 0.177, mean difference 6.1e-4), hidden by the cache; with the Directed loop the barycenter for pair {a<b} is computed from z[[b, a]].'
+  - 'Candidate: the cost passed back by _mm_assignment uses weights[0]/weights.sum() regardless of which series is processed (dba.py:862 passes the full weights vector); harmless for pyspi''s uniform weights.'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    path: kernel
+    reference: from-scratch numpy SSG (own DTW DP + path, same init, same step schedule, same last-sample stopping rule) driven by numpy.random.RandomState(seed).permutation draws identical to the global RNG after np.random.seed(seed)
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: barycenter and statistics match pyspi (with np.random.seed(seed) set before the call) to atol 1e-10 at T=64 and 256
+  - datasets:
+    - bivariate_gaussian
+    - delayed_noise
+    - logistic_maps
+    path: kernel
+    reference: Fréchet cost F(b) from the from-scratch DTW, comparing pyspi sgddtw output with from-scratch MM-DBA and with from-scratch SSG run 30 epochs without early stopping
+    reference_kind: independent-impl
+    criterion: optimality
+    expected_outcome: F(sgddtw) > F(30-epoch SSG) > F(MM-DBA) in most pairs; report the relative gaps (probe4 suggests 15-80%)
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    path: pipeline
+    reference: repeat pyspi computation under 50 different np.random.seed values; numpy summary of the spread
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: non-zero spread for all four identifiers; report SD of bary_sgddtw_mean (expected ~1e-3) and bary_sgddtw_max (expected ~1e-1) relative to the between-pair range
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic: SSG on (x, x) from init x has zero subgradient (V b - W x = 0 on the diagonal path)'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: barycenter equals x exactly (probe3 max|b-x| = 0)
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    - logistic_maps
+    path: pipeline
+    reference: 'SELF-CONSISTENCY (pyspi vs pyspi): numpy comparison of A and A.T from Calculator-style Barycenter(mode=''sgddtw'').multivariate(Data(x)) plus a cold-cache call bivariate(Data(x), i=0, j=1) vs bivariate(Data(x), i=1, j=0) on fresh Data objects (direction convention). Can establish symmetry/order-invariance only, not what A[i,j] means'
+    reference_kind: same-lineage
+    criterion: direction
+    expected_outcome: A[i,j] == A[j,i] bit-identically in multivariate (cache, distance.py:261); establishes that A[i,j] carries no direction; cold-cache swapped-order calls equal for deterministic modes (euclidean, dtw, softdtw) and possibly unequal for sgddtw
+  check_method: independent-impl
+  check_reference: audit/checks/refs/barycenters.py:ssg (from-scratch stochastic subgradient mean, Schultz & Jain 2018, tslearn step schedule and stopping rule mirrored, driven by numpy.random.RandomState(seed) with the global-RNG stream simulated over pairs in Directed.multivariate order) via h_ssg, h_ssg_bc, h_rngdep, h_cache, h_cold (order), h_seeds50; audit/checks/refs/barycenters.py:h_vs_dba (objective vs from-scratch DBA, qualitative); audit/checks/refs/barycenters.py:h_xx (analytic); h_det, h_sym (same-lineage)
+  check_data: bivariate_gaussian, delayed_noise, narrowband_f0-0.25 (kernel T=64/256, four identifiers + raw barycenters); bivariate_gaussian, delayed_noise, logistic_maps, iid_gaussian (pipeline T=1024); bivariate_gaussian seed 43; bivariate_gaussian / iid_gaussian processes [0,1] T=256 over seeds 0..49; bivariate_gaussian, delayed_noise, logistic_maps T=256 and delayed_noise [0,3] T=1024 (objective); iid_gaussian [0,0] (analytic); var2_bivariate, delayed_noise, logistic_maps_chaotic, anm T=1024 (symmetry)
+  agreement_criterion: 'from-scratch SSG on the same RNG stream: rtol 1e-9, atol 1e-10 (statistics, raw barycenters, 50-seed barycenters, after-consumer and shared-cache runs, ordered pairs); analytic SSG(x, x) = x: exact; determinism under seed_all(42): bit-identical; objective comparison: qualitative, pass if F(sgddtw) < F(Euclidean init) on every pair, gaps to DBA and to a 30-epoch SSG reported'
+  closeness: 'SSG statistics: 33/33 runs pass, max_abs 2.2e-16, max_rel 9.6e-14 (kernel T=64/256 four identifiers, pipeline T=1024, seed 43); raw barycenters 6/6, max_abs 2.2e-16; 50 seeds x 2 datasets: max_abs 2.2e-16. After another sgddtw SPI consumed the global RNG (*|rngdep|*): max_abs 0 against the reference that simulates the consumer''s draws, and the pyspi value moved by up to 0.0278 (1.5% relative) from the plain seed-42 run. Shared Data (*|cache|*): the second sgddtw identifier reuses the first one''s barycenter and consumes no RNG draws (flag 0), max_abs 0. Determinism: two seed_all(42) runs differ by 0. Epochs: bivariate_gaussian T=256 kernel stops after 3-5 epochs on all 6 pairs by the cost-increase rule; delayed_noise T=1024 3-30 epochs. Seed spread (bivariate_gaussian [0,1] T=256 pipeline): SD over 50 seeds 3.0e-4 (mean), 8.0e-3 (max), range of max 0.0168; iid_gaussian: 1.8e-3 / 2.9e-3. Objective F = mean_k DTW^2 (*|vs-dba|*): F(sgddtw) < F(Euclidean init) on every pair (pass), but F(sgddtw)/F(DBA) - 1 = 0.02-0.43 on bivariate_gaussian (30-epoch SSG 0.006-0.15), -0.05 to 3.62 on delayed_noise T=256, 1.86 on logistic_maps, 0.995 on delayed_noise [0,3] T=1024. SSG(x, x) = x: 4/4 exact. Symmetry: max|A - A.T| = 0 on all four direction datasets.'
+  verdict: variant
+  score_0_10: 5
+  score_rubric: 5
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 5, second clause: the from-scratch SSG reproduces pyspi (33/33 runs, max_abs 2.2e-16). SSG with last-sample early stopping has no literature
+    definition, and it stops after 3-5 epochs on Gaussian pairs.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 5
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The update rule and step schedule match tslearn''s stochastic subgradient mean exactly (independent replication to 1e-13, including the global-RNG stream). It deviates from Schultz & Jain (arXiv:1701.06393v1, Sec. 3 termination criteria T1/T2; Sec. 5.1 runs fixed 50 epochs): tslearn stops when the pre-update DTW^2 of the single last-processed series rises between epochs, which happens after 3-5 epochs on most Gaussian pairs, so the returned barycenter is an under-converged Frechet-mean estimate (cost 2-43% above DBA on bivariate_gaussian, up to 3.6x on delayed copies). The update uses 2*eta where arXiv v1 Alg. 3 line 8 has eta (a factor-2 step-size scaling). The value depends on the global numpy RNG state, hence on every RNG draw consumed earlier in a Calculator run (already documented, tests/README.md:134/146); within one Data object the first sgddtw identifier fixes the barycenter for the other three. Scored 5: a non-standard estimator with no literature definition (SSG with last-sample early stopping), computed exactly as the code states.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: cheap on the pyspi side (<= 2.8 s per run, T <= 1024); from-scratch SSG ~0.1 s per epoch per series at T=1024
+  symmetry_observed: 'sym: max|A - A.T| = 0 on var2_bivariate, delayed_noise, logistic_maps_chaotic, anm (T=1024, bary_sgddtw_max) because of the per-pair cache; the uncached routine is NOT order-invariant: cold-cache bivariate(i,j) vs bivariate(j,i) with the same seed differ by max|M - M.T| = 0.0486 (bivariate_gaussian) and 0.379 (delayed_noise) on bary_sgddtw_max at T=256 (*|order|* runs, reproduced exactly by the reference)'
+  direction_observed: 'none: A[i,j] = A[j,i] bit-identically on var2_bivariate, delayed_noise, logistic_maps_chaotic, anm; any input-order effect is stochastic and hidden by the cache, so A[i,j] carries no direction'
+  candidate_resolutions:
+  - candidate: premature last-sample stopping makes sgddtw an under-converged DTW barycenter
+    outcome: confirmed
+    evidence: 'distance.bary.sgddtw|*|vs-dba|*: F(sgddtw) > F(DBA) on 13 of 14 pairs and > F(30-epoch SSG) on 12 of 14 (equal on the other 2, where the run went the full 30 epochs) (bivariate_gaussian rel gap to DBA 0.02-0.43 vs 0.006-0.15 for 30 epochs; logistic_maps 1.86 vs 0.80); ref_stopped_on_increase 1 on all 6 pairs of distance.bary.sgddtw|bivariate_gaussian|256|kernel|ssg|* after 3-5 epochs; paper termination (T1)/(T2) uses F over all samples (arXiv:1701.06393v1 Sec. 3)'
+  - candidate: 'cache/ordering effect: the first sgddtw identifier fixes the barycenter for the others; pair {a<b} computed from z[[b, a]]'
+    outcome: confirmed
+    evidence: 'distance.bary.sgddtw|bivariate_gaussian|256|kernel|cache|bary_sgddtw_max: second identifier equals the seed-42 reference with max_abs 0 and consumed no RNG draws (flag 0); the z[[b, a]] order is part of every exact *|ssg|* match (stream simulated in that order)'
+  - candidate: input-order dependence for a fixed RNG draw, hidden by the cache
+    outcome: confirmed
+    evidence: 'distance.bary.sgddtw|{bivariate_gaussian,delayed_noise}|256|kernel|order|bary_sgddtw_max: with np.random.seed(42) before every cold call, max|M - M.T| = 0.0486 and 0.379; the from-scratch SSG reproduces the ordered-pair matrix (max_abs 2.2e-16)'
+  - candidate: _mm_assignment cost uses weights[0]/weights.sum() for every series (harmless with uniform weights)
+    outcome: confirmed
+    evidence: the from-scratch SSG uses dist^2 * 1/n for the stopping cost and reproduces every stopping decision (all *|ssg|* and *|seeds50|* runs exact to 2.2e-16); with unit weights weights[0]/sum = 1/n for every series
+  checks_run:
+  - run_ids:
+    - distance.bary.sgddtw|*|{64,256}|kernel|ssg|*
+    - distance.bary.sgddtw|*|1024|pipeline|ssg|*
+    - distance.bary.sgddtw|bivariate_gaussian|256|kernel|ssg|bary_sgddtw_mean|seed43
+    reference: audit/checks/refs/barycenters.py:h_ssg (independent-impl)
+    outcome: pass 33/33; max_rel 9.6e-14
+  - run_ids:
+    - distance.bary.sgddtw|*|{64,256}|kernel|ssg-bc|bary_sgddtw_mean
+    reference: audit/checks/refs/barycenters.py:h_ssg_bc (independent-impl)
+    outcome: pass 6/6; max_abs 2.2e-16
+  - run_ids:
+    - distance.bary.sgddtw|bivariate_gaussian|256|kernel|rngdep|bary_sgddtw_max
+    - distance.bary.sgddtw|bivariate_gaussian|256|kernel|cache|bary_sgddtw_max
+    reference: audit/checks/refs/barycenters.py:h_rngdep, h_cache (independent-impl)
+    outcome: pass 2/2; max_abs 0; change vs plain seed-42 run 0.0278
+  - run_ids:
+    - distance.bary.sgddtw|{bivariate_gaussian,iid_gaussian}|256|pipeline|seeds50|bary_sgddtw_mean|p0-1
+    reference: audit/checks/refs/barycenters.py:h_seeds50 (independent-impl)
+    outcome: pass 2/2; SD over seeds of bary_sgddtw_max 8.0e-3 / 2.9e-3
+  - run_ids:
+    - distance.bary.sgddtw|{bivariate_gaussian,delayed_noise}|256|kernel|order|bary_sgddtw_max
+    reference: audit/checks/refs/barycenters.py:h_cold (independent-impl)
+    outcome: pass 2/2; max_abs 2.2e-16; max|M - M.T| 0.0486 / 0.379
+  - run_ids:
+    - distance.bary.sgddtw|*|vs-dba|bary_sgddtw_mean
+    reference: audit/checks/refs/barycenters.py:h_vs_dba (independent-impl, qualitative)
+    outcome: pass 4/4 (descent); rel gap to DBA up to 3.62
+  - run_ids:
+    - distance.bary.sgddtw|iid_gaussian|256|kernel|xx|*|p0-0
+    reference: audit/checks/refs/barycenters.py:h_xx (analytic)
+    outcome: pass 4/4; exact
+  - run_ids:
+    - distance.bary.sgddtw|bivariate_gaussian|256|kernel|det|bary_sgddtw_max
+    - distance.bary.sgddtw|*|1024|pipeline|sym|bary_sgddtw_max
+    reference: audit/checks/refs/barycenters.py:h_det, h_sym (same-lineage)
+    outcome: pass 5/5; repeat diff 0; max|A - A.T| 0
+optimisation:
+  complexity_P_T: 'O(P^2 n_epoch T^2): one subgradient (SSG) barycenter per unordered pair (cached on Data), each epoch two numba DTW paths and
+    dense T x T path matrices, with rng.permutation from the global numpy RNG per epoch. Measured P_exponent 2.08, T_exponent 2.20; 118x1024 projected
+    from 32 by pair count (581 s). The pair term dominates.'
+  hotspot_1: tslearn/barycenters/dba.py:_subgradient_valence_warping (third-party:tslearn) 44.0% cumulative, 24.9% self time of the profiled SPI
+    call at 8x1024 (dense path matrices, numpy.zeros 10.0% overall)
+  hotspot_2: tslearn/barycenters/dba.py:_mm_assignment (third-party:tslearn) 39.9% (numba _njit_dtw_path hidden); _subgradient_update_barycenter
+    13.0%
+  hotspot_owner: third-party:tslearn
+  opaque_share: 0.3119
+  profile_file: audit/profiles/distance.bary.sgddtw__8x1024.pstats
+  opportunities:
+  - opportunity_id: barycenters-1
+    opportunity: 'Replace the dense T x T path matrices in tslearn''s barycenter updates with path-index accumulation: _subgradient_valence_warping
+      (tslearn/barycenters/dba.py:308-352) allocates numpy.zeros((T, T)) per series per iteration and sets w_k[i, j] = 1 in a Python loop over
+      the path; _mm_update_barycenter / _subgradient_update_barycenter then multiply the dense matrices (w_k.dot(x_k), numpy.diag(1/V).dot(...)).
+      A numba pass over the path gives the valence and the warped sums in O(T).'
+    opp_type: rewrite-numba-rust-cpp
+    expected_speedup: ~2x
+    speedup_basis: profile:audit/profiles/distance.bary.sgddtw__8x1024.pstats _subgradient_valence_warping 44.0% + most of _subgradient_update_barycenter
+      13.0% removable (Amdahl ~2.2x; DTW paths 39.9% remain)
+    output_risk: unverified-within-tolerance
+    risk_evidence: same RNG consumption (one rng.permutation per epoch) if the epoch loop is unchanged; sums over path entries change order. Any
+      pair-parallel or reordered execution consumes the global RNG differently (rng-stream)
+    effort: M
+    depends_on:
+    - xc-window-parallel

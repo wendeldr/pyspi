@@ -1,0 +1,244 @@
+unit_id: distance.pdist.canberra
+status: profiled
+correctness:
+  metric_name_standard: Canberra distance between z-scored series
+  canonical_ref: Lance & Williams 1966, Computer J. 9(1):60-64 'Computer programs for hierarchical polythetic classification (similarity analyses)'; Lance
+    & Williams 1967, Aust. Comput. J. 1:15-20; signed-data form as in Deza & Deza 2016, entry 'Canberra distance'
+  canonical_definition: 'd(x,y) = sum_t |x_t - y_t| / (|x_t| + |y_t|), with 0/0 := 0 (originally for non-negative data: |x_t - y_t|/(x_t + y_t))'
+  documented_definition: 'GitBook distance-similarity.md ''Pairwise Distance'' (lines 297-321): "Pairwise distance between time-series, computed using sklearn''s
+    pairwise distance function using the following distance metrics: Euclidean, Cityblock, Cosine, Chebyshev, Canberra, Braycurtis"; keywords "undirected,
+    nonlinear, unsigned, unordered". No formula is given. pdist is absent from the supplement: supplement §1.2 ''Distance similarity (26 SPIs)'', p.5 (heading
+    line 209) lists SPIs 22-47 (dcorr, dcorrx, mgc, mgcx, hsic, hhg, dtw, lcss, softdtw, bary) and no pdist entry.'
+  delegate_lib: scipy==1.17.1 scipy.spatial.distance.pdist(X, 'canberra') (C++ _distance_pybind.pdist_canberra), reached through sklearn==1.9.1 pairwise_distances'
+    SciPy branch, then squareform
+  implemented_as: 'Rows z-scored (ddof=1) by default; scipy pdist computes sum_t |x_t - y_t| / (|x_t| + |y_t|) with 0/0 treated as 0 (probe: [0,1,2] vs
+    [0,1,3] -> 0.2). Each term lies in [0,1] and equals 1 whenever x_t and y_t have opposite signs or one of them is 0.'
+  implementation_trace:
+  - pyspi/calculator.py:277 Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend) (Calculator defaults detrend=False, normalise=True,
+    calculator.py:48-50; lines at HEAD a1f20c7)
+  - pyspi/data.py:184-195 optional scipy.signal.detrend(axis=1), then zscore(data, axis=1, nan_policy='omit', ddof=1) per process
+  - pyspi/calculator.py:329-335 S = self._spis[spi].multivariate(self.dataset); np.fill_diagonal(S, np.nan); self._table[spi] = S (HEAD a1f20c7)
+  - 'pyspi/base.py:51-68 parse_multivariate: passes the Data object through unchanged'
+  - pyspi/statistics/distance.py:28-36 class PairwiseDistance(Undirected, Unsigned); __init__ stores metric, identifier 'pdist_<metric>'
+  - 'pyspi/statistics/distance.py:38-40 multivariate overrides Undirected.multivariate (base.py:132-138, never called): return pairwise_distances(data.to_numpy(squeeze=True),
+    metric=self._metric)'
+  - pyspi/data.py:108-118 to_numpy(squeeze=True) -> (M processes, T observations) float64; each row is one vector in R^T
+  - sklearn/metrics/pairwise.py:2309 pairwise_distances(X, Y=None, metric, n_jobs=None, ensure_all_finite=True) (scikit-learn 1.9.1)
+  - sklearn/metrics/pairwise.py:2472 else-branch (metric not precomputed, not in PAIRWISE_DISTANCE_FUNCTIONS, not callable); :2476 dtype = 'infer_float';
+    :2482-2484 check_pairwise_arrays(X, None, dtype=dtype, ensure_all_finite=...) (sklearn/metrics/pairwise.py:171-172 infer_float -> float64, :174-175
+    X = Y = check_array(X))
+  - sklearn/metrics/pairwise.py:2490-2491 n_jobs==1 and X is Y -> distance.squareform(distance.pdist(X, metric))
+  - scipy/spatial/distance.py:1816 pdist (scipy 1.17.1); scipy/spatial/distance.py:2133-2138 metric alias lookup -> metric_info.pdist_func
+  - scipy/spatial/distance.py:1667-1672 MetricInfo('canberra', pdist_func=_distance_pybind.pdist_canberra) (compiled scipy/spatial/_distance_pybind.cpython-312-x86_64-linux-gnu.so)
+  - scipy/spatial/distance.py:1150 canberra(u, v) Python reference; scipy/spatial/distance.py:1178 docstring 'When u[i] and v[i] are 0 for given i, then
+    the fraction 0/0 = 0 is used'
+  - scipy/spatial/distance.py:2154 squareform
+  deviation_from_documented: 'None in substance: the code is sklearn.metrics.pairwise_distances with metric=''canberra'' as the GitBook page states. Not
+    stated on the page: inputs are z-scored per process (ddof=1) by Data by default (optionally detrended first), sklearn forwards this metric to scipy.spatial.distance.pdist,
+    and the Calculator sets the diagonal to NaN. No formula or normalisation (e.g. per-sample scaling) is documented.'
+  deviation_from_canonical: 'Formula: matches the |x|+|y| generalisation with 0/0 := 0 (probe: max |A - scipy.spatial.distance.canberra loop| = 5.7e-14,
+    exactly symmetric). Domain: Lance & Williams defined it for non-negative data; on z-scored signed data every opposite-sign sample contributes exactly
+    1 regardless of magnitude (y = -x gives exactly T), and samples near zero are maximally weighted, so the statistic behaves largely as a sign-disagreement
+    count.'
+  units_and_range: 'Dimensionless; range [0, T] (each term in [0,1]); y = -x gives exactly T (probe T=256: 256.0); for independent Gaussian pairs canberra/T
+    -> 1/2 + ln2/pi = 0.72064 (probe T=4e5: 0.71987). Grows linearly with T; never negative.'
+  direction_convention: 'A[i,j] = d(z_i, z_j) for rows i, j of the (z-scored) M x T data; the metric is symmetric so A[i,j] = A[j,i]; no direction is encoded;
+    diagonal NaN after Calculator.compute (confirmed in the check stage: sym runs).'
+  symmetry_expected: sym
+  already_documented: docs/storage_comparison/REVIEW.md M1 (PairwiseDistance overrides Undirected.multivariate; output exactly symmetric via squareform)
+  new_finding_candidates:
+  - 'Candidate (domain): Canberra is applied outside its original non-negative domain. On z-scored data any sign disagreement contributes 1 irrespective
+    of amplitude and near-zero samples carry maximal weight. Probe: y = -x gives exactly T (256.0 at T=256); for Gaussian pairs canberra/T -> integral over
+    the angle density (rho=0: 0.72064 analytic, 0.71987 probe).'
+  - 'Candidate (interpretation): value grows linearly with T and is a dissimilarity (larger = less coupled); not stated in the GitBook page.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - anm
+    path: kernel
+    reference: 'from-scratch numpy loop over row pairs: sum(where(|x|+|y| > 0, |x - y| / (|x| + |y|), 0)) (no sklearn, no scipy.spatial)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: PairwiseDistance(metric).multivariate(Data(x, normalise=False)) equals the numpy reference off the diagonal to rel 1e-12 at every
+      T
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - iid_gaussian
+    path: pipeline
+    reference: A versus A.T (direction convention) and A[i,j] versus the numpy reference d(z_i, z_j) on the z-scored rows
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A[i,j] = A[j,i] = d(z_i, z_j): symmetric, no direction; diagonal NaN after Calculator; reciprocal entries bit-identical'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    path: pipeline
+    reference: pipeline output on scaled_offset compared with pipeline output on bivariate_gaussian (same draw; positive scale + offset removed by z-scoring)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'identical to rel 1e-12: default z-scoring makes every pdist metric invariant to positive per-channel scale and offset'
+  - datasets:
+    - trending
+    - bivariate_gaussian
+    path: pipeline-detrend
+    reference: pipeline-detrend output on trending compared with pipeline-detrend output on bivariate_gaussian; plain pipeline on trending for contrast
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: with detrend the two agree to rel 1e-10 (linear trend removed exactly by scipy detrend); without detrend trending values differ markedly
+      (trend dominates the distance)
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: same data with a common random permutation of the time index (numpy permutation)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'unchanged to rel 1e-12: every pdist metric is invariant to a joint reordering of samples (supports the ''unordered'' label; shows
+      no temporal structure is used)'
+  - datasets:
+    - delayed_noise
+    path: pipeline
+    reference: qualitative comparison of d(x0, x_k) for delays 1,3,5 against d on iid_gaussian pairs
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'delayed copies look as dissimilar as independent noise (e.g. cosine ~ 1): the metric is lag-0 only and cannot see delayed coupling'
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    path: pipeline
+    reference: population value T * integral_0^{2pi} g(th) f(th) dth with g = |cos th - sin th| / (|cos th| + |sin th|) and angle density f = sqrt(1-rho^2)
+      / (2 pi (1 - rho sin 2th)) (scipy.integrate.quad); rho=0 gives 1/2 + ln2/pi
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: canberra/T within 3 standard errors of the quadrature value at T=4096 (probe at T=4e5 agreed to 2e-3)
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'edge inputs built from the dataset rows: (x, -x) and rows with exact zeros'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: d(x, -x) = T exactly; 0/0 samples contribute 0
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/pdist.py handlers run for this unit (run tag in parentheses): ref_def -> audit/checks/refs/_kernels_basic_misc.py:pdist_metric
+    (def); ref_cdist = same-lineage scipy==1.18.1 cdist (cdist); ref_scaleinv (scaleinv); ref_detrendinv (detrendinv); ref_trend_nodetrend
+    (trend-nodetrend); ref_perm (perm); ref_sym, bit-exact branch max|A-A.T| == 0 (sym, sym-wide64); ref_pop with population() canberra branch T x
+    canberra_pop_per_sample (polar-angle quad) and a 2000-pair Monte-Carlo se from mc_sample (pop, pop-negated); ref_delayed, Monte-Carlo rho=0 null band
+    (delayed-null); ref_dup (dup); ref_near, stable_metric falls through to pdist_metric (near); ref_edge (edge); ref_signed_affine, non-braycurtis branch
+    S01 = S10 = T (signed-affine); ref_signed_warn, non-braycurtis branch no RuntimeWarning (signed-warn); probes audit/checks/probes/pdist_derived.py
+    (permuted, wide64, negated, near_identical, edge, signed_affine, signed_affine_warnings)'
+  check_data: 'kernel: bivariate_gaussian (T 64/1024/4096), iid_gaussian, nonlinear_dependence, anm (T 1024); pipeline: bivariate_gaussian (T 64/256/1024/4096),
+    scaled_offset (T 64/1024/4096), nonlinear_dependence, contaminated, sparse_precision, trending, var2_bivariate, gauss_ar1_pair, iid_gaussian (T 1024/4096),
+    delayed_noise, shared_envelope (T 64-4096); pipeline-detrend: bivariate_gaussian, trending; probe-derived inputs (probes/pdist_derived.py): joint time
+    permutation, 64-row mixture of iid_gaussian, negated rows (rho -> -rho), near-identical rows x0 + eps x1, edge rows (x, -x, shared zeros)'
+  agreement_criterion: 'exact rtol = atol = 1e-12 for from-definition runs (def, kernel/pipeline/pipeline-detrend), dup and edge; tolerance rtol 1e-10 /
+    atol 1e-12 for analytic identities and invariances (ident, scaleinv, detrendinv, perm); rtol 1e-6 / atol 1e-12 for near-identical rows (near); statistical
+    |pyspi - population| <= 2 se with se = Monte-Carlo sd x Bonferroni factor (1.319 for 6 pairs, 1.404 for 10 pairs: family-wise 5 %); qualitative pass_flag
+    for symmetry (bit-exact, euclidean last-bit), delayed-null band, signed/edge/downstream cases'
+  closeness: 'from-definition kernel 6 runs max_rel 1.68e-15, pipeline 8 runs max_rel 1.69e-15, pipeline-detrend 1.53e-15; same-lineage cdist 0.0; scaleinv
+    1.69e-15, detrendinv 1.83e-15, perm 1.07e-15; population T * int g f dtheta (rho=0: 1/2 + ln2/pi = 0.72064 per sample) pass 7/7, max_z 1.45 (raw z 1.92),
+    rel error 0.077 (T=64) -> 0.011-0.023 (4096); edge d(x,-x) = 1024.0 = T exact, shared exact zeros follow 0/0 := 0 (551.7 both sides); signed-affine
+    (x, -x) = 256.0 = T exact; no RuntimeWarning'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 10''s supplement clause fails because the supplement does not mention pdist. The record also holds its canonical clause short: pyspi reproduces
+    the |x|+|y| form to max_rel 1.69e-15, but Lance and Williams defined the index for non-negative data, and on z-scored signed data y=-x gives exactly T (1024.0).
+    No anchor-9 clause names this generalisation.'
+  documentation_status: silent
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The code is the generalised Canberra distance sum |x-y| / (|x| + |y|) with 0/0 := 0 (Deza & Deza form), fp-exact. Lance & Williams defined
+    it for non-negative data; pyspi applies it to z-scored signed data, where every sample of opposite sign contributes exactly 1 whatever its amplitude,
+    samples near zero get maximal weight, and y = -x gives exactly T. Values stay in [0, T]; T-dependent; dissimilarity. Score 9: matches the canonical
+    formula up to the documented |x| + |y| generalisation to signed data.
+    Rubric reading is nearest-anchor 9 (score_rubric_note), because no anchor-9 clause names the |x| + |y| generalisation and the supplement does not mention
+    pdist; the score-9 sentence above is the original reasoning for score_0_10.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: cheap (every pyspi run < 0.03 s; whole family incl. 2000-pair Monte-Carlo references < 1 min; T up to 4096)
+  symmetry_observed: 'self-consistency check (pyspi''s matrix against its own transpose; sym runs labelled same-lineage in results.json): sym: max|A - A.T|
+    = 0.0 (bit-exact) on var2_bivariate, gauss_ar1_pair, iid_gaussian (T=1024) and on the 64-row probe (...|iid_gaussian|1024|pipeline|sym-wide64: n_asym_pairs
+    0); diagonal NaN in every run'
+  direction_observed: 'A[i,j] = A[j,i] = d(z_i, z_j) on the z-scored rows; no direction is encoded: on var2_bivariate (x0 -> x1) the matrix is exactly symmetric,
+    and on delayed_noise the lagged copies x_k = x0(t - d_k) + noise sit inside the rho = 0 null band (...|delayed_noise|1024|pipeline|delayed-null pass),
+    so the metric is lag-0 only. Larger value = less similar (dissimilarity); anti-correlated pairs give the largest values (pop-negated runs).'
+  candidate_resolutions:
+  - candidate: 'applied outside the original non-negative domain: sign disagreements contribute 1, near-zero samples get maximal weight, y = -x gives T'
+    outcome: confirmed
+    evidence: 'distance.pdist.canberra|iid_gaussian|1024|kernel|edge: d(x,-x) = 1024.0 = T; distance.pdist.canberra|iid_gaussian|256|pipeline|signed-affine:
+      S01 = 256.0 = T; distance.pdist.canberra|bivariate_gaussian|*|pipeline|pop: rho=0 per-sample value 0.72064 confirmed statistically'
+  - candidate: value grows linearly with T and is a dissimilarity
+    outcome: confirmed
+    evidence: 'distance.pdist.canberra|bivariate_gaussian|{1024,4096}|pipeline|pop: rho=0.8 pair 449.6 at T=1024 vs 1883 at T=4096; pop-negated rho=-0.8
+      pair 919.3 (T=1024)'
+  checks_run:
+  - run_ids:
+    - distance.pdist.canberra|*|kernel|def
+    - distance.pdist.canberra|*|pipeline|def
+    - distance.pdist.canberra|*|pipeline-detrend|def
+    reference: audit/checks/refs/pdist.py:ref_def -> _kernels_basic_misc.pdist_metric (independent-impl)
+    outcome: pass 15/15, max_rel 1.69e-15
+  - run_ids:
+    - distance.pdist.canberra|bivariate_gaussian|1024|pipeline|cdist
+    reference: audit/checks/refs/pdist.py:ref_cdist -> scipy==1.18.1 scipy.spatial.distance.cdist (same-lineage)
+    outcome: pass, bit-identical (same-lineage)
+  - run_ids:
+    - distance.pdist.canberra|scaled_offset|*|pipeline|scaleinv
+    - distance.pdist.canberra|trending|1024|pipeline-detrend|detrendinv
+    - distance.pdist.canberra|trending|1024|pipeline|trend-nodetrend
+    - distance.pdist.canberra|bivariate_gaussian|1024|pipeline|perm
+    reference: audit/checks/refs/pdist.py:ref_scaleinv, ref_detrendinv, ref_trend_nodetrend, ref_perm (analytic invariances)
+    outcome: 'pass 6/6; trending without detrend: pair (1,3) 86.7 vs 745.6 untrended'
+  - run_ids:
+    - distance.pdist.canberra|var2_bivariate|1024|pipeline|sym
+    - distance.pdist.canberra|gauss_ar1_pair|1024|pipeline|sym
+    - distance.pdist.canberra|iid_gaussian|1024|pipeline|sym
+    - distance.pdist.canberra|iid_gaussian|1024|pipeline|sym-wide64
+    reference: 'audit/checks/refs/pdist.py:ref_sym (qualitative symmetry, NaN diagonal; self-consistency: pyspi''s matrix against its own transpose, reference_kind
+      same-lineage)'
+    outcome: pass 4/4, max|A-A.T| = 0.0
+  - run_ids:
+    - distance.pdist.canberra|bivariate_gaussian|*|pipeline|pop
+    - distance.pdist.canberra|iid_gaussian|4096|pipeline|pop
+    - distance.pdist.canberra|bivariate_gaussian|*|pipeline|pop-negated
+    reference: audit/checks/refs/pdist.py:ref_pop (analytic population value, Monte-Carlo se)
+    outcome: pass 7/7, max_z 1.45
+  - run_ids:
+    - distance.pdist.canberra|delayed_noise|1024|pipeline|delayed-null
+    reference: audit/checks/refs/pdist.py:ref_delayed (Monte-Carlo rho=0 null band)
+    outcome: 'pass: 757.3, 736.3, 731.1 inside [710.9, 766.5]'
+  - run_ids:
+    - distance.pdist.canberra|shared_envelope|*|pipeline|dup
+    reference: audit/checks/refs/pdist.py:ref_dup (identical rows -> 0)
+    outcome: pass 4/4, d(x0,x2) = 0.0
+  - run_ids:
+    - distance.pdist.canberra|iid_gaussian|1024|pipeline|near
+    reference: audit/checks/refs/pdist.py:ref_near (cancellation-free direct forms)
+    outcome: pass, rel error <= 1.1e-15
+  - run_ids:
+    - distance.pdist.canberra|iid_gaussian|1024|kernel|edge
+    reference: audit/checks/refs/pdist.py:ref_edge (from-definition on (x, -x) and shared zeros)
+    outcome: 'pass: d(x,-x) = 1024.0 = T; 0/0 := 0'
+  - run_ids:
+    - distance.pdist.canberra|iid_gaussian|256|pipeline|signed-affine
+    - distance.pdist.canberra|iid_gaussian|256|pipeline|signed-warn
+    reference: 'audit/checks/refs/pdist.py:ref_signed_affine (qualitative, analytic constants: (x,-x) = T, (x, 2x+1) = 0), ref_signed_warn (qualitative,
+      pyspi-side warning count: same-lineage)'
+    outcome: 'pass: (x,-x) = 256.0 = T exactly, no RuntimeWarning'
+optimisation:
+  complexity_P_T: 'O(P^2 T) in one call (pyspi/statistics/distance.py:PairwiseDistance.multivariate -> sklearn pairwise_distances, compiled scipy/sklearn
+    kernel), but at EEG sizes the fixed per-call cost dominates: measured 0.54 ms at 8x1024 and 5.84 ms at 118x1024 (P_exponent 0.02-0.45, T_exponent
+    about 0.1 between 8x256 and 8x1024).'
+  hotspot_1: 'sklearn/metrics/pairwise.py:check_pairwise_arrays -> sklearn/utils/validation.py:check_array (third-party:sklearn) 32.6% of the profiled SPI call at 8x1024 (1.16 ms profiled; called from pairwise_distances): fixed per-call input validation, the largest deep frame at 8x1024. Everything runs under the sklearn/utils/_param_validation.py:wrapper (about 95%, a wrapper). At 118x1024 the compute grows with P^2 and this fixed cost becomes a small share'
+  hotspot_2: 'scipy/spatial/distance.py:pdist (third-party:scipy) 16.4% (compiled pdist_canberra 3.5%, squareform 2.4% of the same call)'
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.3187
+  profile_file: audit/profiles/distance.pdist.canberra__8x1024.pstats
+  no_opportunity_reason: 'No opportunity is listed: pdist is one compiled call per window, and the six pdist units together cost about 24 ms per 118x1024 window (about 14 core-seconds per 600-window patient). Calling scipy pdist + squareform directly would skip sklearn''s validation, a few percent of the call at 118x1024, and is not material at these walls (notes/pdist.md, Optimisation, Opportunities).'
+  opportunities: []

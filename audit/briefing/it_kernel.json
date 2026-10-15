@@ -1,0 +1,421 @@
+{
+ "family": "it_kernel",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/information-theory.md"
+ ],
+ "hypotheses": [
+  "box kernel width 0.5 (entropy-based classes) vs 0.25 (mi/tlmi/te) in bits; kernel TE accepts only k_HISTORY (l_history ignored)",
+  "kernel <= vs < comparison and self-inclusion to be established"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/infotheory.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    414,
+    453
+   ],
+   "section": "1.4",
+   "title": "Information theory (37 SPIs)"
+  },
+  {
+   "lines": [
+    454,
+    460
+   ],
+   "section": "1.4.1",
+   "title": "Joint entropy (je)"
+  },
+  {
+   "lines": [
+    461,
+    468
+   ],
+   "section": "1.4.2",
+   "title": "Conditional entropy (ce)"
+  },
+  {
+   "lines": [
+    469,
+    476
+   ],
+   "section": "1.4.3",
+   "title": "Mutual information (mi)"
+  },
+  {
+   "lines": [
+    477,
+    485
+   ],
+   "section": "1.4.4",
+   "title": "Time-lagged mutual information (tlmi)"
+  },
+  {
+   "lines": [
+    486,
+    510
+   ],
+   "section": "1.4.5",
+   "title": "Transfer entropy (te)"
+  },
+  {
+   "lines": [
+    524,
+    536
+   ],
+   "section": "1.4.7",
+   "title": "Causally conditioned entropy (cce)"
+  },
+  {
+   "lines": [
+    537,
+    550
+   ],
+   "section": "1.4.8",
+   "title": "Directed information (di)"
+  },
+  {
+   "lines": [
+    551,
+    561
+   ],
+   "section": "1.4.9",
+   "title": "Stochastic interaction (si)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "JIDT: infodynamics/measures/continuous/kernel/*.java (box kernel, KERNEL_WIDTH)"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kernel",
+    "kernel_width": 0.5
+   },
+   "identifier_params": {
+    "je_kernel_W-0.5": {
+     "estimator": "kernel"
+    }
+   },
+   "identifiers": [
+    "je_kernel_W-0.5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "infotheory",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kernel",
+   "module": "infotheory",
+   "pair_basis": "unordered",
+   "pyspi_class": "JointEntropy",
+   "representative": "je_kernel_W-0.5",
+   "source": "config",
+   "unit_id": "infotheory.je.kernel"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kernel",
+    "kernel_width": 0.5
+   },
+   "identifier_params": {
+    "ce_kernel_W-0.5": {
+     "estimator": "kernel"
+    }
+   },
+   "identifiers": [
+    "ce_kernel_W-0.5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kernel",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "ConditionalEntropy",
+   "representative": "ce_kernel_W-0.5",
+   "source": "config",
+   "unit_id": "infotheory.ce.kernel"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kernel",
+    "kernel_width": 0.5
+   },
+   "identifier_params": {
+    "cce_kernel_W-0.5": {
+     "estimator": "kernel"
+    }
+   },
+   "identifiers": [
+    "cce_kernel_W-0.5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kernel",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "CausalEntropy",
+   "representative": "cce_kernel_W-0.5",
+   "source": "config",
+   "unit_id": "infotheory.cce.kernel"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kernel",
+    "history_length": 1,
+    "kernel_width": 0.5
+   },
+   "identifier_params": {
+    "xme_kernel_W-0.5_k1": {
+     "estimator": "kernel",
+     "history_length": 1
+    }
+   },
+   "identifiers": [
+    "xme_kernel_W-0.5_k1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kernel",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "CrossmapEntropy",
+   "representative": "xme_kernel_W-0.5_k1",
+   "source": "config",
+   "unit_id": "infotheory.xme.kernel_k1"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kernel",
+    "history_length": 10,
+    "kernel_width": 0.5
+   },
+   "identifier_params": {
+    "xme_kernel_W-0.5_k10": {
+     "estimator": "kernel",
+     "history_length": 10
+    }
+   },
+   "identifiers": [
+    "xme_kernel_W-0.5_k10"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kernel",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "CrossmapEntropy",
+   "representative": "xme_kernel_W-0.5_k10",
+   "source": "config",
+   "unit_id": "infotheory.xme.kernel_k10"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kernel",
+    "kernel_width": 0.5
+   },
+   "identifier_params": {
+    "di_kernel_W-0.5": {
+     "estimator": "kernel"
+    }
+   },
+   "identifiers": [
+    "di_kernel_W-0.5"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kernel",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "DirectedInfo",
+   "representative": "di_kernel_W-0.5",
+   "source": "config",
+   "unit_id": "infotheory.di.kernel"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kernel",
+    "kernel_width": 0.5
+   },
+   "identifier_params": {
+    "si_kernel_W-0.5_k-1": {
+     "estimator": "kernel"
+    }
+   },
+   "identifiers": [
+    "si_kernel_W-0.5_k-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kernel",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "StochasticInteraction",
+   "representative": "si_kernel_W-0.5_k-1",
+   "source": "config",
+   "unit_id": "infotheory.si.kernel"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kernel",
+    "kernel_width": 0.25
+   },
+   "identifier_params": {
+    "mi_kernel_W-0.25": {
+     "estimator": "kernel",
+     "kernel_width": 0.25
+    }
+   },
+   "identifiers": [
+    "mi_kernel_W-0.25"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "infotheory",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kernel",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "MutualInfo",
+   "representative": "mi_kernel_W-0.25",
+   "source": "config",
+   "unit_id": "infotheory.mi.kernel"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kernel",
+    "kernel_width": 0.25
+   },
+   "identifier_params": {
+    "tlmi_kernel_W-0.25": {
+     "estimator": "kernel",
+     "kernel_width": 0.25
+    }
+   },
+   "identifiers": [
+    "tlmi_kernel_W-0.25"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kernel",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "TimeLaggedMutualInfo",
+   "representative": "tlmi_kernel_W-0.25",
+   "source": "config",
+   "unit_id": "infotheory.tlmi.kernel"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kernel",
+    "k_history": 1,
+    "kernel_width": 0.25,
+    "l_history": 1
+   },
+   "identifier_params": {
+    "te_kernel_W-0.25_k-1": {
+     "estimator": "kernel",
+     "k_history": 1,
+     "kernel_width": 0.25,
+     "l_history": 1
+    }
+   },
+   "identifiers": [
+    "te_kernel_W-0.25_k-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "embedding",
+    "infotheory",
+    "nonlinear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kernel",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "TransferEntropy",
+   "representative": "te_kernel_W-0.25_k-1",
+   "source": "config",
+   "unit_id": "infotheory.te.kernel_k-1_kt-1_l-1_lt-1"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "JIDT box-kernel entropy/MI/TE (bits, width 0.5 or 0.25)",
+   "module": "infotheory",
+   "pair_basis": "n/a",
+   "pyspi_class": "JIDTBase",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "infotheory.est.kernel"
+  }
+ ]
+}

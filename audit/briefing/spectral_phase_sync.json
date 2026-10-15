@@ -1,0 +1,439 @@
+{
+ "family": "spectral_phase_sync",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/spectral.md"
+ ],
+ "hypotheses": [
+  "PLV/PLI/wPLI/dsPLI/dswPLI/PPC take their expectation over K=5 tapers (not trials/time); null PLV ~ sqrt(pi/(4K))",
+  "PLI and wPLI signed (M3); dspli = (K PLI^2 - 1)/(K-1); PPC = (|K PLV_c|^2 - K)/(K^2 - K); negatives valid (M7)",
+  "plv statfn wraps np.absolute"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/spectral.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    582,
+    613
+   ],
+   "section": "1.5",
+   "title": "Spectral (126 SPIs)"
+  },
+  {
+   "lines": [
+    701,
+    715
+   ],
+   "section": "1.5.6",
+   "title": "Phase locking value (plv)"
+  },
+  {
+   "lines": [
+    716,
+    729
+   ],
+   "section": "1.5.7",
+   "title": "Pairwise phase consistency"
+  },
+  {
+   "lines": [
+    730,
+    767
+   ],
+   "section": "1.5.8",
+   "title": "Phase lag index (pli)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py (phase_locking_value, phase_lag_index, weighted_phase_lag_index, debiased_squared_*, pairwise_phase_consistency)"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [
+    "plv_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+    "plv_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+    "plv_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+    "plv_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+    "plv_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+    "plv_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+    "plv_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+    "plv_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+    "plv_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+    "plv_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+    "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "plv_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "plv_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "plv_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "plv_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "plv_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "plv_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "plv_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "plv_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "plv_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "plv_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "PhaseLockingValue",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PhaseLockingValue",
+   "representative": "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.plv"
+  },
+  {
+   "eeg_identifiers": [
+    "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+    "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+    "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+    "pli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+    "pli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+    "pli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+    "pli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+    "pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+    "pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+    "pli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+    "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "pli_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "pli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "pli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "pli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "pli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "pli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "pli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "pli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "pli_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "PhaseLagIndex",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PhaseLagIndex",
+   "representative": "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.pli"
+  },
+  {
+   "eeg_identifiers": [
+    "wpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+    "wpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+    "wpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+    "wpli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+    "wpli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+    "wpli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+    "wpli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+    "wpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+    "wpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+    "wpli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+    "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "wpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "wpli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "wpli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "wpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "wpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "wpli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "wpli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "wpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "WeightedPhaseLagIndex",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "WeightedPhaseLagIndex",
+   "representative": "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.wpli"
+  },
+  {
+   "eeg_identifiers": [
+    "dspli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+    "dspli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+    "dspli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+    "dspli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+    "dspli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+    "dspli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+    "dspli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+    "dspli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+    "dspli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+    "dspli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+    "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "dspli_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "dspli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "dspli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "dspli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "dspli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dspli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "dspli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "dspli_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "DebiasedSquaredPhaseLagIndex",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "DebiasedSquaredPhaseLagIndex",
+   "representative": "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.dspli"
+  },
+  {
+   "eeg_identifiers": [
+    "dswpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+    "dswpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+    "dswpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+    "dswpli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+    "dswpli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+    "dswpli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+    "dswpli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+    "dswpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+    "dswpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+    "dswpli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+    "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "dswpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "dswpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "dswpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "dswpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "DebiasedSquaredWeightedPhaseLagIndex",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "DebiasedSquaredWeightedPhaseLagIndex",
+   "representative": "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.dswpli"
+  },
+  {
+   "eeg_identifiers": [
+    "ppc_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+    "ppc_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+    "ppc_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+    "ppc_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+    "ppc_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+    "ppc_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+    "ppc_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+    "ppc_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+    "ppc_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+    "ppc_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+    "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "hyperparameters": {},
+   "identifier_params": {
+    "ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25,
+     "statistic": "max"
+    },
+    "ppc_multitaper_max_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0,
+     "statistic": "max"
+    },
+    "ppc_multitaper_max_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1,
+     "statistic": "max"
+    },
+    "ppc_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
+     "fmax": 0.5,
+     "fmin": 0.25
+    },
+    "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
+     "fmax": 0.25,
+     "fmin": 0
+    },
+    "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+     "fs": 1
+    }
+   },
+   "identifiers": [
+    "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "ppc_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "ppc_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "ppc_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "spectral",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "PairwisePhaseConsistency",
+   "module": "spectral",
+   "pair_basis": "multivariate",
+   "pyspi_class": "PairwisePhaseConsistency",
+   "representative": "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+   "source": "config",
+   "unit_id": "spectral.ppc"
+  }
+ ]
+}

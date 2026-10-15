@@ -1,0 +1,252 @@
+unit_id: distance.lcss.constraint-None
+status: profiled
+correctness:
+  metric_name_standard: Longest common subsequence similarity (LCSS, eps-matching, normalised by the shorter length)
+  canonical_ref: Vlachos M, Kollios G, Gunopulos D 2002, Proc. 18th ICDE pp. 673-684, definitions of LCSS_{delta,eps} and similarity S1 = LCSS/min(n,m)
+    (Sec. 2; definition numbering not re-checked against the PDF; the paper states the eps test per coordinate for 2-D trajectories)
+  canonical_definition: LCSS(A,B) = 0 if A or B empty; 1+LCSS(Head(A),Head(B)) if |a_n-b_m| < eps and |n-m| <= delta; else max(LCSS(Head(A),B),
+    LCSS(A,Head(B))); similarity S1 = LCSS_{delta,eps}(A,B)/min(n,m)
+  documented_definition: 'supplement §1.2.8, p.7 (pack lines 302-311) and GitBook ''Longest Common Subsequence'': "measuring the similarity between
+    continuous subsections of time series... subject to distance thresholds and alignment constraints. We use the default threshold from the tslearn
+    package (eps = 1), and include the three global constraints"; keywords undirected, nonlinear, unsigned.'
+  delegate_lib: tslearn==0.9.0 tslearn.metrics.lcss (dtw_variants.py:2383) -> numba _njit_lcss
+  units_and_range: Dimensionless similarity in [0, 1] (count of matched pairs / min(n, m)); 1 = every point matched; higher = more similar (a
+    similarity, despite the 'distance' module); symmetric in its arguments; quantised in steps of 1/T.
+  direction_convention: 'Undirected: A[i,j] = A[j,i] = lcss(z_min(i,j), z_max(i,j)) via Undirected.multivariate mirroring; diagonal NaN.'
+  symmetry_expected: sym
+  already_documented: 'no'
+  implemented_as: z-score rows (ddof=1); integer LCSS DP over the full grid with match rule |x_i - y_j| <= 1 (no time window, delta = infinity);
+    score = LCSS length / min(T, T) = LCSS / T.
+  implementation_trace:
+  - pyspi/calculator.py:329 Calculator.compute calls self._spis[spi].multivariate(self.dataset)
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend(axis=1) only if detrend=True (default False), then scipy.stats.zscore(axis=1, nan_policy=''omit'',
+    ddof=1) if normalise=True (default True)'
+  - 'pyspi/base.py:132-138 Undirected.multivariate: A = Directed.multivariate(data); A[tril(-1)] = A.T[tril(-1)] (lower triangle overwritten by
+    the upper triangle, so A[i,j] = bivariate(min(i,j), max(i,j)))'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A filled with NaN, bivariate(data, i, j) for every ordered pair i != j (both orders computed,
+    diagonal stays NaN)'
+  - 'pyspi/base.py:27-49 parse_bivariate: a raw (x, y) call builds Data() and add_process(x), add_process(y) (pyspi/data.py:219-240)'
+  - 'pyspi/statistics/distance.py:154-163 TimeWarping.__init__: identifier += ''_constraint-'' + global_constraint.replace(''_'',''-''); self._global_constraint
+    stored'
+  - 'pyspi/statistics/distance.py:174-177 TimeWarping.bivariate: z = data.to_numpy(squeeze=True) (pyspi/data.py:108-118); return self._simfn(z[i],
+    z[j], global_constraint=self._global_constraint)'
+  - 'pyspi/statistics/distance.py:190-197 LongestCommonSubsequence: self._simfn = tslearn.metrics.lcss (eps not passed, library default used)'
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/__init__.py:44-55 tslearn.metrics.lcss is tslearn.metrics.dtw_variants.lcss (tslearn==0.9.0)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2383-2391 lcss(s1, s2, eps=1.0, global_constraint=None, sakoe_chiba_radius=None,
+    itakura_max_slope=None, be=None)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2485-2496 to_time_series(remove_nans=True); mask = compute_mask_(...) where
+    compute_mask_ is tslearn.metrics._masks.compute_mask (import at dtw_variants.py:11), which returns a BOOLEAN mask (.venv/lib/python3.12/site-packages/tslearn/metrics/_masks.py:199-307,
+    310-361; same defaults radius 1 / slope 2.0)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2497-2498 numpy backend -> _njit_lcss(s1, s2, eps, mask)
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2321-2345 _njit_lcss: acc = njit_lcss_accumulated_matrix(...); return
+    float(acc[-1][-1]) / min(l1, l2)'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2232-2267 njit_lcss_accumulated_matrix: integer DP; line 2259 ''if numpy.isfinite(mask[i
+    - 1, j - 1]):'' (True for both True and False boolean entries); line 2260 match if sqrt(squared dist) <= eps -> 1 + acc[i-1][j-1], else max(acc[i][j-1],
+    acc[i-1][j])'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py:2270-2318 lcss_accumulated_matrix (non-numpy backends only): line 2306
+    ''if mask[i - 1, j - 1]:'' honours the boolean mask'
+  - 'https://raw.githubusercontent.com/tslearn-team/tslearn/v0.5.2/tslearn/metrics/dtw_variants.py compute_mask/sakoe_chiba_mask/itakura_mask:
+    mask = numpy.full((sz1, sz2), numpy.inf) with admissible cells set to 0. (float 0/inf mask), and the same ''if numpy.isfinite(mask[i - 1,
+    j - 1])'' test in njit_lcss_accumulated_matrix (WebFetch of the v0.5.2 tag)'
+  deviation_from_documented: none (eps = 1 as documented; no constraint).
+  deviation_from_canonical: 'Match test uses <= eps (dtw_variants.py:2260) instead of the strict < eps of Vlachos et al. (only matters on exact
+    ties; probe: lcss([0,0],[1,1]) = 1.0 vs 0.0 under the strict rule). Normalisation by min(n,m) matches S1. eps = 1 is absolute, applied after
+    z-scoring, i.e. one standard deviation. Unconstrained means delta = infinity (Vlachos et al. use a finite matching window delta).'
+  new_finding_candidates:
+  - 'Candidate (low dynamic range): with eps = 1 on z-scored data the unconstrained score saturates near 0.8 for unrelated series. Probe: independent
+    N(0,1) T=64/256/1024 -> 0.797/0.805/0.809; x vs -x -> 0.828/0.797/0.807; x vs x -> 1.0. Hypothesis: lcss cannot distinguish independence from
+    perfect anti-correlation and spans roughly [0.8, 1] in practice (snapshot small/full matrices span 0.84-0.97).'
+  - 'Cross-family (infrastructure) candidate, affects direct two-array calls only: parse_bivariate (pyspi/base.py:33-36) builds Data() (normalise=True)
+    and calls add_process(x) then add_process(y); the first call goes through set_data and is z-scored, the second is np.append-ed raw (pyspi/data.py:230-234).
+    Probe with x, y ~ 5 + 3 N(0,1), T=64: stored means [0.0, 4.783], stds [1.0, 2.995]. So spi.bivariate(x, y) compares z-scored x with raw y.
+    Calculator/multivariate paths are unaffected.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    - logistic_maps
+    path: kernel
+    reference: from-scratch numpy LCSS DP (Vlachos Def. 2 with delta = infinity, eps = 1, <= rule) divided by min(n,m)
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: identical rational values (integer count / T) at T in {64,256,1024}
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: same from-scratch DP with strict < eps (Vlachos et al. literal rule)
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: identical to the <= variant for continuous data (ties have probability zero); documents the tie convention only
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic: lcss(x,x) = 1; null distribution from iid_gaussian pairs'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: iid pairs give ~0.8 (saturation candidate); bivariate_gaussian rho=0.8 pair scores above rho=0.3 pair only modestly; quantify
+      the dynamic range
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: pyspi output on bivariate_gaussian (z-scoring invariance)
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: A(scaled_offset) == A(bivariate_gaussian) unless a pair sits within 1e-12 of the eps boundary
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: from-scratch numpy LCSS DP applied to the ddof=1 z-scored rows z_i, z_j (no tslearn import)
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'Direction/symmetry convention: A == A.T exactly (np.array_equal with equal_nan), diagonal all NaN, and A[i,j] == A[j,i]
+      == reference(z_min(i,j), z_max(i,j)) within tolerance; reference(z_i, z_j) and reference(z_j, z_i) agree to <= 1e-12 relative, so the undirected
+      label carries no hidden order.'
+  check_method: independent-impl
+  check_reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:lcss_dp(eps=1, constraint=None, <= rule; strict=True variant);
+    audit/checks/refs/dtw_family.py:mc_null (batched LCSS DP, checked against the kernel)
+  check_data: iid_gaussian, delayed_noise, narrowband_f0-0.25, logistic_maps (kernel T 64/256/1024); pipeline T1024 on iid_gaussian, delayed_noise, bivariate_gaussian,
+    shared_envelope, logistic_maps; scaled_offset, trending T1024; iid_gaussian null T64/256/1024
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 (values are integers / T); null: Bonferroni 2 se; qualitative orderings'
+  closeness: All 17 dp runs bit-identical (max_abs 0.0). Strict '<' rule identical to '<=' on iid_gaussian T256/T1024 (kernel) and logistic_maps T1024 (pipeline)
+    (max_abs 0.0). Null mean over pairs 0.792 / 0.804 / 0.812 vs Monte Carlo 0.788 / 0.803 / 0.810 (max_z 1.85 / 1.17 / 1.86). scaled_offset pipeline vs z-scored
+    bivariate_gaussian max_abs 0.0; kernel path on raw scaled_offset 0.14-0.56 x the z-scored value.
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 10''s canonical clause fails only on exact ties: the match test is <= eps where Vlachos et al. use < eps (probe lcss([0,0],[1,1]) = 1.0
+    vs 0.0). On the audit data the two rules agree (3 strict-rule runs, max_abs 0.0) and 17/17 dp runs are bit-identical. No anchor-9 clause names a tie rule.'
+  documentation_status: described
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: LCSS similarity of Vlachos et al. 2002 with delta = infinity, eps = 1 (documented), normalised by min(n, m) (their S1). Match test is <= eps
+    instead of < eps (tie convention; identical on all test data). eps is absolute, i.e. 1 SD after z-scoring; without z-scoring (kernel path) the score depends
+    on amplitude. A linear trend changes the value by up to 64% without detrend (0.24% after detrend).
+  new_finding: false
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.1 s per pyspi run at T=1024'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on every matrix; unmirrored probe (both orders computed by tslearn) max|B - B.T| = 0.0; diagonal NaN'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = f(z_i, z_j); on delayed_noise (x_k = x0 delayed by 0/1/3/5) the matrix carries no lead/lag sign, only
+    how well warping absorbs the delay; delayed_noise lcss(z0, zk) = 0.999 for every delay (unconstrained matching ignores time).'
+  candidate_resolutions:
+  - candidate: 'low dynamic range: eps = 1 on z-scored data saturates near 0.8 for unrelated series and does not separate anti-correlation from independence'
+    outcome: confirmed
+    evidence: 'distance.lcss.constraint-None|iid_gaussian|{64,256,1024}|pipeline|null: Monte Carlo null mean 0.788 / 0.803 / 0.810 (SD 0.021 / 0.0082 / 0.0037);
+      |1024|pipeline|null-neg: lcss(x,-x) 0.7988 vs independent 0.8105 (-1.4%; the Monte Carlo 1% quantile is 0.8018, so the anti-correlated pair is only
+      just below it); |256|pipeline|null-neg -1.0%; |bivariate_gaussian|1024|pipeline|range: rho 0.3 pair 0.8145 (z 1.3), rho 0.8 pair 0.9023 (z 25). The
+      ordering is right but the range on z-scored data is about [0.79, 1]; a property of the eps = 1 default, not a code deviation.'
+  - candidate: parse_bivariate z-scores only the first of two raw arrays
+    outcome: confirmed
+    evidence: 'Confirmed, but it belongs to preproc.two_array_api (preprocessing_base family, already checked; run preproc.two_array_api|scaled_offset|256|pipeline|spi-dtw),
+      so it is not a finding of this unit. Re-measured here on the direct-array API: distance.lcss.constraint-None|scaled_offset|256|pipeline|rawcall: bivariate(x0,
+      x1) 0.613, bivariate(x1, x0) 0.793 equal f(zscore(first), raw second) exactly; both z-scored 0.809.'
+  checks_run:
+  - run_ids:
+    - distance.lcss.constraint-None|bivariate_gaussian|1024|pipeline|dp
+    - distance.lcss.constraint-None|delayed_noise|1024|kernel|dp
+    - distance.lcss.constraint-None|delayed_noise|1024|pipeline|dp
+    - distance.lcss.constraint-None|delayed_noise|256|kernel|dp
+    - distance.lcss.constraint-None|delayed_noise|64|kernel|dp
+    - distance.lcss.constraint-None|iid_gaussian|1024|kernel|dp
+    - distance.lcss.constraint-None|iid_gaussian|1024|pipeline|dp
+    - distance.lcss.constraint-None|iid_gaussian|256|kernel|dp
+    - distance.lcss.constraint-None|iid_gaussian|64|kernel|dp
+    - distance.lcss.constraint-None|logistic_maps|1024|kernel|dp
+    - distance.lcss.constraint-None|logistic_maps|1024|pipeline|dp
+    - distance.lcss.constraint-None|logistic_maps|256|kernel|dp
+    - distance.lcss.constraint-None|logistic_maps|64|kernel|dp
+    - distance.lcss.constraint-None|narrowband_f0-0.25|1024|kernel|dp
+    - distance.lcss.constraint-None|narrowband_f0-0.25|256|kernel|dp
+    - distance.lcss.constraint-None|narrowband_f0-0.25|64|kernel|dp
+    - distance.lcss.constraint-None|shared_envelope|1024|pipeline|dp
+    reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:dtw_dp / lcss_dp / soft_dtw_dp (every ordered pair separately)
+      [exact rtol 1e-10 atol 1e-12 (soft-DTW tolerance rtol/atol 1e-10)]
+    outcome: 'pass: 17/17 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-None|bivariate_gaussian|1024|pipeline|range
+    reference: audit/checks/refs/dtw_family.py:handle 'range' (bivariate_gaussian rho 0.3 / 0.8) [qualitative]
+    outcome: 'pass: 1/1 pass'
+  - run_ids:
+    - distance.lcss.constraint-None|delayed_noise|1024|pipeline|unmirrored
+    - distance.lcss.constraint-None|iid_gaussian|1024|pipeline|unmirrored
+    reference: audit/checks/refs/dtw_family.py:matrix vs probes/dtw_family_probes.py:unmirrored (Directed.multivariate) [exact]
+    outcome: 'pass: 2/2 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-None|iid_gaussian|1024|kernel|strict
+    - distance.lcss.constraint-None|iid_gaussian|256|kernel|strict
+    - distance.lcss.constraint-None|logistic_maps|1024|pipeline|strict
+    reference: audit/checks/refs/_kernels_distance.py:lcss_dp(strict=True) [exact]
+    outcome: 'pass: 3/3 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-None|iid_gaussian|1024|pipeline|null
+    - distance.lcss.constraint-None|iid_gaussian|256|pipeline|null
+    - distance.lcss.constraint-None|iid_gaussian|64|pipeline|null
+    reference: audit/checks/refs/dtw_family.py:mc_null (400 independent z-scored Gaussian pairs, batched DP) [statistical, Bonferroni 2 se]
+    outcome: 'pass: 3/3 pass; max_z 1.86, 1.17, 1.85'
+  - run_ids:
+    - distance.lcss.constraint-None|iid_gaussian|1024|pipeline|null-neg
+    - distance.lcss.constraint-None|iid_gaussian|256|pipeline|null-neg
+    reference: audit/checks/refs/dtw_family.py:handle 'null-neg' (rows x0, -x0, x1, x2) [qualitative]
+    outcome: 'pass: 2/2 pass'
+  - run_ids:
+    - distance.lcss.constraint-None|iid_gaussian|256|pipeline|ident
+    reference: audit/checks/refs/dtw_family.py:matrix on rows (x0, x0, x1) / same-lineage pyspi softdtw bit identity [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-None|scaled_offset|1024|kernel|scale-raw
+    reference: audit/checks/refs/dtw_family.py:matrix on raw scaled_offset rows [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-None|scaled_offset|1024|pipeline|scaleinv
+    reference: audit/checks/refs/dtw_family.py:matrix on z-scored bivariate_gaussian [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-None|scaled_offset|1024|pipeline|scaleinv-self
+    reference: pyspi matrix on bivariate_gaussian (same-lineage) [rtol 1e-10]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-None|scaled_offset|256|pipeline|rawcall
+    reference: 'audit/checks/refs/dtw_family.py: f(zscore(first), raw second) vs probes/dtw_family_probes.py:raw_call [exact]'
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-None|trending|1024|pipeline-detrend|detrend
+    reference: audit/checks/refs/dtw_family.py:matrix on z-score(LS-detrend(trending)) [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.lcss.constraint-None|trending|1024|pipeline|trend
+    reference: audit/checks/refs/dtw_family.py:matrix on z-scored trending rows [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 0, max_rel <= 0'
+optimisation:
+  complexity_P_T: 'O(P^2 T^2): tslearn lcss per ordered pair (TimeWarping is Undirected over Directed.multivariate, both orders computed, pyspi/statistics/distance.py:TimeWarping.bivariate),
+    a T x T mask plus a numba DP over the full grid. Measured P_exponent 2.07, T_exponent 1.17 (8x256 -> 8x1024; a fixed per-call cost of tens
+    of microseconds and a ~50 ms 8x256 overhead flatten it); 118x1024 measured (87.8 s per window). The P^2 pair term dominates.'
+  hotspot_1: tslearn/metrics/dtw_variants.py:lcss (third-party:tslearn) 87.3% self time of the profiled SPI call at 8x1024 (numba njit_lcss_accumulated_matrix
+    hidden in it)
+  hotspot_2: tslearn/metrics/_masks.py:compute_mask (third-party:tslearn) 5.4%; instantiate_backend 5.4% (str() of the inputs)
+  hotspot_owner: third-party:tslearn
+  opaque_share: 0.0208
+  profile_file: audit/profiles/distance.lcss.constraint-None__8x1024.pstats
+  opportunities:
+  - opportunity_id: dtw_family-1
+    opportunity: 'One batched numba kernel over the unordered pairs: call tslearn''s njit accumulated-matrix kernels directly (_njit_accumulated_matrix
+      / njit_lcss_accumulated_matrix) from a loop over i < j, build the global-constraint mask once per window (it depends only on T and the constraint)
+      and skip the per-call Python layer (instantiate_backend, which formats each input array with str() to sniff the backend; to_time_series;
+      compute_mask). A prange over pairs adds thread parallelism (the kernels are nogil).'
+    opp_type: vectorise-batch
+    expected_speedup: ~1.1x
+    speedup_basis: profile:audit/profiles/distance.lcss.constraint-None__8x1024.pstats compute_mask 5.4% + instantiate_backend 5.4% removable
+      serially (Amdahl 1.12x); parallel gain counted under xc-window-parallel
+    output_risk: unverified-bit-identical
+    risk_evidence: same njit kernel and per-cell arithmetic; only the Python call layer and the mask placement change
+    effort: M
+    depends_on:
+    - xc-undirected-upper
+    - xc-window-parallel

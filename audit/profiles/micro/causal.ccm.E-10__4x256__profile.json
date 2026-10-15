@@ -1,0 +1,126 @@
+{
+ "unit_id": "causal.ccm.E-10",
+ "identifier": "ccm_E-10_mean",
+ "shape": "4x256",
+ "warmup_shape": "3x100",
+ "wall_profiled_s": 22.97714971000096,
+ "result_status": "ok",
+ "pstats": "audit/profiles/micro/causal.ccm.E-10__4x256.pstats",
+ "env": {
+  "omp_num_threads": "1",
+  "numba_num_threads": "1"
+ },
+ "written_by": "Workflow 3 causal-misc analyst (cProfile around harness.compute_spi, one call, after one untimed warm-up call at warmup_shape)",
+ "total_tt_s": 22.977106990000014,
+ "top10_cumulative": [
+  {
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "tottime_s": 1.5910000000000002e-05,
+   "cumtime_s": 22.977085690000003,
+   "owner": "harness",
+   "opaque": false
+  },
+  {
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 1,
+   "tottime_s": 6.200000000000001e-06,
+   "cumtime_s": 22.977037411,
+   "owner": "pyspi",
+   "opaque": false
+  },
+  {
+   "function": "pyspi/statistics/causal.py:multivariate",
+   "line": 152,
+   "ncalls": 1,
+   "tottime_s": 3.682e-05,
+   "cumtime_s": 22.977030811000002,
+   "owner": "pyspi",
+   "opaque": false
+  },
+  {
+   "function": "pyspi/statistics/causal.py:_from_cache",
+   "line": 84,
+   "ncalls": 1,
+   "tottime_s": 0.000637359,
+   "cumtime_s": 22.976832444000003,
+   "owner": "pyspi",
+   "opaque": false
+  },
+  {
+   "function": "pyEDM/CoreEDM.py:CCM",
+   "line": 363,
+   "ncalls": 6,
+   "tottime_s": 0.000123797,
+   "cumtime_s": 22.973056503000002,
+   "owner": "third-party:pyEDM",
+   "opaque": false
+  },
+  {
+   "function": "~:<built-in method pyBindEDM.CCM>",
+   "line": 0,
+   "ncalls": 6,
+   "tottime_s": 22.961021778000003,
+   "cumtime_s": 22.961021778000003,
+   "owner": "third-party:pyEDM",
+   "opaque": true
+  },
+  {
+   "function": "pyEDM/AuxFunc.py:GetDF",
+   "line": 137,
+   "ncalls": 6,
+   "tottime_s": 0.000105908,
+   "cumtime_s": 0.007482426,
+   "owner": "third-party:pyEDM",
+   "opaque": false
+  },
+  {
+   "function": "pyEDM/AuxFunc.py:PandasDataFrametoDF",
+   "line": 176,
+   "ncalls": 6,
+   "tottime_s": 0.0016355360000000002,
+   "cumtime_s": 0.007296449000000001,
+   "owner": "third-party:pyEDM",
+   "opaque": false
+  },
+  {
+   "function": "pandas/core/frame.py:__init__",
+   "line": 702,
+   "ncalls": 7,
+   "tottime_s": 9.184900000000001e-05,
+   "cumtime_s": 0.004831656,
+   "owner": "third-party:pandas",
+   "opaque": false
+  },
+  {
+   "function": "pandas/core/internals/construction.py:dict_to_mgr",
+   "line": 375,
+   "ncalls": 6,
+   "tottime_s": 0.000148219,
+   "cumtime_s": 0.004217304,
+   "owner": "third-party:pandas",
+   "opaque": false
+  }
+ ],
+ "opaque_share": 0.9994034891335112,
+ "opaque_share_by_owner": {
+  "third-party:pyEDM": 0.9992999461591483,
+  "third-party:pandas": 8.485550425684808e-05,
+  "third-party:numpy": 1.388451558061008e-05,
+  "python": 3.5647655745193515e-06,
+  "builtin": 9.270096539686256e-07,
+  "pyspi": 3.1117929698946826e-07
+ },
+ "self_time_share_by_owner": {
+  "third-party:pyEDM": 0.9993822119988304,
+  "third-party:pandas": 0.0005391919881555113,
+  "third-party:numpy": 3.515690640913013e-05,
+  "pyspi": 3.0211331665997505e-05,
+  "python": 1.1244061322099446e-05,
+  "harness": 1.0567039623642362e-06,
+  "builtin": 9.270096539686256e-07
+ },
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)"
+}

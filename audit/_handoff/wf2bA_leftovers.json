@@ -1,0 +1,368 @@
+{
+ "preprocessing_base+spectral_csm+spectral_coherence": {
+  "not_done": [
+   "preprocessing_base: Did not check whether saved EEG windows contain flat or saturated channels (open question 2): that needs a scan of the stored patient windows, which are outside the synthetic suite.",
+   "preprocessing_base: Did not time the cache-hit calls of the double work; left to the optimisation stage.",
+   "preprocessing_base: Ran ccm direction runs at T=256 (P=2) and the ccm cache-order group at P=2, not T=1024, because of cost (about 100 s per run at T=1024).",
+   "preprocessing_base: The symmetry sweep used one dataset (iid_gaussian T=256), as the task asked; the record's second proposed dataset, bivariate_gaussian, was not run.",
+   "preprocessing_base: No null-dataset direction runs: the compare.py 'direction' criterion cannot express an all-zero expected sign. Null behaviour of the infrastructure is covered by the iid_gaussian symmetry, upper-only and toy runs.",
+   "preprocessing_base: One reference defect was fixed during iteration: lmfit_Ridge passed the direction check on a 2e-16 difference. Rounding-level differences are now recorded as unresolvable (qualitative fail).",
+   "spectral_csm: Literature locations were not re-checked: Percival & Walden section contents, the full texts of Walden 2000 and Slepian 1978, and the journal copies of Nolte 2008 and Mitra & Pesaran 1999. No new copies were available, so this open question stays open in the note.",
+   "spectral_csm: The EEG failure modes were shown on SPI objects (multivariate calls with exceptions caught in the probe). A full Calculator run with the retained185 preset was not executed. That Calculator turns these exceptions into an all-NaN table with a failed MetricReport is cited from calculator.py:327-339 at HEAD and was not run.",
+   "spectral_csm: The provenance of the supplement's '125 bins, f0 = 4/T' sentence is unresolved. The checks show only that the multitaper path does not use it.",
+   "spectral_csm: Thomson adaptive weighting was not checked as an alternative estimator. Only mne's eigenvalue-weighted default was quantified (difference up to 0.0305 in coherency).",
+   "spectral_csm: Newer spectral_connectivity releases (2.x) were not compared, because only 1.1.2 is installed and nothing may be installed.",
+   "spectral_csm: The per-bin directed coherence reaching 103 on narrowband_f0-0.25 was observed but not investigated; it belongs to spectral_directed.",
+   "spectral_coherence: The record's proposed same-lineage nitime check was not run, because nitime is not installed in the comparison venv. It was replaced by an external-package form check with mne-connectivity 0.9.0. mne weights tapers by eigenvalue, so that check is qualitative (pyspi lies within 1e-4 of the library form and is separated from the canonical form).",
+   "spectral_coherence: Section and equation numbers for Carter 1987, Nolte 2004, Priestley 1981 and Mardia & Jupp 2000 were not checked against the papers (none opened); the records keep the narrowed from-memory disclaimers.",
+   "spectral_coherence: The supplement's 125 bins / f0 = 4/T statement could not be traced to any code path; settling it needs the code or library version behind the published analysis.",
+   "spectral_coherence: The 1024 Hz patient mapping of the EEG bands depends on the workflow's resampling stage, which does not exist yet.",
+   "spectral_coherence: The adversarial Fable review of these records was not run here; it belongs at the workflow level.",
+   "spectral_coherence: The trace-stage YAML anchor issue was already resolved before this stage (no &id001 found); the records were re-dumped with an alias-free dumper anyway."
+  ],
+  "remaining_issues": [
+   {
+    "family": "preprocessing_base",
+    "unit_id": "n/a",
+    "field": "run_checks.py --family preprocessing_base --force (reviewer re-run)",
+    "problem": "Not a record defect: the reviewer's forced re-run was still executing (pyspi step started 21:30:19, about 7 min of compute) when the structured output was forced, so its outcome was not observed by this reviewer. The pre-rerun results.json (179 runs: 131 pass, 48 fail, 0 without reference, index 179 ok) was verified line by line against every number quoted in the four records and the note (flat/flat-P3/flat-P2 acceptance tables, P values, stored std/unique/lag-1 ranges, swallow slope 0.0493, mod-* totals 285/273/144/0 warnings/10 logging records, cds 0.0132 and igci 0.0 silent on stdout, stderr, warnings and logging at any level (reviewer probe recheck_pb_csm_coh/probe_cds_igci.py), order-hist c per row, nodetrend 1.59/1.61, cov-ratio (T-1)/T, two-array 159.48/68.86, 31.71/7.72, 8.085 vs 0.818, direction table values, toy/calls 20 calls, upper/grp/rng differences), and fable_probe2.py was re-run and reproduces the P-dependence (T=64 P=3 const 3.0 residual std 0.0 rejected vs 3.06e-16 at P=5 accepted; T=256 P=5 const 1e-3 rejected, P=3/P=2 accepted). spectral_coherence and spectral_csm forced re-runs completed with results byte-identical to the snapshot (549/33 and 172/0; 0 differing entries). Expected outcome of the pending preprocessing_base re-run: compare 131 pass / 48 fail, exit 1 from compare.py only (deliberate failures)."
+   }
+  ],
+  "score_disputes": 2,
+  "weak": 6,
+  "disputed": [],
+  "validator_clean": true,
+  "fixed_units": [
+   "preproc.detrend",
+   "preproc.two_array_api",
+   "preproc.zscore",
+   "base.pair_handling",
+   "spectral.cohmag",
+   "spectral.phase",
+   "spectral.icoh",
+   "spectral.multitaper_csm"
+  ],
+  "refutations": 2,
+  "confirmations": 52
+ },
+ "spectral_phase_sync+spectral_psi_gd": {
+  "not_done": [
+   "spectral_phase_sync: EEG band identifiers were not computed on real EEG data; which edges (exact k/2048 or .3g-rounded) the stored 185-metric run used was not settled. Reading the 1-4 band identifier for patient 004 (512-sample windows) from the saved store would settle it.",
+   "spectral_phase_sync: Equation numbers in Lachaux 1999, Stam 2007 and Vinck 2010/2011 were not re-checked against the papers (only mne's comment citing Vinck 2011 eq. 30).",
+   "spectral_phase_sync: Spectral cache key omitting fs was not probed (every identifier uses fs=1).",
+   "spectral_phase_sync: The taper-dependence bias in the debiased estimators is only resolved to the 200-replicate level (dswPLI z = 2.03, borderline). More re-simulations would be needed to settle it.",
+   "spectral_phase_sync: The trace-stage remaining issues (tie-rule DC wording, dswpli dangling fragment, EEG notes line citation) were already partly corrected in the files on arrival. I rewrote the tie sentences with the measured numbers and updated the working-copy line to 336-337 (the file had moved again). The dswpli fragment was already folded in.",
+   "spectral_psi_gd: Gotman 1983 was not re-read, so its threshold/weighting/intercept rules are not checked; this affects only whether the library rules count as a variant or an extension. Score anchored on rubric 6 regardless.",
+   "spectral_psi_gd: The PRL journal copy of Nolte 2008 was not consulted (arXiv:0712.2352v1 only).",
+   "spectral_psi_gd: EEG window T=512 (0.5 s at 1024 Hz) was not run because make_data only serves T in {64,256,1024,4096}. The bin-count argument (0 bins for the three narrowest bands) is stated analytically in the note.",
+   "spectral_psi_gd: No population (S_true-based) PSI/GD check at T=4096: S_true exists only on the 1/1024 grid.",
+   "spectral_psi_gd: Group delay has no external-package reference (MNE has no multitaper group delay). Canonical evidence for GD is analytic: true delays, the plain OLS kernel, and the population VAR delay.",
+   "spectral_psi_gd: spectral_connectivity 2.0.1 band-forwarding behaviour was not tested (not installed)."
+  ],
+  "remaining_issues": [
+   {
+    "family": "spectral_phase_sync",
+    "unit_id": "spectral.pli",
+    "field": "proposed_checks[0].expected_outcome (tie-rule sentence); same sentence in spectral.wpli, spectral.dspli, spectral.dswpli; notes/spectral_phase_sync.md line 37",
+    "problem": "Low severity. States the elementwise reference leaves diagonal rounding noise of '1.7e-16 to 3.5e-15'. results.json ref_tie_diag_max_abs_im over the 15 (dataset, T) perbin combinations ranges 1.1e-16 (iid_gaussian T=64: 1.099e-16) to 3.45e-15; the lower bound should read 1.1e-16. Upper bound and the identical-pair range (2.6e-16 to 1.3e-15) are correct."
+   },
+   {
+    "family": "spectral_phase_sync",
+    "unit_id": "spectral.plv",
+    "field": "check_cost (also spectral.wpli and spectral.ppc check_cost)",
+    "problem": "Low severity. Saturation-probe timings are stale relative to out/pyspi/index/spectral_phase_sync.json after the --force re-run: plv record says 2.4 s at T=4096 (index 3.49 s), wpli 2.4 s (index 3.59 s), ppc 3.6 s (index 2.52 s). 'Every pyspi run < 0.1 s except the saturation probe' is also slightly off: spectral.plv|iid_gaussian|1024|pipeline|eeg-bands 0.55 s, plv pop 0.12 s, wpli/plv null at T=4096 0.11-0.12 s. Cost class 'cheap' still holds."
+   },
+   {
+    "family": "spectral_phase_sync",
+    "unit_id": "spectral.pli",
+    "field": "refs/spectral_phase_sync.py:h_sym max branch (18 max-identifier sym runs of spectral.pli and spectral.wpli) npz 'value' key",
+    "problem": "Low severity, contract nit; the disputed independent-impl label is upheld. pass_flag is decided against the independent per-bin reference (ref_perbin builds from make_data + _kernels_spectral only), so the label is justified, but the npz 'value' stores pyspi's own matrix A rather than the quantity the reference computed (the predicted matrix, pred_T.T). compare.py ignores 'value' for criterion qualitative, so no outcome changes; saving pred_T.T as value would match the compare.py contract."
+   }
+  ],
+  "score_disputes": 0,
+  "weak": 7,
+  "disputed": [
+   {
+    "unit_id": "spectral.pli, spectral.wpli",
+    "field": "reference_kind of the 18 max-identifier sym runs (part of the review's 108 sym runs)",
+    "reason": "The review says h_sym always saves +-A.T of the pyspi matrix. That holds only for the exact branch. For the PLI and wPLI max identifiers, h_sym stores pyspi's A and sets pass_flag by testing A[j,i] = -min_f X_ij(f) against the independent per-bin reference (ref_perbin, built from scipy DPSS + numpy FFT). That is not pyspi-vs-pyspi self-consistency, so I labelled those 18 runs independent-impl rather than same-lineage. The other 90 sym runs are labelled same-lineage as the review asks.",
+    "evidence": "audit/checks/refs/spectral_phase_sync.py h_sym max branch (pred_T = -np.nanmin(pb[mask], axis=0) from ref_perbin; ok_identity = np.allclose(A.T, pred_T)), now saved with 'independent-impl'; results.json counts after rerun: sym same-lineage 90, sym independent-impl 18"
+   }
+  ],
+  "validator_clean": true,
+  "fixed_units": [
+   "spectral.plv",
+   "spectral.pli",
+   "spectral.wpli",
+   "spectral.dspli",
+   "spectral.dswpli",
+   "spectral.ppc",
+   "spectral.psi",
+   "spectral.gd"
+  ],
+  "refutations": 3,
+  "confirmations": 20
+ },
+ "cov_prec_simple+cov_prec_robust+cov_prec_glasso": {
+  "not_done": [
+   "cov_prec_simple: P > T singular sub-claim of the prec_EmpiricalCovariance pinvh candidate (trace probe P=8, T=5) was not re-run as a manifest run.",
+   "cov_prec_simple: scikit-learn 0.24.1 OAS formula not reproduced numerically: 0.24.1 is not installed and installing is out of scope; equivalence rests on the trace-stage source reading (0.24.1 _shrunk_covariance.py:487-492).",
+   "cov_prec_simple: Whether pinvh's cutoff still drops the structural null eigenvalue of average-referenced data at larger P (e.g. 64) or worse scaling was not tested (only P=4 and P=19).",
+   "cov_prec_simple: Calculator-level aliasing (Calculator.compute storing the cached array returned by multivariate into its pandas table, calculator.py:329-335) was not tested; the audit harness copies the matrix.",
+   "cov_prec_simple: The 4 statistical fails (sparse_precision T=1024 kernel truth, one draw) remain failing by design; the criterion was not loosened.",
+   "cov_prec_robust: sklearn 0.24.1 (the documented version) was not executed because no installs were allowed. The version-drift candidate is therefore inconclusive: the 1.9.1 side is numerically reproduced, and the 0.24.1 side rests on its source text.",
+   "cov_prec_robust: A full default-config Calculator compute beyond the .statistics.basic block was not run. Fresh-process reproducibility is shown for the basic block only (freshfull).",
+   "cov_prec_robust: The record's '20 fresh-process Calculator runs' were replaced by a 20-seed np.random.seed sweep plus two fresh-process pairs (freshfull/freshbasic).",
+   "cov_prec_robust: The optimality reference is not exhaustive: it is the best of 2000 from-scratch C-step runs and 20 rrcov seeds, and on sparse_precision|64 rrcov beat the 2000-start search by 0.0059.",
+   "cov_prec_robust: The prec 'partial correlation' claim was checked only for the robust estimators. The other prec_* estimators belong to other families.",
+   "cov_prec_robust: The optimality check (record: kernel path) and the seed study were both run on the pipeline path. MCD is affine equivariant, so the h-subset problem is unchanged; this is stated in the note.",
+   "cov_prec_robust: rrcov default conventions (alpha=0.5, use.correction=TRUE) are recorded only as extra keys (rrcov_default_conventions_max_abs_diff), not as separate pass/fail runs.",
+   "cov_prec_glasso: sklearn 0.24.1 (documented version) not run: no such environment, so open question 1 (whether 0.24.1 also stalls on var2_bivariate T4096) remains unsettled",
+   "cov_prec_glasso: The inner-CD pre-loop-exit mechanism of the stall (_cd_fast.pyx:1173-1182) was not re-instrumented at the check stage; only its output (W12 equal to the starting point) was verified",
+   "cov_prec_glasso: The effect of contiguous vs shuffled/blocked KFold on autocorrelated series was not tested (open question 5 partly open)",
+   "cov_prec_glasso: Downstream consumers of data.covariance[...] (affected by the NaN-diagonal mutation) were not surveyed",
+   "cov_prec_glasso: The trace stage's full 76-file convergence census was not repeated; checks cover 37 inputs per estimator",
+   "cov_prec_glasso: |stat runs for cov units fail at T1024 (max_z 2.29) because of the realised sample covariance (3.20 sd off on one entry); the dataset was not redrawn, as it is shared and read-only"
+  ],
+  "remaining_issues": [
+   {
+    "family": "cov_prec_simple",
+    "unit_id": "basic.cov.EmpiricalCovariance",
+    "field": "implementation_trace (same line in all 8 cov_prec_simple records: basic.cov/prec.{EmpiricalCovariance,LedoitWolf,OAS,ShrunkCovariance}, line 13 of each)",
+    "problem": "Still cites 'pyspi/calculator.py:294-297 Calculator.compute calls spi.multivariate(dataset) then np.fill_diagonal(S, np.nan)'. At HEAD a1f20c7 (git show HEAD:pyspi/calculator.py) the multivariate call is :329, fill_diagonal :332, table store :335, except :336-339. The glasso fixer updated its four records and explicitly left these eight for the simple fixer, who did not update them. No numeric content affected."
+   },
+   {
+    "family": "cov_prec_simple",
+    "unit_id": "basic.cov.EmpiricalCovariance",
+    "field": "audit/notes/cov_prec_simple.md:13 (Shared pipeline step 2)",
+    "problem": "Same stale citation '`pyspi/calculator.py:294-297`'; should be :329-335 at HEAD a1f20c7 as in the glasso note's step 5."
+   },
+   {
+    "family": "cov_prec_robust",
+    "unit_id": "basic.cov.MinCovDet",
+    "field": "audit/notes/cov_prec_robust.md:26 (Shared trace step 2)",
+    "problem": "Still cites '`pyspi/calculator.py:294-300`' although the note's own correction list (line 317) says the records' citations were moved to :329/:332/:335 at HEAD a1f20c7; the note's trace text was not updated."
+   },
+   {
+    "family": "cov_prec_robust",
+    "unit_id": "basic.cov.MinCovDet",
+    "field": "check_cost (identical text in basic.cov.EllipticEnvelope, basic.prec.MinCovDet, basic.prec.EllipticEnvelope)",
+    "problem": "Quotes 'median 0.025 s at T=64, 0.35 s at T=1024, 0.75 s (max 1.14 s) at T=4096 ... the family's 323 pyspi runs took 465 s in total (20-fit seed studies up to 21 s at T=4096)'. These predate the fixer's --force re-run: out/pyspi/index/cov_prec_robust.json now gives 403.2 s total, longest run 15.0 s, plain-run medians 0.020 / 0.322 / 0.717 s (max 0.764 s at T=4096). Cost category 'cheap' is unaffected; the numbers are stale."
+   },
+   {
+    "family": "cov_prec_robust",
+    "unit_id": "basic.cov.MinCovDet",
+    "field": "closeness / candidate_resolutions[1] evidence (freshbasic 0.0765)",
+    "problem": "Low priority, by construction: basic.cov.MinCovDet|sparse_precision|64|pipeline|freshbasic seeds two fresh processes from OS entropy, so any future --force re-run of the family changes this value and leaves the quoted 0.0765 stale (it was 0.148 before the fixer's re-run). The record already says the size changes between check runs; I therefore did not --force this family. Consider quoting it only as 'nonzero (differs between fresh processes)' or making the run qualitative-only."
+   }
+  ],
+  "score_disputes": 0,
+  "weak": 8,
+  "disputed": [
+   {
+    "unit_id": "basic.cov.GraphicalLasso",
+    "field": "what_changed",
+    "reason": "The review compares the record's 2.2e-3 with 3.447e-3, but 3.447e-3 belongs to the GraphicalLassoCV unit, not to GraphicalLasso. For basic.cov.GraphicalLasso, the largest ref_maxabs_vs_R_penalize_diagonal_TRUE over its 11 rglasso runs is 2.196e-3, which matches the record's 'up to 2.2e-3'. I added the run_id to the record for clarity, but the number stands.",
+    "evidence": "audit/checks/out/results/cov_prec_glasso.json: basic.cov.GraphicalLasso|sparse_precision|256|pipeline|rglasso ref_maxabs_vs_R_penalize_diagonal_TRUE = 0.0012549873872899353; basic.cov.GraphicalLasso|sparse_precision|4096|pipeline|rglasso = 0.002195645919000483 (the unit maximum); 0.003447026308411899 is basic.cov.GraphicalLassoCV|sparse_precision|256|pipeline|rglasso, and 0.0021112278837498444 is basic.cov.GraphicalLassoCV|sparse_precision|1024|kernel|rglasso."
+   },
+   {
+    "unit_id": "basic.cov.GraphicalLassoCV",
+    "field": "reference_kind label of the degen runs",
+    "reason": "The other runs the review listed were relabelled same-lineage. The degen runs were not, because they do not compare pyspi with pyspi. ref_degen recomputes S independently (S_of, numpy only) and derives alpha_max = max|S_offdiag| from the KKT conditions. It passes only if pyspi's output is all zero exactly when alpha_ >= alpha_max. This is the same kind of analytic-condition check as ref_range, which the review accepted as analytic, and it uses pyspi's alpha_ in the same way the accepted kkt/admm runs do. The label has no score effect either way.",
+    "evidence": "audit/checks/refs/cov_prec_glasso.py:ref_degen (around line 587; S from S_of, amax = max|S[off]|, ok = all_zero == (alpha >= amax*(1-1e-12))); results: 12 degen runs, reference_kind analytic, all pass."
+   },
+   {
+    "unit_id": "basic.cov.LedoitWolf",
+    "field": "reference_kind of null runs (LedoitWolf and OAS units only)",
+    "reason": "The review item calls all truth/null runs Monte-Carlo means. The LedoitWolf/OAS null runs are not Monte Carlo. Their reference is the exact zero matrix, which follows analytically from the shrinkage clipping to 1, so the analytic label is correct and was kept. Only the Monte Carlo truth/null runs (all four Empirical/Shrunk null runs and all truth runs) were relabelled independent-impl.",
+    "evidence": "/media/dan/Data/git/pyspi/audit/checks/refs/cov_prec_simple.py:366-372 (null handler for LW/OAS writes value=nandiag(np.zeros((P,P))), criterion exact, derived from b^2=min(bbar^2,d^2) / min(num/den,1)); the Monte Carlo branch at line ~345 excludes tag=='null' for LedoitWolf/OAS; results.json after the --force re-run: 16 null runs analytic (LW/OAS), 16 null runs independent-impl (Empirical/Shrunk)"
+   }
+  ],
+  "validator_clean": true,
+  "fixed_units": [
+   "basic.cov.MinCovDet",
+   "basic.cov.EllipticEnvelope",
+   "basic.prec.MinCovDet",
+   "basic.prec.EllipticEnvelope",
+   "basic.cov.GraphicalLasso",
+   "basic.prec.GraphicalLasso",
+   "basic.cov.GraphicalLassoCV",
+   "basic.prec.GraphicalLassoCV",
+   "basic.cov.EmpiricalCovariance",
+   "basic.cov.LedoitWolf",
+   "basic.cov.OAS",
+   "basic.cov.ShrunkCovariance",
+   "basic.prec.EmpiricalCovariance",
+   "basic.prec.LedoitWolf",
+   "basic.prec.OAS",
+   "basic.prec.ShrunkCovariance"
+  ],
+  "refutations": 2,
+  "confirmations": 32
+ },
+ "rank_corr+xcorr+pdist": {
+  "not_done": [
+   "rank_corr: Open question 1 (whether the EEG export carries ties) not answered: no EEG data was examined. The note says how to settle it (count distinct values per channel before and after detrend/z-score).",
+   "rank_corr: Open questions 2 and 3 (relabel 'linear' to 'nonlinear'; intent of the -sq variants) are maintainer decisions. The checks only establish the facts (label mismatch; -sq is bit-identical to signed^2).",
+   "rank_corr: The analytic SEs for statistical runs are asymptotic (Fisher-z delta method, Bonett & Wright / Fieller et al.). A scratch Monte Carlo (mc2.py in the session scratchpad) puts empirical SD / SE at 0.94-1.00. Stored se = 1.5 x SE, so compare.py's 2-se band equals the record's 3-SE criterion.",
+   "rank_corr: The record's optional single-check 'R cor' item was done for both units, but only at T=1024 (bivariate_gaussian continuous and tied, contaminated tied).",
+   "xcorr: The Brockwell & Davis section and theorem locators (\u00a711.2, Thm 11.2.2) remain unverified: no copy of the book was available.",
+   "xcorr: The trace's random-walk figure 0.6176 (scratchpad xcorr_fix/p1.py) was not re-run. The independent random-walk pair in cointegrated gives 0.329 at T=1024.",
+   "xcorr: No null with two independent autocorrelated AR(1) series was run to quantify how anti-conservative the 1.96/sqrt(T) bound is. Only the random-walk evidence (cointegrated pair (2,3)) is recorded.",
+   "xcorr: Historical EEG data (pyspi 1.1.1.1): the code at tag v1.1.1 was inspected with read-only git show and is identical for CrossCorrelation, with z-score before detrend in data.py. It was not run, and whether 1.1.1.1 is exactly tag v1.1.1 was not established.",
+   "xcorr: Results report 124 fails. All are deliberate deviation measurements (84 canon, 40 same-lineage perm-selfcons), so run_checks.py exits non-zero for the compare step by design.",
+   "pdist: normalise=False variants (uncentred cosine, offset-dependent distances) were not run: they are not config identifiers and pyspi's default/EEG path z-scores.",
+   "pdist: Propagation of braycurtis +inf into code outside pyspi (e.g. user min-max or z-scaling of the SPI table) was not run; only pyspi's own _rmmin and _get_correlation_df were checked.",
+   "pdist: EEG-band identifiers are identical to the config identifiers for pdist (no band parameter), so no EEG probe was needed.",
+   "pdist: The 'nonlinear'/'unordered' label questions and whether to guard braycurtis on signed data are policy decisions; the evidence is recorded but cannot settle them."
+  ],
+  "remaining_issues": [
+   {
+    "family": "pdist",
+    "unit_id": "distance.pdist.cityblock, distance.pdist.chebyshev, distance.pdist.canberra, distance.pdist.braycurtis",
+    "field": "check_reference",
+    "problem": "Minor, not raised in the fix round: the check_reference string is one family-wide template copied into all six records. It names ref_ident for cityblock, chebyshev, canberra and braycurtis although results/pdist.json has ident runs only for euclidean and cosine, and it omits reference functions that were run and are cited in checks_run: ref_signed_affine and ref_signed_warn (canberra), the same plus ref_calc_downstream (braycurtis) and ref_contam (chebyshev). checks_run is accurate per unit, so no number, verdict or score is affected; the field should list only the functions actually run for that unit."
+   }
+  ],
+  "score_disputes": 1,
+  "weak": 8,
+  "disputed": [
+   {
+    "unit_id": "distance.pdist.canberra and distance.pdist.braycurtis",
+    "field": "reference_kind of the signed-affine runs",
+    "reason": "signed-affine does not compare pyspi with pyspi. The pass_flag compares pyspi's entries with constants derived from the formula: canberra(x,-x) = T exactly, braycurtis(x,-x) = +inf, d(x, 2x+1) = 0, all <= T. The stored value is the independent from-definition kernel applied to the reference's own z-score, not S or S.T. So the 'analytic' label is correct, and only sym/sym-wide64/signed-warn/calc-downstream were relabelled same-lineage.",
+    "evidence": "audit/checks/refs/pdist.py:ref_signed_affine (the rule lines: canberra 'S01 = S10 = T exactly; S02 ~ 0; S12 ~ T'; braycurtis 'S01 = S10 = +inf; S02 < 1e-12'). value=V=pdist_metric(zscore(X)) comes from _kernels_basic_misc, not pyspi. results/pdist.json distance.pdist.canberra|iid_gaussian|256|pipeline|signed-affine: ref_S01 = 256.0 = T."
+   }
+  ],
+  "validator_clean": true,
+  "fixed_units": [
+   "distance.pdist.euclidean",
+   "distance.pdist.cosine",
+   "distance.pdist.cityblock",
+   "distance.pdist.chebyshev",
+   "distance.pdist.canberra",
+   "distance.pdist.braycurtis",
+   "basic.xcorr.max_sig-True",
+   "basic.xcorr.mean_sig-True",
+   "basic.xcorr.max_sig-False",
+   "basic.xcorr.mean_sig-False",
+   "basic.kendalltau",
+   "basic.spearmanr"
+  ],
+  "refutations": 3,
+  "confirmations": 42
+ },
+ "barycenters+cdt_pairwise+lmfit": {
+  "not_done": [
+   "barycenters: Full tight re-optimisation of the soft-DTW barycenter at T=4096 was not run because of cost. The T=4096 gap (>= 0.0010) is a lower bound from one Armijo line-search step. At T=1024 the re-optimisation was capped at 40 iterations, so those gaps are also lower bounds.",
+   "barycenters: The pyspi side of the T=4096 soft-DTW run took 66 s for one pair, slightly over the ~60 s per-run budget.",
+   "barycenters: The published Pattern Recognit. 74 version of Schultz & Jain was not read; only arXiv:1701.06393v1, where SSG is Alg. 3. The records keep the trace-stage citation 'Alg. 1'. No search of the tslearn issue tracker for the stopping rule was done.",
+   "barycenters: The max_time statistic was confirmed absent from config statically only; it was not run numerically because it has no config identifier.",
+   "barycenters: The bary_euclidean_max population (extreme-value) check was not done. Only the sq-mean population check was run.",
+   "barycenters: The authors' intent behind keeping bary_euclidean_mean and the bary-sq_* identifiers cannot be determined from the repository (open questions 1-2 are answered on the evidence only).",
+   "cdt_pairwise: anm at T=4096 not run (O(T^3); estimated ~5 min per pair). anm T=1024 run only as 2-process subsets (pairs 0-1, 2-3).",
+   "cdt_pairwise: anm GP collapse not tested on real EEG windows (open question 2); needs a one-window probe of patient data.",
+   "cdt_pairwise: CDS ffactor 2 vs sfactor 3 provenance in the original jarfo features.py not established (offline). The effect is quantified instead.",
+   "cdt_pairwise: The gamma p-value (hsic_gamma_test) and canonical RECI were written from memory of Gretton's hsicTestGamma.m and Bloebaum et al. Sec. 4-5, not re-checked against the sources. They serve only as direction references.",
+   "cdt_pairwise: BLAS thread-count sensitivity of anm is evidenced by a scratch script (cdt_pairwise_check/inv4.py), not a manifest run: a probe cannot change thread count after import.",
+   "cdt_pairwise: Remaining trace issues listed for the family (CDS identical-pmf wording, calculator.py citations, base.py:41-43 nit) were found already fixed at HEAD a1f20c7; verified, no further edits needed.",
+   "lmfit: Open question 3 (SGDRegressor stability across scikit-learn versions) could not be tested: both venvs carry scikit-learn 1.9.1 and installing other versions is out of scope.",
+   "lmfit: Open question 6 (multi-realisation R > 1 input) was not probed.",
+   "lmfit: Open question 5: other families' briefing packs were not checked for the same 18-line supplement offset.",
+   "lmfit: SGDRegressor direction on raw cointegrated data stays a fail (an SGD non-convergence finding on unscaled data, not a reference issue); no tolerance was loosened.",
+   "lmfit: The trace record lists no remaining trace issues for this family; the only corrections made were the calculator.py line citations (now HEAD a1f20c7), the BayesianRidge deviation_from_canonical hypothesis (replaced with measured numbers) and the supplement line for 'Ride'."
+  ],
+  "remaining_issues": [
+   {
+    "family": "barycenters",
+    "unit_id": "distance.bary.euclidean",
+    "field": "agreement_criterion / closeness / checks_run[popstat].outcome; audit/checks/refs/barycenters.py:h_popstat (zb = 2.865 and its comment); audit/notes/barycenters.md:148-154",
+    "problem": "The popstat critical value is mislabelled. h_popstat sets zb = 2.865 with the comment 'two-sided Bonferroni critical value for alpha = 0.05 over m = 6 pairs: Phi^-1(1 - 0.05/12)', but Phi^-1(1 - 0.05/12) = 2.638 (scipy norm.ppf). 2.865 = Phi^-1(1 - 0.05/24), i.e. the two-sided Bonferroni value over the 12 ordered off-diagonal entries that compare.py actually tests (6 pairs counted twice), or alpha 0.025 over 6 pairs. The record's agreement_criterion ('raw |z| <= 2.865 (Bonferroni over 6 pairs, alpha 0.05)'), the se_inflation 1.4325 = 2.865/2 quoted in closeness, the checks_run outcome and the note's table/text all carry the same label. Outcome is unchanged (raw_max_z 1.057/1.164/1.031 is below either threshold). Fix either the label (state it is the 12-entry / alpha-0.025 value) or set zb = 2.638, bump VERSION['popstat'] and requote max_z and se_inflation (1.319). Pre-existing from the check stage, but the fix pass restated this rule in the record and note without catching it."
+   },
+   {
+    "family": "cdt_pairwise",
+    "unit_id": "causal.anm",
+    "field": "check_cost (and audit/notes/cdt_pairwise.md open question 7)",
+    "problem": "Minor, non-blocking: the quoted timing range '11-17 s per 2-process matrix at T=1024 (two runs)' does not bracket the current out/pyspi/index/cdt_pairwise.json values, which are 9.7-12.3 s for the eleven causal.anm|*|1024|* runs (the index is unchanged by the re-run because the outputs are cached). Either quote the current index range (about 10-12 s this run, 17 s in the earlier run) or drop the lower bound to 10 s. Not a results.json number."
+   }
+  ],
+  "score_disputes": 3,
+  "weak": 5,
+  "disputed": [
+   {
+    "unit_id": "distance.bary.euclidean",
+    "field": "verdict/score_0_10 (degenerate, 0 -> proposed 10 with bary_euclidean_mean as a separate degenerate row)",
+    "reason": "The score is per unit and is reported against the unit's fixed representative identifier, which is bary_euclidean_mean, the constant one. A score of 10 would put 'representative bary_euclidean_mean, score 10' on the CSV row, describing a constant SPI in the EEG selection as fp-exact against canonical. That is the opposite misreading of the one the review worries about. The reviewer's fallback, a separate degenerate row, needs changes to units.yaml or build_csv.py, and both are read-only for this stage. Anchor 0 ('constant') fits the representative exactly, and the misc.lmfit.Lasso record uses the same verdict for a constant SPI. To address the misreading concern, what_changed now states up front that the 0 applies to bary_euclidean_mean and not to the barycenter calculation, and that bary_euclidean_max rates 10. The degenerate-identifier finding itself is confirmed by both sides.",
+    "evidence": "audit/units.yaml:1230 (representative: bary_euclidean_mean); audit/build_csv.py:25 (IDENTITY columns include representative alongside the CORRECTNESS score_0_10 at :31) and :157 (representative=_s(u['representative']) on the one row per unit); audit/README.md:16 (one row per calculation unit) and :55 (anchor 0: constant); audit/records/misc.lmfit.Lasso.yaml:151-152 (degenerate, 0 for a constant SPI); results: 84 *|zero|bary_euclidean_mean runs, max|A| 2.52e-16; audit/env/retained_metrics.txt:8 (bary_euclidean_mean retained)"
+   }
+  ],
+  "validator_clean": true,
+  "fixed_units": [
+   "causal.anm",
+   "causal.cds",
+   "causal.reci",
+   "causal.igci",
+   "misc.lmfit.SGDRegressor",
+   "distance.bary.sgddtw",
+   "distance.bary.euclidean",
+   "distance.bary.softdtw",
+   "distance.bary.dtw"
+  ],
+  "refutations": 5,
+  "confirmations": 48
+ },
+ "it_gaussian+pec": {
+  "not_done": [
+   "it_gaussian: Exact upstream JIDT commit of the bundled jar not established (needs a byte-level rebuild comparison); only 'not v1.6.1' is shown",
+   "it_gaussian: Population (analytic) checks for cce/di on var2_bivariate were not added (done on gauss_ar1_pair, white pairs and the constructed independent AR(2) pair instead)",
+   "it_gaussian: Statistical runs use a single fixed draw per T with a per-entry 2-SD rule and no familywise correction; all passed, max_z 1.75",
+   "it_gaussian: Supplement line-number convention (briefing vs grep -n) left to the synthesis stage; records keep section + page + grep -n line",
+   "it_gaussian: infotheory.tlmi.gaussian documentation inconsistency recorded as an elaboration of REVIEW M8 (new_finding false); te_symbolic label issue recorded as consequence of known bug 1 (new_finding false)",
+   "pec: A single-sample exact zero of the analytic signal was not constructed; the log(0) hypothesis was confirmed only for an all-zero channel on the kernel path. The pipeline rejects constant channels.",
+   "pec: Whether Khan et al. 2018 used absolute=True and log power was not checked (paper Methods not read).",
+   "pec: Whether bridged or duplicate channels occur in the EEG recordings was not checked; that needs the EEG data, which is out of scope here.",
+   "pec: The trace probe's pre-mirror asymmetry figure (5.2e-16) and the 2-channel-subset bivariateness probe were not re-run as manifest runs; bivariateness is supported only indirectly by the pairwise kernel matching every kern run.",
+   "pec: One statistical run (misc.pec.orth-True_log-True|bivariate_gaussian|4096|pipeline|pec_orth_log_abs-stat) fails narrowly (raw z 2.642 vs z* 2.638). It is attributed to the single realised draw, not to an estimator difference, and is reported as a failed run. A second independent draw would settle it, but the suite has one draw per T.",
+   "pec: The stale citations listed as remaining trace issues were already correct at HEAD a1f20c7 (calculator.py:252-259 and :329, DEPENDENCY_COMPATIBILITY_REVIEW.md:69, DEPENDENCY_MIGRATION.md:78-79), so no edit was needed."
+  ],
+  "remaining_issues": [
+   {
+    "family": "pec",
+    "unit_id": "notes/pec.md",
+    "field": "Checks > Reference > 'Standard errors' paragraph (line 169)",
+    "problem": "Says the earlier se = sd*z*/2 rule 'let three runs pass that exceed 2 SD', but the pre-fix vs post-fix results (verify_it_gaussian_pec/results_pec_before.json vs current results/pec.json: 164/41 -> 160/45) show four runs flipped (pec_log lagstat z 2.100, pec_orth stat 2.207, pec_orth_abs stat 2.534, pec_orth_log stat 2.335); the 'Revisions after the adversarial review' section and the fix report correctly say four. Minor internal inconsistency; change 'three' to 'four'."
+   },
+   {
+    "family": "it_gaussian",
+    "unit_id": "infotheory.si.gaussian (and the other 12 it_gaussian records)",
+    "field": "implementation_trace (all 13 records); new_finding_candidates[0] of infotheory.si.gaussian and new_finding_candidates[1] of infotheory.je.gaussian",
+    "problem": "Still cite pyspi/calculator.py:294 (multivariate call), :297 (fill_diagonal) and :301-303 (except -> NaN), which predate commit a1f20c7; at HEAD these are :329, :332 and :336-337. The check stage updated only the est.gaussian candidate text (336-338) and the si candidate evidence (336-338), so the si record now cites both 301-303 and 336-338 for the same lines. The pec records were brought to HEAD for the same citations; the it_gaussian ones were not. Minor (text content is right, line numbers stale)."
+   },
+   {
+    "family": "it_gaussian",
+    "unit_id": "infotheory.est.gaussian",
+    "field": "check_cost (and notes/it_gaussian.md run-time paragraph, line 219)",
+    "problem": "Quotes single-run absolute timings without the machine-load caveat the gc-auto record now carries: '3.7 s for the degenerate-contract probe; 0.7-1.6 s for the scaled_offset probes' and the note's 'Every other run takes <= 1.4 s'. My forced re-run (under load) measured 9.6 s (degenerate), 4.7 s (norm-invariance), 1.9 s (gc-auto iid T1024 params), family total 53.6 s (quoted 45 / 24.3 / 31.3 s); the gc-auto T4096 params probe took 6.9 s, inside its quoted 3.6-11.1 s range. The 'cheap' class is unaffected; low severity, but the same kind of run-specific timing quote was disputed for gc-auto."
+   }
+  ],
+  "score_disputes": 1,
+  "weak": 9,
+  "disputed": [],
+  "validator_clean": true,
+  "fixed_units": [
+   "misc.pec.orth-False_log-False",
+   "misc.pec.orth-False_log-True",
+   "misc.pec.orth-True_log-False",
+   "misc.pec.orth-True_log-True",
+   "infotheory.si.gaussian",
+   "infotheory.mi.gaussian",
+   "infotheory.est.gaussian",
+   "infotheory.je.gaussian",
+   "infotheory.cce.gaussian",
+   "infotheory.te.gaussian_k-1_kt-1_l-1_lt-1",
+   "infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2"
+  ],
+  "refutations": 1,
+  "confirmations": 24
+ }
+}

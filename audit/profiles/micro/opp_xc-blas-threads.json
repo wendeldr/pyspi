@@ -1,0 +1,235 @@
+{
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "jvm_openblas_children": {
+  "jvm_threads-1_solve": {
+   "completed": true,
+   "last_step": "CHILD_OK",
+   "returncode": 0,
+   "wall_s": 0.4989883539965376
+  },
+  "jvm_threads-2_solve": {
+   "completed": false,
+   "last_step": "STEP jvm",
+   "returncode": -11,
+   "wall_s": 1.4234662109956844
+  },
+  "jvm_threads-8_gemm_batched_eigh": {
+   "completed": true,
+   "last_step": "CHILD_OK",
+   "returncode": 0,
+   "wall_s": 1.8924736879998818
+  },
+  "jvm_threads-8_solve": {
+   "completed": false,
+   "last_step": "STEP jvm",
+   "returncode": -11,
+   "wall_s": 1.4524042120028753
+  },
+  "nojvm_threads-8_solve": {
+   "completed": true,
+   "last_step": "CHILD_OK",
+   "returncode": 0,
+   "wall_s": 0.6213172379939351
+  }
+ },
+ "jvm_started_in_part_a": false,
+ "machine_load": "five other audit groups ran concurrently on the 64-core machine",
+ "notes": "Thread-count sweep, no candidate implementation. Diffs are against the 1-thread output of the same call; speedup_vs_1 is the 1-thread wall over the n-thread wall. jvm_openblas_children: returncode -11 is SIGSEGV.",
+ "opportunity_id": "xc-blas-threads",
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_xc-blas-threads.py",
+ "settings": {
+  "NUMBA_NUM_THREADS": "1",
+  "OMP_NUM_THREADS": "1",
+  "OPENBLAS_NUM_THREADS": "1 at load, raised by threadpool_limits",
+  "blas_threads_swept": [
+   1,
+   4,
+   8
+  ],
+  "java": "OpenJDK 21.0.12.1 (java -version)",
+  "openblas": [
+   {
+    "internal_api": "openblas",
+    "version": "0.3.34.106.0"
+   },
+   {
+    "internal_api": "openblas",
+    "version": "0.3.30"
+   }
+  ]
+ },
+ "shapes": {
+  "cov_GraphicalLassoCV_118x1024": {
+   "threads_1": {
+    "bit_identical": true,
+    "effective_blas_threads": [
+     1,
+     1
+    ],
+    "max_abs_diff": 0.0,
+    "max_rel_diff": 0.0,
+    "n_entries": 13924,
+    "nan_mask_equal": true,
+    "speedup_vs_1": 1.0,
+    "wall_s": 5.152168268003152,
+    "walls_s": [
+     5.152168268003152
+    ]
+   },
+   "threads_4": {
+    "bit_identical": false,
+    "effective_blas_threads": [
+     4,
+     4
+    ],
+    "max_abs_diff": 1.3322676295501878e-15,
+    "max_rel_diff": 7.516145299079667e-11,
+    "n_entries": 13924,
+    "nan_mask_equal": true,
+    "speedup_vs_1": 0.9638117699440562,
+    "wall_s": 5.345616673992481,
+    "walls_s": [
+     5.345616673992481
+    ]
+   },
+   "threads_8": {
+    "bit_identical": false,
+    "effective_blas_threads": [
+     8,
+     8
+    ],
+    "max_abs_diff": 1.3322676295501878e-15,
+    "max_rel_diff": 7.516145299079667e-11,
+    "n_entries": 13924,
+    "nan_mask_equal": true,
+    "speedup_vs_1": 0.9501688483910818,
+    "wall_s": 5.42237127298722,
+    "walls_s": [
+     5.42237127298722
+    ]
+   }
+  },
+  "data_construction_118x1024": {
+   "threads_1": {
+    "bit_identical": true,
+    "effective_blas_threads": [
+     1,
+     1
+    ],
+    "max_abs_diff": 0.0,
+    "max_rel_diff": 0.0,
+    "n_entries": 120832,
+    "nan_mask_equal": true,
+    "speedup_vs_1": 1.0,
+    "wall_s": 0.002963161008665338,
+    "walls_s": [
+     0.0032050250010797754,
+     0.003138686006423086,
+     0.0029792699933750555,
+     0.0029756809963146225,
+     0.002963161008665338
+    ]
+   },
+   "threads_4": {
+    "bit_identical": true,
+    "effective_blas_threads": [
+     4,
+     4
+    ],
+    "max_abs_diff": 0.0,
+    "max_rel_diff": 0.0,
+    "n_entries": 120832,
+    "nan_mask_equal": true,
+    "speedup_vs_1": 0.8846310377244996,
+    "wall_s": 0.0033496010000817478,
+    "walls_s": [
+     0.0035922059905715287,
+     0.0034768979967338964,
+     0.0033496010000817478,
+     0.0033824300044216216,
+     0.0033697010076139122
+    ]
+   },
+   "threads_8": {
+    "bit_identical": true,
+    "effective_blas_threads": [
+     8,
+     8
+    ],
+    "max_abs_diff": 0.0,
+    "max_rel_diff": 0.0,
+    "n_entries": 120832,
+    "nan_mask_equal": true,
+    "speedup_vs_1": 0.8873514237679127,
+    "wall_s": 0.003339332004543394,
+    "walls_s": [
+     0.003667823999421671,
+     0.0034893480042228475,
+     0.0033624010102357715,
+     0.003339332004543394,
+     0.0033885199954966083
+    ]
+   }
+  },
+  "gpfit_DotProduct_pair_8x1024": {
+   "threads_1": {
+    "bit_identical": true,
+    "effective_blas_threads": [
+     1,
+     1
+    ],
+    "max_abs_diff": 0.0,
+    "max_rel_diff": 0.0,
+    "n_entries": 1,
+    "nan_mask_equal": true,
+    "speedup_vs_1": 1.0,
+    "wall_s": 1.94021088599402,
+    "walls_s": [
+     2.984259821998421,
+     1.94021088599402
+    ]
+   },
+   "threads_4": {
+    "bit_identical": false,
+    "effective_blas_threads": [
+     4,
+     4
+    ],
+    "max_abs_diff": 7.771561172376096e-16,
+    "max_rel_diff": 7.79880735393628e-16,
+    "n_entries": 1,
+    "nan_mask_equal": true,
+    "speedup_vs_1": 1.3402221613946284,
+    "wall_s": 1.4476785579900024,
+    "walls_s": [
+     1.4524889300082577,
+     1.4476785579900024
+    ]
+   },
+   "threads_8": {
+    "bit_identical": false,
+    "effective_blas_threads": [
+     8,
+     8
+    ],
+    "max_abs_diff": 7.771561172376096e-16,
+    "max_rel_diff": 7.79880735393628e-16,
+    "n_entries": 1,
+    "nan_mask_equal": true,
+    "speedup_vs_1": 1.4035384999207243,
+    "wall_s": 1.3823709760035854,
+    "walls_s": [
+     1.3823709760035854,
+     1.388673577006557
+    ]
+   }
+  }
+ },
+ "written_at": "2026-10-15T09:52:10-0400"
+}

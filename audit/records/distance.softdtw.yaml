@@ -1,0 +1,398 @@
+unit_id: distance.softdtw
+status: profiled
+correctness:
+  metric_name_standard: Soft-DTW discrepancy (Cuturi-Blondel soft-min DTW value, gamma = 1, squared Euclidean cost); not the soft-DTW divergence
+  canonical_ref: 'Cuturi M, Blondel M 2017, Soft-DTW: a Differentiable Loss Function for Time-Series, ICML (PMLR 70:894-903), eq. (1)-(2) and
+    Algorithm 1'
+  canonical_definition: 'dtw_gamma(x,y) = min^gamma { <A, Delta(x,y)> : A in A_{n,m} }, min^gamma(a_1..a_k) = -gamma log sum_i exp(-a_i/gamma),
+    Delta_ij = ||x_i - y_j||^2; computed by r_ij = Delta_ij + min^gamma(r_{i-1,j-1}, r_{i-1,j}, r_{i,j-1}), r_00 = 0, borders +inf'
+  documented_definition: 'supplement §1.2.9, p.7 (pack lines 312-320) and GitBook ''Soft Dynamic Time Warping'': "uses a smoothed formulation
+    of DTW to optimize the minimal-cost alignment as a differentiable loss function... computed via the tslearn package (with the default hyperparameter,
+    gamma = 1), and includes the same global constraints as DTW" (identifiers softdtw, softdtw_constraint-itakura, softdtw_constraint-sakoe_chiba).'
+  delegate_lib: tslearn==0.9.0 tslearn.metrics.soft_dtw (softdtw_variants.py:530) -> SoftDTW/_njit_soft_dtw; cost matrix via scikit-learn==1.9.1
+    euclidean_distances
+  implemented_as: z-score rows (ddof=1); D_ij = (sklearn euclidean_distances(x, y))^2 = clamp(x_i^2 + y_j^2 - 2 x_i y_j, 0); soft-DTW recursion
+    with gamma = 1 (numba fastmath softmin with max-shift); value R[T,T]. No global constraint for any of the three identifiers.
+  implementation_trace:
+  - pyspi/calculator.py:329 Calculator.compute calls self._spis[spi].multivariate(self.dataset)
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend(axis=1) only if detrend=True (default False), then scipy.stats.zscore(axis=1, nan_policy=''omit'',
+    ddof=1) if normalise=True (default True)'
+  - 'pyspi/base.py:132-138 Undirected.multivariate: A = Directed.multivariate(data); A[tril(-1)] = A.T[tril(-1)] (lower triangle overwritten by
+    the upper triangle, so A[i,j] = bivariate(min(i,j), max(i,j)))'
+  - 'pyspi/base.py:84-94 Directed.multivariate: A filled with NaN, bivariate(data, i, j) for every ordered pair i != j (both orders computed,
+    diagonal stays NaN)'
+  - 'pyspi/base.py:27-49 parse_bivariate: a raw (x, y) call builds Data() and add_process(x), add_process(y) (pyspi/data.py:219-240)'
+  - 'pyspi/statistics/distance.py:154-163 TimeWarping.__init__ (inherited): identifier gets ''_constraint-itakura'' / ''_constraint-sakoe-chiba'';
+    self._global_constraint stored but never read by SoftDynamicTimeWarping'
+  - 'pyspi/statistics/distance.py:200-208 SoftDynamicTimeWarping: name = ''Dynamic time warping''; bivariate overrides TimeWarping.bivariate and
+    returns tslearn.metrics.soft_dtw(z[i], z[j]) with no constraint and default gamma'
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/__init__.py:57-67 tslearn.metrics.soft_dtw is tslearn.metrics.softdtw_variants.soft_dtw
+    (tslearn==0.9.0)
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/softdtw_variants.py:530 soft_dtw(ts1, ts2, gamma=1.0, be=None, compute_with_backend=False)
+    (no constraint parameter exists; probe: TypeError on global_constraint=)'
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/softdtw_variants.py:624-628 be.array; if math.isclose(gamma, 0.0) return dtw(ts1, ts2)**2
+    (not taken, gamma=1)
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/softdtw_variants.py:629-638 SoftDTW(SquaredEuclidean(_to_time_series(ts1, True), _to_time_series(ts2,
+    True)), gamma=1.0).compute()
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/softdtw_variants.py:1176-1216 SquaredEuclidean.compute: be.pairwise_euclidean_distances(X,
+    Y) ** 2'
+  - .venv/lib/python3.12/site-packages/tslearn/backend/numpy_backend.py:19,70 pairwise_euclidean_distances = sklearn.metrics.pairwise.euclidean_distances
+  - '.venv/lib/python3.12/site-packages/sklearn/metrics/pairwise.py:268 euclidean_distances -> 376-426 _euclidean_distances (scikit-learn 1.9.1):
+    float64 path -2*X@Y.T + |X|^2 + |Y|^2, clamped at 0, then sqrt (squared again by tslearn)'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/softdtw_variants.py:1068-1135 SoftDTW.__init__/compute: D cast to float64, R_ zeros (m+2,
+    n+2); _njit_soft_dtw(D, R_, gamma); return R_[m, n]'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/soft_dtw_fast.py:100-125 _njit_soft_dtw: R[:m+1,0] = R[0,:n+1] = DBL_MAX, R[0,0] = 0;
+    R[i,j] = D[i-1,j-1] + softmin3(R[i-1,j], R[i-1,j-1], R[i,j-1], gamma)'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/soft_dtw_fast.py:14-48 _njit_softmin3 (numba fastmath=True): -gamma * (log(sum exp(-a/gamma
+    - max)) + max)'
+  deviation_from_documented: 'The documented Sakoe-Chiba and Itakura variants are not implemented: SoftDynamicTimeWarping.bivariate (distance.py:205-208)
+    never passes the constraint and tslearn.soft_dtw has no constraint argument, so the three identifiers are identical (probe: bit-identical
+    4x128 matrices). gamma = 1 matches the documentation. Class name ''Dynamic time warping'' duplicates the DTW name (distance.py:202, cosmetic).
+    Identifier spelling: the code produces ''softdtw_constraint-sakoe-chiba'' (distance.py:161 replaces ''_'' by ''-''), the supplement and GitBook
+    list ''softdtw_constraint-sakoe_chiba'' (cosmetic).'
+  deviation_from_canonical: 'none for the value itself: matches Cuturi-Blondel Algorithm 1 with squared Euclidean cost and gamma = 1 (probe T=40:
+    tslearn -2.205017147170598 vs from-scratch -2.2050171471705955). The cost matrix uses the dot-product expansion (last-bit cancellation; probe:
+    max abs cell error 1.1e-14 on z-scored data, 2.9e-8 with offset 1e4) and softmin uses numba fastmath.'
+  units_and_range: 'Real-valued, NOT non-negative (the audit reads the ''unsigned'' keyword by the GitBook glossary''s sign-meaning sentence, glossary-of-terms.md:21, which says whether the sign indicates how A and B co-fluctuate; the same glossary entry also ties the keyword to the range, so it is mixed, and the supplement only lists the keyword axes, supplement.txt:126-128; and ''distance'' is the literature category): includes an entropic term down to about -gamma*log(number
+    of alignment paths); soft_dtw(x,x) != 0 (probe T=40: -31.28; T=1024: -717.3); scale grows with T; symmetric in its arguments. Units: squared
+    data units (z-scored -> dimensionless).'
+  direction_convention: 'Undirected: A[i,j] = A[j,i] = soft_dtw(z_min(i,j), z_max(i,j)) via Undirected.multivariate mirroring; diagonal NaN (probe:
+    raw soft_dtw(z0,z1) - soft_dtw(z1,z0) = 0.0).'
+  symmetry_expected: sym
+  already_documented: tests/README.md bug 3 (SoftDynamicTimeWarping ignores global_constraint; locked in tests/unit/test_known_bugs.py:111-131)
+  new_finding_candidates:
+  - 'Candidate (interpretation): pyspi reports the soft-DTW VALUE, not the soft-DTW divergence D(x,y) = sdtw(x,y) - (sdtw(x,x)+sdtw(y,y))/2 (Blondel,
+    Mensch, Vert 2021, AISTATS; tslearn offers cdist_soft_dtw_normalized). Values are mostly negative and dominated by a length-dependent entropic
+    term: probe (z-scored, seeded) T=64: sdtw(x,x) = -41.4, independent -9.07, x vs -x +2.84; T=1024: -717.3, -189.1, -188.4. So at T=1024 it
+    does not separate independent from anti-correlated pairs; snapshot small/full matrices contain both signs (min -16.96, max 2.31 for small).'
+  - 'Candidate (numerical, minor): the squared-Euclidean cost comes from sklearn''s |x|^2+|y|^2-2xy expansion followed by sqrt and re-squaring, which
+    adds an absolute error of order 1e-14 per cell on unit-scale data (probe: 1.07e-14 max on z-scored data; 1.4e-14 max over 20 seeds of y = x + 1e-3
+    noise, T=256) and 2.9e-8 with a 1e4 offset when normalise=False. The relative error of a cell is that absolute error divided by (x_i - y_j)^2, so
+    it is unbounded as the cell approaches 0: for y = x + 1e-3 noise the maximum diagonal relative error ranged from 1.2e-7 to 2.1e-3 across 20 seeds,
+    and no single relative figure characterises it. Expected impact on the final value < 1e-10 relative for z-scored data (hypothesis, to be measured
+    by the from-scratch check).'
+  - 'Cross-family (infrastructure) candidate, affects direct two-array calls only: parse_bivariate (pyspi/base.py:33-36) builds Data() (normalise=True)
+    and calls add_process(x) then add_process(y); the first call goes through set_data and is z-scored, the second is np.append-ed raw (pyspi/data.py:230-234).
+    Probe with x, y ~ 5 + 3 N(0,1), T=64: stored means [0.0, 4.783], stds [1.0, 2.995]. So spi.bivariate(x, y) compares z-scored x with raw y.
+    Calculator/multivariate paths are unaffected.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    - logistic_maps
+    path: kernel
+    reference: from-scratch numpy soft-DTW (Cuturi-Blondel Algorithm 1, direct (x_i-y_j)^2 cost, scipy.special.logsumexp softmin, gamma = 1)
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: relative difference <= 1e-10 at T in {64,256,1024} (4096 with an anti-diagonal vectorised reference)
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: pyspi softdtw matrix
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: softdtw_constraint-itakura and softdtw_constraint-sakoe-chiba matrices are bit-identical to softdtw (known bug 3, re-confirmed)
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: from-scratch soft-DTW with gamma -> 1e-3 vs from-scratch hard DTW squared
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: reference satisfies dtw^2 - gamma*log(number of alignment paths) <= sdtw <= dtw^2 and converges to dtw^2 as gamma -> 0 (sanity
+      of the reference)
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic properties: sdtw(x,x) != 0 and typically < sdtw(x,y); divergence D(x,y) >= 0 computed from-scratch'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: pyspi values are negative for most pairs and the soft-DTW divergence ranks pairs differently from the raw value; document
+      dynamic range vs T
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    path: pipeline
+    reference: from-scratch numpy soft-DTW recursion applied to the ddof=1 z-scored rows z_i, z_j (no tslearn import)
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'Direction/symmetry convention: A == A.T exactly (np.array_equal with equal_nan), diagonal all NaN, and A[i,j] == A[j,i]
+      == reference(z_min(i,j), z_max(i,j)) within tolerance; reference(z_i, z_j) and reference(z_j, z_i) agree to <= 1e-12 relative, so the undirected
+      label carries no hidden order.'
+  check_method: independent-impl
+  check_reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:soft_dtw_dp (Cuturi & Blondel 2017 Alg. 1, direct (a-b)^2
+    cost, logsumexp softmin); audit/checks/refs/dtw_family.py:soft_dtw_masked (documented constrained variants); same-lineage bit identity of the constraint
+    identifiers with softdtw; audit/checks/refs/_kernels_distance.py:dtw_dp for the gamma -> 0 band; audit/checks/refs/dtw_family.py:mc_null
+  check_data: iid_gaussian, delayed_noise, narrowband_f0-0.25, logistic_maps (kernel T 64/256/1024, all 3 identifiers); pipeline T1024 on iid_gaussian, delayed_noise,
+    bivariate_gaussian, shared_envelope; iid_gaussian T256 (gamma probes, near-identical and +1e4 rows); scaled_offset, trending T1024; null T256/T1024
+  agreement_criterion: tolerance rtol 1e-10, atol 1e-10; bit identity (rtol 0) between identifiers; gamma probes rtol 1e-9 and the analytic band; null Bonferroni
+    2 se
+  closeness: 'softdtw: 16/16 dp runs within max_abs 2.3e-13, max_rel 2.5e-14 of the from-scratch recursion; constraint identifiers vs unconstrained reference
+    8/8 (max_rel 4.8e-15). softdtw_constraint-itakura and -sakoe-chiba are bit-identical to softdtw in all 32 ''ident'' runs (kernel 4 datasets x 3 T, pipeline
+    4 datasets). Against the masked (documented) soft-DTW all 8 ''masked'' runs fail: itakura masked minus unconstrained 2.5-22.6, sakoe-chiba 57-1303 (iid_gaussian
+    T1024: 676-848). gamma probes: tslearn vs reference max_rel 4.6e-15 (gamma 0.001) and 1.1e-14 (gamma 0.1); both inside the analytic band around dtw^2.
+    Near-identical z-scored rows max_rel 3.1e-16; rows + 1e4 on the kernel path max_rel 1.0e-8 (fails the 1e-10 tolerance). Null T1024 -188.1 vs Monte Carlo
+    -194.6 +- 13.6 (max_z 1.07); T256 max_z 1.43.'
+  verdict: wrong
+  score_0_10: 3
+  score_rubric: 3
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: Anchor 3 names the softdtw constraint identifiers, which equal softdtw bit for bit in all 32 ident runs. The approved anchor text has no rule for
+    which identifier a unit row describes, so the row was scored on its lowest-scoring identifier. The representative softdtw alone is within max_rel 2.5e-14 of the
+    from-scratch recursion (16/16 runs).
+  documentation_status: misdescribed
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: R1
+  score_adjustment_reason: 'R1: the base identifier softdtw agrees with a from-scratch Cuturi-Blondel Alg. 1 recursion at gamma = 1 in 16/16 runs (max_rel 2.5e-14),
+    and 10 is withheld for the dot-product cancellation that also holds pdist euclidean at 9 (kernel-path +1e4 offset run max_rel 1.008e-8, just above the 1e-8 bar,
+    max_abs 3.0e-7).'
+  identifier_exceptions: 'softdtw_constraint-itakura=3 (wrong): constraint never passed to tslearn, bit-identical to softdtw in 16/16 ident runs (32 for the two constraint
+    identifiers; tests/README bug 3) | softdtw_constraint-sakoe-chiba=3 (wrong): constraint never passed to tslearn, bit-identical to softdtw in 16/16 ident runs (tests/README
+    bug 3)'
+  what_changed: 'The score 3 applies to the two constraint identifiers softdtw_constraint-itakura and softdtw_constraint-sakoe-chiba, not to the
+    representative identifier softdtw (units.yaml representative; the CSV row carries softdtw next to the score), which on its own would rate 10: it
+    is Cuturi & Blondel''s soft-DTW with gamma = 1 to about 1e-14 relative against an independent recursion, as documented. The unit is scored on
+    its lowest-scoring identifier, the rule that also gives distance.bary.euclidean 0 (there the lowest-scoring identifier is also the representative);
+    rubric anchor 3 names this case. The two constraint identifiers ignore their constraint (SoftDynamicTimeWarping.bivariate, distance.py:205-208,
+    passes nothing), so they equal softdtw bit for bit: already documented as tests/README.md bug 3. Separately, and not a deviation: pyspi reports
+    the raw soft-DTW value, which is the canonical Cuturi-Blondel 2017 quantity (eq. 2, Alg. 1) and the documented one (supplement.txt:305-310), not
+    the soft-DTW divergence of Blondel, Mensch & Vert 2021. On z-scored data every value at T=1024 is negative (-454 to -174), sdtw(x,x) is about
+    -712 to -718, and the ranking differs from the divergence (Spearman 0.44-0.60). This does not contradict the labels: the supplement only lists signed or unsigned among its keyword axes (supplement.txt:126-128) without
+    defining them, and the GitBook glossary (information-about-pyspi/spis/glossary-of-terms.md:21) is mixed, tying the keyword first to the range ("correlation coefficients
+    ... [-1, 1]", "distance correlation (defined in the range [0,1]) are unsigned") and then to whether the sign indicates how fluctuations in A correspond to B; the audit
+    adopts the sign-meaning sentence, and under it the entropic offset does not make the value signed, and ''distance'' is the literature category shared with LCSS (a similarity). new_finding is false: the constraint issue is documented,
+    the raw-value property belongs to the canonical quantity (as for the DTW and LCSS low-dynamic-range candidates in this family), and the dot-product
+    cost error is a floating-point property that reaches 1e-8 relative only with normalisation off. Rubric reading is nearest-anchor 3 (score_rubric_note),
+    because the anchor text has no rule for which identifier a unit row describes; under R1 score_adjusted is 9, not 10, for the dot-product cancellation
+    (score_adjustment_reason). The ''anchor 3 names this case'' wording above is the original reasoning for score_0_10; ''would rate 10'' is the original
+    estimate for the representative softdtw on its own.'
+  new_finding: false
+  definition_under_review: false
+  check_cost: 'cheap: <= 1.5 s per pyspi run at T=1024; reference 0.12 s per pair at T=1024'
+  symmetry_observed: 'sym after mirroring: max|A - A.T| = 0.0 on every pyspi matrix. tslearn itself is symmetric only to the last bits: the unmirrored probe
+    gives max|B - B.T| = 1.1e-13 at T1024 (iid_gaussian and delayed_noise), and the from-scratch reference 5.7e-14; diagonal NaN'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = f(z_i, z_j); on delayed_noise (x_k = x0 delayed by 0/1/3/5) the matrix carries no lead/lag sign, only
+    how well warping absorbs the delay; values on delayed_noise T1024 -702 to -691.5 (closer to sdtw(x,x) about -714 than to the independent level about -190).'
+  candidate_resolutions:
+  - candidate: pyspi reports the raw soft-DTW value (mostly negative, length-dominated), not the soft-DTW divergence
+    outcome: confirmed
+    evidence: 'distance.softdtw|{iid_gaussian,bivariate_gaussian,delayed_noise}|1024|pipeline|div|softdtw: fraction of negative values 1.0, raw range -453.6
+      to -174.1, self values mean -712 to -718, divergence 11-549 (>= 0), Spearman(raw, divergence) 0.44 / 0.60 / 0.49; |iid_gaussian|1024|pipeline|null-neg|softdtw:
+      sdtw(x,-x) -174.0 vs independent -186.4, within 1.5 SD of the Monte Carlo null (-194.6 +- 13.6). Not in KNOWN_ISSUES, but a property of the
+      canonical, documented quantity rather than a code deviation, so it does not make new_finding true.'
+  - candidate: dot-product cost expansion adds an absolute error per cell; relative effect on the value < 1e-10 for z-scored data
+    outcome: confirmed
+    evidence: 'distance.softdtw|iid_gaussian|256|pipeline|near|softdtw max_rel 3.1e-16 (no effect on z-scored data); |iid_gaussian|256|kernel|offset|softdtw
+      (rows + 1e4, normalise=False): max_abs 3.0e-7, max_rel 1.0e-8 vs the direct-difference reference. Minor; reachable only with normalisation off.'
+  - candidate: parse_bivariate z-scores only the first of two raw arrays
+    outcome: confirmed
+    evidence: 'Confirmed, but it belongs to preproc.two_array_api (preprocessing_base family, already checked; run preproc.two_array_api|scaled_offset|256|pipeline|spi-dtw),
+      so it is not a finding of this unit. Re-measured here on the direct-array API: distance.softdtw|scaled_offset|256|pipeline|rawcall|softdtw: bivariate(x0,
+      x1) 478.3, bivariate(x1, x0) -118.8 equal f(zscore(first), raw second) (max_abs 5.7e-14); both z-scored -60.6.'
+  checks_run:
+  - run_ids:
+    - distance.softdtw|bivariate_gaussian|1024|pipeline|div|softdtw
+    - distance.softdtw|delayed_noise|1024|pipeline|div|softdtw
+    - distance.softdtw|iid_gaussian|1024|pipeline|div|softdtw
+    reference: audit/checks/refs/dtw_family.py:handle 'div' (soft-DTW divergence from audit/checks/refs/_kernels_distance.py:soft_dtw_dp) [qualitative]
+    outcome: 'pass: 3/3 pass'
+  - run_ids:
+    - distance.softdtw|bivariate_gaussian|1024|pipeline|dp|softdtw
+    - distance.softdtw|delayed_noise|1024|kernel|dp|softdtw
+    - distance.softdtw|delayed_noise|1024|pipeline|dp|softdtw
+    - distance.softdtw|delayed_noise|256|kernel|dp|softdtw
+    - distance.softdtw|delayed_noise|64|kernel|dp|softdtw
+    - distance.softdtw|iid_gaussian|1024|kernel|dp|softdtw
+    - distance.softdtw|iid_gaussian|1024|pipeline|dp|softdtw
+    - distance.softdtw|iid_gaussian|256|kernel|dp|softdtw
+    - distance.softdtw|iid_gaussian|64|kernel|dp|softdtw
+    - distance.softdtw|logistic_maps|1024|kernel|dp|softdtw
+    - distance.softdtw|logistic_maps|256|kernel|dp|softdtw
+    - distance.softdtw|logistic_maps|64|kernel|dp|softdtw
+    - distance.softdtw|narrowband_f0-0.25|1024|kernel|dp|softdtw
+    - distance.softdtw|narrowband_f0-0.25|256|kernel|dp|softdtw
+    - distance.softdtw|narrowband_f0-0.25|64|kernel|dp|softdtw
+    - distance.softdtw|shared_envelope|1024|pipeline|dp|softdtw
+    reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:dtw_dp / lcss_dp / soft_dtw_dp (every ordered pair separately)
+      [exact rtol 1e-10 atol 1e-12 (soft-DTW tolerance rtol/atol 1e-10)]
+    outcome: 'pass: 16/16 pass; max_abs <= 2.27e-13, max_rel <= 2.55e-14'
+  - run_ids:
+    - distance.softdtw|bivariate_gaussian|1024|pipeline|ident|softdtw_constraint-itakura
+    - distance.softdtw|delayed_noise|1024|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|delayed_noise|1024|pipeline|ident|softdtw_constraint-itakura
+    - distance.softdtw|delayed_noise|256|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|delayed_noise|64|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|iid_gaussian|1024|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|iid_gaussian|1024|pipeline|ident|softdtw_constraint-itakura
+    - distance.softdtw|iid_gaussian|256|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|iid_gaussian|64|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|logistic_maps|1024|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|logistic_maps|256|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|logistic_maps|64|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|narrowband_f0-0.25|1024|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|narrowband_f0-0.25|256|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|narrowband_f0-0.25|64|kernel|ident|softdtw_constraint-itakura
+    - distance.softdtw|shared_envelope|1024|pipeline|ident|softdtw_constraint-itakura
+    reference: audit/checks/refs/dtw_family.py:matrix on rows (x0, x0, x1) / same-lineage pyspi softdtw bit identity [exact]
+    outcome: 'pass: 16/16 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.softdtw|bivariate_gaussian|1024|pipeline|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|delayed_noise|1024|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|delayed_noise|1024|pipeline|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|delayed_noise|256|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|delayed_noise|64|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|iid_gaussian|1024|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|iid_gaussian|1024|pipeline|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|iid_gaussian|256|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|iid_gaussian|64|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|logistic_maps|1024|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|logistic_maps|256|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|logistic_maps|64|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|narrowband_f0-0.25|1024|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|narrowband_f0-0.25|256|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|narrowband_f0-0.25|64|kernel|ident|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|shared_envelope|1024|pipeline|ident|softdtw_constraint-sakoe-chiba
+    reference: audit/checks/refs/dtw_family.py:matrix on rows (x0, x0, x1) / same-lineage pyspi softdtw bit identity [exact]
+    outcome: 'pass: 16/16 pass; max_abs <= 0, max_rel <= 0'
+  - run_ids:
+    - distance.softdtw|delayed_noise|1024|kernel|dp|softdtw_constraint-itakura
+    - distance.softdtw|delayed_noise|256|kernel|dp|softdtw_constraint-itakura
+    - distance.softdtw|iid_gaussian|1024|kernel|dp|softdtw_constraint-itakura
+    - distance.softdtw|iid_gaussian|256|kernel|dp|softdtw_constraint-itakura
+    reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:dtw_dp / lcss_dp / soft_dtw_dp (every ordered pair separately)
+      [exact rtol 1e-10 atol 1e-12 (soft-DTW tolerance rtol/atol 1e-10)]
+    outcome: 'pass: 4/4 pass; max_abs <= 2.27e-13, max_rel <= 4.83e-15'
+  - run_ids:
+    - distance.softdtw|delayed_noise|1024|kernel|dp|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|delayed_noise|256|kernel|dp|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|iid_gaussian|1024|kernel|dp|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|iid_gaussian|256|kernel|dp|softdtw_constraint-sakoe-chiba
+    reference: audit/checks/refs/dtw_family.py:matrix -> audit/checks/refs/_kernels_distance.py:dtw_dp / lcss_dp / soft_dtw_dp (every ordered pair separately)
+      [exact rtol 1e-10 atol 1e-12 (soft-DTW tolerance rtol/atol 1e-10)]
+    outcome: 'pass: 4/4 pass; max_abs <= 2.27e-13, max_rel <= 4.83e-15'
+  - run_ids:
+    - distance.softdtw|delayed_noise|1024|kernel|masked|softdtw_constraint-itakura
+    - distance.softdtw|delayed_noise|256|kernel|masked|softdtw_constraint-itakura
+    - distance.softdtw|iid_gaussian|1024|kernel|masked|softdtw_constraint-itakura
+    - distance.softdtw|iid_gaussian|256|kernel|masked|softdtw_constraint-itakura
+    reference: audit/checks/refs/dtw_family.py:soft_dtw_masked (documented constrained soft-DTW) [tolerance 1e-10]
+    outcome: 'fail: 0/4 pass; max_abs <= 22.6, max_rel <= 5.8'
+  - run_ids:
+    - distance.softdtw|delayed_noise|1024|kernel|masked|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|delayed_noise|256|kernel|masked|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|iid_gaussian|1024|kernel|masked|softdtw_constraint-sakoe-chiba
+    - distance.softdtw|iid_gaussian|256|kernel|masked|softdtw_constraint-sakoe-chiba
+    reference: audit/checks/refs/dtw_family.py:soft_dtw_masked (documented constrained soft-DTW) [tolerance 1e-10]
+    outcome: 'fail: 0/4 pass; max_abs <= 1.3e+03, max_rel <= 2.53'
+  - run_ids:
+    - distance.softdtw|delayed_noise|1024|pipeline|unmirrored|softdtw
+    - distance.softdtw|iid_gaussian|1024|pipeline|unmirrored|softdtw
+    reference: audit/checks/refs/dtw_family.py:matrix vs probes/dtw_family_probes.py:unmirrored (Directed.multivariate) [exact]
+    outcome: 'pass: 2/2 pass; max_abs <= 2.27e-13, max_rel <= 5.85e-16'
+  - run_ids:
+    - distance.softdtw|iid_gaussian|1024|pipeline|null-neg|softdtw
+    - distance.softdtw|iid_gaussian|256|pipeline|null-neg|softdtw
+    reference: audit/checks/refs/dtw_family.py:handle 'null-neg' (rows x0, -x0, x1, x2) [qualitative]
+    outcome: 'pass: 2/2 pass'
+  - run_ids:
+    - distance.softdtw|iid_gaussian|1024|pipeline|null|softdtw
+    - distance.softdtw|iid_gaussian|256|pipeline|null|softdtw
+    reference: audit/checks/refs/dtw_family.py:mc_null (400 independent z-scored Gaussian pairs, batched DP) [statistical, Bonferroni 2 se]
+    outcome: 'pass: 2/2 pass; max_z 1.07, 1.43'
+  - run_ids:
+    - distance.softdtw|iid_gaussian|256|kernel|offset|softdtw
+    reference: audit/checks/refs/_kernels_distance.py:soft_dtw_dp on rows + 1e4 (kernel path) [tolerance 1e-10]
+    outcome: 'fail: 0/1 pass; max_abs <= 2.96e-07, max_rel <= 1.01e-08'
+  - run_ids:
+    - distance.softdtw|iid_gaussian|256|pipeline|gamma-0.001
+    reference: audit/checks/refs/_kernels_distance.py:soft_dtw_dp(gamma=0.001) vs probes/dtw_family_probes.py:softdtw_gamma [tolerance 1e-9]
+    outcome: 'pass: 1/1 pass; max_abs <= 5.83e-13, max_rel <= 4.64e-15'
+  - run_ids:
+    - distance.softdtw|iid_gaussian|256|pipeline|gamma-0.1
+    reference: audit/checks/refs/_kernels_distance.py:soft_dtw_dp(gamma=0.1) vs probes/dtw_family_probes.py:softdtw_gamma [tolerance 1e-9]
+    outcome: 'pass: 1/1 pass; max_abs <= 1.38e-12, max_rel <= 1.12e-14'
+  - run_ids:
+    - distance.softdtw|iid_gaussian|256|pipeline|gbound-0.001
+    reference: audit/checks/refs/dtw_family.py:handle 'gbound' (dtw^2 - g log3 (2T-1) <= sdtw <= dtw^2) [optimality]
+    outcome: 'pass: 1/1 pass'
+  - run_ids:
+    - distance.softdtw|iid_gaussian|256|pipeline|gbound-0.1
+    reference: audit/checks/refs/dtw_family.py:handle 'gbound' [optimality]
+    outcome: 'pass: 1/1 pass'
+  - run_ids:
+    - distance.softdtw|iid_gaussian|256|pipeline|ident|softdtw
+    reference: audit/checks/refs/dtw_family.py:matrix on rows (x0, x0, x1) / same-lineage pyspi softdtw bit identity [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 1.42e-14, max_rel <= 3.32e-16'
+  - run_ids:
+    - distance.softdtw|iid_gaussian|256|pipeline|near|softdtw
+    reference: audit/checks/refs/_kernels_distance.py:soft_dtw_dp on near-identical rows [tolerance 1e-10]
+    outcome: 'pass: 1/1 pass; max_abs <= 5.68e-14, max_rel <= 3.14e-16'
+  - run_ids:
+    - distance.softdtw|scaled_offset|1024|kernel|scale-raw|softdtw
+    reference: audit/checks/refs/dtw_family.py:matrix on raw scaled_offset rows [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 1.46e-11, max_rel <= 2.11e-16'
+  - run_ids:
+    - distance.softdtw|scaled_offset|1024|pipeline|scaleinv-self|softdtw
+    reference: pyspi matrix on bivariate_gaussian (same-lineage) [rtol 1e-10]
+    outcome: 'pass: 1/1 pass; max_abs <= 1.71e-13, max_rel <= 8.22e-16'
+  - run_ids:
+    - distance.softdtw|scaled_offset|1024|pipeline|scaleinv|softdtw
+    reference: audit/checks/refs/dtw_family.py:matrix on z-scored bivariate_gaussian [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 1.14e-13, max_rel <= 5.8e-16'
+  - run_ids:
+    - distance.softdtw|scaled_offset|256|pipeline|rawcall|softdtw
+    reference: 'audit/checks/refs/dtw_family.py: f(zscore(first), raw second) vs probes/dtw_family_probes.py:raw_call [exact]'
+    outcome: 'pass: 1/1 pass; max_abs <= 5.68e-14, max_rel <= 1.19e-16'
+  - run_ids:
+    - distance.softdtw|trending|1024|pipeline-detrend|detrend|softdtw
+    reference: audit/checks/refs/dtw_family.py:matrix on z-score(LS-detrend(trending)) [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 1.02e-12, max_rel <= 5.2e-15'
+  - run_ids:
+    - distance.softdtw|trending|1024|pipeline|trend|softdtw
+    reference: audit/checks/refs/dtw_family.py:matrix on z-scored trending rows [exact]
+    outcome: 'pass: 1/1 pass; max_abs <= 9.09e-13, max_rel <= 7.19e-16'
+optimisation:
+  complexity_P_T: 'O(P^2 T^2) per identifier: per ordered pair (Undirected over Directed.multivariate) tslearn soft_dtw builds the T x T squared-distance
+    matrix with sklearn euclidean_distances (SquaredEuclidean) and runs the numba soft-DTW recursion; the unit''s three identifiers ignore their
+    constraint and repeat the same work (family-warm 7.77 s vs fresh 2.54 s at 8x1024). Measured T_exponent 1.81 (8x256 -> 8x1024); 118x1024 projected
+    by pair count (626 s fresh, 1916 s for the three identifiers).'
+  hotspot_1: tslearn/metrics/softdtw_variants.py:SoftDTW.compute (third-party:tslearn) 51.9% self time of the profiled SPI call at 8x1024 (numba
+    soft-DTW recursion hidden in it)
+  hotspot_2: tslearn/metrics/softdtw_variants.py:SoftDTW.__init__ -> SquaredEuclidean.compute -> sklearn _euclidean_distances (third-party:sklearn)
+    45.4% cumulative (sklearn 29.3%, numpy astype casts 10.6%)
+  hotspot_owner: third-party:tslearn
+  opaque_share: 0.1157
+  profile_file: audit/profiles/distance.softdtw__8x1024.pstats
+  opportunities:
+  - opportunity_id: dtw_family-3
+    opportunity: 'Compute the soft-DTW matrix once for the unit''s three identifiers: SoftDynamicTimeWarping.bivariate (pyspi/statistics/distance.py:206-208)
+      calls soft_dtw(z[i], z[j]) without the constraint, so softdtw, softdtw_constraint-itakura and softdtw_constraint-sakoe-chiba are the same
+      computation. Invalid once the constraint is honoured.'
+    opp_type: cache-sharing
+    expected_speedup: ~3x
+    speedup_basis: 'complexity: three identical computations; family-warm increments 2.58 / 2.59 / 2.60 s for the three identifiers (audit/profiles/distance.softdtw__8x1024__family-warm.json)
+      at 8x1024 (7.77 s unit total -> 2.58 s)'
+    output_risk: unverified-bit-identical
+    risk_evidence: identical call soft_dtw(z[i], z[j]) with gamma=1 for all three identifiers (correctness block)
+    effort: S
+    depends_on: []
+  - opportunity_id: dtw_family-4
+    opportunity: 'Fuse the cost into the recursion: compute (x_i - y_j)^2 inside one numba kernel instead of building the T x T matrix with sklearn''s
+      dot-product expansion plus three astype casts in SquaredEuclidean.'
+    opp_type: rewrite-numba-rust-cpp
+    expected_speedup: '1.5-1.8x'
+    speedup_basis: 'profile:audit/profiles/distance.softdtw__8x1024.pstats SoftDTW.__init__ 45.4% (Amdahl 1.83x, reached only if the fused squared difference costs nothing inside the recursion; a fused cost adds T^2 subtractions and squares, so about 1.5-1.8x).
+      Independent of dtw_family-3 (independent_of), because dtw_family-3 serves two of the three identifiers from the first one''s matrix (fewer calls) and this avenue makes each
+      remaining call cheaper, so the savings multiply'
+    output_risk: unverified-within-tolerance
+    risk_evidence: sklearn computes clamp(x^2 + y^2 - 2xy, 0) (correctness block), a direct square differs by rounding
+    effort: M
+    depends_on:
+    - xc-undirected-upper
+    - xc-window-parallel
+    independent_of:
+    - dtw_family-3

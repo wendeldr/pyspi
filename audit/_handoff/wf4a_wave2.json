@@ -1,0 +1,433 @@
+{
+ "clusters": [
+  {
+   "cluster": "w2-spectral-directed-sgc",
+   "families": [
+    "spectral_directed",
+    "sgc"
+   ],
+   "ok": true,
+   "fixed": 29,
+   "false_positives": 32,
+   "external_checked": [
+    "GitBook /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/glossary-of-terms.md:27 (rows = sources sentence): correct in all 23 citations",
+    "GitBook spi-descriptions/spectral.md:82 (dcoh), :107 (dtf/ddtf), :210 (pdcoh/gpdcoh), :350-358 (sgc section, text at 358): all correct",
+    "supplement/supplement.txt: 570 (sec 1.5 heading), 589-599 / 570-599 (band rule), 752/774/789 (1.5.9/1.5.10/1.5.11), 809-818 (1.5.12 sgc): all correct",
+    "DEPENDENCY_COMPATIBILITY_REVIEW.md (Nyquist/frequency grid at 76-86; ddtf depends on whole grid at 82): unnumbered mentions consistent",
+    "tests/README.md: 219-221 (spectral-connectivity pin), 224 ('dtf_* == pdcoh_*'), 249 (order-20 partial_nan); the :220 citation was wrong and is now :249",
+    "spectral_connectivity v2.0.1 connectivity.py:1298-1303 (spectral_directed.md:227) is an upstream-release citation with the version named; no local copy, left as is",
+    "No JIDT .java, R-package or PhiToolbox citations in these families"
+   ],
+   "leftovers_applied": [
+    "wf2bB spectral_directed+sgc remaining_issues[0]: order-None record line 397 and notes/sgc.md:256 now say all 42 changes are lower (ref_n_ntotT_lower 42, ref_n_ntotT_higher 0 in results/sgc.json run spectral.sgc.parametric_order-None|var2_bivariate|256|pipeline|ntot), split as 40 draws 2 -> 1, one 3 -> 2, one 3 -> 1. The quoted order counts force that split; it is not a newly computed number",
+    "wf2bB remaining_issues[1]: replaced 'under the default warnings filter state' with 'under the message-regex warnings filters numpy installs on import' in the spectral.py:438-440 implementation_trace entry of all four sgc records (nonparametric:110, order-1:102, order-20:102, order-None:111)",
+    "wf2bB remaining_issues[2]: check_cost re-quoted from out/pyspi/index/sgc.json (last forced rerun, file mtime 01:36). nonparametric: per run <= 0.29 s (iid_gaussian T=4096 null 0.289, delayed_noise T=1024 P=4 impl 0.258, var2_bivariate T=4096 impl 0.174), sweep up to 13.3 s, 83 runs, 39.4 s total. order-1: <= 0.008 s (trending T=256 pipeline-detrend), sweep up to 12.3 s, 80 runs, 30 s. order-20: <= 0.025 s (iid_gaussian T=64 0.024), sweep up to 11.8 s, 86 runs, 31 s. order-None figures already matched and were left alone",
+    "wf2bA still_open_for_synthesis: none name spectral_directed or sgc. The stale calculator.py item does not apply: all calculator.py citations in these 10 records and 2 notes already point at HEAD lines 325-339 / 336-337. The 292-303 / 301-303 mentions at notes/spectral_directed.md:270 and notes/sgc.md:329 are intentional correction-log history"
+   ],
+   "claim_problems": [
+    "None found in records or notes of these families. Separate inconsistency in the handoff summary (not a record): audit/_handoff/wf2bB_leftovers.json 'spectral_directed+sgc' refuted_candidates says the order-None Ntot = 2T penalty has 'no observed effect on selected orders'. The current order-None record and notes/sgc.md:256/358 show 42/200 borderline draws change order (results/sgc.json ntot run). confirmed_findings also still says the spectral.py:439 TypeError happens 'under default filters'. Whoever builds the synthesis from that JSON should use the records' wording."
+   ],
+   "not_done": [
+    "wf2bB spectral_directed+sgc not_done items (segfault re-test at P >= 10, NumPy < 2 fallback, Korzeniewska 2003 / Geweke 1982 primary sources, upstream issue-tracker search, logistic_maps_chaotic direction, extra nonparametric MC/detrend coverage) need computation or external retrieval, so they were not attempted here",
+    "wf2bA leftovers not_done (spectral_csm group): per-bin directed coherence reaching 103 on narrowband_f0-0.25 was assigned to spectral_directed for investigation. That needs a run. The dcoh record and note already document dcoh as unbounded (up to 2833), which may cover it, but this was not checked"
+   ],
+   "refutations": [
+    {
+     "file": "audit/records/spectral.sgc.parametric_order-1.yaml",
+     "line": 38,
+     "problem": "The agent reports no claim problems in these families and says the wf2bB remaining_issues[1] phrase replacement is done. But the implemented_as field of order-1 (line 38) and order-20 (audit/records/spectral.sgc.parametric_order-20.yaml:38) still says warnings.warn(err) at :439 'raises TypeError under the default warnings filters'. The leftover and notes/sgc.md:48 call this wrong: Python's default filters alone let the call through, and the TypeError comes from the message-regex filters numpy installs on import. notes/sgc.md:332 says the phrase was replaced 'in all four records and this note'. That holds for the implementation_trace entries and for order-None's implemented_as (lines 43-44), but not for these two implemented_as fields.",
+     "evidence": "grep -n -i 'default warnings' over the cluster files returns only spectral.sgc.parametric_order-1.yaml:38 and spectral.sgc.parametric_order-20.yaml:38 ('...raises TypeError under the default warnings / filters, so a direct multivariate() call raises TypeError'). The order-None equivalent (lines 43-44) reads 'under the message-regex warnings filters numpy installs on import'."
+    }
+   ],
+   "missed": [
+    {
+     "file": "audit/records/spectral.sgc.parametric_order-1.yaml",
+     "line": 38,
+     "problem": "implemented_as still says 'under the default warnings filters'. It should use the same 'message-regex warnings filters numpy installs on import' wording as the order-None record (lines 43-44) and the four implementation_trace entries. As it stands, notes/sgc.md:332 ('in all four records') is inaccurate."
+    },
+    {
+     "file": "audit/records/spectral.sgc.parametric_order-20.yaml",
+     "line": 38,
+     "problem": "Same leftover phrase in implemented_as: 'raises TypeError under the default warnings filters'. It contradicts notes/sgc.md:48 and :332."
+    },
+    {
+     "file": "audit/notes/sgc.md",
+     "line": 176,
+     "problem": "The bare citation `spectral.py:439` resolves to .venv/.../nitime/algorithms/spectral.py:439 ('sf = sf.sum(axis=0)'), and citations.py flags it as token-miss. The agent qualified the same bare name to pyspi/statistics/spectral.py:439 in the records' expected_outcome entries but counted this note item as a false positive. The note discusses both nitime and pyspi, so it should read pyspi/statistics/spectral.py:439 (the line content, warnings.warn(err), is correct). Minor."
+    },
+    {
+     "file": "audit/records/spectral.dtf.yaml",
+     "line": 68,
+     "problem": "'Glossary-of-terms.md:27' has a capital G, but the GitBook file is information-about-pyspi/spis/glossary-of-terms.md, so the checker lists this citation as unresolved under a name that does not exist. The line content (rows = sources) is correct. Cosmetic: lowercase the G or give the full GitBook path."
+    }
+   ],
+   "sampled": 56,
+   "resolved": [
+    "audit/records/spectral.sgc.parametric_order-1.yaml:38 implemented_as: 'raises TypeError under the default warnings filters' replaced with 'under the message-regex warnings filters numpy installs on import' (wf2bB remaining_issues[1] leftover). The wording now matches order-None:43-44 and the four implementation_trace entries",
+    "audit/records/spectral.sgc.parametric_order-20.yaml:38 implemented_as: same phrase replacement. notes/sgc.md:332 ('in all four records and this note') is now accurate. The only remaining 'default (warnings)' text is the intentional correction-log quote at sgc.md:332",
+    "audit/notes/sgc.md:176 bare `spectral.py:439` now reads `pyspi/statistics/spectral.py:439`, and the line content (warnings.warn(err)) was confirmed at HEAD. For consistency the other bare `spectral.py:439` mentions in the note were qualified the same way (lines 49, 101, 152, 205, 269, 368). None of them is in an Optimisation section. citations.py still flags line 176 as token-miss on the word 'direct' only, which is a false positive",
+    "audit/records/spectral.dtf.yaml:68: 'Glossary-of-terms.md:27' lowercased to 'glossary-of-terms.md:27'. It now matches the GitBook file information-about-pyspi/spis/glossary-of-terms.md and the form every other record in the cluster uses",
+    "Refutation (no claim problems / leftover phrase replacement done) is resolved by the two implemented_as edits above. No verdicts, scores or check results were changed"
+   ],
+   "disputed": [],
+   "remaining": [],
+   "validator_clean": true
+  },
+  {
+   "cluster": "w2-wavelet",
+   "families": [
+    "wavelet_psi",
+    "wavelet_measures"
+   ],
+   "ok": true,
+   "fixed": 15,
+   "false_positives": 33,
+   "external_checked": [
+    "GitBook /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/spectral.md: 14-20 (overview, 125 bins, bands), 24-35 (cohmag), 49-60 (phase), 152-163 (icoh), 177-188 (ppc), 233-244 (pli family), 297-308 (plv), 322-346 (PSI section), 330 ('only spectral measure ... time-frequency domain'). All match their sentences; these are all 32 unresolved items in my files",
+    "supplement/supplement.txt: \u00a71.5 heading 570, preamble/bands 589-599, \u00a71.5.1 601 (quote at 605), \u00a71.5.2 616, \u00a71.5.4 644 (text 649-654), \u00a71.5.5 670, \u00a71.5.6 686, \u00a71.5.7 701, \u00a71.5.8 715 (wpli/dspli/dswpli quote 717-722). The records cited briefing-pack line numbers (audit/briefing/wavelet_measures.json supplement_sections), which are 12-14 lines off the file. Fixed. The psi record and note already gave both numbering systems and were left as they are",
+    "docs/storage_comparison/REVIEW.md: M4 at 153-157 (unsigned label inappropriate at 155, branch-cut offset at 157), M8 195-201, M9 203-205",
+    "DEPENDENCY_MIGRATION.md: the PSI axis-selection sentence is at 84-85 at a1f20c7 and HEAD (79 at 36ac45a). Fixed",
+    "EEG_OPTIMIZATION_NOTES.md: 'wavelet PSI axis selection' at line 168 at a1f20c7. At HEAD a42ebc1 it is line 169, reworded to 'wavelet PSI axes'. Fixed with both",
+    "tests/README.md: :155, :157 (mne 0.23.0, status ok counts only NaN), :217 (degenerate wavelet set, n(n-1) = 0) confirmed",
+    "audit/briefing/KNOWN_ISSUES.md:37 (wavelet PSI axis selection) confirmed",
+    "mne_connectivity 0.9.0 (project venv): spectral/epochs.py 97-113, 124-135, 141-153, 216-222, 270-277, 335-341, 345-365, 443-457, 652, 770, 1143-1154, 1472, 1555-1571; epochs_bivariate.py 64/68, 84-94, 187-202, 270-311, 359/362; effective.py 52-53, 216-224, 495-528 (518-523, 526); base.py 812. All confirmed",
+    "mne 1.13.2 time_frequency/tfr.py 151-178 (159, 165-166, 167-172, 178), 322-401 (377, 400), 767 confirmed",
+    "pyspi/statistics/wavelet.py (every cited range), pyspi/data.py 108-118 and 184-195, pyspi/base.py 132-138, pyspi/config.yaml:1238 confirmed at HEAD",
+    "No PhiToolbox, JIDT or R citations in these families"
+   ],
+   "leftovers_applied": [
+    "wf2bB wavelet_psi wavelet.psi tail statement. In the record's what_changed and in notes/wavelet_psi.md (Net effect bullet and Verdict), the 't >= 37 / 987 of 1024 samples cannot reach the stored value' claim is now limited to the kernel path and the default no-detrend pipeline. Added that with detrend the fitted line carries the time order of the tail, citing run wavelet.psi|delayed_noise|1024|pipeline-detrend|tailpert (ref_pyspi_change_sd_only_x3_about_tail_mean = 0.0865) and the review probe review_detrend_rev.py (time reversal of x[:, 37:])",
+    "wf2bB wavelet_psi wavelet.psi intended-quantity agreement. Record what_changed and the check summary, plus the note's controls bullet and Verdict, now give ref_intended_whole_agree as 1.0 for the full and high variants and 0.86 for mean-low and max-low. Values copied from audit/checks/out/results/wavelet_psi.json dir runs: logistic_maps_chaotic|64 dir:{mean,max}-low = 0.0, var2_chain|64 dir:{mean,max}-low = 0.333, all others 1.0",
+    "wf2bB wavelet_measures wavelet.phase. REVIEW M4 (docs/storage_comparison/REVIEW.md:155-157) is now cited in already_documented, in the channel-order offset candidate_resolution evidence, in the label candidate_resolution evidence, and in the note's perm bullet. new_finding is unchanged (it rests on candidate 1)",
+    "wf2bB wavelet_measures wavelet.pli. The note's ident run-tag bullet (line 232) no longer calls the rep port an independent replay. It now says rep replays mne's arithmetic and is labelled same-lineage (reference_kind same-lineage in results/wavelet_measures.json for all nine phase/pli/wspli rep runs)",
+    "wf2bB wavelet_measures wavelet.ppc. Note canonical narrowband_f0-0.1 PPC 0.0170 changed to 0.0169, copied from results/wavelet_measures.json run wavelet.ppc|narrowband_f0-0.1|1024|pipeline|canon:mean-full ref_canon_value_10 = 0.016949881976195742",
+    "wf2bA still_open item 3 (stale calculator.py citations): applied for my families. The psi record and note had the old 294-297 citation; it is now 329-332 / 329-335",
+    "wf2bA still_open item 5 (HEAD a1f20c7 vs a42ebc1): my files had no 'HEAD a1f20c7' labels. The one doc citation that a42ebc1 actually moved (EEG_OPTIMIZATION_NOTES.md) now gives both commits"
+   ],
+   "claim_problems": [
+    "wavelet.icoh new_finding (wf2bB remaining_issue, earlier deferred as out of scope). icoh's new_finding: true now rests only on the 'unsigned label on a signed quantity' candidate (record candidate_resolutions, line 154; notes/wavelet_measures.md:267). The one-sample-wavelet cause is counted on wavelet.morlet_cwt. wavelet.psi treats its own label contradiction as already documented: notes/wavelet_psi.md:181 cites EEG notes \u00a7review 'parameter-specific/shared labels' (EEG_OPTIMIZATION_NOTES.md:169 at a42ebc1) and REVIEW M9 (docs/storage_comparison/REVIEW.md:203-205). REVIEW M4/M8 document signed values under unsigned labels for other classes. For consistency icoh new_finding should be false, or the record should justify the difference. Flipping new_finding is a finding-classification change, so it was not made here",
+    "wavelet.phase candidate 4 ('label unsigned for a signed angle', outcome confirmed) is documented by REVIEW M4 (REVIEW.md:155) for coherence phase. Candidate 3 (A_rev = -A + 2 pi n/N branch-cut offset) is the M4 mechanism (REVIEW.md:157). I added both citations. new_finding stays true through candidate 1 (round-off artefact), but any per-candidate 'new' tally should count candidates 3 and 4 as already documented"
+   ],
+   "not_done": [
+    "wavelet.psi h_fscache reference_kind is 'analytic' in audit/checks/refs/wavelet_psi.py and in results. It should be independent-impl (replica_fs plus a code-reading pass rule). Fixing it means editing refs code and re-running run_checks, which is not allowed in this workflow. The records and notes do not repeat the 'analytic' label, and no score depends on it",
+    "wf2bB wavelet group not_done items (Epoching option, fs != 1 cache reuse beyond code reading, Torrence & Webster / Vinck / Nolte 2004 equation checks against papers, T = 4096 runs, cross-scipy/CPU stability, multi-epoch R = 8 probes, phase pi - 1 ulp case) all need computation or fetching papers. Left for later stages",
+    "My 'mne_connectivity/...' path qualifiers produced 8 new token-miss false positives on the rescan. The token 'mne_connectivity' now sits next to correct citations: wavelet.py:87-88 in 7 records, and epochs.py:1555-1571 in notes/wavelet_psi.md:27. I re-read the cited lines and they are right. No action needed beyond knowing these 8 are heuristic noise"
+   ],
+   "refutations": [],
+   "missed": [
+    {
+     "file": "audit/records/wavelet.morlet_cwt.yaml",
+     "line": 71,
+     "problem": "already_documented still quotes EEG_OPTIMIZATION_NOTES.md \u00a7review as ''wavelet PSI axis selection''. a42ebc1 reworded that item: line 169 at HEAD reads 'wavelet PSI axes', and the old wording was at line 168 at a1f20c7. The agent fixed the same quote in wavelet.psi.yaml:92, which now gives both commits, but not here. The quote should carry the same 'at a1f20c7' qualifier or use the HEAD wording. (The unquoted mention in wavelet.psi.yaml:238 is descriptive and matches KNOWN_ISSUES.md:37, so it is fine.)"
+    },
+    {
+     "file": "audit/notes/wavelet_measures.md",
+     "line": 232,
+     "problem": "Leftover wf2bB pli was applied too broadly. The ident run-tag bullet now says the `rep` port's 'runs are labelled same-lineage too (reference_kind `same-lineage` in results.json)', and the generic `rep` bullet that follows describes rep as the plain identifier on three paths. In results/wavelet_measures.json only the 9 phase/pli/wspli rep runs are same-lineage (refs/wavelet_measures.py:port_cwt+pipeline_value). The 18 rep runs of cohmag, dswpli, dwspli, icoh, plv and ppc have reference_kind 'analytic' and reference_detail 'analytic constant 1.0 / -inf / 0.0 (one epoch, one-sample wavelet)'. The sentence should be limited to phase, pli and wspli. As written it implies every rep run in the family is a same-lineage port."
+    },
+    {
+     "file": "audit/notes/wavelet_psi.md",
+     "line": 12,
+     "problem": "'The GitBook `spectral.md:322-346` repeats this text' follows the band-rule sentence, so it reads as the GitBook source of the bands. Lines 322-346 are the Phase Slope Index section. The band bullets are at GitBook spectral.md:14-20 (18-20 for the three ranges). The record (wavelet.psi.yaml:20) attaches it correctly ('GitBook spectral.md:322-346 (Phase Slope Index) repeats the same text'). The note should give spectral.md:14-20 for the bands, or move the 322-346 citation onto the \u00a71.5.4 paragraph at line 10. The problem predates this workflow, and the agent's 'all 32 unresolved items match their sentences' missed it."
+    },
+    {
+     "file": "audit/records/wavelet.cohmag.yaml",
+     "line": 51,
+     "problem": "Low severity. In 'mne/time_frequency/tfr.py:767-792 cwt -> :303-319 _get_nfft -> :322-401 _cwt_gen', the range 767-792 covers only the signature and docstring of cwt. The body is at 793-794 (_get_nfft, then _cwt_array), and _cwt_array at 797-806 is the function that calls _cwt_gen (799). The chain skips _cwt_array. The same line appears in the sibling records. The status is 'ok', so citations.py does not flag it."
+    }
+   ],
+   "sampled": 64,
+   "resolved": [
+    "audit/records/wavelet.morlet_cwt.yaml:71 already_documented: the quote now reads 'EEG_OPTIMIZATION_NOTES.md \u00a7review (line 169 at a42ebc1, ''wavelet PSI axes''; line 168 at a1f20c7 read ''wavelet PSI axis selection'')', the same wording as wavelet.psi.yaml:92. I checked it with grep at HEAD and with git show a1f20c7.",
+    "audit/notes/wavelet_measures.md:232 ident bullet: the same-lineage statement now covers only the 9 rep runs of phase, pli and wspli (results/wavelet_measures.json, refs/wavelet_measures.py:port_cwt+pipeline_value). It now also says the 18 rep runs of cohmag, dswpli, dwspli, icoh, plv and ppc compare against the one-epoch, one-sample-wavelet constant and are labelled analytic. I checked this against reference_kind and reference_detail in the results JSON.",
+    "audit/notes/wavelet_psi.md:12: the band rule now cites the GitBook overview spectral.md:14-20 (ranges at 18-20). spectral.md:322-346 is now attached to the \u00a71.5.4 PSI text quoted in the note. I confirmed both ranges in /media/dan/Data/git/pyspiDocumentation/.../spectral.md.",
+    "tfr.py cwt chain in 10 records (wavelet.{cohmag,phase,icoh,plv,ppc,pli,dswpli,wspli,dwspli,morlet_cwt}.yaml): 'tfr.py:767-792 cwt -> :303-319 _get_nfft -> :322-401 _cwt_gen' is now 'tfr.py:766-794 cwt -> :303-319 _get_nfft (..., called at 793) -> :797-806 _cwt_array (called at 794; calls _cwt_gen at 799) -> :322-401 _cwt_gen'. In mne 1.13.2: def cwt at 766, body at 793-794, _cwt_array at 797-806. The same chain at audit/notes/wavelet_measures.md:36 ('tfr.py:767 cwt -> :322-401') now reads 'tfr.py:766-794 cwt -> :797-806 _cwt_array -> :322-401 _cwt_gen'. I left wavelet.psi.yaml:67 ('tfr.py:767-797 cwt -> _get_nfft -> _cwt_array') alone: it already names _cwt_array and its range reaches the def at 797."
+   ],
+   "disputed": [],
+   "remaining": [],
+   "validator_clean": true
+  },
+  {
+   "cluster": "w2-distance-dependence",
+   "families": [
+    "dcorr_hsic",
+    "hhg_mgc",
+    "lagged_dcorr_mgc"
+   ],
+   "ok": true,
+   "fixed": 16,
+   "false_positives": 35,
+   "external_checked": [
+    "GitBook /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/glossary-of-terms.md:21 ('Signed' row: distance correlation in [0,1]) and :27 (rows = sources): all citations right",
+    "GitBook spi-descriptions/distance-similarity.md:184-199 (HHG section), :192 (RKHS wording), :251-266 (MGC section), :257 (LCSS key-reference link): all right",
+    "supplement/supplement.txt \u00a71.2.1-\u00a71.2.6 (lines 220-278): supplement.txt:243-252 (mgc) and :272-278 (hhg) right; section numbers in all 10 records and 3 notes match their SPI",
+    "docs/storage_comparison/REVIEW.md:189-193 (M7) and :197 (M8 pec bullet): right",
+    "EEG_OPTIMIZATION_NOTES.md:169 ('legitimate negative estimates') and :132 (generic Undirected double work): right",
+    "neurodata/r-mgc scratchpad copies hhg_mgc/dl/rmgc_MGCLocalCorr.R:167 and rmgc_MGCSampleStat.R:99,122-126,172: right",
+    "SciPy v1.17.1 _stats.pyx scratchpad copy hhg_mgc/dl/_stats_v1.17.1.pyx:323-332, 444, 451-491: right",
+    "hyppo 0.5.2 site-packages sources (time_series/_utils.py, independence/{dcorr,mgc,hhg,base}.py, tools/common.py, time_series/{dcorrx,mgcx}.py) for every flagged hyppo citation",
+    "PhiToolbox and JIDT: not cited by these families"
+   ],
+   "leftovers_applied": [
+    "wf2bB remaining_issues (lagged_dcorr_mgc, distance.dcorrx.maxlag-1): notes/lagged_dcorr_mgc.md Setup>Results bullet (line 138) no longer says 'read as chance'. It now says the exceedance is not an independent chance event: it is the iid_gaussian T256 draw that dcorr_hsic also flags, seen through the lag-0 dCor^2 term. This matches note line 214 and the record.",
+    "wf2bB remaining_issues (lagged_dcorr_mgc, distance.dcorrx.maxlag-10 candidate_resolutions[1].evidence): 'statistic - sum of terms <= 1.1e-16' changed to '<= 8.9e-16 (max 8.88e-16 on distance.dcorrx.maxlag-10|narrowband_f0-0.25|256|kernel|lagterms, ref_stat_minus_sum_of_terms_maxabs)'. Copied from out/results/lagged_dcorr_mgc.json. dcorrx.maxlag-1's '<= 0.0e+00' was re-checked against the same file and is right.",
+    "wf2bB remaining_issues (hhg_mgc, distance.mgc perm fail): the mgc record closeness, the checks_run perm outcome and notes/hhg_mgc.md (MGC perm bullet; HHG perm bullet) now say that the T256 perm draw is iid_gaussian_T256.npz, seed 42. The manifests show it is the same dataset as dcorr_hsic's four failing *|iid_gaussian|256|pipeline|null runs (0.15% lower permutation tail of mean dCor^2, notes/dcorr_hsic.md 'The five failures'), and lagged_dcorr_mgc traces its null exceedance to it. The HHG T64 fail is noted as having no such explanation (dcorr_hsic T64 |z| <= 1.73).",
+    "wf2bB remaining_issues (lagged_dcorr_mgc and hhg_mgc 'unsigned' cross-family consistency): adopted dcorr_hsic's 'partly' treatment. already_documented in the four dcorrx/mgcx records went from 'no' to a 'partly' text citing REVIEW M7 (REVIEW.md:189-193), M8 (:197) and EEG_OPTIMIZATION_NOTES.md:169. The 'unsigned' candidate_resolutions evidence in those records now names the M7/M8 class. notes/lagged_dcorr_mgc.md lines 99 and 311 were reworded to match. In distance.mgc, already_documented now reads 'partly: REVIEW M2 ...; M7/M8 class ...' and candidate_resolutions[0].evidence reads 'A new instance of the class documented in REVIEW M7/M8 ... which do not name mgc'. notes/hhg_mgc.md lines 160 and 400 were aligned. new_finding, verdicts and scores are unchanged.",
+    "wf2bA still_open_for_synthesis: no item names these families. 'HEAD a1f20c7' labels: none in these files."
+   ],
+   "claim_problems": [
+    "distance.mgc.yaml new_finding_candidates (lines ~73-74) says 'KNOWN_ISSUES M7/M8 list legitimate negatives only for wavelet, pec and entropy SPIs'. REVIEW M7 (docs/storage_comparison/REVIEW.md:191) names dspli/dswpli/ppc, the bias-corrected phase-sync estimators, which come in multitaper and wavelet variants, so 'wavelet' only partly describes M7. The wording was left alone because it is a trace-stage claim, not a citation.",
+    "The wf2bB reviewer's figure 'z-scored inputs agree to 4.4e-16' (mgc perm draw vs dcorr_hsic null draw) has no results/index file behind it, so it was not copied. The records cite the shared dataset file instead (iid_gaussian_T256.npz, seed 42, the same in both manifests)."
+   ],
+   "not_done": [
+    "R package citations (MGCLocalCorr.R, MGCSampleStat.R) are named as neurodata/r-mgc GitHub master fetched 2026-10-14, as the trace says. Whether the CRAN mgc release has the same lines was not checked: it needs a network fetch, and wf2bB not_done already lists this.",
+    "Remaining 50 token-miss items in these files after the edits (35 original plus 10 from the REVIEW/EEG citations added with the 'partly' wording, plus the requalified mgcx docstring citations) were each read and left as scanner false positives. Remaining unresolved: GitBook pages, REVIEW.md bare name, R files and _stats.pyx, all checked against the local copies above."
+   ],
+   "refutations": [
+    {
+     "file": "audit/records/distance.mgc.yaml",
+     "line": 205,
+     "problem": "Leftover wf2bB remaining_issues[2] was applied with a wrong identifier. The text says the T256 draw is '(iid_gaussian_T256.npz, seed 42)', and the agent's report says seed 42 is 'the same in both manifests'. But seed 42 is the per-run harness seed: every run in every family manifest carries 'seed': 42, and audit/checks/pyspi_outputs.py:153 passes it to harness.seed_all. It is not the seed that generated the draw. audit/checks/data/MANIFEST.json:42-47 gives iid_gaussian_T256.npz seed 1000256, from the rule base_seed*1_000_000+T in data/CONVENTIONS.md:123. The shared dataset is established by the dataset name and T (the same .npz file), not by seed 42. The same mislabel is at notes/hhg_mgc.md:279 and :389. The leftover should say seed 1000256 or drop the seed.",
+     "evidence": "grep '\"seed\"' audit/checks/manifest/dcorr_hsic.json shows 42 on every run (scratch, dcor, ...); hhg_mgc.json gives seed 42 for the gauss_ar1_pair perm runs too; MANIFEST.json:47 \"seed\": 1000256 for file iid_gaussian_T256.npz; pyspi_outputs.py:153 harness.seed_all(int(run.get(\"seed\", 42)))."
+    }
+   ],
+   "missed": [
+    {
+     "file": "audit/records/distance.hhg.yaml",
+     "line": 169,
+     "problem": "wf2bB remaining_issues[2] says that 'the hhg_mgc record and note' should cite the dcorr_hsic shared-draw evidence. The agent updated the mgc record and both perm bullets in notes/hhg_mgc.md, which also cover the HHG T64 fail ('no such explanation'). The distance.hhg record's closeness (lines 168-173) and its checks_run perm outcome (line 287) were left alone. They still do not say that the HHG T256 draw (mean percentile 0.2805, low but passing) is the same draw as dcorr_hsic's failing null runs, or that the T64 fail has no such explanation. The record and the note are therefore inconsistent."
+    },
+    {
+     "file": "audit/records/distance.mgcx.maxlag-1.yaml",
+     "line": 74,
+     "problem": "Claim problem introduced by the 'partly' leftover, also present in distance.mgcx.maxlag-10.yaml:74. The already_documented text copied from dcorrx calls the class an 'unsigned label on a legitimately negative bias-corrected estimator'. For mgcx, the negative values come from MGC's global-scale fallback. distance.mgc.yaml (deviation_from_documented (1) and closeness) states that this fallback is the column-centred dCorr^{n,n}, not hyppo's U-centred unbiased dCor^2. The mgc record itself says only 'legitimately negative estimator'. Calling mgcx 'bias-corrected' is imprecise and inconsistent with the mgc record. Report it under claim_problems; do not rewrite it."
+    }
+   ],
+   "sampled": 41,
+   "resolved": [
+    "Refutation (distance.mgc.yaml:205-206; notes/hhg_mgc.md:279 and :389) holds: seed 42 is the per-run harness seed (pyspi_outputs.py:153 harness.seed_all(run.get('seed', 42))), while audit/checks/data/MANIFEST.json:47 gives iid_gaussian_T256.npz seed 1000256 (CONVENTIONS.md:123 base_seed*1_000_000+T). In all three places 'seed 42' now reads 'dataset seed 1000256', with a MANIFEST.json pointer in the record and at note line 279. No other 'seed 42' remains in the files of the three families.",
+    "Missed item distance.hhg.yaml perm consistency holds and is fixed (wf2bB remaining_issues[2] leftover). The closeness now ends with a sentence saying: the T256 draw (iid_gaussian_T256.npz, dataset seed 1000256) is low but passing for HHG (mean percentile 0.2805); it is the same draw on which dcorr_hsic's four iid_gaussian|256|pipeline|null runs fail (0.15% lower tail) and on which MGC's |256|kernel|perm fails; the T64 fail has no such explanation (dcorr_hsic T64 |z| <= 1.73). The checks_run perm outcome (line ~288) got a matching clause. No numbers, verdict or score changed, and the record is now consistent with notes/hhg_mgc.md.",
+    "Missed item distance.mgcx.maxlag-1.yaml:74 and distance.mgcx.maxlag-10.yaml:74 holds as a claim problem. already_documented calls the mgcx class an 'unsigned label on a legitimately negative bias-corrected estimator'. But distance.mgc.yaml:46-47 and :83 say MGC's global-scale fallback is the column-centred dCorr^{n,n} (Shen eq. 6), not hyppo's U-centred unbiased Dcorr, so 'bias-corrected' is imprecise for mgcx and inconsistent with the mgc record's 'legitimately negative estimator'. Reported under claim_problems and left unchanged, as instructed."
+   ],
+   "disputed": [],
+   "remaining": [
+    "Claim problem, handed on and not fixed (by design, since claims may not be rewritten in 4a): audit/records/distance.mgcx.maxlag-1.yaml:74 and distance.mgcx.maxlag-10.yaml:74 already_documented calls mgcx an 'unsigned label on a legitimately negative bias-corrected estimator'. distance.mgc.yaml says MGC's global-scale fallback is the column-centred dCorr^{n,n}, not hyppo's U-centred (bias-corrected) dCor^2, so 'bias-corrected' is imprecise for mgcx. A later claim-fix pass needs to handle it."
+   ],
+   "validator_clean": true
+  },
+  {
+   "cluster": "w2-elastic-ccm",
+   "families": [
+    "dtw_family",
+    "gwtau",
+    "ccm"
+   ],
+   "ok": true,
+   "fixed": 12,
+   "false_positives": 16,
+   "external_checked": [
+    "GitBook information-about-pyspi/spis/glossary-of-terms.md:25-27 (Directed SPIs, rows = sources) is correct for every ccm record and note citation; :21 (12-keyword table) is correct for gwtau",
+    "GitBook spi-descriptions/distance-similarity.md:150 (DTW paragraph containing 'shifting and dilating' and 'pathological warpings') is correct; lines 164-180 / line 166 (gwtau block and keywords incl. 'unordered') are correct",
+    "GitBook spi-descriptions/causal-inference.md CCM section (line 68 'mean (mean), maximum (max) and difference (diff)') matches",
+    "GitBook development/development/incorporating-new-spis.md:430 (labels: descriptive keywords) and :546 (labels used by filter_spis) are correct",
+    "supplement/supplement.txt:283-286 (DTW alignment text) is correct. \u00a71.2.7 p.6-7, \u00a71.2.8 p.7, \u00a71.2.9 p.7 and \u00a71.3.5 p.8-9 / p.9 are correct. The 'pack lines 286-301/302-311/312-320/381-413' citations are briefing-pack line numbers from Python splitlines, which also splits at form feeds, so they run 6-8 lines above sed/grep numbering. They are labelled as pack lines and match audit/briefing/{dtw_family,ccm}.json, so they were left unchanged",
+    "DEPENDENCY_COMPATIBILITY_REVIEW.md (fixed :87 -> :88-90)",
+    "DEPENDENCY_MIGRATION.md:51 (pyEDM row)",
+    "EEG_OPTIMIZATION_NOTES.md:169 (HEAD) vs a1f20c7:168 wording",
+    "tests/README.md Known bugs items 2 (ccm E=None) and 3 (softdtw constraint) are correct",
+    "tests/unit/test_known_bugs.py:86-107 and :88 are correct",
+    "Revision-qualified citations checked with git show: a2c3300^:setup.py:29 and a2c3300^:requirements.txt:20 ('tslearn'), pyproject.toml:41, 30556b9:tests/requirements-test-lock.txt:66 (tslearn==0.9.0). All are correct; the scanner reports them out-of-range only because it reads HEAD",
+    "tslearn 0.9.0 site-packages: _dtw.py:30 is def dtw (exported by tslearn.metrics); dtw_variants.py:2306 is the mask-honouring branch of lcss_accumulated_matrix. Both correct",
+    "cppEDM .cc Lnnn citations point at upstream tag v1.15.2; the records and note name the version (pyEDM==1.15.2.0 / cppEDM 1.15.2, github blob v1.15.2), so they were left unchanged",
+    "pyspi/calculator.py HEAD: 50 defaults, 230 _load_yaml, 277 Data(...), 327-339, 329, 332, 336-339, 354-355 are all confirmed in the gwtau and ccm files"
+   ],
+   "leftovers_applied": [
+    "wf2bB_leftovers 'dtw_family+gwtau+ccm': remaining_issues and disputed are both empty, so there was no text fix to apply. Its not_done items need computation or external PDFs or toolchains and were left for later stages",
+    "wf2bA still_open 'HEAD moved a1f20c7 -> a42ebc1': my files already label calculator.py lines as 'HEAD a42ebc1; file unchanged since a1f20c7' (ccm records and note) or 'lines at HEAD a42ebc1' (gwtau), so no edit was needed",
+    "wf2bA still_open 'stale calculator.py citations in 2b-B families': applied for my families. The 8 stale :294 citations are fixed (see fixed); every other calculator.py citation in my 14 files was checked against HEAD and is current"
+   ],
+   "claim_problems": [],
+   "not_done": [
+    "Scanner limitation for other clusters, not an item of mine: audit/checks/citations.py rates the stale pre-a1f20c7 citation 'pyspi/calculator.py:294' (old multivariate call; HEAD 329) as 'ok'. The nearby token 'compute' matches HEAD line 295 ('def compute'), which is within the +/-2 window. Other clusters should grep their files for 'calculator.py:29[0-9]' and 'calculator.py:30[0-3]' instead of relying on --only-problems."
+   ],
+   "refutations": [],
+   "missed": [
+    {
+     "file": "audit/records/distance.gwtau.yaml",
+     "line": 302,
+     "problem": "Possible wording-rule issue (not a citation, so outside the agent's edit scope; flag only, do not count against the 4a fixes). what_changed says 'pyspi computes the authors' MATLAB GWtau exactly (verified against an independent merged-quantile W2, POT and closed forms)'. This describes an independent check result, not a golden, but it does call a pyspi output 'verified'. Synthesis could reword it to 'agrees with ... to rel <= 1e-12'. The other 'verified' hits in the cluster (distance.dtw.constraint-itakura.yaml:108, distance.dtw.constraint-sakoe_chiba.yaml:116) describe the audit's own reference kernel masks, not pyspi output, so they are fine."
+    }
+   ],
+   "sampled": 79,
+   "resolved": [
+    "Agent's 12 citation fixes re-checked: no 'calculator.py:29x/30[0-3]' citation is left in the dtw_family, gwtau or ccm records and notes, and no 'DEPENDENCY_COMPATIBILITY_REVIEW.md:87' is left. The reviewer raised no refutations, so the fixes stand.",
+    "Validator: validate_records.py --stage checked over all 11 cluster records (causal.ccm.E-1/E-10/E-None, distance.dtw x3, distance.lcss x3, distance.softdtw, distance.gwtau) reports 11/11 present, 0 problems. All 11 are at status checked, so --stage profiled does not apply. Its 55 problems are optimisation blocks that are not filled yet, which is Workflow 3 scope."
+   ],
+   "disputed": [
+    "audit/records/distance.gwtau.yaml:302 (reviewer 'missed' wording item). The text is there as quoted: 'pyspi computes the authors' MATLAB GWtau exactly (verified against an independent merged-quantile W2, POT and closed forms)'. It is a what_changed claim sentence, not a file:line citation. The 4a edit rules allow changes to citations only and forbid rewriting claims, and the reviewer also marked it 'flag only, outside the agent's edit scope'. So I did not edit it here. It is passed on to synthesis to reword, e.g. 'agrees with an independent merged-quantile W2, POT and closed-form computation (rel <= 1e-12)', to meet the wording rule on 'verified'."
+   ],
+   "remaining": [
+    "audit/records/distance.gwtau.yaml:302 (what_changed, wording rule, not a citation): it still says 'pyspi computes the authors' MATLAB GWtau exactly (verified against an independent merged-quantile W2, POT and closed forms)'. I agree with the dispute: this is outside 4a citation scope and the claim must not be rewritten here. It stays open for synthesis to reword without 'verified', e.g. 'agrees with an independent merged-quantile W2, POT and closed-form computation (rel <= 1e-12)'."
+   ],
+   "validator_clean": true
+  },
+  {
+   "cluster": "w2-it-kozachenko-kernel",
+   "families": [
+    "it_kozachenko",
+    "it_kernel"
+   ],
+   "ok": true,
+   "fixed": 15,
+   "false_positives": 0,
+   "external_checked": [
+    "GitBook /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/information-theory.md: cited lines 11, 14, 15, 24-42, 46-64, 48, 68-86, 139-157, 161-180, 184-202, 206-231, 235-254, 243 all hold the described text (sections, keywords, v1.6.1 mention); no change needed",
+    "GitBook /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/table-of-spis.md:73: holds the information-theory table row with 'Cross-Map Entropy' / xme and identifiers xme_kozachenko_k1/k10, xme_gaussian_k1/k10, xme_kernel_k1/k10; correct",
+    "Supplement /media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt: kozachenko records' heading lines 405, 444, 451, 513, 526, 539 confirmed; kernel records remapped from pack ranges to supplement.txt ranges",
+    "pyspi/calculator.py at HEAD (48-51, 277, 329, 332, 556-562, 559) and pyspi/data.py:193-195, pyspi/statistics/infotheory.py:71-82: confirmed for the already-refreshed citations in all 19 records and both notes",
+    "JIDT .java citations (no local source): line numbers left alone; checked every citation carries a v1.6.1-tag or a9b6b3e qualifier (14 bare ones got qualifiers); the it_kernel note's L-convention paragraph (lines 28-38) already covers its own note"
+   ],
+   "leftovers_applied": [
+    "wf2bB it_kozachenko+it_kernel remaining_issues[2] (infotheory.ce.kozachenko symmetry_observed): appended 'kernel path on raw unequal-scale rows (no z-scoring): 3.82 (ref_sym_maxabs, run infotheory.ce.kozachenko|scaled_offset|1024|kernel|jrand)', copied from audit/checks/out/results/it_kozachenko.json (3.8185337475609824)",
+    "wf2bB it_kozachenko+it_kernel not_done 'Supplement line-number remap (open question 6) not done': done for all 10 kernel records citing pack ranges and the it_kernel note (citation-only change)",
+    "wf2bA_leftovers_status still_open_for_synthesis 'stale calculator.py citations in 2b-B families (infotheory.*.kernel :264/:294)': confirmed already at HEAD lines (277/329/332/48-51) in all kernel and kozachenko records and notes; nothing further needed"
+   ],
+   "claim_problems": [
+    "xme k10 score inconsistency (wf2bB remaining_issues[0] and [1]): infotheory.xme.kernel_k10 is related-quantity score 3, and its what_changed (record line ~131) and notes/it_kernel.md (lines ~610-612, 673, 698) justify this by saying 'infotheory.xme.kozachenko_k10 scores the same off-by-one at 3'. But infotheory.xme.kozachenko_k10 now scores 4, and its what_changed (record line 100) and notes/it_kozachenko.md:414 say 'anchor 4, as infotheory.xme.gaussian_k10 and infotheory.xme.kernel_k10', which is false while kernel_k10 is 3. gaussian_k10 is 4. All three apply the same 9-lags-under-history_length=10 composition. Resolving this means changing a score: either kernel_k10 goes 3->4 or the three siblings agree on one anchor. Then the cross-reference text in both records and both notes needs rewriting. I left the scores and texts unchanged."
+   ],
+   "not_done": [
+    "2b-B not_done items for these families that need computation or outside work stay open: no T=4096 kernel runs; JIDT issue tracker not searched; exact jar commit not pinned; xme_k10 saturation fraction comes from a scratch measurement; frame runs on var2 cover je/ce only. None of them is a text or citation fix."
+   ],
+   "refutations": [
+    {
+     "file": "audit/notes/it_kernel.md",
+     "line": 700,
+     "problem": "The agent says the supplement remap was 'done for all 10 kernel records citing pack ranges and the it_kernel note'. That holds for the 10 records but not for the note. Only note line 66 was remapped. The per-SPI 'Documented' paragraphs still cite pack-only ranges with no supplement.txt range.",
+     "evidence": "grep of notes/it_kernel.md: line 175 '(pack 454-460)', 199 '(pack 461-468)', 220 '(pack 469-476)', 244 '(pack 477-485)', 263 '(pack 486-510)', 338 '(pack 524-536)', 373 '(pack 537-550)', 410 '(pack 551-561)'. None is preceded by a supplement.txt range. The agent's own grep pattern ('pack line') would not have matched these. In supplement.txt the section headings are at 444/451/459/467/476/513/526/539, and those ranges were applied correctly in the records."
+    }
+   ],
+   "missed": [
+    {
+     "file": "audit/notes/it_kernel.md",
+     "line": 175,
+     "problem": "Pack-only supplement citations need the same remap as the records. The section-to-range mapping is: 175 \u00a71.4.1 -> supplement.txt:444-450; 199 \u00a71.4.2 -> 451-458; 220 \u00a71.4.3 -> 459-466; 244 \u00a71.4.4 -> 467-475; 263 \u00a71.4.5 -> 476-499; 338 \u00a71.4.7 -> 513-525; 373 \u00a71.4.8 -> 526-538; 410 \u00a71.4.9 -> 539-549. Keep the pack range after each one. Also, open question 6 at lines 445-447 ('The citations here use section and page, with the pack's line ranges') no longer describes line 66. It may be left as the historical question, but once the above is fixed the answer at 700-703 should not imply the whole note is done."
+    },
+    {
+     "file": "audit/records/infotheory.est.kernel.yaml",
+     "line": 106,
+     "problem": "Bare 'data.py:226-238' is ambiguous. citations.py resolves it to .venv/.../coverage/data.py and marks it 'ok' against the wrong file. The intended pyspi/data.py:226-238 (Data.add_process: a raw proc is appended without z-scoring, and the first one goes through set_data) does match the sentence. Writing 'pyspi/data.py:226-238' would make it unambiguous. The line number is right."
+    }
+   ],
+   "sampled": 45,
+   "resolved": [
+    "audit/notes/it_kernel.md:175,199,220,244,263,338,373,410: the reviewer's refutation holds. The note's per-SPI Documented paragraphs only cited pack ranges. I added supplement.txt ranges before them and kept the pack ranges: \u00a71.4.1 444-450, \u00a71.4.2 451-458, \u00a71.4.3 459-466, \u00a71.4.4 467-475, \u00a71.4.5 476-499, \u00a71.4.7 513-525, \u00a71.4.8 526-538, \u00a71.4.9 539-549. Each range was checked against the supplement.txt headings at 444/451/459/467/476/500/513/526/539/550.",
+    "audit/notes/it_kernel.md:700-701: the open question 6 answer now says 'every record and every Documented paragraph of this note now cite' the supplement.txt range first, so it no longer overstates what was remapped. I left the question at 445-447 as written because it records the question as originally asked.",
+    "audit/records/infotheory.est.kernel.yaml:106: changed the bare 'data.py:226-238' to 'pyspi/data.py:226-238' so citations.py can no longer resolve it to coverage/data.py in .venv. The line range was already right: it is the Data.add_process body, where a raw proc is appended and the first one goes through set_data. citations.py now marks it token-miss only because the def add_process at line 219 falls outside the +/-2 window, which is a heuristic false positive."
+   ],
+   "disputed": [],
+   "remaining": [],
+   "validator_clean": true
+  },
+  {
+   "cluster": "w2-it-kraskov-phi",
+   "families": [
+    "it_kraskov",
+    "phi"
+   ],
+   "ok": true,
+   "fixed": 22,
+   "false_positives": 14,
+   "external_checked": [
+    "GitBook /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/information-theory.md: lines 11, 11-16, 16, 20, 160-180, 206-226, 216, 222-223 and 235-251 all match their sentences (21 citations)",
+    "Supplement /media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt: lines 489 (tau-max-2 prose) and 495-496 (tau-max-4 identifiers) match; the cited section numbers and pages (\u00a71.4 p.9, \u00a71.4.3-1.4.5 p.10) match the TOC",
+    "Archived PhiToolbox <scratchpad>/phitoolbox/pyspi/lib/PhiToolbox: Phi/phi_star_Gauss.m:50-126, :87, :108, :114-126 and the minFunc header at 29-31 and 99; Phi/phi_G_Gauss.m:36-60; Phi/phi_G_Gauss_AL.m:37-119, :76-79, :78-79, :97-100, :107-119; utility/I_s_I_s_d.m:1-17, :2, :6, :12-16; utility/Gauss/logdet.m:1-9, Cov_comp.m:25-47, Cov_cond.m:14, H_gauss.m:13-14. All match.",
+    "Octave /usr/share/octave/8.4.0/m/optimization/fminunc.m:130,147: GradObj default off, and has_grad. Both match.",
+    "docs/storage_comparison/REVIEW.md:198 (M8, Gaussian je/ce can be negative): matches",
+    "pyspi/lib/jidt/version-1.6.1.txt:8-10: matches",
+    "pyspi/config.yaml:556, 562, 601-602, 616-622: match",
+    "JIDT .java citations (upstream, no local source): line numbers left as they are; every one now carries a version (full a9b6b3e or v1.6.1 commit URL, an explicit 'at JIDT a9b6b3e', or the note-wide rule)"
+   ],
+   "leftovers_applied": [
+    "wf2bA still_open item 'stale calculator.py citations ... infotheory.phi.* :264': fixed in all four phi records and in notes/phi.md, together with the :48, :294 and :240-246 citations in the same places. Nine kraskov records also had a stale :281-302 that the scanner rated ok; those are fixed too.",
+    "wf2bB it_kraskov+phi remaining_issues[0]: in records/infotheory.te.kraskov_DCE_auto-MAX_CORR_AIS_kmax-10_taumax-4.yaml, deviation_from_documented (1) is reworded to match the non-DCE record: the tau-max-2 prose at supplement line 489 / GitBook :216 versus tau-max-4 at 495-496 / :222-223, with the code at config.yaml:562 matching the identifiers, so this is a slip inside the documentation rather than a code deviation. The 'Trace-stage fields corrected' tau-max bullet in notes/it_kraskov.md now names both te.kraskov_auto and te.kraskov_DCE_auto.",
+    "wf2bB it_kraskov+phi remaining_issues[1]: in records/infotheory.theiler_window.yaml, the pop checks_run outcome 'constant in T' now reads 'does not shrink with T; it rises toward C = ref_cross_sq_C'. The numbers are copied from results/it_kraskov.json, runs infotheory.theiler_window|{gauss_ar1_pair,var2_bivariate}|{256,1024,4096}|pipeline|pop: gauss_ar1_pair 1.176 / 1.435 / 1.541 toward C = 1.571, and var2_bivariate 0.361 / 0.394 / 0.405 toward C = 0.405.",
+    "wf2bB disputed (phi.star_norm-0 score kept at 9): read and left alone, since it is a score matter and no text fix is pending.",
+    "wf2bA still_open item on 'HEAD a1f20c7' labels: none of my records or notes contain a1f20c7, 36ac45a or HEAD labels, so nothing to do."
+   ],
+   "claim_problems": [],
+   "not_done": [
+    "Cross-family, needs a synthesis decision: the 'pack lines N-M' supplement citations (51 across audit/records and audit/notes; in my families 414-453, 469-476, 477-485, 486-510) use the line ranges from audit/briefing/*.json. build_briefings.py counts lines with Python str.splitlines(), which also breaks at form feeds, so these ranges run 9-12 lines past the newline-based numbering of supplement.txt that sed, grep and editors show. Example: \u00a71.4.3 mi is 459-466 by newline numbering but 469-476 in the pack. The 'supplement.txt:489' and ':495-496' citations use newline numbering and are right. I left the 'pack lines' citations alone because they are accurate as references to the pack. Converting them should be done for every family at once, not for one cluster."
+   ],
+   "refutations": [],
+   "missed": [],
+   "sampled": 70,
+   "resolved": [],
+   "disputed": [],
+   "remaining": [],
+   "validator_clean": true
+  },
+  {
+   "cluster": "w2-gpfit-coint-ids",
+   "families": [
+    "gpfit",
+    "coint",
+    "ids"
+   ],
+   "ok": true,
+   "fixed": 5,
+   "false_positives": 49,
+   "external_checked": [
+    "GitBook /media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/miscellaneous.md: 13-41 is the Cointegration section with the estimator list. Line 39 marks coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10 as 'cointegration'. 117-127 is the Interdependence Score section. All 9 unresolved citations are correct.",
+    "Supplement supplement/supplement.txt: 885 is the 1.6.3 heading, 886-890 the text, 892-894 the AEG bullet, 896-898 the Johansen bullet, and 870 is the 1.6.2 gpfit section. All correct.",
+    "tests/README.md: 113, 130 (PREPROC_SPIS list contains coint_johansen_max_eig_stat_order-1_ardiff-1), 134-135, 145-146, 521-528 and 529-531 (coint run-status rows). All correct.",
+    "tests/regression/harness.py:96-98 and 282-284, generate_goldens.py:82, test_spi_goldens.py:188 and 204. All correct.",
+    "pyspi/sonnet_config.yaml:166-181 and pyspi/config.yaml:1293-1358 and 1394-1404, including the per-record Johansen config ranges. All correct.",
+    "statsmodels 0.15.0 _stattools.py, vecm.py and linear_model.py, plus sklearn 1.9.1 kernels.py and _gpr.py lines in the venv. Spot-checked. All correct.",
+    "audit/notes/cov_prec_robust.md:161-162 and 338-343"
+   ],
+   "leftovers_applied": [
+    "wf2bB gpfit DotProduct check_reference: 'theta = 0 plus 10 log-uniform starts' changed to 'theta = 0 plus 20 log-uniform starts, 21 per pair' (refs/gpfit.py:545 n = 20; results/gpfit.json ref_n_starts 21 on misc.gpfit.DotProduct|anm|256|pipeline|multistart and |iid_gaussian|256|pipeline|multistart)",
+    "wf2bB gpfit DotProduct checks_run scratch outcome: '9 fail at max_rel 9.3e-8 to 1.35e-4' changed to '3.6e-8 (cointegrated T1024) to 1.35e-4'. Values copied from results/gpfit.json: misc.gpfit.DotProduct|cointegrated|1024|kernel|scratch max_rel 3.553e-8 (smallest failing) and misc.gpfit.DotProduct|anm|256|kernel|scratch 1.347e-4 (largest)",
+    "wf2bB gpfit DotProduct score-9 rationale (text only, score unchanged): 'the supplement does not describe it' changed to 'the supplement misdescribes it (\u00a71.6.2)' in record what_changed, at notes/gpfit.md:320 (heading) and notes/gpfit.md:364",
+    "wf2bB ids already_documented / candidate_resolutions[0].evidence: cite cov_prec_robust.md:338-343 (checked answer) instead of 161-162, and narrow 'no repository text states' to 'states explicitly' in the record (lines 88-89, 277) and in notes/ids.md:163. new_finding is unchanged",
+    "wf2bB coint cosmetic: added '. ' before 'Interpretation note, not a finding' in all five coint records (aeg, johansen order-0/1 x ardiff-1/10)",
+    "wf2bA still_open_for_synthesis: no items name gpfit, coint or ids. The HEAD a1f20c7/a42ebc1 item was checked: my files already state that HEAD is a42ebc1 and that calculator.py is unchanged since a1f20c7"
+   ],
+   "claim_problems": [],
+   "not_done": [
+    "The 5 stale-calculator flags (pyspi/calculator.py:295 in the five coint records) still show after the re-run. I left them because they are correct at HEAD: line 295 is 'def compute(self, *, on_metric_complete=None):', which the sentence names as '(def)'. The scanner flags them only because they also match the old file. All other calculator.py citations in my files (230, 239, 251-267, 252-259, 256, 327-339, 329, 332, 335, 336-337, 336-339, 339, 342-346, 347-353, 354-355, 355) were confirmed at HEAD.",
+    "The new cov_prec_robust.md:338-343 citation in misc.ids.yaml shows as token-miss. That is a false positive: the lines contain the freshfull/freshbasic answer and np.random.seed(1717). It depends on audit/notes/cov_prec_robust.md keeping its line numbers if another cluster edits that note.",
+    "The wf2bB not_done items for gpfit, coint and ids all need computation, real EEG data or installs (T=4096 gpfit, statsmodels 0.12.0, golden regeneration without the seed line, the EEG persistence share, the sgddtw RNG probe). They are left for later stages."
+   ],
+   "refutations": [
+    {
+     "file": "audit/records/misc.coint.johansen_order-0_ardiff-1.yaml",
+     "line": 14,
+     "problem": "The agent's external_checked entry says supplement.txt '896-898 the Johansen bullet ... All correct'. That is wrong: the bullet runs onto line 899, so 896-898 cuts it short.",
+     "evidence": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt:896-899. Line 898 ends 'fixed autoregressive lags of 1' and line 899 is '(ardiff-1) and 10 (ardiff-10).'. The quotation in the record ends with '...lags of 1 (ardiff-1) and 10 (ardiff-10).', which is text from line 899. The same range appears in johansen_order-0_ardiff-10.yaml:14, johansen_order-1_ardiff-1.yaml:16, johansen_order-1_ardiff-10.yaml:16 and notes/coint.md:32."
+    }
+   ],
+   "missed": [
+    {
+     "file": "audit/records/misc.coint.johansen_order-0_ardiff-1.yaml",
+     "line": 14,
+     "problem": "'Johansen bullet (supplement.txt:896-898)' should be 896-899. The quoted text ends with '(ardiff-1) and 10 (ardiff-10).' on supplement.txt line 899. Same fix needed in misc.coint.johansen_order-0_ardiff-10.yaml:14, misc.coint.johansen_order-1_ardiff-1.yaml:16, misc.coint.johansen_order-1_ardiff-10.yaml:16 and audit/notes/coint.md:32."
+    },
+    {
+     "file": "audit/records/misc.coint.aeg.yaml",
+     "line": 10,
+     "problem": "documented_definition gives '(heading supplement.txt line 885, text 886-898)', but the \u00a71.6.3 text ends at line 899. Same range in the documented_definition of all four johansen records (johansen_order-0_ardiff-1.yaml:10, johansen_order-0_ardiff-10.yaml:10, johansen_order-1_ardiff-1.yaml:12, johansen_order-1_ardiff-10.yaml:12) and in audit/notes/coint.md:14. Each should read 886-899."
+    }
+   ],
+   "sampled": 42,
+   "resolved": [
+    "Refutation upheld: supplement.txt line 899 is '(ardiff-1) and 10 (ardiff-10).', so the Johansen bullet runs 896-899, not 896-898. The agent's 'All correct' external_checked entry was wrong.",
+    "Johansen bullet citation changed from supplement.txt:896-898 to 896-899 in misc.coint.johansen_order-0_ardiff-1.yaml:14, johansen_order-0_ardiff-10.yaml:14, johansen_order-1_ardiff-1.yaml:16, johansen_order-1_ardiff-10.yaml:16 and audit/notes/coint.md:32.",
+    "Section 1.6.3 text range changed from 'text 886-898' to 'text 886-899' in documented_definition of misc.coint.aeg.yaml:10, johansen_order-0_ardiff-1.yaml:10, johansen_order-0_ardiff-10.yaml:10, johansen_order-1_ardiff-1.yaml:12, johansen_order-1_ardiff-10.yaml:12 and audit/notes/coint.md:14. The heading at line 885 is confirmed. No other 898 citations remain in the gpfit, coint and ids files."
+   ],
+   "disputed": [],
+   "remaining": [],
+   "validator_clean": true
+  }
+ ]
+}

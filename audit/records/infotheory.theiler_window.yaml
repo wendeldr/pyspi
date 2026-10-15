@@ -1,0 +1,200 @@
+unit_id: infotheory.theiler_window
+status: profiled
+correctness:
+  metric_name_standard: Theiler window (dynamic correlation exclusion) size chosen from the autocorrelation time of the pair via Bartlett's formula
+  canonical_ref: Theiler 1986, Phys. Rev. A 34, 2427 (window, supplement [36]); Bartlett 1946, J. R. Stat. Soc. Suppl. 8, 27 (supplement [37]) for the variance of the sample cross-correlation of two autocorrelated
+    series, Var(r_xy) ≈ (1/T) Σ_{k=−∞}^{∞} ρ_x(k) ρ_y(k); the effective-sample-size form T_eff = T / (1 + 2 Σ_{k>=1} ρ_x(k) ρ_y(k)) as used by Cliff et al. 2021, Phys. Rev. Research 3, 013145 (supplement
+    [10]). Forms from memory; see Open questions.
+  canonical_definition: Autocorrelation time of the pair τ = Σ_{k=−∞}^{∞} ρ_x(k) ρ_y(k) = 1 + 2 Σ_{k>=1} ρ_x(k) ρ_y(k) (population ACFs; in practice the sum is truncated at a lag where the sample ACF is
+    no longer distinguishable from 0); Theiler window W of about τ samples, excluding neighbours with |t − t'| <= W.
+  documented_definition: 'supplement §1.4, p.9-10 (pack lines 414-453): ''The window size should be large enough to render observations included in the density estimate uncorrelated (sometimes called the
+    "autocorrelation time" [36]); here, we set the window as the product of the autocorrelation functions of both time series (a heuristic for the autocorrelation time based on Bartlett''s formula [10,
+    37]). The DCE modifier indicates that the Theiler window is used for the KSG estimator.'' GitBook information-theory.md:20 same text.'
+  delegate_lib: pyspi (numpy 2.5.4 np.correlate / np.dot, scipy 1.17.1 scipy.stats.zscore); consumed by JIDT DYN_CORR_EXCL
+  implemented_as: 'On the first DCE call for a Data object: for every pair _i < _j, W[_i,_j] = W[_j,_i] = 2 · Σ_{k=0}^{T−1} r_i(k) r_j(k), with r the biased sample ACF of the z-scored (ddof=0) preprocessed
+    series over all lags 0..T−1 (np.correlate ''full'', normalised by lag 0); cached as data.theiler and shared by every DCE SPI on that Data. Per pair the calculator receives DYN_CORR_EXCL = int(W[i,j])
+    (truncation toward 0). In JIDT a neighbour is excluded when |t − t''| <= W; W = 0 or 1 still excludes only very close points.'
+  implementation_trace:
+  - pyspi/statistics/infotheory.py:57-58 '_DCE' added to the identifier when dyn_corr_excl is truthy ('AUTO' in config.yaml:512, :534, :563, :570, :577)
+  - 'pyspi/statistics/infotheory.py:195-216 JIDTBase._set_theiler_window (dyn_corr_excl=''AUTO''): on the first call for a Data object computes, for every pair _i<_j, theiler[_i,_j] = theiler[_j,_i] = 2
+    * np.dot(utils.acf(z[_j]), utils.acf(z[_i])) and caches it as data.theiler; then setProperty(''DYN_CORR_EXCL'', str(int(data.theiler[i, j]))) on the calculator for the current pair'
+  - 'pyspi/utils.py:47-60 acf(x): x = scipy.stats.zscore(x) (ddof=0); acf = np.correlate(x, x, ''full''); acf /= acf[T-1]; returns lags 0..T-1 (biased sample ACF, divisor sum x^2 at every lag, no lag truncation)'
+  - pyspi/statistics/infotheory.py:217-220 numeric dyn_corr_excl alternative (not used by any config)
+  - pyspi/statistics/infotheory.py:270, :303, :381 MutualInfo/TimeLaggedMutualInfo/TransferEntropy.bivariate call _set_theiler_window(data, i, j) before initialise
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/MutualInfoCalculatorMultiVariateKraskov.java#L231-L233 DYN_CORR_EXCL
+    -> dynCorrExclTime, dynCorrExcl = W > 0; :298-303 throws if N <= k + 2W
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/kraskov/ConditionalMutualInfoCalculatorMultiVariateKraskov.java#L269-L271
+    and :316 same for CMI; https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/TransferEntropyCalculatorViaCondMutualInfo.java#L462-L465
+    forwards and stores it, :752-754 copies it into the auto-embedding AIS calculator
+  - JIDT https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/utils/KdTree.java#L751-L753 and utils/UnivariateNearestNeighbourSearcher.java#L503-L505 exclusion
+    test |dt| <= dynCorrExclTime
+  deviation_from_documented: 'Documented as ''the product of the autocorrelation functions of both time series''; implemented as twice the inner product of the two full sample ACFs (lags 0..T−1), then int().
+    Documented as a heuristic for the autocorrelation time; for oscillatory, periodic, trending or random-walk inputs the value grows linearly with T (probe p3: narrowband 22/85/339/1353 at T=64/256/1024/4096)
+    and is not an autocorrelation time.'
+  deviation_from_canonical: 'Relative to Bartlett''s 1 + 2Σ_{k>=1} ρ_xρ_y: (1) the lag-0 term is doubled, so the raw value is exactly Bartlett + 1 (probe p3: difference 1.00 on every pair); (2) int() truncation;
+    (3) the sum uses the biased sample ACF over all T−1 lags with no truncation, so noisy high-lag products accumulate and periodic components contribute ≈ T/3 (2 Σ (1−k/T)² cos²(ωk)); (4) the window is
+    a pair quantity (product of both ACFs) while a Theiler window is usually set from the autocorrelation time of the embedded variables. For white noise W = 1 or 2 depending on sampling noise (probe p3
+    iid_gaussian T=1024: [2,2,1,1,2,2,2,2,1,1]).'
+  units_and_range: integer number of samples, >= 0 in practice (can be 0 or negative only if the ACF inner product is below 0.5, not observed); symmetric in (i, j); grows ∝ T for non-decaying ACFs
+  direction_convention: n/a (symmetric pair quantity W[i,j] = W[j,i])
+  symmetry_expected: n/a
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'CANDIDATE (pack hypothesis confirmed): W = int(2·dot(acf_i, acf_j)) = int(1 + [1 + 2Σ_{k>=1} r_i r_j]), i.e. Bartlett''s value plus one before truncation; probe p3 raw − Bartlett = 1.00 on all pairs
+    of 11 datasets × 4 T × 2 preprocessing variants.'
+  - 'CANDIDATE (pack hypothesis refined): the window is pair-specific but is not recomputed per pair: all pairs are computed on the first call and cached as data.theiler (infotheory.py:197-212), shared
+    across all DCE SPIs on that Data object.'
+  - 'CANDIDATE: summing all T−1 lags makes W ∝ T for oscillatory/periodic/trending/random-walk input (probe p3: narrowband ≈ 0.33 T, logistic_maps 665 at T=4096, trending without detrend 1403 at T=4096
+    but 2 after detrend, cointegrated 1277 at T=4096, shared_envelope 1084), so the ''autocorrelation time'' heuristic removes about 2/3 of the series from every neighbour search.'
+  - 'CANDIDATE: large W makes the auto-embedding TE unit return NaN at small T (N = T − 37 <= 4 + 2W; probe p13 T=64 narrowband, logistic_maps, shared_envelope) — see infotheory.te.kraskov_DCE_auto-MAX_CORR_AIS_kmax-10_taumax-4.'
+  - 'CANDIDATE (efficiency): acf of each channel is recomputed inside the pair loop with np.correlate ''full'' (O(T²) each), i.e. P(P−1) ACF evaluations instead of P.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - var2_bivariate
+    - gauss_ar1_pair
+    - delayed_noise
+    - narrowband_f0-0.1
+    - logistic_maps
+    - cointegrated
+    - trending
+    - shared_envelope
+    path: pipeline
+    reference: 'from-scratch numpy: biased ACF by explicit lag loop on z-scored rows, W = int(2 Σ_{k=0}^{T−1} r_i(k) r_j(k)); compare with data.theiler after a DCE call'
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: integer windows identical on every pair (raw values to <= 1e-10)
+  - datasets:
+    - iid_gaussian
+    - gauss_ar1_pair
+    - var2_bivariate
+    - narrowband_f0-0.1
+    - narrowband_f0-0.25
+    path: pipeline
+    reference: 'analytic population value of Bartlett''s τ = 1 + 2 Σ_{k>=1} ρ_x(k) ρ_y(k): white noise 1; gauss_ar1_pair and var2_bivariate from the VAR autocovariance sequence; a pure sinusoid has a non-summable
+      product (τ undefined/infinite)'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: raw pyspi value ≈ τ + 1 (white noise ≈ 2, giving W in {1, 2}); for narrowband W/T → 1/3 as T grows (0.343, 0.333, 0.331, 0.330 at T=64..4096, probe p3)
+  - datasets:
+    - trending
+    - cointegrated
+    path: pipeline-detrend
+    reference: same rule on detrended vs non-detrended input
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'trending: W drops from up to 1403 (T=4096) to 1-2 with detrend; cointegrated stays large (1093 at T=4096)'
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_kraskov.py:chk_lagloop (explicit lag-loop biased ACF, 2 sum_k r_i r_j over k=0..T-1, no np.correlate); audit/checks/refs/it_kraskov.py:chk_bartlett (audit/checks/refs/_kernels_infotheory.py:theiler_window_bartlett
+    + 1); audit/checks/refs/it_kraskov.py:chk_pop (population Bartlett tau from VAR autocovariances, Monte Carlo of the rule, large-T limit tau + 1 + C from audit/checks/refs/it_kraskov.py:pop_cross_sq);
+    audit/checks/refs/it_kraskov.py:chk_growth (sinusoid closed form ~T/3); audit/checks/refs/it_kraskov.py:chk_detrend; values read through audit/checks/probes/it_kraskov_probes.py:theiler_raw (data.theiler)
+  check_data: iid_gaussian, bivariate_gaussian, var2_bivariate, gauss_ar1_pair, delayed_noise, narrowband_f0-0.1, logistic_maps, cointegrated, trending, shared_envelope at T1024 (pipeline; trending and
+    cointegrated also pipeline-detrend); narrowband_f0-0.1 at T64/256/1024/4096; gauss_ar1_pair and var2_bivariate also at T256 and T4096 (population runs)
+  agreement_criterion: raw window rtol 1e-10 / atol 1e-12 and integer windows identical; Bartlett+1 rtol 1e-10; population statistical (|pyspi - MC mean| <= 2 MC SD; reference_kind independent-impl, the
+    population tau + 1 is analytic and quoted); growth and detrend qualitative
+  closeness: 'lagloop: 12/12 pass with max_abs 0.0 and int_mismatch 0 (integer windows: iid 1-2, bivariate 2, var2 2, gauss_ar1 5, delayed_noise 2, narrowband 339, logistic_maps 208, cointegrated 158-205
+    (37-111 detrended), trending 1-350 (2 detrended), shared_envelope 18-273). Bartlett: raw - (1 + 2 sum_(k>=1) r_i r_j) = 1.0000 on all 11 pairs (var2_bivariate raw 2.6398 vs Bartlett 1.6398, int 2; iid_gaussian
+    Bartlett 0.940-1.040, raw 1.940-2.040, int 1-2), max_abs 1.3e-15. Population: tau+1 = 2.00 (iid), 2.34 (var2), 3.63 (gauss_ar1) vs pyspi raw 2.024 / 2.640 / 5.145 and MC mean of the rule 2.001 / 2.739
+    / 5.061 (z 0.60 / 0.83 / 0.12): beyond the +1, the all-lag sum of sample-ACF products adds an upward bias on cross-correlated pairs that does not vanish as T grows. MC excess over tau+1 at T = 256 /
+    1024 / 4096: gauss_ar1_pair 1.18 / 1.44 / 1.54, var2_bivariate 0.36 / 0.39 / 0.40; iid 0.001 (independent channels). The large-T limit tau + 1 + C with C = sum_m rho_01(m)^2 (Bartlett covariance of
+    lagged products) is 5.197 (C 1.571) and 2.749 (C 0.405), against MC means 5.167 and 2.749 at T=4096. pyspi raw vs MC at T=256 / 4096: gauss_ar1_pair 4.358 / 4.741 (z 0.34 / 1.21); var2_bivariate T=4096
+    2.643 (z 1.75); var2_bivariate T=256 3.421 vs MC 2.705 +- 0.209 (z 3.42: FAIL of the 2-SD criterion on this single dataset draw; the draw is exact against the lag loop, and a 2000-draw probe gives P(rule
+    >= 3.421) = 0.0055 under the generating model, right skew 0.71, scratchpad it_kraskov_check/theiler_tail.py). Growth: narrowband_f0-0.1 raw 22.1 / 85.4 / 339.2 / 1352.9 at T=64/256/1024/4096, within
+    1.2% of 2a^2 sum_k (1-k/T)^2 cos^2(wk) (0.346 T -> 0.330 T). Detrend: trending pairs 340-350 -> 2.0-2.7; cointegrated 158-206 -> 38-111.'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 6: the raw window equals Bartlett''s factor + 1.00 on all 11 pairs (var2_bivariate 2.6398 vs 1.6398) and grows about T/3 on narrowband
+    input (339 at T=1024).'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Documented as ''the product of the autocorrelation functions of both time series (a heuristic for the autocorrelation time based on Bartlett''s formula)''; implemented as W = int(2 sum_{k=0}^{T-1}
+    r_i(k) r_j(k)) over all lags of the biased sample ACFs. That is exactly Bartlett''s factor 1 + 2 sum_{k>=1} r_i r_j plus 1 (lag 0 counted twice), with no lag truncation, so on cross-correlated pairs
+    it carries an upward bias that does not vanish as T grows (its expectation tends to tau + 1 + sum_m rho_ij(m)^2, not tau + 1: an inconsistent estimator of Bartlett''s factor; +1.54 on gauss_ar1_pair
+    and +0.40 on var2_bivariate at T=4096), and it grows linearly with T (about T/3) for oscillatory, trending or random-walk input, where it is not an autocorrelation time. Computed once per Data object
+    for all pairs and cached.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.3 s per probe at T=4096'
+  symmetry_observed: 'sym: W[i,j] = W[j,i] exactly (max|W - W.T| = 0.0 on every lagloop run)'
+  direction_observed: n/a (symmetric pair quantity)
+  candidate_resolutions:
+  - candidate: raw window = Bartlett + 1 before int()
+    outcome: confirmed
+    evidence: 'infotheory.theiler_window|var2_bivariate|1024|pipeline|bartlett, infotheory.theiler_window|iid_gaussian|1024|pipeline|bartlett: raw - Bartlett = 1.0000 on 11 pairs (max_abs 1.3e-15)'
+  - candidate: window computed for all pairs on the first call and cached as data.theiler, not recomputed per pair
+    outcome: confirmed
+    evidence: 'infotheory.theiler_window|*|lagloop: one _set_theiler_window(data, 0, 1) call fills the whole P x P matrix (probe theiler_raw); pyspi/statistics/infotheory.py:197-212'
+  - candidate: all-lag sum makes W grow with T on oscillatory/trending/random-walk input
+    outcome: confirmed
+    evidence: 'infotheory.theiler_window|narrowband_f0-0.1|{64,256,1024,4096}|pipeline|growth: 22.1/85.4/339.2/1352.9 (0.33 T); lagloop T=1024: logistic_maps 208, trending 350, cointegrated 205, shared_envelope
+      273'
+  - candidate: large W makes the DCE auto-embedding TE NaN at small T
+    outcome: confirmed
+    evidence: 'infotheory.te.kraskov_DCE_auto-MAX_CORR_AIS_kmax-10_taumax-4|{narrowband_f0-0.1,logistic_maps,shared_envelope}|64|kernel|ksg: 6/6, 2/2, 6/12 NaN, the NaN mask reproduced exactly by the guard
+      N <= 4 + 2W of the k=10, tau=4 AIS candidate'
+  - candidate: 'efficiency: ACF recomputed inside the pair loop (P(P-1) evaluations instead of P)'
+    outcome: confirmed
+    evidence: code reading pyspi/statistics/infotheory.py:202-209 (utils.acf(src), utils.acf(targ) inside the _i/_j loop); output unaffected (lagloop max_abs 0.0)
+  checks_run:
+  - run_ids:
+    - infotheory.theiler_window|*|1024|pipeline|lagloop
+    - infotheory.theiler_window|trending|1024|pipeline-detrend|lagloop
+    - infotheory.theiler_window|cointegrated|1024|pipeline-detrend|lagloop
+    reference: audit/checks/refs/it_kraskov.py:chk_lagloop
+    outcome: pass 12/12; max_abs 0.0, integer mismatches 0
+  - run_ids:
+    - infotheory.theiler_window|var2_bivariate|1024|pipeline|bartlett
+    - infotheory.theiler_window|iid_gaussian|1024|pipeline|bartlett
+    reference: audit/checks/refs/it_kraskov.py:chk_bartlett
+    outcome: pass 2/2; raw - Bartlett = 1.0000
+  - run_ids:
+    - infotheory.theiler_window|iid_gaussian-p01|1024|pipeline|pop
+    - infotheory.theiler_window|gauss_ar1_pair|{256,1024,4096}|pipeline|pop
+    - infotheory.theiler_window|var2_bivariate|{256,1024,4096}|pipeline|pop
+    reference: audit/checks/refs/it_kraskov.py:chk_pop
+    outcome: pass 6/7, fail 1/7 (var2_bivariate T=256, z 3.42, a tail draw of the dataset, P = 0.0055); MC excess over tau+1 does not shrink with T; it rises toward C = ref_cross_sq_C (ref_mc_excess_over_tau_plus_1 at T = 256 / 1024 / 4096, gauss_ar1_pair 1.176 / 1.435 / 1.541 toward C = 1.571; var2_bivariate 0.361 / 0.394 / 0.405 toward C = 0.405; results/it_kraskov.json runs infotheory.theiler_window|{gauss_ar1_pair,var2_bivariate}|{256,1024,4096}|pipeline|pop)
+  - run_ids:
+    - infotheory.theiler_window|narrowband_f0-0.1|{64,256,1024,4096}|pipeline|growth
+    reference: audit/checks/refs/it_kraskov.py:chk_growth
+    outcome: pass 4/4; within 1.2% of the T/3 closed form
+  - run_ids:
+    - infotheory.theiler_window|trending|1024|pipeline-detrend|detrend
+    - infotheory.theiler_window|cointegrated|1024|pipeline-detrend|detrend
+    reference: audit/checks/refs/it_kraskov.py:chk_detrend
+    outcome: pass 2/2; trending 350 -> 2.7, cointegrated stays 38-111
+optimisation:
+  complexity_P_T: 'O(P^2 T^2): JIDTBase._set_theiler_window (infotheory.py:195-216) loops over i<j and calls utils.acf (z-score + np.correlate ''full'', O(T^2)) for both channels of every pair: P(P-1) acf calls
+    once per Data (~0.41 ms each at T=1024 in the mi_kraskov_DCE and tlmi_kraskov_DCE profiles, 56 calls in 0.023 s; 0.27-0.77 ms each without cProfile in audit/profiles/micro/probe_theiler_window_calls.json;
+    ~13806 x 0.41 ms = ~5.7 s per window at P=118, 3.7-10.6 s over the un-profiled range), cached in data.theiler for all DCE SPIs.'
+  hotspot_1: 'pyspi/statistics/infotheory.py:JIDTBase._set_theiler_window (pyspi) 3.8% cum / 3.3% self of the profiled mi_kraskov_DCE call at 8x1024 (infrastructure unit: mi.kraskov_DCE pstats); the window
+    build itself, pyspi/utils.py:acf (56 calls, 0.023 s of the 5.13 s call, ~0.41 ms per call), is 0.45%; the 3.3% self time (0.171 s) is outside acf (the loop and the 56 JIDT setProperty calls, which JPype
+    dispatches without cProfile entries). A self time that large shows up in 2 of the 5 DCE profiles (also te_kraskov_DCE_auto at 8x256: 0.299 s of 41.7 s, 0.72%); the other three have 0.06-0.08%
+    (tlmi_kraskov_DCE 0.0023 s of 3.76 s, te_kraskov_DCE k-1 / k-2 0.0053 s of 7.75 s and 0.0038 s of 4.81 s at 8x1024). It is not this frame''s work: audit/profiles/micro/probe_theiler_window_calls.json (every
+    call timed without cProfile, five DCE units, 3 fresh processes x 2 SPI calls each, two runs) gives a median of 0.02-0.05 ms per call after the window build, apart from stalls that land on the first Java
+    call of a pair (in the precall case a trivial Java call timed just before takes them over and this frame stays below 0.06 ms): in te_kraskov_DCE_auto at 8x256 every SPI call has them (largest 132-208 ms,
+    0.44-1.26 s per SPI call, 1.1-3.3% of it), in the four 8x1024 units one stall in 1 of 24 SPI calls per run (137 ms, 155 ms)'
+  hotspot_2: pyspi/utils.py:acf 0.45% of the same call (np.correlate 'full' on z-scored series, called twice per i<j pair on the first DCE call per Data)
+  hotspot_owner: pyspi
+  opaque_share: 0.0023
+  profile_file: audit/profiles/infotheory.mi.kraskov_DCE__8x1024.pstats (mi.kraskov_DCE; infrastructure unit)
+  opportunities:
+  - opportunity_id: it_kraskov-3
+    opportunity: Compute each channel's ACF once (P utils.acf calls, or one batched FFT autocorrelation) and fill W[i,j] = int(2 * np.dot(acf_i, acf_j)) from the cached vectors, instead of two utils.acf
+      calls per pair inside the i<j loop of _set_theiler_window.
+    opp_type: cache-sharing
+    expected_speedup: ~100x
+    speedup_basis: 'profile:audit/profiles/infotheory.mi.kraskov_DCE__8x1024.pstats pyspi/utils.py:47 acf 0.45% of the DCE call (56 calls, 0.023 s, ~0.41 ms each) + complexity: P(P-1) -> P acf calls (13806 ->
+      118 at P=118, ~5.7 s -> ~0.05 s per window at 0.41 ms per call); the self time of _set_theiler_window outside acf is not removed (3.3% in the mi_DCE profile and 0.72% in the te_DCE_auto 8x256 profile,
+      0.06-0.08% in the other three DCE profiles; audit/profiles/micro/probe_theiler_window_calls.json: a median of 0.02-0.05 ms per call without cProfile, plus stalls that land on the first Java call of a pair
+      and move to any Java call placed before it, so no change to this frame removes them); for the DCE SPIs themselves acf is ~2% of the quiet mi_DCE wall, so this is an infrastructure-only saving. No ranking basis on this row. This infrastructure unit has no SPI identifiers of its own, so profiles/summary.json holds no 118x1024 projection for it and rank_basis_s and projected_patient_s_after stay blank; its cost sits inside the timings of the units that call it. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README ''Optimisation columns'', rule 5).'
+    output_risk: unverified-bit-identical
+    risk_evidence: the same utils.acf vectors and the same per-pair np.dot; only the acf calls are cached (a matrix product A @ A.T would change summation order and could flip int() at integer boundaries)
+    effort: S
+    depends_on: []

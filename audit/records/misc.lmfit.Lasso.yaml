@@ -1,0 +1,239 @@
+unit_id: misc.lmfit.Lasso
+status: profiled
+correctness:
+  metric_name_standard: in-sample mean squared error of a lasso regression (alpha = 1, sklearn scaling 1/(2T)) of y = x_j on x = x_i
+  canonical_ref: 'Tibshirani 1996, J. R. Stat. Soc. B 58(1):267-288, lasso estimator and its soft-threshold solution for orthonormal design (section 2.2); scikit-learn
+    objective (1/(2 n_samples)) ||y - Xw||^2_2 + alpha ||w||_1 (sklearn/linear_model/_coordinate_descent.py:1334); coordinate descent: Friedman, Hastie & Tibshirani
+    2010, J Stat Softw 33(1)'
+  canonical_definition: 'single centred predictor: w = S(sum(xc*yc)/T, alpha) / (sum(xc^2)/T) with S(u, a) = sign(u) max(|u| - a, 0); b = ybar - w xbar; MSE = (1/T)
+    sum (y - b - w x)^2. For z-scored (ddof=1) inputs and alpha = 1: |sum(xc*yc)/T| = |r|(T-1)/T < 1 always, so w = 0 and MSE = (T-1)/T for every pair'
+  documented_definition: 'Not documented. supplement §1.6.1, p.18 (supplement.txt lines 856-868; the briefing pack gives 874-887, which is off by 18 lines): "we use
+    a number of linear models and record the mean squared error (MSE) of a regression of y on x. The following models (with the default parameters) from scikit-learn
+    [2] are included: stochastic gradient descent regression with a squared loss (ordinary least squares fit) function (denoted by modifier SGDRegressor); Ridge regression, which uses
+    l2-norm regularization (Ride); the Elastic-Net model [76, 77], which uses both l1 and l2-norm regularization (ElasticNet); and the Bayesian Ridge regressor uses
+    a gamma distribution prior (with lambda1 = lambda2 = 1e-6) for the l2-norm regularizor in Ridge regression (BayesianRidge). This yields four SPIs: 215. lmfit_SGDRegressor
+    216. lmfit_Ridge 217. lmfit_ElasticNet 218. lmfit_BayesianRidge"; keywords "directed, linear, unsigned, bivariate, contemporaneous"; rationale "Linear regression
+    is commonly used for establishing independence through model fits (e.g., see additive noise models in Sec. 1.3.1)". GitBook spi-descriptions/miscellaneous.md
+    "Linear Model Fit" repeats the text verbatim (including the typo "Ride") and lists the same four identifiers. The supplement says "This yields four SPIs" and
+    neither it nor the GitBook mentions Lasso or lmfit_Lasso; the identifier exists only through pyspi/config.yaml:1275.'
+  delegate_lib: scikit-learn==1.9.1 sklearn.linear_model.Lasso(random_state=42).fit -> ElasticNet.fit (l1_ratio=1.0) -> enet_path -> _cd_fast.enet_coordinate_descent
+    (Cython); sklearn.metrics.mean_squared_error; numpy==2.5.4
+  implemented_as: 'A[i, j] = in-sample MSE of the alpha=1 lasso fit of z_j on z_i. sklearn multiplies alpha by n_samples before coordinate descent (l1_reg = alpha*l1_ratio*T,
+    _coordinate_descent.py:783), and the initial duality-gap check at w = 0 already satisfies gap <= tol because |x^T y| = |r|(T-1) < T = l1_reg, so the solver returns
+    at iteration 0 with coef_ = 0 (probe: Lasso n_iter_ 0, coef_ [0.], dual_gap_ 0.0 on bivariate_gaussian_T256 pair (2,3) with r = 0.82). The prediction is the intercept
+    mean(z_j) ~ 1e-17, so A[i, j] = mean(z_j^2) = (T-1)/T exactly for every pair: probe gives the constant 0.984375, 0.99609375, 0.9990234375, 0.999755859375 at T
+    = 64, 256, 1024, 4096 on iid_gaussian, bivariate_gaussian (rho 0.8), delayed_noise, nonlinear_dependence, anm, scaled_offset and shared_envelope identical pair
+    (max deviation 0.0). random_state=42 is passed but selection="cyclic", so the RNG (rng.randint seed, _cd_fast.pyx:374) is never used for ordering.'
+  implementation_trace:
+  - 'pyspi/config.yaml:1264-1278 .statistics.misc LinearModel: labels directed/linear/unsigned/bivariate/contemporaneous; configs model: Ridge, Lasso, SGDRegressor,
+    ElasticNet, BayesianRidge (Lasso is the fifth, undocumented config)'
+  - 'pyspi/calculator.py:230-267 Calculator._load_yaml (HEAD a1f20c7): for params in configs (252): spi = getattr(module, fcn)(**params) (256), i.e. LinearModel(model=...);
+    self._spis[spi.identifier] = spi (257); the class attribute labels (misc.py:109) are what the calculator reports'
+  - 'pyspi/data.py:184-195 Data.set_data: scipy.signal.detrend(axis=1) only if detrend=True (default False) (187), then scipy.stats.zscore(axis=1, nan_policy="omit",
+    ddof=1) if normalise=True (default) (195); stored as (M, T, 1)'
+  - 'pyspi/calculator.py:329-339 Calculator.compute (HEAD a1f20c7): S = self._spis[spi].multivariate(self.dataset) (329); np.fill_diagonal(S, np.nan) (332); any exception
+    -> self._table[spi] = np.nan (336-337), so one failing pair makes the whole matrix NaN'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for j (outer), for i != j (inner): A[i, j] = self.bivariate(data, i=i, j=j); no mirroring'
+  - 'pyspi/base.py:27-49 parse_bivariate: Data passed through unchanged (two raw arrays would be wrapped into a new z-scored Data with i, j = 0, 1)'
+  - 'pyspi/data.py:108-118 Data.to_numpy(): returns the (M, T, 1) array, so z[i] is a (T, 1) design matrix with one feature'
+  - pyspi/statistics/misc.py:106-109 class LinearModel(Directed, Unsigned); labels ["misc", "unsigned", "unordered", "normal", "linear", "directed"]
+  - 'pyspi/statistics/misc.py:111-113 __init__: identifier "lmfit_<model>", self._model = getattr(sklearn.linear_model, model)'
+  - 'pyspi/statistics/misc.py:117-124 bivariate: z = data.to_numpy(); warnings suppressed; if "random_state" in inspect.signature(model).parameters: model(random_state=42).fit(z[i],
+    ravel(z[j])) else model().fit(z[i], ravel(z[j])) -> predictor = process i, target = process j'
+  - pyspi/statistics/misc.py:125-126 y_predict = mdl.predict(z[i]); return mean_squared_error(y_predict, ravel(z[j])) -> in-sample (training) MSE on the same T samples
+    used for fitting (argument order swapped, harmless because MSE is symmetric)
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:1329-1337 class Lasso(ElasticNet): objective (1/(2 n_samples)) ||y - Xw||^2_2
+    + alpha ||w||_1; defaults alpha=1.0, max_iter=1000, tol=1e-4, selection="cyclic", random_state=None (probe inspect.signature)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:1501-1514 Lasso.__init__: super().__init__(..., l1_ratio=1.0, ...)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:1096-1294 ElasticNet.fit: _pre_fit centring (1212-1221), coef_ initialised to
+    zeros (1233-1236), self.path(X, y, l1_ratio, alphas=[alpha], ...) (1248-1270), _set_intercept (1283)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:832 _pre_fit -> _preprocess_data (188-199): X and y centred, offsets stored'
+  - .venv/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:477 enet_path; 757 rng = check_random_state(random_state); 781-784 l1_reg = alpha*l1_ratio*n_samples,
+    l2_reg = alpha*(1-l1_ratio)*n_samples; 841-853 cd_fast.enet_coordinate_descent (precompute False)
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_cd_fast.pyx:243 enet_coordinate_descent; 391-400 tol *= y@y and duality gap at the initial w = 0: if
+    gap <= tol return w (n_iter 0); 445-448 coordinate update w_j = sign(tmp) max(|tmp| - alpha, 0) / (||x_j||^2 + beta) (not reached here)'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:301-316 LinearModel.predict -> _coordinate_descent.py:1301-1317 ElasticNet._decision_function (dense input: super()._decision_function, _base.py:291-299): X @ coef_ + intercept_'
+  - '.venv/lib/python3.12/site-packages/sklearn/linear_model/_base.py:318-334 _set_intercept: intercept_ = y_offset - X_offset @ coef_ (unpenalised intercept)'
+  - '.venv/lib/python3.12/site-packages/sklearn/metrics/_regression.py:524-600 mean_squared_error: _average((y_true - y_pred) ** 2, axis=0) (586-588), divisor T'
+  deviation_from_documented: '(a) The SPI is undocumented: supplement §1.6.1 lists four lmfit SPIs (215-218) and the GitBook four identifiers; lmfit_Lasso is a fifth
+    produced by config.yaml:1275. (b) If read against the family description ("record the MSE of a regression of y on x"), the regression is degenerate: the coefficient
+    is always exactly 0 on default-preprocessed data, so the output is the constant (T-1)/T and does not depend on the data at all. (c) "directed" label: trivially
+    symmetric (constant).'
+  deviation_from_canonical: 'The estimator itself is the canonical lasso (sklearn scaling, unpenalised intercept), which the checks reproduce; the deviation is in the choice
+    alpha = 1: with sklearn''s 1/(2T) scaling the threshold for a nonzero coefficient on one standardised predictor is |r|(T-1)/T > 1, which is impossible, so the
+    fitted model is always the intercept-only model and the SPI is the constant ((T-1)/T). With normalise=False the coefficient is nonzero only when the biased covariance
+    |cov0(x_i, x_j)| > 1, which makes the SPI depend on the absolute scale of the raw data.'
+  units_and_range: 'units of the target variance; on z-scored data exactly (T-1)/T for every off-diagonal entry (0.984375 at T=64 ... 0.999755859375 at T=4096), symmetric,
+    no information; with normalise=False equals var0(x_j) unless |cov0(x_i, x_j)| > 1 (probe scaled_offset_T1024 raw: column values 0.0395, 4.058, 24.78, 97.89 =
+    var0 of the target, except A[2,3] = 35.675 vs 97.894 and A[3,2] = 9.0302 vs 24.779 where |cov0| > 1); unsigned, >= 0.'
+  direction_convention: 'A[i, j] = in-sample MSE of the linear prediction of process j (target, column) from process i (predictor, row), per misc.py:122-126; LOWER
+    = j better linearly predicted from i. Code-derived; with the default z-scoring the matrix is symmetric (see units_and_range), so the direction is only empirically
+    identifiable with normalise=False, where column j scales with var(x_j) (probe on scaled_offset_T1024: column means of A track std_j^2 = 0.0395, 4.058, 24.78,
+    97.89).'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (degenerate constant SPI): lmfit_Lasso returns exactly (T-1)/T for every pair under default preprocessing, because alpha = 1 with sklearn''s 1/(2T)
+    loss scaling exceeds the largest possible |x^T y|/T = |r|(T-1)/T < 1, so the duality gap at w = 0 is already zero (_cd_fast.pyx:391-400). Evidence: probe1.py
+    "Lasso: maxdiff=0.00e+00 ... rng=[0.9961,0.9961]" on bivariate_gaussian_T256 (true rho 0.8 pair included) and on all other probed datasets/T; probe2.py "Lasso
+    0 [0.] -1.39e-17 0.0" (n_iter_, coef_, intercept_, dual_gap_); probe4.py identical series (shared_envelope x0 = x2) also gives 0.9844 at T=64.'
+  - 'Candidate (undocumented SPI): lmfit_Lasso is produced by pyspi/config.yaml:1275 but absent from supplement §1.6.1 ("This yields four SPIs") and from the GitBook
+    identifier list.'
+  - 'Candidate (scale-dependent behaviour without normalisation): with normalise=False the lasso is active only when |cov0(x_i, x_j)| > 1; probe scaled_offset_T1024
+    raw shows A equals var0(target) in 10 of 12 entries and a real fit only for the high-variance pair (2,3).'
+  - 'Candidate (documented rationale vs quantity): the supplement motivates lmfit by independence testing "through model fits (e.g., see additive noise models)",
+    but the SPI is the raw in-sample MSE of a contemporaneous linear fit, which measures linear predictability (a transform of r^2 for the closed-form models), not
+    residual independence; no residual-independence test is computed (misc.py:125-126).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - nonlinear_dependence
+    - anm
+    - shared_envelope
+    - contaminated
+    - logistic_maps
+    path: pipeline
+    reference: 'analytic: (T-1)/T for every off-diagonal entry (KKT condition |x^T y|/T <= alpha holds for every standardised pair)'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: every off-diagonal entry equals (T-1)/T to <= 1e-15 at every T; the SPI is classified degenerate
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - trending
+    path: pipeline-detrend
+    reference: analytic (T-1)/T after detrend + zscore(ddof=1)
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: constant (T-1)/T, identical to the default path
+  - datasets:
+    - scaled_offset
+    path: kernel
+    reference: 'from-scratch numpy single-predictor lasso: w = S(xc@yc/T, 1)/(xc@xc/T), b = mean(y) - w mean(x), MSE on raw (normalise=False) data (no sklearn import)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: max relative difference <= 1e-8 (coordinate descent stops on a duality-gap tolerance, tol=1e-4 * y@y, so a nonzero-coefficient fit may differ
+      slightly from the exact minimiser); confirms the scale-dependent activation |cov0| > 1
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - anm
+    path: pipeline
+    reference: 'analytic: A[i, j] depends only on (r_ij, T) after z-scoring, so A must equal A.T; compute max |A - A.T| off the diagonal'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'max |A - A.T| <= 1e-12 at every T (probe: <= 7.8e-16 on iid_gaussian, bivariate_gaussian, delayed_noise, nonlinear_dependence, anm, scaled_offset);
+      confirms that the "directed" label carries no directional information under default preprocessing'
+  - datasets:
+    - scaled_offset
+    - var2_bivariate
+    - anm
+    path: kernel
+    reference: 'analytic direction test: run LinearModel.multivariate on Data(x, normalise=False); compare A[i, j] with var0(x_j) * (1 - r_ij^2) (target-variance
+      scaling) and with var0(x_i) * (1 - r_ij^2) (predictor-variance scaling), numpy only'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A[i, j] tracks var0(x_j) (column = target) and not var0(x_i); establishes the empirical convention A[i, j] = MSE of predicting j from i. For
+      Lasso the raw-scale direction test works because inactive entries equal var0(x_j) exactly (column = target).
+  check_method: analytic
+  check_reference: audit/checks/refs/lmfit.py:h_exact (analytic constant (T-1)/T, cross-checked with refs/_kernels_basic_misc.py:lasso_1d_mse) and refs/lmfit.py:enet_sklearn_tol
+    (l1_ratio = 1; exact single-coordinate minimiser plus the solver's initial duality-gap exit, numpy only); refs/lmfit.py:h_params, h_direction
+  check_data: 'pipeline: all 21 datasets x T in {64, 256, 1024, 4096}; pipeline-detrend: iid_gaussian, bivariate_gaussian, trending, cointegrated x {64, 1024, 4096};
+    kernel/raw: scaled_offset, cointegrated, var2_bivariate, anm, bivariate_gaussian x {64, 1024, 4096}; probe probes/lmfit_params.py:lasso_params on bivariate_gaussian
+    256, sparse_precision 64, shared_envelope 64; direction (raw) T=1024'
+  agreement_criterion: exact (rtol 1e-10, atol 1e-12); params probe exact on (n_iter_, coef_, intercept_); qualitative raw-scale direction test
+  closeness: 'constant 96/96 pass: every off-diagonal entry equals (T-1)/T within 4.44e-16 on the 84 default-path runs and within 3.55e-15 on the 12 pipeline-detrend
+    runs (n_const = 864 of 864 entries); largest |r|(T-1)/T = 0.99976 < alpha = 1 (shared_envelope identical pair, T=4096); params 3/3 pass (n_iter_ 0 and coef_ 0
+    on every pair, max_abs 0); raw 15/15 pass (max_rel 2.2e-16) with n_active = n_abs_cov0_gt_alpha_l1 (scaled_offset|1024: 2 of 12, cointegrated|1024: 12 of 12,
+    bivariate_gaussian/anm/var2_bivariate: 0); direction 4/4 pass'
+  verdict: degenerate
+  score_0_10: 0
+  score_rubric: 0
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 0: the value is the constant (T-1)/T on 864 of 864 entries (96/96 runs, max deviation 3.55e-15).'
+  documentation_status: silent
+  verdict_adjusted: degenerate
+  score_adjusted: 0
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: The lasso estimator is sklearn's penalised form of Tibshirani 1996 and agrees with the analytic soft-threshold solution, but with alpha = 1 and sklearn's 1/(2T) loss scaling the coefficient of a standardised predictor is zero
+    whenever |r|(T-1)/T <= 1, which always holds; coordinate descent exits at iteration 0 and the prediction is the target mean, so the SPI is the data-independent
+    constant (T-1)/T on every dataset, at every T and under detrending. The SPI is also absent from the supplement ("four SPIs") and the GitBook. On raw (normalise=False)
+    data it fits only pairs with |cov0| > 1. As a practical consequence for the EEG data, lmfit_Lasso is in the retained EEG-185 set (audit/env/retained_metrics.txt:82),
+    and on the EEG workflow preprocessing (detrend then z-score) it is the same constant (T-1)/T (the 12 pipeline-detrend constant runs pass with the
+    84 pipeline runs, 96/96, max_abs 3.55e-15), so it stores no information.
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.020 s per pyspi run; all 122 Lasso runs about 1 s of pyspi time'
+  symmetry_observed: 'sym on the default (z-scored) path: max|A - A.T| <= 6.7e-16 over the 84 pipeline runs (iid_gaussian|64|pipeline|constant) and <= 4.9e-15 on
+    pipeline-detrend (trending|4096|pipeline-detrend|constant); asym on raw (kernel) data, where A[i, j] is in units of var0(x_j) (max|A - A.T| 3.88e3 on cointegrated|4096|kernel|raw);
+    on the default path trivially symmetric because every entry is (T-1)/T'
+  direction_observed: 'A[i, j] = in-sample MSE of predicting process j (target, column) from process i (predictor, row); lower = more linearly predictable. Raw-scale
+    direction runs (misc.lmfit.Lasso|{scaled_offset,var2_bivariate,anm,cointegrated}|1024|kernel|direction, 4/4 pass): pyspi equals the from-scratch f(x_i -> x_j)
+    to max_rel <= 2.0e-16 and differs from f(x_j -> x_i) by max_rel 0.0375 (var2_bivariate) to 2477 (scaled_offset). On the default z-scored path the matrix is symmetric,
+    so on the direction datasets (delayed_noise, var2_bivariate, logistic_maps_chaotic, anm) A[i, j] = A[j, i] to <= 7.8e-16 and the value carries no causal direction.
+    For Lasso the default-path value is the constant (T-1)/T, so no orientation is visible at all.'
+  candidate_resolutions:
+  - candidate: 'Degenerate constant SPI: exactly (T-1)/T for every pair under default preprocessing'
+    outcome: confirmed
+    evidence: 'misc.lmfit.Lasso|*|*|pipeline|constant (84 runs) and |pipeline-detrend|constant (12 runs): 96/96 exact, max_abs_dev_from_c <= 3.55e-15, n_const 864/864;
+      probe misc.lmfit.Lasso|*|pipeline|params: n_iter_ 0, coef_ 0'
+  - candidate: Undocumented SPI (config.yaml:1275; supplement lists four lmfit SPIs)
+    outcome: confirmed
+    evidence: 'supplement.txt:856-868 "This yields four SPIs" (215-218, no Lasso); pyspi/config.yaml:1275 "- model: Lasso"'
+  - candidate: Scale-dependent behaviour without normalisation (active only when |cov0(x_i, x_j)| > 1)
+    outcome: confirmed
+    evidence: 'misc.lmfit.Lasso|*|*|kernel|raw: 15/15 exact; n_active equals n_abs_cov0_gt_alpha_l1 in every run (scaled_offset|1024: 2 of 12; scaled_offset|64: 6
+      of 12; cointegrated|1024: 12 of 12)'
+  - candidate: Documented rationale (independence via model fits / ANM) vs quantity (in-sample MSE of a contemporaneous linear fit)
+    outcome: confirmed
+    evidence: 'constant runs: the value does not depend on the data at all, so no independence statistic enters; misc.py:125-126'
+  checks_run:
+  - run_ids:
+    - misc.lmfit.Lasso|*|*|pipeline|constant
+    - misc.lmfit.Lasso|*|*|pipeline-detrend|constant
+    reference: refs/lmfit.py:h_exact (analytic (T-1)/T; lasso_1d_mse cross-check)
+    outcome: pass 96/96, max_abs 3.55e-15
+  - run_ids:
+    - misc.lmfit.Lasso|*|*|kernel|raw
+    reference: refs/lmfit.py:enet_sklearn_tol(l1_ratio=1)
+    outcome: pass 15/15, max_rel 2.2e-16
+  - run_ids:
+    - misc.lmfit.Lasso|*|*|pipeline|params
+    reference: refs/lmfit.py:h_params (probes/lmfit_params.py:lasso_params)
+    outcome: pass 3/3, n_iter_ 0 everywhere
+  - run_ids:
+    - misc.lmfit.Lasso|*|1024|kernel|direction
+    reference: refs/lmfit.py:h_direction
+    outcome: pass 4/4
+optimisation:
+  complexity_P_T: 'O(P^2 T) for the arithmetic, but a T-independent per-call overhead dominates: one sklearn Lasso fit + predict + mean_squared_error per ordered pair (pyspi/statistics/misc.py:115-126, inspect.signature per pair at line 120). Measured P_exponent 2.06, T_exponent 0.02. Pair term dominates; measured 11.1 s per window at 118x1024 (family-warm, measured).'
+  hotspot_1: sklearn/utils/validation.py:check_array (third-party:sklearn) 36.8% of the profiled SPI call at 8x1024 (input validation incl. narwhals dataframe detection and finite checks); coordinate-descent enet_path is 9.9%
+  hotspot_2: 'sklearn/metrics/_regression.py:mean_squared_error (third-party:sklearn) 21.3% of the profiled SPI call at 8x1024; inspect.signature (Python stdlib) 11.8% in all, of which 6.0% is called per pair from pyspi/statistics/misc.py:bivariate (line 120), 3.6% sits inside sklearn base._validate_params (get_params -> _get_param_names) and 2.2% inside the validate_params wrapper of mean_squared_error'
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.198
+  profile_file: audit/profiles/misc.lmfit.Lasso__8x1024.pstats
+  opportunities:
+  - opportunity_id: lmfit-2
+    opportunity: Lasso and ElasticNet with one regressor as a batched soft-threshold closed form from the same Gram matrix as lmfit-1, reproducing sklearn's initial duality-gap exit at w = 0 (on z-scored data Lasso returns the constant (T-1)/T and ElasticNet is censored below |r| ~ 0.51).
+    opp_type: vectorise-batch
+    expected_speedup: 1000-3000x
+    speedup_basis: 'profile:audit/profiles/misc.lmfit.Lasso__8x1024.pstats base.py:multivariate 99.967% (the ordered-pair loop, replaced as a whole; misc.py:bivariate 99.74%: enet_path 9.9%, inspect.signature 11.8%, mean_squared_error 21.3%, the rest sklearn validation) -> Amdahl bound 3,030x at 8x1024; the remainder is a fixed cost (summary.json family-warm pairs fit t_fixed 1.0 ms of 11.1 s at 118x1024), so the bound at 118x1024 is about 1e4x + complexity: the replacement has the one-Gram-matrix structure of lmfit-1, measured at 3.5-3.8 ms per 118x1024 window (audit/profiles/micro/opp_lmfit-1.json and the reviewer re-runs); allowing an estimated 4-11 ms (not a timing; no candidate code exists) for the soft threshold and the duality-gap test gives 1000-3000x'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'the closed form must reproduce sklearn''s gap test at w = 0 (_cd_fast.pyx, exit band recorded in the ElasticNet check: |r| <= 0.5T/((T-1)(1 - sqrt(2e-4)))); outside it one cyclic update reaches the closed form, so only float-order differences are expected, but a pair at the band edge would jump by up to 4.8e-3; for Lasso at alpha = 1 on the default z-scored path every pair lies inside the exit band (|x^T y| = |r|(T-1) < T = l1_reg, implemented_as above), so the band edge cannot arise there; it matters for ElasticNet and for non-default inputs'
+    effort: M
+    depends_on: []
+  - opportunity_id: lmfit-4
+    opportunity: 'Strip per-call overhead around the unchanged sklearn fit: hoist inspect.signature(self._model) to __init__ (misc.py:120 runs it per pair), run fit/predict under sklearn.config_context(skip_parameter_validation=True, assume_finite=True), and compute the in-sample MSE with numpy instead of sklearn.metrics.mean_squared_error.'
+    opp_type: replace-library
+    expected_speedup: ~1.8x
+    speedup_basis: 'profile:audit/profiles/misc.lmfit.Lasso__8x1024.pstats inspect.signature 11.8% (6.0% called from misc.py:120, the part the hoist removes; the other 5.8% sits inside _validate_params and the mean_squared_error validation wrapper, so it is already in those shares), mean_squared_error 21.3%, sklearn base._validate_params 10.6% (containing validate_parameter_constraints 7.4%), _assert_all_finite 8.4% (overlapping cProfile shares, inflated by profiling) + complexity: per-call constant overhead, T-independent (T_exponent 0.02); an unprofiled throwaway check at 8x1024 (56 ordered pairs, same arrays, OMP_NUM_THREADS=1) gave 1.78x per pair with max_abs_diff 0.0 (not saved as a micro-benchmark); contained in lmfit-2, which replaces the sklearn fit whose per-call overhead this avenue strips, so on this unit it saves nothing on top of lmfit-2 (subsumed_by; README ''Optimisation columns'', ranking rule 4) and remains the fallback that keeps sklearn''s solver if lmfit-2 is not taken'
+    output_risk: unverified-bit-identical
+    risk_evidence: the same sklearn solver code runs on the same arrays; validation and signature inspection do not modify the data; for one output mean_squared_error is numpy mean((y_true - y_pred)**2), the same operations as an explicit numpy mean; assume_finite=True skips the finite-value check, so on input with NaN or inf sklearn raises today while the stripped call would proceed, and the bit-identical claim covers finite input only
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - lmfit-2

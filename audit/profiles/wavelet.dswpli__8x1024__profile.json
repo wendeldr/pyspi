@@ -1,0 +1,235 @@
+{
+ "P": 8,
+ "T": 1024,
+ "baseline_rss_mb": 480.5,
+ "budget_s": 120.0,
+ "data_kind": "synthetic",
+ "data_sha256": "8e7e5fadc565fde86c145bcd58801cc90799abd9427b553b966b0df36ab32ada",
+ "edf": null,
+ "entry_sources": {
+  "dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5": "extra"
+ },
+ "env": {
+  "java": null,
+  "omp_num_threads": "1",
+  "packages": {
+   "cdt": "0.6.0",
+   "hyppo": "0.5.2",
+   "jpype1": "1.7.1",
+   "mne": "1.13.2",
+   "nitime": "0.12.1",
+   "numpy": "2.5.4",
+   "pandas": "3.0.6",
+   "pyEDM": "1.15.2.0",
+   "pyyaml": "6.0.3",
+   "scikit-learn": "1.9.1",
+   "scipy": "1.17.1",
+   "sktime": "1.2.0",
+   "spectral-connectivity": "1.1.2",
+   "statsmodels": "0.15.0",
+   "torch": "2.14.1+cpu",
+   "tslearn": "0.9.0"
+  },
+  "platform": "linux",
+  "pyspi_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+  "pyspi_version": "2.0.2",
+  "python": "3.12.3"
+ },
+ "error": null,
+ "family": "wavelet_measures",
+ "finished_at": "2026-10-15T05:25:10+00:00",
+ "fit": null,
+ "git_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+ "hwm_reset": true,
+ "identifiers": [
+  "dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5"
+ ],
+ "jvm_requested": false,
+ "jvm_started": false,
+ "measure_mode": "measured",
+ "mode": "profile",
+ "n_pairs": null,
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)",
+ "opaque_share": 0.2660725170837086,
+ "opaque_share_by_owner": {
+  "builtin": 7.098131908034586e-05,
+  "python": 0.000528711370134081,
+  "third-party:colorama": 0.0005546602481903574,
+  "third-party:mne": 0.003545315457811547,
+  "third-party:mne_connectivity": 0.08403832729543169,
+  "third-party:numpy": 0.13275740279218393,
+  "third-party:packaging": 1.088597415650664e-05,
+  "third-party:pandas": 0.0001140193225034788,
+  "third-party:scipy": 0.04442146241371624,
+  "third-party:xarray": 3.075089050049686e-05
+ },
+ "pair_basis": "multivariate",
+ "peak_rss_delta_mb": 193.9,
+ "peak_rss_mb": 674.4,
+ "process_peak_rss_mb": 674.4,
+ "pstats": "audit/profiles/wavelet.dswpli__8x1024.pstats",
+ "pyspi_dirty": false,
+ "reason": null,
+ "repeats": 1,
+ "repeats_extended": null,
+ "repeats_planned": null,
+ "representative": "dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5",
+ "result_status": "ok",
+ "ru_maxrss_mb": 674.4,
+ "schema": 1,
+ "self_time_share_by_owner": {
+  "builtin": 7.098131908034586e-05,
+  "harness": 7.916566461406981e-05,
+  "pyspi": 0.08108027968382527,
+  "python": 0.005998584950495114,
+  "third-party:colorama": 0.0007847966283632404,
+  "third-party:mne": 0.07265212805882823,
+  "third-party:mne_connectivity": 0.5730894608137795,
+  "third-party:numba": 1.904383313510529e-05,
+  "third-party:numpy": 0.19362140078903753,
+  "third-party:packaging": 6.141967268010522e-05,
+  "third-party:pandas": 0.0021791866202467525,
+  "third-party:scipy": 0.06797013414184704,
+  "third-party:xarray": 0.0023934178240668804
+ },
+ "shape": "8x1024",
+ "spi_seed": 42,
+ "started_at": "2026-10-15T05:25:09+00:00",
+ "status": "ok",
+ "synth_seed": 20261014,
+ "t_cold_s": 0.5450477799968212,
+ "t_per_pair_ms": null,
+ "threads": {
+  "affinity_cpus": 64,
+  "jvm_running": false,
+  "numba_threads": 64,
+  "omp_num_threads": "1",
+  "os_threads": 1,
+  "threadpools": [
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   }
+  ],
+  "torch_threads": 1
+ },
+ "timeout_s": 360.0,
+ "top10_cumulative": [
+  {
+   "cumtime_s": 0.377523243,
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "harness",
+   "tottime_s": 1.9809e-05
+  },
+  {
+   "cumtime_s": 0.377471965,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 8.560000000000001e-06
+  },
+  {
+   "cumtime_s": 0.377462715,
+   "function": "pyspi/statistics/wavelet.py:multivariate",
+   "line": 80,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.030489747
+  },
+  {
+   "cumtime_s": 0.278280234,
+   "function": "pyspi/statistics/wavelet.py:_get_cache",
+   "line": 48,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.00011059600000000001
+  },
+  {
+   "cumtime_s": 0.27750045100000004,
+   "function": "<decorator-gen-294>:spectral_connectivity_epochs",
+   "line": 1,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "python",
+   "tottime_s": 0.001308734
+  },
+  {
+   "cumtime_s": 0.275708862,
+   "function": "mne_connectivity/spectral/epochs.py:spectral_connectivity_epochs",
+   "line": 768,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:mne_connectivity",
+   "tottime_s": 0.017878734
+  },
+  {
+   "cumtime_s": 0.190802158,
+   "function": "mne_connectivity/spectral/epochs.py:_epoch_spectral_connectivity",
+   "line": 497,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:mne_connectivity",
+   "tottime_s": 0.072820812
+  },
+  {
+   "cumtime_s": 0.07022972200000001,
+   "function": "mne_connectivity/spectral/epochs.py:_compute_spectra",
+   "line": 393,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:mne_connectivity",
+   "tottime_s": 0.013651218000000001
+  },
+  {
+   "cumtime_s": 0.06855509800000001,
+   "function": "numpy/lib/_nanfunctions_impl.py:nanmean",
+   "line": 952,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:numpy",
+   "tottime_s": 0.0031879520000000004
+  },
+  {
+   "cumtime_s": 0.050679673,
+   "function": "mne/time_frequency/tfr.py:cwt",
+   "line": 766,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:mne",
+   "tottime_s": 6.7090000000000005e-06
+  }
+ ],
+ "total_tt_s": 0.3775500420000003,
+ "traceback_tail": null,
+ "unit_id": "wavelet.dswpli",
+ "wall_cv": null,
+ "wall_median_s": null,
+ "wall_profiled_s": 0.3776539890022832,
+ "wall_s": null,
+ "walls_s": null,
+ "warmup_error": null,
+ "warmup_shape": "8x1024"
+}

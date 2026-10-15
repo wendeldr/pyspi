@@ -1,0 +1,7 @@
+# R references run through Rscript with R_LIBS_USER=/home/dan/R/audit-lib (system R 4.6.1, 2026-06-24).
+# System library already provides: urca 1.3.x (Johansen ca.jo), rrcov (CovMcd), tseries, kernlab.
+# Installed into ~/R/audit-lib on 2026-10-14: Rcpp 1.1.2 (the system Rcpp predates R 4.6 and no longer compiles), glasso, dHSIC.
+# Not available: energy, HHG, mgc. `energy` compiles against the new Rcpp but fails at dyn.load during lazy loading
+# (shared-object load error under R 4.6.1); HHG and mgc depend on it. Consequences for the audit: distance correlation uses the
+# Python `dcor` package as the external second opinion, HHG uses a from-scratch implementation only, and MGC has no independent
+# external reference (scipy.stats.multiscale_graphcorr is the same lineage as hyppo), so its score is capped at 6.

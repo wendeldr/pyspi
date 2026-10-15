@@ -1,0 +1,182 @@
+unit_id: infotheory.je.gaussian
+status: profiled
+correctness:
+  metric_name_standard: Joint differential entropy H(X,Y) under a bivariate Gaussian model
+  canonical_ref: Cover T.M. & Thomas J.A. 2006, Elements of Information Theory, 2nd ed., Wiley, §8.4 Theorem 8.4.1 (differential entropy of a multivariate normal); supplement cites MacKay 2003, Information
+    Theory, Inference and Learning Algorithms
+  canonical_definition: H(X,Y) = 0.5*ln((2*pi*e)^2 det Sigma_XY) = (1+ln 2pi) + 0.5*ln(sx^2 sy^2 (1-rho^2)) nats
+  documented_definition: 'supplement §1.4.1, p.10 (supplement.txt:444-449): ''The joint entropy [33] quantifies the uncertainty over the paired observations''; keywords ''undirected, nonlinear, unsigned,
+    bivariate, contemporaneous''. GitBook information-theory.md:139-157 same text.'
+  delegate_lib: JIDT infodynamics.jar bundled at pyspi/lib/jidt (labelled 1.6.1 by version-1.6.1.txt, but its class inventory includes EntropyCalculatorMultiVariateCommon, added upstream in commit 3d1f3fe
+    on 2024-04-20; between tag v1.6.1 and commit a9b6b3e the Gaussian MI/CMI/TE/AIS leaf classes, MatrixUtils, MathsUtils and ChiSquareMeasurementDistribution are byte-identical, their MultiVariateCommon/Via
+    parents differ only in observation-ID/noise-seed bookkeeping, and EntropyCalculatorMultiVariateGaussian was refactored onto EntropyCalculatorMultiVariateCommon with its value path unchanged; details
+    in infotheory.est.gaussian) via JPype1==1.7.1 on OpenJDK 21; gaussian.EntropyCalculatorMultiVariateGaussian (initialise(2) + setObservations(double[][]) + computeAverageLocalOfObservations)
+  implemented_as: 'Each channel z-scored (ddof=1) by Data; for each unordered pair (first order visited by the loop) the (T,2) matrix [x_i, x_j] is passed to the JIDT Gaussian entropy calculator: 0.5*(2*(1+ln
+    2pi) + ln det C) with C the ddof=1 sample covariance. Since both diagonals of C are exactly 1, je = (1+ln 2pi) + 0.5*ln(1-r^2) = 2*1.4189385 - mi_gaussian, with r the sample Pearson correlation. Cached
+    in data.joint_entropy (shared with ce). Both orders are visited, the second is a cache hit; the lower triangle is then overwritten from the upper.'
+  implementation_trace:
+  - pyspi/calculator.py:329 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 fill_diagonal NaN; :336-339 any exception from any pair -> the whole SPI entry becomes NaN (:337) and the error is recorded, warning issued at :354-355
+  - 'pyspi/data.py:184-195 preprocessing in Data.set_data: optional scipy.signal.detrend(axis=1), then (default normalise=True) scipy.stats.zscore(axis=1, ddof=1)'
+  - 'pyspi/base.py:132-138 Undirected.multivariate: Directed loop then A[li] = A.T[li] with li = tril_indices(P,-1) (lower triangle overwritten from the upper, i<j)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: _entropy_calc = _getcalc(''entropy'') (:36); identifier += ''_gaussian'' (:38); estimator ''gaussian'' -> labels += [''linear''], _dyn_corr_excl
+    = None (:53-55)'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: every calculator gets setProperty(''BIAS_CORRECTION'',''false'') and setProperty(''NOISE_SEED'',''42''); no NORMALISE property is set'
+  - 'pyspi/statistics/infotheory.py:103-134 _getcalc: ''gaussian'' (and any unrecognised estimator) falls to the else branches -> gaussian.EntropyCalculatorMultiVariateGaussian (:111-112), gaussian.MutualInfoCalculatorMultiVariateGaussian
+    (:120-123), gaussian.TransferEntropyCalculatorGaussian (:129-130)'
+  - pyspi/statistics/infotheory.py:223-234 JointEntropy(JIDTBase, Undirected); bivariate -> _compute_joint_entropy
+  - 'pyspi/statistics/infotheory.py:159-177 _compute_joint_entropy: x, y = data.to_numpy()[[i, j]] (each (T,1)); initialise(2); setObservations(np.concatenate([x, y], axis=1)); value stored at [i,j] and
+    [j,i]'
+  - 'pyspi/config.yaml:397-409 JointEntropy configs: estimator gaussian (no further parameters)'
+  - 'https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/gaussian/EntropyCalculatorMultiVariateGaussian.java EntropyCalculatorMultiVariateGaussian
+    (extends EntropyCalculatorMultiVariateCommon, :53-54): finaliseAddObservations :87-96 computes means and MatrixUtils.covarianceMatrix(observations, means); setCovariance :110-123 takes MatrixUtils.CholeskyDecomposition
+    (throws on non-PD); computeAverageLocalOfObservations :162-175 returns 0.5*(d*(1+ln 2pi) + ln det(Sigma)) in nats'
+  - https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/EntropyCalculatorMultiVariateCommon.java :66 normalise = true by default, but
+    finaliseAddObservations :178-212 only stacks observations and adds noise if addNoise (default false, :70); no normalisation is applied for the Gaussian estimator; NOISE_SEED handled :133-139 (no effect
+    without addNoise)
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] covarianceMatrix(double[][], double[]) :3426-3439 -> covarianceTwoColumns :3370-3377 divides by (n-1) (ddof=1);
+    CholeskyDecomposition :4496-4498 (tol 10e-10 = 1e-9) / :4528-4560 throws NonPositiveDefiniteMatrixException when a pivot <= tol; determinantViaCholeskyResult :4673-4680
+  deviation_from_documented: 'none for the quantity. Labels: config.yaml keyword ''nonlinear'' is not carried by the instance (instance labels end with ''linear''); ''unsigned'' label although values can
+    be negative (REVIEW M8).'
+  deviation_from_canonical: 'none (plug-in Gaussian estimator with ddof=1 covariance). After default z-scoring the value carries no marginal-scale information and is an affine function of r^2: je = 2.8378770664
+    + 0.5*ln(1-r^2) (probe var2_bivariate_T1024: 2.81900377 = 2*1.41893853 - 0.01887329).'
+  units_and_range: nats; real, <= 2.8378770664 under z-scoring (equality iff r=0), -> -inf as |r| -> 1, raises on exact collinearity (Cholesky); without normalisation shifts by ln(sx*sy); symmetric
+  direction_convention: 'undirected: A[i,j] = A[j,i] = H(x_i, x_j). Undirected.multivariate (base.py:133-137) runs Directed.multivariate (base.py:85-93) over every ordered pair and then overwrites the lower
+    triangle from the upper; the second order of each pair is a cache hit in data.joint_entropy (infotheory.py:168-175 stores both [i,j] and [j,i]), so the JIDT entropy calculator runs P(P-1)/2 times (probe
+    iid_gaussian_T256, P=5: 10 calls)'
+  symmetry_expected: sym
+  already_documented: REVIEW M8 (Gaussian joint entropy can be negative; not an abs omission)
+  new_finding_candidates:
+  - 'CANDIDATE (redundancy): under default normalise=True, je_gaussian is an exact affine transform of mi_gaussian: je = 2*0.5*(1+ln 2pi) - mi. Probe var2_bivariate_T1024: je 2.81900377, mi 0.01887329,
+    2*1.41893853 - 0.01887329 = 2.81900377. Hence je_gaussian, ce_gaussian and mi_gaussian carry identical ranking information (all functions of |r|).'
+  - 'CANDIDATE (robustness): exact collinearity raises NonPositiveDefiniteMatrixException (probe shared_envelope rows 0/2) and Calculator blanks the whole je matrix (calculator.py:336-339 at HEAD a1f20c7); see infotheory.est.gaussian.'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - var2_bivariate
+    - iid_gaussian
+    - contaminated
+    path: pipeline
+    reference: 'from-scratch numpy: z-score each row with ddof=1, H = 0.5*(2*(1+ln 2pi) + ln det np.cov([x_i,x_j], ddof=1))'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: abs difference <= 1e-12 for every pair and T
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic population value for unit-variance pairs: (1+ln 2pi) + 0.5*ln(1-rho^2): rho=0.3 -> 2.7907217, rho=0.8 -> 2.3270514'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: at T=4096 within 3 sampling SDs (delta method on r); bias shrinks with T over 64..4096
+  - datasets:
+    - bivariate_gaussian
+    - var2_bivariate
+    path: pipeline
+    reference: analytic identity je = 2*1.4189385332046727 - mi_gaussian (both computed by pyspi on the same Data)
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: identity holds to 1e-12 on every pair
+  - datasets:
+    - scaled_offset
+    path: pipeline
+    reference: 'analytic: with normalise=False, je(scaled) - je(D2 rows) = ln(s_i*s_j)'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: shift equals ln(s_i s_j) to 1e-10; with normalise=True scaled_offset equals bivariate_gaussian (same draw) to 1e-12
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_gaussian.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:gaussian_joint_entropy (slogdet of the ddof=1 covariance, no JIDT); audit/checks/refs/it_gaussian.py:chk_truth_pair
+    (analytic (1+ln 2pi) + 0.5 ln(1-rho^2), Monte Carlo SE from 300 numpy draws); audit/checks/refs/it_gaussian.py:chk_equals_d2; audit/checks/refs/it_gaussian.py:chk_identity_mi (same-lineage identity
+    je = 2 H1 - mi_gaussian)
+  check_data: bivariate_gaussian T1024 (pipeline) and T4096 pairs (0,1)/(2,3); var2_bivariate T1024; iid_gaussian T256; contaminated T1024; delayed_noise T64; scaled_offset T1024 (kernel and pipeline);
+    shared_envelope T256 (degenerate contract, run under infotheory.est.gaussian)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 on every off-diagonal entry; statistical: |pyspi - Monte Carlo mean| <= 2 Monte Carlo SD per entry'
+  closeness: 'Numpy closed form: 6/6 exact runs pass, max_abs <= 3.6e-15 (je|var2_bivariate|1024|pipeline|numpy 4.4e-16; je|scaled_offset|1024|kernel|numpy on raw data 3.6e-15). Identity je = 2*1.4189385332
+    - mi_gaussian: max_abs 4.4e-16 (je|bivariate_gaussian|1024|pipeline|identity-mi). z-scored scaled_offset equals bivariate_gaussian (same draw): 1.3e-15. Analytic at T=4096: rho=0.3 population 2.79072,
+    |pyspi - population| 0.0029 (max_z 0.71); rho=0.8 population 2.32705, 0.0116 (max_z 0.85). Raw scaled_offset minus raw bivariate_gaussian (same draw, normalise=False) equals ln(s_i s_j) on every pair
+    to max_abs 1.4e-15 (je|scaled_offset|1024|kernel|shift-d2; e.g. ln(0.2*2) = -0.91629, ln(5*10) = 3.91202).'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 9 ddof clause: ddof=1 covariance. The numpy reference agrees on 6/6 exact runs, max_abs 3.6e-15.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Nothing in the formula: plug-in Gaussian joint entropy in nats. Convention: ddof=1 covariance (a ddof=0 estimate would be lower by 0.5*d*ln(N/(N-1)) per entropy, e.g. 1.41698 instead of
+    1.41894 for one z-scored variable at T=256). Under the default z-scoring the value carries no marginal-scale information and is exactly 2*1.4189385332 - mi_gaussian (affine in mi_gaussian).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap (pyspi time_s in out/pyspi/index/it_gaussian.json, single runs of the review-stage forced re-run, made under machine load: the shift-d2 probe (two je matrices, scaled_offset T = 1024) took
+    1.37 s and bivariate_gaussian|1024|pipeline|numpy, the first run of the family in manifest order, 0.89 s; every other run <= 0.009 s; 11 runs, 2.3 s in total; an earlier run quoted <= 0.02 s per
+    pyspi run at T = 1024 and 1.7 s for its first run (warm-up) (not stored in the index or results files); references are closed forms plus a 300-draw Monte Carlo (seconds; not stored in the index or
+    results files))'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on all 6 numpy runs and the identity run (Undirected mirrors the upper triangle)'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = H(x_i, x_j) (pipeline: of the z-scored rows)'
+  candidate_resolutions:
+  - candidate: je_gaussian is an exact affine transform of mi_gaussian under default z-scoring
+    outcome: confirmed
+    evidence: 'infotheory.je.gaussian|bivariate_gaussian|1024|pipeline|identity-mi: pyspi je equals 2*1.4189385332046727 - pyspi mi_gaussian to max_abs 4.4e-16; infotheory.est.gaussian|*|entropy-constant:
+      every univariate entropy is 1.4189385332 (<= 4.4e-16)'
+  - candidate: exact collinearity raises NonPositiveDefiniteMatrixException and Calculator blanks the whole je matrix
+    outcome: confirmed
+    evidence: 'infotheory.est.gaussian|shared_envelope|256|pipeline|degenerate: je_gaussian raises NonPositiveDefiniteMatrixException on the bit-identical pair (0,2); a real Calculator restricted to je_gaussian
+      + mi_gaussian returns an all-NaN je table and a ''failed'' metric report (calculator_je_all_nan = 1, calculator_je_report_failed = 1; pyspi/calculator.py:336-338 at HEAD a1f20c7)'
+  checks_run:
+  - run_ids:
+    - infotheory.je.gaussian|bivariate_gaussian|1024|pipeline|numpy
+    - infotheory.je.gaussian|var2_bivariate|1024|pipeline|numpy
+    - infotheory.je.gaussian|iid_gaussian|256|pipeline|numpy
+    - infotheory.je.gaussian|contaminated|1024|pipeline|numpy
+    - infotheory.je.gaussian|delayed_noise|64|pipeline|numpy
+    - infotheory.je.gaussian|scaled_offset|1024|kernel|numpy
+    reference: audit/checks/refs/it_gaussian.py:chk_numpy (audit/checks/refs/_kernels_infotheory.py:gaussian_joint_entropy)
+    outcome: 6/6 pass; max_abs <= 3.6e-15
+  - run_ids:
+    - infotheory.je.gaussian|scaled_offset|1024|pipeline|equals-d2
+    reference: audit/checks/refs/it_gaussian.py:chk_equals_d2
+    outcome: 1/1 pass; max_abs 1.3e-15
+  - run_ids:
+    - infotheory.je.gaussian|bivariate_gaussian|1024|pipeline|identity-mi
+    reference: audit/checks/refs/it_gaussian.py:chk_identity_mi (same-lineage)
+    outcome: 1/1 pass; max_abs 4.4e-16
+  - run_ids:
+    - infotheory.je.gaussian|bivariate_gaussian|4096|pipeline|truth-p01
+    - infotheory.je.gaussian|bivariate_gaussian|4096|pipeline|truth-p23
+    reference: audit/checks/refs/it_gaussian.py:chk_truth_pair (analytic + Monte Carlo SE)
+    outcome: 2/2 pass; max_z 0.71 / 0.85
+  - run_ids:
+    - infotheory.je.gaussian|scaled_offset|1024|kernel|shift-d2
+    reference: audit/checks/refs/it_gaussian.py:chk_je_shift (analytic ln(s_i s_j); audit/checks/probes/it_gaussian_probes.py:je_scaled_shift)
+    outcome: 1/1 pass; max_abs 1.4e-15
+optimisation:
+  complexity_P_T: 'O(P^2 T): JointEntropy.bivariate -> JIDTBase._compute_joint_entropy (infotheory.py:159-177) caches data.joint_entropy symmetrically, so P(P-1)/2 JIDT EntropyCalculatorMultiVariateGaussian
+    calls run, each with a T x 2 JArray(JDouble, 2) conversion (row-by-row, O(T)). Measured fresh P exponent 2.06, T exponent 0.97 (the 2-D conversion is linear in T). At 118x1024 the pair term dominates
+    (t_fixed 0.6 ms): 11.0 s measured fresh.'
+  hotspot_1: pyspi/statistics/infotheory.py:JIDTBase._compute_joint_entropy (third-party:jidt + jpype 2-D conversion, booked as self time) 98.7% cum / 97.8% self of the profiled SPI call at 8x1024
+  hotspot_2: 'jpype/_jarray.py:JArray.__new__ (third-party:jpype) 0.7%; numpy tril_indices 0.6%. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java)
+    time is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jpype
+  opaque_share: 0.0101
+  profile_file: audit/profiles/infotheory.je.gaussian__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_gaussian-1
+    opportunity: Compute the pairwise Gaussian SPIs for all pairs at once in numpy from one ddof=1 covariance of the z-scored rows (lag blocks x(t-m) and x(t+1) for tlmi and TE), with a batched slogdet
+      over the pair sub-matrices, instead of one JIDT calculator call per pair through JPype (infotheory.py:JIDTBase._compute_joint_entropy, MutualInfo.bivariate, TimeLaggedMutualInfo.bivariate, TransferEntropy.bivariate).
+    opp_type: replace-library
+    expected_speedup: ~1900x (fresh ~2900x)
+    speedup_basis: 'microbench:audit/profiles/micro/opp_it_gaussian-1.json (je_gaussian: candidate alone at 118x1024 3.8 ms including Data construction (2.9 ms), shapes 118x1024_candidate_only,
+      against the quiet summary.json 118x1024 walls 11.04 s fresh (measured) and 7.18 s family-warm (extrapolated-pairs-from-32) = 2935x / 1909x. Those ratios count Data construction in the
+      candidate, which the basis leaves out (profile_units.py times compute_spi on a prebuilt Data), so they move with Data-construction time (1709x against the family-warm basis in the Workflow 4c
+      run, 4.2 ms with Data). The like-for-like cost is the math alone: shapes 118x1024_split (4c run) gives 0.89 ms on a prebuilt Data, 8106x against the family-warm basis and 12,460x against the
+      fresh wall. The lower bound 1900x is kept as a conservative figure below the like-for-like ratio; with it the unit keeps 2.3 s per patient, with 8106x 0.5 s. The ranking basis itself is
+      low: the single fresh 118x1024 measurement (11.04 s, one repeat) is 1.54x the extrapolated family-warm 7.18 s, while fresh and family-warm agree at 32x1024 (0.519 s / 0.516 s), so the gap is
+      in the pairs-from-32 extrapolation, not a cache, and the patient-seconds saving ranked on (4,309 s) is a lower figure (6,623 s on the fresh wall); same-run speedups against the pyspi baseline on the shared machine 26x at 8x1024 and 497x at 32x1024
+      in the latest run (27x / 454x in the first; the 32x1024 same-run baselines are noisy)) + profile:audit/profiles/infotheory.je.gaussian__8x1024.pstats pyspi/statistics/infotheory.py:159 _compute_joint_entropy
+      98.7% (the candidate replaces the whole multivariate call; its own cost is one (k+1)P-square covariance plus O(P^2) small slogdets, milliseconds at 118x1024)'
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_it_gaussian-1.json: max_abs_diff 1.3e-15 (8x1024), 2.7e-15 (32x1024) and 2.2e-15 (118x1024, shapes 118x1024_split, one-shot pyspi baseline against
+      the math-only candidate, max_rel_diff 8.1e-16), NaN masks equal, not bit-identical (np.cov + slogdet instead of JIDT''s covariance + Cholesky)'
+    effort: M
+    depends_on: []

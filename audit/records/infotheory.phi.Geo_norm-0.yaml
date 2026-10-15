@@ -1,0 +1,387 @@
+unit_id: infotheory.phi.Geo_norm-0
+status: profiled
+correctness:
+  metric_name_standard: geometric integrated information Phi_G (Gaussian AR(1) model), unnormalised, nats
+  canonical_ref: 'Oizumi M, Tsuchiya N, Amari S (2016) ''Unified framework for information integration based on information geometry'',
+    PNAS 113:14817 (supplement [55]); arXiv:1510.04455 v1: Eq. 8 constraint q(Y[P_i]|X) = q(Y[P_i]|X[P_i]), Eq. 9 Phi_G = min_{q in
+    M_G} D_KL(p||q), Gaussian AR model Eqs. 15-17 (A''_ij = 0, i != j), stationarity Eqs. 18-20, Phi_G = 1/2 log |Sigma(E)''|/|Sigma(E)|
+    Eq. 21, 0 <= Phi_G <= I(X;Y) (Discussion); augmented-Lagrangian solver from PhiToolbox (Kitazono & Oizumi, supplement [52]).'
+  canonical_definition: Phi_G = min over disconnected models Y = A'X + E' with A' block-diagonal w.r.t. the partition (and q(X) = p(X))
+    of D_KL(p(X,Y)||q(X,Y)) = min_{A' blockdiag} 1/2 log |Sigma_E + (A-A') Sigma_X (A-A')'| / |Sigma_E|, A = Sigma_YX Sigma_X^-1, Sigma_E
+    = Sigma_Y - Sigma_YX Sigma_X^-1 Sigma_XY; global minimum over A' (Eq. 9 is a min). Bounds 0 <= Phi_G <= I(X;Y) and Phi_G <= SI(X;Y).
+  documented_definition: 'supplement §1.4.10, p.12 (supplement.txt lines 550-562; keywords line 551 ''undirected, nonlinear, unsigned,
+    bivariate, time-dependent''): ''We implement two proxy measures for IIT 2.0 [51] from the PhiToolbox [52]''; ''Phi_G is a measure
+    of integrated information derived from information geometry [55]. It is an undirected measure that quantifies the divergence between
+    the actual probability distribution of a system and an approximated probability distribution where influences among elements are
+    statistically disconnected. Here we implement the Gaussian-distribution model [53].'' ''Both measures are optionally normalized
+    (divided) by entropy (denoted by the modifier norm)'' (supplement §1.4.10, p.12, line 564). GitBook information-theory.md lines
+    111-133 repeat the same text. Identifier phi_Geo_t-1_norm-0.'
+  delegate_lib: 'pyspi (pyspi/lib/phi_native.py, native port of PhiToolbox phi_G_Gauss.m / phi_G_Gauss_AL.m) + numpy linalg; scipy==1.17.1
+    scipy.linalg.solve/inv; executed: phi_native.phi_comp -> phi_g_gauss -> phi_g_gauss_al'
+  implemented_as: Calculator default z-scores each channel (ddof=1). For pair (i,j), rows [i,j] form a 2xT array; tau = delay = 1; past
+    window X1 = x[:, 0:T-1], present X2 = x[:, 1:T], each centred by its own mean, covariances with denominator T-2 (Cov_X, Cov_Y, Cov_XY
+    = E[X(t-1)X(t)']); partition [1,2] (each channel its own part; the only bipartition, so no MIP search). VAR(1) parameters A = Cov_YX
+    Cov_X^-1, Sigma_E = Cov_Y - Cov_YX Cov_X^-1 Cov_XY; Phi_G = 1/2 log|Sigma_E'|/|Sigma_E| with Sigma_E' = Sigma_E + (A-A_p) Cov_X
+    (A-A_p)' minimised over diagonal A_p by an augmented Lagrangian (mu=2, alpha=0.9, gamma=1.01) that stops when the per-iteration
+    change of logdet(Sigma_E') is below 1e-10 (maxiter 1e5); eigenvalues of Sigma_E' clamped at 1e-12. Any exception inside bivariate
+    returns NaN (logged).
+  implementation_trace:
+  - pyspi/calculator.py:277 Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend); defaults normalise=True,
+    detrend=False (calculator.py:48-50)
+  - pyspi/data.py:184-195 optional scipy.signal.detrend, then scipy.stats.zscore(data, axis=1, nan_policy='omit', ddof=1)
+  - pyspi/calculator.py:329 S = self._spis[spi].multivariate(self.dataset)
+  - 'pyspi/base.py:132-138 Undirected.multivariate -> Directed.multivariate (base.py:85-94: every ordered pair i != j calls bivariate)
+    then A[li] = A.T[li] copies the upper triangle (bivariate(i,j), i<j) into the lower'
+  - pyspi/base.py:27-47 parse_bivariate (two raw arrays are wrapped by Data.add_process; see open questions on preprocessing of that
+    path)
+  - pyspi/statistics/infotheory.py:537-547 IntegratedInformation(Undirected, Unsigned); labels ['linear','unsigned','infotheory','temporal','undirected'];
+    identifier phi_{phitype}_t-{delay}_norm-{normalization}
+  - 'pyspi/statistics/infotheory.py:549-573 bivariate: P = np.array([1, 2]) (atomic bipartition), X = data.to_numpy(squeeze=True)[[i,
+    j]], params {''tau'': delay}, options {type_of_phi, type_of_dist ''Gauss'', normalization}; phi_comp(X, P, params, options); any
+    exception -> logging.error and np.nan'
+  - 'pyspi/lib/phi_native.py:394-433/443 phi_comp: cov_comp(X, tau, isjoint=True) then phi_star_gauss or phi_g_gauss'
+  - 'pyspi/lib/phi_native.py:46-77 cov_comp: X1 = X[:, :T-tau], X2 = X[:, tau:], each centred by its own mean; Cov_X = X1 X1''/(T-tau-1),
+    Cov_Y = X2 X2''/(T-tau-1), Cov_XY = X1 X2''/(T-tau-1) (= E[X(t-tau) X(t)''])'
+  - 'pyspi/lib/phi_native.py:21-43 logdet: Cholesky 2*sum(log(diag L)); on LinAlgError np.linalg.eigvals, keeps eigenvalues > 1e-12,
+    returns sum(log) (complex dtype); -inf if none kept'
+  - pyspi/lib/phi_native.py:104-115 h_gauss = 0.5*logdet(C) + 0.5*n*log(2*pi*e) (nats)
+  - 'pyspi/lib/phi_native.py:357-391 phi_g_gauss: A = solve(Cov_X, Cov_XY)'' (= Cov_YX Cov_X^-1), Cov_E = Cov_Y - Cov_XY'' Cov_X^-1
+    Cov_XY; method None -> K = 2 <= 3 -> ''AL'''
+  - 'pyspi/lib/phi_native.py:249-289 phi_g_gauss_al setup: mu=2, alpha=0.9, gamma=1.01, maxiter=100000, error=1e-10; A_p initialised
+    to blockdiag(A); B = A_p; Lambda = 0; eigh(Cov_X)'
+  - 'pyspi/lib/phi_native.py:291-313 loop: Cov_E_p = Cov_E + (A-A_p) Cov_X (A-A_p)''; eigh(Cov_E_p); eigenvalues clamped at 1e-12 (line
+    303, not in the MATLAB phi_G_Gauss_AL.m, vendored or upstream); closed-form A_p update in the joint eigenbasis'
+  - pyspi/lib/phi_native.py:319-332 B = A_p with cross-part blocks halved (constraint A_p = B <=> cross blocks zero), Lambda -= mu (A_p
+    - B), mu *= 1.01 when the constraint violation shrinks by less than 10%
+  - pyspi/lib/phi_native.py:334-337 stop when |logdet(Cov_E_p) - logdet(Cov_E_p_prev)| < 1e-10 (objective change only; no constraint
+    or stationarity test)
+  - 'pyspi/lib/phi_native.py:340-354 phi_G = (logdet(Cov_E_p) - logdet(Cov_E))/2; normalization==1: divide by (N_c-1)*min_k h_gauss(Cov_X[M_k,
+    M_k])'
+  - 'MATLAB/Octave, pyspi vendored PhiToolbox copy (see note at end of entry) (git show 76ab2bb^:pyspi/lib/PhiToolbox/Phi/phi_G_Gauss.m:36-60;
+    Phi/phi_G_Gauss_AL.m:37-119; utility/Gauss/logdet.m:1-9): same constants, same update (phi_G_Gauss_AL.m:78-79) without the eigenvalue
+    clamp, same stopping rule (97-100). Provenance: pyspi''s vendored PhiToolbox copy (git show 76ab2bb^:pyspi/lib/PhiToolbox; Phi/phi_star_Gauss.m
+    there calls fminunc(fh, beta, Options) at line 108 where upstream oizumi-lab/PhiToolbox master calls minFunc(@I_s_I_s_d, beta, Options);
+    phi_G_Gauss.m, phi_G_Gauss_AL.m and utility/Gauss/logdet.m are identical to upstream master apart from whitespace (diff -w against
+    raw.githubusercontent.com/oizumi-lab/PhiToolbox/master, fetched 2026-10-14))'
+  deviation_from_documented: 'Supplement keyword ''nonlinear'' (and config.yaml label) contradicts the Gaussian/linear implementation
+    and the class label ''linear''. Otherwise the prose matches (undirected; Gaussian model; PhiToolbox algorithm). Beyond the prose:
+    same AL algorithm as PhiToolbox plus an eigenvalue clamp (phi_native.py:303) absent in phi_G_Gauss_AL.m.'
+  deviation_from_canonical: 'Model matches the PNAS Gaussian formulation (constraint on A'', Eq. 17; Phi_G from Eq. 21). Deviations:
+    (1) the AL stopping rule tests only the change of the objective, so the iterate can stop at a non-stationary point in flat directions:
+    probe delayed_noise T64 pair (0,1) returned 2.3439385 while direct minimisation reaches 2.3406849 (gap 3.25e-3, 0.14%; Eq. 19 residual
+    8.2e-3; mu had grown to 1.35e6 after 2681 iterations); Octave running pyspi''s vendored PhiToolbox copy (phi_G files identical to
+    upstream) returns the same 2.34393854875, so this is inherited from PhiToolbox. Other probe cases agree with the global minimum
+    to <= 1e-8 except delayed_noise T1024 (0,1) gap 2.0e-5 and narrowband T64 (0,2) gap 4.0e-6. (2) the eigenvalue clamp at 1e-12 alters
+    results only for near-singular Sigma_E''. (3) degenerate covariances: a singular conditional covariance gives finite values via
+    the logdet fallback instead of +inf (exact one-step delay pair); an exactly singular Cov_X (bit-identical copy, T <= 1024) gives
+    NaN with a UserWarning (solve raises LinAlgError, phi_native.py:374-378); a numerically ill-conditioned Cov_X (same copy at T=4096)
+    gives a finite negative value -0.3466 with LinAlgWarning, violating Phi_G >= 0. Plug-in sample covariances with separate past/present
+    means and T-2 denominators (the denominator cancels in the unnormalised value). Check-stage correction: the trace statement that
+    other cases agree with the global minimum to ~1e-8 does not hold at T = 4096 on weakly coupled pairs, where the AL stops before
+    the constraint is met and UNDER-estimates Phi_G (cointegrated -3.46e-4, relative ~1.0; bivariate_gaussian -4.6e-6; iid_gaussian
+    -2.7e-6; off-diagonal |A_p| up to 9.8e-4), and the non-optimal stop reaches 1.107 nats on shared_envelope (0,1) at T64; both reproduced
+    by Octave on PhiToolbox. On the exact-delay construction the check runs give small NEGATIVE values (z-scored -0.00062, raw -0.0200
+    at delayed_noise T1024).'
+  units_and_range: 'nats; 0 <= Phi_G <= min(I, SI) in theory, positive finite-sample bias; invariant to per-channel affine rescaling;
+    symmetric; NaN when an exception occurs (e.g. constant channel); degenerate pairs never give inf: an exactly predictable pair gives
+    finite or complex-typed values, a bit-identical copy gives NaN at T <= 1024 and, at T=4096, NaN (star, TypeError caught) or a finite
+    negative value -0.3466 (Geo). Check stage: exactly predictable pairs can also return small negative values (exact-delay construction,
+    delayed_noise T1024).'
+  direction_convention: 'Undirected: A[i,j] = A[j,i] = value of bivariate(min(i,j), max(i,j)) on rows [i, j] with partition [1, 2] (base.py:136-137
+    mirrors the upper triangle; the lower-triangle bivariate calls are computed and discarded). The quantity is symmetric under swapping
+    the parts; computing the pair in the other row order differs only by optimiser tolerance. Probe on the Calculator/Data path (both
+    rows z-scored, phi_comp on rows [0,1] vs [1,0], gauss_ar1_pair T4096): star 0.031018450195045 vs 0.031018450195543 (diff -5.0e-13),
+    Geo 0.08925335492965669 in both orders (bit-identical). The larger gaps seen earlier (star 7.0e-13, Geo 1.3e-9) came from the raw-array
+    call spi.bivariate(x0, x1) vs (x1, x0), where parse_bivariate z-scores only the first array (data.py:219-238), so they are not the
+    Calculator-path numbers. Off-diagonal entries of the returned matrix are bitwise equal (var2_chain T1024: np.array_equal(A[off],
+    A.T[off]) True); np.array_equal(A, A.T) is False only because the diagonal is NaN, and np.array_equal(A, A.T, equal_nan=True) is
+    True.'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (optimiser accuracy): the AL solver can stop at a non-stationary feasible point because its only stopping test is |delta
+    logdet| < 1e-10 while mu grows geometrically; Phi_G is then over-estimated. Evidence: probe3/probe4 delayed_noise T64 pair (0,1):
+    pyspi 2.3439385490, Octave on the vendored copy 2.34393854875, direct minimisation (Nelder-Mead and BFGS agree) 2.3406848862 at
+    a = [-3.4126, 0.0224] vs AL a = [-2.6183, 0.0286]; gradient at the AL point [8.2e-3, 8.3e-5], Hessian eigenvalues [0.0101, 9.008]
+    (flat valley); constraint violation 5.6e-33, 2681 iterations, final mu 1.35e6.'
+  - 'Candidate (hypothesis check, confirmed but minor): the 1e-12 eigenvalue clamp (phi_native.py:303) is absent in phi_G_Gauss_AL.m:76-79;
+    since Sigma_E'' >= Sigma_E it is active only when Sigma_E is numerically singular (probe delayed_noise T64 pair (0,1): smallest
+    eigenvalue of Sigma_E 0.00832, smallest eigenvalue of the iterate Sigma_E'' over all 2681 AL iterations 0.00936 (probe3 tracks this
+    minimum across the loop), final Sigma_E'' 0.1009, so the clamp never acted; no difference vs Octave beyond 1e-10 in the three compared
+    cases).'
+  - 'Candidate (degenerate input handling): logdet''s eigenvalue fallback (phi_native.py:37-43) silently drops eigenvalues <= 1e-12,
+    including negative ones, and returns a complex-dtype number; for a singular conditional covariance this replaces -inf by a finite
+    value, so an exactly predictable pair can be reported as almost unintegrated. Evidence: probe6 exact one-step delay pair, eig(Cov_Y|X)
+    = [-2.2e-16, 1.0015] on z-scored input -> Cholesky fails -> logdet 0.00153+0j -> phi* 0.000636+0j; the same series unnormalised
+    has eigenvalue +2.2e-16 -> Cholesky succeeds -> phi* 18.03. The guards np.isinf(H_cond) / np.iscomplex(H_cond) (lines 169-175) never
+    fire because the fallback filters zeros and np.iscomplex(x+0j) is False. MATLAB logdet.m used log(det(X)) (-inf or complex). Bit-identical
+    copies (shared_envelope (0,2), rows still bit-identical after the Data z-score) do NOT go through the logdet fallback on the Calculator/Data
+    path: at T = 64, 256 and 1024 scipy.linalg.inv(Cov_X) (phi_native.py:203, star) and scipy.linalg.solve(Cov_X, Cov_XY) (phi_native.py:374,
+    Geo) raise LinAlgError and both return NaN with UserWarning ''Matrix inversion failed in phi_star computation'' / ''Singular covariance
+    matrix in phi_G computation''. At T = 4096 the computed Cov_X is only ill-conditioned (LinAlgWarning, no exception): star then raises
+    TypeError "''<'' not supported between instances of ''complex'' and ''float''" inside L-BFGS-B once a complex logdet reaches the
+    objective, which bivariate''s except (infotheory.py:571-573) logs and turns into NaN, while Geo returns a finite NEGATIVE value
+    -0.3465735902 (numerically -ln(2)/2), below the canonical lower bound 0. The finite values 0.0657 (phi*) and 0.2350 (phi_G) quoted
+    earlier come only from the raw-array call spi.bivariate(x[0], x[2]) at T1024, where the second array is not z-scored (channels affinely
+    related, not identical); that path gives other T-dependent finite/complex values (probe T256 star 0.2689+0j, T4096 star -0.0293+0j).
+    Outcome therefore depends on T and on the call path.'
+  - 'Candidate (documentation/labels): supplement §1.4.10 keywords and config.yaml:616-622 say ''nonlinear'', while the class labels
+    say ''linear'' (infotheory.py:541) and the estimator is purely Gaussian/second-order (cov_comp); config labels are not used at runtime
+    (calculator.py:253-259 instantiates the class, spi.labels is the class attribute). The supplement also says ''normalized (divided)
+    by entropy'' without stating which entropy (code: min of the past marginal entropies).'
+  proposed_checks:
+  - datasets:
+    - gauss_ar1_pair
+    path: kernel
+    reference: from-scratch direct minimisation of f(a) = 1/2 [log|Sigma_E + (A-diag a) Sigma_X (A-diag a)'| - log|Sigma_E|] over a
+      in R^2 (numpy slogdet; scipy.optimize.minimize BFGS and Nelder-Mead from several starts plus a coarse grid), inputs from dataset
+      truth (A, Sigma_E, Sigma_X); no phi_native import
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: phi_g_gauss(Sigma_X, Sigma_XY.T, Sigma_X, [1,2]) agrees with the global minimum to abs <= 1e-8 (probe 0.0874723233
+      vs 0.0874723233)
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    - delayed_noise
+    - logistic_maps
+    - narrowband_f0-0.25
+    - cointegrated
+    - bivariate_gaussian
+    - gauss_ar1_pair
+    path: kernel
+    reference: same multi-start direct minimiser on sample covariances of each z-scored pair, plus the Eq. 19 stationarity residual
+      (Sigma_X (A-A')' Sigma_E'^-1)_ii at pyspi's returned A_p
+    reference_kind: independent-impl
+    criterion: optimality
+    expected_outcome: 'pyspi >= reference - 1e-7 (small negative gaps allowed: the AL iterate can be slightly infeasible, off-diagonal
+      A_p up to ~1e-7); flag every case with pyspi - reference > 1e-6 as a non-optimal stop (probe delayed_noise T64 pair (0,1): 2.343939
+      vs 2.340685, gap 3.25e-3, stationarity residual 8.2e-3)'
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    - delayed_noise
+    - logistic_maps
+    - narrowband_f0-0.25
+    - cointegrated
+    - bivariate_gaussian
+    path: pipeline
+    reference: analytic bounds 0 <= Phi_G <= I(X;Y) = 1/2 log|Sigma_X|/|Sigma_E| and Phi_G <= SI = 1/2 log(Sigma*_11 Sigma*_22/|Sigma_E|)
+      (Sigma*_kk = within-channel conditional variances), all computed from scratch from the same sample covariances
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: every off-diagonal norm-0 value lies in [-1e-9, min(I, SI) + 1e-9]
+  - datasets:
+    - gauss_ar1_pair
+    path: pipeline
+    reference: population value from the first check (0.0874723 nats for norm-0)
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pipeline values at T = 64..4096 approach the population value with error shrinking roughly as T^-1/2 (sample T=4096
+      probe 0.08925)
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'null: independent white noise has Phi_G = 0 in population'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: mean off-diagonal value positive and decreasing roughly as 1/T
+  - datasets:
+    - var2_bivariate
+    - var2_chain
+    - delayed_noise
+    path: pipeline
+    reference: analytic symmetry under relabelling of the two parts; compare A[i,j], A[j,i], bivariate(i,j), bivariate(j,i)
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'direction convention: off-diagonal A[i,j] == A[j,i] bitwise (mirror at pyspi/base.py:136-137; compare with np.array_equal(A,
+      A.T, equal_nan=True) or on off-diagonal entries, since the diagonal is NaN); raw bivariate(i,j) vs (j,i) differ by AL tolerance
+      only (probe, both rows z-scored, gauss_ar1_pair T4096: 0, bit-identical); the unidirectional X->Y coupling in var2_bivariate is
+      not reflected in any asymmetry'
+  - datasets:
+    - gauss_ar1_pair
+    - delayed_noise
+    - iid_gaussian
+    path: kernel
+    reference: Octave 8.4 running pyspi's vendored PhiToolbox phi_G_Gauss.m / phi_G_Gauss_AL.m from git 76ab2bb^ (identical to upstream
+      oizumi-lab/PhiToolbox master apart from whitespace) (same algorithm and authors; labelled same-lineage)
+    reference_kind: same-lineage
+    criterion: tolerance
+    expected_outcome: 'rel <= 1e-8 except where the 1e-12 eigenvalue clamp is active; probe: delayed_noise T64 2.34393854875 (Octave)
+      vs 2.343938549 (pyspi), i.e. the non-optimal stop is inherited; gauss_ar1_pair T1024 0.0967508095731 both'
+  - datasets:
+    - shared_envelope
+    - delayed_noise
+    path: kernel
+    reference: 'degenerate inputs: identical copy (shared_envelope (0,2)) and exact one-step delay pair; canonical I = +inf'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'document the actual behaviour per path and T. Calculator/Data path, shared_envelope (0,2) (bit-identical after
+      z-scoring): NaN with UserWarning at T = 64, 256, 1024 (solve(Cov_X, Cov_XY) raises LinAlgError, phi_native.py:374); finite negative
+      -0.3466 with LinAlgWarning at T = 4096. Constructed exact one-step delay pair (kernel): finite value instead of inf (probe 18.033
+      on raw input). Canonical I is +inf for both.'
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: analytic invariance of Phi_G to per-channel affine maps
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: with normalise=False scaled_offset equals bivariate_gaussian to abs <= 1e-8 (AL tolerance; probe 0.000208057161
+      vs 0.000208057899, diff 7e-10)
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/phi.py:geo_ref (min over diagonal A'' of 1/2 log|Sigma_E + (A - A'') Sigma_X (A - A'')''|/|Sigma_E|,
+    Oizumi, Tsuchiya & Amari 2016 PNAS Eqs. 17-21: 81x81 grid + BFGS with the analytic Eq. 19 gradient + Nelder-Mead polish), chk_indep,
+    chk_geo_details, chk_pop, chk_nullpop, chk_conv, chk_null, chk_bounds (I and SI), chk_sym, chk_mirror, chk_degenerate, chk_exactdelay,
+    chk_invariance; audit/checks/octave/phi.m (GNU Octave 8.4.0 running pyspi''s vendored PhiToolbox, git 76ab2bb^:pyspi/lib/PhiToolbox,
+    phi_comp(X, [1 2], params.tau = 1, options.type_of_dist = ''Gauss'', type_of_phi, normalization) on pyspi''s own input array; same-lineage
+    because phi_native.py is a port of these files); probes audit/checks/probes/phi_probes.py (pop, nullpop, geo_details, unmirrored,
+    exact_delay)'
+  check_data: population lag-1 covariances of gauss_ar1_pair (D15) and var2_bivariate (D5); 8 datasets at T 64/256/1024/4096 (pipeline)
+    and 4 at T1024 (kernel); var2_chain; shared_envelope (copy and processes [0,1,3]); scaled_offset (kernel); trending (pipeline-detrend)
+  agreement_criterion: 'tolerance atol 1e-6 against the global constrained minimum (AL stop |delta logdet| < 1e-10); optimality: every
+    pyspi - global-min gap in [-1e-7, 1e-6]; population atol 1e-8; convergence/null |pyspi - MC mean| <= 2 MC SD; bounds -1e-9 <= Phi_G
+    <= min(I, SI) + 1e-9; Octave atol 1e-8'
+  closeness: 'Population D15: pyspi 0.0874723233 vs global minimum, gap 3.1e-11 (Eq. 19 residual at the reference 3.8e-11); D5 0.142013,
+    gap 2.5e-10; nullpop 0 and 0 (Phi_G vanishes with noise correlation only). Sample covariances: 27/37 indep runs pass; 23/33 geo-details
+    pass. Failures, all reproduced by Octave on PhiToolbox to <= 3.4e-10: over-estimates (non-stationary stop) delayed_noise 3.25e-3
+    / 7.6e-4 / 2.0e-5 / 1.65e-5 (T 64/256/1024/4096), narrowband_f0-0.25 4.0e-6 (T64) and 1.1e-6 (T4096), shared_envelope (0,1) 1.107
+    nats at T64 (pyspi 6.5319 vs 5.4252), 1.15e-3 T256, 2.2e-5 T1024; under-estimates (infeasible stop, off-diagonal |A_p| up to 9.8e-4)
+    cointegrated T4096 -3.46e-4 (relative ~1.0), bivariate_gaussian T4096 -4.6e-6, iid_gaussian T4096 -2.7e-6, scaled_offset raw -2.34e-5
+    (relative 0.28, so the raw-scale value is not affine-invariant). Of the 136 pipeline pairs of the 8-dataset set, 6 over-estimate
+    by > 1e-6 and 3 under-estimate by > 1e-6; with shared_envelope ([0,1,3]) 9 of 148 over-estimate by > 1e-6. Convergence: gauss_ar1_pair
+    pyspi - population 0.0422 / -0.0043 / 0.0093 / 0.0018 (T 64..4096, max_z 0.70); var2_bivariate within 2 MC SD (max_z <= 0.97). Null
+    iid: mean 0.0216 / 0.00176 / 0.000717 / 0.000218 (T x mean 1.38 / 0.45 / 0.73 / 0.89), z -1.74 .. 0.82, minimum 2.2e-6. Bounds 16/16:
+    Phi_G <= min(I, SI) (closest delayed_noise T1024, SI - Phi_G 3.9e-7). Octave 16/16 pass (max_abs 3.4e-10).'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 7 fails on both clauses. The PhiToolbox augmented Lagrangian does not pass optimality checks: 24/37 geo-details runs pass, delayed_noise
+    T64 stops with an Eq. 19 residual of 8.2e-3, and shared_envelope T64 is 1.107 nats above the global minimum. Its match to the PhiToolbox the supplement cites rests
+    only on the same-lineage Octave run (16/16, max_abs 3.4e-10), which the README caps at 6; that cap also keeps anchor 9''s MATLAB/author clause out. Anchor 6''s
+    ''deviates from the supplement'' half does not hold literally, because pyspi reproduces that PhiToolbox, so 6 is the highest anchor cleared.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Canonical Phi_G (PNAS Eqs. 17-21) where the augmented Lagrangian converges (most pairs, to ~1e-9), but the AL ported
+    from PhiToolbox phi_G_Gauss_AL.m stops on objective change alone: on strongly predictable pairs with a flat valley it stops at a
+    feasible non-stationary point (over-estimate up to 1.107 nats, 20 %, shared_envelope T64), and on weakly coupled pairs at large
+    T it stops before the constraint is met (under-estimate, relative error up to ~1.0 on a pair with Phi_G 3.5e-4), which also makes
+    raw-scale values scale-dependent. Octave on the authors'' code gives the same numbers, so the deviation is inherited. Score 6: the
+    computed value deviates from the canonical minimum in an interpretable, regime-dependent way; matching the authors'' code is a same-lineage
+    result that cannot raise the score above 6. Degenerate pairs: NaN or -ln(2)/2 instead of +inf.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.9 s per pyspi run (Geo AL on delayed_noise T64 is the slowest); covariances only, all T up to 4096'
+  symmetry_observed: 'sym: off-diagonal A[i, j] == A[j, i] bitwise on every run (max|A - A.T| = 0.0 off the diagonal; np.array_equal(A,
+    A.T, equal_nan=True) true on the mirror runs, the diagonal is NaN). Unmirrored Directed.multivariate: max|U - U.T| 8.3e-17 (var2_bivariate),
+    1.4e-16 (var2_chain), 1.6e-14 (delayed_noise) at T1024'
+  direction_observed: 'undirected: A[i, j] = A[j, i] = Phi_G(rows [min, max]); var2_bivariate x0 -> x1 gives A01 = A10 = 0.160150 at
+    T1024, var2_chain 0.156334, delayed_noise 2.270418; no direction information'
+  candidate_resolutions:
+  - candidate: AL stops at a non-stationary feasible point (only stopping test |delta logdet| < 1e-10), over-estimating Phi_G
+    outcome: confirmed
+    evidence: 'infotheory.phi.Geo_norm-0|*|geo-details (8 datasets x 4 T, 136 pairs, plus shared_envelope without the copy): over-estimates
+      pyspi - global minimum > 1e-6 on delayed_noise at every T (3.25e-3 T64, 7.6e-4 T256, 2.0e-5 T1024, 1.65e-5 T4096; Eq. 19 residual
+      8.2e-3 .. 6e-4, constraint satisfied to <= 1e-8), narrowband_f0-0.25 T64 4.0e-6 and T4096 1.1e-6, and shared_envelope (0,1) T64
+      1.107 nats (pyspi 6.5319 vs 5.4252, 20 %), T256 1.15e-3, T1024 2.2e-5 (processes [0,1,3]). Octave on the vendored phi_G_Gauss_AL.m
+      (identical to upstream) reproduces every one of these to <= 3.4e-10 (infotheory.phi.Geo_norm-0|{delayed_noise,narrowband_f0-0.25,shared_envelope}|*|octave),
+      so it is inherited from PhiToolbox.'
+  - candidate: 1e-12 eigenvalue clamp added in phi_native (absent in MATLAB)
+    outcome: confirmed
+    evidence: 'Present only in phi_native.py:303; numerically inactive on every run compared with Octave: pyspi - Octave max_abs 3.4e-10
+      over 16 Geo_norm-0 octave runs and 1.9e-10 over 10 Geo_norm-1 runs, including the delayed_noise T64 stall. Speed/robustness only.'
+  - candidate: 'degenerate inputs: logdet eigenvalue filter and singular solves give NaN, finite or negative values instead of +inf'
+    outcome: confirmed
+    evidence: 'shared_envelope (0,2) bit-identical copy on the Calculator path: star NaN at T = 64, 256, 1024, 4096; Geo NaN at T <=
+      1024 and -0.3465735902 (= -ln(2)/2, below the lower bound 0) at T = 4096 (infotheory.phi.{star,Geo}_norm-0|shared_envelope|*|pipeline|degenerate,
+      all 8 reproduce the trace description). Exact one-step-delay pair [u(t+1), u(t)] from delayed_noise row 0, T1024 (infotheory.phi.{star,Geo}_norm-0|delayed_noise|1024|kernel|exactdelay):
+      star z-scored -0.00110, raw -0.0215; Geo z-scored -0.00062, raw -0.0200 (all real-valued, all NEGATIVE; canonical +inf). The trace
+      probe (a different series, rng(0), T = 513) gave +0.000636+0j and 18.03 on the same construction, so the output depends on the
+      sign of a roundoff eigenvalue of Cov(Y|X) (here min eig 2.2e-16 z-scored, -1.3e-35 raw) and can be negative. Correction of the
+      trace-stage wording: the values are not only "finite or complex-typed" but can violate Phi >= 0.'
+  - candidate: supplement/config label "nonlinear" vs class label "linear"; normalising entropy unspecified
+    outcome: confirmed
+    evidence: 'documentation-only: the estimator is purely second order (every check reference uses covariances only and reproduces
+      pyspi to optimiser tolerance where the optimiser converges); nonlinear_dependence-type structure is invisible by construction.
+      No numeric run needed.'
+  checks_run:
+  - run_ids:
+    - infotheory.phi.Geo_norm-0|gauss_ar1_pair|1024|kernel|pop
+    - infotheory.phi.Geo_norm-0|var2_bivariate|1024|kernel|pop
+    - infotheory.phi.Geo_norm-0|gauss_ar1_pair|1024|kernel|nullpop
+    reference: audit/checks/refs/phi.py:chk_pop, chk_nullpop
+    outcome: pass 3/3; gap 3.1e-11 (D15), 2.5e-10 (D5); nullpop 0, 0
+  - run_ids:
+    - infotheory.phi.Geo_norm-0|{bivariate_gaussian,cointegrated,delayed_noise,gauss_ar1_pair,iid_gaussian,logistic_maps,narrowband_f0-0.25,var2_bivariate}|{64,256,1024,4096}|pipeline|indep
+    - infotheory.phi.Geo_norm-0|{cointegrated,delayed_noise,gauss_ar1_pair,var2_bivariate}|1024|kernel|indep
+    - infotheory.phi.Geo_norm-0|trending|1024|pipeline-detrend|detrend
+    reference: audit/checks/refs/phi.py:chk_indep
+    outcome: 'fail 10/37 (pass 27): AL over-estimates up to 3.25e-3 (delayed_noise T64), under-estimates down to -3.46e-4 (cointegrated
+      T4096)'
+  - run_ids:
+    - infotheory.phi.Geo_norm-0|{bivariate_gaussian,cointegrated,delayed_noise,gauss_ar1_pair,iid_gaussian,logistic_maps,narrowband_f0-0.25,var2_bivariate}|{64,256,1024,4096}|pipeline|geo-details
+    - infotheory.phi.Geo_norm-0|shared_envelope|{64,256,1024,4096}|pipeline|geo-details
+    - infotheory.phi.Geo_norm-0|scaled_offset|1024|kernel|geo-details
+    reference: audit/checks/refs/phi.py:chk_geo_details
+    outcome: fail 13/37 (optimality); worst over-estimate 1.107 nats (shared_envelope T64 (0,1)), worst under-estimate -3.46e-4
+  - run_ids:
+    - infotheory.phi.Geo_norm-0|scaled_offset|1024|kernel|invariance
+    reference: audit/checks/refs/phi.py:chk_invariance
+    outcome: fail; -2.34e-5 (relative 0.28) on raw scaled rows (AL scale dependence)
+  - run_ids:
+    - infotheory.phi.Geo_norm-0|gauss_ar1_pair|{64,256,1024,4096}|pipeline|conv
+    - infotheory.phi.Geo_norm-0|var2_bivariate|{256,1024,4096}|pipeline|conv
+    reference: audit/checks/refs/phi.py:chk_conv
+    outcome: pass 7/7; max_z 0.97
+  - run_ids:
+    - infotheory.phi.Geo_norm-0|iid_gaussian|{64,256,1024,4096}|pipeline|null
+    reference: audit/checks/refs/phi.py:chk_null
+    outcome: pass 4/4; T x mean 0.45-1.38
+  - run_ids:
+    - infotheory.phi.Geo_norm-0|{bivariate_gaussian,cointegrated,delayed_noise,gauss_ar1_pair,iid_gaussian,logistic_maps,narrowband_f0-0.25,var2_bivariate}|{64,1024}|pipeline|bounds
+    reference: audit/checks/refs/phi.py:chk_bounds
+    outcome: pass 16/16; 0 <= Phi_G <= min(I, SI)
+  - run_ids:
+    - infotheory.phi.Geo_norm-0|{var2_bivariate,var2_chain,delayed_noise}|1024|pipeline|sym
+    - infotheory.phi.Geo_norm-0|{var2_bivariate,var2_chain,delayed_noise}|1024|pipeline|mirror
+    reference: audit/checks/refs/phi.py:chk_sym, chk_mirror
+    outcome: pass 6/6; unmirrored asymmetry <= 1.6e-14, mirrored 0.0
+  - run_ids:
+    - infotheory.phi.Geo_norm-0|{delayed_noise,gauss_ar1_pair,iid_gaussian,narrowband_f0-0.25,var2_bivariate}|{64,1024}|pipeline|octave
+    - infotheory.phi.Geo_norm-0|{cointegrated,iid_gaussian,bivariate_gaussian}|4096|pipeline|octave
+    - infotheory.phi.Geo_norm-0|scaled_offset|1024|kernel|octave
+    - infotheory.phi.Geo_norm-0|shared_envelope|{64,256}|pipeline|octave
+    reference: audit/checks/octave/phi.m via refs/phi.py:chk_octave
+    outcome: pass 16/16 (same-lineage); max_abs 3.4e-10, including every failing case above
+  - run_ids:
+    - infotheory.phi.Geo_norm-0|shared_envelope|{64,256,1024,4096}|pipeline|degenerate
+    - infotheory.phi.Geo_norm-0|delayed_noise|1024|kernel|exactdelay
+    reference: audit/checks/refs/phi.py:chk_degenerate, chk_exactdelay
+    outcome: 'pass 5/5 (documents the candidate behaviour): NaN at T <= 1024, -0.34657 at T4096; exact delay -0.00062 / -0.0200'
+optimisation:
+  complexity_P_T: 'O(P^2 (T + iters * c)): phi_native.phi_g_gauss -> phi_g_gauss_al (phi_native.py:249-354), an augmented-Lagrangian loop of ~51 iterations per pair at 8x1024 (2848 numpy solves / 56 pairs),
+    each with one eigh (2904 eigh = 56 initial + 2848 in-loop), one solve, np.ix_ indexing and two Cholesky logdets (5808 = 2 x 2904 in the norm-0 profile) on 2x2 matrices; cov_comp is the only O(T) part.
+    Measured fresh P exponent 2.04, T exponent 0.07: ~5 ms per pair of Python/numpy call overhead. At 118x1024 the pair term is everything: 62.7-64.0 s measured.'
+  hotspot_1: pyspi/lib/phi_native.py:phi_g_gauss_al (pyspi) 96.0% cum / 29.7% self of the profiled SPI call at 8x1024 (norm-0 profile; norm-1 runs the same path)
+  hotspot_2: pyspi/lib/phi_native.py:logdet (pyspi -> numpy cholesky 15.1%) 28.8%; numpy np.ix_ 11.6%; numpy/linalg eigh 10.7%; numpy/linalg solve 8.5%
+  hotspot_owner: third-party:numpy
+  opaque_share: 0.1933
+  profile_file: audit/profiles/infotheory.phi.Geo_norm-0__8x1024.pstats
+  opportunities:
+  - opportunity_id: phi-4
+    opportunity: Compile phi_g_gauss_al's augmented-Lagrangian iteration for the two-element partition (numba, or closed forms for the 2x2 eigendecompositions), or batch it over all pairs as stacked (n_pairs,
+      2, 2) arrays with a per-pair convergence mask, removing numpy per-call overhead on tiny matrices.
+    opp_type: rewrite-numba-rust-cpp
+    expected_speedup: 5-20x
+    speedup_basis: 'profile:audit/profiles/infotheory.phi.Geo_norm-0__8x1024.pstats pyspi/lib/phi_native.py:249 phi_g_gauss_al 96.0% (29.7% self, logdet 28.8%, np.ix_ 11.6%, eigh 10.7%, solve 8.5%; norm-0
+      profile) + complexity: T exponent 0.07, so ~5 ms per pair is call overhead, not arithmetic; Amdahl cap 1/(1-0.96) = 25x'
+    output_risk: unverified-within-tolerance
+    risk_evidence: the same iteration evaluated with different floating-point operations; the 1e-10 stopping rule on the logdet change can then stop one iteration earlier or later, and the check stage found
+      non-stationary stops that Octave/PhiToolbox reproduces (delayed_noise 3.25e-3 at T=64, shared_envelope 1.1 nats at T=64), so near such cases the difference can exceed fp tolerance
+    effort: M
+    depends_on: []

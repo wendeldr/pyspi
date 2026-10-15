@@ -1,0 +1,473 @@
+unit_id: spectral.sgc.parametric_order-20
+status: profiled
+correctness:
+  metric_name_standard: parametric (VAR(20)) spectral Granger causality (nitime), Geweke f_{j->i}(f), pairwise bivariate,
+    band mean or max
+  canonical_ref: 'Geweke J. 1982, J. Am. Stat. Assoc. 77(378):304-313 (frequency-domain causality f_{y->x}(lambda) from a
+    bivariate VAR); VAR estimation: OLS or Yule-Walker/Whittle (Whittle 1963 Biometrika 50:129-134; LWR recursion Morf, Vieira
+    & Kailath 1978 Ann. Statist. 6:643-648; Lutkepohl 2005, New Introduction to Multiple Time Series Analysis, ch. 3). Equation/section
+    numbers not re-checked against the texts (from memory).'
+  canonical_definition: Fit x_t = sum_{k=1}^{p} A_k x_{t-k} + e_t (p = 20), Sigma = Cov(e); H(f) = (I - sum_k A_k e^{-i 2
+    pi f k})^{-1}, S = H Sigma H^H; f_{y->x}(f) = ln( S_xx(f) / [ S_xx(f) - (Sigma_yy - Sigma_xy^2/Sigma_xx) |H_xy(f)|^2 ]
+    ) >= 0. Band mean/max is a pyspi construction; the full-band mean approximates the time-domain Geweke F_{y->x} = ln(Sigma_xx^restricted
+    / Sigma_xx).
+  documented_definition: 'supplement §1.5.12, p.17 (supplement.txt lines 809-818: heading 809, quoted text 811-818): "Spectral
+    Granger causality [40] is the frequency domain equivalent to Granger causality, computed via the spectral transfer matrix
+    and noise covariance that are estimated using either a parametric (VAR model) approach [41] or nonparametric (spectral
+    factorization) approach [57, 58]. We implement the nonparametric form from the Spectral Connectivity Toolbox [56] and
+    the parametric implementation from v0.9 of NiTime [74]. The VAR model is estimated via least squares using the same order
+    for both processes, where the order is either inferred (denoted by modifier order-None) or fixed. We infer a VAR model
+    order from the Bayesian information criterion (with a maximum lag of 50, implemented in the NiTime toolkit), as well as
+    choosing fixed orders of one (denoted by order-1) and 20 (order-20)." Keywords: "directed, linear, unsigned, bivariate,
+    frequency-dependent". Band rule, supplement §1.5, p.12 (supplement.txt heading line 570, quoted text lines 589-599): "We
+    use 125 uniformly sampled bins across the entire frequency range, f in [f0, fs/2] ... f0 = 4/T ... fmin-0_fmax-0-5: the
+    full-frequency range, f in [0, fs/2]; fmin-0_fmax-0-25: f in [0, fs/4]; fmin-0-25_fmax-0-5: f in [fs/4, fs/2]"; summary
+    = mean or max over the band. Same text on GitBook spectral.md:350-358 (Spectral Granger Causality). Matrix convention
+    for directed SPIs, GitBook glossary-of-terms.md:27: "entry calc.table[...][0,1] will be the directed information from
+    process 0 to process 1. The rows in this table reflect the sources while the columns reflect the targets." Refs: [40]
+    Granger 1969 Econometrica 37:424; [41] Geweke 1982 JASA 77:304; [56] spectral_connectivity (Denovellis et al.); [57,58]
+    Dhamala, Rangarajan & Ding 2008 NeuroImage 41:354 and PRL 100:018701; [74] Rokem et al. NiTime.'
+  delegate_lib: nitime==0.12.1 analysis.GrangerAnalyzer (fit_model, utils.autocov_vector, algorithms.lwr_recursion, algorithms.granger_causality_xy)
+    with scipy==1.17.1 scipy.signal.freqz; numpy==2.5.4; band selection and summary native pyspi
+  implemented_as: Input z-scored per channel (ddof=1; optional detrend). For each pair (i<j) nitime fits a bivariate VAR(20)
+    by the LWR (block Yule-Walker/Whittle) recursion on autocovariances with divisor N-k and no demeaning; no order selection.
+    From (a, ecov) nitime evaluates H on omega_k = pi k/513 (scipy freqz, Nyquist excluded) and Geweke f_{x->y}, f_{y->x}
+    on that grid, labelled with get_freqs = k/1024 (k = 0..512, label 0.5 at the last point). pyspi builds F[a,b] = GC a ->
+    b, then transposes so cache[0,f,a,b] = GC b -> a; keeps labels 1e-5 <= f <= fmax (DC excluded by the fmin override, both
+    ends inclusive), np.nanmean/np.nanmax per cell, NaN where > 50% of bins are NaN; any ValueError (e.g. singular LWR matrix)
+    reaches the handler at spectral.py:438-440, whose warnings.warn(err) at :439 raises TypeError under the message-regex warnings
+    filters numpy installs on import, so a direct multivariate() call raises TypeError and Calculator.compute sets the whole table to NaN (calculator.py:336-337);
+    the intended all-NaN return at :440 happens only under catch_warnings(record=True)+simplefilter("always") or resetwarnings().
+    A[i, j] = band summary of GC from j to i. No mean removal inside nitime (relies on z-scoring).
+  implementation_trace:
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1,
+    ddof=1) when normalise=True (default)'
+  - 'pyspi/calculator.py:325-339 Calculator.compute: S = spi.multivariate(dataset); any exception escaping multivariate sets
+    the whole SPI table to NaN with a warning'
+  - pyspi/statistics/spectral.py:320-323 class SpectralGrangerCausality(NonparametricSpectralMultivariate, Directed, Unsigned);
+    identifier "sgc"; labels unsigned/embedding/spectral/directed/lagged
+  - pyspi/statistics/spectral.py:325-358 __init__ defaults fs=1, fmin=1e-5, fmax=0.5, method="nonparametric", order=None,
+    max_order=50, statistic="mean", ignore_nan=True, nan_threshold=0.5; statistic mean -> np.nanmean, max -> np.nanmax (ignore_nan=True)
+  - 'pyspi/statistics/spectral.py:343-345 if fmin <= 0: warning and self._fmin = 1e-5 (the identifier at :363/:369 is still
+    built from the ORIGINAL fmin argument, so "fmin-0" identifiers run with fmin=1e-5; probe: sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5
+    -> _fmin 1e-05)'
+  - 'pyspi/config.yaml:1166-1181 (mean) and :1217-1232 (max) six order-20 configs; the full-band configs pass only fs: 1,
+    so their identifiers carry the default fmin-1e-05 (supplement lists fmin-0_fmax-0-5 for these)'
+  - 'pyspi/statistics/spectral.py:366-371 parametric: self._order = order, self._max_order = max_order (50); identifier _parametric_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}_order-{order}'
+  - pyspi/statistics/spectral.py:391-396 z = data.to_numpy(squeeze=True) (P x T, z-scored by default); ts.TimeSeries(z, sampling_interval=1)
+    (fs argument not forwarded); nta.GrangerAnalyzer(time_series, order=self._order, max_order=self._max_order)
+  - pyspi/statistics/spectral.py:398-406 triu_id = np.triu_indices(P) (includes diagonal); F = NaN array (P,P,513); F[i,j,:]
+    = GA.causality_xy[i,j,:] and F[j,i,:] = GA.causality_yx[i,j,:] for i <= j, so F[a,b] = GC from a to b
+  - pyspi/statistics/spectral.py:408-409 F = transpose(expand_dims(F, 3), axes=[3,2,1,0]) -> cache[0, f, a, b] = F[b, a, f]
+    = GC from b to a; freq = GA.frequencies
+  - .venv/lib/python3.12/site-packages/nitime/analysis/granger.py:74-114 GrangerAnalyzer(input, ij=None, order, max_order,
+    criterion=bayesian_information_criterion, n_freqs=1024); ij defaults to all pairs (i, j) with i < j (:106-112, meshgrid
+    + tril_indices_from(-1))
+  - '.venv/lib/python3.12/site-packages/nitime/analysis/granger.py:41-44 fit_model with order given: lag = order + 1; Rxx
+    = autocov_vector(vstack([x1, x2]), nlags=order+1) (lags 0..20); coef, ecov = lwr_recursion(Rxx) -> VAR(20) Yule-Walker/LWR
+    fit; no order search and no criterion'
+  - '.venv/lib/python3.12/site-packages/nitime/analysis/granger.py:116-131 _model: fit_model(data[i], data[j], order, max_order,
+    criterion) per pair -> separate bivariate VAR for each pair (pairwise, not conditional)'
+  - '.venv/lib/python3.12/site-packages/nitime/analysis/granger.py:155-177 _granger_causality: alg.granger_causality_xy(model_coef[i,j],
+    error_cov[i,j], n_freqs=1024) -> gc_xy[i,j] = f_x_on_y (i -> j), gc_yx[i,j] = f_y_on_x (j -> i); :183-208 _dict2arr fills
+    causality_xy / causality_yx (NaN outside ij)'
+  - .venv/lib/python3.12/site-packages/nitime/analysis/granger.py:179-181 frequencies = utils.get_freqs(sampling_rate=1, 1024);
+    .venv/lib/python3.12/site-packages/nitime/utils.py:1207-1211 get_freqs = linspace(0, Fs/2, n/2 + 1) -> 513 labels 0, 1/1024,
+    ..., 0.5 (endpoint included)
+  - '.venv/lib/python3.12/site-packages/nitime/utils.py:2127-2177 crosscov_vector: R(k) = mean over t of x(t) y(t-k) with
+    prod.mean over the N-k overlapping samples (:2170-2176); no mean removal; :2180-2212 autocov_vector = crosscov_vector(x,
+    x)'
+  - '.venv/lib/python3.12/site-packages/nitime/algorithms/autoregressive.py:168-249 lwr_recursion(r): Levinson-Whittle-Wiggins-Robinson
+    recursion (Morf, Vieira & Kailath 1978) solving the block Yule-Walker equations for X[t] + sum_{i=1}^{P} a(i) X[t-i] =
+    e[t]; returns (a (P,2,2), sigf = forward prediction-error covariance)'
+  - '.venv/lib/python3.12/site-packages/nitime/algorithms/autoregressive.py:315-359 transfer_function_xy: A(w) from freq_response
+    of [1, a00], [0, a01], [0, a10], [1, a11]; H(w) = A(w)^{-1} by the 2x2 shortcut'
+  - .venv/lib/python3.12/site-packages/nitime/algorithms/spectral.py:737-764 freq_response(b, n_freqs=1024) -> scipy.signal.freqz(b,
+    a=1, worN=513, whole=False)
+  - .venv/lib/python3.12/site-packages/scipy/signal/_filter_design.py:338-339 freqz(..., include_nyquist=False); :516-526
+    w = linspace(0, pi, N, endpoint=False) -> omega_k = pi k / 513, i.e. f_k = k/1026 (last 0.49903), while nitime labels
+    them k/1024 (last 0.5); probe max label error 9.7e-4 cycles/sample
+  - '.venv/lib/python3.12/site-packages/nitime/algorithms/autoregressive.py:455-525 granger_causality_xy(a, cov): sigma=cov[0,0],
+    upsilon=cov[0,1], gamma=cov[1,1]; f_y_on_x = ln(Sxx / (sigma |Hxx + (upsilon/sigma) Hxy|^2)) with Sxx = sigma|Hxx_hat|^2
+    + (gamma - upsilon^2/sigma)|Hxy|^2 (:485-499); f_x_on_y symmetric (:501-509); returns (w, f_x_on_y, f_y_on_x, f_xy, Sw)'
+  - 'pyspi/statistics/spectral.py:410-413 per-Data cache data.spectral_gc[key] = {"freq", "F"}; key from _getkey :375-379
+    (nonparametric: ("nonparametric",-1,-1); parametric: ("parametric", order, max_order)), shared by the six band/statistic
+    identifiers of a unit'
+  - 'pyspi/statistics/spectral.py:417-423 multivariate: freq_id = where((freq >= fmin) & (freq <= fmax)) (both ends inclusive);
+    result = statfn(cache[0, freq_id, :, :], axis=0), i.e. A[a, b] = nanmean/nanmax over band of cache[0, f, a, b]'
+  - pyspi/statistics/spectral.py:425-435 nan_pct = fraction of NaN frequencies per cell (diagonal forced to 0); cells with
+    nan_pct > nan_threshold (0.5, strict) set to NaN with a warning
+  - 'pyspi/statistics/spectral.py:438-440 except ValueError as err (includes numpy LinAlgError, a ValueError subclass; probe:
+    LinAlgError MRO (LinAlgError, ValueError, ...)). The intended outcome, return np.full((P, P), nan) at :440, is not reached
+    under the message-regex warnings filters numpy installs on import: :439 warnings.warn(err) passes the exception INSTANCE as the message, warnings
+    wraps it as a UserWarning but matches the raw object against message-regex filters, and numpy registers three message-regex
+    ignore filters on import (.venv/lib/python3.12/site-packages/numpy/__init__.py:696-698; four after importing pyspi.calculator),
+    so :439 itself raises TypeError "expected string or bytes-like object, got ValueError" (or "got LinAlgError"). Probe (scratchpad
+    sgc_fix/r1.py, fresh interpreter, filters as installed by numpy on import): narrowband_f0-0.1 T=256 order-None and shared_envelope T=256 order-1
+    and order-20 all raise TypeError at spectral.py:439; a bare python -c "import numpy, warnings; warnings.warn(ValueError(1))"
+    raises the same TypeError. The all-NaN return at :440 executes only when no message-regex filter is reached first (after
+    warnings.resetwarnings(), or inside catch_warnings(record=True) + simplefilter("always"); probe nanfrac 1.0). Resulting
+    behaviour under the message-regex warnings filters numpy installs on import: a direct multivariate() call (tests/regression/harness.py:264-272 compute_spi; audit/checks/pyspi_outputs.py:148-162
+    run_one) raises TypeError; Calculator.compute (calculator.py:336-337, except Exception) sets the whole SPI table to NaN
+    with the warning "Caught <class TypeError> ..." instead of the original message. Other exception types propagate to calculator.py:336-337
+    directly.'
+  deviation_from_documented: '(1) Direction: documented rows = sources (glossary-of-terms.md:27); implemented A[i, j] = GC
+    j -> i. Probe var2_bivariate (0 -> 1 only) T=4096: A[0,1]=0.0047, A[1,0]=0.2858. (2) "VAR model is estimated via least
+    squares": nitime solves the block Yule-Walker equations with the LWR recursion on autocovariances with divisor N-k (nitime/utils.py:2170-2176),
+    not OLS; with that divisor the autocovariance sequence need not be positive definite and det(ecov) can be negative. (3)
+    "parametric implementation from v0.9 of NiTime": installed nitime 0.12.1. (4) Frequency grid: documented 125 bins on [4/T,
+    fs/2]; implemented 513 freqz points omega_k = pi k/513 (f = k/1026) labelled k/1024, so the label 0.5 is the point 0.49903
+    and the label 0.25 is 0.24951 (probe). (5) Identifiers "fmin-0" run with fmin = 1e-5, which drops only the DC point. (6)
+    Identifier: the full-band configs produce sgc_parametric_{mean,max}_fs-1_fmin-1e-05_fmax-0-5_order-20, while the supplement
+    lists ..._fmin-0_fmax-0-5_order-20 (same computation). (7) Documented "unsigned" but negative values occur when the LWR
+    noise covariance is not positive definite (see units_and_range).'
+  deviation_from_canonical: 'Per-frequency formula is Geweke 1982 (nitime autoregressive.py:485-509, standard rotated-noise
+    form). Value-changing differences: VAR coefficients from LWR on the N-k-divisor, non-demeaned autocovariances instead
+    of OLS or the positive-definite biased (divisor N) Yule-Walker; evaluation grid off by a factor 1024/1026 relative to
+    its labels; pairwise bivariate VAR. Fixed order 20 on short series (T = 64: 2 x 2 x 20 = 80 coefficients from 64 samples)
+    makes the N-k-divisor LWR fit ill-conditioned: non-positive-definite noise covariance, negative and NaN per-frequency
+    values. Band mean/max is a pyspi construction.'
+  units_and_range: 'nats; canonical spectral GC is >= 0, but here the parametric values are not clipped: negative values and
+    NaN (log of a negative ratio) occur when the LWR noise covariance is indefinite (gamma - upsilon^2/sigma < 0 or sigma
+    < 0). Probe (pyspi output): iid_gaussian T=64 min -1.126 (mean statistic), 4 negative cells and 20% NaN cells; bivariate_gaussian
+    T=64 min -0.581; var2_bivariate and gauss_ar1_pair T=64 all-NaN matrices (55-65% NaN bins). At T=256 iid_gaussian has
+    no negative/NaN bins. Directed, asymmetric; diagonal NaN; on any ValueError the whole table is NaN in the Calculator (via
+    a TypeError raised by the handler at spectral.py:439), and a direct multivariate() call raises TypeError.'
+  direction_convention: 'A[i, j] = spectral GC from process j (source, column) to process i (target, row), i.e. TARGET-by-SOURCE,
+    the transpose of the documented sources-in-rows convention (GitBook glossary-of-terms.md:27) and of other pyspi directed
+    SPIs (e.g. infotheory.py:274 src, targ = data[[i, j]]). Derivation: nitime gc_xy[i,j] = f_x_on_y = GC i -> j (granger.py:172,
+    autoregressive.py:501-509); pyspi F[a,b] = a -> b (spectral.py:400-406) then cache[0,f,a,b] = F[b,a,f] (spectral.py:408),
+    so A[a,b] = GC b -> a. Empirical: var2_bivariate A[1,0] > A[0,1] at T = 256, 1024, 4096 (truth 0 -> 1); delayed_noise
+    T=1024 large entries in column 0.'
+  symmetry_expected: asym
+  already_documented: 'no entry in KNOWN_ISSUES.md is specific to the parametric path. Observation only, outside KNOWN_ISSUES.md:
+    tests/README.md:249 records the six sgc_parametric_*_order-20 goldens as partial_nan at small size (5 x 64), without a
+    cause; the order-20 record gives the cause. DEPENDENCY_COMPATIBILITY_REVIEW.md band forwarding/Nyquist notes concern spectral_connectivity,
+    not nitime.'
+  new_finding_candidates:
+  - 'CANDIDATE (direction): A[i, j] = GC j -> i (target-by-source), opposite to the documented convention. Evidence: nitime
+    granger.py:172-173 gc_xy[i,j] = f_x_on_y (i -> j); spectral.py:401-408 F[a,b] = a -> b then transpose axes [3,2,1,0] gives
+    cache[0,f,a,b] = F[b,a,f]; probe var2_bivariate (truth 0 -> 1) A[1,0] >> A[0,1] at T = 256, 1024, 4096; delayed_noise
+    T=1024 order-20 column 0 = 3.86, 3.03, 4.00 vs row 0 <= 0.06.'
+  - 'CANDIDATE (sign): "unsigned" SPI returns negative values; nitime does not clip and LWR on N-k-divisor autocovariances
+    (utils.py:2176 prod.mean over N-k samples) can give an indefinite noise covariance (probe min det(ecov) -0.391 iid_gaussian
+    T=64 order 20; sigma = -0.89). '
+  - 'CANDIDATE (offset sensitivity): nitime autocovariances are not demeaned (nitime/utils.py:2172-2176), so with normalise=False
+    an offset changes the result. Probe var2_bivariate T=1024 scaled+offset (x*[2,0.5] + [3,-5]), normalise=False: order-1
+    A[1,0] 0.0432 vs 0.2886 z-scored (order-20 0.4240 vs 0.3275); scaling alone 0.2881 (invariant up to the removed sample
+    mean). Nonparametric path unaffected (0.4361 vs 0.4362).'
+  - 'CANDIDATE (grid labels): freqz grid omega_k = pi k/513 labelled k/1024 (probe: label 0.25 -> actual 0.24951, label 0.5
+    -> 0.49903, max error 9.7e-4); band edges therefore slightly shifted; Nyquist never evaluated.'
+  - 'CANDIDATE (all-or-nothing failure with a broken handler): any ValueError in one pair (for a fixed order: singular LWR
+    in lwr_recursion via scipy.linalg.inv) aborts the whole SPI, losing every other pair. The handler at spectral.py:438-440
+    is meant to return an all-NaN P x P matrix, but warnings.warn(err) at :439 passes an exception instance as the message
+    and raises TypeError under the message-regex warnings filters numpy installs on import (numpy/__init__.py:696-698 message-regex filters); a direct multivariate()
+    call therefore raises TypeError, and Calculator.compute (calculator.py:336-337) turns it into an all-NaN table whose warning
+    names TypeError, not the nitime/scipy message. Probe shared_envelope T=256 order 20 and order 1, filters as installed by numpy on import: TypeError
+    "expected string or bytes-like object, got LinAlgError" at spectral.py:439; inside catch_warnings(record=True)+simplefilter("always")
+    the same call returns 100% NaN with the warning "A singular matrix detected: slice(s) [0] are singular."; pair (0,2) is
+    the identical-channel pair.'
+  - 'CANDIDATE (short-series degeneracy, cause of the documented partial_nan goldens): at T=64 order 20 the LWR fit is indefinite
+    for many pairs; per-frequency NaN fraction 19.8% iid_gaussian, 55% var2_bivariate, 65% gauss_ar1_pair (probe), and the
+    50% rule turns whole cells NaN; this explains tests/README.md:249 partial_nan for order-20 at small size (5 x 64).'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - iid_gaussian
+    - delayed_noise
+    path: kernel
+    reference: from-scratch numpy Geweke evaluation of nitime's own fitted (coef, ecov) for each pair on omega_k = pi k/513,
+      convention X[t] + sum a(i) X[t-i] = e[t] (independent of nitime's transfer_function_xy/granger_causality_xy)
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: agreement <= 1e-10 with GA.causality_xy/causality_yx at every point; confirms gc_xy[i,j] = i -> j and
+      the freqz grid (labels k/1024 vs evaluated k/1026)
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - iid_gaussian
+    - bivariate_gaussian
+    path: kernel
+    reference: from-scratch block Yule-Walker solve (numpy.linalg.solve of the block-Toeplitz system) built from non-demeaned
+      autocovariances with divisor N-k (nitime convention), plus the same with divisor N (canonical biased YW) and numpy least
+      squares (OLS) for comparison
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: N-k divisor reproduces nitime coef/ecov to <= 1e-10; differences to divisor-N YW and OLS recorded (O(order/T)),
+      and det(ecov) sign compared (indefinite only with N-k)
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - delayed_noise
+    path: pipeline
+    reference: ground truth from the generating models (var2_bivariate 0 -> 1 only; gauss_ar1_pair 1 -> 0 stronger; delayed_noise
+      x0 leads)
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A[target, source] > A[source, target] for true links: A[1,0] > A[0,1] on var2_bivariate, A[0,1] > A[1,0]
+      on gauss_ar1_pair; establishes A[i,j] = GC j -> i'
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'from-scratch numpy Geweke 1982 formula: for a bivariate VAR x_t = sum_k A_k x_{t-k} + e_t, H(f) = (I - sum_k
+      A_k e^{-i2pi f k})^{-1}, S = H Sigma H^H, f_{y->x}(f) = ln(S_xx / (S_xx - (Sigma_yy - Sigma_xy^2/Sigma_xx)|H_xy|^2))
+      (no nitime, no spectral_connectivity), averaged over pyspi''s kept points; and statsmodels VAR(p).fit (OLS) coefficients
+      fed to the same from-scratch Geweke formula as an external-package fit at the same order'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: converges to analytic at T >= 1024 (probe var2 T=4096 0.2858 vs 0.2888); at T = 64 degenerate (negative/NaN),
+      at T = 256 inflated by over-fitting
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic null: true spectral GC 0 for independent/contemporaneously correlated white processes'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'T=64: negative values and NaN cells (probe min -1.126 iid_gaussian); T >= 256: small positive, decreasing
+      like O(order/T)'
+  - datasets:
+    - shared_envelope
+    - delayed_noise
+    - iid_gaussian
+    - var2_bivariate
+    - gauss_ar1_pair
+    path: pipeline
+    reference: qualitative error-path / degeneracy check (singular LWR on identical channels; indefinite noise covariance
+      on short series)
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'shared_envelope: LinAlgError in lwr_recursion; under the message-regex warnings filters numpy installs on import pyspi multivariate (compute_spi)
+      raises TypeError from pyspi/statistics/spectral.py:439 and Calculator.compute gives an all-NaN table; T=64: NaN fraction per cell and
+      negative cells recorded (expected partial NaN, negatives)'
+  - datasets:
+    - scaled_offset
+    - var2_bivariate
+    path: pipeline-detrend
+    reference: 'invariance property of canonical GC under per-channel affine maps: compare pyspi with normalise=False on x*scale
+      + offset to pyspi on z-scored x (and with detrend=True)'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: canonical GC is invariant to scale and offset; pyspi parametric is scale-invariant (<= 1e-3) but not
+      offset-invariant with normalise=False (probe order-1 0.0432 vs 0.2886); with default z-scoring invariant
+  check_method: independent-impl
+  check_reference: audit/checks/refs/sgc.py:chk_impl (from-scratch VAR(20) by direct Yule-Walker on N-k autocovariances, Geweke
+    ratio, band rule; no nitime); audit/checks/refs/sgc.py:chk_yw/chk_geweke/chk_grid; audit/checks/refs/sgc.py:chk_deg/chk_indef
+    (T=64); audit/checks/refs/sgc.py:chk_ols (statsmodels==0.15.0); audit/checks/refs/sgc.py:chk_truth/chk_mcexp/chk_null/chk_conv;
+    audit/checks/refs/sgc.py:chk_dir; audit/checks/refs/sgc.py:chk_err/chk_sweep; audit/checks/refs/sgc.py:chk_affine
+  check_data: var2_bivariate T64/T256/T1024/T4096 (pipeline, kernel); gauss_ar1_pair T64/T256/T1024/T4096; delayed_noise T1024;
+    iid_gaussian T64 (P=5)/T256/T1024/T4096; bivariate_gaussian T1024; trending T256 pipeline-detrend; shared_envelope T256;
+    sweep at T256/T1024
+  agreement_criterion: 'tolerance rtol 1e-6/atol 1e-8 (impl, deg), 1e-7/1e-10 (yw), 1e-9/1e-12 (geweke); statistical |pyspi
+    - value| <= z_(1-0.05/2m) x Monte Carlo SD (200 draws); conv bias ratio >= 4; indef: negative/NaN bins iff indefinite
+    noise covariance'
+  closeness: 'Implementation: 41/41 impl runs max_abs 3.4e-11 (including T=64); LWR = direct Yule-Walker to 9.6e-12 (T=64
+    included); Geweke on nitime''s fits 9.6e-12. Convergence: var2_bivariate causal A[1,0] 0.354 / 0.328 / 0.286 at T=256/1024/4096
+    vs 0.289 and non-causal A[0,1] 0.081 / 0.017 / 0.0047 vs 0; Monte Carlo bias 0.087 / 0.020 / 0.0047 (conv pass, ratio
+    18.5); truth runs fail where the non-causal cell''s positive bias exceeds the familywise band (4 of 7 var2/gauss runs
+    at T >= 1024 fail with max_z 2.15-3.05, gauss_ar1_pair T256/T4096 pass). Order 20 at T=256 vs 1024: iid null mean 0.087
+    vs 0.016 (Monte Carlo 0.090 / 0.020). T=64: per-bin NaN 19.8% / 55.2% / 65.1% (iid / var2 / gauss_ar1_pair), var2 and
+    gauss_ar1_pair matrices all NaN, iid min -1.126, every anomaly in a pair with an indefinite LWR noise covariance (indef
+    pass). LWR vs OLS at T=1024: 0.0080 (var2, SD 0.032), 0.0024 (gauss_ar1_pair).'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: anchor
+  score_rubric_note: Anchor 7 names LWR instead of OLS. On var2 at T=1024, LWR and OLS differ by 0.0080.
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Geweke spectral GC of a pairwise VAR(20) fitted by the LWR recursion on non-demeaned N-k autocovariances,
+    fp-exact against an independent Yule-Walker re-implementation and consistent (bias 0.087 -> 0.0047 from T=256 to 4096).
+    Rubric anchor 7 (''LWR instead of OLS''; difference <= 0.008 at T=1024). Short series are degenerate: at T=64 (80 coefficients
+    from 64 samples per pair) the N-k-divisor autocovariances give indefinite noise covariances, hence negative values for
+    an ''unsigned'' SPI and NaN bins/cells (whole matrix NaN for var2_bivariate and gauss_ar1_pair), which is the cause of
+    the partial_nan status tests/README.md records for the small order-20 goldens. Also: row = target (transpose of the glossary);
+    k/1026 grid labelled k/1024; offset-sensitive with normalise=False; a singular pair aborts the whole SPI through the TypeError-raising
+    handler.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: pyspi time per SPI run <= 0.025 s (iid_gaussian T=64 0.024 s, delayed_noise T=1024 P=4 0.016 s); probe runs up to 11.8 s (sweep);
+    86 runs, 31 s in total (out/pyspi/index/sgc.json, last forced rerun)'
+  symmetry_observed: 'asym: max|A - A.T| = 0.31 (var2_bivariate T1024), 4.05 (delayed_noise T1024), 0.011 (iid_gaussian T1024)'
+  direction_observed: 'row = target, column = source: A[i, j] = GC x_j -> x_i. var2_bivariate A[1,0] 0.328 / 0.286 vs A[0,1]
+    0.017 / 0.0047 at T=1024/4096; gauss_ar1_pair A[0,1] 0.162 > A[1,0] 0.048; delayed_noise T=1024: A[target, source] 3.03-4.06
+    vs <= 0.058 on all 6 links.'
+  candidate_resolutions:
+  - candidate: 'direction: A[i, j] = GC j -> i (target-by-source)'
+    outcome: confirmed
+    evidence: spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|dir, |var2_bivariate|4096|pipeline|dir, |gauss_ar1_pair|1024|pipeline|dir,
+      |delayed_noise|1024|pipeline|dir pass under row = target (9/9 links, 0/9 under rows = sources). Not in KNOWN_ISSUES.md.
+  - candidate: 'sign: unsigned SPI returns negative values from an indefinite LWR noise covariance'
+    outcome: confirmed
+    evidence: 'spectral.sgc.parametric_order-20|iid_gaussian|64|pipeline|indef pass (4 of 10 pairs indefinite, e.g. (0,2)
+      det -0.391; (0,3) Sigma_00 -0.89); |iid_gaussian|64|pipeline|impl:mean-full: pyspi min -1.126, the from-scratch value
+      agrees to 9.8e-13.'
+  - candidate: 'offset sensitivity: nitime does not demean'
+    outcome: confirmed
+    evidence: 'spectral.sgc.parametric_order-20|var2_bivariate|1024|kernel|affine fails: pyspi on x*[2,0.5]+[3,-5] with normalise=False
+      gives A[0,1] 0.0770 / A[1,0] 0.4240 against 0.0174 / 0.3272 for the same estimator on the untransformed data (max_abs
+      0.097); the from-scratch non-demeaned replica on the transformed data equals pyspi (0.0), so the cause is the non-demeaned
+      N-k autocovariance; |kernel|scale passes (max_abs 6.1e-16): pure scaling is exact. With the default z-scoring the effect
+      is absent.'
+  - candidate: 'grid labels: freqz points k/1026 labelled k/1024'
+    outcome: confirmed
+    evidence: spectral.sgc.parametric_order-20|iid_gaussian|1024|pipeline|grid exact (labels linspace(0,0.5,513), evaluation
+      points k/1026, label minus point up to 9.7e-4); effect on the band statistics of the true var2 model <= 6e-4 (ref_pop_label_grid_maxabs_shift
+      in the truth runs)
+  - candidate: all-or-nothing failure with a broken handler
+    outcome: confirmed
+    evidence: 'spectral.sgc.parametric_order-20|shared_envelope|256|pipeline|err pass: nitime raises LinAlgError on pair (0,2)
+      (identical channels), the direct multivariate() call raises TypeError (''expected string or bytes-like object, got LinAlgError'')
+      from spectral.py:439, a real pyspi Calculator gives an all-NaN table (calculator.py:336-337), and only catch_warnings(record=True)+simplefilter(''always'')
+      reaches the all-NaN return at :440; sweep runs spectral.sgc.parametric_order-20|iid_gaussian|256|pipeline|sweep and
+      |1024|pipeline|sweep list every failing input'
+  - candidate: short-series degeneracy at T=64 explains the partial_nan order-20 goldens
+    outcome: confirmed
+    evidence: 'spectral.sgc.parametric_order-20|iid_gaussian|64|pipeline|deg, |var2_bivariate|64|pipeline|deg, |gauss_ar1_pair|64|pipeline|deg:
+      NaN bins 19.8% / 55.2% / 65.1%, negative bins 20.2% / 44.8% / 34.9%, reproduced per bin to <= 1.5e-10; the indef runs
+      tie every anomaly to an indefinite noise covariance. The goldens themselves are snapshots and were not used as a reference.'
+  checks_run:
+  - run_ids:
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|impl:*
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|1024|pipeline|impl:*
+    - spectral.sgc.parametric_order-20|delayed_noise|1024|pipeline|impl:*
+    - spectral.sgc.parametric_order-20|iid_gaussian|1024|pipeline|impl:*
+    - spectral.sgc.parametric_order-20|bivariate_gaussian|1024|pipeline|impl:*
+    - spectral.sgc.parametric_order-20|trending|256|pipeline-detrend|impl:*
+    - spectral.sgc.parametric_order-20|var2_bivariate|256|pipeline|impl:mean-full
+    - spectral.sgc.parametric_order-20|var2_bivariate|4096|pipeline|impl:mean-full
+    reference: 'audit/checks/refs/sgc.py:chk_impl (par_perbin: N-k autocovariances, direct block Yule-Walker solve, Geweke
+      ratio, pyspi band rule)'
+    outcome: 38/38 pass (T >= 256); max_abs 3.4e-11, max_rel 3.1e-12
+  - run_ids:
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|yw
+    - spectral.sgc.parametric_order-20|delayed_noise|1024|pipeline|yw
+    - spectral.sgc.parametric_order-20|iid_gaussian|1024|pipeline|yw
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|1024|pipeline|yw
+    reference: audit/checks/refs/sgc.py:chk_yw
+    outcome: 4/4 pass; max_abs 3.7e-13
+  - run_ids:
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|geweke
+    - spectral.sgc.parametric_order-20|delayed_noise|1024|pipeline|geweke
+    - spectral.sgc.parametric_order-20|iid_gaussian|1024|pipeline|geweke
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|1024|pipeline|geweke
+    reference: audit/checks/refs/sgc.py:chk_geweke
+    outcome: 4/4 pass; max_abs 9.6e-12
+  - run_ids:
+    - spectral.sgc.parametric_order-20|iid_gaussian|1024|pipeline|grid
+    reference: audit/checks/refs/sgc.py:chk_grid
+    outcome: 1/1 exact
+  - run_ids:
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|dir
+    - spectral.sgc.parametric_order-20|var2_bivariate|4096|pipeline|dir
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|1024|pipeline|dir
+    - spectral.sgc.parametric_order-20|delayed_noise|1024|pipeline|dir
+    reference: audit/checks/refs/sgc.py:chk_dir
+    outcome: 4/4 pass; row = target on 9/9 links, rows = sources on 0/9
+  - run_ids:
+    - spectral.sgc.parametric_order-20|var2_bivariate|256|pipeline|truth:mean-full
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|truth:mean-full
+    - spectral.sgc.parametric_order-20|var2_bivariate|4096|pipeline|truth:mean-full
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|truth:mean-low
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|truth:mean-high
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|truth:max-full
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|1024|pipeline|truth:mean-full
+    reference: audit/checks/refs/sgc.py:chk_truth
+    outcome: 3/7 pass; failures come from the non-causal cell (Monte Carlo mean 0.087 / 0.019 / 0.0047 vs 0 at T=256/1024/4096)
+      and gauss_ar1_pair T1024 (z 2.52); causal A[1,0] 0.354 / 0.328 / 0.286 vs 0.289
+  - run_ids:
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|mcexp:mean-full
+    - spectral.sgc.parametric_order-20|iid_gaussian|1024|pipeline|mcexp:mean-full
+    reference: audit/checks/refs/sgc.py:chk_mcexp
+    outcome: 2/2 pass (max_z 0.51, 1.44)
+  - run_ids:
+    - spectral.sgc.parametric_order-20|var2_bivariate|4096|pipeline|conv
+    - spectral.sgc.parametric_order-20|iid_gaussian|4096|pipeline|conv
+    reference: audit/checks/refs/sgc.py:chk_conv
+    outcome: '2/2 pass: bias 0.087/0.020/0.0047 (ratio 18.5) on var2, 0.095/0.020/0.0049 (ratio 19.3) on iid'
+  - run_ids:
+    - spectral.sgc.parametric_order-20|iid_gaussian|256|pipeline|null:mean-full
+    - spectral.sgc.parametric_order-20|iid_gaussian|1024|pipeline|null:mean-full
+    - spectral.sgc.parametric_order-20|bivariate_gaussian|1024|pipeline|null:mean-full
+    reference: audit/checks/refs/sgc.py:chk_null
+    outcome: '0/3 pass: positive small-sample bias (iid off-diagonal mean 0.087 at T=256, 0.016 at T=1024; Monte Carlo 0.090
+      / 0.020)'
+  - run_ids:
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|pipeline|ols:mean-full
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|1024|pipeline|ols:mean-full
+    reference: audit/checks/refs/sgc.py:chk_ols (statsmodels==0.15.0 VAR OLS)
+    outcome: 2/2 pass; |LWR - OLS| 0.0080 (var2, Monte Carlo SD 0.032) and 0.0024 (gauss_ar1_pair)
+  - run_ids:
+    - spectral.sgc.parametric_order-20|shared_envelope|256|pipeline|err
+    reference: audit/checks/refs/sgc.py:chk_err (probe outcome)
+    outcome: 1/1 pass (LinAlgError -> TypeError, Calculator all NaN)
+  - run_ids:
+    - spectral.sgc.parametric_order-20|iid_gaussian|256|pipeline|sweep
+    - spectral.sgc.parametric_order-20|iid_gaussian|1024|pipeline|sweep
+    reference: audit/checks/refs/sgc.py:chk_sweep (probe sweep)
+    outcome: 2/2 pass
+  - run_ids:
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|kernel|affine
+    - spectral.sgc.parametric_order-20|var2_bivariate|1024|kernel|scale
+    reference: audit/checks/refs/sgc.py:chk_affine
+    outcome: affine fail (max_abs 0.097), scale pass (6.1e-16)
+  - run_ids:
+    - spectral.sgc.parametric_order-20|iid_gaussian|64|pipeline|deg
+    - spectral.sgc.parametric_order-20|var2_bivariate|64|pipeline|deg
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|64|pipeline|deg
+    - spectral.sgc.parametric_order-20|iid_gaussian|64|pipeline|yw
+    - spectral.sgc.parametric_order-20|var2_bivariate|64|pipeline|yw
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|64|pipeline|yw
+    - spectral.sgc.parametric_order-20|iid_gaussian|64|pipeline|impl:mean-full
+    - spectral.sgc.parametric_order-20|var2_bivariate|64|pipeline|impl:mean-full
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|64|pipeline|impl:mean-full
+    reference: audit/checks/refs/sgc.py:chk_deg/chk_yw/chk_impl
+    outcome: '9/9 pass at T=64 (per bin max_abs <= 1.5e-10): NaN bins 19.8% / 55.2% / 65.1%, negative bins 20.2% / 44.8% /
+      34.9%; var2 and gauss_ar1_pair matrices all NaN, iid min -1.126'
+  - run_ids:
+    - spectral.sgc.parametric_order-20|iid_gaussian|64|pipeline|indef
+    - spectral.sgc.parametric_order-20|var2_bivariate|64|pipeline|indef
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|64|pipeline|indef
+    reference: audit/checks/refs/sgc.py:chk_indef
+    outcome: '3/3 pass: negative or NaN bins exactly in the pairs with indefinite LWR noise covariance (4/10, 1/1, 1/1)'
+  - run_ids:
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|256|pipeline|truth:mean-full
+    - spectral.sgc.parametric_order-20|gauss_ar1_pair|4096|pipeline|truth:mean-full
+    reference: audit/checks/refs/sgc.py:chk_truth
+    outcome: 2/2 pass (max_z 1.93, 1.50)
+optimisation:
+  complexity_P_T: 'nitime GrangerAnalyzer over P(P-1)/2 unordered pairs (analysis/granger.py:116-131, 156-176), per pair: autocovariance O(T*p), LWR recursion O(p^2) in Python loops of 2x2 np.dot/scipy inv, 4 freqz (rfft of length 2*n_freqs=2048) and the 2x2 GC algebra; O(P^2 * (T*p + p^2 + n_freqs log n_freqs)) with a large per-pair constant. Measured P exponent 2.06 (fit 8->32, 2.03 between 32x1024 and 118x1024) and T exponent 0.04: the pair term dominates at every P; T matters only through the autocovariance (p = 21 lags).'
+  hotspot_1: .venv/lib/python3.12/site-packages/nitime/algorithms/autoregressive.py:lwr_recursion (third-party:nitime) 65.5% of the profiled SPI call at 118x1024 (self time 47.1%; scipy.linalg.inv inside it 15.8%)
+  hotspot_2: '.venv/lib/python3.12/site-packages/nitime/algorithms/autoregressive.py:granger_causality_xy 24.1% at 118x1024 (transfer_function_xy -> scipy.signal.freqz 18.8%); crosscov_vector 8.7% | opaque_share is the 8x1024 profile-JSON value (audit/profiles/spectral.sgc.parametric_order-20__8x1024__profile.json, builtin tottime over the whole profile); the 118x1024 pstats named in profile_file gives a builtin tottime share of 0.217 of the compute_spi frame (audit/profiles/micro/prof_spectral__index.json). Both are lower bounds: numpy ufunc work sits in the self time of the calling Python frame.'
+  hotspot_owner: third-party:nitime
+  opaque_share: 0.166
+  profile_file: audit/profiles/micro/prof_spectral.sgc.parametric_order-20__118x1024.pstats
+  opportunities:
+  - opportunity_id: sgc-1
+    opportunity: 'Vectorise the Levinson-Whittle-Robinson recursion over all P(P-1)/2 pairs (or compile it with numba): today nitime fit_model calls lwr_recursion once per pair (and once per BIC order) with pure-Python loops over 2x2 np.dot and scipy.linalg.inv (nitime/algorithms/autoregressive.py:168-250, analysis/granger.py:17-61, 116-131).'
+    opp_type: vectorise-batch
+    expected_speedup: 2-3x
+    speedup_basis: profile:audit/profiles/micro/prof_spectral.sgc.parametric_order-20__118x1024.pstats lwr_recursion 65.5% (Amdahl bound 2.9x)
+    output_risk: unverified-within-tolerance
+    risk_evidence: batched matmul/inv round differently from per-pair np.dot and scipy inv
+    effort: M
+    depends_on: []
+  - opportunity_id: sgc-2
+    opportunity: 'Evaluate the transfer function and the spectral GC of all pairs in one batched call: one rfft over the stacked coefficient rows of every pair instead of four scipy.signal.freqz calls per pair, then the 2x2 algebra of granger_causality_xy as array operations (nitime/algorithms/autoregressive.py:315-360, 455-540; algorithms/spectral.py:737-766).'
+    opp_type: vectorise-batch
+    expected_speedup: ~1.3x
+    speedup_basis: profile:audit/profiles/micro/prof_spectral.sgc.parametric_order-20__118x1024.pstats granger_causality_xy 24.1% (Amdahl bound 1.3x).
+      Independent of sgc-1 (independent_of), because sgc-1 cuts lwr_recursion and this avenue the transfer function and granger_causality_xy, disjoint frames; in the residual after sgc-1
+      the granger_causality_xy share is larger, so the standalone ~1.3x stacked there is a lower figure
+    output_risk: unverified-bit-identical
+    risk_evidence: rfft of each stacked row runs the same pocketfft transform as freqz's rfft; the 2x2 algebra is the same elementwise operations
+    effort: M
+    depends_on: []
+    independent_of:
+    - sgc-1

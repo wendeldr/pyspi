@@ -1,0 +1,4951 @@
+schema: 1
+generated_by: audit/build_units.py
+sources:
+  config: pyspi/config.yaml
+  extra: tests/regression/extra_config.yaml
+  retained: audit/env/retained_metrics.txt
+counts:
+  units: 159
+  config_identifiers: 285
+  extra_identifiers: 54
+  retained_only_identifiers: 2
+  retained_identifiers: 185
+  retained_matched: 185
+  infrastructure: 13
+retained_unmatched: []
+units:
+- unit_id: basic.cov.EmpiricalCovariance
+  module: basic
+  pyspi_class: Covariance
+  method_or_estimator: EmpiricalCovariance
+  hyperparameters:
+    estimator: EmpiricalCovariance
+  source: config
+  identifiers:
+  - cov_EmpiricalCovariance
+  - cov-sq_EmpiricalCovariance
+  identifier_params:
+    cov_EmpiricalCovariance:
+      estimator: EmpiricalCovariance
+    cov-sq_EmpiricalCovariance:
+      estimator: EmpiricalCovariance
+      squared: true
+  representative: cov_EmpiricalCovariance
+  family: cov_prec_simple
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - cov-sq_EmpiricalCovariance
+  - cov_EmpiricalCovariance
+  in_eeg_selection: true
+- unit_id: basic.cov.EllipticEnvelope
+  module: basic
+  pyspi_class: Covariance
+  method_or_estimator: EllipticEnvelope
+  hyperparameters:
+    estimator: EllipticEnvelope
+  source: config
+  identifiers:
+  - cov_EllipticEnvelope
+  - cov-sq_EllipticEnvelope
+  identifier_params:
+    cov_EllipticEnvelope:
+      estimator: EllipticEnvelope
+    cov-sq_EllipticEnvelope:
+      estimator: EllipticEnvelope
+      squared: true
+  representative: cov_EllipticEnvelope
+  family: cov_prec_robust
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: basic.cov.GraphicalLasso
+  module: basic
+  pyspi_class: Covariance
+  method_or_estimator: GraphicalLasso
+  hyperparameters:
+    estimator: GraphicalLasso
+  source: config
+  identifiers:
+  - cov_GraphicalLasso
+  - cov-sq_GraphicalLasso
+  identifier_params:
+    cov_GraphicalLasso:
+      estimator: GraphicalLasso
+    cov-sq_GraphicalLasso:
+      estimator: GraphicalLasso
+      squared: true
+  representative: cov_GraphicalLasso
+  family: cov_prec_glasso
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - cov-sq_GraphicalLasso
+  in_eeg_selection: true
+- unit_id: basic.cov.GraphicalLassoCV
+  module: basic
+  pyspi_class: Covariance
+  method_or_estimator: GraphicalLassoCV
+  hyperparameters:
+    estimator: GraphicalLassoCV
+  source: config
+  identifiers:
+  - cov_GraphicalLassoCV
+  - cov-sq_GraphicalLassoCV
+  identifier_params:
+    cov_GraphicalLassoCV:
+      estimator: GraphicalLassoCV
+    cov-sq_GraphicalLassoCV:
+      estimator: GraphicalLassoCV
+      squared: true
+  representative: cov_GraphicalLassoCV
+  family: cov_prec_glasso
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - cov-sq_GraphicalLassoCV
+  - cov_GraphicalLassoCV
+  in_eeg_selection: true
+- unit_id: basic.cov.LedoitWolf
+  module: basic
+  pyspi_class: Covariance
+  method_or_estimator: LedoitWolf
+  hyperparameters:
+    estimator: LedoitWolf
+  source: config
+  identifiers:
+  - cov_LedoitWolf
+  - cov-sq_LedoitWolf
+  identifier_params:
+    cov_LedoitWolf:
+      estimator: LedoitWolf
+    cov-sq_LedoitWolf:
+      estimator: LedoitWolf
+      squared: true
+  representative: cov_LedoitWolf
+  family: cov_prec_simple
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - cov-sq_LedoitWolf
+  - cov_LedoitWolf
+  in_eeg_selection: true
+- unit_id: basic.cov.MinCovDet
+  module: basic
+  pyspi_class: Covariance
+  method_or_estimator: MinCovDet
+  hyperparameters:
+    estimator: MinCovDet
+  source: config
+  identifiers:
+  - cov_MinCovDet
+  - cov-sq_MinCovDet
+  identifier_params:
+    cov_MinCovDet:
+      estimator: MinCovDet
+    cov-sq_MinCovDet:
+      estimator: MinCovDet
+      squared: true
+  representative: cov_MinCovDet
+  family: cov_prec_robust
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - cov-sq_MinCovDet
+  - cov_MinCovDet
+  in_eeg_selection: true
+- unit_id: basic.cov.OAS
+  module: basic
+  pyspi_class: Covariance
+  method_or_estimator: OAS
+  hyperparameters:
+    estimator: OAS
+  source: config
+  identifiers:
+  - cov_OAS
+  - cov-sq_OAS
+  identifier_params:
+    cov_OAS:
+      estimator: OAS
+    cov-sq_OAS:
+      estimator: OAS
+      squared: true
+  representative: cov_OAS
+  family: cov_prec_simple
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - cov-sq_OAS
+  - cov_OAS
+  in_eeg_selection: true
+- unit_id: basic.cov.ShrunkCovariance
+  module: basic
+  pyspi_class: Covariance
+  method_or_estimator: ShrunkCovariance
+  hyperparameters:
+    estimator: ShrunkCovariance
+  source: config
+  identifiers:
+  - cov_ShrunkCovariance
+  - cov-sq_ShrunkCovariance
+  identifier_params:
+    cov_ShrunkCovariance:
+      estimator: ShrunkCovariance
+    cov-sq_ShrunkCovariance:
+      estimator: ShrunkCovariance
+      squared: true
+  representative: cov_ShrunkCovariance
+  family: cov_prec_simple
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - cov-sq_ShrunkCovariance
+  - cov_ShrunkCovariance
+  in_eeg_selection: true
+- unit_id: basic.prec.EmpiricalCovariance
+  module: basic
+  pyspi_class: Precision
+  method_or_estimator: EmpiricalCovariance
+  hyperparameters:
+    estimator: EmpiricalCovariance
+  source: config
+  identifiers:
+  - prec_EmpiricalCovariance
+  - prec-sq_EmpiricalCovariance
+  identifier_params:
+    prec_EmpiricalCovariance:
+      estimator: EmpiricalCovariance
+    prec-sq_EmpiricalCovariance:
+      estimator: EmpiricalCovariance
+      squared: true
+  representative: prec_EmpiricalCovariance
+  family: cov_prec_simple
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - prec-sq_EmpiricalCovariance
+  - prec_EmpiricalCovariance
+  in_eeg_selection: true
+- unit_id: basic.prec.EllipticEnvelope
+  module: basic
+  pyspi_class: Precision
+  method_or_estimator: EllipticEnvelope
+  hyperparameters:
+    estimator: EllipticEnvelope
+  source: config
+  identifiers:
+  - prec_EllipticEnvelope
+  - prec-sq_EllipticEnvelope
+  identifier_params:
+    prec_EllipticEnvelope:
+      estimator: EllipticEnvelope
+    prec-sq_EllipticEnvelope:
+      estimator: EllipticEnvelope
+      squared: true
+  representative: prec_EllipticEnvelope
+  family: cov_prec_robust
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - prec-sq_EllipticEnvelope
+  - prec_EllipticEnvelope
+  in_eeg_selection: true
+- unit_id: basic.prec.GraphicalLasso
+  module: basic
+  pyspi_class: Precision
+  method_or_estimator: GraphicalLasso
+  hyperparameters:
+    estimator: GraphicalLasso
+  source: config
+  identifiers:
+  - prec_GraphicalLasso
+  - prec-sq_GraphicalLasso
+  identifier_params:
+    prec_GraphicalLasso:
+      estimator: GraphicalLasso
+    prec-sq_GraphicalLasso:
+      estimator: GraphicalLasso
+      squared: true
+  representative: prec_GraphicalLasso
+  family: cov_prec_glasso
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - prec-sq_GraphicalLasso
+  - prec_GraphicalLasso
+  in_eeg_selection: true
+- unit_id: basic.prec.GraphicalLassoCV
+  module: basic
+  pyspi_class: Precision
+  method_or_estimator: GraphicalLassoCV
+  hyperparameters:
+    estimator: GraphicalLassoCV
+  source: config
+  identifiers:
+  - prec_GraphicalLassoCV
+  - prec-sq_GraphicalLassoCV
+  identifier_params:
+    prec_GraphicalLassoCV:
+      estimator: GraphicalLassoCV
+    prec-sq_GraphicalLassoCV:
+      estimator: GraphicalLassoCV
+      squared: true
+  representative: prec_GraphicalLassoCV
+  family: cov_prec_glasso
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - prec-sq_GraphicalLassoCV
+  - prec_GraphicalLassoCV
+  in_eeg_selection: true
+- unit_id: basic.prec.LedoitWolf
+  module: basic
+  pyspi_class: Precision
+  method_or_estimator: LedoitWolf
+  hyperparameters:
+    estimator: LedoitWolf
+  source: config
+  identifiers:
+  - prec_LedoitWolf
+  - prec-sq_LedoitWolf
+  identifier_params:
+    prec_LedoitWolf:
+      estimator: LedoitWolf
+    prec-sq_LedoitWolf:
+      estimator: LedoitWolf
+      squared: true
+  representative: prec_LedoitWolf
+  family: cov_prec_simple
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - prec-sq_LedoitWolf
+  - prec_LedoitWolf
+  in_eeg_selection: true
+- unit_id: basic.prec.MinCovDet
+  module: basic
+  pyspi_class: Precision
+  method_or_estimator: MinCovDet
+  hyperparameters:
+    estimator: MinCovDet
+  source: config
+  identifiers:
+  - prec_MinCovDet
+  - prec-sq_MinCovDet
+  identifier_params:
+    prec_MinCovDet:
+      estimator: MinCovDet
+    prec-sq_MinCovDet:
+      estimator: MinCovDet
+      squared: true
+  representative: prec_MinCovDet
+  family: cov_prec_robust
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - prec-sq_MinCovDet
+  - prec_MinCovDet
+  in_eeg_selection: true
+- unit_id: basic.prec.OAS
+  module: basic
+  pyspi_class: Precision
+  method_or_estimator: OAS
+  hyperparameters:
+    estimator: OAS
+  source: config
+  identifiers:
+  - prec_OAS
+  - prec-sq_OAS
+  identifier_params:
+    prec_OAS:
+      estimator: OAS
+    prec-sq_OAS:
+      estimator: OAS
+      squared: true
+  representative: prec_OAS
+  family: cov_prec_simple
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - prec-sq_OAS
+  - prec_OAS
+  in_eeg_selection: true
+- unit_id: basic.prec.ShrunkCovariance
+  module: basic
+  pyspi_class: Precision
+  method_or_estimator: ShrunkCovariance
+  hyperparameters:
+    estimator: ShrunkCovariance
+  source: config
+  identifiers:
+  - prec_ShrunkCovariance
+  - prec-sq_ShrunkCovariance
+  identifier_params:
+    prec_ShrunkCovariance:
+      estimator: ShrunkCovariance
+    prec-sq_ShrunkCovariance:
+      estimator: ShrunkCovariance
+      squared: true
+  representative: prec_ShrunkCovariance
+  family: cov_prec_simple
+  pair_basis: multivariate
+  labels:
+  - basic
+  - linear
+  - signed
+  - undirected
+  - unordered
+  deps: []
+  eeg_identifiers:
+  - prec-sq_ShrunkCovariance
+  - prec_ShrunkCovariance
+  in_eeg_selection: true
+- unit_id: basic.spearmanr
+  module: basic
+  pyspi_class: SpearmanR
+  method_or_estimator: SpearmanR
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - spearmanr-sq
+  - spearmanr
+  identifier_params:
+    spearmanr-sq:
+      squared: true
+    spearmanr:
+      squared: false
+  representative: spearmanr
+  family: rank_corr
+  pair_basis: ordered
+  labels:
+  - basic
+  - linear
+  - rank
+  - signed
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - spearmanr
+  - spearmanr-sq
+  in_eeg_selection: true
+- unit_id: basic.kendalltau
+  module: basic
+  pyspi_class: KendallTau
+  method_or_estimator: KendallTau
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - kendalltau-sq
+  - kendalltau
+  identifier_params:
+    kendalltau-sq:
+      squared: true
+    kendalltau:
+      squared: false
+  representative: kendalltau
+  family: rank_corr
+  pair_basis: ordered
+  labels:
+  - basic
+  - linear
+  - rank
+  - signed
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - kendalltau-sq
+  in_eeg_selection: true
+- unit_id: basic.xcorr.max_sig-True
+  module: basic
+  pyspi_class: CrossCorrelation
+  method_or_estimator: scipy.signal.correlate
+  hyperparameters:
+    statistic: max
+    sigonly: true
+  source: config
+  identifiers:
+  - xcorr_max_sig-True
+  - xcorr-sq_max_sig-True
+  identifier_params:
+    xcorr_max_sig-True:
+      statistic: max
+    xcorr-sq_max_sig-True:
+      statistic: max
+      squared: true
+  representative: xcorr_max_sig-True
+  family: xcorr
+  pair_basis: unordered
+  labels:
+  - basic
+  - linear
+  - signed
+  - temporal
+  - undirected
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: basic.xcorr.mean_sig-True
+  module: basic
+  pyspi_class: CrossCorrelation
+  method_or_estimator: scipy.signal.correlate
+  hyperparameters:
+    statistic: mean
+    sigonly: true
+  source: config
+  identifiers:
+  - xcorr_mean_sig-True
+  - xcorr-sq_mean_sig-True
+  identifier_params:
+    xcorr_mean_sig-True:
+      statistic: mean
+    xcorr-sq_mean_sig-True:
+      statistic: mean
+      squared: true
+  representative: xcorr_mean_sig-True
+  family: xcorr
+  pair_basis: unordered
+  labels:
+  - basic
+  - linear
+  - signed
+  - temporal
+  - undirected
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: basic.xcorr.mean_sig-False
+  module: basic
+  pyspi_class: CrossCorrelation
+  method_or_estimator: scipy.signal.correlate
+  hyperparameters:
+    statistic: mean
+    sigonly: false
+  source: config
+  identifiers:
+  - xcorr_mean_sig-False
+  - xcorr-sq_mean_sig-False
+  identifier_params:
+    xcorr_mean_sig-False:
+      statistic: mean
+      sigonly: false
+    xcorr-sq_mean_sig-False:
+      statistic: mean
+      squared: true
+      sigonly: false
+  representative: xcorr_mean_sig-False
+  family: xcorr
+  pair_basis: unordered
+  labels:
+  - basic
+  - linear
+  - signed
+  - temporal
+  - undirected
+  deps: []
+  eeg_identifiers:
+  - xcorr-sq_mean_sig-False
+  - xcorr_mean_sig-False
+  in_eeg_selection: true
+- unit_id: distance.pdist.euclidean
+  module: distance
+  pyspi_class: PairwiseDistance
+  method_or_estimator: euclidean
+  hyperparameters:
+    metric: euclidean
+  source: config
+  identifiers:
+  - pdist_euclidean
+  identifier_params:
+    pdist_euclidean:
+      metric: euclidean
+  representative: pdist_euclidean
+  family: pdist
+  pair_basis: multivariate
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pdist_euclidean
+  in_eeg_selection: true
+- unit_id: distance.pdist.cityblock
+  module: distance
+  pyspi_class: PairwiseDistance
+  method_or_estimator: cityblock
+  hyperparameters:
+    metric: cityblock
+  source: config
+  identifiers:
+  - pdist_cityblock
+  identifier_params:
+    pdist_cityblock:
+      metric: cityblock
+  representative: pdist_cityblock
+  family: pdist
+  pair_basis: multivariate
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pdist_cityblock
+  in_eeg_selection: true
+- unit_id: distance.pdist.cosine
+  module: distance
+  pyspi_class: PairwiseDistance
+  method_or_estimator: cosine
+  hyperparameters:
+    metric: cosine
+  source: config
+  identifiers:
+  - pdist_cosine
+  identifier_params:
+    pdist_cosine:
+      metric: cosine
+  representative: pdist_cosine
+  family: pdist
+  pair_basis: multivariate
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pdist_cosine
+  in_eeg_selection: true
+- unit_id: distance.pdist.chebyshev
+  module: distance
+  pyspi_class: PairwiseDistance
+  method_or_estimator: chebyshev
+  hyperparameters:
+    metric: chebyshev
+  source: config
+  identifiers:
+  - pdist_chebyshev
+  identifier_params:
+    pdist_chebyshev:
+      metric: chebyshev
+  representative: pdist_chebyshev
+  family: pdist
+  pair_basis: multivariate
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pdist_chebyshev
+  in_eeg_selection: true
+- unit_id: distance.pdist.canberra
+  module: distance
+  pyspi_class: PairwiseDistance
+  method_or_estimator: canberra
+  hyperparameters:
+    metric: canberra
+  source: config
+  identifiers:
+  - pdist_canberra
+  identifier_params:
+    pdist_canberra:
+      metric: canberra
+  representative: pdist_canberra
+  family: pdist
+  pair_basis: multivariate
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pdist_canberra
+  in_eeg_selection: true
+- unit_id: distance.pdist.braycurtis
+  module: distance
+  pyspi_class: PairwiseDistance
+  method_or_estimator: braycurtis
+  hyperparameters:
+    metric: braycurtis
+  source: config
+  identifiers:
+  - pdist_braycurtis
+  identifier_params:
+    pdist_braycurtis:
+      metric: braycurtis
+  representative: pdist_braycurtis
+  family: pdist
+  pair_basis: multivariate
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pdist_braycurtis
+  in_eeg_selection: true
+- unit_id: distance.dcorr.biased-False
+  module: distance
+  pyspi_class: DistanceCorrelation
+  method_or_estimator: hyppo unbiased
+  hyperparameters:
+    biased: false
+  source: config
+  identifiers:
+  - dcorr
+  identifier_params:
+    dcorr:
+      biased: false
+  representative: dcorr
+  family: dcorr_hsic
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.dcorr.biased-True
+  module: distance
+  pyspi_class: DistanceCorrelation
+  method_or_estimator: hyppo biased
+  hyperparameters:
+    biased: true
+  source: config
+  identifiers:
+  - dcorr_biased
+  identifier_params:
+    dcorr_biased:
+      biased: true
+  representative: dcorr_biased
+  family: dcorr_hsic
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.mgc
+  module: distance
+  pyspi_class: MultiscaleGraphCorrelation
+  method_or_estimator: MultiscaleGraphCorrelation
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - mgc
+  identifier_params:
+    mgc: null
+  representative: mgc
+  family: hhg_mgc
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.hsic.biased-False
+  module: distance
+  pyspi_class: HilbertSchmidtIndependenceCriterion
+  method_or_estimator: hyppo unbiased
+  hyperparameters:
+    biased: false
+  source: config
+  identifiers:
+  - hsic
+  identifier_params:
+    hsic:
+      biased: false
+  representative: hsic
+  family: dcorr_hsic
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.hsic.biased-True
+  module: distance
+  pyspi_class: HilbertSchmidtIndependenceCriterion
+  method_or_estimator: hyppo biased
+  hyperparameters:
+    biased: true
+  source: config
+  identifiers:
+  - hsic_biased
+  identifier_params:
+    hsic_biased:
+      biased: true
+  representative: hsic_biased
+  family: dcorr_hsic
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.hhg
+  module: distance
+  pyspi_class: HellerHellerGorfine
+  method_or_estimator: HellerHellerGorfine
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - hhg
+  identifier_params:
+    hhg: null
+  representative: hhg
+  family: hhg_mgc
+  pair_basis: ordered
+  labels:
+  - directed
+  - distance
+  - nonlinear
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.mgcx.maxlag-1
+  module: distance
+  pyspi_class: CrossMultiscaleGraphCorrelation
+  method_or_estimator: hyppo max_lag=1
+  hyperparameters:
+    max_lag: 1
+  source: config
+  identifiers:
+  - mgcx_maxlag-1
+  identifier_params:
+    mgcx_maxlag-1:
+      max_lag: 1
+  representative: mgcx_maxlag-1
+  family: lagged_dcorr_mgc
+  pair_basis: ordered
+  labels:
+  - directed
+  - distance
+  - nonlinear
+  - temporal
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.mgcx.maxlag-10
+  module: distance
+  pyspi_class: CrossMultiscaleGraphCorrelation
+  method_or_estimator: hyppo max_lag=10
+  hyperparameters:
+    max_lag: 10
+  source: config
+  identifiers:
+  - mgcx_maxlag-10
+  identifier_params:
+    mgcx_maxlag-10:
+      max_lag: 10
+  representative: mgcx_maxlag-10
+  family: lagged_dcorr_mgc
+  pair_basis: ordered
+  labels:
+  - directed
+  - distance
+  - nonlinear
+  - temporal
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.dcorrx.maxlag-1
+  module: distance
+  pyspi_class: CrossDistanceCorrelation
+  method_or_estimator: hyppo max_lag=1
+  hyperparameters:
+    max_lag: 1
+  source: config
+  identifiers:
+  - dcorrx_maxlag-1
+  identifier_params:
+    dcorrx_maxlag-1:
+      max_lag: 1
+  representative: dcorrx_maxlag-1
+  family: lagged_dcorr_mgc
+  pair_basis: ordered
+  labels:
+  - directed
+  - distance
+  - nonlinear
+  - temporal
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.dcorrx.maxlag-10
+  module: distance
+  pyspi_class: CrossDistanceCorrelation
+  method_or_estimator: hyppo max_lag=10
+  hyperparameters:
+    max_lag: 10
+  source: config
+  identifiers:
+  - dcorrx_maxlag-10
+  identifier_params:
+    dcorrx_maxlag-10:
+      max_lag: 10
+  representative: dcorrx_maxlag-10
+  family: lagged_dcorr_mgc
+  pair_basis: ordered
+  labels:
+  - directed
+  - distance
+  - nonlinear
+  - temporal
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.dtw.constraint-None
+  module: distance
+  pyspi_class: DynamicTimeWarping
+  method_or_estimator: tslearn global_constraint=None
+  hyperparameters:
+    global_constraint: null
+  source: config
+  identifiers:
+  - dtw
+  identifier_params:
+    dtw:
+      global_constraint: null
+  representative: dtw
+  family: dtw_family
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.dtw.constraint-itakura
+  module: distance
+  pyspi_class: DynamicTimeWarping
+  method_or_estimator: tslearn global_constraint=itakura
+  hyperparameters:
+    global_constraint: itakura
+  source: config
+  identifiers:
+  - dtw_constraint-itakura
+  identifier_params:
+    dtw_constraint-itakura:
+      global_constraint: itakura
+  representative: dtw_constraint-itakura
+  family: dtw_family
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.dtw.constraint-sakoe_chiba
+  module: distance
+  pyspi_class: DynamicTimeWarping
+  method_or_estimator: tslearn global_constraint=sakoe_chiba
+  hyperparameters:
+    global_constraint: sakoe_chiba
+  source: config
+  identifiers:
+  - dtw_constraint-sakoe-chiba
+  identifier_params:
+    dtw_constraint-sakoe-chiba:
+      global_constraint: sakoe_chiba
+  representative: dtw_constraint-sakoe-chiba
+  family: dtw_family
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.softdtw
+  module: distance
+  pyspi_class: SoftDynamicTimeWarping
+  method_or_estimator: tslearn soft_dtw gamma=1 (constraint ignored)
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - softdtw
+  - softdtw_constraint-itakura
+  - softdtw_constraint-sakoe-chiba
+  identifier_params:
+    softdtw:
+      global_constraint: null
+    softdtw_constraint-itakura:
+      global_constraint: itakura
+    softdtw_constraint-sakoe-chiba:
+      global_constraint: sakoe_chiba
+  representative: softdtw
+  family: dtw_family
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.lcss.constraint-None
+  module: distance
+  pyspi_class: LongestCommonSubsequence
+  method_or_estimator: tslearn global_constraint=None
+  hyperparameters:
+    global_constraint: null
+  source: config
+  identifiers:
+  - lcss
+  identifier_params:
+    lcss:
+      global_constraint: null
+  representative: lcss
+  family: dtw_family
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.lcss.constraint-itakura
+  module: distance
+  pyspi_class: LongestCommonSubsequence
+  method_or_estimator: tslearn global_constraint=itakura
+  hyperparameters:
+    global_constraint: itakura
+  source: config
+  identifiers:
+  - lcss_constraint-itakura
+  identifier_params:
+    lcss_constraint-itakura:
+      global_constraint: itakura
+  representative: lcss_constraint-itakura
+  family: dtw_family
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.lcss.constraint-sakoe_chiba
+  module: distance
+  pyspi_class: LongestCommonSubsequence
+  method_or_estimator: tslearn global_constraint=sakoe_chiba
+  hyperparameters:
+    global_constraint: sakoe_chiba
+  source: config
+  identifiers:
+  - lcss_constraint-sakoe-chiba
+  identifier_params:
+    lcss_constraint-sakoe-chiba:
+      global_constraint: sakoe_chiba
+  representative: lcss_constraint-sakoe-chiba
+  family: dtw_family
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.bary.euclidean
+  module: distance
+  pyspi_class: Barycenter
+  method_or_estimator: tslearn euclidean barycenter
+  hyperparameters:
+    mode: euclidean
+  source: config
+  identifiers:
+  - bary_euclidean_mean
+  - bary_euclidean_max
+  - bary-sq_euclidean_mean
+  - bary-sq_euclidean_max
+  identifier_params:
+    bary_euclidean_mean:
+      mode: euclidean
+      statistic: mean
+    bary_euclidean_max:
+      mode: euclidean
+      statistic: max
+    bary-sq_euclidean_mean:
+      mode: euclidean
+      statistic: mean
+      squared: true
+    bary-sq_euclidean_max:
+      mode: euclidean
+      statistic: max
+      squared: true
+  representative: bary_euclidean_mean
+  family: barycenters
+  pair_basis: unordered
+  labels:
+  - distance
+  - nonlinear
+  - signed
+  - temporal
+  - undirected
+  deps: []
+  eeg_identifiers:
+  - bary-sq_euclidean_max
+  - bary-sq_euclidean_mean
+  - bary_euclidean_max
+  - bary_euclidean_mean
+  in_eeg_selection: true
+- unit_id: distance.bary.dtw
+  module: distance
+  pyspi_class: Barycenter
+  method_or_estimator: tslearn dtw barycenter
+  hyperparameters:
+    mode: dtw
+  source: config
+  identifiers:
+  - bary_dtw_mean
+  - bary_dtw_max
+  - bary-sq_dtw_mean
+  - bary-sq_dtw_max
+  identifier_params:
+    bary_dtw_mean:
+      mode: dtw
+      statistic: mean
+    bary_dtw_max:
+      mode: dtw
+      statistic: max
+    bary-sq_dtw_mean:
+      mode: dtw
+      statistic: mean
+      squared: true
+    bary-sq_dtw_max:
+      mode: dtw
+      statistic: max
+      squared: true
+  representative: bary_dtw_mean
+  family: barycenters
+  pair_basis: unordered
+  labels:
+  - distance
+  - nonlinear
+  - signed
+  - temporal
+  - undirected
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.bary.sgddtw
+  module: distance
+  pyspi_class: Barycenter
+  method_or_estimator: tslearn sgddtw barycenter
+  hyperparameters:
+    mode: sgddtw
+  source: config
+  identifiers:
+  - bary_sgddtw_mean
+  - bary_sgddtw_max
+  - bary-sq_sgddtw_mean
+  - bary-sq_sgddtw_max
+  identifier_params:
+    bary_sgddtw_mean:
+      mode: sgddtw
+      statistic: mean
+    bary_sgddtw_max:
+      mode: sgddtw
+      statistic: max
+    bary-sq_sgddtw_mean:
+      mode: sgddtw
+      statistic: mean
+      squared: true
+    bary-sq_sgddtw_max:
+      mode: sgddtw
+      statistic: max
+      squared: true
+  representative: bary_sgddtw_mean
+  family: barycenters
+  pair_basis: unordered
+  labels:
+  - distance
+  - nonlinear
+  - signed
+  - temporal
+  - undirected
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.bary.softdtw
+  module: distance
+  pyspi_class: Barycenter
+  method_or_estimator: tslearn softdtw barycenter
+  hyperparameters:
+    mode: softdtw
+  source: config
+  identifiers:
+  - bary_softdtw_mean
+  - bary_softdtw_max
+  - bary-sq_softdtw_mean
+  - bary-sq_softdtw_max
+  identifier_params:
+    bary_softdtw_mean:
+      mode: softdtw
+      statistic: mean
+    bary_softdtw_max:
+      mode: softdtw
+      statistic: max
+    bary-sq_softdtw_mean:
+      mode: softdtw
+      statistic: mean
+      squared: true
+    bary-sq_softdtw_max:
+      mode: softdtw
+      statistic: max
+      squared: true
+  representative: bary_softdtw_mean
+  family: barycenters
+  pair_basis: unordered
+  labels:
+  - distance
+  - nonlinear
+  - signed
+  - temporal
+  - undirected
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: distance.gwtau
+  module: distance
+  pyspi_class: GromovWasserstainTau
+  method_or_estimator: GromovWasserstainTau
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - gwtau
+  identifier_params:
+    gwtau: null
+  representative: gwtau
+  family: gwtau
+  pair_basis: ordered
+  labels:
+  - distance
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: causal.anm
+  module: causal
+  pyspi_class: AdditiveNoiseModel
+  method_or_estimator: AdditiveNoiseModel
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - anm
+  identifier_params:
+    anm: null
+  representative: anm
+  family: cdt_pairwise
+  pair_basis: ordered
+  labels:
+  - causal
+  - directed
+  - linear
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: causal.cds
+  module: causal
+  pyspi_class: ConditionalDistributionSimilarity
+  method_or_estimator: ConditionalDistributionSimilarity
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - cds
+  identifier_params:
+    cds: null
+  representative: cds
+  family: cdt_pairwise
+  pair_basis: ordered
+  labels:
+  - causal
+  - directed
+  - nonlinear
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: causal.reci
+  module: causal
+  pyspi_class: RegressionErrorCausalInference
+  method_or_estimator: RegressionErrorCausalInference
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - reci
+  identifier_params:
+    reci: null
+  representative: reci
+  family: cdt_pairwise
+  pair_basis: ordered
+  labels:
+  - causal
+  - directed
+  - nonlinear
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - reci
+  in_eeg_selection: true
+- unit_id: causal.igci
+  module: causal
+  pyspi_class: InformationGeometricConditionalIndependence
+  method_or_estimator: InformationGeometricConditionalIndependence
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - igci
+  identifier_params:
+    igci: null
+  representative: igci
+  family: cdt_pairwise
+  pair_basis: ordered
+  labels:
+  - causal
+  - directed
+  - nonlinear
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: causal.ccm.E-None
+  module: causal
+  pyspi_class: ConvergentCrossMapping
+  method_or_estimator: pyEDM CCM E=None
+  hyperparameters:
+    embedding_dimension: null
+  source: config
+  identifiers:
+  - ccm_E-None_mean
+  - ccm_E-None_max
+  - ccm_E-None_diff
+  identifier_params:
+    ccm_E-None_mean:
+      statistic: mean
+    ccm_E-None_max:
+      statistic: max
+    ccm_E-None_diff:
+      statistic: diff
+  representative: ccm_E-None_mean
+  family: ccm
+  pair_basis: multivariate
+  labels:
+  - causal
+  - directed
+  - nonlinear
+  - signed
+  - temporal
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: causal.ccm.E-1
+  module: causal
+  pyspi_class: ConvergentCrossMapping
+  method_or_estimator: pyEDM CCM E=1
+  hyperparameters:
+    embedding_dimension: 1
+  source: config
+  identifiers:
+  - ccm_E-1_mean
+  - ccm_E-1_max
+  - ccm_E-1_diff
+  identifier_params:
+    ccm_E-1_mean:
+      statistic: mean
+      embedding_dimension: 1
+    ccm_E-1_max:
+      statistic: max
+      embedding_dimension: 1
+    ccm_E-1_diff:
+      statistic: diff
+      embedding_dimension: 1
+  representative: ccm_E-1_mean
+  family: ccm
+  pair_basis: multivariate
+  labels:
+  - causal
+  - directed
+  - nonlinear
+  - signed
+  - temporal
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: causal.ccm.E-10
+  module: causal
+  pyspi_class: ConvergentCrossMapping
+  method_or_estimator: pyEDM CCM E=10
+  hyperparameters:
+    embedding_dimension: 10
+  source: config
+  identifiers:
+  - ccm_E-10_mean
+  - ccm_E-10_max
+  - ccm_E-10_diff
+  identifier_params:
+    ccm_E-10_mean:
+      statistic: mean
+      embedding_dimension: 10
+    ccm_E-10_max:
+      statistic: max
+      embedding_dimension: 10
+    ccm_E-10_diff:
+      statistic: diff
+      embedding_dimension: 10
+  representative: ccm_E-10_mean
+  family: ccm
+  pair_basis: multivariate
+  labels:
+  - causal
+  - directed
+  - nonlinear
+  - signed
+  - temporal
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.je.gaussian
+  module: infotheory
+  pyspi_class: JointEntropy
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+  source: config
+  identifiers:
+  - je_gaussian
+  identifier_params:
+    je_gaussian:
+      estimator: gaussian
+  representative: je_gaussian
+  family: it_gaussian
+  pair_basis: unordered
+  labels:
+  - infotheory
+  - linear
+  - undirected
+  - unordered
+  - unsigned
+  deps:
+  - java
+  eeg_identifiers:
+  - je_gaussian
+  in_eeg_selection: true
+- unit_id: infotheory.je.kozachenko
+  module: infotheory
+  pyspi_class: JointEntropy
+  method_or_estimator: JIDT kozachenko
+  hyperparameters:
+    estimator: kozachenko
+  source: config
+  identifiers:
+  - je_kozachenko
+  identifier_params:
+    je_kozachenko:
+      estimator: kozachenko
+  representative: je_kozachenko
+  family: it_kozachenko
+  pair_basis: unordered
+  labels:
+  - infotheory
+  - linear
+  - undirected
+  - unordered
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.je.kernel
+  module: infotheory
+  pyspi_class: JointEntropy
+  method_or_estimator: JIDT kernel
+  hyperparameters:
+    estimator: kernel
+    kernel_width: 0.5
+  source: config
+  identifiers:
+  - je_kernel_W-0.5
+  identifier_params:
+    je_kernel_W-0.5:
+      estimator: kernel
+  representative: je_kernel_W-0.5
+  family: it_kernel
+  pair_basis: unordered
+  labels:
+  - infotheory
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.ce.gaussian
+  module: infotheory
+  pyspi_class: ConditionalEntropy
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+  source: config
+  identifiers:
+  - ce_gaussian
+  identifier_params:
+    ce_gaussian:
+      estimator: gaussian
+  representative: ce_gaussian
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - unordered
+  - unsigned
+  deps:
+  - java
+  eeg_identifiers:
+  - ce_gaussian
+  in_eeg_selection: true
+- unit_id: infotheory.ce.kozachenko
+  module: infotheory
+  pyspi_class: ConditionalEntropy
+  method_or_estimator: JIDT kozachenko
+  hyperparameters:
+    estimator: kozachenko
+  source: config
+  identifiers:
+  - ce_kozachenko
+  identifier_params:
+    ce_kozachenko:
+      estimator: kozachenko
+  representative: ce_kozachenko
+  family: it_kozachenko
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - unordered
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.ce.kernel
+  module: infotheory
+  pyspi_class: ConditionalEntropy
+  method_or_estimator: JIDT kernel
+  hyperparameters:
+    estimator: kernel
+    kernel_width: 0.5
+  source: config
+  identifiers:
+  - ce_kernel_W-0.5
+  identifier_params:
+    ce_kernel_W-0.5:
+      estimator: kernel
+  representative: ce_kernel_W-0.5
+  family: it_kernel
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - nonlinear
+  - unordered
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.cce.gaussian
+  module: infotheory
+  pyspi_class: CausalEntropy
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+  source: config
+  identifiers:
+  - cce_gaussian
+  identifier_params:
+    cce_gaussian:
+      estimator: gaussian
+  representative: cce_gaussian
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.cce.kozachenko
+  module: infotheory
+  pyspi_class: CausalEntropy
+  method_or_estimator: JIDT kozachenko
+  hyperparameters:
+    estimator: kozachenko
+  source: config
+  identifiers:
+  - cce_kozachenko
+  identifier_params:
+    cce_kozachenko:
+      estimator: kozachenko
+  representative: cce_kozachenko
+  family: it_kozachenko
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.cce.kernel
+  module: infotheory
+  pyspi_class: CausalEntropy
+  method_or_estimator: JIDT kernel
+  hyperparameters:
+    estimator: kernel
+    kernel_width: 0.5
+  source: config
+  identifiers:
+  - cce_kernel_W-0.5
+  identifier_params:
+    cce_kernel_W-0.5:
+      estimator: kernel
+  representative: cce_kernel_W-0.5
+  family: it_kernel
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.xme.gaussian_k1
+  module: infotheory
+  pyspi_class: CrossmapEntropy
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+    history_length: 1
+  source: config
+  identifiers:
+  - xme_gaussian_k1
+  identifier_params:
+    xme_gaussian_k1:
+      estimator: gaussian
+      history_length: 1
+  representative: xme_gaussian_k1
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.xme.kozachenko_k1
+  module: infotheory
+  pyspi_class: CrossmapEntropy
+  method_or_estimator: JIDT kozachenko
+  hyperparameters:
+    estimator: kozachenko
+    history_length: 1
+  source: config
+  identifiers:
+  - xme_kozachenko_k1
+  identifier_params:
+    xme_kozachenko_k1:
+      estimator: kozachenko
+      history_length: 1
+  representative: xme_kozachenko_k1
+  family: it_kozachenko
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.xme.kernel_k1
+  module: infotheory
+  pyspi_class: CrossmapEntropy
+  method_or_estimator: JIDT kernel
+  hyperparameters:
+    estimator: kernel
+    kernel_width: 0.5
+    history_length: 1
+  source: config
+  identifiers:
+  - xme_kernel_W-0.5_k1
+  identifier_params:
+    xme_kernel_W-0.5_k1:
+      estimator: kernel
+      history_length: 1
+  representative: xme_kernel_W-0.5_k1
+  family: it_kernel
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.xme.gaussian_k10
+  module: infotheory
+  pyspi_class: CrossmapEntropy
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+    history_length: 10
+  source: config
+  identifiers:
+  - xme_gaussian_k10
+  identifier_params:
+    xme_gaussian_k10:
+      estimator: gaussian
+      history_length: 10
+  representative: xme_gaussian_k10
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.xme.kozachenko_k10
+  module: infotheory
+  pyspi_class: CrossmapEntropy
+  method_or_estimator: JIDT kozachenko
+  hyperparameters:
+    estimator: kozachenko
+    history_length: 10
+  source: config
+  identifiers:
+  - xme_kozachenko_k10
+  identifier_params:
+    xme_kozachenko_k10:
+      estimator: kozachenko
+      history_length: 10
+  representative: xme_kozachenko_k10
+  family: it_kozachenko
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.xme.kernel_k10
+  module: infotheory
+  pyspi_class: CrossmapEntropy
+  method_or_estimator: JIDT kernel
+  hyperparameters:
+    estimator: kernel
+    kernel_width: 0.5
+    history_length: 10
+  source: config
+  identifiers:
+  - xme_kernel_W-0.5_k10
+  identifier_params:
+    xme_kernel_W-0.5_k10:
+      estimator: kernel
+      history_length: 10
+  representative: xme_kernel_W-0.5_k10
+  family: it_kernel
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.di.gaussian
+  module: infotheory
+  pyspi_class: DirectedInfo
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+  source: config
+  identifiers:
+  - di_gaussian
+  identifier_params:
+    di_gaussian:
+      estimator: gaussian
+  representative: di_gaussian
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.di.kozachenko
+  module: infotheory
+  pyspi_class: DirectedInfo
+  method_or_estimator: JIDT kozachenko
+  hyperparameters:
+    estimator: kozachenko
+  source: config
+  identifiers:
+  - di_kozachenko
+  identifier_params:
+    di_kozachenko:
+      estimator: kozachenko
+  representative: di_kozachenko
+  family: it_kozachenko
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.di.kernel
+  module: infotheory
+  pyspi_class: DirectedInfo
+  method_or_estimator: JIDT kernel
+  hyperparameters:
+    estimator: kernel
+    kernel_width: 0.5
+  source: config
+  identifiers:
+  - di_kernel_W-0.5
+  identifier_params:
+    di_kernel_W-0.5:
+      estimator: kernel
+  representative: di_kernel_W-0.5
+  family: it_kernel
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.si.gaussian
+  module: infotheory
+  pyspi_class: StochasticInteraction
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+  source: config
+  identifiers:
+  - si_gaussian_k-1
+  identifier_params:
+    si_gaussian_k-1:
+      estimator: gaussian
+  representative: si_gaussian_k-1
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - linear
+  - temporal
+  - undirected
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.si.kozachenko
+  module: infotheory
+  pyspi_class: StochasticInteraction
+  method_or_estimator: JIDT kozachenko
+  hyperparameters:
+    estimator: kozachenko
+  source: config
+  identifiers:
+  - si_kozachenko_k-1
+  identifier_params:
+    si_kozachenko_k-1:
+      estimator: kozachenko
+  representative: si_kozachenko_k-1
+  family: it_kozachenko
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - linear
+  - temporal
+  - undirected
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.si.kernel
+  module: infotheory
+  pyspi_class: StochasticInteraction
+  method_or_estimator: JIDT kernel
+  hyperparameters:
+    estimator: kernel
+    kernel_width: 0.5
+  source: config
+  identifiers:
+  - si_kernel_W-0.5_k-1
+  identifier_params:
+    si_kernel_W-0.5_k-1:
+      estimator: kernel
+  representative: si_kernel_W-0.5_k-1
+  family: it_kernel
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.mi.gaussian
+  module: infotheory
+  pyspi_class: MutualInfo
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+  source: config
+  identifiers:
+  - mi_gaussian
+  identifier_params:
+    mi_gaussian:
+      estimator: gaussian
+  representative: mi_gaussian
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - linear
+  - undirected
+  - unordered
+  - unsigned
+  deps:
+  - java
+  eeg_identifiers:
+  - mi_gaussian
+  in_eeg_selection: true
+- unit_id: infotheory.mi.kraskov
+  module: infotheory
+  pyspi_class: MutualInfo
+  method_or_estimator: JIDT kraskov
+  hyperparameters:
+    estimator: kraskov
+    prop_k: 4
+  source: config
+  identifiers:
+  - mi_kraskov_NN-4
+  identifier_params:
+    mi_kraskov_NN-4:
+      estimator: kraskov
+      prop_k: 4
+  representative: mi_kraskov_NN-4
+  family: it_kraskov
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.mi.kraskov_DCE
+  module: infotheory
+  pyspi_class: MutualInfo
+  method_or_estimator: JIDT kraskov
+  hyperparameters:
+    estimator: kraskov
+    prop_k: 4
+    dyn_corr_excl: AUTO
+  source: config
+  identifiers:
+  - mi_kraskov_NN-4_DCE
+  identifier_params:
+    mi_kraskov_NN-4_DCE:
+      estimator: kraskov
+      prop_k: 4
+      dyn_corr_excl: AUTO
+  representative: mi_kraskov_NN-4_DCE
+  family: it_kraskov
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.mi.kernel
+  module: infotheory
+  pyspi_class: MutualInfo
+  method_or_estimator: JIDT kernel
+  hyperparameters:
+    estimator: kernel
+    kernel_width: 0.25
+  source: config
+  identifiers:
+  - mi_kernel_W-0.25
+  identifier_params:
+    mi_kernel_W-0.25:
+      estimator: kernel
+      kernel_width: 0.25
+  representative: mi_kernel_W-0.25
+  family: it_kernel
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - nonlinear
+  - undirected
+  - unordered
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.tlmi.gaussian
+  module: infotheory
+  pyspi_class: TimeLaggedMutualInfo
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+  source: config
+  identifiers:
+  - tlmi_gaussian
+  identifier_params:
+    tlmi_gaussian:
+      estimator: gaussian
+  representative: tlmi_gaussian
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  eeg_identifiers:
+  - tlmi_gaussian
+  in_eeg_selection: true
+- unit_id: infotheory.tlmi.kraskov
+  module: infotheory
+  pyspi_class: TimeLaggedMutualInfo
+  method_or_estimator: JIDT kraskov
+  hyperparameters:
+    estimator: kraskov
+    prop_k: 4
+  source: config
+  identifiers:
+  - tlmi_kraskov_NN-4
+  identifier_params:
+    tlmi_kraskov_NN-4:
+      estimator: kraskov
+      prop_k: 4
+  representative: tlmi_kraskov_NN-4
+  family: it_kraskov
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.tlmi.kraskov_DCE
+  module: infotheory
+  pyspi_class: TimeLaggedMutualInfo
+  method_or_estimator: JIDT kraskov
+  hyperparameters:
+    estimator: kraskov
+    prop_k: 4
+    dyn_corr_excl: AUTO
+  source: config
+  identifiers:
+  - tlmi_kraskov_NN-4_DCE
+  identifier_params:
+    tlmi_kraskov_NN-4_DCE:
+      estimator: kraskov
+      prop_k: 4
+      dyn_corr_excl: AUTO
+  representative: tlmi_kraskov_NN-4_DCE
+  family: it_kraskov
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.tlmi.kernel
+  module: infotheory
+  pyspi_class: TimeLaggedMutualInfo
+  method_or_estimator: JIDT kernel
+  hyperparameters:
+    estimator: kernel
+    kernel_width: 0.25
+  source: config
+  identifiers:
+  - tlmi_kernel_W-0.25
+  identifier_params:
+    tlmi_kernel_W-0.25:
+      estimator: kernel
+      kernel_width: 0.25
+  representative: tlmi_kernel_W-0.25
+  family: it_kernel
+  pair_basis: ordered
+  labels:
+  - directed
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.te.kraskov_auto-MAX_CORR_AIS_kmax-10_taumax-4
+  module: infotheory
+  pyspi_class: TransferEntropy
+  method_or_estimator: JIDT kraskov
+  hyperparameters:
+    estimator: kraskov
+    prop_k: 4
+    auto_embed_method: MAX_CORR_AIS
+    k_search_max: 10
+    tau_search_max: 4
+  source: config
+  identifiers:
+  - te_kraskov_NN-4_k-max-10_tau-max-4
+  identifier_params:
+    te_kraskov_NN-4_k-max-10_tau-max-4:
+      estimator: kraskov
+      prop_k: 4
+      auto_embed_method: MAX_CORR_AIS
+      k_search_max: 10
+      tau_search_max: 4
+  representative: te_kraskov_NN-4_k-max-10_tau-max-4
+  family: it_kraskov
+  pair_basis: ordered
+  labels:
+  - directed
+  - embedding
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.te.kraskov_DCE_auto-MAX_CORR_AIS_kmax-10_taumax-4
+  module: infotheory
+  pyspi_class: TransferEntropy
+  method_or_estimator: JIDT kraskov
+  hyperparameters:
+    estimator: kraskov
+    prop_k: 4
+    dyn_corr_excl: AUTO
+    auto_embed_method: MAX_CORR_AIS
+    k_search_max: 10
+    tau_search_max: 4
+  source: config
+  identifiers:
+  - te_kraskov_NN-4_DCE_k-max-10_tau-max-4
+  identifier_params:
+    te_kraskov_NN-4_DCE_k-max-10_tau-max-4:
+      estimator: kraskov
+      prop_k: 4
+      auto_embed_method: MAX_CORR_AIS
+      k_search_max: 10
+      tau_search_max: 4
+      dyn_corr_excl: AUTO
+  representative: te_kraskov_NN-4_DCE_k-max-10_tau-max-4
+  family: it_kraskov
+  pair_basis: ordered
+  labels:
+  - directed
+  - embedding
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.te.kraskov_DCE_k-2_kt-1_l-1_lt-1
+  module: infotheory
+  pyspi_class: TransferEntropy
+  method_or_estimator: JIDT kraskov
+  hyperparameters:
+    estimator: kraskov
+    prop_k: 4
+    dyn_corr_excl: AUTO
+    k_history: 2
+    l_history: 1
+  source: config
+  identifiers:
+  - te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1
+  identifier_params:
+    te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1:
+      estimator: kraskov
+      prop_k: 4
+      k_history: 2
+      l_history: 1
+      dyn_corr_excl: AUTO
+  representative: te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1
+  family: it_kraskov
+  pair_basis: ordered
+  labels:
+  - directed
+  - embedding
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.te.kraskov_DCE_k-1_kt-1_l-1_lt-1
+  module: infotheory
+  pyspi_class: TransferEntropy
+  method_or_estimator: JIDT kraskov
+  hyperparameters:
+    estimator: kraskov
+    prop_k: 4
+    dyn_corr_excl: AUTO
+    k_history: 1
+    l_history: 1
+  source: config
+  identifiers:
+  - te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1
+  identifier_params:
+    te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1:
+      estimator: kraskov
+      prop_k: 4
+      k_history: 1
+      l_history: 1
+      dyn_corr_excl: AUTO
+  representative: te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1
+  family: it_kraskov
+  pair_basis: ordered
+  labels:
+  - directed
+  - embedding
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.te.kraskov_k-1_kt-1_l-1_lt-1
+  module: infotheory
+  pyspi_class: TransferEntropy
+  method_or_estimator: JIDT kraskov
+  hyperparameters:
+    estimator: kraskov
+    prop_k: 4
+    k_history: 1
+    l_history: 1
+  source: config
+  identifiers:
+  - te_kraskov_NN-4_k-1_kt-1_l-1_lt-1
+  identifier_params:
+    te_kraskov_NN-4_k-1_kt-1_l-1_lt-1:
+      estimator: kraskov
+      prop_k: 4
+      k_history: 1
+      l_history: 1
+  representative: te_kraskov_NN-4_k-1_kt-1_l-1_lt-1
+  family: it_kraskov
+  pair_basis: ordered
+  labels:
+  - directed
+  - embedding
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.te.kernel_k-1_kt-1_l-1_lt-1
+  module: infotheory
+  pyspi_class: TransferEntropy
+  method_or_estimator: JIDT kernel
+  hyperparameters:
+    estimator: kernel
+    kernel_width: 0.25
+    k_history: 1
+    l_history: 1
+  source: config
+  identifiers:
+  - te_kernel_W-0.25_k-1
+  identifier_params:
+    te_kernel_W-0.25_k-1:
+      estimator: kernel
+      kernel_width: 0.25
+      k_history: 1
+      l_history: 1
+  representative: te_kernel_W-0.25_k-1
+  family: it_kernel
+  pair_basis: ordered
+  labels:
+  - directed
+  - embedding
+  - infotheory
+  - nonlinear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2
+  module: infotheory
+  pyspi_class: TransferEntropy
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+    auto_embed_method: MAX_CORR_AIS
+    k_search_max: 10
+    tau_search_max: 2
+  source: config
+  identifiers:
+  - gc_gaussian_k-max-10_tau-max-2
+  identifier_params:
+    gc_gaussian_k-max-10_tau-max-2:
+      estimator: gaussian
+      auto_embed_method: MAX_CORR_AIS
+      k_search_max: 10
+      tau_search_max: 2
+  representative: gc_gaussian_k-max-10_tau-max-2
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - directed
+  - embedding
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.te.gaussian_k-1_kt-1_l-1_lt-1
+  module: infotheory
+  pyspi_class: TransferEntropy
+  method_or_estimator: JIDT gaussian
+  hyperparameters:
+    estimator: gaussian
+    k_history: 1
+    l_history: 1
+  source: config
+  identifiers:
+  - gc_gaussian_k-1_kt-1_l-1_lt-1
+  identifier_params:
+    gc_gaussian_k-1_kt-1_l-1_lt-1:
+      estimator: gaussian
+      k_history: 1
+      l_history: 1
+  representative: gc_gaussian_k-1_kt-1_l-1_lt-1
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - directed
+  - embedding
+  - infotheory
+  - linear
+  - temporal
+  - unsigned
+  deps:
+  - java
+  eeg_identifiers:
+  - gc_gaussian_k-1_kt-1_l-1_lt-1
+  in_eeg_selection: true
+- unit_id: infotheory.te.symbolic
+  module: infotheory
+  pyspi_class: TransferEntropy
+  method_or_estimator: JIDT TransferEntropyCalculatorGaussian (symbolic falls through)
+  hyperparameters:
+    estimator: symbolic
+  source: config
+  identifiers:
+  - te_symbolic_k-1_kt-1_l-1_lt-1
+  - te_symbolic_k-10_kt-1_l-1_lt-1
+  identifier_params:
+    te_symbolic_k-1_kt-1_l-1_lt-1:
+      estimator: symbolic
+      k_history: 1
+      l_history: 1
+    te_symbolic_k-10_kt-1_l-1_lt-1:
+      estimator: symbolic
+      k_history: 10
+      l_history: 1
+  representative: te_symbolic_k-1_kt-1_l-1_lt-1
+  family: it_gaussian
+  pair_basis: ordered
+  labels:
+  - directed
+  - embedding
+  - infotheory
+  - symbolic
+  - temporal
+  - unsigned
+  deps:
+  - java
+  eeg_identifiers:
+  - te_symbolic_k-10_kt-1_l-1_lt-1
+  - te_symbolic_k-1_kt-1_l-1_lt-1
+  in_eeg_selection: true
+- unit_id: infotheory.phi.star_norm-0
+  module: infotheory
+  pyspi_class: IntegratedInformation
+  method_or_estimator: phi_native star
+  hyperparameters:
+    phitype: star
+    delay: 1
+    normalization: 0
+  source: config
+  identifiers:
+  - phi_star_t-1_norm-0
+  identifier_params:
+    phi_star_t-1_norm-0:
+      phitype: star
+  representative: phi_star_t-1_norm-0
+  family: phi
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - linear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.phi.star_norm-1
+  module: infotheory
+  pyspi_class: IntegratedInformation
+  method_or_estimator: phi_native star
+  hyperparameters:
+    phitype: star
+    delay: 1
+    normalization: 1
+  source: config
+  identifiers:
+  - phi_star_t-1_norm-1
+  identifier_params:
+    phi_star_t-1_norm-1:
+      phitype: star
+      normalization: 1
+  representative: phi_star_t-1_norm-1
+  family: phi
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - linear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.phi.Geo_norm-0
+  module: infotheory
+  pyspi_class: IntegratedInformation
+  method_or_estimator: phi_native Geo
+  hyperparameters:
+    phitype: Geo
+    delay: 1
+    normalization: 0
+  source: config
+  identifiers:
+  - phi_Geo_t-1_norm-0
+  identifier_params:
+    phi_Geo_t-1_norm-0:
+      phitype: Geo
+  representative: phi_Geo_t-1_norm-0
+  family: phi
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - linear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: infotheory.phi.Geo_norm-1
+  module: infotheory
+  pyspi_class: IntegratedInformation
+  method_or_estimator: phi_native Geo
+  hyperparameters:
+    phitype: Geo
+    delay: 1
+    normalization: 1
+  source: config
+  identifiers:
+  - phi_Geo_t-1_norm-1
+  identifier_params:
+    phi_Geo_t-1_norm-1:
+      phitype: Geo
+      normalization: 1
+  representative: phi_Geo_t-1_norm-1
+  family: phi
+  pair_basis: ordered
+  labels:
+  - infotheory
+  - linear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: spectral.phase
+  module: spectral
+  pyspi_class: CoherencePhase
+  method_or_estimator: CoherencePhase
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - phase_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - phase_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - phase_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - phase_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    phase_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    phase_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    phase_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    phase_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: phase_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_coherence
+  pair_basis: multivariate
+  labels:
+  - spectral
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195
+  - phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342
+  - phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122
+  - phase_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391
+  - phase_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586
+  - phase_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146
+  - phase_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342
+  - phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732
+  - phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122
+  - phase_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122
+  - phase_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  in_eeg_selection: true
+- unit_id: spectral.cohmag
+  module: spectral
+  pyspi_class: CoherenceMagnitude
+  method_or_estimator: CoherenceMagnitude
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - cohmag_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    cohmag_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_coherence
+  pair_basis: multivariate
+  labels:
+  - spectral
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195
+  - cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342
+  - cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122
+  - cohmag_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391
+  - cohmag_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586
+  - cohmag_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146
+  - cohmag_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342
+  - cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732
+  - cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122
+  - cohmag_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122
+  - cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  in_eeg_selection: true
+- unit_id: spectral.icoh
+  module: spectral
+  pyspi_class: ImaginaryCoherence
+  method_or_estimator: ImaginaryCoherence
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - icoh_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - icoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - icoh_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - icoh_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - icoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    icoh_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    icoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    icoh_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    icoh_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    icoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_coherence
+  pair_basis: multivariate
+  labels:
+  - spectral
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - icoh_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195
+  - icoh_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342
+  - icoh_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122
+  - icoh_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391
+  - icoh_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586
+  - icoh_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146
+  - icoh_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342
+  - icoh_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732
+  - icoh_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122
+  - icoh_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122
+  - icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  in_eeg_selection: true
+- unit_id: spectral.psi
+  module: spectral
+  pyspi_class: PhaseSlopeIndex
+  method_or_estimator: PhaseSlopeIndex
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - psi_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - psi_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    psi_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+    psi_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+  representative: psi_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_psi_gd
+  pair_basis: multivariate
+  labels:
+  - spectral
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - psi_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195
+  - psi_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342
+  - psi_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122
+  - psi_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391
+  - psi_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586
+  - psi_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146
+  - psi_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342
+  - psi_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732
+  - psi_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122
+  - psi_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122
+  - psi_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  in_eeg_selection: true
+- unit_id: spectral.plv
+  module: spectral
+  pyspi_class: PhaseLockingValue
+  method_or_estimator: PhaseLockingValue
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - plv_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - plv_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - plv_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - plv_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - plv_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - plv_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    plv_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    plv_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    plv_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    plv_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    plv_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    plv_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: plv_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_phase_sync
+  pair_basis: multivariate
+  labels:
+  - spectral
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - plv_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195
+  - plv_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342
+  - plv_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122
+  - plv_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391
+  - plv_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586
+  - plv_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146
+  - plv_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342
+  - plv_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732
+  - plv_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122
+  - plv_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122
+  - plv_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  in_eeg_selection: true
+- unit_id: spectral.pli
+  module: spectral
+  pyspi_class: PhaseLagIndex
+  method_or_estimator: PhaseLagIndex
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - pli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - pli_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - pli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - pli_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - pli_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - pli_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    pli_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    pli_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    pli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    pli_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    pli_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    pli_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: pli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_phase_sync
+  pair_basis: multivariate
+  labels:
+  - spectral
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195
+  - pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342
+  - pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122
+  - pli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391
+  - pli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586
+  - pli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146
+  - pli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342
+  - pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732
+  - pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122
+  - pli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122
+  - pli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  in_eeg_selection: true
+- unit_id: spectral.wpli
+  module: spectral
+  pyspi_class: WeightedPhaseLagIndex
+  method_or_estimator: WeightedPhaseLagIndex
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - wpli_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - wpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - wpli_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - wpli_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - wpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    wpli_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    wpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    wpli_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    wpli_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    wpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_phase_sync
+  pair_basis: multivariate
+  labels:
+  - spectral
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - wpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195
+  - wpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342
+  - wpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122
+  - wpli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391
+  - wpli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586
+  - wpli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146
+  - wpli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342
+  - wpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732
+  - wpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122
+  - wpli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122
+  - wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  in_eeg_selection: true
+- unit_id: spectral.dspli
+  module: spectral
+  pyspi_class: DebiasedSquaredPhaseLagIndex
+  method_or_estimator: DebiasedSquaredPhaseLagIndex
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - dspli_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - dspli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - dspli_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - dspli_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - dspli_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    dspli_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    dspli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    dspli_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    dspli_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    dspli_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_phase_sync
+  pair_basis: multivariate
+  labels:
+  - spectral
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - dspli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195
+  - dspli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342
+  - dspli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122
+  - dspli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391
+  - dspli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586
+  - dspli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146
+  - dspli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342
+  - dspli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732
+  - dspli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122
+  - dspli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122
+  - dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  in_eeg_selection: true
+- unit_id: spectral.dswpli
+  module: spectral
+  pyspi_class: DebiasedSquaredWeightedPhaseLagIndex
+  method_or_estimator: DebiasedSquaredWeightedPhaseLagIndex
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - dswpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - dswpli_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - dswpli_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - dswpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    dswpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    dswpli_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    dswpli_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    dswpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_phase_sync
+  pair_basis: multivariate
+  labels:
+  - spectral
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - dswpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195
+  - dswpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342
+  - dswpli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122
+  - dswpli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391
+  - dswpli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586
+  - dswpli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146
+  - dswpli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342
+  - dswpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732
+  - dswpli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122
+  - dswpli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122
+  - dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  in_eeg_selection: true
+- unit_id: spectral.ppc
+  module: spectral
+  pyspi_class: PairwisePhaseConsistency
+  method_or_estimator: PairwisePhaseConsistency
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - ppc_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - ppc_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - ppc_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - ppc_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    ppc_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    ppc_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    ppc_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    ppc_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_phase_sync
+  pair_basis: multivariate
+  labels:
+  - spectral
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - ppc_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195
+  - ppc_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342
+  - ppc_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122
+  - ppc_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391
+  - ppc_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586
+  - ppc_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146
+  - ppc_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342
+  - ppc_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732
+  - ppc_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122
+  - ppc_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122
+  - ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  in_eeg_selection: true
+- unit_id: spectral.dtf
+  module: spectral
+  pyspi_class: DirectedTransferFunction
+  method_or_estimator: DirectedTransferFunction
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - dtf_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - dtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - dtf_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - dtf_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - dtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    dtf_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    dtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    dtf_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    dtf_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    dtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_directed
+  pair_basis: ordered
+  labels:
+  - directed
+  - lagged
+  - spectral
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: spectral.dcoh
+  module: spectral
+  pyspi_class: DirectedCoherence
+  method_or_estimator: DirectedCoherence
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - dcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    dcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_directed
+  pair_basis: ordered
+  labels:
+  - directed
+  - spectral
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: spectral.pdcoh
+  module: spectral
+  pyspi_class: PartialDirectedCoherence
+  method_or_estimator: PartialDirectedCoherence
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - pdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - pdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    pdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    pdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_directed
+  pair_basis: ordered
+  labels:
+  - directed
+  - spectral
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: spectral.gpdcoh
+  module: spectral
+  pyspi_class: GeneralizedPartialDirectedCoherence
+  method_or_estimator: GeneralizedPartialDirectedCoherence
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - gpdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - gpdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    gpdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    gpdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_directed
+  pair_basis: ordered
+  labels:
+  - directed
+  - spectral
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: spectral.ddtf
+  module: spectral
+  pyspi_class: DirectDirectedTransferFunction
+  method_or_estimator: DirectDirectedTransferFunction
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  - ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-25
+  - ddtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5
+  - ddtf_multitaper_max_fs-1_fmin-0_fmax-0-5
+  - ddtf_multitaper_max_fs-1_fmin-0_fmax-0-25
+  - ddtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    ddtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    ddtf_multitaper_max_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+      statistic: max
+    ddtf_multitaper_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    ddtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5
+  family: spectral_directed
+  pair_basis: ordered
+  labels:
+  - directed
+  - lagged
+  - spectral
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: spectral.gd
+  module: spectral
+  pyspi_class: GroupDelay
+  method_or_estimator: GroupDelay
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - gd_multitaper_delay_fs-1_fmin-0_fmax-0-5
+  - gd_multitaper_delay_fs-1_fmin-0_fmax-0-25
+  - gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    gd_multitaper_delay_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+      statistic: delay
+    gd_multitaper_delay_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: delay
+    gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: delay
+  representative: gd_multitaper_delay_fs-1_fmin-0_fmax-0-5
+  family: spectral_psi_gd
+  pair_basis: multivariate
+  labels:
+  - directed
+  - lagged
+  - spectral
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - gd_multitaper_delay_fs-1_fmin-0-000488_fmax-0-00195
+  - gd_multitaper_delay_fs-1_fmin-0-000488_fmax-0-0342
+  - gd_multitaper_delay_fs-1_fmin-0-000488_fmax-0-122
+  - gd_multitaper_delay_fs-1_fmin-0-00195_fmax-0-00391
+  - gd_multitaper_delay_fs-1_fmin-0-00391_fmax-0-00586
+  - gd_multitaper_delay_fs-1_fmin-0-00586_fmax-0-0146
+  - gd_multitaper_delay_fs-1_fmin-0-0146_fmax-0-0342
+  - gd_multitaper_delay_fs-1_fmin-0-0342_fmax-0-0732
+  - gd_multitaper_delay_fs-1_fmin-0-0342_fmax-0-122
+  - gd_multitaper_delay_fs-1_fmin-0-0732_fmax-0-122
+  in_eeg_selection: true
+- unit_id: spectral.sgc.nonparametric
+  module: spectral
+  pyspi_class: SpectralGrangerCausality
+  method_or_estimator: spectral_connectivity pairwise_spectral_granger_prediction
+  hyperparameters:
+    method: nonparametric
+  source: config
+  identifiers:
+  - sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5
+  - sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-25
+  - sgc_nonparametric_mean_fs-1_fmin-0-25_fmax-0-5
+  - sgc_nonparametric_max_fs-1_fmin-0_fmax-0-5
+  - sgc_nonparametric_max_fs-1_fmin-0_fmax-0-25
+  - sgc_nonparametric_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5:
+      method: nonparametric
+      fmin: 0
+      fmax: 0.5
+      statistic: mean
+    sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-25:
+      method: nonparametric
+      fmin: 0
+      fmax: 0.25
+      statistic: mean
+    sgc_nonparametric_mean_fs-1_fmin-0-25_fmax-0-5:
+      method: nonparametric
+      fmin: 0.25
+      fmax: 0.5
+      statistic: mean
+    sgc_nonparametric_max_fs-1_fmin-0_fmax-0-5:
+      method: nonparametric
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    sgc_nonparametric_max_fs-1_fmin-0_fmax-0-25:
+      method: nonparametric
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    sgc_nonparametric_max_fs-1_fmin-0-25_fmax-0-5:
+      method: nonparametric
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5
+  family: sgc
+  pair_basis: multivariate
+  labels:
+  - directed
+  - embedding
+  - lagged
+  - spectral
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: spectral.sgc.parametric_order-None
+  module: spectral
+  pyspi_class: SpectralGrangerCausality
+  method_or_estimator: nitime GrangerAnalyzer order=None
+  hyperparameters:
+    method: parametric
+    order: null
+    max_order: 50
+  source: config
+  identifiers:
+  - sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None
+  - sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None
+  - sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None
+  - sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None
+  - sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None
+  - sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None
+  identifier_params:
+    sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None:
+      method: parametric
+      fmin: 0
+      fmax: 0.5
+      statistic: mean
+    sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None:
+      method: parametric
+      fmin: 0
+      fmax: 0.25
+      statistic: mean
+    sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None:
+      fmin: 0.25
+      fmax: 0.5
+      method: parametric
+      statistic: mean
+    sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None:
+      fs: 1
+      method: parametric
+      statistic: max
+    sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None:
+      fmin: 0
+      fmax: 0.25
+      method: parametric
+      statistic: max
+    sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None:
+      fmin: 0.25
+      fmax: 0.5
+      method: parametric
+      statistic: max
+  representative: sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None
+  family: sgc
+  pair_basis: multivariate
+  labels:
+  - directed
+  - embedding
+  - lagged
+  - spectral
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: spectral.sgc.parametric_order-1
+  module: spectral
+  pyspi_class: SpectralGrangerCausality
+  method_or_estimator: nitime GrangerAnalyzer order=1
+  hyperparameters:
+    method: parametric
+    order: 1
+    max_order: 50
+  source: config
+  identifiers:
+  - sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1
+  - sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1
+  - sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1
+  - sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1
+  - sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1
+  - sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1
+  identifier_params:
+    sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1:
+      fs: 1
+      order: 1
+      method: parametric
+      statistic: mean
+    sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1:
+      fmin: 0
+      fmax: 0.25
+      order: 1
+      method: parametric
+      statistic: mean
+    sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1:
+      fmin: 0.25
+      fmax: 0.5
+      order: 1
+      method: parametric
+      statistic: mean
+    sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1:
+      fs: 1
+      order: 1
+      method: parametric
+      statistic: max
+    sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1:
+      fmin: 0
+      fmax: 0.25
+      order: 1
+      method: parametric
+      statistic: max
+    sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1:
+      fmin: 0.25
+      fmax: 0.5
+      order: 1
+      method: parametric
+      statistic: max
+  representative: sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1
+  family: sgc
+  pair_basis: multivariate
+  labels:
+  - directed
+  - embedding
+  - lagged
+  - spectral
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: spectral.sgc.parametric_order-20
+  module: spectral
+  pyspi_class: SpectralGrangerCausality
+  method_or_estimator: nitime GrangerAnalyzer order=20
+  hyperparameters:
+    method: parametric
+    order: 20
+    max_order: 50
+  source: config
+  identifiers:
+  - sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20
+  - sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20
+  - sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20
+  - sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20
+  - sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20
+  - sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20
+  identifier_params:
+    sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20:
+      fs: 1
+      order: 20
+      method: parametric
+      statistic: mean
+    sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20:
+      fmin: 0
+      fmax: 0.25
+      order: 20
+      method: parametric
+      statistic: mean
+    sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20:
+      fmin: 0.25
+      fmax: 0.5
+      order: 20
+      method: parametric
+      statistic: mean
+    sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20:
+      fs: 1
+      order: 20
+      method: parametric
+      statistic: max
+    sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20:
+      fmin: 0
+      fmax: 0.25
+      order: 20
+      method: parametric
+      statistic: max
+    sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20:
+      fmin: 0.25
+      fmax: 0.5
+      order: 20
+      method: parametric
+      statistic: max
+  representative: sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20
+  family: sgc
+  pair_basis: multivariate
+  labels:
+  - directed
+  - embedding
+  - lagged
+  - spectral
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: wavelet.psi
+  module: wavelet
+  pyspi_class: PhaseSlopeIndex
+  method_or_estimator: PhaseSlopeIndex
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean
+  - psi_wavelet_mean_fs-1_fmin-0_fmax-0-25_mean
+  - psi_wavelet_mean_fs-1_fmin-0-25_fmax-0-5_mean
+  - psi_wavelet_max_fs-1_fmin-0_fmax-0-5_max
+  - psi_wavelet_max_fs-1_fmin-0_fmax-0-25_max
+  - psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max
+  identifier_params:
+    psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean:
+      fs: 1
+    psi_wavelet_mean_fs-1_fmin-0_fmax-0-25_mean:
+      fmin: 0
+      fmax: 0.25
+    psi_wavelet_mean_fs-1_fmin-0-25_fmax-0-5_mean:
+      fmin: 0.25
+      fmax: 0.5
+    psi_wavelet_max_fs-1_fmin-0_fmax-0-5_max:
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    psi_wavelet_max_fs-1_fmin-0_fmax-0-25_max:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean
+  family: wavelet_psi
+  pair_basis: multivariate
+  labels:
+  - undirected
+  - unsigned
+  - wavelet
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: misc.lmfit.Ridge
+  module: misc
+  pyspi_class: LinearModel
+  method_or_estimator: sklearn Ridge
+  hyperparameters:
+    model: Ridge
+  source: config
+  identifiers:
+  - lmfit_Ridge
+  identifier_params:
+    lmfit_Ridge:
+      model: Ridge
+  representative: lmfit_Ridge
+  family: lmfit
+  pair_basis: ordered
+  labels:
+  - directed
+  - linear
+  - misc
+  - normal
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - lmfit_Ridge
+  in_eeg_selection: true
+- unit_id: misc.lmfit.Lasso
+  module: misc
+  pyspi_class: LinearModel
+  method_or_estimator: sklearn Lasso
+  hyperparameters:
+    model: Lasso
+  source: config
+  identifiers:
+  - lmfit_Lasso
+  identifier_params:
+    lmfit_Lasso:
+      model: Lasso
+  representative: lmfit_Lasso
+  family: lmfit
+  pair_basis: ordered
+  labels:
+  - directed
+  - linear
+  - misc
+  - normal
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - lmfit_Lasso
+  in_eeg_selection: true
+- unit_id: misc.lmfit.SGDRegressor
+  module: misc
+  pyspi_class: LinearModel
+  method_or_estimator: sklearn SGDRegressor
+  hyperparameters:
+    model: SGDRegressor
+  source: config
+  identifiers:
+  - lmfit_SGDRegressor
+  identifier_params:
+    lmfit_SGDRegressor:
+      model: SGDRegressor
+  representative: lmfit_SGDRegressor
+  family: lmfit
+  pair_basis: ordered
+  labels:
+  - directed
+  - linear
+  - misc
+  - normal
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - lmfit_SGDRegressor
+  in_eeg_selection: true
+- unit_id: misc.lmfit.ElasticNet
+  module: misc
+  pyspi_class: LinearModel
+  method_or_estimator: sklearn ElasticNet
+  hyperparameters:
+    model: ElasticNet
+  source: config
+  identifiers:
+  - lmfit_ElasticNet
+  identifier_params:
+    lmfit_ElasticNet:
+      model: ElasticNet
+  representative: lmfit_ElasticNet
+  family: lmfit
+  pair_basis: ordered
+  labels:
+  - directed
+  - linear
+  - misc
+  - normal
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - lmfit_ElasticNet
+  in_eeg_selection: true
+- unit_id: misc.lmfit.BayesianRidge
+  module: misc
+  pyspi_class: LinearModel
+  method_or_estimator: sklearn BayesianRidge
+  hyperparameters:
+    model: BayesianRidge
+  source: config
+  identifiers:
+  - lmfit_BayesianRidge
+  identifier_params:
+    lmfit_BayesianRidge:
+      model: BayesianRidge
+  representative: lmfit_BayesianRidge
+  family: lmfit
+  pair_basis: ordered
+  labels:
+  - directed
+  - linear
+  - misc
+  - normal
+  - unordered
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - lmfit_BayesianRidge
+  in_eeg_selection: true
+- unit_id: misc.gpfit.DotProduct
+  module: misc
+  pyspi_class: GPModel
+  method_or_estimator: sklearn GP DotProduct
+  hyperparameters:
+    kernel: DotProduct
+  source: config
+  identifiers:
+  - gpfit_DotProduct
+  identifier_params:
+    gpfit_DotProduct:
+      kernel: DotProduct
+  representative: gpfit_DotProduct
+  family: gpfit
+  pair_basis: ordered
+  labels:
+  - directed
+  - misc
+  - nonlinear
+  - normal
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: misc.gpfit.RBF
+  module: misc
+  pyspi_class: GPModel
+  method_or_estimator: sklearn GP RBF
+  hyperparameters:
+    kernel: RBF
+  source: config
+  identifiers:
+  - gpfit_RBF
+  identifier_params:
+    gpfit_RBF:
+      kernel: RBF
+  representative: gpfit_RBF
+  family: gpfit
+  pair_basis: ordered
+  labels:
+  - directed
+  - misc
+  - nonlinear
+  - normal
+  - unordered
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: misc.coint.johansen_order-0_ardiff-10
+  module: misc
+  pyspi_class: Cointegration
+  method_or_estimator: statsmodels coint_johansen
+  hyperparameters:
+    method: johansen
+    det_order: 0
+    k_ar_diff: 10
+  source: config
+  identifiers:
+  - coint_johansen_max_eig_stat_order-0_ardiff-10
+  - coint_johansen_trace_stat_order-0_ardiff-10
+  identifier_params:
+    coint_johansen_max_eig_stat_order-0_ardiff-10:
+      method: johansen
+      statistic: max_eig_stat
+      det_order: 0
+      k_ar_diff: 10
+    coint_johansen_trace_stat_order-0_ardiff-10:
+      method: johansen
+      statistic: trace_stat
+      det_order: 0
+      k_ar_diff: 10
+  representative: coint_johansen_max_eig_stat_order-0_ardiff-10
+  family: coint
+  pair_basis: unordered
+  labels:
+  - misc
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: misc.coint.johansen_order-0_ardiff-1
+  module: misc
+  pyspi_class: Cointegration
+  method_or_estimator: statsmodels coint_johansen
+  hyperparameters:
+    method: johansen
+    det_order: 0
+    k_ar_diff: 1
+  source: config
+  identifiers:
+  - coint_johansen_max_eig_stat_order-0_ardiff-1
+  - coint_johansen_trace_stat_order-0_ardiff-1
+  identifier_params:
+    coint_johansen_max_eig_stat_order-0_ardiff-1:
+      method: johansen
+      statistic: max_eig_stat
+      det_order: 0
+      k_ar_diff: 1
+    coint_johansen_trace_stat_order-0_ardiff-1:
+      method: johansen
+      statistic: trace_stat
+      det_order: 0
+      k_ar_diff: 1
+  representative: coint_johansen_max_eig_stat_order-0_ardiff-1
+  family: coint
+  pair_basis: unordered
+  labels:
+  - misc
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: misc.coint.johansen_order-1_ardiff-10
+  module: misc
+  pyspi_class: Cointegration
+  method_or_estimator: statsmodels coint_johansen
+  hyperparameters:
+    method: johansen
+    det_order: 1
+    k_ar_diff: 10
+  source: config
+  identifiers:
+  - coint_johansen_max_eig_stat_order-1_ardiff-10
+  - coint_johansen_trace_stat_order-1_ardiff-10
+  identifier_params:
+    coint_johansen_max_eig_stat_order-1_ardiff-10:
+      method: johansen
+      statistic: max_eig_stat
+      det_order: 1
+      k_ar_diff: 10
+    coint_johansen_trace_stat_order-1_ardiff-10:
+      method: johansen
+      statistic: trace_stat
+      det_order: 1
+      k_ar_diff: 10
+  representative: coint_johansen_max_eig_stat_order-1_ardiff-10
+  family: coint
+  pair_basis: unordered
+  labels:
+  - misc
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: misc.coint.johansen_order-1_ardiff-1
+  module: misc
+  pyspi_class: Cointegration
+  method_or_estimator: statsmodels coint_johansen
+  hyperparameters:
+    method: johansen
+    det_order: 1
+    k_ar_diff: 1
+  source: config
+  identifiers:
+  - coint_johansen_max_eig_stat_order-1_ardiff-1
+  - coint_johansen_trace_stat_order-1_ardiff-1
+  identifier_params:
+    coint_johansen_max_eig_stat_order-1_ardiff-1:
+      method: johansen
+      statistic: max_eig_stat
+      det_order: 1
+      k_ar_diff: 1
+    coint_johansen_trace_stat_order-1_ardiff-1:
+      method: johansen
+      statistic: trace_stat
+      det_order: 1
+      k_ar_diff: 1
+  representative: coint_johansen_max_eig_stat_order-1_ardiff-1
+  family: coint
+  pair_basis: unordered
+  labels:
+  - misc
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: misc.coint.aeg
+  module: misc
+  pyspi_class: Cointegration
+  method_or_estimator: statsmodels coint (Engle-Granger)
+  hyperparameters:
+    method: aeg
+  source: config
+  identifiers:
+  - coint_aeg_tstat_trend-c_autolag-aic_maxlag-10
+  - coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10
+  - coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10
+  identifier_params:
+    coint_aeg_tstat_trend-c_autolag-aic_maxlag-10:
+      method: aeg
+      statistic: tstat
+      autolag: aic
+      maxlag: 10
+      trend: c
+    coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10:
+      method: aeg
+      statistic: tstat
+      autolag: aic
+      maxlag: 10
+      trend: ct
+    coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10:
+      method: aeg
+      statistic: tstat
+      autolag: bic
+      maxlag: 10
+      trend: ct
+  representative: coint_aeg_tstat_trend-c_autolag-aic_maxlag-10
+  family: coint
+  pair_basis: unordered
+  labels:
+  - misc
+  - nonlinear
+  - temporal
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: misc.pec.orth-False_log-False
+  module: misc
+  pyspi_class: PowerEnvelopeCorrelation
+  method_or_estimator: mne_connectivity envelope_correlation
+  hyperparameters:
+    orth: false
+    log: false
+  source: config
+  identifiers:
+  - pec
+  identifier_params:
+    pec:
+      orth: false
+      log: false
+      absolute: false
+  representative: pec
+  family: pec
+  pair_basis: multivariate
+  labels:
+  - misc
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pec
+  in_eeg_selection: true
+- unit_id: misc.pec.orth-True_log-False
+  module: misc
+  pyspi_class: PowerEnvelopeCorrelation
+  method_or_estimator: mne_connectivity envelope_correlation
+  hyperparameters:
+    orth: true
+    log: false
+  source: config
+  identifiers:
+  - pec_orth
+  - pec_orth_abs
+  identifier_params:
+    pec_orth:
+      orth: true
+      log: false
+      absolute: false
+    pec_orth_abs:
+      orth: true
+      log: false
+      absolute: true
+  representative: pec_orth
+  family: pec
+  pair_basis: multivariate
+  labels:
+  - misc
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pec_orth
+  - pec_orth_abs
+  in_eeg_selection: true
+- unit_id: misc.pec.orth-False_log-True
+  module: misc
+  pyspi_class: PowerEnvelopeCorrelation
+  method_or_estimator: mne_connectivity envelope_correlation
+  hyperparameters:
+    orth: false
+    log: true
+  source: config
+  identifiers:
+  - pec_log
+  identifier_params:
+    pec_log:
+      orth: false
+      log: true
+      absolute: false
+  representative: pec_log
+  family: pec
+  pair_basis: multivariate
+  labels:
+  - misc
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pec_log
+  in_eeg_selection: true
+- unit_id: misc.pec.orth-True_log-True
+  module: misc
+  pyspi_class: PowerEnvelopeCorrelation
+  method_or_estimator: mne_connectivity envelope_correlation
+  hyperparameters:
+    orth: true
+    log: true
+  source: config
+  identifiers:
+  - pec_orth_log
+  - pec_orth_log_abs
+  identifier_params:
+    pec_orth_log:
+      orth: true
+      log: true
+      absolute: false
+    pec_orth_log_abs:
+      orth: true
+      log: true
+      absolute: true
+  representative: pec_orth_log
+  family: pec
+  pair_basis: multivariate
+  labels:
+  - misc
+  - undirected
+  - unsigned
+  deps: []
+  eeg_identifiers:
+  - pec_orth_log
+  - pec_orth_log_abs
+  in_eeg_selection: true
+- unit_id: misc.ids
+  module: misc
+  pyspi_class: InterDependenceScore
+  method_or_estimator: InterDependenceScore
+  hyperparameters: {}
+  source: config
+  identifiers:
+  - ids
+  identifier_params:
+    ids:
+      terms: 6
+      pnorm: max
+      bandwidth: 0.5
+  representative: ids
+  family: ids
+  pair_basis: multivariate
+  labels:
+  - misc
+  - nonlinear
+  - undirected
+  - unsigned
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: wavelet.cohmag
+  module: wavelet
+  pyspi_class: CoherenceMagnitude
+  method_or_estimator: CoherenceMagnitude
+  hyperparameters: {}
+  source: extra
+  identifiers:
+  - cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  - cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-25
+  - cohmag_wavelet_mean_fs-1_fmin-0-25_fmax-0-5
+  - cohmag_wavelet_max_fs-1_fmin-0_fmax-0-5
+  - cohmag_wavelet_max_fs-1_fmin-0_fmax-0-25
+  - cohmag_wavelet_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    cohmag_wavelet_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    cohmag_wavelet_max_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    cohmag_wavelet_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    cohmag_wavelet_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  family: wavelet_measures
+  pair_basis: multivariate
+  labels:
+  - undirected
+  - unsigned
+  - wavelet
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: wavelet.phase
+  module: wavelet
+  pyspi_class: CoherencePhase
+  method_or_estimator: CoherencePhase
+  hyperparameters: {}
+  source: extra
+  identifiers:
+  - phase_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  - phase_wavelet_mean_fs-1_fmin-0_fmax-0-25
+  - phase_wavelet_mean_fs-1_fmin-0-25_fmax-0-5
+  - phase_wavelet_max_fs-1_fmin-0_fmax-0-5
+  - phase_wavelet_max_fs-1_fmin-0_fmax-0-25
+  - phase_wavelet_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    phase_wavelet_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    phase_wavelet_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    phase_wavelet_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    phase_wavelet_max_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    phase_wavelet_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    phase_wavelet_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: phase_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  family: wavelet_measures
+  pair_basis: multivariate
+  labels:
+  - undirected
+  - unsigned
+  - wavelet
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: wavelet.icoh
+  module: wavelet
+  pyspi_class: ImaginaryCoherence
+  method_or_estimator: ImaginaryCoherence
+  hyperparameters: {}
+  source: extra
+  identifiers:
+  - icoh_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  - icoh_wavelet_mean_fs-1_fmin-0_fmax-0-25
+  - icoh_wavelet_mean_fs-1_fmin-0-25_fmax-0-5
+  - icoh_wavelet_max_fs-1_fmin-0_fmax-0-5
+  - icoh_wavelet_max_fs-1_fmin-0_fmax-0-25
+  - icoh_wavelet_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    icoh_wavelet_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    icoh_wavelet_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    icoh_wavelet_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    icoh_wavelet_max_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    icoh_wavelet_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    icoh_wavelet_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: icoh_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  family: wavelet_measures
+  pair_basis: multivariate
+  labels:
+  - undirected
+  - unsigned
+  - wavelet
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: wavelet.plv
+  module: wavelet
+  pyspi_class: PhaseLockingValue
+  method_or_estimator: PhaseLockingValue
+  hyperparameters: {}
+  source: extra
+  identifiers:
+  - plv_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  - plv_wavelet_mean_fs-1_fmin-0_fmax-0-25
+  - plv_wavelet_mean_fs-1_fmin-0-25_fmax-0-5
+  - plv_wavelet_max_fs-1_fmin-0_fmax-0-5
+  - plv_wavelet_max_fs-1_fmin-0_fmax-0-25
+  - plv_wavelet_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    plv_wavelet_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    plv_wavelet_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    plv_wavelet_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    plv_wavelet_max_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    plv_wavelet_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    plv_wavelet_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: plv_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  family: wavelet_measures
+  pair_basis: multivariate
+  labels:
+  - undirected
+  - unsigned
+  - wavelet
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: wavelet.ppc
+  module: wavelet
+  pyspi_class: PairwisePhaseConsistency
+  method_or_estimator: PairwisePhaseConsistency
+  hyperparameters: {}
+  source: extra
+  identifiers:
+  - ppc_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  - ppc_wavelet_mean_fs-1_fmin-0_fmax-0-25
+  - ppc_wavelet_mean_fs-1_fmin-0-25_fmax-0-5
+  - ppc_wavelet_max_fs-1_fmin-0_fmax-0-5
+  - ppc_wavelet_max_fs-1_fmin-0_fmax-0-25
+  - ppc_wavelet_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    ppc_wavelet_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    ppc_wavelet_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    ppc_wavelet_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    ppc_wavelet_max_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    ppc_wavelet_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    ppc_wavelet_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: ppc_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  family: wavelet_measures
+  pair_basis: multivariate
+  labels:
+  - undirected
+  - unsigned
+  - wavelet
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: wavelet.pli
+  module: wavelet
+  pyspi_class: PhaseLagIndex
+  method_or_estimator: PhaseLagIndex
+  hyperparameters: {}
+  source: extra
+  identifiers:
+  - pli_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  - pli_wavelet_mean_fs-1_fmin-0_fmax-0-25
+  - pli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5
+  - pli_wavelet_max_fs-1_fmin-0_fmax-0-5
+  - pli_wavelet_max_fs-1_fmin-0_fmax-0-25
+  - pli_wavelet_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    pli_wavelet_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    pli_wavelet_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    pli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    pli_wavelet_max_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    pli_wavelet_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    pli_wavelet_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: pli_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  family: wavelet_measures
+  pair_basis: multivariate
+  labels:
+  - undirected
+  - unsigned
+  - wavelet
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: wavelet.dswpli
+  module: wavelet
+  pyspi_class: DebiasedSquaredWeightedPhaseLagIndex
+  method_or_estimator: DebiasedSquaredWeightedPhaseLagIndex
+  hyperparameters: {}
+  source: extra
+  identifiers:
+  - dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  - dspli_wavelet_mean_fs-1_fmin-0_fmax-0-25
+  - dspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5
+  - dspli_wavelet_max_fs-1_fmin-0_fmax-0-5
+  - dspli_wavelet_max_fs-1_fmin-0_fmax-0-25
+  - dspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    dspli_wavelet_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    dspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    dspli_wavelet_max_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    dspli_wavelet_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    dspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  family: wavelet_measures
+  pair_basis: multivariate
+  labels:
+  - undirected
+  - unsigned
+  - wavelet
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: wavelet.wspli
+  module: wavelet
+  pyspi_class: weighted_PhaseLagIndex
+  method_or_estimator: weighted_PhaseLagIndex
+  hyperparameters: {}
+  source: extra
+  identifiers:
+  - wspli_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  - wspli_wavelet_mean_fs-1_fmin-0_fmax-0-25
+  - wspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5
+  - wspli_wavelet_max_fs-1_fmin-0_fmax-0-5
+  - wspli_wavelet_max_fs-1_fmin-0_fmax-0-25
+  - wspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    wspli_wavelet_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    wspli_wavelet_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    wspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    wspli_wavelet_max_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    wspli_wavelet_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    wspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: wspli_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  family: wavelet_measures
+  pair_basis: multivariate
+  labels:
+  - undirected
+  - unsigned
+  - wavelet
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: wavelet.dwspli
+  module: wavelet
+  pyspi_class: debiased_weighted_squared_PhaseLagIndex
+  method_or_estimator: debiased_weighted_squared_PhaseLagIndex
+  hyperparameters: {}
+  source: extra
+  identifiers:
+  - dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  - dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-25
+  - dwspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5
+  - dwspli_wavelet_max_fs-1_fmin-0_fmax-0-5
+  - dwspli_wavelet_max_fs-1_fmin-0_fmax-0-25
+  - dwspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5
+  identifier_params:
+    dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-5:
+      fs: 1
+    dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+    dwspli_wavelet_mean_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+    dwspli_wavelet_max_fs-1_fmin-0_fmax-0-5:
+      fmin: 0
+      fmax: 0.5
+      statistic: max
+    dwspli_wavelet_max_fs-1_fmin-0_fmax-0-25:
+      fmin: 0
+      fmax: 0.25
+      statistic: max
+    dwspli_wavelet_max_fs-1_fmin-0-25_fmax-0-5:
+      fmin: 0.25
+      fmax: 0.5
+      statistic: max
+  representative: dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-5
+  family: wavelet_measures
+  pair_basis: multivariate
+  labels:
+  - undirected
+  - unsigned
+  - wavelet
+  deps: []
+  in_eeg_selection: false
+  eeg_identifiers: []
+- unit_id: basic.xcorr.max_sig-False
+  module: basic
+  pyspi_class: CrossCorrelation
+  method_or_estimator: scipy.signal.correlate
+  hyperparameters:
+    statistic: max
+    sigonly: false
+  source: retained
+  identifiers:
+  - xcorr_max_sig-False
+  - xcorr-sq_max_sig-False
+  identifier_params:
+    xcorr_max_sig-False:
+      statistic: max
+      sigonly: false
+    xcorr-sq_max_sig-False:
+      statistic: max
+      sigonly: false
+      squared: true
+  representative: xcorr_max_sig-False
+  family: xcorr
+  pair_basis: unordered
+  labels:
+  - basic
+  - linear
+  - signed
+  - temporal
+  - undirected
+  deps: []
+  eeg_identifiers:
+  - xcorr-sq_max_sig-False
+  - xcorr_max_sig-False
+  in_eeg_selection: true
+- unit_id: preproc.detrend
+  module: data
+  pyspi_class: Data
+  method_or_estimator: scipy.signal.detrend (linear, axis=1)
+  family: preprocessing_base
+  notes: Optional step before z-scoring (pyspi/data.py); the EEG workflow uses detrend=True.
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: preproc.zscore
+  module: data
+  pyspi_class: Data
+  method_or_estimator: scipy.stats.zscore(ddof=1, axis=1) after truncation and detrend
+  family: preprocessing_base
+  notes: Default normalise=True; order truncate -> detrend -> zscore.
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: preproc.two_array_api
+  module: base
+  pyspi_class: parse_bivariate
+  method_or_estimator: Data() + add_process twice (second array not z-scored)
+  family: preprocessing_base
+  notes: Only affects the direct two-array API, not Calculator.
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: base.pair_handling
+  module: base
+  pyspi_class: Directed/Undirected
+  method_or_estimator: Directed loops all ordered pairs; Undirected then mirrors the upper triangle
+  family: preprocessing_base
+  notes: Classes overriding multivariate bypass the mirror (REVIEW M1; tests/README.md bug 5 before b2f6d7e).
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: spectral.multitaper_csm
+  module: spectral
+  pyspi_class: NonparametricSpectral
+  method_or_estimator: spectral_connectivity Multitaper(NW=3, 5 DPSS) + Connectivity cross-spectral matrix
+  family: spectral_csm
+  notes: Shared estimator for every multitaper SPI; expectation is over the 5 tapers.
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: spectral.band_selection
+  module: spectral
+  pyspi_class: NonparametricSpectral
+  method_or_estimator: fmin/fmax selection on the FFT grid (inclusive multivariate, strict bivariate/PSI/GD)
+  family: spectral_csm
+  notes: Narrow EEG bands at T=512/1024 leave 0-3 bins.
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: spectral.wilson_factorisation
+  module: spectral
+  pyspi_class: NonparametricSpectralBivariate
+  method_or_estimator: spectral_connectivity minimum_phase_decomposition (Wilson, tol 1e-8, 60 iterations)
+  family: spectral_directed
+  notes: Shared by dtf/dcoh/pdcoh/gpdcoh/ddtf and nonparametric sgc.
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: wavelet.morlet_cwt
+  module: wavelet
+  pyspi_class: mne
+  method_or_estimator: mne_connectivity cwt_morlet with cwt_freqs=linspace(0.2,0.5,125), n_cycles=freqs/7
+  family: wavelet_measures
+  notes: n_cycles=freqs/7 makes every wavelet one sample long.
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: infotheory.est.gaussian
+  module: infotheory
+  pyspi_class: JIDTBase
+  method_or_estimator: JIDT Gaussian entropy/MI/TE calculators (nats)
+  family: it_gaussian
+  notes: ''
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: infotheory.est.kozachenko
+  module: infotheory
+  pyspi_class: JIDTBase
+  method_or_estimator: JIDT Kozachenko-Leonenko entropy (nats, 1e-8 noise, NORMALISE=true)
+  family: it_kozachenko
+  notes: ''
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: infotheory.est.kernel
+  module: infotheory
+  pyspi_class: JIDTBase
+  method_or_estimator: JIDT box-kernel entropy/MI/TE (bits, width 0.5 or 0.25)
+  family: it_kernel
+  notes: ''
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: infotheory.est.ksg1
+  module: infotheory
+  pyspi_class: JIDTBase
+  method_or_estimator: JIDT Kraskov KSG1 MI / conditional MI (nats, k=4, 1e-8 noise, NUM_THREADS=all)
+  family: it_kraskov
+  notes: ''
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false
+- unit_id: infotheory.theiler_window
+  module: infotheory
+  pyspi_class: JIDTBase
+  method_or_estimator: DYN_CORR_EXCL = int(2 * dot(acf(src), acf(targ))) per pair
+  family: it_kraskov
+  notes: ''
+  hyperparameters: {}
+  source: infrastructure
+  identifiers: []
+  identifier_params: {}
+  representative: null
+  pair_basis: n/a
+  labels: []
+  deps: []
+  eeg_identifiers: []
+  in_eeg_selection: false

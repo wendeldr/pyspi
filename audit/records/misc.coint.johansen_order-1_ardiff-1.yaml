@@ -1,0 +1,352 @@
+unit_id: misc.coint.johansen_order-1_ardiff-1
+status: profiled
+correctness:
+  metric_name_standard: 'Johansen cointegration rank test statistics for r=0 in a bivariate VECM: lambda-max (max_eig_stat) and trace (trace_stat); statsmodels det_order=1 (pre-detrended levels), 1 lagged
+    difference'
+  canonical_ref: Johansen S. 1988, J. Economic Dynamics and Control 12(2-3):231-254, "Statistical analysis of cointegration vectors" (LR trace test, eq. for -2lnQ); Johansen S. 1991, Econometrica 59(6):1551-1580
+    (deterministic terms, lambda-max); Johansen S. & Juselius K. 1990, Oxford Bull. Econ. Stat. 52(2):169-210 (models H1, H1*, constant restricted/unrestricted); Lutkepohl 2005, New Introduction to Multiple
+    Time Series Analysis, §7.2 / §8.2 (statsmodels docstring reference)
+  canonical_definition: R0t, R1t = residuals of Delta y_t and y_(t-1) on lagged differences Delta y_(t-1..t-k) and deterministic terms D_t; S_ij = m^-1 sum R_it R_jt'; lambda_1 >= lambda_2 solve |lambda
+    S11 - S10 S00^-1 S01| = 0; trace(r) = -m sum_(i=r+1..n) ln(1-lambda_i), lambda-max(r) = -m ln(1-lambda_(r+1)); here n=2, r=0. Documented "constant and linear trend" most naturally maps to the restricted-trend
+    case H*(r) (trend in the cointegration space, unrestricted constant; urca ecdet="trend").
+  documented_definition: 'supplement §1.6.3, p.19 (heading supplement.txt line 885, text 886-899): "If two time series are individually integrated but some linear combination of them has a lower order of
+    integration, then the series are said to be cointegrated [79]. We implement statistics for quantifying the cointegration of bivariate time series from two tests included in v0.12.0 of statsmodels [75]:
+    the Augmented Engle-Granger (AEG, modifier aeg) [80] two-step test and the Johansen test (johansen) [81]." Keywords: "undirected, linear, unsigned, bivariate, time-dependent". [80] = Engle & Granger
+    1987 Econometrica 55, 251; [81] = Pesaran & Shin 1999 (ARDL bounds approach), not Johansen. GitBook spi-descriptions/miscellaneous.md:13-41 has the same text (Key References link to JSTOR 1913236 =
+    Engle & Granger 1987 and to the Pesaran-Shin ARDL chapter). Johansen bullet (supplement.txt:896-899): "For the Johansen test, we output both the maximum eigenvalue (modifier max_eig_stat) and the trace
+    (trace_stat) of the vector error correction model. Similar to the AEG test, we also assume a constant (order-0) or constant and linear trend (order-1) and fixed autoregressive lags of 1 (ardiff-1) and
+    10 (ardiff-10)." Listed as SPIs 221-228.'
+  delegate_lib: statsmodels==0.15.0 statsmodels.tsa.vector_ar.vecm.coint_johansen (numpy==2.5.4 linalg inv/eig/cholesky/pinv)
+  implemented_as: 'Default pipeline z-scores (optionally detrends) each channel. For each unordered pair the first call bivariate(i=hi, j=lo) runs statsmodels coint_johansen on the (T x 2) matrix [z_hi,
+    z_lo] with det_order=1: full-sample linear trend removed from levels by OLS on np.vander(linspace(-1,1,T), 2) (vecm.py:650-653, :670); differences, lagged differences and lagged levels then only demeaned
+    (f=0). VECM Delta y_t = Pi y_(t-1) + sum_(i=1..1) G_i Delta y_(t-i) + D_t + e_t (VAR order 2); eigenvalues a_1 >= a_2 of S_kk^-1 S_k0 S_00^-1 S_0k from residual moment matrices over m = T-1-1 samples.
+    Returned: max_eig_stat = -m log(1-a_1) and trace_stat = -m [log(1-a_1)+log(1-a_2)] (tests of r=0). One fit serves both identifiers. Column order does not matter (probe: max relative swap difference
+    <= 1.3e-11). Critical values, rank decision and eigenvectors are discarded.'
+  implementation_trace:
+  - pyspi/calculator.py:252-259 Calculator._load_yaml instantiates Cointegration(**params) per config; the YAML labels block (config.yaml:1294-1299, "linear") is not read, so instance labels come from the
+    class
+  - 'pyspi/calculator.py:295 (def) and :327-339 compute: S = spi.multivariate(dataset); fill_diagonal NaN; any exception -> the whole matrix for that SPI set to NaN (:336-337), a MetricReport with status=failed
+    recorded, and a warning built at :339 and emitted at :355'
+  - 'pyspi/data.py:184-195 preprocessing: optional scipy.signal.detrend(axis=1), then zscore(axis=1, ddof=1) by default'
+  - 'pyspi/base.py:132-138 Undirected.multivariate -> Directed.multivariate (base.py:85-94: outer loop j, inner loop i != j, A[i,j] = bivariate(i=i, j=j)); then A[tril] = A.T[tril]. For a pair a<b the FIRST
+    call is bivariate(i=b, j=a)'
+  - pyspi/statistics/misc.py:22-26 class Cointegration(Undirected, Unsigned); labels = ["misc","unsigned","temporal","undirected","nonlinear"]
+  - pyspi/config.yaml:1332-1340 two configs (statistic max_eig_stat and trace_stat) with det_order=1, k_ar_diff=1
+  - 'pyspi/statistics/misc.py:28-45 __init__: branch method == "johansen" stores _det_order, _k_ar_diff; identifier coint_johansen_<statistic>_order-<det>_ardiff-<k>'
+  - 'pyspi/statistics/misc.py:54-58 key = ("johansen", det_order, k_ar_diff): the statistic is not in the key, so max_eig_stat and trace_stat share one cached fit'
+  - 'pyspi/statistics/misc.py:62-67 _from_cache: try data.coint[self.key][(i, j)]; on miss z = data.to_numpy(squeeze=True) (shape P x T)'
+  - 'pyspi/statistics/misc.py:79-87 coint_johansen(z[[i, j]].T, det_order, k_ar_diff); ci = {max_eig_stat: stats.max_eig_stat[0], trace_stat: stats.trace_stat[0]} (r = 0 row only)'
+  - 'pyspi/statistics/misc.py:89-95 store ci under (i, j) AND (j, i): the first-computed orientation is reused for the reverse pair'
+  - pyspi/statistics/misc.py:99-103 bivariate returns ci[self._statistic] (comment at :99 says "Return the negative t-statistic", no negation is applied)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:594 coint_johansen(endog, det_order, k_ar_diff) (statsmodels 0.15.0; imports inv from numpy.linalg :5,
+    lagmat :16)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:650-658 inner detrend(y, order) = OLS residuals on np.vander(np.linspace(-1,1,len(y)), order+1); resid(y,
+    x) = y - x pinv(x) y
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:665-670 f = 0 for det_order > -1; endog = detrend(endog, det_order)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:671-679 dx = diff(endog); z = lagmat(dx, k)[k:] demeaned; dx = dx[k:] demeaned; r0t = resid(dx, z)
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:681-684 lx = endog[1 : T-k] (level at t-k), demeaned; rkt = resid(lx, z)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:686-692 skk = rkt'rkt/m, sk0 = rkt'r0t/m, s00 = r0t'r0t/m; eig(inv(skk) sk0 inv(s00) sk0') (numpy 2.5.4
+    returns complex128 eigenvalues, imaginary part 0 in every probe)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:694-706 cholesky normalisation of eigenvectors and descending sort (no effect on the statistics)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:714-718 m = rkt.shape[0] = T-k-1; lr1[i] = -m sum_(j>=i) log(1-a_j) (trace), lr2[i] = -m log(1-a_i) (max-eig);
+    complex-to-float assignment emits ComplexWarning at :717-718
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:772-790 JohansenTestResult.trace_stat -> lr1, max_eig_stat -> lr2
+  deviation_from_documented: '(1) The supplement says "the maximum eigenvalue ... and the trace ... of the vector error correction model"; the code returns the LR test STATISTICS for rank 0 (-m log(1-a_1)
+    and -m sum log(1-a_i)), not an eigenvalue or a matrix trace. (2) "constant (order-0)" / "constant and linear trend (order-1)" do not name the Johansen case; order-0 is the unrestricted constant, order-1
+    is the statsmodels pre-detrending scheme. (3) "autoregressive lags of 1 (ardiff-1) and 10" = number of lagged DIFFERENCES (VAR order k+1). (4) Citation [81] is Pesaran & Shin 1999 (ARDL), not Johansen
+    1988/1991. (5) Metadata: class label "nonlinear" (misc.py:26) vs documented keyword and config label "linear". (6) Supplement cites statsmodels v0.12.0; installed 0.15.0 (value changes between versions
+    not assessed).'
+  deviation_from_canonical: 'det_order=1 matches NO standard Johansen deterministic case (candidate). statsmodels removes a full-sample linear trend from the LEVELS by OLS before differencing (vecm.py:650-653,
+    :670) and then only demeans differences and lagged levels on the effective sample (f=0, :665-667, :674, :678, :683); the trend is never partialled jointly with the lagged differences. Probes (T=256
+    cointegrated): pair (1,0) k=1: statsmodels maxeig 105.347364 trace 109.648779 vs restricted-trend case (Johansen H*(r), urca ca.jo ecdet="trend", K=2, identical to a from-scratch RRR) maxeig 105.347370
+    trace 111.330040; pair (2,0): statsmodels maxeig 13.4316 trace 16.8835 vs restricted-trend 13.5735 / 18.4528 (trace 9.3% lower). Unrestricted-trend (case 5) also differs (rel up to 2.5%). Differences
+    shrink with T (T=1024: 2e-6 to 1.7e-2 relative). Johansen-1988 level form y_(t-k) is equivalent to y_(t-1) (see order-0 units). pyspi keeps only r=0. CHECK-STAGE CORRECTION: ''Differences shrink with
+    T'' holds for the cointegrated pair only. On non-cointegrated pairs the gap to case 4 persists (max_rel 0.26 max-eig / 0.34 trace at T=4096), while the gap to the unrestricted-trend case 5 shrinks to
+    <= 1.2e-3; statsmodels'' det_order-1 tables are case-5 quantiles (runs misc.coint.johansen_order-1_ardiff-1|cointegrated|*|kernel|canon-* and |cvmc).'
+  units_and_range: 'dimensionless LR statistics (chi-square-type, non-standard asymptotics); both >= 0 and trace_stat >= max_eig_stat on non-degenerate pairs, trace - max_eig = -m ln(1-lambda_2) (probe
+    identity error <= 1.5e-14); grow O(T) when the pair is jointly stationary (iid_gaussian T=256 pair (1,0), k=1, det=1: trace 205.73); no upper bound; for exactly collinear pairs the outcome is input-dependent:
+    bitwise-identical channels (shared_envelope x2 == x0) raise LinAlgError (singular inverse or non-PD cholesky, vecm.py:690-694), which makes the whole pipeline matrix NaN, while z vs 3z+1 can also return
+    without error with out-of-range values (negative eigenvalues/statistics); see new_finding_candidates; symmetric by construction; NaN diagonal'
+  direction_convention: 'undirected: A[i,j] = A[j,i] = statistic of coint_johansen([z_max(i,j), z_min(i,j)]); the column order does not change the value (permutation invariance of the reduced-rank eigenvalues;
+    probe swap difference <= 1.3e-11 relative), so no direction is encoded'
+  symmetry_expected: sym
+  already_documented: no (tests/README.md:130 only lists coint_johansen_max_eig_stat_order-1_ardiff-1 among the preprocessing-variant snapshot SPIs; tests/README.md:521-528 lists run status/timing; nothing
+    in KNOWN_ISSUES.md concerns coint)
+  new_finding_candidates:
+  - 'CANDIDATE (definition, order-1 only): statsmodels det_order=1 detrends levels over the full sample before differencing (vecm.py:670) instead of putting a trend in the VECM; the statistic matches neither
+    the restricted-trend (urca ecdet="trend") nor the unrestricted-trend Johansen case. Evidence (T=256 cointegrated): pair (1,0) k=1: statsmodels maxeig 105.347364 trace 109.648779 vs restricted-trend
+    case (Johansen H*(r), urca ca.jo ecdet="trend", K=2, identical to a from-scratch RRR) maxeig 105.347370 trace 111.330040; pair (2,0): statsmodels maxeig 13.4316 trace 16.8835 vs restricted-trend 13.5735
+    / 18.4528 (trace 9.3% lower). (from-scratch RRR = urca to 6 decimals). Effect is largest on the trace statistic and at small T; pipeline detrend (data.py:186) leaves order-1 values unchanged (probe
+    max abs diff <= 4.9e-11).'
+  - 'CANDIDATE (conceptual): the documented premise ("individually integrated") is not checked; on stationary inputs the r=0 statistics are large and grow ~linearly with T, independent of coupling. Probe
+    (k=1, det=1): independent white noise iid_gaussian T=256 pair (1,0) trace 205.73 vs the truly cointegrated random-walk pair (cointegrated T=256 (1,0)) trace 109.65. For z-scored stationary data (EEG)
+    the SPI therefore ranks pairs by persistence/stationarity of the channels rather than by cointegration (hypothesis to quantify in the check stage).'
+  - 'CANDIDATE (robustness): exactly collinear pairs give an input-dependent outcome in coint_johansen (vecm.py:650-718), either a numpy LinAlgError or a silently out-of-range value. (a) Bitwise-identical
+    channels (shared_envelope x2 == x0 after Data normalisation) raised "Singular matrix" in all four Johansen configs at T=256 and T=1024; Calculator.compute (calculator.py:336-337) then stores an all-NaN
+    matrix for the SPI, so one duplicated channel blanks every pair. (b) For z vs 3z+1 (z a Data-normalised channel, coint_johansen called directly on [z, 3z+1]) over {cointegrated, iid_gaussian, trending,
+    shared_envelope} x T {256, 1024} x channels {0, 1} x four configs, 29/64 raised and 35/64 returned without error, often with negative eigenvalues, negative statistics or eigenvalues near 1 with very
+    large statistics. This config: raises e.g. iid_gaussian T=256 ch0, det=1, k=1 -> "Matrix is not positive definite"; returns e.g. shared_envelope T=1024 ch0: eig [-0.4847, -5.6898], trace -2346.31; cointegrated
+    T=256 ch1: eig [0.0096, -0.2992], trace -64.06. The z used in the earlier probe (seed-0 random walk, T=256, coint/probe3.py) passed through Data raises in all four configs. Probe: coint_fix/p_collin.py.
+    Which inputs raise vs return, and whether a returned value can be distinguished from a valid one, is for the check stage.'
+  - 'CANDIDATE (numerics, value-neutral): with numpy 2.5.4 np.linalg.eig returns complex128 even for real spectra (probe: eig of [[2,1],[1,3]] -> complex128), so every call emits ComplexWarning at vecm.py:717-718
+    and silently drops the imaginary part; max |imag| over all probed pairs/datasets was 0.0.'
+  - 'CANDIDATE (metadata): class label "nonlinear" (misc.py:26) while the supplement keyword and config.yaml:1294-1299 say "linear"; the Calculator never reads YAML labels (calculator.py:252-259). Probe:
+    Cointegration().labels -> ["misc","unsigned","temporal","undirected","nonlinear"].'
+  - 'CANDIDATE (documentation): the supplement says "maximum eigenvalue" and "trace" of the VECM; the outputs are the rank-0 LR statistics (misc.py:84-87 take max_eig_stat[0], trace_stat[0]); citation [81]
+    (Pesaran & Shin 1999, ARDL) does not describe the Johansen test.'
+  - 'CANDIDATE (robustness, latent): __init__ branches on method == "johansen" (misc.py:40) but _from_cache on method == "aeg" (misc.py:69); any other spelling builds an AEG-style identifier and then calls
+    coint_johansen without _det_order. Probe: Cointegration(method="Johansen").bivariate(...) -> AttributeError: no attribute "_det_order". Not reachable from the shipped configs.'
+  proposed_checks:
+  - datasets:
+    - cointegrated
+    - iid_gaussian
+    - trending
+    - var2_bivariate
+    - gauss_ar1_pair
+    path: kernel
+    reference: from-scratch numpy restricted-trend RRR (R1 augmented with t, constant unrestricted; probe4.py joh(case="trend_restr")) AND a from-scratch literal re-implementation of the statsmodels pre-detrending
+      algorithm (vecm.py:650-718) for exact agreement
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'literal re-implementation (same-algorithm, numpy only) within 1e-9 relative; restricted-trend canonical case differs: trace up to ~9% lower at T=256 (cointegrated pairs (1,0),(2,0)),
+      maxeig up to ~1.7%, shrinking with T'
+  - datasets:
+    - cointegrated
+    - iid_gaussian
+    - trending
+    path: kernel
+    reference: R urca::ca.jo(x, type="eigen"/"trace", ecdet="trend", K=2, spec="transitory"), last element of @teststat (r=0), x = [z_hi, z_lo]
+    reference_kind: external-pkg
+    criterion: tolerance
+    expected_outcome: 'DISAGREEMENT expected (canonical case 4 vs statsmodels det_order=1): cointegrated T=256 (1,0) trace 109.6488 vs urca 111.3300; report the relative gap per T'
+  - datasets:
+    - cointegrated
+    path: pipeline
+    reference: 'analytic truth matrix is_cointegrated from the dataset (pair (0,1) cointegrated with vector [2,-1]; (0,2),(0,3),(1,2),(1,3),(2,3) not) plus MacKinnon-Haug-Michelis 1999 case "restricted
+      trend", n-r=2: trace 25.872, lambda-max 19.387 (literature constants; the statsmodels det_order=1 statistic is not exactly this case)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: at T >= 256 the (0,1) statistic exceeds the 95% critical value and every non-cointegrated pair; for non-cointegrated random-walk pairs the exceedance rate over a Monte Carlo of independent
+      random walks (simulated in-check, from-scratch reference) is near 5% for order-0 (size check); report T=64 separately (k=10 leaves m=53)
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - var2_bivariate
+    - cointegrated
+    path: pipeline
+    reference: 'qualitative stationarity confound: compare statistics on jointly stationary independent pairs with the cointegrated pair at the same T'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'independent white-noise pairs give statistics of the same order as or larger than the cointegrated pair and grow ~linearly in T (probe T=256: iid trace 205.73 vs cointegrated 109.65);
+      documents that the SPI does not measure coupling on I(0) data'
+  - datasets:
+    - cointegrated
+    - delayed_noise
+    - trending
+    path: pipeline
+    reference: 'direction convention: from-scratch statistic on [z_i, z_j] and on [z_j, z_i] for every pair; compare with A[i,j] and A[j,i]'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: A == A.T exactly (mirror + two-key cache), NaN diagonal; A[i,j] equals the from-scratch value for either column order within 1e-9 relative (order invariance), so the unit carries no
+      direction
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    - cointegrated
+    path: pipeline
+    reference: invariance of Johansen eigenvalues under per-channel positive affine maps (z-scoring on/off; scaled_offset = scale*D2 + offset)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: scaled_offset == bivariate_gaussian and normalise=True == normalise=False within 1e-8 relative (probe raw vs z-scored max abs diff <= 4e-10)
+  - datasets:
+    - trending
+    - cointegrated
+    path: pipeline-detrend
+    reference: from-scratch reference applied to scipy-free least-squares linearly detrended, z-scored series
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'pipeline detrend leaves order-1 values unchanged up to rounding (probe max abs diff 4.9e-11 on cointegrated, 1.1e-12 on trending): the full-sample level detrend in vecm.py:670 absorbs
+      it'
+  - datasets:
+    - shared_envelope
+    path: pipeline
+    reference: degenerate input (x2 bit-identical to x0)
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: kernel raises numpy LinAlgError for pair (0,2); Calculator stores an all-NaN matrix for the SPI (every pair lost)
+  - datasets:
+    - cointegrated
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic identities: trace_stat - max_eig_stat = -m ln(1 - lambda_2) >= 0; both >= 0; the two identifiers read one cached fit'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: identity holds within 1e-12 absolute (probe <= 1.5e-14); max_eig and trace identifiers produced by one coint_johansen call per pair
+  check_method: external-pkg
+  check_reference: 'audit/checks/r/coint.R jo (R urca 1.3.3 ca.jo: ecdet ''none'' on OLS-detrended levels reproduces pyspi; native ecdet ''trend'' and ecdet ''none'' + dumvar t quantify the gaps); audit/checks/refs/coint.py:rrr_case
+    cases 4 and 5 (textbook RRR); audit/checks/refs/coint.py:handle_johansen own -> audit/checks/refs/_kernels_basic_misc.py:johansen; statsmodels tables via audit/checks/probes/coint_probes.py:crit, cross-checked
+    by Monte Carlo (cvmc)'
+  agreement_criterion: 'exact rtol 1e-10 (kernel); tolerance rtol 1e-8 (urca on detrended levels); tolerance rtol 1e-6 for the canonical cases 4 (expected to differ: gap measured) and 5 (extra key); qualitative
+    propositions; statistical (2 bootstrap se) for the table Monte Carlo'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 7 holds only in part. urca ca.jo on detrended levels reproduces statsmodels'' det_order-1 scheme (OLS-detrended levels) on 8/8 runs, max_rel
+    9.6e-14. As for the order-0 units, the supplement''s ''maximum eigenvalue'', ''trace'' and ''autoregressive lags of 1'' do not describe what the code returns: the
+    rank-0 LR statistics with 1 lagged difference. Anchor 8 does not fit: the trace statistic differs from Johansen case 4 by up to 0.34 relative at T=4096.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'det_order=1 is LeSage''s/statsmodels'' scheme: the levels are detrended by full-sample OLS on [1, t] and the VECM is then fitted with an unrestricted constant (reproduced exactly by ca.jo
+    ecdet=''none'' on detrended levels). It is not Johansen''s restricted-trend case 4 (urca ecdet=''trend''): relative gaps up to 0.195 (trace, k=10, T=256) that persist at T=4096 (0.26-0.38 on non-cointegrated
+    pairs). It approaches the unrestricted-trend case 5 (gap <= 1.2e-3 for k=1 and <= 1.1e-2 for k=10 at T=4096), and statsmodels'' det_order-1 critical values are case-5 quantiles (cvmc). So the supplement''s
+    ''constant and linear trend'' is implemented as a finite-sample approximation of case 5. On driftless walks the case-5 tables over-reject (trace 0.19-0.22 at the 5% value). Same robustness and confound
+    limits as the order-0 units.'
+  new_finding: true
+  check_data: cointegrated T64/256/1024/4096 (kernel, pipeline, pipeline-detrend, reversed channels); iid_gaussian T256/1024/4096; trending, var2_bivariate, gauss_ar1_pair, delayed_noise, scaled_offset
+    T1024; shared_envelope T256/1024; simulated independent random walks (400 per T in the size probe; 2000 at T=4000 in the table Monte Carlo)
+  closeness: '19/19 exact pass vs the statsmodels-placement kernel, max_rel 2.3e-13; EXPECTED TO DIFFER, 0/8 vs textbook case 4: max_rel max-eig 0.025 / 0.018 / 0.26 and trace 0.124 / 0.085 / 0.34 at T
+    = 256 / 1024 / 4096 (mean_rel trace 0.072 / 0.043 / 0.20), i.e. no convergence on the non-cointegrated pairs (T=4096 pair (0,2) trace: pyspi 7.89, case 4 10.91, case 5 7.89); vs case 5 max_rel max-eig
+    4.0e-3 / 3.2e-4 / 1.2e-3, trace 2.0e-3 / 1.2e-3 / 4.8e-4; textbook case 3 on pre-detrended levels reproduces pyspi (<= 1.6e-14); EXPECTED TO DIFFER, 0/8: vs the closest native ecdet (''trend'', restricted
+    trend) max_rel max-eig/trace 0.025/0.124 (cointegrated T=256), 0.018/0.085 (T=1024), 1.2e-3/7.1e-4 (iid T=256), 1.5e-5 (iid T=1024); ecdet ''none'' + dumvar t (case 5) 4.0e-3/2.0e-3 (T=256) and 3.2e-4/1.2e-3
+    (T=1024); ecdet ''none''/''const'' on raw levels >= 0.91 on cointegrated; 8/8 pass vs ca.jo(ecdet=''none'', K=2) on full-sample OLS-detrended levels, max_rel 9.6e-14; cointegrated (0,1) max-eig 40.15
+    / 105.35 / 384.73 / 1628.8 and trace 43.25 / 109.65 / 389.41 / 1628.8 at T = 64 / 256 / 1024 / 4096 vs 95% values 17.15 / 18.40; 8/8 pass; null pairs rejecting at 5% (trace) 1 / 1 / 4 of 5 / 0; driftless
+    walks, 400 reps: rejection max-eig 0.060 / 0.0675 and trace 0.190 / 0.2125 at T = 256 / 1024 (se 0.011); Monte Carlo 95% trace quantile 23.45 / 23.93 vs table 18.40; per-replicate values exact (max_rel
+    1.6e-14); iid trace median 225.4 / 865.9 / 3303.8 at T = 256 / 1024 / 4096 (2.06 / 2.22 / 2.03 times cointegrated (0,1)); every iid pair exceeds the 95% value; delayed_noise 944.2 (2.42x), var2_bivariate
+    861.5 (2.21x); max-eig iid T=1024 median 457.5 (1.19x); exact (max_rel 5.8e-16); min(trace - max_eig) 4.66 (cointegrated) / 395.1 (iid); reversed order: max_rel 8.9e-15; pyspi relabelled max_abs 1.1e-13;
+    pass: trending (D2 + slope t) equals D2 (max_rel 1.7e-15): det_order 1 removes linear trends; pipeline-detrend on trending matches the kernel (max_abs 1.9e-12) and leaves the values unchanged (822.5-843.6
+    on both paths)'
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.03 s per plain pyspi run at T=4096; probes <= 9 s'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 over every plain SPI run of the unit (bit-exact mirror, NaN diagonal); column order of the delegate call changes the value by <= 5.2e-12 relative (own-* swap_max_rel),
+    channel reversal by <= 1.5e-11 absolute (perm-* relabel_max_abs). This agrees with base.pair_handling''s visiting-order measurement of <= 2.6e-13 (run base.pair_handling|iid_gaussian|256|pipeline|upper-misc.Cointegration)'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = the statistic of coint_johansen([z_hi, z_lo]), invariant to the column order; on var2_bivariate (x0 -> x1) and delayed_noise the matrix is symmetric
+    (confound runs), so no direction is encoded'
+  candidate_resolutions:
+  - candidate: det_order=1 matches no standard Johansen deterministic case (pre-detrended levels)
+    outcome: confirmed
+    evidence: 'misc.coint.johansen_order-1_ardiff-1|cointegrated|{256,1024,4096}|kernel|canon-{me,tr} and |iid_gaussian|1024|kernel|canon-*: EXPECTED TO DIFFER, 0/8 vs textbook case 4: max_rel max-eig 0.025
+      / 0.018 / 0.26 and trace 0.124 / 0.085 / 0.34 at T = 256 / 1024 / 4096 (mean_rel trace 0.072 / 0.043 / 0.20), i.e. no convergence on the non-cointegrated pairs (T=4096 pair (0,2) trace: pyspi 7.89,
+      case 4 10.91, case 5 7.89); vs case 5 max_rel max-eig 4.0e-3 / 3.2e-4 / 1.2e-3, trace 2.0e-3 / 1.2e-3 / 4.8e-4; textbook case 3 on pre-detrended levels reproduces pyspi (<= 1.6e-14); misc.coint.johansen_order-1_ardiff-1|*|kernel|urca-*
+      vs ca.jo ecdet ''trend'': EXPECTED TO DIFFER, 0/8: vs the closest native ecdet (''trend'', restricted trend) max_rel max-eig/trace 0.025/0.124 (cointegrated T=256), 0.018/0.085 (T=1024), 1.2e-3/7.1e-4
+      (iid T=256), 1.5e-5 (iid T=1024); ecdet ''none'' + dumvar t (case 5) 4.0e-3/2.0e-3 (T=256) and 3.2e-4/1.2e-3 (T=1024); ecdet ''none''/''const'' on raw levels >= 0.91 on cointegrated; exact reproduction
+      only by ecdet ''none'' on OLS-detrended levels (misc.coint.johansen_order-1_ardiff-1|*|kernel|urcadt-*: 8/8 pass vs ca.jo(ecdet=''none'', K=2) on full-sample OLS-detrended levels, max_rel 9.6e-14).
+      Refinement of the trace text: the gap to case 4 does not shrink with T on non-cointegrated pairs; the statistic approaches the unrestricted-trend case 5, whose asymptotic quantiles statsmodels tabulates
+      for det_order 1 (statsmodels det_order-1 table vs Monte Carlo of textbook case 5 on walks with a quadratic trend (T=4000, 2000 reps): trace 95% 18.3985 vs 18.727 (se 0.36), max-eig 17.148 vs 17.579
+      (se 0.33); max z 1.31, pass (run misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|cvmc))'
+  - candidate: 'stationarity confound: on stationary inputs the r=0 statistics are large, grow ~linearly in T and do not measure coupling'
+    outcome: confirmed
+    evidence: 'misc.coint.johansen_order-1_ardiff-1|iid_gaussian|{256,1024,4096}|pipeline|confound-tr, |iid_gaussian|1024|pipeline|confound-me, |delayed_noise|1024|pipeline|confound-tr, |var2_bivariate|1024|pipeline|confound-tr:
+      iid trace median 225.4 / 865.9 / 3303.8 at T = 256 / 1024 / 4096 (2.06 / 2.22 / 2.03 times cointegrated (0,1)); every iid pair exceeds the 95% value; delayed_noise 944.2 (2.42x), var2_bivariate 861.5
+      (2.21x); max-eig iid T=1024 median 457.5 (1.19x). Interpretation note, not a finding: this is the standard behaviour of a cointegration test applied to I(0) series (every linear combination of two stationary series is stationary, so r = 0 is rejected); it is an applicability limit of the method, not a value defect, and does not support new_finding, which rests on the det_order-1 pre-detrending scheme and the collinear-pair robustness defects.'
+  - candidate: 'exactly collinear pairs: input-dependent LinAlgError (whole matrix NaN) or silently out-of-range values'
+    outcome: confirmed
+    evidence: 'misc.coint.johansen_order-1_ardiff-1|shared_envelope|256|pipeline|calc and |1024|pipeline|calc: Calculator reports the SPI failed (''Singular matrix'') and stores an all-NaN matrix (all four
+      Johansen configs x 2 identifiers = 8 of the 11 coint SPIs fail; the aeg SPIs return -inf for the pair instead); misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|collinear: [z, 3z+1]
+      over 16 cases: 9 raise (1 ''Singular matrix'', 8 not positive definite), 7 return, 6 out of range (returned values -2149.5 to 1930.9) (the trace probe counted 29/64 raises over the four configs calling
+      coint_johansen on [z, 3z+1]; through the SPI the first-visited column order is [3z+1, z] and the four configs give 28/64)'
+  - candidate: numpy 2.5.4 eig returns complex128 (ComplexWarning, imaginary part dropped); value-neutral
+    outcome: confirmed
+    evidence: 'misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|cplx: 58/58 eig results complex128, max |imag| 0.0, 232 ComplexWarnings, no other warnings (value-neutral; recorded as a numerics
+      note, not a defect)'
+  - candidate: class label 'nonlinear' vs documented/config 'linear'
+    outcome: confirmed
+    evidence: 'misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|meta: [has nonlinear, has linear, issigned, Johansen-spelling code, AEG-spelling code] = [1, 0, 0, 1, 1]'
+  - candidate: 'documentation: ''maximum eigenvalue''/''trace of the VECM'' are the rank-0 LR statistics; citation [81] is Pesaran & Shin (ARDL)'
+    outcome: confirmed
+    evidence: 'misc.coint.johansen_order-1_ardiff-1|*|kernel|own-*: pyspi equals -m ln(1 - lambda_1) and -m sum ln(1 - lambda_i) (19/19 exact pass vs the statsmodels-placement kernel, max_rel 2.3e-13);
+      misc.coint.johansen_order-1_ardiff-1|*|kernel|ident-tr: exact (max_rel 5.8e-16); min(trace - max_eig) 4.66 (cointegrated) / 395.1 (iid); the citation is a reading of supplement reference [81] (no
+      numeric check)'
+  - candidate: '__init__ branches on ''johansen'' but _from_cache on ''aeg'': other spellings fail with AttributeError (latent)'
+    outcome: confirmed
+    evidence: 'misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|meta: Cointegration(method=''Johansen'') and (method=''AEG'') both raise AttributeError naming _det_order (code 1); not reachable
+      from the shipped configs'
+  checks_run:
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|{256,1024,4096}|kernel|own-{me,tr}
+    - misc.coint.johansen_order-1_ardiff-1|iid_gaussian|{256,1024,4096}|kernel|own-{me,tr}
+    - misc.coint.johansen_order-1_ardiff-1|{trending,var2_bivariate,gauss_ar1_pair}|1024|kernel|own-tr
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|1024|pipeline|own-tr
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|1024|pipeline-detrend|own-tr
+    - misc.coint.johansen_order-1_ardiff-1|trending|1024|pipeline-detrend|own-{me,tr}
+    reference: audit/checks/refs/coint.py:handle_johansen own -> audit/checks/refs/_kernels_basic_misc.py:johansen
+    outcome: pass 19/19; 19/19 exact pass vs the statsmodels-placement kernel, max_rel 2.3e-13
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|{256,1024,4096}|kernel|canon-{me,tr}
+    - misc.coint.johansen_order-1_ardiff-1|iid_gaussian|1024|kernel|canon-{me,tr}
+    reference: audit/checks/refs/coint.py:rrr_case (case 4)
+    outcome: 'fail 0/8 (expected; the gap is the measurement); EXPECTED TO DIFFER, 0/8 vs textbook case 4: max_rel max-eig 0.025 / 0.018 / 0.26 and trace 0.124 / 0.085 / 0.34 at T = 256 / 1024 / 4096 (mean_rel
+      trace 0.072 / 0.043 / 0.20), i.e. no convergence on the non-cointegrated pairs (T=4096 pair (0,2) trace: pyspi 7.89, case 4 10.91, case 5 7.89); vs case 5 max_rel max-eig 4.0e-3 / 3.2e-4 / 1.2e-3,
+      trace 2.0e-3 / 1.2e-3 / 4.8e-4; textbook case 3 on pre-detrended levels reproduces pyspi (<= 1.6e-14)'
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|{cointegrated,iid_gaussian}|{256,1024}|kernel|urca-{me,tr}
+    reference: audit/checks/r/coint.R jo (urca 1.3.3 ca.jo)
+    outcome: 'fail 0/8 (expected); EXPECTED TO DIFFER, 0/8: vs the closest native ecdet (''trend'', restricted trend) max_rel max-eig/trace 0.025/0.124 (cointegrated T=256), 0.018/0.085 (T=1024), 1.2e-3/7.1e-4
+      (iid T=256), 1.5e-5 (iid T=1024); ecdet ''none'' + dumvar t (case 5) 4.0e-3/2.0e-3 (T=256) and 3.2e-4/1.2e-3 (T=1024); ecdet ''none''/''const'' on raw levels >= 0.91 on cointegrated'
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|{cointegrated,iid_gaussian}|{256,1024}|kernel|urcadt-{me,tr}
+    reference: audit/checks/r/coint.R jo variant none_dt
+    outcome: pass 8/8; 8/8 pass vs ca.jo(ecdet='none', K=2) on full-sample OLS-detrended levels, max_rel 9.6e-14
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|{64,256,1024,4096}|pipeline|stat-{me,tr}
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|crit
+    reference: audit/checks/refs/coint.py:handle_johansen stat (make_data is_cointegrated + statsmodels tables via probe crit)
+    outcome: pass 8/8; cointegrated (0,1) max-eig 40.15 / 105.35 / 384.73 / 1628.8 and trace 43.25 / 109.65 / 389.41 / 1628.8 at T = 64 / 256 / 1024 / 4096 vs 95% values 17.15 / 18.40; 8/8 pass; null pairs
+      rejecting at 5% (trace) 1 / 1 / 4 of 5 / 0
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|{256,1024}|pipeline|size
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|cvmc
+    reference: 'audit/checks/refs/coint.py:handle_johansen size / cvmc (probe size: pyspi on 400 independent random-walk pairs)'
+    outcome: 'pass; driftless walks, 400 reps: rejection max-eig 0.060 / 0.0675 and trace 0.190 / 0.2125 at T = 256 / 1024 (se 0.011); Monte Carlo 95% trace quantile 23.45 / 23.93 vs table 18.40; per-replicate
+      values exact (max_rel 1.6e-14); statsmodels det_order-1 table vs Monte Carlo of textbook case 5 on walks with a quadratic trend (T=4000, 2000 reps): trace 95% 18.3985 vs 18.727 (se 0.36), max-eig
+      17.148 vs 17.579 (se 0.33); max z 1.31, pass (run misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|cvmc)'
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|iid_gaussian|{256,1024,4096}|pipeline|confound-tr
+    - misc.coint.johansen_order-1_ardiff-1|iid_gaussian|1024|pipeline|confound-me
+    - misc.coint.johansen_order-1_ardiff-1|{delayed_noise,var2_bivariate}|1024|pipeline|confound-tr
+    reference: audit/checks/refs/coint.py:handle_johansen confound
+    outcome: pass 6/6 (proposition holds); iid trace median 225.4 / 865.9 / 3303.8 at T = 256 / 1024 / 4096 (2.06 / 2.22 / 2.03 times cointegrated (0,1)); every iid pair exceeds the 95% value; delayed_noise
+      944.2 (2.42x), var2_bivariate 861.5 (2.21x); max-eig iid T=1024 median 457.5 (1.19x)
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|1024|pipeline|perm-{me,tr}-p3210
+    reference: audit/checks/refs/coint.py:handle_johansen perm
+    outcome: 'pass 2/2; reversed order: max_rel 8.9e-15; pyspi relabelled max_abs 1.1e-13'
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|{cointegrated,iid_gaussian}|1024|kernel|ident-tr
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|onefit
+    reference: audit/checks/refs/coint.py:handle_johansen ident / onefit
+    outcome: 'pass 3/3; exact (max_rel 5.8e-16); min(trace - max_eig) 4.66 (cointegrated) / 395.1 (iid); onefit: 6 coint_johansen calls for the max-eig SPI (6 pairs), 0 more for the trace SPI on the same
+      Data, fresh-Data difference 0'
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|scaled_offset|1024|kernel|affine-tr
+    - misc.coint.johansen_order-1_ardiff-1|trending|1024|kernel|trendinv-tr
+    reference: audit/checks/refs/coint.py:handle_johansen affine / trendinv
+    outcome: 'pass 2/2; pass: trending (D2 + slope t) equals D2 (max_rel 1.7e-15): det_order 1 removes linear trends'
+  - run_ids:
+    - misc.coint.johansen_order-1_ardiff-1|shared_envelope|{256,1024}|pipeline|calc
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|collinear
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|cplx
+    - misc.coint.johansen_order-1_ardiff-1|cointegrated|256|pipeline|meta
+    reference: audit/checks/refs/coint.py:handle_johansen calc / collinear / cplx / meta
+    outcome: 'pass 5/5 (propositions hold); [z, 3z+1] over 16 cases: 9 raise (1 ''Singular matrix'', 8 not positive definite), 7 return, 6 out of range (returned values -2149.5 to 1930.9)'
+optimisation:
+  complexity_P_T: 'O(P^2 (k^2 T + k^3)) with k = 1: one statsmodels coint_johansen per unordered pair (pyspi/statistics/misc.py:62-97 caches (i, j) and (j, i); the trace_stat identifier is then a cache hit, 0.008 s at 118x1024), residualising differences and lagged levels on 2 lagged differences plus det_order=1 terms by OLS over about T rows. Measured P_exponent 2.06, T_exponent 0.13: per-call statsmodels overhead still dominates at T=1024. Pair term dominates; measured 6.3 s per window at 118x1024 (family-warm, measured).'
+  hotspot_1: statsmodels/tsa/vector_ar/vecm.py:detrend (third-party:statsmodels) 69.3% of the profiled SPI call at 8x1024 (112 statsmodels OLS fits, OLS.fit 33.4%); coint_johansen 97.8% overall
+  hotspot_2: statsmodels/tsa/vector_ar/vecm.py:resid (third-party:statsmodels, numpy pinv/svd inside) 12.3% of the profiled SPI call at 8x1024; numpy/linalg/_linalg.py:svd 18.5% in total
+  hotspot_owner: third-party:statsmodels
+  opaque_share: 0.208
+  profile_file: audit/profiles/misc.coint.johansen_order-1_ardiff-1__8x1024.pstats
+  opportunities:
+  - opportunity_id: coint-1
+    opportunity: 'Batch the Johansen moment matrices: the regressors of a pair are the union of two per-channel blocks (lagged differences plus the deterministic terms), so build one Gram matrix of all channels'' detrended level, difference and lagged-difference columns per window, form each pair''s S00/S0k/Skk by Schur complements of 2(k+1)-sized blocks, and solve the 2x2 generalised eigenproblems for all pairs in one vectorised call (replaces statsmodels vecm.py:coint_johansen per pair).'
+    opp_type: vectorise-batch
+    expected_speedup: 10-50x
+    speedup_basis: 'profile:audit/profiles/misc.coint.johansen_order-1_ardiff-1__8x1024.pstats base.py:multivariate 99.893% (the pair loop, replaced as a whole by the batched computation) -> Amdahl bound 937x at 8x1024; vecm.py:coint_johansen alone 97.79% (detrend 69.3% via statsmodels OLS, resid 12.3% via numpy pinv/svd) -> bound 45x if only the per-pair Johansen call were replaced + complexity: per pair O(T k^2) OLS with statsmodels object overhead becomes O(k^3) on precomputed moments after one O(P^2 k^2 T) Gram product'
+    output_risk: unverified-within-tolerance
+    risk_evidence: same reduced-rank regression, but normal-equation Schur complements replace statsmodels OLS/pinv residualisation (vecm.py:650-683), a different factorisation and float order; the check stage already sees column-order changes of <= 5.2e-12 relative
+    effort: L
+    depends_on: []

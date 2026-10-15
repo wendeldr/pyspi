@@ -1,0 +1,434 @@
+unit_id: misc.ids
+status: profiled
+correctness:
+  metric_name_standard: 'InterDependence Score IDS-max (IDS_inf): maximum absolute Pearson correlation between the first k Taylor-series feature maps of
+    a Gaussian kernel applied to each variable'
+  canonical_ref: 'Radhakrishnan A, Jain Y, Uhler C, Lander ES 2025, PNAS 122(34):e2509860122 (PMC12403096), "Efficiently quantifying dependence in massive
+    scientific datasets using InterDependence Scores": Eq. 3 (Gaussian kernel exp(-(x-y)^2/(2B^2))), Eq. 6 (feature map), Eq. 11 (feature correlations),
+    Eq. 12 (IDS_p as l_p norm, IDS_inf = max); main-text implementation choice: IDS_inf, B = 1, k = 6 terms, data min-max scaled to [0, 8]. Reference code:
+    github.com/aradha/interdependence_scores (main, last commit 3c8d62b, 2025-03-18).'
+  canonical_definition: phi_m(x) = exp(-x^2/(2B^2)) x^m / (sqrt(m!) B^m), m = 0..k-1; rho_ml = Corr(phi_m(x), phi_l(y)); IDS_p(x, y) = ((1/k^2) sum_{m,l}
+    |rho_ml|^p)^(1/p), IDS_inf = max_{m,l} |rho_ml|; values in [0, 1], 0 iff all k^2 feature correlations vanish (population).
+  documented_definition: 'Not in the supplement (no section; the SPI post-dates it). GitBook miscellaneous.md:117-127: keywords "undirected, nonlinear,
+    unsigned"; "a fast and scalable measure of dependence that captures both linear and various non-linear dependencies ... Based on the Hilbert-Schmidt
+    Independence Criterion (HSIC), the IDS offers a finite-dimensional approximation of the universal kernels that can detect any type of dependence"; "the
+    IDS is normalized to a range of [0, 1] with a score of 0 indicating independence"; implementation "based on the code made publicly available" at aradha/interdependence_scores.
+    Key reference: PNAS doi 10.1073/pnas.2509860122.'
+  delegate_lib: 'pyspi (vendored, MIT) pyspi/lib/ids/numpy_dependence.py compute_IDS_numpy, a verbatim copy of upstream aradha/interdependence_scores ids/numpy_dependence.py
+    (diff: added header docstring, removed __main__ demo); numpy==2.5.4 np.corrcoef; tqdm==4.70.1 imported but only used by the unused p-value path'
+  implemented_as: 'Data z-scores each process (ddof=1, default normalise=True; detrend off by default). multivariate transposes to (T, P), builds K*P feature
+    columns f_k(z) = exp(-0.5 z^2) z^k / sqrt(k!), k = 0..5, ordered term-major (column index k*P + p), subtracts column means, computes the full (KP x
+    KP) np.corrcoef, reshapes to (K, P, K, P), replaces NaN/inf by 0, takes abs, and returns max over both term axes: A[i, j] = max_{k,l} |Corr(f_k(z_i),
+    f_l(z_j))| (36 correlations per pair). bandwidth=0.5 is the coefficient of z^2, i.e. paper B = 1; the missing B^m factor is irrelevant because correlations
+    are invariant to per-column scale (probe: code vs Eq. 6 with B_paper = sqrt(1/(2*bandwidth)) agree to <= 4.4e-16 for bandwidth 0.25/0.5/1.0). No p-value
+    (p_val=False). No mirroring: multivariate overrides Undirected.multivariate, symmetry comes from np.corrcoef, exact up to last-bit rounding (check stage:
+    max |A - A^T| = 2.2e-16 over 65 square outputs, 52 of them not bitwise symmetric). Diagonal is 1 from compute_IDS (k = l term), set to NaN by Calculator.compute.
+    Matches a from-scratch numpy reference to <= 8.9e-16 on 7 datasets x 4 lengths.'
+  implementation_trace:
+  - 'pyspi/config.yaml:1394-1404 InterDependenceScore configs: terms 6, pnorm max, bandwidth 0.5 (fast_config.yaml:1295-1305 same); YAML labels are not
+    read, class labels used'
+  - 'pyspi/calculator.py:230-267 Calculator._load_yaml (def 230): importlib.import_module(".statistics.misc") (239) - first import executes numpy_dependence.py:11-12
+    np.random.seed(1717) - then the per-config loop 251-267 instantiates InterDependenceScore(**params) (256) and stores it under identifier "ids" (257)'
+  - 'pyspi/data.py:184-203 Data.set_data: optional detrend (184-191), zscore(axis=1, nan_policy="omit", ddof=1) when normalise (193-195), NaN after preprocessing
+    raises ValueError (199-203) so constant channels never reach IDS'
+  - 'pyspi/calculator.py:295-355 Calculator.compute (def 295; per-SPI try/except 327-339): S = spi.multivariate(dataset) (329); fill_diagonal(S, nan) (332);
+    self._table[spi] = S (335); except 336-339: whole block NaN (337), error and warning text recorded (338-339); MetricReport status "failed" (342-346);
+    on_metric_complete callback (347-353); warnings.warn(failure_warning) emitted after the callback (354-355)'
+  - 'pyspi/base.py:51-68 parse_multivariate: wraps raw iterables into Data (default z-scoring), else passes Data through'
+  - pyspi/statistics/misc.py:11 from pyspi.lib.ids.dependence import compute_IDS
+  - 'pyspi/statistics/misc.py:178-191 InterDependenceScore(Undirected, Unsigned): identifier "ids" fixed (180, does not encode params), labels unsigned/misc/undirected/nonlinear
+    (181), defaults terms=6, pnorm="max", bandwidth=0.5 (185-191)'
+  - 'pyspi/statistics/misc.py:194-200 multivariate (overrides base.py:132-138 Undirected.multivariate, so no lower-triangle mirroring): z = squeeze(data.to_numpy(),
+    axis=2).T -> (T, P) (197); compute_IDS(z, num_terms, p_norm, bandwidth_term) (198-199)'
+  - pyspi/data.py:108-118 Data.to_numpy returns the (P, T, 1) array
+  - 'pyspi/lib/ids/dependence.py:9-31 compute_IDS: always dispatches to compute_IDS_numpy (upstream dependence.py prefers a torch backend when torch is
+    importable; the vendored copy does not)'
+  - pyspi/lib/ids/numpy_dependence.py:11-12 SEED = 1717; np.random.seed(SEED) at module import (global numpy RNG), inherited verbatim from upstream ids/numpy_dependence.py
+  - 'pyspi/lib/ids/numpy_dependence.py:16-23 transform: exp(-B y^2) * y^i / sqrt(i!) for i in range(num_terms), concatenated on the last axis -> term-major
+    (T, K*P)'
+  - 'pyspi/lib/ids/numpy_dependence.py:25-26 center: subtract column means'
+  - 'pyspi/lib/ids/numpy_dependence.py:60-64 compute_IDS_numpy: transform then center'
+  - 'pyspi/lib/ids/numpy_dependence.py:76-78 Y is None branch: C = np.corrcoef(X_t.T) over all K*P columns; reshape(num_terms, dx, num_terms, dx)'
+  - pyspi/lib/ids/numpy_dependence.py:80-84 nan_to_num(nan=0, posinf=0, neginf=0); abs; p_norm == "max" -> amax over axes (0, 2)
+  - 'pyspi/lib/ids/numpy_dependence.py:85-92 p_norm 2 / 1: power means of the k^2 |rho| (not used by the default config); any other p_norm value falls through
+    and returns the raw (K, P, K, P) array'
+  - pyspi/lib/ids/numpy_dependence.py:29-57 and 94-97 permutation p-value path (p_val=False in pyspi, never executed)
+  - '.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py:2896-2902 cov: X -= avg; c = dot(X, X_T.conj()) (symmetric product)'
+  - '.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py:3029-3047 corrcoef: c = cov(x) (3029); c /= stddev[:, None]; c /= stddev[None,
+    :] (3037-3038, division order gives last-bit asymmetry); clip to [-1, 1] (3043)'
+  deviation_from_documented: '(a) GitBook says 0 indicates independence; in finite samples IDS-max is positively biased under independence: probe on iid_gaussian
+    off-diagonal mean 0.235 / 0.113 / 0.065 / 0.032 at T = 64 / 256 / 1024 / 4096; from-scratch Monte Carlo null mean 2.06/sqrt(T) (0.258 at T=64, 95% quantile
+    0.370), larger still for autocorrelated series. The [0, 1] range itself holds (abs of clipped correlations). (b) "finite-dimensional approximation of
+    the universal kernels that can detect any type of dependence": with k = 6 truncated terms the statistic approximates, but is not, a universal-kernel
+    HSIC; consistency against every alternative is not guaranteed (paper: "IDS_p is an approximation to a measure that is a statistically consistent estimate
+    of independence"). (c) Parameters terms/pnorm/bandwidth and the bandwidth convention (coefficient of z^2, = paper B = 1) are undocumented; the identifier
+    "ids" does not change with parameters. (d) Otherwise the code is the documented upstream implementation (verbatim copy of the numpy backend). Check
+    stage: (b) is now shown by construction: a dependent law phi(x)phi(y)(1 + eps g(x)g(y)) with g orthogonal to 1 and to the six features has population
+    IDS_p = 0 for every p while Corr(g(X), g(Y)) = 0.474; pyspi gives 0.0435 at T = 4096 (null mean 0.0324, q95 0.0477) (misc.ids|iid_gaussian|4096|pipeline|hidden-dependence).'
+  deviation_from_canonical: '(1) Preprocessing: pyspi feeds z-scored data (mean 0, sd 1, ddof=1); the paper''s reported setting min-max scales to [0, 8]
+    before IDS. Because the Gaussian damping is not scale/shift invariant, values differ materially: probe nonlinear_dependence T=4096 pair (0,1) 0.943
+    (z-score) vs 0.485 (min-max [0,8]); pair (2,3) 0.993 vs 0.313; contaminated 0.949 vs 0.592. The paper explicitly allows other normalisations, so this
+    is a variant choice, not a code error. (2) Kernel parametrisation: bandwidth_term multiplies y^2 (exp(-0.5 y^2) = Eq. 6 with B = 1); Eq. 6 B^m and sqrt(m!)
+    scalings cancel in correlations, so the default matches the paper''s B = 1, k = 6, IDS_inf exactly (probe <= 4.4e-16). (3) No permutation p-value; the
+    paper pairs IDS with permutation P-values for interpretation. (4) Application to autocorrelated time series violates the i.i.d.-sample assumption behind
+    the null behaviour; IDS is zero-lag only (delayed_noise lag-1/3/5 copies score at the null level 0.03-0.05 at T=4096). (5) Constant features are mapped
+    to 0 by nan_to_num (code convention; unreachable in pyspi because Data rejects NaN after z-scoring).'
+  units_and_range: 'dimensionless, [0, 1], unsigned; symmetric up to last-bit rounding (check stage max |A - A^T| = 2.2e-16, not exactly 0); diagonal 1
+    from the library (k = l), NaN after Calculator; cannot be NaN off the diagonal (nan_to_num). Positively biased under independence (~2.06/sqrt(T) for
+    i.i.d. samples). Not an upper bound on or generalisation of |Pearson|: for a standard bivariate Gaussian the population value is 0.2641 at rho = 0.3
+    and 0.7349 at rho = 0.8 (Gauss-Hermite quadrature probe; maximising pair (k, l) = (3, 3)); exact linear relations give 1 only after z-scoring makes
+    the two series identical up to sign. Invariant to sign flips of either variable (odd/even features; probe diff 0.0) and, through z-scoring, to positive
+    affine maps (scaled_offset reproduces bivariate_gaussian); not invariant to scale or shift at the kernel level (probe pair (0,1): 0.986 / 0.945 / 0.750
+    at scale 0.3 / 1 / 3).'
+  direction_convention: 'undirected: A[i, j] = A[j, i] = IDS-max(z_i, z_j) (same set of 36 term pairs in both orders); symmetry comes from np.corrcoef,
+    not from base.py mirroring, and holds to 2.2e-16 (check stage).'
+  symmetry_expected: sym
+  already_documented: tests/regression/harness.py:96-98 for the import-time reseed only (tests/unit/test_ids_reference.py locks the feature/reduction construction
+    against a small from-scratch reference; the test-harness docstring at tests/regression/harness.py:96-98 reads "Importing pyspi.statistics.misc calls np.random.seed(1717) as
+    a side effect, which is why seed_all must run after this", the checked cov_prec_robust note (answer at audit/notes/cov_prec_robust.md:338-343, freshfull vs freshbasic runs) states that default-config reproducibility of the robust SPIs rests on the misc import reseed, and tests/README.md:113, :134-135 and :145-146 describe global-RNG stochastic SPIs and seed_all();
+    KNOWN_ISSUES.md does not list the reseed, and no repository text states explicitly that a seed set before the first Calculator() is
+    discarded for the global-RNG SPIs; REVIEW M1/M2 list mirror-bypassing classes with last-bit asymmetry but not IDS)
+  new_finding_candidates:
+  - 'Candidate (global RNG side effect, cross-family): pyspi/lib/ids/numpy_dependence.py:11-12 runs np.random.seed(1717) at import, and calculator.py:239
+    imports .statistics.misc while constructing the Calculator. Probe: np.random.seed(123); Calculator(configfile=pyspi/config.yaml) -> np.random.get_state()
+    equals the seed(1717) state (True); first draw after importing misc 0.3554744 = first draw of seed(1717). A user seed set before Calculator() is silently
+    discarded on first construction in a process, and the global-RNG SPIs (sklearn MinCovDet/EllipticEnvelope with random_state=None, basic.py:39; tslearn
+    sgddtw) then draw from a fixed stream; re-importing does not reseed, so the second Calculator in a process is not reset. Inherited from upstream (same
+    lines in aradha ids/numpy_dependence.py).'
+  - 'Candidate (null bias undocumented): GitBook "a score of 0 indicating independence" vs probe iid_gaussian off-diagonal mean 0.2354 (T=64), 0.1135 (256),
+    0.0647 (1024), 0.0324 (4096), matching a from-scratch Monte Carlo null mean 2.06/sqrt(T); at T = 64 a pair of independent white-noise series scores
+    about 0.26, comparable to a Gaussian pair with rho = 0.3 (population IDS 0.264).'
+  - 'Candidate (preprocessing differs from the paper''s reported setting): pyspi z-scores (data.py:195) while the paper min-max scales to [0, 8] before
+    IDS; probe values differ by up to 0.68 (nonlinear_dependence pair (2,3) 0.993 vs 0.313 at T=4096). Variant, not an error, but the GitBook does not say
+    which normalisation pyspi uses.'
+  - 'Candidate (last-bit asymmetry, low impact): misc.py:194-200 overrides Undirected.multivariate so no mirroring; np.corrcoef divides by stddev[:, None]
+    then stddev[None, :] (_function_base_impl.py:3037-3038). Probe max |A - A^T| = 5.55e-17 (iid_gaussian T=64) up to 1.11e-16 (several datasets); same
+    class as REVIEW M2 but IDS is not listed there.'
+  - 'Candidate (unsupported p_norm returns a 4-D array): numpy_dependence.py:83-92 handles only "max", 1, 2; probe compute_IDS(X, p_norm=3) and p_norm="2"
+    return shape (6, 4, 6, 4). Calculator.compute does not store it: for P != 6, fill_diagonal (calculator.py:332) raises ValueError; for P == 6, fill_diagonal
+    accepts the (6, 6, 6, 6) array but self._table[spi] = S (calculator.py:335) raises AssertionError in pandas ("Shape of new values must be compatible
+    with manager shape"). In both cases the except at calculator.py:336-337 sets the whole block to NaN, the MetricReport is marked failed (342-346) and
+    a warning is emitted (355) (probe: Calculator with pnorm 3 or "2" gives an all-NaN ids block for P = 4 and P = 6). So the effect is a silent NaN block,
+    not a stored 4-D result; the paper defines IDS_p for any p. Only reachable with a non-default config.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - anm
+    - contaminated
+    - logistic_maps
+    - delayed_noise
+    path: kernel
+    reference: 'from-scratch numpy (no import of pyspi.lib.ids): f_k(z) = exp(-0.5 z^2) z^k / sqrt(k!), k = 0..5, centred, explicit Pearson per (k, l) with
+      np.dot and norms, max |rho| per pair, on the same z-scored input (ddof=1)'
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: max abs difference <= 1e-12 off the diagonal at all T (probe <= 8.9e-16)
+  - datasets:
+    - bivariate_gaussian
+    path: kernel
+    reference: 'analytic population IDS-max for a standard bivariate Gaussian via 2-D Gauss-Hermite quadrature (numpy.polynomial.hermite_e, 120 nodes) of
+      Corr(f_k(X), f_l(Y)): 0.2641 at rho = 0.3, 0.7349 at rho = 0.8 (argmax (k, l) = (3, 3))'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pairs (0,1) and (2,3) approach 0.264 / 0.735 as T grows; at T = 4096 within about 3 null standard deviations (~0.025); probe 0.2697
+      / 0.7303
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'from-scratch Monte Carlo null of the same statistic on independent N(0,1) pairs (numpy default_rng, >= 1000 replicates per T): mean 2.06/sqrt(T),
+      95% quantile 0.370 / 0.192 / 0.095 / 0.047 at T = 64 / 256 / 1024 / 4096'
+    reference_kind: independent-impl
+    criterion: statistical
+    expected_outcome: off-diagonal values are consistent with the null distribution (mean*sqrt(T) ~ 2.06; probe dataset means 0.235 / 0.113 / 0.065 / 0.032);
+      documents the finite-sample bias
+  - datasets:
+    - nonlinear_dependence
+    - anm
+    - bivariate_gaussian
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic symmetry A[j, i] = A[i, j] and known dependence structure (nonlinear_dependence: (0,1) and (2,3) dependent with Pearson ~ 0, cross
+      pairs independent)'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'max |A - A^T| <= 1e-15 (not necessarily 0; probe <= 1.1e-16); index convention: A[0,1] and A[2,3] > 0.9 and all cross pairs below
+      the null 95% quantile at T >= 1024 (probe 0.943 / 0.993 vs <= 0.07); diagonal NaN after Calculator'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    path: pipeline
+    reference: 'analytic invariance: pipeline z-scoring removes per-process scale/offset; kernel-level sign-flip invariance (features are odd/even in z)'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: scaled_offset equals bivariate_gaussian to <= 1e-12; flipping the sign of one process leaves A unchanged (probe 0.0)
+  - datasets:
+    - trending
+    path: pipeline-detrend
+    reference: 'analytic: trending = bivariate_gaussian + linear trends; after detrending the structure of bivariate_gaussian (only (0,1) rho 0.3 and (2,3)
+      rho 0.8 dependent) should reappear'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: without detrend shared trends inflate cross pairs (probe T=1024 (1,2) 0.979, (1,3) 0.996); with detrend (n1d1) cross pairs fall to
+      the null level and (2,3) is highest (probe 0.750), (0,1) 0.263
+  - datasets:
+    - nonlinear_dependence
+    - iid_gaussian
+    path: kernel
+    reference: from-scratch implementation of paper Eq. 6 (feature map with explicit 1/(sqrt(m!) B^m) and B_paper = sqrt(1/(2*bandwidth))) for bandwidth
+      in {0.25, 0.5, 1.0}
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: agreement <= 1e-12 for every bandwidth (probe <= 4.4e-16), confirming bandwidth=0.5 == paper B = 1
+  - datasets:
+    - nonlinear_dependence
+    - contaminated
+    - anm
+    - bivariate_gaussian
+    path: kernel
+    reference: from-scratch IDS-max with the paper's reported preprocessing (min-max scaling to [0, 8]) instead of z-scoring
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: report the size of the preprocessing effect (probe T=4096 nonlinear_dependence (0,1) 0.943 vs 0.485, (2,3) 0.993 vs 0.313); values
+      are expected to differ, documenting pyspi as a z-score variant
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'numpy.random.seed(1717) state comparison in a fresh interpreter: seed the global RNG, construct Calculator(default config), compare np.random.get_state()
+      with the seed(1717) state'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: states are equal (probe True), i.e. constructing the Calculator overwrites a prior user seed; a second construction in the same process
+      does not reseed
+  check_method: independent-impl
+  check_reference: audit/checks/refs/ids.py:chk_kids -> audit/checks/refs/_kernels_basic_misc.py:ids (transform, explicit dot/norm Pearson, max over the
+    term blocks; no import of pyspi.lib.ids) plus refs/ids.py:eq6_ids (own per-pair transcription of Radhakrishnan et al. 2025 PNAS Eq. 6, 11, 12, B = sqrt(1/(2*bandwidth)));
+    refs/ids.py:chk_eq6 (bandwidth 0.25/0.5/1.0, pnorm 1/2 through probes/ids_probes.py:ids_param); refs/ids.py:chk_identical, chk_signflip, chk_invariance
+    (analytic); refs/ids.py:chk_truth (population IDS-max of a standard bivariate normal by 2-D Gauss-Hermite quadrature, 120 nodes, plus own Monte Carlo,
+    2000 draws); refs/ids.py:chk_null (own Monte Carlo null, 2000 draws, iid and random-walk; AR(1) extra keys); refs/ids.py:chk_structure (per-pair permutation
+    bound, 1000 shuffles); refs/ids.py:chk_hidden (constructed dependent law with population IDS = 0, probes/ids_probes.py:hidden_construction, own MC 300
+    draws); refs/ids.py:chk_minmax (paper's reported min-max [0, 8] preprocessing); refs/ids.py:chk_pnorm_unsupported; refs/ids.py:chk_rng (legacy MT19937
+    stream np.random.RandomState(seed), fresh interpreters via probes/ids_probes.py:rng_import, rng_calculator, rng_cross_spi); refs/ids.py:chk_symmetry;
+    numpy==2.5.4, scipy==1.18.1
+  check_data: 'kernel path: iid_gaussian T64/T256/T1024/T4096, nonlinear_dependence T64/T256/T1024/T4096, bivariate_gaussian, anm, contaminated, logistic_maps,
+    delayed_noise, scaled_offset T1024; pipeline: the same seven datasets T1024, iid_gaussian T64-T4096 (null), bivariate_gaussian pairs (0,1)/(2,3) T256/T1024/T4096
+    (truth), scaled_offset T1024 (invariance), cointegrated x2,x3 T1024 (random-walk null), delayed_noise T4096 (zero lag), shared_envelope x0,x2 T256 (identical
+    pair), nonlinear_dependence/contaminated/anm/bivariate_gaussian T4096 (paper preprocessing), trending T1024 (pipeline and pipeline-detrend); constructed
+    hidden-dependence sample T4096 (kernel and pipeline); RNG probes on iid_gaussian T64'
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 (kernel mirror, Eq. 6 transcription, analytic invariances and identical-pair = 1); statistical: |pyspi
+    - MC mean| <= 2 se with se = MC sd (truth, hidden-dependence) or MC sd x familywise factor over the pairs (null); qualitative: structure (max|A-A^T|
+    <= 1e-15, NaN diagonal, dependent pairs above and independent pairs below a per-pair permutation (1 - 0.05/m) bound), RNG side effects reproduced exactly
+    against the MT19937 stream, unsupported pnorm failure mode, symmetry <= 1e-15 over every square output; the paper-minmax08 runs are exact comparisons
+    with the paper''s reported preprocessing and are expected to fail (they size the preprocessing effect)'
+  closeness: 'Kernel mirror: all 24 kids runs pass, max_abs <= 2.2e-15 (kernel path <= 7.8e-16 on 14 runs; pipeline and pipeline-detrend <= 2.2e-15 on 10 runs,
+    the largest being trending pipeline-detrend with own lstsq detrend); own Eq. 6/11/12 transcription vs kernel mirror <= 1.0e-15 (ref_eq6_vs_kernel_maxabs). Bandwidth 0.25/0.5/1.0 vs Eq. 6 with B = 1.414/1.0/0.707:
+    max_abs <= 4.4e-16 (6 runs); pnorm 1 and 2 vs Eq. 12: 1.1e-16. Analytic: identical rows ([x0, x0, -x0, 2.5 x0 - 1]) and the shared_envelope x2 = x0
+    copy give exactly 1 (max_abs 0.0); sign flip 1.1e-16; scaled_offset pipeline vs z-scored bivariate_gaussian 5.6e-17, while the raw kernel path differs
+    by 0.628 (not scale invariant). Population (quadrature): 0.26408 (rho 0.3) and 0.73485 (rho 0.8), argmax (k,l) = (3,3); pyspi 0.2746/0.2617/0.2697 (rho
+    0.3) and 0.7617/0.7492/0.7303 (rho 0.8) at T = 256/1024/4096, all 6 within 2 MC sd (max_z <= 0.93); MC mean - population 0.0173/0.0029/0.00004 (rho
+    0.3). Null iid_gaussian (MC 2000): MC mean 0.2579/0.1273/0.0648/0.0324 at T = 64/256/1024/4096 (mean x sqrt(T) 2.06/2.04/2.07/2.07, q95 0.368/0.183/0.094/0.047);
+    pyspi off-diagonal mean 0.2354/0.1135/0.0647/0.0324, all 4 runs pass (max_z <= 1.50). AR(1) null at T = 1024: MC mean 0.069/0.132/0.359 and q95 0.100/0.192/0.557
+    for phi 0.5/0.9/0.99; independent random walks: MC mean 0.568 (8.8 x the iid mean), pyspi 0.465 (pass, z 0.62). Structure: nonlinear_dependence (0,1)/(2,3)
+    0.945/0.985 (T1024) and 0.943/0.993 (T4096), anm 0.853/0.968, bivariate_gaussian 0.262/0.749, independent pairs <= 0.071 and below their permutation
+    bounds (5/5 qualitative pass, including delayed_noise T4096 max 0.046 vs bound median 0.055 and trending detrended 0.263/0.750 with cross pairs <= 0.077,
+    versus 0.996 without detrend). Paper preprocessing (min-max [0, 8], B = 1): pyspi on min-max rows agrees with Eq. 6 to <= 3.3e-16 (4 runs); pyspi default
+    vs paper setting differs by 0.680 (nonlinear_dependence: 0.943/0.993 vs 0.485/0.313), 0.357 (contaminated 0.949 vs 0.592), 0.178 (anm 0.857/0.965 vs
+    0.828/0.787) and 0.054 (bivariate_gaussian 0.270/0.730 vs 0.225/0.677) at T = 4096 (4 expected fails). Hidden dependence (population IDS = 0, Corr(g(X),
+    g(Y)) = 0.474): pyspi 0.0436 (kernel) / 0.0435 (pipeline) vs null MC mean 0.0325/0.0324 (pass, z 1.30/1.38); own MC under that law 0.0322/0.0317 vs
+    null 0.0325/0.0324 (z -0.62/-1.26) while the sample Corr(g(X), g(Y)) is 0.491 (z 31.4). RNG: seed(123) then import of pyspi.lib.ids gives the seed(1717)
+    state (first draw 0.35547 = RandomState(1717)); importing pyspi.calculator alone leaves the stream (0.69647 = RandomState(123)); one IDS compute leaves
+    the stream (next draw 0.26495 = second draw of RandomState(1717)); IDS identical under seeds 1 and 2 (diff 0.0); a second Calculator in the same process
+    keeps the user seed (0.22199 = RandomState(5)); cov_MinCovDet sum|A| is 2.30186 under user seeds 1 and 2 set before Calculator() and equals the no-ids
+    config under seed 1717, while without ids seeds 1/2 give 2.64277/2.24323; with ids computed before MinCovDet and seed 7 set after construction MinCovDet
+    is unchanged (2.74185 both). Symmetry: max|A - A^T| 2.2e-16 over 65 square outputs, 52 not bitwise symmetric.'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 7''s supplement-variant clause is met only through the GitBook page, because the supplement does not mention ids (as for pdist braycurtis).
+    The paper''s Eq. 6/11/12 is reproduced to 4.4e-16, but on z-scored input. The paper''s reported setting min-max scales to [0, 8]. Anchor 8 does not fit, because
+    that normalisation changes values by up to 0.68 (nonlinear_dependence (2,3) T=4096: 0.993 vs 0.313) and is not a constant factor.'
+  documentation_status: silent
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The estimator is the paper''s IDS_inf with k = 6 and B = 1 (bandwidth 0.5 is the coefficient of z^2) to floating-point precision, against
+    an own transcription of Eq. 6/11/12 and the shared kernel mirror; bandwidth and pnorm 1/2 also match Eq. 6/12. Score 7 (README anchor: matches the documented
+    variant but differs from canonical in a value-changing way, here input normalisation): pyspi feeds z-scored data (ddof=1) while the paper''s reported
+    setting min-max scales each variable to [0, 8]; the Gaussian damping is not scale/shift invariant, so values differ by up to 0.68 (nonlinear_dependence
+    (2,3) 0.993 vs 0.313 at T = 4096). The paper allows other normalisations, so this is a variant, not an error; neither the GitBook nor the code says
+    which normalisation pyspi uses. Documentation claims checked: ''0 indicates independence'' holds only asymptotically (finite-sample null mean about
+    2.07/sqrt(T) for iid pairs, much larger for autocorrelated series: random walks 0.57 at T = 1024); ''can detect any type of dependence'' does not hold
+    for the k = 6 statistic (constructed dependent law with population IDS = 0, pyspi at the null level). Not a generalisation of |Pearson| (rho 0.8 gives
+    0.735). Code-level: module import reseeds the global numpy RNG (confirmed; the import side effect is noted in tests/regression/harness.py:96-98, its cross-SPI
+    consequence for user seeds is new); last-bit asymmetry 2.2e-16; pnorm other than ''max''/1/2 gives a silent
+    all-NaN Calculator block. Not 9: the normalisation difference is value-changing and undocumented, not a trivial convention. Not 10: there is no supplement
+    description and the canonical reported setting is not reproduced on pyspi''s default path.
+    Rubric reading is nearest-anchor 7 (score_rubric_note), because anchor 7''s supplement-variant clause is met only through the GitBook page; the ''README
+    anchor'' wording above is the original reasoning for score_0_10.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: every SPI run <= 0.005 s at T = 4096 (index time_s); the RNG cross-SPI probe takes 14 s because it starts 7 fresh interpreters with
+    MinCovDet; whole family about 75 s pyspi side and 60 s reference side'
+  symmetry_observed: 'sym up to last-bit rounding: max|A - A.T| = 2.2e-16 over 65 square outputs, 52 of them not bitwise symmetric (worst misc.ids|nonlinear_dependence|256|kernel|kids;
+    misc.ids|iid_gaussian|4096|pipeline|symmetry); diagonal NaN after the pipeline'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = IDS-max(z_i, z_j) at zero lag. anm x0 -> x1 gives 0.853 in both orientations and x2 -> x3 0.968 (misc.ids|anm|1024|pipeline|structure),
+    so no direction information; delayed_noise lagged copies (lags 1, 3, 5) score at the null level, max 0.046 vs permutation bound median 0.055 at T =
+    4096 (misc.ids|delayed_noise|4096|pipeline|zero-lag)'
+  candidate_resolutions:
+  - candidate: 'global RNG side effect: pyspi/lib/ids/numpy_dependence.py:11-12 np.random.seed(1717) at import replaces a user seed set before the first
+      Calculator()'
+    outcome: confirmed
+    evidence: 'misc.ids|iid_gaussian|64|pipeline|rng-import (seed(123) then import pyspi.lib.ids: state equals seed(1717), first draw 0.35547; pyspi.calculator
+      import alone does not reseed; IDS consumes no RNG and is identical under seeds 1 and 2); misc.ids|iid_gaussian|64|pipeline|rng-calculator (first Calculator()
+      reseeds, second keeps the user seed 5); misc.ids|iid_gaussian|64|pipeline|rng-cross-spi (cov_MinCovDet identical, 2.30186, under user seeds 1 and
+      2 set before Calculator() and equal to seed 1717 without ids; seeds 1/2 without ids give 2.64277/2.24323; computing ids does not shift the stream
+      MinCovDet sees). Not in KNOWN_ISSUES.md; the import side effect is noted in tests/regression/harness.py:96-98 (test-harness docstring), the discarded
+      user seed for other SPIs is not stated explicitly anywhere in the repository (audit/notes/cov_prec_robust.md:338-343 shows the same side effect from the reproducibility side); inherited from upstream. sgddtw was not run; it draws from the same global stream (tests/README.md:146).'
+  - candidate: 'null bias undocumented: GitBook ''a score of 0 indicating independence'' vs a positive finite-sample null level'
+    outcome: confirmed
+    evidence: 'misc.ids|iid_gaussian|{64,256,1024,4096}|pipeline|null: pyspi off-diagonal mean 0.2354/0.1135/0.0647/0.0324 vs own MC 0.2579/0.1273/0.0648/0.0324
+      (mean x sqrt(T) about 2.07), all pass; misc.ids|cointegrated|1024|pipeline|null-randomwalk: random-walk null MC mean 0.568, pyspi 0.465. This is estimator
+      behaviour (README: finite-sample bias is not incorrectness); the deviation is in the documentation.'
+  - candidate: preprocessing differs from the paper's reported setting (z-score vs min-max [0, 8])
+    outcome: confirmed
+    evidence: misc.ids|nonlinear_dependence|4096|pipeline|paper-minmax08 max_abs 0.680, misc.ids|contaminated|4096|pipeline|paper-minmax08 0.357, misc.ids|anm|4096|pipeline|paper-minmax08
+      0.178, misc.ids|bivariate_gaussian|4096|pipeline|paper-minmax08 0.054 (expected fails); pyspi itself reproduces the paper setting on min-max rows
+      (4 minmax08 kernel runs <= 3.3e-16). Variant, not an error.
+  - candidate: last-bit asymmetry from the missing mirror (np.corrcoef division order)
+    outcome: confirmed
+    evidence: 'misc.ids|iid_gaussian|4096|pipeline|symmetry: max|A - A^T| 2.2e-16, 52 of 65 square outputs not bitwise symmetric. Same class as REVIEW M2,
+      which does not list IDS; negligible in value.'
+  - candidate: unsupported p_norm returns a 4-D array that the Calculator cannot store
+    outcome: confirmed
+    evidence: 'misc.ids|bivariate_gaussian|256|pipeline|pnorm-unsupported: pnorm 3 and ''2'' give compute_IDS ndim 4; Calculator block all NaN, MetricReport
+      failed, ValueError at P = 4 (fill_diagonal) and AssertionError at P = 6 (table store), all four cases. Only reachable with a non-default config.'
+  checks_run:
+  - run_ids:
+    - misc.ids|iid_gaussian|1024|kernel|kids
+    - misc.ids|bivariate_gaussian|1024|kernel|kids
+    - misc.ids|nonlinear_dependence|1024|kernel|kids
+    - misc.ids|anm|1024|kernel|kids
+    - misc.ids|contaminated|1024|kernel|kids
+    - misc.ids|logistic_maps|1024|kernel|kids
+    - misc.ids|delayed_noise|1024|kernel|kids
+    - misc.ids|iid_gaussian|64|kernel|kids
+    - misc.ids|iid_gaussian|256|kernel|kids
+    - misc.ids|iid_gaussian|4096|kernel|kids
+    - misc.ids|nonlinear_dependence|64|kernel|kids
+    - misc.ids|nonlinear_dependence|256|kernel|kids
+    - misc.ids|nonlinear_dependence|4096|kernel|kids
+    - misc.ids|scaled_offset|1024|kernel|kids
+    reference: refs/ids.py:chk_kids (_kernels_basic_misc.ids; eq6_ids as extra key)
+    outcome: 14/14 pass; max_abs <= 7.8e-16; Eq. 6 transcription vs kernel <= 1.0e-15
+  - run_ids:
+    - misc.ids|iid_gaussian|1024|pipeline|kids
+    - misc.ids|bivariate_gaussian|1024|pipeline|kids
+    - misc.ids|nonlinear_dependence|1024|pipeline|kids
+    - misc.ids|anm|1024|pipeline|kids
+    - misc.ids|contaminated|1024|pipeline|kids
+    - misc.ids|logistic_maps|1024|pipeline|kids
+    - misc.ids|delayed_noise|1024|pipeline|kids
+    - misc.ids|iid_gaussian|64|pipeline|kids
+    - misc.ids|trending|1024|pipeline|kids
+    - misc.ids|trending|1024|pipeline-detrend|kids
+    reference: refs/ids.py:chk_kids on own z-scored (ddof=1) / detrended rows
+    outcome: 10/10 pass; max_abs <= 2.2e-15
+  - run_ids:
+    - misc.ids|nonlinear_dependence|1024|kernel|eq6-bw0.25
+    - misc.ids|nonlinear_dependence|1024|kernel|eq6-bw0.5
+    - misc.ids|nonlinear_dependence|1024|kernel|eq6-bw1.0
+    - misc.ids|iid_gaussian|1024|kernel|eq6-bw0.25
+    - misc.ids|iid_gaussian|1024|kernel|eq6-bw0.5
+    - misc.ids|iid_gaussian|1024|kernel|eq6-bw1.0
+    - misc.ids|nonlinear_dependence|1024|pipeline|pnorm1
+    - misc.ids|nonlinear_dependence|1024|pipeline|pnorm2
+    reference: refs/ids.py:chk_eq6 (paper Eq. 6/11/12, B = sqrt(1/(2*bandwidth)))
+    outcome: 8/8 pass; max_abs <= 4.4e-16
+  - run_ids:
+    - misc.ids|bivariate_gaussian|256|pipeline|identical
+    - misc.ids|shared_envelope|256|pipeline|identical-pair
+    - misc.ids|bivariate_gaussian|1024|pipeline|signflip
+    - misc.ids|bivariate_gaussian|1024|kernel|signflip
+    - misc.ids|scaled_offset|1024|pipeline|invariance
+    reference: refs/ids.py:chk_identical, chk_signflip, chk_invariance (analytic)
+    outcome: 5/5 pass; identical = 1 exactly (0.0), sign flip 1.1e-16, scaled_offset 5.6e-17
+  - run_ids:
+    - misc.ids|bivariate_gaussian|256|pipeline|truth-p01
+    - misc.ids|bivariate_gaussian|256|pipeline|truth-p23
+    - misc.ids|bivariate_gaussian|1024|pipeline|truth-p01
+    - misc.ids|bivariate_gaussian|1024|pipeline|truth-p23
+    - misc.ids|bivariate_gaussian|4096|pipeline|truth-p01
+    - misc.ids|bivariate_gaussian|4096|pipeline|truth-p23
+    reference: refs/ids.py:chk_truth (Gauss-Hermite population value + own MC)
+    outcome: 6/6 pass; max_z <= 0.93; population 0.2641 / 0.7349
+  - run_ids:
+    - misc.ids|iid_gaussian|64|pipeline|null
+    - misc.ids|iid_gaussian|256|pipeline|null
+    - misc.ids|iid_gaussian|1024|pipeline|null
+    - misc.ids|iid_gaussian|4096|pipeline|null
+    - misc.ids|cointegrated|1024|pipeline|null-randomwalk
+    reference: refs/ids.py:chk_null (own MC, 2000 draws, familywise se)
+    outcome: 5/5 pass; max_z <= 1.50; iid MC mean x sqrt(T) 2.04-2.07
+  - run_ids:
+    - misc.ids|nonlinear_dependence|1024|pipeline|structure
+    - misc.ids|nonlinear_dependence|4096|pipeline|structure
+    - misc.ids|anm|1024|pipeline|structure
+    - misc.ids|bivariate_gaussian|1024|pipeline|structure
+    - misc.ids|delayed_noise|4096|pipeline|zero-lag
+    - misc.ids|trending|1024|pipeline-detrend|structure
+    reference: refs/ids.py:chk_structure (known structure + per-pair permutation bound)
+    outcome: 6/6 pass; dependent margins >= 0.152, independent pairs <= 0.84 of their bound
+  - run_ids:
+    - misc.ids|nonlinear_dependence|4096|kernel|minmax08
+    - misc.ids|contaminated|4096|kernel|minmax08
+    - misc.ids|anm|4096|kernel|minmax08
+    - misc.ids|bivariate_gaussian|4096|kernel|minmax08
+    reference: refs/ids.py:chk_minmax (Eq. 6 on min-max [0, 8] rows)
+    outcome: 4/4 pass; max_abs <= 3.3e-16
+  - run_ids:
+    - misc.ids|nonlinear_dependence|4096|pipeline|paper-minmax08
+    - misc.ids|contaminated|4096|pipeline|paper-minmax08
+    - misc.ids|anm|4096|pipeline|paper-minmax08
+    - misc.ids|bivariate_gaussian|4096|pipeline|paper-minmax08
+    reference: refs/ids.py:chk_minmax (pyspi default vs the paper's reported setting)
+    outcome: '0/4 pass (expected): max_abs 0.680 / 0.357 / 0.178 / 0.054, the size of the preprocessing effect'
+  - run_ids:
+    - misc.ids|iid_gaussian|4096|kernel|hidden-dependence
+    - misc.ids|iid_gaussian|4096|pipeline|hidden-dependence
+    reference: refs/ids.py:chk_hidden (probes/ids_probes.py:hidden_construction; own MC under the law and under the null)
+    outcome: 2/2 pass; pyspi 0.0436 / 0.0435 vs null mean 0.0325 / 0.0324 while Corr(g(X), g(Y)) = 0.474
+  - run_ids:
+    - misc.ids|bivariate_gaussian|256|pipeline|pnorm-unsupported
+    reference: refs/ids.py:chk_pnorm_unsupported
+    outcome: 1/1 pass; all-NaN block, report failed, ValueError (P=4) / AssertionError (P=6)
+  - run_ids:
+    - misc.ids|iid_gaussian|64|pipeline|rng-import
+    - misc.ids|iid_gaussian|64|pipeline|rng-calculator
+    - misc.ids|iid_gaussian|64|pipeline|rng-cross-spi
+    reference: refs/ids.py:chk_rng (np.random.RandomState stream; fresh interpreters)
+    outcome: 3/3 pass; reseed to 1717 on first import reproduced, IDS consumes no RNG, user seed before Calculator() ignored by MinCovDet
+  - run_ids:
+    - misc.ids|iid_gaussian|4096|pipeline|symmetry
+    reference: refs/ids.py:chk_symmetry
+    outcome: 1/1 pass; max|A - A^T| 2.2e-16 over 65 outputs
+optimisation:
+  complexity_P_T: O(K P T) feature construction + O(K^2 P^2 T) for np.corrcoef of the K P = 6 P feature columns (pyspi/lib/ids/numpy_dependence.py:60-92, via pyspi/statistics/misc.py:194-200), one call per window (no pair loop). Measured power-law P_exponent 1.19, T_exponent 0.54; at 118x1024 the O(K^2 P^2 T) corrcoef dominates (52.4%); measured 0.029 s per window at 118x1024 (measured).
+  hotspot_1: pyspi/lib/ids/numpy_dependence.py:transform (pyspi) 42.5% of the profiled SPI call at 8x1024 (33.7% at 118x1024, audit/profiles/micro/misc.ids__118x1024.pstats)
+  hotspot_2: numpy/lib/_function_base_impl.py:corrcoef (third-party:numpy, cov inside) 20.3% of the profiled SPI call at 8x1024 and 52.4% at 118x1024; pyspi/lib/ids/numpy_dependence.py:center 25.6% at 8x1024, 6.3% at 118x1024
+  hotspot_owner: pyspi
+  opaque_share: 0.1
+  profile_file: audit/profiles/misc.ids__8x1024.pstats
+  opportunities:
+  - opportunity_id: ids-1
+    opportunity: 'Trim the feature construction in pyspi/lib/ids/numpy_dependence.py: build z^k exp(-B z^2) by repeated multiplication from one exp factor instead of a fresh power per term (transform, lines 16-23) and drop center() before np.corrcoef, which centres again (lines 64, 77).'
+    opp_type: vectorise-batch
+    expected_speedup: ~1.3x
+    speedup_basis: 'profile:audit/profiles/micro/misc.ids__118x1024.pstats transform 33.7% + center 6.3% (corrcoef/cov 52.4% stays: every cross-term correlation is needed) -> removable share at most 0.4, Amdahl 1.67x + complexity: O(K P T) elementwise work; the whole unit is 0.03 s per window at 118x1024'
+    output_risk: unverified-within-tolerance
+    risk_evidence: repeated multiplication instead of power for integer k and skipping the pre-centring change float rounding; corrcoef re-centres, so only last-bit differences are expected
+    effort: S
+    depends_on: []

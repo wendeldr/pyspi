@@ -1,0 +1,318 @@
+unit_id: spectral.gpdcoh
+status: profiled
+correctness:
+  metric_name_standard: Generalised partial directed coherence (squared |gPDC|^2), band mean / band max, bivariate nonparametric estimate
+  canonical_ref: Baccala LA, Sameshima K, Takahashi DY (2007) Generalized partial directed coherence. Proc. 15th Int. Conf. Digital Signal Processing (DSP 2007), IEEE, pp. 163-166
+  canonical_definition: pi^g_ij(f) = (1/sigma_i) Abar_ij(f) / sqrt( sum_k (1/sigma_k^2) |Abar_kj(f)|^2 ), sigma_k^2 = innovation variance of channel k, full multivariate VAR; flow j -> i; sum_i |pi^g_ij|^2
+    = 1; invariant to channel scaling; modulus quantity
+  documented_definition: 'supplement §1.5.11, p.17 (line 789-794): ''we include the generalized partial directed coherence (gpdoh) [73], which scales the relative strength of inflow from x -> y by their
+    noise covariance''; same text GitBook spectral.md:210. Band rule, supplement §1.5, p.12-13 (supplement.txt lines 570-599 in this checkout; the pack''s line numbers are offset by about 12-16): ''We use
+    125 uniformly sampled bins across the entire frequency range, f in [f0, fs/2] ... f0 = 4/T'' and bands ''fmin-0_fmax-0-5: f in [0, fs/2]; fmin-0_fmax-0-25: f in [0, fs/4]; fmin-0-25_fmax-0-5: f in [fs/4,
+    fs/2]'', summary = mean or max over the band. Directed measures ''are nonparametrically estimated through spectral matrix factorization [57, 58]'' (§1.5, p.12). Row/column meaning of the MPI: GitBook
+    glossary-of-terms.md:27 ''The rows in this table reflect the sources while the columns reflect the targets''.'
+  delegate_lib: spectral_connectivity==1.1.2 Connectivity.generalized_partial_directed_coherence (numpy 2.5.4, scipy 1.17.1)
+  implemented_as: 'Same per-pair multitaper + Wilson pipeline; Sigma = A0 A0^T; nv = diag(Sigma) broadcast along rows; L = |Abar / sqrt(nv) / _total_outflow(Abar, nv)|^2 = (|Abar_ij|^2/sigma_i^2) / sum_k
+    (|Abar_kj|^2/sigma_k^2) (SQUARED). Kernel probe p2_kernel.py: equals canonical |pi^g|^2 to 8.9e-16 on exact var2_bivariate and var2_chain spectra. A[i, j] = nanmean/nanmax of L[f, 0, 1] over fmin <
+    f < fmax.'
+  implementation_trace:
+  - pyspi/data.py:184-195 optional scipy detrend then zscore(axis=1, ddof=1) per process (Data default normalise=True, detrend=False)
+  - pyspi/statistics/spectral.py:258-265 GeneralizedPartialDirectedCoherence(NonparametricSpectralBivariate, Directed), _measure 'generalized_partial_directed_coherence'
+  - 'pyspi/calculator.py:325-339 Calculator.compute (HEAD a42ebc1): :329 S = self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan); :336-337 except Exception -> self._table[spi] = np.nan (whole SPI matrix NaN), error recorded :338-339'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for j, for i != j: A[i, j] = self.bivariate(data, i=i, j=j) (P(P-1) ordered pairs)'
+  - 'pyspi/statistics/spectral.py:20-43 NonparametricSpectral.__init__: fmax=None -> fs/2; statistic ''mean'' -> np.nanmean, ''max'' -> np.nanmax; identifier suffix _multitaper_<stat>_fs-1_fmin-.._fmax-..'
+  - 'pyspi/statistics/spectral.py:106-126 NonparametricSpectralBivariate._get_cache: key (measure, i, j); z = data.to_numpy(squeeze=True)[[i, j]].T (column 0 = x_i, column 1 = x_j); m = sc.Multitaper(z,
+    sampling_frequency=fs); conn = sc.Connectivity.from_multitaper(m); res = getattr(conn, measure)(); cached in data.spectral_bv'
+  - 'pyspi/statistics/spectral.py:128-134 bivariate: freq_id = where((freq > fmin) * (freq < fmax)) (STRICT inequalities, unlike the multivariate path at :88 which uses >= / <=); returns statfn(res[0, freq_id,
+    0, 1])'
+  - pyspi/_spectral_compat.py:15-28 replaces the numpy namespace of spectral_connectivity.connectivity only (np.in1d shim); minimum_phase_decomposition.py keeps the real numpy
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:74-100 Multitaper defaults: time_halfbandwidth_product=3, detrend_type=''constant'', n_tapers=None, is_low_bias=True; :155-164
+    n_tapers = floor(2*NW-1) = 5'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:167-178 single window = whole series; :181-185 n_fft = next_fast_len(T) (no zero padding; = T for T in {64,256,1024,4096}); :188-190
+    frequencies = fftfreq(n_fft, 1/fs)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:238-260 fft: detrend(constant) -> taper (dpss, :357-387) -> FFT / fs (:335-354)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:156-172 Connectivity.from_multitaper (expectation_type 'trials_tapers' -> mean over trials and the 5 tapers, :45-53)
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:195-208 _cross_spectral_matrix S[a, b] = X_a conj(X_b); :210-220 _expectation_cross_spectral_matrix
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:259-261 _minimum_phase_factor (plain property, NOT cached: every access re-runs Wilson) -> minimum_phase_decomposition.py:161-222'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:263-266 _transfer_function = _estimate_transfer_function(Psi) restricted to the first (n_fft+1)//2 bins (decorator :73-89); :1145-1170
+    H = Psi @ inv(A0), A0 = ifft(Psi)[lag 0].real
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:268-270 _noise_covariance -> :1116-1142 Sigma = A0 @ A0^T
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:272-274 _MVAR_Fourier_coefficients = inv(H)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:845-874 generalized_partial_directed_coherence: nv = _get_noise_variance(self._noise_covariance); _squared_magnitude(Abar /
+    sqrt(nv) / _total_outflow(Abar, nv)) (3 Wilson runs)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:1234-1238 _get_noise_variance (row-indexed diag(Sigma)); :1241-1250 _total_outflow sums |Abar_kj|^2 / sigma_k^2 over rows k
+  deviation_from_documented: '(i) Direction: documented ''from x -> y'' with rows = sources; implemented A[i, j] = flow x_j -> x_i (row = target), probe p3_pipeline.py var2_bivariate A[1,0] = 0.2972 > A[0,1]
+    = 0.1086 for x0 -> x1. (ii) ''nonparametrically estimated through spectral matrix factorization'' holds, but each ordered pair is factorised on its own 2-channel spectrum (bivariate, unconditioned on
+    the other P-2 channels). (iii) Band rule: documented 125 bins from f0 = 4/T with closed bands; implemented: the multitaper grid k/n_fft (n_fft = T for power-of-two T, so T/2 non-negative bins, DC included,
+    Nyquist absent) with open bands (fmin < f < fmax): DC is always dropped and the f = 0.25 bin belongs to neither half-band (p6_misc.py T=64: full band 31 bins 0.0156-0.4844, low band 15 bins ending 0.2344,
+    high band 15 bins starting 0.2656).'
+  deviation_from_canonical: 'Formula matches squared gPDC exactly (p2_kernel.py 8.9e-16); canonical is a modulus, library returns the square. Setting deviation: bivariate 2-channel model per pair, so not
+    partial/conditional for P > 2 (p3_pipeline.py var2_chain A[2,0] = 0.1847 with no direct 0 -> 2). For 2 channels the off-diagonal squared gPDC equals the canonical squared directed coherence (p10_dc_gpdc.py
+    2.2e-16), so this unit is what canonical bivariate DC would be. Estimator bias floor ~0.11 in the null direction at every T (p5_bias_T.py). Unlike dtf/pdcoh, gpdcoh keeps the designed direction under
+    a 100:1 innovation-variance ratio (p4_delay.py s=0.1: [0,1]=0.112 [1,0]=0.881 vs exact 0 / 0.990).'
+  units_and_range: 'dimensionless, squared, per-frequency in [0, 1]; band mean/max in [0, 1]; non-negative; asymmetric; diagonal NaN; invariant to channel scaling up to estimation noise (p6_misc.py x1*10:
+    0.3152 -> 0.3149)'
+  direction_convention: 'A[i, j] = statfn over the band of L[0, 1] where L is the library measure on the ordered 2-channel array [x_i, x_j]; the library''s [a, b] entry is the flow from channel b to channel
+    a (H[a, b] maps innovation b into signal a; kernel probe p2_kernel.py on the exact var2_bivariate spectrum: x0 -> x1 appears at L[1, 0], L[0, 1] = 0). Hence A[i, j] = estimated flow x_j -> x_i: ROW
+    = TARGET, COLUMN = SOURCE. Confirming evidence: exact-spectrum toy VAR(1) with x0 -> x1 gives library DTF L[1,0] = 0.1608, L[0,1] = 0 (review probe pD_kernel_directed.py); pipeline probe p3_pipeline.py
+    (T=4096, z-scored) var2_bivariate A[1,0] = 0.2617 > A[0,1] = 0.1281 (x0 -> x1). logistic_maps (y = process 1 drives x = process 0, audit/checks/make_data.py:207 (beta_xy = 0.1, beta_yx = 0) and :309-310 (update equations)) shows A[0,1] > A[1,0] in the pipeline,
+    but the Wilson factorisation does not converge on that dataset at T >= 1024 (60 iterations, residual 0.32-0.38; p7_wilson.py, review pF_wilson.py), so it is not used as confirming evidence. This is
+    the opposite of the glossary''s row = source convention. On delayed_noise the DTF/PDC/dcoh/ddtf matrices look row = source only because the estimator fails there (see candidates); gpdcoh on delayed_noise
+    follows row = target.'
+  symmetry_expected: asym
+  already_documented: DEPENDENCY_COMPATIBILITY_REVIEW.md (Nyquist handling / frequency grid of spectral-connectivity 1.1.2 vs 2.x; pinned at 1.1.2 per tests/README.md dependency constraints); base.pair_handling
+    record (glossary row = source convention)
+  new_finding_candidates:
+  - 'CANDIDATE (direction reversed vs documentation): p3_pipeline.py var2_bivariate gpdcoh [[nan, 0.1086], [0.2972, nan]] for x0 -> x1; delayed_noise gpdcoh A[k,0] ~0.87-0.88 > A[0,k] ~0.11 for x0 leading:
+    row = target consistently.'
+  - 'CANDIDATE (bivariate gPDC is not partial): spectral.py:112 two-channel model per pair; var2_chain gpdcoh A[2,0] = 0.1847 (p3_pipeline.py) where the 3-channel gPDC is 0 (p2_kernel.py var2_chain ''[0.0,
+    0.2544, 1.0]'').'
+  - 'CANDIDATE (bias floor): null-direction band mean 0.120, 0.112, 0.109, 0.109, 0.111 at T = 64..16384 (p5_bias_T.py s=1.0), also ~0.11 for s=0.1; independent of T and of the coupling.'
+  - 'CANDIDATE (squared vs modulus): connectivity.py:870 ''_squared_magnitude(...)'' vs modulus definition in Baccala et al. 2007.'
+  - 'CANDIDATE (cost): 3 Wilson runs per call (p6_misc.py).'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - var2_chain
+    path: kernel
+    reference: 'analytic: true VAR(2) transfer matrix from the MANIFEST coefficients (Abar(f) = I - A1 e^{-i2pi f} - A2 e^{-i4pi f}, H = inv(Abar), S = H Sigma H^H on fftfreq(1024)) fed into spectral_connectivity.Connectivity
+      via a subclass overriding _expectation_cross_spectral_matrix (only the factorisation + measure formula are under test); canonical measure computed in numpy from (Abar, H, Sigma); canonical gPDC with
+      row (target) sigma_i in the numerator and sigma_k in the column sum'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: library generalized_partial_directed_coherence equals the canonical squared gPDC within 1e-12; column sums 1
+  - datasets:
+    - var2_bivariate
+    - logistic_maps
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic ground truth from the generating model (var2_bivariate: x0 -> x1 only; var2_chain: 0 -> 1 -> 2; logistic_maps: process 1 (y) drives process 0 (x)) plus a from-scratch numpy OLS
+      VAR(p) fit (p = 2 for var2_*, BIC-chosen <= 10 for logistic_maps) with the canonical measure computed from the fitted coefficients; reference does not import spectral_connectivity; delayed_noise truth:
+      x0 leads x1..x3'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'establishes A[i,j] meaning: A[1,0] > A[0,1] (var2_bivariate), A[0,1] > A[1,0] (logistic_maps), A[k,0] > A[0,k] for k = 1..3 (delayed_noise): row = target; logistic_maps is reported
+      but not decisive unless the Wilson factorisation converges on it (it does not at T >= 1024 in p7_wilson.py)'
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    path: kernel
+    reference: 'independent-impl: from-scratch numpy multitaper (scipy.signal.windows.dpss(T, NW=3, Kmax=5), constant detrend, FFT, mean over tapers) and from-scratch numpy Wilson (1972) factorisation following
+      Dhamala et al. 2008 (same plus operator: half zero-lag, upper-triangular, zero lags >= n/2), then the canonical formula; does not import spectral_connectivity'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: per-bin squared gPDC agrees with the from-scratch estimator within 1e-6
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: kernel
+    reference: 'analytic invariance: gPDC is invariant to x_k -> c_k x_k + b_k (b removed by constant detrend)'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: kernel-level gpdcoh on scaled_offset equals that on bivariate_gaussian (same draw) within 1e-8 per bin; dtf/pdcoh/dcoh do not satisfy this (contrast)
+  - datasets:
+    - var2_bivariate
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic: band mean of canonical squared gPDC from the true VAR coefficients and Sigma on the open-band bins'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: true-direction bias shrinks with T; null direction stays ~0.11 at all T (bias floor)
+  check_method: analytic
+  check_reference: audit/checks/refs/spectral_directed.py:h_exactbin (analytic A(f) and Sigma, _kernels_spectral.gpdc), audit/checks/refs/spectral_directed.py:h_chain, audit/checks/refs/spectral_directed.py:h_rep
+    / h_indep / h_formula, audit/checks/refs/spectral_directed.py:h_truth / h_mc / h_dir / h_scale; probes audit/checks/probes/spectral_directed_probes.py
+  check_data: var2_bivariate T64/T256/T1024/T4096 (pipeline), var2_chain T256 (pipeline-detrend)/T1024, iid_gaussian processes 0-2 T256/T1024/T4096 (kernel), gauss_ar1_pair T1024/T4096, delayed_noise T1024/T4096,
+    logistic_maps_chaotic T1024/T4096, logistic_maps T4096, scaled_offset vs bivariate_gaussian T1024 (kernel); exact VAR(2) spectra of var2_bivariate and var2_chain on fftfreq(1024)
+  agreement_criterion: 'tolerance rtol 1e-6 / atol 1e-8 for the replication of every identifier (rep, indep), rtol 1e-9 / atol 1e-12 for the formula on the library''s own factors, atol 1e-10 (gpdcoh 1e-8)
+    on the exact spectrum; statistical: |pyspi - value| <= 2 se with se = Monte Carlo SD x z_Bonferroni(m)/2 over the m off-diagonal entries (familywise 5% per run); direction: sign of A - A.T equals the
+    population sign; qualitative as stated per run; scale: band-mean change < 1e-2 counts as invariant (the estimator''s own non-equivariance level)'
+  closeness: 'Formula: canonical squared gPDC (|A_ij|^2/sigma_i^2) / sum_k (|A_kj|^2/sigma_k^2) to 1.0e-15 on the exact spectra (exactbin 2/2; 3-channel var2_chain gPDC[2,0] 3.8e-32) and to 1.0e-15 on the
+    library''s own factors (formula 6/6); off-diagonal squared gPDC = canonical squared DC (Baccala 1998) to <= 3.9e-16. Independent chain: rep 21/21 (<= 8.1e-14), indep 11/11 (<= 2.7e-12 at T256/T1024/T4096; the T1024/T256 subset <= 2.3e-13). Chain: conditioned
+    gPDC(0->2) 0.0, bivariate population 0.0845, pyspi 0.2031 (MC 0.176 +- 0.017). Truth: estimator mean 0.302 vs population 0.247 (true) and 0.110 vs 0 (null) at T4096, 0/8 truth pass (max |z| 4.5 -> 21.7);
+    mc 7/7 (max |z| 1.63). Scale: band mean changes by 3.1e-3 (population 0.0) vs 0.871 for dtf (scale pass). Range: <= 1.0 on all 5 datasets.'
+  verdict: related-quantity
+  score_0_10: 4
+  score_rubric: 4
+  score_rubric_basis: anchor
+  score_rubric_note: Per bin this is the canonical squared gPDC (to 1.0e-15). Because it is fitted per pair, it is not partialised for P > 2 (var2_chain pyspi 0.2031
+    vs conditioned 0.0).
+  documentation_status: misdescribed
+  verdict_adjusted: related-quantity
+  score_adjusted: 4
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The formula is the canonical squared gPDC (fp-exact; Baccala, Sameshima & Takahashi 2007 define the modulus), but as for pdcoh the per-pair 2-channel model removes the partialisation (var2_chain:
+    0.0845 bivariate vs 0.0 conditioned, pyspi 0.2031). For 2 channels the off-diagonal squared gPDC equals the canonical squared directed coherence, so gpdcoh is what dcoh should return. It is the only
+    unit of the family that keeps the population direction on delayed_noise (estimator 0.88 vs 0.11) and that is scale invariant (3.1e-3, the Wilson non-equivariance level). T-independent estimator bias
+    (~0.11 null), row = target, open bands as for dtf. Rubric anchor 4 for P > 2 (pairwise gPDC is a related but different quantity); canonical for P = 2.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: one pyspi run <= 0.9 s at P=2-3, T<=4096 (var2_bivariate T4096: dtf 0.52 s, dcoh 0.68 s, pdcoh 0.51 s, gpdcoh 0.69 s, ddtf 0.87 s); T=4096 used for the analytic convergence runs and for the per-bin independent runs (indep at T256/T1024/T4096; pyspi probe <= 0.77 s, reference Wilson 21-29 iterations); Monte
+    Carlo (100-400 draws) runs in the reference'
+  symmetry_observed: 'asym: max|A - A.T| between 0.015 and 0.797 over the 21 rep runs (var2_bivariate T1024 mean-full 0.199); diagonal NaN'
+  direction_observed: 'row = target, column = source: A[i, j] estimates flow x_j -> x_i. var2_bivariate (x0 -> x1): A[1,0] - A[0,1] = +0.199 at T1024 and +0.189 at T4096; var2_chain: A[1,0] > A[0,1], A[2,1]
+    > A[1,2], A[2,0] > A[0,2] (dir runs pass); delayed_noise follows row = target as well (A[k,0] - A[0,k] = 0.772, 0.771, 0.797; dir pass) and logistic_maps_chaotic gives A[1,0] - A[0,1] = 0.208 / 0.215
+    (x -> y; factorisation residual 0.40/0.37, reported only). This is the opposite of the glossary''s row = source convention.'
+  candidate_resolutions:
+  - candidate: direction reversed vs documentation
+    outcome: confirmed
+    evidence: spectral.gpdcoh|var2_bivariate|1024|pipeline|dir:mean-full (+0.199), |delayed_noise|1024|pipeline|dir:mean-full (pass, 0.77-0.80), var2_chain dir pass
+  - candidate: bivariate gPDC is not partial
+    outcome: confirmed
+    evidence: 'spectral.gpdcoh|var2_chain|1024|pipeline|chain:mean-full: 0.0 conditioned vs 0.0845 bivariate population, pyspi 0.2031'
+  - candidate: bias floor ~0.11 independent of T
+    outcome: confirmed
+    evidence: 'spectral.gpdcoh|var2_bivariate|{256,1024,4096}|pipeline|truth:mean-full: null-direction estimator mean 0.109/0.110/0.110 vs 0; iid_gaussian truth runs 0.107-0.112 at T256/1024/4096; SD falls
+      0.021 -> 0.005'
+  - candidate: squared vs modulus
+    outcome: confirmed
+    evidence: 'spectral.gpdcoh|var2_bivariate|1024|pipeline|formula~p01: lib == canonical squared (0.0); band mean 0.3152 vs modulus 0.5288'
+  - candidate: 'cost: 3 Wilson runs per call'
+    outcome: confirmed
+    evidence: 'spectral.wilson_factorisation|var2_chain|256|pipeline|calls: 18 runs at P=3'
+  checks_run:
+  - run_ids:
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|rep:mean-full
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|rep:mean-low
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|rep:mean-high
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|rep:max-full
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|rep:max-low
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|rep:max-high
+    - spectral.gpdcoh|var2_chain|1024|pipeline|rep:mean-full
+    - spectral.gpdcoh|var2_chain|1024|pipeline|rep:mean-low
+    - spectral.gpdcoh|var2_chain|1024|pipeline|rep:mean-high
+    - spectral.gpdcoh|var2_chain|1024|pipeline|rep:max-full
+    - spectral.gpdcoh|var2_chain|1024|pipeline|rep:max-low
+    - spectral.gpdcoh|var2_chain|1024|pipeline|rep:max-high
+    - spectral.gpdcoh|iid_gaussian|256|kernel|rep:mean-full~p012
+    - spectral.gpdcoh|iid_gaussian|256|kernel|rep:max-high~p012
+    - spectral.gpdcoh|var2_bivariate|64|pipeline|rep:mean-full
+    - spectral.gpdcoh|var2_bivariate|64|pipeline|rep:max-low
+    - spectral.gpdcoh|var2_chain|256|pipeline-detrend|rep:mean-full
+    - spectral.gpdcoh|gauss_ar1_pair|1024|pipeline|rep:mean-full
+    - spectral.gpdcoh|delayed_noise|1024|pipeline|rep:mean-full
+    - spectral.gpdcoh|logistic_maps_chaotic|1024|pipeline|rep:mean-full
+    - spectral.gpdcoh|scaled_offset|1024|kernel|rep:mean-full
+    reference: audit/checks/refs/spectral_directed.py:h_rep (independent multitaper + Wilson, library formula transcribed, strict band)
+    outcome: 21/21 pass; max_abs 8.1e-14
+  - run_ids:
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|formula~p01
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|formula~p10
+    - spectral.gpdcoh|var2_chain|1024|pipeline|formula~p02
+    - spectral.gpdcoh|gauss_ar1_pair|1024|pipeline|formula~p01
+    - spectral.gpdcoh|delayed_noise|1024|pipeline|formula~p03
+    - spectral.gpdcoh|iid_gaussian|256|kernel|formula~p01
+    reference: audit/checks/refs/spectral_directed.py:h_formula (formula on the library's own H/Sigma, probe audit/checks/probes/spectral_directed_probes.py:perbin)
+    outcome: 6/6 pass; max_abs 1.0e-15
+  - run_ids:
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|indep~p01
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|indep~p10
+    - spectral.gpdcoh|var2_chain|1024|pipeline|indep~p02
+    - spectral.gpdcoh|gauss_ar1_pair|1024|pipeline|indep~p01
+    - spectral.gpdcoh|delayed_noise|1024|pipeline|indep~p03
+    - spectral.gpdcoh|iid_gaussian|256|kernel|indep~p01
+    - spectral.gpdcoh|gauss_ar1_pair|4096|pipeline|indep~p01
+    - spectral.gpdcoh|iid_gaussian|1024|kernel|indep~p01
+    - spectral.gpdcoh|iid_gaussian|4096|kernel|indep~p01
+    - spectral.gpdcoh|var2_bivariate|256|pipeline|indep~p01
+    - spectral.gpdcoh|var2_bivariate|4096|pipeline|indep~p01
+    reference: audit/checks/refs/spectral_directed.py:h_indep (whole chain independent, per bin)
+    outcome: 11/11 pass; max_abs 2.7e-12 (T4096 runs <= 2.7e-12, T256 <= 1.4e-14; Wilson reconstruction error of the independent kernel 0.0015-0.024)
+  - run_ids:
+    - spectral.gpdcoh|var2_bivariate|1024|kernel|exactbin
+    - spectral.gpdcoh|var2_chain|1024|kernel|exactbin
+    reference: audit/checks/refs/spectral_directed.py:h_exactbin (analytic VAR(2) H, library Wilson on the exact spectrum via audit/checks/probes/spectral_directed_probes.py:exact_perbin)
+    outcome: 2/2 pass; max_abs 1.0e-15
+  - run_ids:
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|dir:mean-full
+    - spectral.gpdcoh|var2_bivariate|4096|pipeline|dir:mean-full
+    - spectral.gpdcoh|var2_chain|1024|pipeline|dir:mean-full
+    - spectral.gpdcoh|gauss_ar1_pair|1024|pipeline|dir:mean-full
+    - spectral.gpdcoh|delayed_noise|1024|pipeline|dir:mean-full
+    - spectral.gpdcoh|logistic_maps_chaotic|1024|pipeline|dir:mean-full
+    - spectral.gpdcoh|logistic_maps_chaotic|4096|pipeline|dir:mean-full
+    reference: audit/checks/refs/spectral_directed.py:h_dir (population sign of the bivariate quantity / generating model)
+    outcome: 7/7 pass
+  - run_ids:
+    - spectral.gpdcoh|var2_bivariate|256|pipeline|truth:mean-full
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|truth:mean-full
+    - spectral.gpdcoh|var2_bivariate|4096|pipeline|truth:mean-full
+    - spectral.gpdcoh|var2_bivariate|4096|pipeline|truth:mean-low
+    - spectral.gpdcoh|var2_bivariate|4096|pipeline|truth:mean-high
+    - spectral.gpdcoh|iid_gaussian|256|kernel|truth:mean-full~p012
+    - spectral.gpdcoh|iid_gaussian|1024|kernel|truth:mean-full~p012
+    - spectral.gpdcoh|iid_gaussian|4096|kernel|truth:mean-full~p012
+    reference: audit/checks/refs/spectral_directed.py:h_truth (analytic population value, se = Monte Carlo SD x z_Bonf/2)
+    outcome: 0/8 pass; max |z| 4.5 -> 21.7
+  - run_ids:
+    - spectral.gpdcoh|var2_bivariate|1024|pipeline|mc:mean-full
+    - spectral.gpdcoh|var2_bivariate|4096|pipeline|mc:mean-full
+    - spectral.gpdcoh|var2_chain|1024|pipeline|mc:mean-full
+    - spectral.gpdcoh|delayed_noise|1024|pipeline|mc:mean-full
+    - spectral.gpdcoh|iid_gaussian|256|kernel|mc:mean-full~p012
+    - spectral.gpdcoh|iid_gaussian|1024|kernel|mc:mean-full~p012
+    - spectral.gpdcoh|iid_gaussian|4096|kernel|mc:mean-full~p012
+    reference: audit/checks/refs/spectral_directed.py:h_mc (Monte Carlo mean of the independent estimator)
+    outcome: 7/7 pass; max |z| 1.63
+  - run_ids:
+    - spectral.gpdcoh|var2_chain|1024|pipeline|chain:mean-full
+    reference: audit/checks/refs/spectral_directed.py:h_chain (multivariate 3-channel truth vs bivariate marginal population vs Monte Carlo)
+    outcome: 'fail (qualitative): bivariate 0.0845 vs conditioned 0.0'
+  - run_ids:
+    - spectral.gpdcoh|scaled_offset|1024|kernel|scale:mean-full
+    reference: audit/checks/refs/spectral_directed.py:h_scale
+    outcome: 'pass: change 3.1e-3 (population 0.0)'
+  - run_ids:
+    - spectral.gpdcoh|logistic_maps|4096|pipeline|range:max-full
+    - spectral.gpdcoh|logistic_maps_chaotic|4096|pipeline|range:max-full
+    - spectral.gpdcoh|delayed_noise|4096|pipeline|range:max-full
+    - spectral.gpdcoh|var2_bivariate|4096|pipeline|range:max-full
+    - spectral.gpdcoh|iid_gaussian|1024|kernel|range:max-full~p012
+    reference: audit/checks/refs/spectral_directed.py:h_range (canonical range [0, 1])
+    outcome: 5/5 pass; max 1.0
+  - run_ids:
+    - spectral.wilson_factorisation|var2_chain|256|pipeline|calls
+    reference: audit/checks/refs/spectral_directed.py:h_calls
+    outcome: pass; 18 Wilson runs for gpdcoh at P=3
+optimisation:
+  complexity_P_T: 'P(P-1) ordered pairs x [2-channel Multitaper (DPSS O(K*T) pure Python + FFT O(K*T log T)) + 3 Wilson factorisations of a 2x2 x n_fft spectrum (~28 iterations of FFT O(n_fft log n_fft) and n_fft 2x2 solves each)]; O(P^2 * T log T) with a large per-pair constant (57-99 ms per pair at T=1024). Measured T exponent 0.82; never run above 8x1024 (infeasible list): the 118x1024 projection is a pair-count scaling of the 8x1024 wall (extrapolated-pairs-from-8), consistent with the per-pair loop having no shared term.'
+  hotspot_1: .venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:minimum_phase_decomposition (third-party:spectral_connectivity) 80.1% of the profiled SPI call at 8x1024 (3 calls per ordered pair), of which numpy/linalg/_linalg.py:solve on 2x2 stacks 53.6%
+  hotspot_2: .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:dpss_windows 17.7% (inside connectivity.py:from_multitaper 18.0%, one Multitaper per ordered pair)
+  hotspot_owner: third-party:spectral_connectivity
+  opaque_share: 0.083
+  profile_file: audit/profiles/spectral.gpdcoh__8x1024.pstats
+  opportunities:
+  - opportunity_id: spectral_directed-1
+    opportunity: 'Memoise the Wilson factor (H, Sigma) per ordered pair on the Data and serve every property access and all five directed units from it: the library recomputes minimum_phase_decomposition on each access of _transfer_function / _noise_covariance / _MVAR_Fourier_coefficients (connectivity.py:260-275), i.e. 2, 3, 2, 3 and 4 factorisations per pair for dtf, dcoh, pdcoh, gpdcoh and ddtf (14 per ordered pair for the five units).'
+    opp_type: cache-sharing
+    expected_speedup: ~2x
+    speedup_basis: profile:audit/profiles/spectral.gpdcoh__8x1024.pstats minimum_phase_decomposition 80.1% over 3 calls per pair, 2 removable
+    output_risk: unverified-bit-identical
+    risk_evidence: the factorisation is deterministic (Cholesky start, fixed tolerance); reusing it repeats no arithmetic and changes none
+    effort: S
+    depends_on: []
+  - opportunity_id: spectral_directed-2
+    opportunity: Run one batched Wilson factorisation over all pairs with the pairs on the leading axis (the library checks convergence per leading index, minimum_phase_decomposition.py:102-125, 161-222) and replace np.linalg.solve on stacks of 2x2 matrices (_get_linear_predictor, :128-158) by the closed-form 2x2 inverse, removing the per-pair Python loop (pyspi/base.py:85-94 for the directed units, spectral_connectivity/connectivity.py:722-743 for sgc).
+    opp_type: vectorise-batch
+    expected_speedup: 2-5x
+    speedup_basis: 'profile:audit/profiles/spectral.gpdcoh__8x1024.pstats minimum_phase_decomposition 80.1% (solve 53.6%) + complexity: a closed-form 2x2 inverse is a few flops per matrix against LAPACK gesv per matrix plus Python per pair'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'closed-form 2x2 inverse rounds differently and the 1e-8 stop rule can shift by an iteration; a batch must also keep two failure paths: on the sgc path the library pair loop catches np.linalg.LinAlgError per pair and writes NaN (spectral_connectivity/connectivity.py:724-743; a closed-form inverse does not raise, so singular pairs must be detected and set to NaN explicitly; on the directed path pyspi''s pair loop (pyspi/base.py:85-94) has no such handler, so today a raising pair fails the whole SPI in the Calculator''s per-SPI exception handler, and a batch must keep that behaviour or record the change), and a failed Cholesky initial condition fails the whole SPI on both paths: the handler at minimum_phase_decomposition.py:48 names xp.linalg.linalg.LinAlgError, which numpy 2.5.4 does not have, so the failure raises AttributeError, which neither the library pair loop (LinAlgError only) nor pyspi catches, and the Calculator sets the whole SPI to NaN (pyspi/calculator.py:336-337); no RNG is drawn (probes recorded in notes/spectral_directed.md Checks "NumPy-2 fallback" and notes/sgc.md "Error path"). A batch must keep that whole-SPI failure or record the change. The random start from the global numpy RNG (minimum_phase_decomposition.py:54-63), which in a batched call would hit every pair, is reachable only under a numpy that still has the deprecated numpy.linalg.linalg shim (numpy < 2.4 as checked: 2.2.6 and 2.3.3 resolve xp.linalg.linalg.LinAlgError with a DeprecationWarning, 2.4.6 and 2.5.4 raise AttributeError) or a spectral_connectivity release whose handler catches xp.linalg.LinAlgError (v2.0.1 does, notes/spectral_directed.md); that rng-stream risk is conditional on such a numpy or library version and does not apply in this environment (pyproject.toml pins numpy>=2.5.4,<2.6)'
+    effort: L
+    depends_on:
+    - spectral_directed-1
+  - opportunity_id: spectral_csm-shared-csm
+    opportunity: Compute the multitaper Fourier coefficients once per Data and memoise the taper-averaged CSM, power and coherency on the Data under a key without measure or band (pyspi/statistics/spectral.py:46-50, 64-83; this also removes the first-insert string key at :81 that makes the first spectral SPI on a Data compute twice). Every undirected measure, every psi/gd band, the 2x2 blocks of the bivariate directed path and the sgc nonparametric pair loop read from it; the phase-sync measures take their per-taper products from the shared coefficients.
+    opp_type: cache-sharing
+    expected_speedup: ~1.2x
+    speedup_basis: 'profile:audit/profiles/spectral.gpdcoh__8x1024.pstats connectivity.py:from_multitaper 18.0% (DPSS 17.7%) per ordered pair + complexity: the 2x2 CSM block of a pair is a slice of the shared P-channel CSM.
+      Independent of spectral_directed-1 and spectral_directed-2 (independent_of), because those avenues cut the Wilson factorisation (minimum_phase_decomposition) and this one the
+      per-pair Multitaper and DPSS build (from_multitaper), disjoint frames; in their residual the from_multitaper share is larger, so this avenue''s standalone figure stacked there is a
+      lower figure'
+    output_risk: unverified-bit-identical
+    risk_evidence: multivariate and bivariate CSM entries are bit-identical (spectral_csm.md trace, Direction convention)
+    effort: M
+    depends_on: []
+    independent_of:
+    - spectral_directed-1
+    - spectral_directed-2

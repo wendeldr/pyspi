@@ -1,0 +1,127 @@
+unit_id: preproc.two_array_api
+status: profiled
+correctness:
+  metric_name_standard: 'Input parsing for the direct array API: spi.bivariate(x, y) and spi.multivariate([x1, x2, ...]) build a pyspi Data object from raw arrays'
+  canonical_ref: 'pyspi''s own documented preprocessing contract: supplement §1 (heading line 95), p.3 ''Prior to evaluating each statistic, we standardize (z-score) the MTS along the time axis'' (no external literature defines an API)'
+  canonical_definition: Every process handed to a statistic is z-scored along time (ddof=1) exactly as Data(np.vstack([x, y])) would do, so spi.bivariate(x, y) == spi.multivariate(Data(np.vstack([x, y])))[0, 1] for i=0, j=1
+  documented_definition: 'supplement §1, p.3: standardize (z-score) the MTS before evaluating each statistic. pyspi/base.py:5-7 comment: ''parsing functions for decorating so that we can either input the time series directly or use the data structure''. GitBook development/development/incorporating-new-spis.md:357 ''consistent input parsing''. pyspi/base.py:31 error text: ''Input must be either a pyspi.data object or two 1D-array inputs.'' No page states that the direct-array path skips normalisation of later arrays.'
+  delegate_lib: pyspi (base.parse_bivariate, base.parse_multivariate, data.Data.add_process); scipy==1.17.1 scipy.stats.zscore applied to the first array only
+  implemented_as: 'parse_bivariate with a non-Data first argument creates Data() (no data, normalise=True, detrend=False), calls add_process(x): since _data does not exist this goes through set_data(proc, dim_order=''s'') and x IS z-scored (ddof=1); add_process(y) then appends y RAW with np.append (no detrend, no z-score). parse_multivariate does the same for an iterable: only the first process is z-scored. If i and j are both None and the Data has exactly 2 processes, i, j = 0, 1; otherwise base.py:45 builds Warning(''i and j not set.'') without raising or warning and calls the function with i=j=None. Detrend is never applied on this path and the caller cannot pass normalise/detrend. Unequal lengths raise ValueError from np.reshape. Probe p3_twoarray.py: two-array Data rows mean/std(ddof=1) ''[0. -4.7143] [1. 2.9476]'' for inputs 4x+10 and 3y-5.'
+  implementation_trace:
+  - 'pyspi/base.py:27-49 parse_bivariate: base.py:29-36 builds Data() then add_process(data1), add_process(data2)'
+  - pyspi/base.py:41-45 i, j defaulting; base.py:45 'Warning("i and j not set.")' is constructed, not raised or emitted
+  - pyspi/base.py:47 calls the wrapped bivariate with i, j (possibly None)
+  - 'pyspi/base.py:51-68 parse_multivariate: base.py:55-59 Data() then add_process for each element'
+  - 'pyspi/data.py:59-80 Data() with data=None: no set_data call, flags normalise=True, detrend=False'
+  - 'pyspi/data.py:219-240 add_process: data.py:230-236 appends the raw process when _data exists; data.py:237-238 first process goes through set_data'
+  - pyspi/data.py:149-208 set_data(proc, dim_order='s') -> zscore at data.py:193-195 (first process only)
+  - scipy/stats/_stats_py.py:2678-2760 zscore -> zmap (first process only)
+  - 'pyspi/base.py:8-25 parse_univariate: Data(data=1D array) uses dim_order=''ps'' and raises RuntimeError at pyspi/data.py:170-174'
+  deviation_from_documented: 'The direct-array path violates the documented ''z-score the MTS before evaluating each statistic'': the second (and any later) array is used raw. Scale/offset-sensitive SPIs therefore give different values from the Data/Calculator path on the same inputs. Probe p3_twoarray.py with xs = 4x+10, ys = 3y-5: dtw Data path 9.595792 vs bivariate(xs, ys) 58.469788 vs bivariate(z(x), z(y)) 9.595792; cov_EmpiricalCovariance multivariate([xs, ys])[0,1] = 1.789 vs Data path 0.607. Scale-invariant SPIs (spearmanr 0.570682 on all three paths) and, on this input, xcorr_max_sig-False (0.611807 on all three) were unaffected. Calculator is not affected (it always builds Data from the whole array).'
+  deviation_from_canonical: 'Same as deviation_from_documented: canonical (documented) contract is z-scoring of every process; the implementation z-scores only the first. Additionally an unset i/j on a Data with more than 2 processes is not reported (no warning) and is passed through as None.'
+  units_and_range: Not a statistic; affects the input units of every SPI called via the direct array API (second array keeps its raw units, offset and scale).
+  direction_convention: Data row 0 = first argument (x), row 1 = second argument (y); with i, j = 0, 1 the SPI's bivariate sees i = x, j = y (source x, target y for directed SPIs).
+  symmetry_expected: n/a
+  already_documented: 'Partly: tests/unit/test_data.py:74-88 test_add_process_appends_raw_unnormalised locks the Data.add_process behaviour (''First process goes through set_data ... later processes are appended raw''). Its consequence for SPI values through parse_bivariate/parse_multivariate, and the unraised Warning, are not in KNOWN_ISSUES.md.'
+  new_finding_candidates:
+  - 'CANDIDATE (two-array API z-scores only the first array): pyspi/base.py:34-36 -> pyspi/data.py:231-234 appends data2 raw; probe p3_twoarray.py: ''dtw Data(raw)=9.595792 bivariate(xs,ys)=58.469788 bivariate(z(x),z(y))=9.595792''. Affects every scale- or offset-sensitive SPI used through spi.bivariate(x, y).'
+  - 'CANDIDATE (same defect for list input to multivariate): pyspi/base.py:55-59; probe p3_twoarray.py: ''cov multivariate(list raw)[0,1] = 1.789328112801402 vs Data(raw)[0,1] = 0.6070368612347317''.'
+  - 'CANDIDATE (unset i, j not reported): pyspi/base.py:45 ''Warning(''i and j not set.'')'' creates an exception object and discards it; probe p3_twoarray.py on a 3-process Data: ''probe on 3 procs, no i/j -> (None, None) warnings emitted: 0''; dtw then fails with a numba TypingError, xcorr and spearmanr with IndexError. Whether some SPI silently returns a number with i=j=None is untested (hypothesis).'
+  - 'CANDIDATE (minor, parse_univariate): a raw 1-D array cannot be used: ''parse_univariate 1D -> RuntimeError Data array dimension (1) and length of dim_order (2) are not equal.'' (probe p3_twoarray.py; pyspi/base.py:10-12 uses Data(data=data1) with default dim_order=''ps'').'
+  proposed_checks:
+  - datasets:
+    - scaled_offset
+    path: kernel
+    reference: 'from-scratch numpy: expected array seen by the SPI is vstack([zscore_ddof1(x), zscore_ddof1(y)]); capture the actual array with a toy Directed subclass whose bivariate returns data.to_numpy(squeeze=True)'
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: candidate predicts row 0 equals the numpy z-score to <= 1e-14 and row 1 is bit-identical to the raw y (mean and std of scaled_offset row unchanged); the canonical expectation is both rows z-scored
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'same-lineage: pyspi''s own Data path spi.multivariate(Data(np.vstack([x, y])))[0, 1] for every identifier whose class uses Directed.multivariate or Undirected.multivariate (141 identifiers), versus spi.bivariate(x, y) on raw rows (2,3) of scaled_offset (scale 5 and 10, offsets -2 and 5)'
+    reference_kind: same-lineage
+    criterion: qualitative
+    expected_outcome: scale/offset-invariant SPIs agree to <= 1e-10; scale- or offset-sensitive SPIs (dtw, lcss, softdtw, bary_*, lmfit_*, gpfit_*, kraskov/kernel estimators, hsic) disagree on scaled_offset; on z-scored inputs bivariate(z(x), z(y)) agrees with the Data path to <= 1e-10 for all deterministic SPIs
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic: with 3+ processes and no i/j the call is ill-posed and should raise or warn'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'for every bivariate-capable identifier called as spi.bivariate(Data(iid_gaussian[:3])) record (a) whether any Python warning is emitted (candidate: none) and (b) whether it raises or returns a number; any returned number is a silent-misuse case'
+  check_method: independent-impl
+  check_reference: refs/preprocessing_base.py:r_capture (numpy z-score; contract vs mechanism), r_two_array_spi (kernels _kernels_distance.dtw_dp, _kernels_basic_misc.ridge_mse/spearman, numpy 1/T covariance, _kernels_infotheory.gaussian_te on z-scored inputs), r_unset_ij, r_univariate; pyspi side probes/preprocessing_base_probes.py:capture_bivariate, capture_multivariate_list, two_array_spi, unset_ij, univariate_raw
+  check_data: scaled_offset rows (2, 3) (scale 5 and 10, offsets -2 and 5) at T = 64, 1024 (capture) and 256 (SPIs); scaled_offset all 4 rows at 256 (list input); iid_gaussian rows 0-2 at T = 64 (unset i/j, all 285 config identifiers); iid_gaussian row 0 at 64 (1-D input)
+  agreement_criterion: 'captured array: exact (rtol 1e-12) against the documented contract (all rows z-scored) and against the candidate mechanism (first row z-scored, later rows raw); SPI values: tolerance rtol 1e-9 against the kernel on z-scored inputs, both orientations, three input paths; unset i/j and 1-D input: qualitative (canonical expectation: raise or warn / accept)'
+  closeness: 'Captured array (cap-contract fail, cap-mechanism pass at T=64 and 1024, max abs 0): row 0 mean 0, sd 1; row 1 bit-identical to the raw input (mean 4.68, sd 9.90 at T=1024). List input (list-contract fail, list-mechanism pass): rows 1-3 raw (sd 2.00, 4.88, 9.88). SPI values against the kernel on z-scored data: dtw direct raw path 159.48 / 68.86 vs 8.714 (max abs dev 150.8), Data path and direct z-scored path dev 0.0; lmfit_Ridge direct raw 31.71 / 7.72 vs 0.3245 (dev 31.4), other paths dev 0.0; cov_EmpiricalCovariance via multivariate([x, y]) 8.085 vs 0.818 (dev 7.27), other paths dev <= 2.2e-16; spearmanr and gc_gaussian_k-1_kt-1_l-1_lt-1 (scale/offset invariant) all paths agree (dev <= 9.6e-16). Unset i/j on 3 processes: 0 Python warnings over 285 identifiers; cds returns 0.0132 and igci 0.0 with no exception, Python warning or logging record (silent; mod-causal); mi_gaussian, mi_kraskov_NN-4, mi_kernel_W-0.25, tlmi_* (3) and phi_* (4) return NaN without an exception or Python warning, and each emits one logging record (n_logging_records 10 on mod-infotheory: WARNING ''MI calcs failed. Maybe check input data for Cholesky factorisation?'' for mi_*, WARNING ''Time-lagged MI calcs failed ...'' for tlmi_*, ERROR ''Integrated information computation failed: only integers, slices ...'' for phi_*), so the failure is reported through the logging module, with a message that does not name the unset i/j; the other 273 raise (TypeError, IndexError, ValueError, numba errors, or NotImplementedError for 144 classes without a bivariate). Raw 1-D array to a parse_univariate method: RuntimeError(''Data array dimension (1) and length of dim_order (2) are not equal.'').'
+  verdict: wrong
+  score_0_10: 3
+  score_rubric: 3
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'No anchor is written for infrastructure units, so anchor 3 is applied with the documented z-score contract as the label. Anchor 4 fails because
+    the output is not a coherent related quantity. It depends on the raw scale of every array after the first and on argument order: dtw gives 159.48 or 68.86, against
+    8.714 on z-scored inputs.'
+  documentation_status: misdescribed
+  verdict_adjusted: wrong
+  score_adjusted: 3
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The direct-array API (spi.bivariate(x, y), spi.multivariate([x1, x2, ...])) z-scores only the first array; every later array reaches the SPI raw (no z-score, and no detrend on this path), contrary to the documented ''standardize (z-score) the MTS ... prior to evaluating each statistic''. Scale- and offset-sensitive SPIs therefore return a different quantity (dtw 159.5 vs 8.71, Ridge MSE 31.7 vs 0.32, cov 8.08 vs 0.82); scale-invariant SPIs are unaffected. Calculator and the Data path are not affected. An unset i/j is never reported as such (base.py builds a Warning object and discards it); two SPIs (cds, igci) return a finite number for the ill-posed call with no message at all, and ten infotheory identifiers return NaN with a logging-module message that names a different cause. Score 3 by analogy to README anchor 3, ''An identifier hyperparameter is ignored or the label does not describe the computation'': no anchor is written for infrastructure units, and here the documented contract (supplement.txt:101-102 ''Prior to evaluating each statistic, we standardize (z-score) the MTS'') plays the role of the label, which the direct-array path does not honour for any array after the first; it also makes argument order matter (dtw 159.48 / 68.86 with x and y swapped, against 8.714 on z-scored inputs). Not 2, 1 or 0: no sign change against a canonical quantity, no substituted estimator and no degenerate output; each SPI computes its own formula on wrongly scaled input.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: capture and SPI runs under 2 s; unset i/j sweep 2-46 s per module at T=64. Scope: the trace stage proposed the same-lineage Data-path vs direct-path comparison for all 141 identifiers whose class uses the generic loops; it was run for 5 (dtw, lmfit_Ridge, cov_EmpiricalCovariance, spearmanr, gc_gaussian_k-1_kt-1_l-1_lt-1). For the other 136 the statement that later arrays reach the SPI raw rests on the captured-array runs (cap-*, list-*: the parse decorators are shared by every SPI), not on their SPI values; which of them change value depends on their scale/offset sensitivity and was not measured (not done).'
+  symmetry_observed: n/a (input parsing); for dtw the direct raw path is asymmetric (bivariate(x, y) = 159.48, bivariate(y, x) = 68.86 on spi-dtw) because only the first argument is z-scored, whereas the Data path is symmetric
+  direction_observed: 'Row 0 of the parsed Data is the first argument and row 1 the second; with i, j = 0, 1 the SPI receives i = first argument (spi-gc_gaussian_k-1_kt-1_l-1_lt-1: bivariate(x, y) = TE(x -> y) from the kernel to 9.6e-16, both orientations)'
+  candidate_resolutions:
+  - candidate: two-array API z-scores only the first array
+    outcome: confirmed
+    evidence: preproc.two_array_api|scaled_offset|{64,1024}|pipeline|cap-mechanism pass / cap-contract fail (row 1 bit-identical to raw); spi-dtw, spi-lmfit_Ridge fail on the direct raw path only (dev 150.8, 31.4)
+  - candidate: same defect for list input to multivariate
+    outcome: confirmed
+    evidence: 'preproc.two_array_api|scaled_offset|256|pipeline|list-mechanism pass / list-contract fail; spi-cov_EmpiricalCovariance: multivariate([x, y]) = 8.085 vs 0.818'
+  - candidate: unset i, j not reported; some SPI may silently return a number
+    outcome: confirmed
+    evidence: 'preproc.two_array_api|iid_gaussian|64|pipeline|mod-{basic,distance,causal,infotheory,spectral,wavelet,misc}: 0 Python warnings in 285 calls; mod-causal fail (cds 0.0132, igci 0.0 with no exception, warning or logging record: z[None] selects the whole array); mod-infotheory passes the revised criterion (10 identifiers return NaN with one logging record each, n_logging_records 10, messages about Cholesky factorisation or integer indexing, not about the unset i/j)'
+  - candidate: parse_univariate rejects a raw 1-D array
+    outcome: confirmed
+    evidence: 'preproc.two_array_api|iid_gaussian|64|pipeline|univariate-1d: RuntimeError(''Data array dimension (1) and length of dim_order (2) are not equal.'')'
+  checks_run:
+  - run_ids:
+    - preproc.two_array_api|scaled_offset|{64,1024}|pipeline|cap-contract
+    - preproc.two_array_api|scaled_offset|256|pipeline|list-contract
+    reference: refs/preprocessing_base.py:r_capture (documented contract)
+    outcome: fail 3/3 (max abs 35.0)
+  - run_ids:
+    - preproc.two_array_api|scaled_offset|{64,1024}|pipeline|cap-mechanism
+    - preproc.two_array_api|scaled_offset|256|pipeline|list-mechanism
+    reference: refs/preprocessing_base.py:r_capture (candidate mechanism)
+    outcome: pass 3/3 (max abs 0)
+  - run_ids:
+    - preproc.two_array_api|scaled_offset|256|pipeline|spi-{dtw,lmfit_Ridge,cov_EmpiricalCovariance}
+    reference: refs/preprocessing_base.py:r_two_array_spi
+    outcome: fail 3/3 on the direct raw path only (dev 150.8, 31.4, 7.27); Data and z-scored paths dev <= 2.2e-16
+  - run_ids:
+    - preproc.two_array_api|scaled_offset|256|pipeline|spi-{spearmanr,gc_gaussian_k-1_kt-1_l-1_lt-1}
+    reference: refs/preprocessing_base.py:r_two_array_spi
+    outcome: pass 2/2 (scale-invariant controls, dev <= 9.6e-16)
+  - run_ids:
+    - preproc.two_array_api|iid_gaussian|64|pipeline|mod-{basic,distance,causal,infotheory,spectral,wavelet,misc}
+    reference: refs/preprocessing_base.py:r_unset_ij
+    outcome: 'pass 6/7, fail mod-causal (cds, igci finite with no message); mod-infotheory passes because its 10 NaN returns each emit a logging record (criterion: raise, Python warning or logging record)'
+  - run_ids:
+    - preproc.two_array_api|iid_gaussian|64|pipeline|univariate-1d
+    reference: refs/preprocessing_base.py:r_univariate
+    outcome: fail (RuntimeError on raw 1-D input)
+optimisation:
+  complexity_P_T: 'O(T) per call: parse_bivariate builds Data() and calls add_process twice (pyspi/base.py:28-37, pyspi/data.py:add_process), z-scoring only the first array; not on the
+    Calculator / EEG workflow path, which builds one Data per window (0 s per window)'
+  hotspot_1: 'pyspi/base.py:parse_bivariate -> pyspi/data.py:Data.add_process (pyspi): no unit profile exercises this path (profiles call multivariate on a prebuilt Data)'
+  hotspot_2: 'n/a: no unit profile exercises this path (see hotspot_1), so there is no second frame to name'
+  hotspot_owner: pyspi
+  opaque_share: 'n/a: no cProfile frame exists for this path (the profiling pass builds the Data before prof.runcall, profile_units.py:712-718, and no unit profile calls the two-array API), so there is no profile to take a builtin-time share from'
+  profile_file: none for this path; the Data construction scale is in audit/profiles/micro/opp_xc-blas-threads.json (3.0 ms at 118x1024)
+  no_opportunity_reason: 'No opportunity: the two-array call path (parse_bivariate building a Data per call) is not on the Calculator or EEG workflow path, which builds one Data per window, so it costs 0 s per window there; its defect is a correctness item (score 3), not a timing one.'
+  opportunities: []

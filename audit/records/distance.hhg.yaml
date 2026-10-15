@@ -1,0 +1,364 @@
+unit_id: distance.hhg
+status: profiled
+correctness:
+  metric_name_standard: 'Heller-Heller-Gorfine (HHG) test statistic: sum over all ordered sample pairs of Pearson chi-square statistics of rank-of-distance 2x2 tables (sum.chisq variant, no p-value)'
+  canonical_ref: Heller R, Heller Y, Gorfine M (2013) A consistent multivariate test of association based on ranks of distances. Biometrika 100(2):503-510, Section 2 (Table 2, definition of S(i,j) and T);
+    arXiv:1201.3522v3 p.3
+  canonical_definition: 'T = sum_{i=1}^N sum_{j!=i} S(i,j), S(i,j) = (N-2){A12(i,j)A21(i,j) - A11(i,j)A22(i,j)}^2 / {A1.(i,j)A2.(i,j)A.1(i,j)A.2(i,j)}, with A11(i,j) = sum_{k!=i,j} I{d(x_i,x_k) <= d(x_i,x_j)}
+    I{d(y_i,y_k) <= d(y_i,y_j)} (A12, A21, A22 analogously, N-2 points per table); S(i,j) = 0 when a margin is 0. d is a norm-induced distance (here Euclidean, 1-D: |x_i - x_k|).'
+  documented_definition: 'supplement §1.2.6, p.6 (supplement.txt:272-278; the pack listed 278-285): keywords ''undirected, nonlinear, unsigned, bivariate, contemporaneous''; ''The Heller-Heller-Gorfine
+    (HHG) method [16] yields an RKHS-based statistic that uses the ranks of random variables to obtain sample kernel matrices, rather than their distances (cf. HSIC in Sec. 1.2.5). This SPI is computed
+    via the hyppo package''. GitBook spi-descriptions/distance-similarity.md:184-199 repeats the text; base identifier hhg.'
+  delegate_lib: hyppo==0.5.2 hyppo.independence.HHG().statistic (numba==0.68.0 jit kernel hyppo.independence.hhg._pearson_stat); distance matrices from scikit-learn==1.9.1 sklearn.metrics.pairwise_distances(metric='euclidean')
+    via hyppo.tools.compute_dist
+  implemented_as: 'Calculator default preprocessing: per-process z-score along time (scipy.stats.zscore ddof=1), no detrend. For each ordered pair (i,j), i!=j: x = process i, y = process j as (T,1) arrays
+    (single realisation). Distances: sklearn euclidean_distances dot-product formula sqrt(max(x_a^2 + x_b^2 - 2 x_a x_b, 0)) with diagonal forced to 0 (not exactly |x_a - x_b| and not bit-symmetric; probe
+    max |D - |x_a - x_b|| = 3.5e-14 at T=64). Kernel: for every ordered sample pair (a,b), a!=b: mask_x = D^x[a,:] <= D^x[a,b], mask_y likewise; t11 = sum(mask_x & mask_y) - 2 (removes k=a and k=b, which
+    always satisfy both <=), t12, t21, t22 the other cells; S = (n-2)(t12 t21 - t11 t22)^2/denom if denom > 0 else 0; statistic = sum of off-diagonal S. Raw T is returned (no normalisation, no permutation
+    p-value; auto/fast Hoeffding variant not used because auto=False). Directed base class: both orders (i,j) and (j,i) are computed; A has NaN diagonal.'
+  implementation_trace:
+  - pyspi/calculator.py:46-53 Calculator(detrend=False, normalise=True) defaults; :277 Data(..., normalise=self._normalise, detrend=self._detrend)
+  - pyspi/data.py:184-197 optional detrend then zscore(data, axis=1, nan_policy='omit', ddof=1); :257-260 adds realisation axis (P,T,1); :108-118 to_numpy
+  - pyspi/base.py:84-94 Directed.multivariate loops all ordered pairs, A[i,j] = self.bivariate(data, i=i, j=j), diagonal NaN; :27-49 parse_bivariate
+  - pyspi/statistics/distance.py:10-15 imports hyppo.independence.HHG; :66-71 class HellerHellerGorfine(Directed, Unsigned), labels include 'directed'; :73-77 x, y = data.to_numpy()[[i, j]] (each (T,1));
+    stat = HHG().statistic(x, y)
+  - pyspi/config.yaml:179-188 HellerHellerGorfine listed with label 'undirected' (contradicts class label 'directed')
+  - .venv/lib/python3.12/site-packages/hyppo/independence/hhg.py:144-149 HHG.__init__(compute_distance='euclidean'), is_distance False, auto False
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/hhg.py:151-194 statistic: compute_dist (176-179), auto False branch -> _pearson_stat, mask diagonal, np.sum(S[mask]) (188-191)'
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/hhg.py:274-297 _pearson_stat numba kernel: a = distx[i,:] <= distx[i,j]; t11 = np.sum(a*b) - 2; S[i,j] = ((n-2)*(t12*t21 - t11*t22)**2)/denom if
+    denom > 0'
+  - .venv/lib/python3.12/site-packages/hyppo/tools/common.py:436-503 compute_dist -> pairwise_distances(mat, metric=metric, n_jobs=workers) at :499
+  - '.venv/lib/python3.12/site-packages/sklearn/metrics/pairwise.py:2309 pairwise_distances; :1924 ''euclidean'' -> euclidean_distances; :268 euclidean_distances; :403-421 _euclidean_distances float64 path:
+    distances = -2 X Y^T + XX + YY, clip at 0, fill diagonal 0 when X is Y'
+  deviation_from_documented: (1) The supplement and GitBook describe HHG as 'an RKHS-based statistic that uses the ranks of random variables to obtain sample kernel matrices'. The code computes Heller et
+    al.'s sum of Pearson chi-square statistics over 2x2 tables built from ranks of distances (hhg.py:282-295). No kernel or RKHS is involved and the ranks are ranks of distances, not of the variables. (2)
+    The supplement keywords and config.yaml:180-186 say 'undirected', but the class is Directed with the label 'directed' (distance.py:66, 71). The statistic is exactly symmetric anyway. (3) 'unsigned'
+    is consistent with the output (T >= 0).
+  deviation_from_canonical: 'The kernel matches Heller et al. 2013 §2: ''<='' indicators, k = i and k = j excluded via the -2 on t11, S = 0 when a margin is 0 (denom > 0 test), and T sums over all ordered
+    pairs. One input deviates: the distances are sklearn dot-product Euclidean distances, not the exact |x_a - x_b|. Near-equal and exactly tied distances can therefore be ordered differently from the exact
+    metric, which changes the counts. In probes, exact and sklearn distances gave identical T on 17 of 19 datasets at T=256. The relative difference was 1.4% on logistic_maps (process 1 has 8 distinct values)
+    and 0.43% on shared_envelope, and shared_envelope T=64 pair (0,1) differed by exactly 62 = n-2. Scope: pyspi returns the raw T, which grows like N^2 under independence and N^3 under dependence. It is
+    not a normalised effect size, so values are not comparable across series lengths. Check-stage addition: on the raw (kernel-path) logistic_maps rows the rounding effect is larger, 4.9% relative at T=256
+    (distance.hhg|logistic_maps|256|kernel|exact: pyspi 858472.24 vs exact-distance 818546.71), against 1.4% after z-scoring (|pipeline|exact: 825361.34 vs 813945.24). For the bit-identical copy shared_envelope
+    (0,2) on raw rows at T=64, pyspi gives 242110 = N(N-2)(N-3) + (N-2), one more non-zero-margin table than the analytic maximum 242048 that exact distances reproduce.'
+  units_and_range: 'Dimensionless, >= 0, unbounded, and dependent on T. Under independence each S ~ chi2_1 approximately, so T is near the number of non-zero-margin pairs, which is about N(N-1); iid T=64
+    probe gave 2714-4212 against N(N-1)=4032. For identical 1-D series with no tied distances, every pair except each point''s nearest and farthest neighbour (zero margin) contributes N-2, giving T = N(N-2)(N-3).
+    The probe on shared_envelope (0,2) at T=64 gave 242048 = 64*62*61. T is exactly symmetric in (x,y). The diagonal is NaN. Check-stage addition: under independence (continuous data) the exact null mean
+    is E[T] = n(n-2)(n-3)/(n-1), derived from the hypergeometric table (E[S | margins > 0] = N/(N-1), N = n-2) and P(no zero margin) = ((n-3)/(n-1))^2: 3842.0 at n=64 and 64514.0 at n=256 (Monte Carlo of
+    2000 iid pairs at n=256: 64814 +- 328 SE, skewness 0.98).'
+  direction_convention: A[i,j] = HHG(x = process i, y = process j). Directed.multivariate at base.py:91-93 calls bivariate(data, i, j), which unpacks x, y = data[[i, j]] at distance.py:75-76. Swapping x
+    and y swaps A12 with A21 and A1. with A.1, leaving S unchanged, and all counts are integer. The matrix is therefore exactly symmetric (probe max |A - A.T| = 0.0 on iid_gaussian, bivariate_gaussian,
+    nonlinear_dependence, delayed_noise and shared_envelope at T=64) and carries no direction information.
+  symmetry_expected: sym
+  already_documented: REVIEW M2 (root cause only; consequence new)
+  new_finding_candidates:
+  - 'CANDIDATE: HHG is exactly symmetric but implemented as Directed (distance.py:66 ''class HellerHellerGorfine(Directed, Unsigned)'', labels at :71 include ''directed''), so pyspi computes both orders
+    and reports a ''directed'' label for an undirected quantity. Evidence: algebraic symmetry of S(i,j) under swapping x and y, and the probe p1_hhg.py printed ''max|A-A.T|= 0.0'' on 5 datasets. config.yaml:180-186
+    and supplement §1.2.6 both say ''undirected'', so the class label contradicts pyspi''s own documentation.'
+  - 'CANDIDATE: the documentation misdescribes the method. Supplement §1.2.6 and GitBook distance-similarity.md:192 say ''RKHS-based statistic that uses the ranks of random variables to obtain sample kernel
+    matrices'', but hhg.py:282-295 computes Pearson chi-square statistics of 2x2 tables built from ranks of distances, with no kernel.'
+  - 'CANDIDATE: rank comparisons run on sklearn dot-product Euclidean distances (pairwise.py:409-411) instead of exact |x_a - x_b|, so ties and near-ties are resolved by rounding error. Probe p7_rounding_scope.py
+    at T=256 reported ''logistic_maps HHG max rel diff 1.40e-02'' and ''shared_envelope HHG max rel diff 4.32e-03'', and 0 on the other 17 datasets. Probe p5_logistic.py reported ''HHG sklearn 825361.34
+    exact 813945.24'' (logistic_maps T=256). Probe p2_ties.py found that sklearn distances create extra exact ties (shared_envelope T=256 row ties 180/240 vs 7/135 exact). This has the same root cause as
+    docs/storage_comparison/REVIEW.md M2 (dot-product Euclidean distances), which was reported there only as last-bit asymmetry of pdist_euclidean. Here the consequence is a percent-level change in a rank
+    statistic.'
+  - 'HYPOTHESIS (kernel arithmetic probed; end-to-end HHG at this length not run): _pearson_stat (hhg.py:288-295) evaluates (n-2)*(t12*t21 - t11*t22)**2 in int64. numba inspect_types on the float64,float64
+    signature (probe p_hhg_int3.py) types t11, t12, t21, t22, denom and n as int64 (a, b are bool arrays; np.sum of their products is int64). With N = n-2 points per table, |t12*t21 - t11*t22| <= floor(N/2)*ceil(N/2),
+    so the numerator is bounded by (n-2)(floor(N/2)ceil(N/2))^2, which first exceeds 2^63-1 at n = 10812 (about 1.08e4); at n = 10502 the bound is 7.98e18 < 9.22e18 (probe p_hhg_int.py/p_hhg_int2.py). A
+    numba njit replica of the hhg.py:295 numerator at n = 10812 with t11 = t22 = 5405, t12 = t21 = 0 returned -9220849508775795366 against the exact 9225894564933756250 (silent wrap). Such tables occur
+    for identical or near-identical series (t12 = t21 = 0) at pairs whose distance rank is near N/2, so T >= 10812 on strongly dependent pairs may give wrapped, negative S(i,j). Not reachable at the audit''s
+    T <= 4096; the full O(n^3) HHG at n >= 10812 was not run.'
+  - 'CANDIDATE (interpretation): pyspi returns the raw permutation-test statistic T, whose null level grows like N(N-1). Values are therefore not comparable across series lengths or windows of different
+    length, unlike the [−1,1]-normalised dcorr and mgc in the same family.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - anm
+    - contaminated
+    - var2_bivariate
+    path: kernel
+    reference: From-scratch numpy implementation of Heller et al. 2013 §2. It uses exact distances |x_a - x_b| from np.abs of an outer difference, '<=' indicators excluding k = a, b, S = 0 when any margin
+      is 0, and T = sum over ordered pairs. It is vectorised per a as an (n x n) boolean outer product and does not import hyppo or sklearn. Input is the z-scored process pair taken from pyspi's Data, so
+      only the kernel is compared. Run at T in {64, 256, 1024} (T=4096 costs about 6 min per pyspi call).
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: Relative difference <= 1e-12 on these continuous datasets. Probes at T=64 and T=256 agreed to about 1e-15 relative, for example 2928.4725589238396 vs 2928.4725589238515.
+  - datasets:
+    - logistic_maps
+    - shared_envelope
+    path: kernel
+    reference: The same from-scratch exact-distance HHG reference, compared with pyspi. As an attribution aid only, also run hyppo HHG(compute_distance=None) on the exact distance matrices. That comparison
+      is labelled same-lineage and isolates the effect of the distance inputs.
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: pyspi is expected to DISAGREE with the exact-distance reference by up to about 1.4% relative (logistic_maps T=256) and about 0.4% (shared_envelope T=256), with the disagreement shrinking
+      to 0 when hyppo is given exact distances. That would confirm sklearn rounding as the cause. If agreement is <= 1e-12, refute the rounding candidate.
+  - datasets:
+    - iid_gaussian
+    - shared_envelope
+    path: kernel
+    reference: 'Analytic value for identical 1-D series with no tied distances: T = N(N-2)(N-3). Pairs: iid_gaussian process 0 with itself and with 2*x0 + 1 (constructed in the check), and shared_envelope
+      (0,2), which is a bit-identical copy, at T=64 only, because exact distance ties appear at larger T.'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: pyspi HHG = N(N-2)(N-3) exactly, for example 242048 at T=64. The affine copy may deviate only if rounding flips a near-tie; report it if it does.
+  - datasets:
+    - var2_bivariate
+    - logistic_maps
+    - delayed_noise
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'Direction convention: compute the full pyspi matrix A and compare A[i,j] with the from-scratch HHG(x_i, x_j) and HHG(x_j, x_i). These datasets have known source->target structure (var2_bivariate
+      X->Y, logistic_maps y->x, delayed_noise x0 leads).'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: A[i,j] == A[j,i] bit-for-bit. A[i,j] equals the reference for (x_i, x_j) within 1e-12 relative. HHG therefore carries no direction information despite the 'directed' label.
+  - datasets:
+    - iid_gaussian
+    - gauss_ar1_pair
+    path: kernel
+    reference: 'Permutation null from the from-scratch reference: 200 random permutations of y per pair. Compute the percentile of the pyspi value within that null, and compare the null mean with N(N-1)
+      minus the zero-margin pair count.'
+    reference_kind: independent-impl
+    criterion: statistical
+    expected_outcome: For iid_gaussian, pyspi percentiles are consistent with Uniform(0,1) across pairs and T, and the null mean is within a few percent of the non-zero-margin pair count. gauss_ar1_pair
+      may show dependence from contemporaneous coupling; record it.
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'Invariance: scaled_offset is the same draw as bivariate_gaussian, times a scale plus an offset. After pyspi''s z-scoring and with HHG''s rank invariance, the two matrices should coincide.'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: Matrices equal to within 1e-12 relative. A larger difference would indicate z-score rounding feeding the distance-rank comparisons.
+  - datasets:
+    - trending
+    - bivariate_gaussian
+    path: pipeline-detrend
+    reference: 'Qualitative: linear trends induce spurious distance dependence. Compare trending with and without detrend against bivariate_gaussian (the same draw without trends).'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: Without detrend, pairs in trending show very large T, of order N^3, including the pairs that are independent in bivariate_gaussian. With detrend=True, values fall back near the bivariate_gaussian
+      levels. They are not expected to be identical, because scipy detrend removes the least-squares line of each realised series, not the true slope*t.
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/hhg_mgc.py:hhg_from_dist (Heller, Heller & Gorfine 2013 Sec. 2 from scratch: exact |x_a - x_b|, ''<='' indicators over k not in {i,j}, zero-margin rule, cumulative-histogram
+    counts; cross-validated in --selftest against audit/checks/refs/_kernels_distance.py:hhg, including tied data); audit/checks/refs/hhg_mgc.py:ref_copies and ref_dup (analytic N(N-2)(N-3) for identical
+    rankings); audit/checks/refs/hhg_mgc.py:ref_null (analytic E[T] = n(n-2)(n-3)/(n-1) with Monte Carlo SD); audit/checks/refs/hhg_mgc.py:mc_quantile_band (Monte Carlo null for Gaussian marginals, 2000
+    draws; approximate for non-Gaussian marginals, see scratchpad hhg_mgc_check/p_null_marginals.py); audit/checks/refs/hhg_mgc.py:ref_hyppo_exact with probe audit/checks/probes/hhg_mgc_probes.py:hyppo_exact
+    (same-lineage attribution aid: hyppo HHG fed exact distances); audit/checks/probes/hhg_mgc_probes.py:copies; audit/checks/refs/hhg_mgc.py:ref_perm (per-pair conditional permutation null, 200 permutations
+    of y on exact distances; trace proposed check [4]); calibration probes scratchpad hhg_mgc_check/p_perm_ks_calibration.py, p_perm_other_draws.py, p_null_marginals.py'
+  check_data: iid_gaussian, bivariate_gaussian, nonlinear_dependence, anm, contaminated, var2_bivariate T64/T256 kernel; bivariate_gaussian processes (2,3) T1024 kernel; bivariate_gaussian T256 pipeline;
+    logistic_maps and shared_envelope T64/T256 kernel and T256 pipeline (tied-data attribution); iid_gaussian copies T64/T256; shared_envelope (0,2) T64; var2_bivariate, logistic_maps_chaotic, delayed_noise,
+    gauss_ar1_pair T256 pipeline (direction); iid_gaussian T64/T256 pipeline (null); nonlinear_dependence, bivariate_gaussian, anm T256 (ordering); scaled_offset T256; trending T256 pipeline and pipeline-detrend;
+    iid_gaussian and gauss_ar1_pair T64/T256 kernel (per-pair permutation null)
+  agreement_criterion: 'tolerance rtol 1e-12 against the from-scratch statistic on exact distances (continuous data) or on sklearn-mirrored distances (tied data); exact rtol/atol 1e-12 against the analytic
+    identical-ranking value; statistical |pyspi - E[T]| <= z_(1-0.025/m) Monte Carlo SD; qualitative: dependent pairs above and independent pairs inside the empirical family-wise null band [q(0.025/6),
+    q(1-0.025/6)] of 2000 Monte Carlo draws; qualitative per-pair permutation null (200 permutations of y): iid_gaussian pass = KS of the 10 pair percentiles vs U(0,1) p >= 0.05 and no upper-tail permutation
+    p < 0.05/10; gauss_ar1_pair pass = upper-tail p < 0.025 (detection only, permutation ignores autocorrelation)'
+  closeness: 'Continuous data: all 14 def runs (6 datasets x T64/T256 kernel, bivariate_gaussian T256 pipeline, bivariate_gaussian (2,3) T1024) max_abs 0.0, i.e. pyspi equals the from-scratch Heller et
+    al. statistic bit for bit; dir runs (var2_bivariate, logistic_maps_chaotic, delayed_noise, gauss_ar1_pair T256 pipeline) max_abs 0.0; scaled_offset|256|pipeline|scaleinv 0.0; trending trend/detrend
+    0.0. Analytic: iid_gaussian|64|kernel|copies and |256|kernel|copies give exactly N(N-2)(N-3) = 242048 and 16451072 on the copy and affine-copy pairs (max_abs 0.0); shared_envelope|64|pipeline|dup 242048
+    exactly. Tied data against EXACT distances (expected fails, rounding candidate): logistic_maps|256|kernel|exact max_rel 4.88e-2 (858472.24 vs 818546.71), |256|pipeline|exact 1.40e-2, |64|kernel|exact
+    9.9e-3; shared_envelope|256|kernel|exact 3.73e-3 (abs 8128 = 32 x 254), |256|pipeline|exact 4.32e-3, |64|kernel|exact abs 62 = n-2; the same pairs match the reference on sklearn-mirrored distances (4
+    skdist runs, max_abs 0.0) and hyppo fed exact distances matches the exact-distance reference (4 hyppo-exact runs, max_abs 0.0). Null: iid_gaussian|64|pipeline|null mean over pairs 3290.4 vs E[T] 3842.0
+    (max_z 0.96), |256|pipeline|null 53204.2 vs 64514.0 (max_z 1.44). Ordering (T256): band [38512, 118786]; nonlinear_dependence (0,1) 3286900.5 and (2,3) 1620054.8, anm 2510927.2 / 5409301.4, bivariate_gaussian
+    rho=0.8 1940899.5 > rho=0.3 150648.4, all independent pairs inside the band (largest anm (0,3) 103653.7, null upper tail 0.0165). Trend: (1,2) 2086441.8 and (1,3) 5532123.2 without detrend, 61082.4
+    and 49758.8 after detrend. Permutation null (|perm, 200 permutations per pair): iid_gaussian|64|kernel|perm FAILS the uniformity criterion (KS p 0.0109, percentiles 0.085 to 0.695, mean 0.309; smallest
+    upper-tail p 0.308, so no pair is flagged as dependent); |256|kernel|perm passes (KS p 0.124, percentiles 0.0 to 0.74, mean 0.2805, smallest upper-tail p 0.264). Both failures and near-failures are
+    in the LOWER tail (pyspi below its own permutation null). The pooled permutation-null mean equals the analytic E[T] within MC error: z = -0.60 (iid T64), 1.08 (iid T256), -1.12 and 1.21 (gauss_ar1_pair
+    T64, T256). gauss_ar1_pair|64|kernel|perm and |256|kernel|perm pass: pyspi 7945.2 and 315100.7 above all 200 permutations (percentile 1.0, p_upper 0.005; permutation means 3768.3 and 65778.0). Calibration
+    probe (scratchpad hhg_mgc_check/p_perm_ks_calibration.py, 400 fresh 5 x 64 iid draws): the KS criterion fails on 5.75% of null draws and reaches KS p <= 0.012 on 0.75%; the mean pair percentile is 0.4955
+    (SD 0.093) and is <= 0.31 on 2.0% of draws. The T256 draw (iid_gaussian_T256.npz, dataset seed 1000256, audit/checks/data/MANIFEST.json), on which the
+    HHG percentiles are low but pass (mean 0.2805), is the same draw on which dcorr_hsic''s four distance.*|iid_gaussian|256|pipeline|null runs fail (mean dCor^2 at the
+    0.15% lower permutation tail; notes/dcorr_hsic.md, "The five failures") and on which MGC''s |256|kernel|perm fails; the T64 fail is on the T64 draw, which passes
+    in dcorr_hsic (|z| <= 1.73), so it has no such explanation.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: anchor
+  score_rubric_note: On continuous data pyspi is bit-identical to the from-scratch Heller et al. statistic (14 def runs, max_abs 0.0). Tie rounding on tied data (up
+    to 4.9e-2 relative, raw logistic_maps T=256) sits under anchor 9's estimator-variance clause. Anchor 10 fails because the supplement describes an RKHS kernel statistic
+    on ranks of the variables.
+  documentation_status: misdescribed
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The computation is the canonical Heller, Heller & Gorfine (2013) sum of Pearson chi-square statistics, reproduced bit for bit on continuous
+    data by an independent from-scratch reference (14 def runs, max_abs 0.0; refs/hhg_mgc.py imports neither hyppo nor sklearn). Score mapping: on continuous
+    data the numeric half of anchor 10 is met and its supplement half fails, because the supplement/GitBook text misdescribes the statistic (''RKHS-based
+    statistic that uses the ranks of random variables to obtain sample kernel matrices'') and labels it undirected while the class is Directed. That is not
+    one of anchor 9''s trivial value conventions; 9 is the score for ''canonical computation reproduced, supplement wrong'' (README "Score columns: original, rubric reading, adjusted"; for hhg the rubric reading is anchor 9 through the estimator-variance clause, see score_rubric_note), applied the same way
+    to misc.gpfit.DotProduct and misc.coint.johansen_order-0_*. The one value deviation, on tied or grid-valued data, is placed under the anchor-9 clause
+    ''within statistical tolerance consistent with estimator variance'', by analogy: ranks are taken over sklearn dot-product distances, so exact ties and
+    near-ties are resolved by floating-point rounding of the dot-product distance formula (a numerical artefact, root cause REVIEW M2, not a convention).
+    Against exact distances this moves the value by 2.6e-4 (shared_envelope T64 kernel, abs 62) to 4.9e-2 relative (raw logistic_maps T256), while the null
+    sampling SD at n=256 is 14225 on a mean of 64514, about 22% (distance.hhg|iid_gaussian|256|pipeline|null); the sampling SD on dependent data was not measured,
+    so the comparison is by analogy only. In absolute terms the analogy fits only part of the runs: the largest deviation (logistic_maps|256|kernel|exact, max_abs 39926 on the raw logistic maps) is 2.8 times the only SD measured (14225, the iid null at n=256), while shared_envelope T256 (max_abs 8128 kernel, 9188 pipeline, about 0.6 SD), logistic_maps T256 pipeline (11420, 0.8 SD) and the EEG T256 gaps (about 1.1e3 to 4.2e3, at most 0.3 SD) lie within it; the relative comparison above sets a deviation against a relative SD and overstates the fit for the raw logistic maps. Scope: the deviation is not confined to niche data. On a real EEG window (001_Baseline.EDF, channels EEG G1-G3,
+    mid-recording; scratch probe wf4b2_high-optimiser-other/p_hhg.py, own numpy HHG) the samples are grid-valued (ADC step 2.66e-7, |x/step - round| <= 5e-11;
+    341 to 446 distinct values per 1024 samples across the window''s six EEG channels): pyspi differs from the canonical statistic computed with exact ties
+    on the integer codes by 2.24e-3 / 1.53e-3 / 3.69e-3 relative at T=256 (pairs 01/02/12) and 1.62e-3 / 1.18e-3 / 1.53e-3 at T=512, so it is not bit-exact
+    on digitised recordings. The audit''s exact-distance reference (np.abs on pyspi''s z-scored floats) does not recover the canonical ties either: it differs
+    from pyspi by 4.0e-6 to 4.8e-4 and from the integer-code value by about the same 1e-3 as pyspi does, because z-scoring breaks some exact ties by rounding.
+    The check design therefore cannot separate canonical from rounded ties on grid-valued data; that needs a run on integer codes (not in the manifest). Separately,
+    pyspi returns the raw T, whose null mean n(n-2)(n-3)/(n-1) grows like T^2, so values are not comparable across window lengths (an output scaling choice,
+    not a value defect). distance.hhg is not in the retained 185-metric EEG set.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'expensive: O(T^3) per ordered pair. pyspi def-p23 (two ordered calls at T=1024) took 28.9 s in the first run (14.4 s per call) and 17.7 s in
+    the forced re-run (machine load differs); T=4096 not run (trace estimate about 6 min per call); the 48 runs took 63.9 s of pyspi time in the re-run. Reference
+    side: the T=256 Monte Carlo null (2000 draws) about 4 min; the per-pair permutation null 212.5 s for iid_gaussian T=256 (10 pairs x 200) and 17.9 s for
+    gauss_ar1_pair T=256. The trace proposed check [4] (200-permutation null per pair on iid_gaussian and gauss_ar1_pair, kernel) was run as proposed (|perm
+    runs); the analytic E[T] with a Monte Carlo SD (|null runs) and the Monte Carlo quantile band (|order runs) are additional, not a replacement. Not run:
+    T=1024 permutation nulls (about 2000 x 2 s) and any KS pooling across T; a manifest run on integer-coded (grid-valued) data with an exact-tie reference,
+    which the exact-distance reference on z-scored floats cannot replace (scratch probe wf4b2_high-optimiser-other/p_hhg.py: EEG T256/T512, pyspi vs integer-code
+    ties 1.2e-3 to 3.7e-3 relative)'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on every HHG run (all def, dir, exact, skdist, trend and scaleinv runs report ref_pyspi_asym 0.0), although the class is Directed and computes both orders'
+  direction_observed: No direction information. A[i,j] = A[j,i] bit for bit on var2_bivariate (x0 -> x1; 123220.1 both orders), logistic_maps_chaotic (x -> y; 213720.7), gauss_ar1_pair (315100.7) and delayed_noise
+    at T=256 (distance.hhg|*|256|pipeline|dir); A[i,j] = HHG(process i, process j) equals the from-scratch value for both argument orders (max_abs 0.0). delayed_noise pairs are at null level (e.g. (0,1)
+    74162.8, null upper tail 0.22) because HHG is contemporaneous and the delayed copies are lagged white noise.
+  candidate_resolutions:
+  - candidate: HHG is exactly symmetric but implemented as Directed with a 'directed' label, contradicting config.yaml and the supplement ('undirected')
+    outcome: confirmed
+    evidence: 'distance.hhg|{var2_bivariate,logistic_maps_chaotic,delayed_noise,gauss_ar1_pair}|256|pipeline|dir: ref_pyspi_asym 0.0 and match to the from-scratch
+      statistic for both orders; every other HHG run also reports max|A - A.T| = 0.0. Not in KNOWN_ISSUES (REVIEW M9 is a general label-structure discussion
+      that does not name hhg)'
+  - candidate: Documentation describes an RKHS/kernel statistic on ranks of the variables; the code computes chi-square statistics of rank-of-distance 2x2
+      tables
+    outcome: confirmed
+    evidence: All 14 def runs equal the from-scratch Heller et al. 2013 statistic (refs/hhg_mgc.py:hhg_from_dist, no kernel) with max_abs 0.0, e.g. distance.hhg|bivariate_gaussian|1024|kernel|def-p23;
+      supplement.txt:272-278 and GitBook distance-similarity.md:184-199 carry the RKHS wording
+  - candidate: Ranks are taken over sklearn dot-product distances, so ties and near-ties are resolved by rounding (percent-level change on tied data)
+    outcome: confirmed
+    evidence: 'distance.hhg|logistic_maps|256|kernel|exact max_rel 4.88e-2, |256|pipeline|exact 1.40e-2, |64|kernel|exact 9.9e-3; distance.hhg|shared_envelope|256|kernel|exact
+      3.73e-3, |256|pipeline|exact 4.32e-3, |64|kernel|exact abs 62 = n-2 (all fail against exact distances); the same pairs pass at max_abs 0.0 against sklearn-mirrored
+      distances (|skdist) and hyppo fed exact distances reproduces the exact-distance reference (|hyppo-exact, max_abs 0.0), so the distance arithmetic is
+      the whole cause. Root cause REVIEW M2 (dot-product distances); the consequence for a rank statistic is new. Scope (wf4b-2 scratch probe wf4b2_high-optimiser-other/p_hhg.py):
+      on a real grid-valued EEG window (001_Baseline, G1-G3) pyspi differs from the canonical statistic with exact integer-code ties by 1.18e-3 to 3.69e-3
+      relative at T=256/512, while continuous data agree to fp rounding in the probe (bivariate_gaussian T64 1.7e-16, nonlinear_dependence T256 8.5e-16 relative; these nonzero figures come from the probe''s own summation, and bit-exactness on continuous data rests on the def runs, max_abs 0.0)'
+  - candidate: 'HYPOTHESIS: int64 overflow of the numerator in hyppo _pearson_stat for n >= 10812 (silent wrap on near-identical series)'
+    outcome: inconclusive
+    evidence: 'Not run: an end-to-end HHG at n >= 10812 is O(n^3) (about 1.3e12 table updates; pyspi took 14.4 s per call at n=1024) and outside the audit''s
+      T <= 4096. The trace-stage numba replica of the numerator (p_hhg_int3.py) wraps, but the full statistic was not computed. Settling it needs one hyppo
+      HHG call on two identical series of length about 1.1e4'
+  - candidate: pyspi returns the raw permutation statistic T, whose null level grows like N(N-1), so values are not comparable across series lengths
+    outcome: confirmed
+    evidence: distance.hhg|iid_gaussian|64|pipeline|null mean 3290.4 vs |256|pipeline|null mean 53204.2 (analytic E[T] 3842.0 and 64514.0, both runs within
+      the Monte Carlo band); identical-copy value 242048 at T=64 vs 16451072 at T=256 (distance.hhg|iid_gaussian|{64,256}|kernel|copies). An interpretation
+      finding, not a computation error; permutation-null means 3829.6 (n=64) and 64881.0 (n=256) equal the analytic E[T] within MC error (distance.hhg|iid_gaussian|{64,256}|kernel|perm,
+      z -0.60 and 1.08)
+  checks_run:
+  - run_ids:
+    - distance.hhg|iid_gaussian|64|kernel|def
+    - distance.hhg|bivariate_gaussian|64|kernel|def
+    - distance.hhg|nonlinear_dependence|64|kernel|def
+    - distance.hhg|anm|64|kernel|def
+    - distance.hhg|contaminated|64|kernel|def
+    - distance.hhg|var2_bivariate|64|kernel|def
+    - distance.hhg|iid_gaussian|256|kernel|def
+    - distance.hhg|bivariate_gaussian|256|kernel|def
+    - distance.hhg|nonlinear_dependence|256|kernel|def
+    - distance.hhg|anm|256|kernel|def
+    - distance.hhg|contaminated|256|kernel|def
+    - distance.hhg|var2_bivariate|256|kernel|def
+    - distance.hhg|bivariate_gaussian|1024|kernel|def-p23
+    - distance.hhg|bivariate_gaussian|256|pipeline|def
+    reference: audit/checks/refs/hhg_mgc.py:ref_def -> hhg_from_dist on exact distances
+    outcome: pass 14/14; max_abs 0.0 (T64, T256, T1024 pair (2,3))
+  - run_ids:
+    - distance.hhg|logistic_maps|64|kernel|exact
+    - distance.hhg|logistic_maps|64|kernel|skdist
+    - distance.hhg|logistic_maps|64|kernel|hyppo-exact
+    - distance.hhg|logistic_maps|256|kernel|exact
+    - distance.hhg|logistic_maps|256|kernel|skdist
+    - distance.hhg|logistic_maps|256|kernel|hyppo-exact
+    - distance.hhg|shared_envelope|64|kernel|exact
+    - distance.hhg|shared_envelope|64|kernel|skdist
+    - distance.hhg|shared_envelope|64|kernel|hyppo-exact
+    - distance.hhg|shared_envelope|256|kernel|exact
+    - distance.hhg|shared_envelope|256|kernel|skdist
+    - distance.hhg|shared_envelope|256|kernel|hyppo-exact
+    - distance.hhg|logistic_maps|256|pipeline|exact
+    - distance.hhg|shared_envelope|256|pipeline|exact
+    reference: audit/checks/refs/hhg_mgc.py:ref_def (exact and sklearn-mirrored distances), audit/checks/refs/hhg_mgc.py:ref_hyppo_exact with probe audit/checks/probes/hhg_mgc_probes.py:hyppo_exact
+    outcome: 'exact: fail 6/6 as the rounding candidate predicts (max_rel 4.88e-2 logistic_maps T256 kernel, 4.32e-3 shared_envelope T256 pipeline); skdist pass 4/4 and hyppo-exact pass 4/4 at max_abs 0.0'
+  - run_ids:
+    - distance.hhg|iid_gaussian|64|kernel|copies
+    - distance.hhg|iid_gaussian|256|kernel|copies
+    - distance.hhg|shared_envelope|64|pipeline|dup
+    reference: audit/checks/refs/hhg_mgc.py:ref_copies, ref_dup (analytic N(N-2)(N-3)) with probe audit/checks/probes/hhg_mgc_probes.py:copies
+    outcome: pass 3/3; 242048 and 16451072 exactly
+  - run_ids:
+    - distance.hhg|var2_bivariate|256|pipeline|dir
+    - distance.hhg|logistic_maps_chaotic|256|pipeline|dir
+    - distance.hhg|delayed_noise|256|pipeline|dir
+    - distance.hhg|gauss_ar1_pair|256|pipeline|dir
+    reference: audit/checks/refs/hhg_mgc.py:ref_dir (from-scratch, both argument orders)
+    outcome: pass 4/4; max_abs 0.0, max|A - A.T| = 0.0
+  - run_ids:
+    - distance.hhg|iid_gaussian|64|pipeline|null
+    - distance.hhg|iid_gaussian|256|pipeline|null
+    reference: audit/checks/refs/hhg_mgc.py:ref_null (analytic E[T] = n(n-2)(n-3)/(n-1), Monte Carlo SD)
+    outcome: pass 2/2; max_z 0.96 (T64), 1.44 (T256)
+  - run_ids:
+    - distance.hhg|nonlinear_dependence|256|pipeline|order
+    - distance.hhg|bivariate_gaussian|256|pipeline|order
+    - distance.hhg|anm|256|pipeline|order
+    reference: audit/checks/refs/hhg_mgc.py:ref_order with audit/checks/refs/hhg_mgc.py:mc_quantile_band (2000 draws)
+    outcome: pass 3/3; dependent pairs 150648 to 5409301 above the band [38512, 118786], independent pairs inside, rho=0.8 > rho=0.3
+  - run_ids:
+    - distance.hhg|scaled_offset|256|pipeline|scaleinv
+    - distance.hhg|trending|256|pipeline|trend
+    - distance.hhg|trending|256|pipeline-detrend|detrend
+    - distance.hhg|trending|256|pipeline-detrend|trendqual
+    reference: audit/checks/refs/hhg_mgc.py:ref_scaleinv, ref_def (own z-score / detrend), ref_trendqual
+    outcome: pass 4/4; scaleinv and trend/detrend max_abs 0.0; trending independent pairs 2.09e6 and 5.53e6 without detrend, 61082 and 49759 after
+  - run_ids:
+    - distance.hhg|iid_gaussian|64|kernel|perm
+    - distance.hhg|iid_gaussian|256|kernel|perm
+    - distance.hhg|gauss_ar1_pair|64|kernel|perm
+    - distance.hhg|gauss_ar1_pair|256|kernel|perm
+    reference: audit/checks/refs/hhg_mgc.py:ref_perm (200 permutations per pair of hhg_from_dist on exact distances; KS vs U(0,1))
+    outcome: 'pass 3/4, fail 1/4: iid_gaussian T64 fails the KS uniformity criterion (p 0.0109, lower tail; no upper-tail rejection); iid_gaussian T256 passes (KS p 0.124); gauss_ar1_pair T64/T256 pass
+      (percentile 1.0). Permutation-null mean vs analytic E[T]: |z| <= 1.21 on all four. The T256 draw is the one on which dcorr_hsic''s iid_gaussian|256 null runs
+      and distance.mgc|iid_gaussian|256|kernel|perm fail; the T64 fail has no such shared-draw explanation (dcorr_hsic T64 |z| <= 1.73)'
+optimisation:
+  complexity_P_T: 'O(P^2 T^3): hyppo/independence/hhg.py:_pearson_stat loops over all T(T-1) sample pairs (i, j) and for each counts over T samples
+    with four boolean temporaries; pyspi runs it for every ORDERED pair (HellerHellerGorfine is Directed, pyspi/base.py:Directed.multivariate).
+    Measured T_exponent 2.93 (8x256 5.5 s -> 8x1024 321.6 s); never run above 8x1024, so the 118x1024 projection (79285 s) is pair-count scaling
+    only. The P^2 T^3 term dominates at every shape.'
+  hotspot_1: 'hyppo/independence/hhg.py:HHG.statistic (third-party:hyppo) 98.8% self time of the profiled SPI call at 8x256 (profiled in this
+    stage, the 8x1024 and 8x256 profiler runs timed out): the numba _pearson_stat O(T^3) kernel is hidden in it'
+  hotspot_2: hyppo/tools/common.py:compute_dist -> sklearn euclidean_distances (third-party:sklearn) 1.2% at 8x256
+  hotspot_owner: third-party:hyppo
+  opaque_share: 0.0016
+  profile_file: audit/profiles/micro/distance.hhg__8x256.pstats
+  opportunities:
+  - opportunity_id: hhg_mgc-1
+    opportunity: 'Compute one direction only: HHG is run as Directed (both ordered pairs) but _pearson_stat is symmetric in (x, y) by construction
+      (swapping the arguments swaps t12 and t21, leaves t11, t22 and the integer denominator unchanged), so compute i < j and mirror.'
+    opp_type: algorithmic
+    expected_speedup: ~2x
+    speedup_basis: 'complexity: halves the P(P-1) ordered-pair loop; profile:audit/profiles/micro/distance.hhg__8x256.pstats hhg.py:statistic
+      98.8% is all per-pair work'
+    output_risk: unverified-bit-identical
+    risk_evidence: 'symmetry_observed: max|A - A.T| = 0.0 on every HHG check run although both orders are computed; integer contingency counts
+      and the same float formula in both orders'
+    effort: S
+    depends_on: []
+  - opportunity_id: hhg_mgc-2
+    opportunity: 'Replace the O(T^3) _pearson_stat double loop with a per-row rank / 2-D dominance count: for each sample i, rank row i of both
+      distance matrices once and get t11 for every j with a sort plus a Fenwick tree (O(T log T) per row, O(T^2 log T) per pair); t12, t21, t22
+      follow from the row ranks. Counts stay integers, so S and the final sum are unchanged provided ties keep the ''<='' rule.'
+    opp_type: algorithmic
+    expected_speedup: 20-80x
+    speedup_basis: 'profile:audit/profiles/micro/distance.hhg__8x256.pstats hhg.py:statistic 98.8% (Amdahl bound 83x) + complexity: T^3 -> T^2
+      log2 T is ~100x at T=1024 (~30x at T=256) before constants; the gain grows about as T / log T'
+    output_risk: unverified-bit-identical
+    risk_evidence: integer contingency counts t11..t22 and the same S formula; only the counting algorithm changes (ties must follow '<=')
+    effort: L
+    depends_on:
+    - hhg_mgc-1

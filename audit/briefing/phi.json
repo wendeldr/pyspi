@@ -1,0 +1,157 @@
+{
+ "family": "phi",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/information-theory.md"
+ ],
+ "hypotheses": [
+  "phi_star via L-BFGS-B with finite-difference gradient where the MATLAB original had an analytic one; inv(C_D_cond) recomputed per objective evaluation",
+  "phi_G augmented Lagrangian with eigenvalue clamp absent in MATLAB",
+  "normalization=1 divides by (N_c-1) * min H; phi* <= MI relationship"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/infotheory.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    562,
+    581
+   ],
+   "section": "1.4.10",
+   "title": "Integrated information (phi)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "pyspi/lib/phi_native.py; MATLAB original: git show 76ab2bb^:pyspi/lib/PhiToolbox/Phi/phi_star_Gauss.m (also phi_G_Gauss_AL.m, utility/I_s_I_s_d.m, utility/Gauss/logdet.m, Cov_comp.m)"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "delay": 1,
+    "normalization": 0,
+    "phitype": "star"
+   },
+   "identifier_params": {
+    "phi_star_t-1_norm-0": {
+     "phitype": "star"
+    }
+   },
+   "identifiers": [
+    "phi_star_t-1_norm-0"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "phi_native star",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "IntegratedInformation",
+   "representative": "phi_star_t-1_norm-0",
+   "source": "config",
+   "unit_id": "infotheory.phi.star_norm-0"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "delay": 1,
+    "normalization": 1,
+    "phitype": "star"
+   },
+   "identifier_params": {
+    "phi_star_t-1_norm-1": {
+     "normalization": 1,
+     "phitype": "star"
+    }
+   },
+   "identifiers": [
+    "phi_star_t-1_norm-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "phi_native star",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "IntegratedInformation",
+   "representative": "phi_star_t-1_norm-1",
+   "source": "config",
+   "unit_id": "infotheory.phi.star_norm-1"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "delay": 1,
+    "normalization": 0,
+    "phitype": "Geo"
+   },
+   "identifier_params": {
+    "phi_Geo_t-1_norm-0": {
+     "phitype": "Geo"
+    }
+   },
+   "identifiers": [
+    "phi_Geo_t-1_norm-0"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "phi_native Geo",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "IntegratedInformation",
+   "representative": "phi_Geo_t-1_norm-0",
+   "source": "config",
+   "unit_id": "infotheory.phi.Geo_norm-0"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "delay": 1,
+    "normalization": 1,
+    "phitype": "Geo"
+   },
+   "identifier_params": {
+    "phi_Geo_t-1_norm-1": {
+     "normalization": 1,
+     "phitype": "Geo"
+    }
+   },
+   "identifiers": [
+    "phi_Geo_t-1_norm-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "phi_native Geo",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "IntegratedInformation",
+   "representative": "phi_Geo_t-1_norm-1",
+   "source": "config",
+   "unit_id": "infotheory.phi.Geo_norm-1"
+  }
+ ]
+}

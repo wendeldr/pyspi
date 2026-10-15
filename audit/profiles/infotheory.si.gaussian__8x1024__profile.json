@@ -1,0 +1,217 @@
+{
+ "P": 8,
+ "T": 1024,
+ "baseline_rss_mb": 540.8,
+ "budget_s": 120.0,
+ "data_kind": "synthetic",
+ "data_sha256": "8e7e5fadc565fde86c145bcd58801cc90799abd9427b553b966b0df36ab32ada",
+ "edf": null,
+ "entry_sources": {
+  "si_gaussian_k-1": "config"
+ },
+ "env": {
+  "java": "21.0.12.1",
+  "omp_num_threads": "1",
+  "packages": {
+   "cdt": "0.6.0",
+   "hyppo": "0.5.2",
+   "jpype1": "1.7.1",
+   "mne": "1.13.2",
+   "nitime": "0.12.1",
+   "numpy": "2.5.4",
+   "pandas": "3.0.6",
+   "pyEDM": "1.15.2.0",
+   "pyyaml": "6.0.3",
+   "scikit-learn": "1.9.1",
+   "scipy": "1.17.1",
+   "sktime": "1.2.0",
+   "spectral-connectivity": "1.1.2",
+   "statsmodels": "0.15.0",
+   "torch": "2.14.1+cpu",
+   "tslearn": "0.9.0"
+  },
+  "platform": "linux",
+  "pyspi_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+  "pyspi_version": "2.0.2",
+  "python": "3.12.3"
+ },
+ "error": null,
+ "family": "it_gaussian",
+ "finished_at": "2026-10-15T04:53:05+00:00",
+ "fit": null,
+ "git_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+ "hwm_reset": true,
+ "identifiers": [
+  "si_gaussian_k-1"
+ ],
+ "jvm_requested": true,
+ "jvm_started": true,
+ "measure_mode": "measured",
+ "mode": "profile",
+ "n_pairs": 56,
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)",
+ "opaque_share": 0.0022329529758924253,
+ "opaque_share_by_owner": {
+  "builtin": 3.61595063123843e-05,
+  "harness": 4.830172517733316e-06,
+  "pyspi": 1.8962899514064128e-05,
+  "third-party:jpype": 0.0021250815082667603,
+  "third-party:numpy": 4.791888928148319e-05
+ },
+ "pair_basis": "ordered",
+ "peak_rss_delta_mb": 2.9,
+ "peak_rss_mb": 543.7,
+ "process_peak_rss_mb": 543.7,
+ "pstats": "audit/profiles/infotheory.si.gaussian__8x1024.pstats",
+ "pyspi_dirty": false,
+ "reason": null,
+ "repeats": 1,
+ "repeats_extended": null,
+ "repeats_planned": null,
+ "representative": "si_gaussian_k-1",
+ "result_status": "ok",
+ "ru_maxrss_mb": 535.6,
+ "schema": 1,
+ "self_time_share_by_owner": {
+  "builtin": 3.61595063123843e-05,
+  "harness": 4.001052533948575e-05,
+  "pyspi": 0.9969873927774451,
+  "third-party:jpype": 0.00270838983840089,
+  "third-party:numpy": 0.00022804735250205938
+ },
+ "shape": "8x1024",
+ "spi_seed": 42,
+ "started_at": "2026-10-15T04:53:04+00:00",
+ "status": "ok",
+ "synth_seed": 20261014,
+ "t_cold_s": 0.8565906770018046,
+ "t_per_pair_ms": null,
+ "threads": {
+  "affinity_cpus": 64,
+  "jvm_running": true,
+  "numba_threads": 64,
+  "omp_num_threads": "1",
+  "os_threads": 25,
+  "threadpools": [
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   }
+  ],
+  "torch_threads": 1
+ },
+ "timeout_s": 360.0,
+ "top10_cumulative": [
+  {
+   "cumtime_s": 0.8384490490000001,
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "harness",
+   "tottime_s": 1.9328000000000002e-05
+  },
+  {
+   "cumtime_s": 0.838393742,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 2,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 1.59e-05
+  },
+  {
+   "cumtime_s": 0.838386422,
+   "function": "pyspi/base.py:multivariate",
+   "line": 132,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 2.2400000000000002e-05
+  },
+  {
+   "cumtime_s": 0.8382162470000001,
+   "function": "pyspi/base.py:multivariate",
+   "line": 84,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.000168385
+  },
+  {
+   "cumtime_s": 0.8380319620000001,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 28,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 9.2175e-05
+  },
+  {
+   "cumtime_s": 0.8379287870000001,
+   "function": "pyspi/statistics/infotheory.py:bivariate",
+   "line": 524,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.001959487
+  },
+  {
+   "cumtime_s": 0.8359470400000001,
+   "function": "pyspi/statistics/infotheory.py:_compute_conditional_entropy",
+   "line": 180,
+   "ncalls": 168,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.8336640120000001
+  },
+  {
+   "cumtime_s": 0.0022585590000000003,
+   "function": "jpype/_jarray.py:__new__",
+   "line": 86,
+   "ncalls": 336,
+   "opaque": false,
+   "owner": "third-party:jpype",
+   "tottime_s": 0.000307471
+  },
+  {
+   "cumtime_s": 0.0016050830000000002,
+   "function": "~:<built-in method _jpype._newArrayType>",
+   "line": 0,
+   "ncalls": 336,
+   "opaque": true,
+   "owner": "third-party:jpype",
+   "tottime_s": 0.0016050830000000002
+  },
+  {
+   "cumtime_s": 0.00034600500000000003,
+   "function": "jpype/_jarray.py:_toJavaClass",
+   "line": 141,
+   "ncalls": 336,
+   "opaque": false,
+   "owner": "third-party:jpype",
+   "tottime_s": 0.000181621
+  }
+ ],
+ "total_tt_s": 0.8384793680000001,
+ "traceback_tail": null,
+ "unit_id": "infotheory.si.gaussian",
+ "wall_cv": null,
+ "wall_median_s": null,
+ "wall_profiled_s": 0.8385539859955315,
+ "wall_s": null,
+ "walls_s": null,
+ "warmup_error": null,
+ "warmup_shape": "8x1024"
+}

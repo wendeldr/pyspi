@@ -1,0 +1,159 @@
+unit_id: preproc.detrend
+status: profiled
+correctness:
+  metric_name_standard: Linear least-squares detrending (removal of a fitted degree-1 polynomial a + b t per channel)
+  canonical_ref: 'Bendat & Piersol 2010, Random Data: Analysis and Measurement Procedures, 4th ed., Wiley, data-preparation chapter (trend removal by least-squares polynomial fit, first order); equivalently ordinary least squares on the design [1, t]'
+  canonical_definition: r_t = x_t - (a_hat + b_hat t), with (a_hat, b_hat) = argmin sum_t (x_t - a - b t)^2; b_hat = sum (t - tbar)(x_t - xbar) / sum (t - tbar)^2, a_hat = xbar - b_hat tbar; the residual has exactly zero mean and zero sample correlation with t
+  documented_definition: 'Supplement gives no detrending rule (supplement §1, line 95, p.3 only says ''we standardize (z-score) the MTS along the time axis''). GitBook api-reference/pyspi.calculator.calculator.md:19: ''Detrend the dataset along the time axis before normalising (if enabled), default=False.'' api-reference/pyspi.data.data.md:29: ''If True, detrend the dataset along the time axis before normalising (if enabled), default=True.'' (the signature on line 31 of the same page says detrend=False). Docstring pyspi/data.py:44-45: ''If True, detrend each time series in the MTS dataset individually along the time axis, default=False.'''
+  delegate_lib: scipy==1.17.1 scipy.signal.detrend(data, axis=1) with defaults type='linear', bp=0, overwrite_data=False
+  implemented_as: 'Calculator(detrend=False default) forwards the flag to Data only when the dataset is not already a Data object. Data.set_data runs reorder to (processes, observations, replications) -> truncation to n_processes/n_observations -> scipy.signal.detrend(data, axis=1) if self.detrend -> zscore if self.normalise -> NaN check. scipy fits the design A = [t/N, 1], t = 1..N, per column by scipy.linalg.lstsq and subtracts A @ coef (one segment because bp=0), i.e. an ordinary OLS linear-trend residual per (process, replication) along time. Dtype: float32 input stays float32 (dtype char ''f'' is kept), integer input is promoted to float64. A ValueError from detrend (NaN/inf input) is caught, printed as ''Could not detrend data: ...'' and the data continue undetrended. The EEG workflow uses detrend=True then z-score (order fixed by the code: detrend precedes zscore). Probe p1_data.py: Data(normalise=False, detrend=True) matches a numpy.polyfit degree-1 residual to 5.3e-15; detrend then zscore matches to 2.7e-15; 3-D (p,s,r) input is detrended per replication (max abs diff 0.0 vs scipy on axis=1).'
+  implementation_trace:
+  - pyspi/calculator.py:48-56 Calculator.__init__(detrend=False, normalise=True) stores self._detrend
+  - 'pyspi/calculator.py:269-277 load_dataset: Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend) only when dataset is not a Data instance'
+  - pyspi/data.py:59-80 Data.__init__(detrend=False) stores self.detrend and calls set_data
+  - pyspi/data.py:177 _reorder_data -> (p, s, r) layout (pyspi/data.py:253-271)
+  - pyspi/data.py:179-182 truncation to n_processes / n_observations happens before detrend
+  - pyspi/data.py:184-191 detrend(data, axis=1) inside try/except ValueError that only prints 'Could not detrend data'
+  - pyspi/data.py:193-197 zscore follows detrend (see preproc.zscore)
+  - pyspi/data.py:199-203 NaN check raises ValueError
+  - scipy/signal/_signaltools.py:4178-4180 detrend signature (type='linear', bp=0, overwrite_data=False)
+  - scipy/signal/_signaltools.py:4266-4269 asarray; dtype kept if in 'dfDF' else 'd'
+  - scipy/signal/_signaltools.py:4274-4280 single segment bp=[0, N]
+  - scipy/signal/_signaltools.py:4287-4295 moveaxis to time-first, reshape (N, -1), copy, cast
+  - 'scipy/signal/_signaltools.py:4298-4304 per segment: A = [arange(1, N+1)/N, 1]; coef = linalg.lstsq(A, data); data - A @ coef'
+  - scipy/signal/_signaltools.py:4307-4309 restore shape
+  deviation_from_documented: Matches the docstring and the Calculator API page (linear, per channel, along time, before z-scoring). The Data API page (pyspi.data.data.md:29) states default=True, contradicting its own signature (line 31) and the code (pyspi/data.py:62 detrend=False). 'Detrend' is not specified as linear anywhere in the docs; the code uses scipy's linear default. The GitBook finance tutorial (finance-stock-price-time-series.md:47) applies detrend(zscore(z, ddof=1)), the opposite order to the code and the EEG workflow (it is the historical order recorded in EEG_OPTIMIZATION_NOTES.md:42-43).
+  deviation_from_canonical: 'none for the residual itself (OLS linear residual; agrees with numpy.polyfit to 5e-15 in probe p1_data.py). Edge behaviour outside the canonical definition: for a channel that is constant or exactly linear the canonical residual is identically zero, but the floating-point residual (std 1e-19 to 2e-13 in p2_flat.py) is then z-scored to unit variance instead of being rejected (see new_finding_candidates).'
+  units_and_range: 'Same units as the input; residual has zero mean and no linear trend; unbounded; float32 stays float32. Not a pairwise statistic: symmetry n/a.'
+  direction_convention: n/a (per-channel transform; no pair index).
+  symmetry_expected: n/a
+  already_documented: EEG_OPTIMIZATION_NOTES.md lines 42-43 (detrend first, then z-score; historical stores used z-score then detrend); tests/unit/test_data.py:38-53 test_detrend_then_zscore_order locks the current order. The flat-channel, swallowed-error and doc-default items below are not in KNOWN_ISSUES.md.
+  new_finding_candidates:
+  - 'CANDIDATE (flat/linear channels pass silently when detrend=True): a constant or exactly linear channel leaves a rounding-error residual whose sample std (about 1e-16 to 2e-13) exceeds scipy.zscore''s zero-variance guard ''zero = std <= xp.abs(eps * mn)'' (scipy/stats/_stats_py.py:2932) because the post-detrend mean mn is itself about 1e-17; the channel is then z-scored to a unit-variance, few-level, strongly autocorrelated artefact instead of being rejected. Probe p2_flat.py: ''T= 1024 const 3.0 -> OK std=1.000 uniq=9 lag1ac=+1.00 rawresid_std=3.1e-16''; ''T= 4096 linear .37t+1.1 -> OK std=1.000 uniq=13 lag1ac=-0.25 rawresid_std=2.4e-13''. Outcome is data-dependent: ''T=64 const 3.0 -> ValueError(NaN)'', every ''const 0.0'' -> ValueError(NaN), ''T=64 const 1e-3 -> OK''. Without detrend a constant channel raises (p1_data.py: ''constant row detrend=False: ValueError''). Relevant to flat EEG channels in the detrend=True workflow.'
+  - 'CANDIDATE (detrend failure swallowed): pyspi/data.py:186-189 catches ValueError from detrend and only prints; with normalise=False and a non-finite sample the dataset is accepted undetrended with the inf still present. Probe p6_inf.py: ''inf, normalise=False, detrend=True -> accepted; row0 still trended? slope 0.224 | inf present True'' and stdout ''Could not detrend data: array must not contain infs or NaNs''. With normalise=True the later NaN check (data.py:199-203) still raises, so the default path is unaffected.'
+  - 'CANDIDATE (documentation default): GitBook pyspi.data.data.md:29 says detrend ''default=True'' while the signature on line 31 and pyspi/data.py:62 use False.'
+  proposed_checks:
+  - datasets:
+    - trending
+    - scaled_offset
+    - iid_gaussian
+    path: kernel
+    reference: from-scratch numpy closed-form OLS residual r = x - xbar - b (t - tbar), b = sum((t-tbar)(x-xbar))/sum((t-tbar)^2), applied row-wise; compared with Data(X, normalise=False, detrend=True).to_numpy(squeeze=True)
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: max abs difference <= 1e-12 * max|x| at every T in {64,256,1024,4096}; residual row means <= 1e-12 and zero correlation with t
+  - datasets:
+    - trending
+    - bivariate_gaussian
+    path: pipeline-detrend
+    reference: 'analytic: trending = bivariate_gaussian (same draw) + slope*t, and OLS detrending is linear and annihilates a + b t, so detrend+zscore of both must coincide'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'Data(trending, detrend=True) equals Data(bivariate_gaussian, detrend=True) to <= 1e-12 (probe: 1.8e-15 at T=64, 3.1e-14 at T=1024); without detrend they differ by O(1) (probe: 2.3 to 4.7). Extend to cheap deterministic SPIs (cov_EmpiricalCovariance, spearmanr, dtw, mi_gaussian): outputs equal to <= 1e-10'
+  - datasets:
+    - trending
+    path: pipeline-detrend
+    reference: 'analytic: historical order detrend(zscore(x, ddof=1)) equals current order zscore(detrend(x), ddof=1) divided by the per-row constant c = std(x)/std(resid) (both ddof=1)'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'per-row ratio current/historical is constant to <= 1e-12 and equals c (probe p1_data.py: ratios [1.137, 1.389, 3.691] equal the predicted c). Scale-invariant SPIs (spearmanr, kendalltau, mi_gaussian, xcorr) agree between orders to <= 1e-10; scale-sensitive SPIs (cov_EmpiricalCovariance, pdist_euclidean, dtw, lmfit_*) differ'
+  - datasets:
+    - iid_gaussian
+    path: pipeline-detrend
+    reference: 'analytic: a constant or exactly linear channel has an identically zero OLS residual, so its z-score is undefined; build variants of iid_gaussian with row 1 replaced by 0.0, 3.0, 1e-3 and 0.37 t + 1.1'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'confirm or refute the flat-channel candidate: record, for each T in {64,256,1024,4096} and each replacement, whether Data(detrend=True, normalise=True) raises or returns a unit-variance channel; the canonical expectation is a consistent rejection or flag, the candidate predicts a data-dependent mix'
+  check_method: independent-impl
+  check_reference: refs/preprocessing_base.py:ols_detrend + zs (closed-form OLS residual and ddof=1 z-score in numpy) via r_detonly, r_order_full, r_trunc; analytic invariance r_inv_data; kernels _kernels_basic_misc.spearman/empirical_cov, _kernels_infotheory.gaussian_mi, _kernels_distance.dtw_dp via r_inv_spi; analytic order identity r_order_hist_data / r_order_hist_spis; qualitative r_flat, r_swallow; pyspi side probes/preprocessing_base_probes.py:data_array, historical_order_spis, flat_channel, error_paths
+  check_data: trending, scaled_offset, iid_gaussian at T = 64, 256, 1024, 4096 (detrend only); trending and scaled_offset at 64, 1024, 4096 (full order and truncation); trending vs the same bivariate_gaussian draw at 64, 1024, 4096 (array) and 256 (SPIs); trending 256, 1024 (historical order); iid_gaussian with row 1 replaced by 0.0, 3.0, 1e-3, 0.37t+1.1 at all four T with all P=5 rows, and at T = 64, 256, 1024 with the first 3 and the first 2 rows (P dependence)
+  agreement_criterion: 'detrend only: tolerance atol = 1e-12 * max|x|, rtol 0; truncate -> detrend -> z-score: exact rtol 1e-12, atol 1e-12; invariance: atol 1e-12 (array), rtol 1e-9 (SPIs); order identity zscore(detrend(x)) = c * detrend(zscore(x)): exact 1e-12; flat-channel and swallowed-error runs: qualitative (canonical expectation = rejection)'
+  closeness: 'detonly 12/12 pass, max abs 8.53e-14 (preproc.detrend|trending|4096|kernel|detonly), <= 3.6e-15 for scaled_offset and iid_gaussian; numpy residual row means <= 3.2e-15 and |corr with t| <= 2.3e-14. order-full 6/6 and trunc 6/6 pass, max abs 1.39e-13 (trending|4096|...|trunc), <= 1.8e-15 on scaled_offset. inv-data 3/3 pass, max abs 8.88e-14 (T=4096); inv-cov/spearmanr/mi_gaussian/dtw 4/4 pass, max rel 1.91e-12 (mi_gaussian). Control without detrend: cov and spearmanr differ from the detrended draw by 1.59 and 1.61 (nodetrend-* runs). Historical order: pyspi/historical ratio constant per row (spread <= 2.8e-10 at T=1024) and equal to c = [1.0018, 14.67, 6.07, 29.88] (T=1024) and [1.0005, 3.77, 1.83, 7.57] (T=256); cov_EmpiricalCovariance differs between orders by up to 0.792 (T=1024) and 0.759 (T=256), exactly by c_i c_j (max rel dev 1.6e-14), spearmanr identical (difference 0.0). Flat channel (row 1 of iid_gaussian replaced; const 0.0, const 3.0, const 1e-3, ramp 0.37t+1.1), 10 runs, all fail the rejection expectation. P=5 (flat runs): T=64 const 3.0, const 1e-3 and ramp accepted; T=256 const 3.0 and ramp accepted, const 1e-3 rejected; T=1024 and 4096 const 3.0, const 1e-3 and ramp accepted. P=3 and P=2 (flat-P3, flat-P2 runs, first 3 or 2 rows of the same draw): T=64 const 1e-3 and ramp accepted, const 3.0 rejected; T=256 and 1024 const 3.0, const 1e-3 and ramp accepted. So the same replacement at the same T is accepted at one P and rejected at another (const 3.0 at T=64; const 1e-3 at T=256): scipy.signal.detrend solves all rows in one multi-right-hand-side lstsq (scipy/signal/_signaltools.py:4303), so the rounding residual of the flat row depends on the other rows, and acceptance depends on that residual. Only const 0.0 (rejected in all 10 runs) and the ramp (accepted in all 10) behave the same in every run. Accepted rows have std 1.0, 2 to 26 distinct values, lag-1 autocorrelation 0.62 to 0.999. inf with normalise=False: accepted, inf still present, row-0 slope 0.049 retained (swallow run).'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 10 fails on documentation and on degenerate input. The supplement does not describe detrending. The GitBook pages never say the detrend
+    is linear, and the Data API page gives the wrong default (True). Constant or linear channels are often accepted and z-scored into unit-variance artefacts: all 10
+    flat runs fail the rejection check, and the ramp is accepted in all 10. No anchor-9 clause names these. The residual agrees with the OLS reference to 8.53e-14 (detonly
+    12/12).'
+  documentation_status: silent
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'None for non-degenerate channels: pyspi''s scipy detrend equals the closed-form OLS linear residual and the order truncate -> detrend -> z-score is as documented in the docstring and Calculator page. Outside the canonical domain (constant or exactly linear channels, non-finite input) the behaviour is not a rejection: see candidate_resolutions. The historical stores'' order (z-score then detrend) differs from the current one by a per-row constant c, which changes scale-sensitive SPIs (cov by c_i c_j) and leaves rank SPIs unchanged. Score 9 (rubric 9, trivial convention), not 10: the residual is fp-exact, but the documentation does not state the detrend type (linear is scipy''s default, documented nowhere), the Data API page contradicts the code on the default, and two edge paths (flat-channel acceptance, swallowed detrend error) deviate from the canonical expectation of rejection; the sibling preproc.zscore is scored 9 for an undocumented convention. Lowered from 10 after the adversarial review. Rubric reading is nearest-anchor 9 (score_rubric_note), because no anchor-9 clause names the undocumented detrend type or the accepted flat channels; the ''rubric 9, trivial convention'' wording above is the original reasoning for score_0_10.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: every run under 1 s; T up to 4096'
+  symmetry_observed: n/a (per-channel transform)
+  direction_observed: n/a (per-channel transform)
+  candidate_resolutions:
+  - candidate: flat or exactly linear channel passes silently when detrend=True
+    outcome: confirmed
+    evidence: 'preproc.detrend|iid_gaussian|{64,256,1024,4096}|pipeline-detrend|flat (P=5) and preproc.detrend|iid_gaussian|{64,256,1024}|pipeline-detrend|flat-P3 / flat-P2: some flat or linear replacement is accepted in all 10 runs, stored as a unit-variance row with 2-26 distinct values and lag-1 autocorrelation 0.62-0.999. Which replacements are accepted depends on T, on the constant and on the other rows of the array: const 3.0 at T=64 is accepted at P=5 and rejected at P=3 and P=2; const 1e-3 at T=256 is rejected at P=5 and accepted at P=3 and P=2 (scipy detrend solves all rows in one lstsq, scipy/signal/_signaltools.py:4303; reviewer probe preprocessing_base_check/fable_probe2.py: flat-row residual std exactly 0.0 at T=64, P=3, const 3.0 vs 3.06e-16 at P=5). The ramp is accepted and const 0.0 rejected in every run. Without detrend the same runs record raised_without_detrend = [1, 1, 1, 0] at T=64 and [1, 1, 0, 0] at T >= 256 at every P: a constant 1e-3 channel is accepted even without detrend at T >= 256 (scratch probe preprocessing_base_check/p_const_nodetrend.py: stored as a constant row of -0.998 with zero variance); that path z-scores each row separately, so it does not depend on the other rows.'
+  - candidate: detrend failure swallowed (inf input accepted undetrended with normalise=False)
+    outcome: confirmed
+    evidence: 'preproc.detrend|iid_gaussian|256|kernel|swallow: inf_accepted 1, inf_still_present 1, stored row-0 slope 0.0493 (the added 0.05 t trend is still there), normalise_true_raises 1 (default path unaffected)'
+  - candidate: GitBook Data API page states detrend default=True
+    outcome: confirmed
+    evidence: 'documentation reading, no numeric run: pyspiDocumentation/information-about-pyspi/api-reference/pyspi.data.data.md:29 says ''default=True''; pyspi/data.py:62 and the Calculator page (pyspi.calculator.calculator.md:19) say False'
+  checks_run:
+  - run_ids:
+    - preproc.detrend|{trending,scaled_offset,iid_gaussian}|{64,256,1024,4096}|kernel|detonly
+    reference: refs/preprocessing_base.py:r_detonly
+    outcome: pass 12/12, max abs 8.53e-14
+  - run_ids:
+    - preproc.detrend|{trending,scaled_offset}|{64,1024,4096}|pipeline-detrend|order-full
+    - preproc.detrend|{trending,scaled_offset}|{64,1024,4096}|pipeline-detrend|trunc
+    reference: refs/preprocessing_base.py:r_order_full, r_trunc
+    outcome: pass 12/12, max abs 1.39e-13
+  - run_ids:
+    - preproc.detrend|trending|{64,1024,4096}|pipeline-detrend|inv-data
+    - preproc.detrend|trending|256|pipeline-detrend|inv-{cov_EmpiricalCovariance,spearmanr,mi_gaussian,dtw}
+    reference: refs/preprocessing_base.py:r_inv_data, r_inv_spi
+    outcome: pass 7/7, max abs 8.88e-14 (array), max rel 1.91e-12 (SPIs)
+  - run_ids:
+    - preproc.detrend|trending|256|pipeline|nodetrend-{cov_EmpiricalCovariance,spearmanr}
+    reference: refs/preprocessing_base.py:r_nodetrend
+    outcome: 'pass 2/2 (control: differences 1.59 and 1.61 without detrend)'
+  - run_ids:
+    - preproc.detrend|trending|{256,1024}|pipeline-detrend|order-hist-data
+    - preproc.detrend|trending|{256,1024}|pipeline-detrend|order-hist-spis
+    reference: refs/preprocessing_base.py:r_order_hist_data, r_order_hist_spis
+    outcome: pass 4/4; cov differs between orders by up to 0.792, spearmanr by 0
+  - run_ids:
+    - preproc.detrend|iid_gaussian|{64,256,1024,4096}|pipeline-detrend|flat
+    - preproc.detrend|iid_gaussian|{64,256,1024}|pipeline-detrend|flat-P3
+    - preproc.detrend|iid_gaussian|{64,256,1024}|pipeline-detrend|flat-P2
+    reference: refs/preprocessing_base.py:r_flat
+    outcome: fail 10/10 (some flat/linear channel accepted in every run; which ones depends on T, the constant and P; candidate confirmed)
+  - run_ids:
+    - preproc.detrend|iid_gaussian|256|kernel|swallow
+    reference: refs/preprocessing_base.py:r_swallow
+    outcome: fail (inf accepted undetrended with normalise=False; candidate confirmed)
+optimisation:
+  complexity_P_T: 'O(P T): scipy.signal.detrend(data, axis=1) builds A = [t/N, 1] and solves one lstsq for all P rows (pyspi/data.py:184-187); once per window, independent of the SPI
+    count. Measured Data construction (truncate, detrend, zscore, NaN check) 3.0 ms at 118x1024, no gain with 4 or 8 BLAS threads'
+  hotspot_1: 'pyspi/data.py:Data.set_data -> scipy/signal/_signaltools.py:detrend (third-party:scipy): no cProfile frame: profile_units.py builds the Data before prof.runcall (profile_units.py:712-718),
+    so detrend/zscore never appear in a unit pstats (the only zscore frames are the per-pair re-normalisation inside the kraskov_DCE units, 0.3-0.5%); whole Data construction 3.0 ms
+    per 118x1024 window (audit/profiles/micro/opp_xc-blas-threads.json), about 0.001% of the 229 s retained-selection window'
+  hotspot_2: 'scipy.linalg.lstsq inside detrend: not separated from zscore (the micro times the whole Data construction)'
+  hotspot_owner: third-party:scipy
+  opaque_share: 'n/a: no cProfile frame exists for this path (the profiling pass builds the Data before prof.runcall, profile_units.py:712-718, and no unit profile calls the two-array API), so there is no profile to take a builtin-time share from'
+  profile_file: audit/profiles/micro/opp_xc-blas-threads.json (data_construction_118x1024; no pstats frame exists)
+  opportunities:
+  - opportunity_id: preprocessing_base-2
+    opportunity: Replace scipy.signal.detrend + scipy.stats.zscore(nan_policy='omit') in pyspi/data.py:Data.set_data (lines 184-195) by one numpy pass per window (closed-form OLS slope
+      and intercept per row, then mean and ddof=1 std).
+    opp_type: algorithmic
+    expected_speedup: 1-3x
+    speedup_basis: 'complexity:both steps are already O(P T); a closed-form numpy pass removes only scipy''s lstsq set-up and the nan_policy=''omit'' handling, so 1-3x on a cost that
+      is 3.0 ms per 118x1024 window for the whole Data construction (baseline timing only, no candidate: audit/profiles/micro/opp_xc-blas-threads.json data_construction_118x1024); an
+      absolute saving below 3 ms of a ~229 s window. No ranking basis on this row. This infrastructure unit has no SPI identifiers of its own, so profiles/summary.json holds no 118x1024 projection for it and rank_basis_s and projected_patient_s_after stay blank; its cost sits inside the timings of the units that call it. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README ''Optimisation columns'', rule 5).'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'the same OLS detrend and ddof=1 z-score, re-associated: ordinary channels change at rounding level. Degenerate-input caveat: flat or exactly linear channels are accepted
+      or rejected by scipy''s zero-variance guard on last-bit residuals (preproc.detrend record, probe p2_flat.py), so a re-associated detrend could flip that outcome for such channels'
+    effort: S
+    depends_on: []

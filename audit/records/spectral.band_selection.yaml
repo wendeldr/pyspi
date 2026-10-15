@@ -1,0 +1,179 @@
+unit_id: spectral.band_selection
+status: profiled
+correctness:
+  metric_name_standard: band-limited summary (arithmetic mean or maximum over the frequency bins inside [fmin, fmax]) of a per-frequency spectral connectivity measure
+  canonical_ref: 'No canonical source fixes inclusive vs exclusive band edges. The documented rule (supplement §1.5) uses closed intervals. For PSI the canonical band rule is Nolte et al. 2008, Phys. Rev. Lett. 100:234101, eq. 3 (sum over frequency pairs (f, f + df) at the native resolution within band F). Bastos & Schoffelen 2016, Front. Syst. Neurosci. 9:175 (supplement [59]) describes band-averaging of spectral measures. Nolte eq. 3 checked against arXiv:0712.2352v1 p.2 (not the PRL journal copy): Psi_tilde_ij = Im(sum_{f in F} C_ij^*(f) C_ij(f + delta_f)), where delta_f "is the frequency resolution", with C_ij from eq. 4. Bastos & Schoffelen is cited for practice only, without a section or equation, and was not re-checked.'
+  canonical_definition: 'For a grid f_k and band [fmin, fmax]: B = {k : fmin <= f_k <= fmax} (closed, as documented); summary = (1/|B|) sum_{k in B} m(f_k) or max_{k in B} m(f_k). The same B for every SPI that shares an (fmin, fmax) label. For PSI: Psi = Im sum_{f in F} conj(C(f)) C(f + df) over adjacent frequencies.'
+  documented_definition: 'supplement §1.5, p.13 (pack lines 582-613; heading at supplement.txt line 570): "In order to obtain SPIs, we take the mean (denoted by modifier mean) and the maximum (max) values of each measure over three ranges of the spectrum ... fmin-0_fmax-0-5: the full-frequency range, f in [0, fs/2]; fmin-0_fmax-0-25: the lower frequencies, f in [0, fs/4]; and fmin-0-25_fmax-0-5: the higher frequencies, f in [fs/4, fs/2]", on a grid of "125 uniformly sampled bins across the entire frequency range, f in [f0, fs/2] ... f0 = 4/T". GitBook spectral.md:16-20 has the same text. No rule is documented for PSI/GD sub-sampling or for the EEG bands (the EEG identifiers come from the retained list audit/env/retained_metrics.txt and are not in config.yaml).'
+  delegate_lib: pyspi (numpy 2.5.4 np.where, np.nanmean, np.nanmax) for the multivariate, bivariate and SGC paths; spectral_connectivity==1.1.2 connectivity._bandpass and _get_independent_frequency_step for PhaseSlopeIndex and GroupDelay
+  implemented_as: 'The grid is conn.frequencies = k/n_fft for k = 0..(n_fft+1)//2 - 1 (DC included, Nyquist excluded). Four paths apply different rules. (a) Multivariate SPIs (cohmag, phase, icoh, plv, pli, wpli, dspli, dswpli, ppc) use freq_id = (freq >= fmin) & (freq <= fmax), inclusive, then np.nanmean or np.nanmax over the frequency axis. NaN bins are skipped silently; an empty selection gives NaN with a RuntimeWarning (mean) or raises ValueError (max). For plv the statistic is applied to |PLV|. (b) Nonparametric SGC uses the same inclusive rule, but fmin <= 0 is overridden to 1e-5, which excludes DC. (c) Bivariate directed SPIs (dcoh, pdcoh, gpdcoh, dtf, ddtf) use a strict rule, (freq > fmin) & (freq < fmax). This drops DC from fmin=0 bands and drops the f = 0.25 bin from both half bands. (d) PSI and GD: pyspi first calls the library method with default arguments, which raises TypeError (PSI at connectivity.py:1329; GD at :1357). It then passes frequencies_of_interest=[fmin, fmax] and frequency_resolution=(fmax-fmin)/50. _bandpass is strict (connectivity.py:1329-1331). PSI keeps every step-th bandpassed bin, with step = ceil(n_fft (fmax-fmin)/50); at T=1024 the full band has step 11 and uses 47 bins. PSI then sums over all unordered pairs (M5). GD regresses the unwrapped phase on the largest significant cluster of the bandpassed bins, subsampled by step, and requires at least 3 points; otherwise the result is NaN. pyspi''s own freq_id is computed but not used for PSI (IndexError fallback) or GD (TypeError fallback). Bin counts (inclusive/strict): T=64 full 32/31, low 17/15, high 16/15; T=256 128/127, 65/63, 64/63; T=1024 512/511, 257/255, 256/255; T=4096 2048/2047, 1025/1023, 1024/1023. The f = 0.25 bin lies on the grid at every manifest T and is counted in both the low band and the high band under the inclusive rule.'
+  implementation_trace:
+  - 'pyspi/statistics/spectral.py:20-43 NonparametricSpectral.__init__: fmax default fs/2; statistic mean -> np.nanmean, max -> np.nanmax, delay/slope/rvalue -> None; identifier uses fmin/fmax formatted .3g'
+  - pyspi/statistics/spectral.py:72-77 TypeError fallback to _get_statistic; freq = conn.frequencies
+  - pyspi/statistics/spectral.py:88 multivariate freq_id = np.where((freq >= fmin) * (freq <= fmax)) (inclusive)
+  - pyspi/statistics/spectral.py:90-101 statfn(adj_freq[0, freq_id, :, :], axis=0); IndexError fallback adj_freq[0] (PSI, :92-93); TypeError fallback picks delay/slope/rvalue (GD, :94-100)
+  - pyspi/statistics/spectral.py:132-134 bivariate freq_id = np.where((freq > fmin) * (freq < fmax)) (strict); statfn(bv_freq[0, freq_id, 0, 1])
+  - pyspi/statistics/spectral.py:176-177 PhaseLockingValue wraps statfn with np.absolute
+  - 'pyspi/statistics/spectral.py:297-301 PhaseSlopeIndex._get_statistic: frequencies_of_interest=[fmin, fmax], frequency_resolution=(fmax - fmin)/50'
+  - 'pyspi/statistics/spectral.py:313-317 GroupDelay._get_statistic: same arguments'
+  - 'pyspi/statistics/spectral.py:343-345 SpectralGrangerCausality: fmin <= 0 overridden to 1e-5; :421-423 inclusive freq_id and statfn; :425-435 NaN-fraction mask'
+  - pyspi/calculator.py:327-339 (HEAD a1f20c7) any exception in multivariate -> the whole SPI table entry is NaN and the MetricReport has status failed with the error description
+  - spectral_connectivity/connectivity.py:73-89 _non_negative_frequencies; :174-180 Connectivity.frequencies
+  - 'spectral_connectivity/connectivity.py:1313-1335 _bandpass: (foi[0] < frequencies) & (frequencies < foi[1]) (strict)'
+  - spectral_connectivity/connectivity.py:1338-1357 _get_independent_frequency_step = int(ceil(frequency_resolution / frequency_difference))
+  - 'spectral_connectivity/connectivity.py:1060-1104 phase_slope_index: _bandpass (:1091-1093), step sub-sampling (:1095-1102), _inner_combination(...).imag (:1104; :1107-1113 all unordered pairs)'
+  - 'spectral_connectivity/connectivity.py:902-987 group_delay: step (:930-934), _bandpass (:935-937), _find_significant_frequencies (:946-951; :1432-1482 with min_group_size=3 at :1408-1429), masked linregress (:962-967)'
+  deviation_from_documented: '(1) The documentation uses closed intervals. The bivariate directed SPIs (spectral.py:132), PSI and GD (connectivity.py:1329-1331) use open intervals: DC is dropped from fmin=0 bands and f = fs/4 from both half bands. At T=1024 the strict path averages 511, 255 and 255 bins against 512, 257 and 256 for the multivariate path under the same identifier suffix. (2) The Nyquist bin is never on the grid, so [.., fs/2] is in effect [.., fs/2 - 1/n_fft] (already documented, REVIEW M4). (3) The inclusive multivariate rule puts the f = fs/4 bin in both the low and the high band, so the documented "lower" and "higher" ranges overlap by one bin. (4) The documented 125-bin grid from f0 = 4/T is not used: DC is inside every multivariate fmin=0 band and the bin count is n_fft/2. (5) PSI is computed on a sub-sampled grid (step = ceil(n_fft (fmax-fmin)/50)), which is not documented, and GD only on the largest significant cluster with at least 3 points.'
+  deviation_from_canonical: 'There is no canonical edge rule, but one (fmin, fmax) label should denote one bin set. Here the bin set depends on the SPI class (inclusive multivariate, strict bivariate/PSI/GD, DC-excluded SGC). For PSI, Nolte 2008 eq. 3 uses adjacent frequency pairs at the native resolution. The library instead sums all pairs (M5, already documented) on a grid sub-sampled with frequency_resolution = band/50, which is not tied to the multitaper bandwidth 2W = 6/T (at T=1024: band/50 = 0.01 for the full band vs 2W = 0.0059). For the narrow EEG bands the bin sets are tiny. With the exact edges configured in pyspi/workflow/retained185.yaml (0.5, 2, 4, 6, 15, 35, 75 and 125 divided by 1024; check stage confirmed, the earlier hypothesis is resolved), T=1024 gives inclusive counts 2, 3, 3 and strict counts 1, 1, 1 for (0.5-2), (2-4) and (4-6); T=512 gives inclusive 1, 2, 2 and strict 0, 0, 0. With the rounded identifier values (0.000488, 0.00195, 0.00391, 0.00586), T=1024 would give inclusive and strict counts 1, 3, 2; the identifier string keeps only 3 significant digits, but the workflow configuration (retained185.yaml) stores the exact floats, so the exact-edge counts are the ones computed (check stage: masks runs).'
+  units_and_range: n/a (selection and aggregation step). The output keeps the units of the per-frequency measure. nanmean/nanmax ignore NaN bins. An empty multivariate selection gives an all-NaN matrix (nanmean) or ValueError -> NaN table (nanmax). With fewer than 2 strict bins PSI raises IndexError -> NaN table; with fewer than 3 usable bins GD returns NaN, and with 0 bins it raises ValueError -> NaN table.
+  direction_convention: 'n/a for the selection itself; orientation is unchanged: multivariate A[i,j] = stat over the selected bins of m[i,j](f) (row i leads when its CSM phase is positive, see spectral.multitaper_csm); bivariate A[i,j] = stat over bins of entry [0,1] of the 2-channel [i,j] result.'
+  symmetry_expected: n/a
+  already_documented: REVIEW M4 (DC included, Nyquist excluded, arithmetic mean of principal angles); REVIEW M5 (PSI sums all unordered frequency pairs in the band); REVIEW M6 (GD all-NaN cases observed in saved data); DEPENDENCY_COMPATIBILITY_REVIEW.md:74-84 (Nyquist inclusion and PSI band forwarding in newer spectral-connectivity); EEG_OPTIMIZATION_NOTES.md §review (spectral band forwarding, phase aggregation/endpoints)
+  new_finding_candidates:
+  - 'CANDIDATE (pack hypothesis confirmed): the edge rule differs by path. Multivariate uses >= / <= (spectral.py:88: "np.where((freq >= self._fmin) * (freq <= self._fmax))"). Bivariate directed uses > / < (spectral.py:132: "np.where((freq > self._fmin) * (freq < self._fmax))"). PSI/GD use the library''s strict _bandpass (connectivity.py:1329-1331). Probe counts, inclusive/strict: T=1024 full 512/511, low 257/255, high 256/255; T=64 32/31, 17/15, 16/15.'
+  - 'CANDIDATE: the f = 0.25 bin is on the grid at every manifest T (probe: "bin 0.25 in grid: True" at T = 64, 256, 1024, 4096). The inclusive rule counts it in both fmin-0_fmax-0-25 and fmin-0-25_fmax-0-5; the strict rule counts it in neither.'
+  - 'CANDIDATE (pack hypothesis confirmed, extends REVIEW M6): narrow EEG bands leave 0-3 bins. Probe on 3 iid channels with edges at exact k/1024: at T=1024, psi raises "IndexError: too many indices for array" for (0.5-2), (2-4) and (4-6), because one strict bin leaves no frequency pair (connectivity.py:1110-1111); gd returns [nan nan nan] (fewer than min_group_size = 3 points); cohmag returns single-bin values. At T=512, gd raises "ValueError: zero-size array to reduction operation maximum" and dcoh returns [nan nan nan] (0 strict bins). Calculator turns each exception into an all-NaN table (calculator.py:327-339 at HEAD a1f20c7, status failed in the MetricReport). Whether the EEG run hits these cases depends on the float band edges (recorded exactly in pyspi/workflow/retained185.yaml) and on the epoch length (0.5 s at 2048 Hz = 1024 samples in the workflow example).'
+  - 'CANDIDATE (refines DEPENDENCY_COMPATIBILITY_REVIEW.md:84 for 1.1.2): with the pinned 1.1.2 the PSI band is forwarded, but only because the default-argument call fails. A spy on Connectivity.phase_slope_index shows "kwargs {}" (raises TypeError at connectivity.py:1329, "NoneType object is not subscriptable"), then "kwargs {frequencies_of_interest: [0, 0.25], frequency_resolution: 0.005}". GD fails at connectivity.py:1357. Any library version whose defaults do not raise would silently compute the full band.'
+  - 'CANDIDATE: PSI sub-samples the bandpassed bins with step = ceil(n_fft (fmax-fmin)/50) (connectivity.py:1095-1102 with pyspi/statistics/spectral.py:300). Probe bin counts used: T=256 full band step 3 -> 43 bins; T=1024 step 11 -> 47; T=4096 step 41 -> 50. So PSI uses at most about 50 bins, at a spacing set by band width rather than by the taper bandwidth.'
+  - 'CANDIDATE: aggregation is NaN-ignoring (np.nanmean/np.nanmax at spectral.py:29-32), so bins where the measure is NaN (for example zero power) are dropped silently and the effective bin count can vary per pair. An empty selection behaves differently by statistic: nanmean gives NaN with a RuntimeWarning, while nanmax raises "ValueError: zero-size array to reduction operation fmax which has no identity" (probe), so the whole table becomes NaN.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic bin sets on the grid f_k = k/n_fft: inclusive k in [ceil(fmin n_fft), floor(fmax n_fft)] intersected with [0, (n_fft+1)//2 - 1]; strict k in (fmin n_fft, fmax n_fft) with the same cap; PSI k-subset = strict[0::ceil(n_fft (fmax-fmin)/50)]; for the 3 config bands and the 10 EEG bands (exact k/1024 edges and identifier-rounded edges) at T in {64, 256, 512 (truncated from 1024), 1024, 4096}; compared with the indices pyspi selects (np.where on Connectivity.frequencies, instrumented) and with the shape passed to _inner_combination'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: index sets match the analytic rules exactly; counts as in implemented_as (T=1024 full 512/511, low 257/255, high 256/255; PSI full-band 47 bins); EEG counts at T=1024 exact edges inclusive 2/3/3, strict 1/1/1; at T=512 inclusive 1/2/2, strict 0/0/0
+  - datasets:
+    - iid_gaussian
+    - var2_chain
+    - narrowband_f0-0.1
+    - delayed_noise
+    path: pipeline
+    reference: from-scratch multitaper CSM (sinc-kernel DPSS + numpy.fft on Data(x).to_numpy()) -> per-bin MSC and |Im coherency|; mean and max over (a) the analytic inclusive set and (b) the analytic strict set; compared with CoherenceMagnitude and ImaginaryCoherence for the three config bands
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: pyspi equals the inclusive-set summary to <= 1e-12 for all six cohmag and six icoh identifiers, and differs from the strict-set summary by more than 1e-8 for the mean statistics (the DC and 0.25 bins differ), identifying the inclusive rule
+  - datasets:
+    - var2_bivariate
+    - var2_chain
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'same-lineage: per-frequency directed_coherence from spectral_connectivity Connectivity on the 2-channel [i,j] array (the library is used only to obtain the per-bin values), aggregated by an independent numpy summary over the analytic strict set and over the analytic inclusive set; compared with DirectedCoherence(fs=1) and DirectedTransferFunction(fs=1).bivariate'
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: pyspi bivariate values equal the strict-set summary to <= 1e-15 (same per-bin arrays) and differ from the inclusive-set summary; confirms the strict rule of spectral.py:132
+  - datasets:
+    - narrowband_f0-0.25
+    path: pipeline
+    reference: 'analytic identity for the inclusive rule: n_low*mean_low + n_high*mean_high - n_full*mean_full = m(f=0.25), with n = inclusive bin counts (T=1024: 257, 256, 512); the sinusoid at f0 = 0.25 sits on grid bin k = n_fft/4, so m(0.25) is close to 1; m(0.25) from the from-scratch CSM'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'identity holds to <= 1e-12 for cohmag mean (bin double-counted); for the max statistic one of the two half-band maxima equals MSC(0.25) (probe: T=256 low max 0.9996170 = MSC(0.25); T=1024 high max 0.9999001 = MSC(0.25)); under the strict rule (dcoh) the 0.25 bin is in neither half band'
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic expectation of the code path for narrow EEG bands (exact k/1024 edges and rounded identifier edges) at T = 1024 and at T = 512 (first 512 samples): PSI needs >= 2 strict bins, GD >= 3 usable bins, multivariate nanmax needs >= 1 inclusive bin'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'T=1024 exact edges: psi (0.5-2), (2-4), (4-6) -> IndexError -> all-NaN table; gd -> all NaN; cohmag mean equals the single- or two-bin average. T=512: gd ValueError, dcoh NaN, cohmag max on (0.5-2) from one bin. Record which EEG identifiers are degenerate under each edge hypothesis'
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'instrumentation spy (no numeric reference): record the kwargs of Connectivity.phase_slope_index and group_delay calls from PhaseSlopeIndex/GroupDelay._get_cache for each configured band'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: first call kwargs {} raising TypeError (connectivity.py:1329 / :1357), second call with frequencies_of_interest = [fmin, fmax] and frequency_resolution = (fmax - fmin)/50 for every band; PSI results for fmin-0_fmax-0-25 and fmin-0-25_fmax-0-5 differ from the full band
+  check_method: analytic
+  check_reference: 'audit/checks/refs/spectral_csm.py: h_masks (analytic bin sets on k/n_fft: inclusive and strict), h_spy (analytic PSI/GD kwargs, PSI step and bin count, failure rules), h_eeg (outcome predicted from bin counts), h_spi (independent kernel cohmag/icoh over the inclusive set, strict alternative as extra key), h_id025 (double-count identity), h_bvagg (same-lineage: library per-bin dcoh/DTF aggregated over the strict set), h_fftcount; library side audit/checks/probes/spectral_csm_bands.py (pyspi''s own reducers instrumented through the spectral cache and a recording _statfn; spies on Connectivity.phase_slope_index, group_delay and _inner_combination)'
+  check_data: iid_gaussian (T = 64, 256, 512 = first half of 1024, 1024, 4096), narrowband_f0-0.25 (256, 1024, 4096), var2_chain 256, var2_bivariate 1024, gauss_ar1_pair 1024, delayed_noise (256, 512, 1024); config bands and the 10 retained EEG bands with the exact floats of pyspi/workflow/retained185.yaml
+  agreement_criterion: 'bin masks, PSI/GD forwarded arguments and bin counts, fft counts: exact; cohmag/icoh band summaries: tolerance rtol 1e-10, atol 1e-12 against the inclusive set; bivariate aggregation: exact against the strict set (same-lineage per-bin values); EEG outcomes and the f = 0.25 identity: qualitative, decided by the reference from analytic bin counts (identity residual < 1e-10)'
+  closeness: '58 runs, all pass. Masks (5 runs, exact): multivariate inclusive / bivariate strict counts full, low, high = 32/31, 17/15, 16/15 (T=64); 128/127, 65/63, 64/63 (256); 256/255, 129/127, 128/127 (512); 512/511, 257/255, 256/255 (1024); 2048/2047, 1025/1023, 1024/1023 (4096); EEG bands 1-4, 4-8, 8-12 Hz-equivalent (k/1024 edges 0.5-2, 2-4, 4-6): 2/1, 3/1, 3/1 at T=1024, 1/0, 2/0, 2/0 at T=512, 0/0, 1/0, 1/0 at T=256. cohmag/icoh (36 runs): max_abs <= 1.5e-13 against the inclusive set; the strict set would differ by up to 0.515 (icoh max fmin-0_fmax-0-25, iid_gaussian T=64), 0.035 (icoh mean low band, iid_gaussian T=64), 0.0036 (cohmag mean low band, narrowband T=1024), 0.0096 (var2_chain T=256). Bivariate dcoh/DTF (4 runs, same-lineage): max_abs 1.1e-15 against the strict set; the inclusive set would differ by 0.0017 (gauss_ar1_pair 1024), 0.0022 (var2_bivariate 1024), 0.129 (var2_chain 256). f = 0.25 bin: n_low m_low + n_high m_high - n_full m_full - MSC(0.25) = 2.7e-14, 1.2e-13, 4.8e-13 at T = 256, 1024, 4096 (MSC(0.25) >= 0.99961), so the inclusive rule counts it in both half bands; strict rule (dcoh, narrowband 1024): n_full m_full - n_low m_low - n_high m_high - dcoh(0.25) = 1.4e-13 with counts 511/255/255, so it is in neither half band. PSI/GD spy (4 runs, exact): two library calls per band, the first with no kwargs (TypeError), the second with frequencies_of_interest = [fmin, fmax] and frequency_resolution = (fmax - fmin)/50; PSI sums over 47/43/43 bins (T=1024), 43/32/32 (256), 43/43/43 (512), 50/49/49 (4096) of the 511/255/255 (etc.) strict bins. EEG outcomes (5 runs, qualitative): at T=1024 PSI raises IndexError and GD is all-NaN for the three narrow bands; at T=512 also GD ValueError and dcoh all-NaN; at T=256 cohmag max raises ValueError and cohmag mean is all-NaN for the 0.5-2/1024 band. Multitaper.fft counts (exact): [1, 1, 0, 1, 1, 1, 1, 12].'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 6: one fmin/fmax label selects different bin sets (inclusive multivariate 512/257/256 bins vs strict bivariate/PSI/GD 511/255/255 at T=1024),
+    and neither path uses the documented 125-bin grid from f0 = 4/T.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The documented closed bands [fmin, fmax] are applied by the multivariate reducer (inclusive, spectral.py:88) but the bivariate directed SPIs (spectral.py:132), PSI and GD (library _bandpass) use open bands, so one fmin/fmax label denotes different bin sets: DC is dropped from fmin=0 bands and the f = fs/4 bin is in both half bands (inclusive) or in neither (strict). PSI additionally keeps every ceil(n_fft (fmax - fmin)/50)-th strict bin (at most about 50) and sums over all pairs (REVIEW M5). The Nyquist bin is never on the grid (REVIEW M4). For the retained EEG bands at the EEG workflow''s T = 1024 (0.5 s at 2048 Hz) the 1-4, 4-8 and 8-12 Hz-equivalent bands have 2-3 inclusive and 1 strict bin, so PSI fails (all-NaN table) and GD is all-NaN there. Score 6: deviates from the documentation and from the one-label-one-bin-set requirement in an interpretable way; the multivariate path alone would match the documented closed bands.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: cheap (masks/spy < 3 s per run; EEG outcome runs 8-23 s each because they build 50 SPIs; whole family about 3.5 min including references)
+  symmetry_observed: 'n/a (selection step): the selected bin set does not depend on (i, j) (masks runs); symmetry of the summaries is that of the per-bin measure'
+  direction_observed: 'n/a for the selection; orientation preserved: the bivariate summaries at A[i,j] equal the strict-set aggregation of entry [0,1] of the 2-channel [i,j] library result (bvagg runs, max_abs 1.1e-15)'
+  candidate_resolutions:
+  - candidate: edge rule differs by path (inclusive multivariate, strict bivariate/PSI/GD)
+    outcome: confirmed
+    evidence: spectral.band_selection|iid_gaussian|*|kernel|masks* (exact); spi=cohmag_*/icoh_* runs match the inclusive set to 1.5e-13 and differ from the strict set by up to 0.515; bvagg runs match the strict set to 1.1e-15 and differ from the inclusive set by 0.0017-0.129; spy runs show _bandpass strict
+  - candidate: f = 0.25 bin counted in both half bands (inclusive) and in neither (strict)
+    outcome: confirmed
+    evidence: spectral.band_selection|narrowband_f0-0.25|{256,1024,4096}|pipeline|id025 (residual <= 4.8e-13); spectral.band_selection|narrowband_f0-0.25|1024|pipeline|bvagg (strict identity residual 1.4e-13, counts 511/255/255)
+  - candidate: narrow EEG bands leave 0-3 bins; PSI IndexError, GD NaN/ValueError, dcoh NaN
+    outcome: confirmed
+    evidence: spectral.band_selection|{delayed_noise,iid_gaussian}|1024|pipeline-detrend|eeg and eeg-n512, iid_gaussian|256|pipeline-detrend|eeg; exact edges from pyspi/workflow/retained185.yaml; EEG workflow example uses 2048 Hz and 0.5 s windows (T=1024); extends REVIEW M6 (GD all-NaN)
+  - candidate: with 1.1.2 the PSI/GD band is forwarded only because the default-argument call fails
+    outcome: confirmed
+    evidence: 'spectral.band_selection|iid_gaussian|*|kernel|spy* (exact): first call 0 kwargs, second [fmin, fmax], (fmax-fmin)/50 for all 13 bands; refines DEPENDENCY_COMPATIBILITY_REVIEW.md (band forwarding), already documented'
+  - candidate: PSI sub-samples to at most about 50 bins with a band-width-based step
+    outcome: confirmed
+    evidence: 'spy runs ref_psi_bins_used: T=1024 47/43/43, T=4096 50/49/49, T=256 43/32/32; EEG 0.5-125/1024 band at T=1024: 42 of 124 strict bins'
+  - candidate: NaN-ignoring aggregation; empty selection gives NaN for mean but ValueError for max
+    outcome: confirmed
+    evidence: 'spectral.band_selection|iid_gaussian|256|pipeline-detrend|eeg: band 0.5-2/1024 has 0 inclusive bins; cohmag mean code 0 with 20/20 NaN, cohmag max code 2 (ValueError); NaN bins dropped silently by np.nanmean/np.nanmax (spectral.py:29-32, observed in the masks instrumentation)'
+  checks_run:
+  - run_ids:
+    - spectral.band_selection|iid_gaussian|*|kernel|masks
+    - spectral.band_selection|iid_gaussian|1024|kernel|masks-n512
+    reference: audit/checks/refs/spectral_csm.py:h_masks
+    outcome: pass (5/5), exact
+  - run_ids:
+    - spectral.band_selection|iid_gaussian|*|kernel|spy
+    - spectral.band_selection|iid_gaussian|1024|kernel|spy-n512
+    reference: audit/checks/refs/spectral_csm.py:h_spy
+    outcome: pass (4/4), exact
+  - run_ids:
+    - spectral.band_selection|*|*|pipeline-detrend|eeg
+    - spectral.band_selection|*|1024|pipeline-detrend|eeg-n512
+    reference: audit/checks/refs/spectral_csm.py:h_eeg
+    outcome: 'pass (5/5, qualitative): predicted IndexError/ValueError/NaN outcomes all observed'
+  - run_ids:
+    - spectral.band_selection|*|*|pipeline|spi=cohmag_*
+    - spectral.band_selection|*|*|pipeline|spi=icoh_*
+    reference: audit/checks/refs/spectral_csm.py:h_spi
+    outcome: pass (36/36), max_abs 1.5e-13 vs the inclusive set
+  - run_ids:
+    - spectral.band_selection|narrowband_f0-0.25|*|pipeline|id025
+    reference: audit/checks/refs/spectral_csm.py:h_id025
+    outcome: pass (3/3), residual <= 4.8e-13
+  - run_ids:
+    - spectral.band_selection|*|*|pipeline|bvagg
+    reference: audit/checks/refs/spectral_csm.py:h_bvagg (same-lineage)
+    outcome: pass (4/4), max_abs 1.1e-15 vs the strict set
+  - run_ids:
+    - spectral.band_selection|delayed_noise|256|pipeline|fftcount
+    reference: audit/checks/refs/spectral_csm.py:h_fftcount
+    outcome: pass, exact [1, 1, 0, 1, 1, 1, 1, 12]
+optimisation:
+  complexity_P_T: 'Per identifier O(m*P^2) reduction over the m band bins of the cached (1, n_fft/2, P, P) array (np.nanmean / np.nanmax, pyspi/statistics/spectral.py:87-101); bivariate path O(m) per ordered pair. Infrastructure unit without its own timing: per-identifier increments after the first of a unit are 0.007-0.024 s at 118x1024 (family-warm records). Its indirect cost is larger: for psi and gd the band is part of the cache key (spectral.py:46-48), so every band rebuilds the multitaper CSM.'
+  hotspot_1: numpy/lib/_nanfunctions_impl.py:nanmean (includes the _replace_nan copy) 3.2% of the profiled cohmag call at 118x1024 (audit/profiles/micro/prof_spectral.cohmag__118x1024.pstats); hotspot_owner names the frame's owner (third-party:numpy); the call site and the place spectral_csm-2 would change are pyspi/statistics/spectral.py:88-91
+  hotspot_2: 'band in the psi/gd cache key: .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:coherency 83.6% of each profiled psi band call at 118x1024 (audit/profiles/micro/prof_spectral.psi__118x1024.pstats) is repeated per band'
+  hotspot_owner: third-party:numpy
+  opaque_share: 0.111
+  profile_file: audit/profiles/spectral.cohmag__8x1024.pstats
+  opportunities:
+  - opportunity_id: spectral_csm-2
+    opportunity: Reduce each band with a plain mean over a contiguous slice of the cached per-frequency array when the band has no off-diagonal NaN (fall back to nanmean otherwise), instead of np.nanmean, which copies the whole band slice in _replace_nan (pyspi/statistics/spectral.py:88-91).
+    opp_type: algorithmic
+    expected_speedup: ~2x
+    speedup_basis: 'profile:audit/profiles/micro/prof_spectral.cohmag__118x1024.pstats nanmean 3.2% of the unit call (the reduction is the whole of this unit''s own cost) + complexity: one pass instead of copy + pass. No ranking basis on this row. This infrastructure unit has no SPI identifiers of its own, so profiles/summary.json holds no 118x1024 projection for it and rank_basis_s and projected_patient_s_after stay blank; its cost sits inside the timings of the units that call it. build_csv ranks the row as saving 0 s, after every row of its tier and kind with a positive saving, then by output risk and effort (README ''Optimisation columns'', rule 5).'
+    output_risk: unverified-bit-identical
+    risk_evidence: np.nanmean is sum over NaN-replaced values / count; with no NaN in the slice the same sum and count result; guarded fallback keeps the NaN pattern
+    effort: S
+    depends_on: []

@@ -1,0 +1,62 @@
+{
+ "family": "spectral_csm",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/spectral.md"
+ ],
+ "hypotheses": [
+  "NW=3, 5 DPSS tapers, whole series as one window, constant detrend, n_fft=next_fast_len(T) via scipy.fftpack; expectation over the 5 tapers; non-negative frequencies keep DC and drop Nyquist for even n_fft",
+  "every measure variant rebuilds Multitaper and the full two-sided CSM; first-insert cache keyed by string",
+  "band selection: inclusive (>=, <=) in the multivariate path, strict in the bivariate path and in PSI/GD _bandpass; narrow EEG bands at T=1024 leave 2-3 bins (delta 2, theta 3, alpha 3) and PSI/GD strict bandpass leaves 1"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/spectral.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    582,
+    613
+   ],
+   "section": "1.5",
+   "title": "Spectral (126 SPIs)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py (Multitaper, _make_tapers, fft)",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py (Connectivity, _cross_spectral_matrix, _expectation, _non_negative_frequencies)"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "spectral_connectivity Multitaper(NW=3, 5 DPSS) + Connectivity cross-spectral matrix",
+   "module": "spectral",
+   "pair_basis": "n/a",
+   "pyspi_class": "NonparametricSpectral",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "spectral.multitaper_csm"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "fmin/fmax selection on the FFT grid (inclusive multivariate, strict bivariate/PSI/GD)",
+   "module": "spectral",
+   "pair_basis": "n/a",
+   "pyspi_class": "NonparametricSpectral",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "spectral.band_selection"
+  }
+ ]
+}

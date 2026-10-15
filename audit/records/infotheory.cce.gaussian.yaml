@@ -1,0 +1,213 @@
+unit_id: infotheory.cce.gaussian
+status: profiled
+correctness:
+  metric_name_standard: Causally conditioned (block) entropy H(Y^n || X^n) with block length n = 5, Gaussian model
+  canonical_ref: Kramer G. 1998, PhD thesis 'Directed information for channels with feedback', ETH Zurich, eq. (3.x) causal conditioning H(Y^N||X^N) = sum_{n=1}^N H(Y_n | Y^{n-1}, X^n); Ziebart B.D., Bagnell
+    J.A. & Dey A.K. 2010, ICML (maximum causal entropy); Amblard P.-O. & Michel O.J.J. 2011, J Comput Neurosci 30:7-16
+  canonical_definition: H(Y^N || X^N) = sum_{n=1}^{N} H(Y_n | Y_1..Y_{n-1}, X_1..X_n) (X up to and including time n)
+  documented_definition: 'supplement §1.4.7, p.11 (supplement.txt:513-524): ''Causally conditioned entropy [42-44] aims to measure the uncertainty remaining in time series y in the context of the entire
+    (causal) past of both time series x and y. The measure is computed as a sum of conditional entropies (of y given both the past of x and the past of y) with increasing history lengths. ... for computational
+    reasons, we restrict the history length to 10. This corresponds to the assumption that the joint process is, at maximum, a 10th-order Markov chain.'' Keywords ''directed, nonlinear, unsigned, bivariate,
+    time-dependent''. GitBook information-theory.md:24-42 same text.'
+  delegate_lib: JIDT infodynamics.jar bundled at pyspi/lib/jidt (labelled 1.6.1 by version-1.6.1.txt, but its class inventory includes EntropyCalculatorMultiVariateCommon, added upstream in commit 3d1f3fe
+    on 2024-04-20; between tag v1.6.1 and commit a9b6b3e the Gaussian MI/CMI/TE/AIS leaf classes, MatrixUtils, MathsUtils and ChiSquareMeasurementDistribution are byte-identical, their MultiVariateCommon/Via
+    parents differ only in observation-ID/noise-seed bookkeeping, and EntropyCalculatorMultiVariateGaussian was refactored onto EntropyCalculatorMultiVariateCommon with its value path unchanged; details
+    in infotheory.est.gaussian) via JPype1==1.7.1 on OpenJDK 21; gaussian.EntropyCalculatorMultiVariateGaussian (2 entropies per term, 5 terms) and infodynamics.utils.MatrixUtils.makeDelayEmbeddingVector
+  implemented_as: A[i,j] = sum_{m=1}^{5} H(x_j(t) | x_j(t-1..t-m+1), x_i(t..t-m+1)) with each term a stationary (sliding-window, T-m+1 samples) Gaussian conditional entropy on z-scored data (ddof=1). This
+    is the block quantity H(Y^5 || X^5) under stationarity (not a per-sample rate), it includes the contemporaneous source sample x_i(t) in every term, and n = 5 (constructor default) rather than the documented
+    10.
+  implementation_trace:
+  - pyspi/calculator.py:329 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 fill_diagonal NaN; :336-339 any exception from any pair -> the whole SPI entry becomes NaN (:337) and the error is recorded, warning issued at :354-355
+  - 'pyspi/data.py:184-195 preprocessing in Data.set_data: optional scipy.signal.detrend(axis=1), then (default normalise=True) scipy.stats.zscore(axis=1, ddof=1)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for every ordered pair i != j, A[i,j] = self.bivariate(data, i=i, j=j)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: _entropy_calc = _getcalc(''entropy'') (:36); identifier += ''_gaussian'' (:38); estimator ''gaussian'' -> labels += [''linear''], _dyn_corr_excl
+    = None (:53-55)'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: every calculator gets setProperty(''BIAS_CORRECTION'',''false'') and setProperty(''NOISE_SEED'',''42''); no NORMALISE property is set'
+  - 'pyspi/statistics/infotheory.py:103-134 _getcalc: ''gaussian'' (and any unrecognised estimator) falls to the else branches -> gaussian.EntropyCalculatorMultiVariateGaussian (:111-112), gaussian.MutualInfoCalculatorMultiVariateGaussian
+    (:120-123), gaussian.TransferEntropyCalculatorGaussian (:129-130)'
+  - pyspi/statistics/infotheory.py:429-437 CausalEntropy(JIDTBase, Directed).__init__(n=5) -> self._n = 5 (config passes no n)
+  - 'pyspi/statistics/infotheory.py:439-454 _compute_causal_entropy(src, targ): for i = 1..n: Yp = MatrixUtils.makeDelayEmbeddingVector(targ, i-1)[:-1] (targ lags 1..i-1), Xp = makeDelayEmbeddingVector(src,
+    i) (src lags 0..i-1, i.e. including the present x(t)), Yf = targ[i-1:]; sum of _compute_conditional_entropy(Yf, [Yp, Xp]) = H(y(t) | y(t-1..t-i+1), x(t..t-i+1)) on T-i+1 samples'
+  - pyspi/statistics/infotheory.py:180-193 _compute_conditional_entropy(X, Y) = H(X,Y) - H(Y) with the Gaussian entropy calculator
+  - pyspi/statistics/infotheory.py:456-457 _getkey adds n to the cache key; :459-474 bivariate caches data.causal_entropy[(estimator, n)][i,j] = _compute_causal_entropy(z[i], z[j]) (src = i, targ = j)
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] makeDelayEmbeddingVector(double[], k) :2084-2092 -> (data, k, k-1, T-k+1) :2140-2158, rows [x(t), x(t-1),
+    ..., x(t-k+1)] for t = k-1..T-1; k = 0 yields T+1 zero-width rows (probe-consistent)
+  - 'pyspi/config.yaml:425-437 CausalEntropy configs: estimator gaussian (no n)'
+  - 'https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/gaussian/EntropyCalculatorMultiVariateGaussian.java EntropyCalculatorMultiVariateGaussian
+    (extends EntropyCalculatorMultiVariateCommon, :53-54): finaliseAddObservations :87-96 computes means and MatrixUtils.covarianceMatrix(observations, means); setCovariance :110-123 takes MatrixUtils.CholeskyDecomposition
+    (throws on non-PD); computeAverageLocalOfObservations :162-175 returns 0.5*(d*(1+ln 2pi) + ln det(Sigma)) in nats'
+  - https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/EntropyCalculatorMultiVariateCommon.java :66 normalise = true by default, but
+    finaliseAddObservations :178-212 only stacks observations and adds noise if addNoise (default false, :70); no normalisation is applied for the Gaussian estimator; NOISE_SEED handled :133-139 (no effect
+    without addNoise)
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] covarianceMatrix(double[][], double[]) :3426-3439 -> covarianceTwoColumns :3370-3377 divides by (n-1) (ddof=1);
+    CholeskyDecomposition :4496-4498 (tol 10e-10 = 1e-9) / :4528-4560 throws NonPositiveDefiniteMatrixException when a pivot <= tol; determinantViaCholeskyResult :4673-4680
+  deviation_from_documented: (1) History restricted to n = 5 terms (infotheory.py:435), not 10 as documented (supplement §1.4.7; GitBook). (2) Each term conditions on the present x(t) as well as the past
+    ('past of x' in the text); this follows Kramer's definition but not the supplement wording. (3) The value is a sum over 5 terms (magnitude approx 5 x per-sample entropy, e.g. 6.12 nats on var2_bivariate_T1024),
+    not 'the uncertainty remaining in y' per sample.
+  deviation_from_canonical: 'Matches Kramer''s causally conditioned entropy for block length N = 5 under stationarity (probe var2_bivariate_T1024: A[0,1] = 6.12472743 and A[1,0] = 6.63088572 equal a numpy
+    re-implementation 6.124727425882034 / 6.630885716374198). Finite truncation (5) instead of the whole past; terms estimated on different sample counts (T-m+1).'
+  units_and_range: nats; real (sum of differential conditional entropies), approx 5*1.4189 = 7.09 for independent white series under z-scoring, can be negative for strongly coupled pairs; asymmetric; raises
+    on singular embeddings (Calculator blanks the matrix)
+  direction_convention: 'A[i,j] = H(x_j^5 || x_i^5): column j is the target whose uncertainty is measured, row i the causally conditioning source (infotheory.py:472 passes z[i] as src, z[j] as targ). Probe
+    var2_bivariate_T1024 (x0 drives x1): A[0,1]=6.125 < A[1,0]=6.631'
+  symmetry_expected: asym
+  already_documented: REVIEW M8 (sign of Gaussian entropies) by the same mechanism; tests/README.md lists cce_* as FORCE_SLOW only
+  new_finding_candidates:
+  - 'CANDIDATE (documented parameter mismatch, hypothesis confirmed): CausalEntropy uses n = 5 (infotheory.py:435 ''def __init__(self, n=5, ...)''; config.yaml:425-437 passes no n) while supplement §1.4.7
+    and GitBook say the history is restricted to 10.'
+  - 'CANDIDATE (documentation wording): every term conditions on x(t) (makeDelayEmbeddingVector(src, i) contains lags 0..i-1, infotheory.py:449), i.e. ''past and present of x'', matching Kramer''s X^n but
+    not the supplement''s ''past of x''.'
+  - 'CANDIDATE (scale of output): the value is a 5-term block sum, so it scales with n and is not comparable to a per-sample conditional entropy (iid z-scored data give approx 7.09 nats, not approx 1.42).'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    - gauss_ar1_pair
+    - iid_gaussian
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'from-scratch numpy: sum_{m=1}^{5} [H(y(t), y lags 1..m-1, x lags 0..m-1) - H(y lags 1..m-1, x lags 0..m-1)] with ddof=1 slogdet entropies, sample alignment t = m-1..T-1'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: abs difference <= 1e-10 on every ordered pair and T
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic for serially independent Gaussian pairs: 5*(1.4189385 + 0.5*ln(1-rho^2)): rho=0.8 -> 4.5405645, rho=0.3 -> 6.8589160, independent -> 7.0946927'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: within 3 sampling SDs at T=4096; symmetric for these white pairs
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    path: pipeline
+    reference: 'known ground truth: x0 drives x1'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A[0,1] < A[1,0] (conditioning on the driver lowers the target's causally conditioned entropy); establishes A[i,j] = H(x_j || x_i)
+  - datasets:
+    - gauss_ar1_pair
+    path: pipeline
+    reference: analytic population value of the 5-term sum from the stationary VAR(1) autocovariances Gamma(h) = A^h Sigma_X (dataset truth), building each block covariance explicitly
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: within 3 sampling SDs at T=4096
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_gaussian.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:gaussian_cce(n=5) (sum_m H(y_t | y lags 1..m-1, x lags 0..m-1), sliding-window samples); audit/checks/refs/it_gaussian.py:chk_truth_pair
+    (analytic 5 (H1 + 0.5 ln(1-rho^2))); audit/checks/refs/it_gaussian.py:chk_cce_truth (population from Gamma(h) = A^h Sigma_X, Monte Carlo SE); audit/checks/refs/it_gaussian.py:chk_n10 with audit/checks/probes/it_gaussian_probes.py:cce_n10;
+    audit/checks/refs/it_gaussian.py:chk_configured_n with audit/checks/probes/it_gaussian_probes.py:configured_history
+  check_data: var2_bivariate T64/T1024; delayed_noise T256/T1024; gauss_ar1_pair T1024/T4096; iid_gaussian T256 and pair (0,1) at T4096; bivariate_gaussian T1024 and pairs at T4096
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12; statistical: |pyspi - Monte Carlo mean| <= 2 Monte Carlo SD; direction: A[0,1] < A[1,0] for x0 -> x1'
+  closeness: 'Numpy: 5/5 exact runs pass, max_abs <= 2.3e-14; n = 10 probe vs numpy n = 10: max_abs 0.0. Analytic T=4096: white pairs population 6.85892 (rho=0.3) / 4.54056 (rho=0.8), |pyspi - population|
+    0.0183 (max_z 0.57) / 0.0555 (max_z 0.99); gauss_ar1_pair population 5.81321 (0->1) / 5.56278 (1->0), 0.147 (max_z 1.75). Configured n = 5 for cce_gaussian and di_gaussian (documented 10). var2_bivariate
+    T1024: n = 5 gives 6.1247 / 6.6309, n = 10 gives 11.9494 / 13.1081. Independent white pair (iid_gaussian x0, x1, T=4096): population 5 H1 = 7.09469, Monte Carlo mean 7.09162 (SD 0.00180), pyspi 7.09433
+    (0->1) / 7.09321 (1->0), |pyspi - population| 0.0015 (max_z 1.51) (cce|iid_gaussian|4096|pipeline|truth-iid); the T=256 exact-run values 6.97-7.06 are a sanity range only.'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 7 fits only in part: the code is the supplement''s finite-history sum, but with n = 5 where the supplement says 10 (n10 probe on var2_bivariate
+    T1024 gives 11.95 vs 6.12). Anchor 8 fails because the n = 5 truncation is not a constant-factor or monotone map of the canonical whole-past value.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: Kramer's causally conditioned entropy H(Y^5 || X^5) computed exactly (stationary sliding-window terms, present x included in each term, nats), but with n = 5 terms where the supplement and
+    GitBook document a history length of 10; the n = 10 value is about twice as large (11.95 vs 6.12 on var2_bivariate 0->1). The output is a 5-term block sum, not a per-sample entropy.
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap (pyspi time_s in out/pyspi/index/it_gaussian.json, single runs of the review-stage forced re-run, made under machine load: the slowest runs are bivariate_gaussian|1024|pipeline|numpy (P = 4)
+    0.69 s, iid_gaussian|4096|pipeline|truth-iid 0.60 s, the var2_bivariate T = 64 configured-n probe 0.60 s and gauss_ar1_pair|4096|pipeline|truth 0.59 s; every other run <= 0.42 s; 13 runs, 4.1 s in
+    total; 10 Gaussian entropies per ordered pair; an earlier run quoted <= 0.66 s per pyspi run at P = 5, T = 256 (not stored in the index or results files))'
+  symmetry_observed: 'asym: max|A - A.T| = 0.506 (var2_bivariate T1024), 9.01 (delayed_noise T256), 0.204 (gauss_ar1_pair), 0.0054 (bivariate_gaussian white pairs), 0.079 (iid_gaussian)'
+  direction_observed: 'A[i,j] = H(x_j^5 || x_i^5): column j = target whose uncertainty is measured, row i = causally conditioning source. var2_bivariate T1024: A[0,1] = 6.125 < A[1,0] = 6.631; delayed_noise
+    T1024: A[0,1] = -1.997 < A[1,0] = 7.083'
+  candidate_resolutions:
+  - candidate: CausalEntropy uses n = 5 while the supplement and GitBook say 10
+    outcome: confirmed
+    evidence: 'infotheory.cce.gaussian|var2_bivariate|64|pipeline|configured-n (cce_n = 5, di_n = 5); infotheory.cce.gaussian|var2_bivariate|1024|pipeline|n10 (n = 10: 11.949 / 13.108 vs n = 5: 6.125 /
+      6.631)'
+  - candidate: every term conditions on the present x(t), matching Kramer's X^n but not the supplement's 'past of x'
+    outcome: confirmed
+    evidence: 'infotheory.cce.gaussian|*|numpy: the reference with x lags 0..m-1 (audit/checks/refs/_kernels_infotheory.py:cce_embedding) reproduces pyspi to <= 2.3e-14'
+  - candidate: the value is a 5-term block sum, not a per-sample conditional entropy
+    outcome: confirmed
+    evidence: infotheory.cce.gaussian|bivariate_gaussian|4096|pipeline|truth-p01/p23 match 5 (H1 + 0.5 ln(1-rho^2)) = 6.859 / 4.541; iid_gaussian T256 values 6.97-7.06 vs 5 H1 = 7.09
+  checks_run:
+  - run_ids:
+    - infotheory.cce.gaussian|var2_bivariate|1024|pipeline|numpy
+    - infotheory.cce.gaussian|delayed_noise|256|pipeline|numpy
+    - infotheory.cce.gaussian|gauss_ar1_pair|1024|pipeline|numpy
+    - infotheory.cce.gaussian|iid_gaussian|256|pipeline|numpy
+    - infotheory.cce.gaussian|bivariate_gaussian|1024|pipeline|numpy
+    reference: audit/checks/refs/it_gaussian.py:chk_numpy (audit/checks/refs/_kernels_infotheory.py:gaussian_cce n=5)
+    outcome: 5/5 pass; max_abs <= 2.3e-14
+  - run_ids:
+    - infotheory.cce.gaussian|bivariate_gaussian|4096|pipeline|truth-p01
+    - infotheory.cce.gaussian|bivariate_gaussian|4096|pipeline|truth-p23
+    - infotheory.cce.gaussian|gauss_ar1_pair|4096|pipeline|truth
+    - infotheory.cce.gaussian|iid_gaussian|4096|pipeline|truth-iid
+    reference: audit/checks/refs/it_gaussian.py:chk_truth_pair / chk_cce_truth / chk_cce_iid (analytic + Monte Carlo SE)
+    outcome: '4/4 pass; max_z <= 1.75 (iid pair: 1.51)'
+  - run_ids:
+    - infotheory.cce.gaussian|var2_bivariate|1024|pipeline|direction
+    - infotheory.cce.gaussian|delayed_noise|1024|pipeline|direction
+    reference: audit/checks/refs/it_gaussian.py:chk_direction
+    outcome: 2/2 pass; A[0,1] < A[1,0] on both
+  - run_ids:
+    - infotheory.cce.gaussian|var2_bivariate|1024|pipeline|n10
+    reference: audit/checks/refs/it_gaussian.py:chk_n10 (audit/checks/probes/it_gaussian_probes.py:cce_n10)
+    outcome: 1/1 pass; max_abs 0.0
+  - run_ids:
+    - infotheory.cce.gaussian|var2_bivariate|64|pipeline|configured-n
+    reference: audit/checks/refs/it_gaussian.py:chk_configured_n (audit/checks/probes/it_gaussian_probes.py:configured_history)
+    outcome: 1/1 pass; n = 5
+optimisation:
+  complexity_P_T: 'O(P^2 n T n): CausalEntropy._compute_causal_entropy (infotheory.py:439-454) builds, for m = 1..5, delay embeddings with MatrixUtils.makeDelayEmbeddingVector (Java), concatenates them
+    with np.concatenate over the returned Java double[][] (iterating rows through JPype: 57,400 __next__ calls at 8x1024) and runs one conditional entropy (2 JIDT calls, 2-D conversions up to T x 10) per
+    term: 10 JIDT calls per ordered pair. Measured fresh P exponent 2.12, T exponent 0.98. At 118x1024 the pair term dominates: 370 s projected (extrapolated-pairs-from-32).'
+  hotspot_1: 'pyspi/statistics/infotheory.py:CausalEntropy._compute_causal_entropy (third-party:jpype: np.concatenate over Java arrays, self time) 100.0% cum / 55.1% self of the profiled SPI call at 8x1024'
+  hotspot_2: 'pyspi/statistics/infotheory.py:JIDTBase._compute_conditional_entropy (third-party:jpype 2-D conversion + jidt, self time) 42.2%; jpype/_jarray.py:__next__ 2.4%. opaque_share is a lower bound:
+    JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jpype
+  opaque_share: 0.0042
+  profile_file: audit/profiles/infotheory.cce.gaussian__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_gaussian-2
+    opportunity: 'Closed-form numpy for the composite Gaussian SPIs, batched over pairs: si from one lag-1 covariance (three conditional entropies as log-det ratios), xme from the source-lag block with
+      and without the target sample, cce/di from one lagged covariance per term m = 1..5 (each term has its own sample window), and the gc auto MAX_CORR_AIS search from Gaussian AIS of every (k, tau) candidate
+      per channel; replaces 2-10 JIDT entropy calls per pair, each with a 2-D JArray conversion.'
+    opp_type: replace-library
+    expected_speedup: 20-100x
+    speedup_basis: 'profile:audit/profiles/infotheory.cce.gaussian__8x1024.pstats pyspi/statistics/infotheory.py:439 _compute_causal_entropy 100.0% + complexity: per pair the JIDT path costs ~1 ms per 2-D
+      entropy call (component timings in audit/profiles/micro/opp_it_gaussian-1.json: a 1023x4 JArray(JDouble, 2) conversion 1.01 ms of a 1.05 ms 4-D JIDT entropy call; the entropy itself on a prebuilt
+      array 0.043 ms) while a batched slogdet of a <= 11x11 sub-matrix costs microseconds; the measured closed forms of it_gaussian-1 ran 271-643x faster than the same-run pyspi baseline at 32x1024
+      in the latest run (te_symbolic_k-10 224x; 399-454x and 174x in the first)'
+    output_risk: unverified-within-tolerance
+    risk_evidence: same Gaussian log-det quantities on the same samples with different float operations; the check stage's numpy closed forms reproduce pyspi to <= 2.3e-14 (5/5 numpy runs; n = 10 probe
+      0.0)
+    effort: M
+    depends_on: []
+  - opportunity_id: it_gaussian-4
+    opportunity: 'Cut JPype marshalling of the 2-D observations in the JIDT entropy paths (Gaussian and box-kernel estimators alike): pass them with jpype.JArray.of(ndarray) (one buffer copy) instead
+      of JArray(JDouble, 2)(ndarray) (row-by-row conversion, ~1 ms per call at T=1024 whatever the column count) in JIDTBase._compute_joint_entropy, JIDTBase._compute_conditional_entropy and
+      CrossmapEntropy.bivariate, and build the cce/di delay embeddings in numpy instead of MatrixUtils.makeDelayEmbeddingVector followed by np.concatenate over the returned Java double[][]
+      (CausalEntropy._compute_causal_entropy). Which of these calls a unit makes is named in its speedup_basis.'
+    opp_type: vectorise-batch
+    expected_speedup: 5-10x
+    speedup_basis: profile:audit/profiles/infotheory.cce.gaussian__8x1024.pstats pyspi/statistics/infotheory.py:439 _compute_causal_entropy self 55.1% + _compute_conditional_entropy 42.2%
+      + component timings in audit/profiles/micro/opp_it_gaussian-1.json, components block (1023x4 conversion 1.01 ms -> 0.17 ms with JArray.of, conversion_2d_by_shape;
+      4-D Gaussian entropy call including the conversion 1.05 ms -> 0.22 ms; written by the it_gaussian-1 script, and no it_gaussian-4 candidate was run on this unit, so this is not a microbench basis);
+      scope here = the 2-D conversions in JIDTBase._compute_conditional_entropy and the cce delay embeddings in CausalEntropy._compute_causal_entropy.
+      Subsumed_by it_gaussian-2 on this unit, whose closed-form numpy replaces every JIDT entropy call and with it every 2-D JArray conversion and Java delay embedding, so build_csv credits this
+      avenue no saving on top of it
+    output_risk: unverified-bit-identical
+    risk_evidence: 'the same doubles reach JIDT: the component check in audit/profiles/micro/opp_it_gaussian-1.json gives a bitwise-equal 4-D entropy with JArray.of; numpy delay embeddings are copies of
+      the same samples in the same column order'
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - it_gaussian-2

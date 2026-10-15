@@ -1,0 +1,313 @@
+{
+ "schema": 1,
+ "script": "audit/profiles/micro/prof_basic.py",
+ "written_at": "2026-10-15",
+ "threads": {
+  "OMP_NUM_THREADS": "1",
+  "NUMBA_NUM_THREADS": "1",
+  "JIDT": "n/a"
+ },
+ "notes": "cProfile around one seeded harness.compute_spi call of the representative identifier on a fresh Data, after one untimed warm-up at the same shape. The kept pstats were written by the basic group's analyst with the same call sequence (scratch script); 'reproduction_frames' are the shares from a later 'run' of this script into a scratch directory, kept to show the shares are reproducible. opaque_share = tottime of builtin ('~') entries over total tottime (profile_units.analyse_profile), a lower bound: compiled sklearn/scipy work is hidden in the self time of Python frames (e.g. the Cython cd_fast solver inside _graphical_lasso).",
+ "profiles": {
+  "basic.cov.EmpiricalCovariance__118x1024": {
+   "unit_id": "basic.cov.EmpiricalCovariance",
+   "identifier": "cov_EmpiricalCovariance",
+   "shape": "118x1024",
+   "pstats": "audit/profiles/micro/prof_basic.cov.EmpiricalCovariance__118x1024.pstats",
+   "opaque_share": 0.0743,
+   "frames": {
+    "compute_spi_cum_s": 0.0035,
+    "scipy/linalg/_decomp.py:eigh": {
+     "ncalls": 1,
+     "cum_pct": 58.7,
+     "self_pct": 58.3
+    },
+    "scipy/linalg/_basic.py:pinvh": {
+     "ncalls": 1,
+     "cum_pct": 63.0,
+     "self_pct": 3.5
+    },
+    "numpy/lib/_function_base_impl.py:cov": {
+     "ncalls": 1,
+     "cum_pct": 15.4,
+     "self_pct": 12.4
+    },
+    "sklearn/utils/validation.py:check_array": {
+     "ncalls": 3,
+     "cum_pct": 10.6,
+     "self_pct": 1.1
+    },
+    "sklearn/covariance/_empirical_covariance.py:empirical_covariance": {
+     "ncalls": 1,
+     "cum_pct": 18.0,
+     "self_pct": 0.2
+    }
+   },
+   "reproduction_frames": {
+    "compute_spi_cum_s": 0.0049,
+    "scipy/linalg/_decomp.py:eigh": {
+     "ncalls": 1,
+     "cum_pct": 62.7,
+     "self_pct": 62.3
+    },
+    "scipy/linalg/_basic.py:pinvh": {
+     "ncalls": 1,
+     "cum_pct": 66.5,
+     "self_pct": 2.9
+    },
+    "numpy/lib/_function_base_impl.py:cov": {
+     "ncalls": 1,
+     "cum_pct": 14.2,
+     "self_pct": 11.5
+    },
+    "sklearn/utils/validation.py:check_array": {
+     "ncalls": 3,
+     "cum_pct": 9.4,
+     "self_pct": 0.9
+    },
+    "sklearn/covariance/_empirical_covariance.py:empirical_covariance": {
+     "ncalls": 1,
+     "cum_pct": 16.5,
+     "self_pct": 0.2
+    }
+   }
+  },
+  "basic.cov.GraphicalLasso__118x1024": {
+   "unit_id": "basic.cov.GraphicalLasso",
+   "identifier": "cov_GraphicalLasso",
+   "shape": "118x1024",
+   "pstats": "audit/profiles/micro/prof_basic.cov.GraphicalLasso__118x1024.pstats",
+   "opaque_share": 0.0251,
+   "frames": {
+    "compute_spi_cum_s": 0.0612,
+    "scipy/linalg/_decomp.py:eigh": {
+     "ncalls": 1,
+     "cum_pct": 3.4,
+     "self_pct": 3.3
+    },
+    "scipy/linalg/_basic.py:pinvh": {
+     "ncalls": 1,
+     "cum_pct": 3.6,
+     "self_pct": 0.2
+    },
+    "numpy/lib/_function_base_impl.py:cov": {
+     "ncalls": 1,
+     "cum_pct": 0.9,
+     "self_pct": 0.7
+    },
+    "sklearn/utils/validation.py:check_array": {
+     "ncalls": 2,
+     "cum_pct": 0.4,
+     "self_pct": 0.1
+    },
+    "sklearn/covariance/_empirical_covariance.py:empirical_covariance": {
+     "ncalls": 1,
+     "cum_pct": 1.1,
+     "self_pct": 0.0
+    },
+    "sklearn/covariance/_graph_lasso.py:_graphical_lasso": {
+     "ncalls": 1,
+     "cum_pct": 97.8,
+     "self_pct": 88.6
+    }
+   },
+   "reproduction_frames": {
+    "compute_spi_cum_s": 0.0616,
+    "scipy/linalg/_decomp.py:eigh": {
+     "ncalls": 1,
+     "cum_pct": 3.4,
+     "self_pct": 3.3
+    },
+    "scipy/linalg/_basic.py:pinvh": {
+     "ncalls": 1,
+     "cum_pct": 3.6,
+     "self_pct": 0.2
+    },
+    "numpy/lib/_function_base_impl.py:cov": {
+     "ncalls": 1,
+     "cum_pct": 0.9,
+     "self_pct": 0.7
+    },
+    "sklearn/utils/validation.py:check_array": {
+     "ncalls": 2,
+     "cum_pct": 0.4,
+     "self_pct": 0.0
+    },
+    "sklearn/covariance/_empirical_covariance.py:empirical_covariance": {
+     "ncalls": 1,
+     "cum_pct": 1.1,
+     "self_pct": 0.0
+    },
+    "sklearn/covariance/_graph_lasso.py:_graphical_lasso": {
+     "ncalls": 1,
+     "cum_pct": 97.9,
+     "self_pct": 89.0
+    }
+   }
+  },
+  "basic.cov.GraphicalLassoCV__118x1024": {
+   "unit_id": "basic.cov.GraphicalLassoCV",
+   "identifier": "cov_GraphicalLassoCV",
+   "shape": "118x1024",
+   "pstats": "audit/profiles/micro/prof_basic.cov.GraphicalLassoCV__118x1024.pstats",
+   "opaque_share": 0.0263,
+   "frames": {
+    "compute_spi_cum_s": 5.6805,
+    "scipy/linalg/_decomp.py:eigh": {
+     "ncalls": 86,
+     "cum_pct": 3.0,
+     "self_pct": 2.9
+    },
+    "scipy/linalg/_basic.py:pinvh": {
+     "ncalls": 86,
+     "cum_pct": 3.2,
+     "self_pct": 0.2
+    },
+    "numpy/lib/_function_base_impl.py:cov": {
+     "ncalls": 46,
+     "cum_pct": 0.3,
+     "self_pct": 0.2
+    },
+    "sklearn/utils/validation.py:check_array": {
+     "ncalls": 67,
+     "cum_pct": 0.1,
+     "self_pct": 0.0
+    },
+    "sklearn/covariance/_empirical_covariance.py:empirical_covariance": {
+     "ncalls": 51,
+     "cum_pct": 0.4,
+     "self_pct": 0.0
+    },
+    "sklearn/covariance/_graph_lasso.py:graphical_lasso_path": {
+     "ncalls": 20,
+     "cum_pct": 86.4,
+     "self_pct": 0.0
+    },
+    "sklearn/covariance/_graph_lasso.py:_graphical_lasso": {
+     "ncalls": 81,
+     "cum_pct": 98.8,
+     "self_pct": 89.1
+    }
+   },
+   "reproduction_frames": {
+    "compute_spi_cum_s": 5.7301,
+    "scipy/linalg/_decomp.py:eigh": {
+     "ncalls": 86,
+     "cum_pct": 2.9,
+     "self_pct": 2.9
+    },
+    "scipy/linalg/_basic.py:pinvh": {
+     "ncalls": 86,
+     "cum_pct": 3.2,
+     "self_pct": 0.2
+    },
+    "numpy/lib/_function_base_impl.py:cov": {
+     "ncalls": 46,
+     "cum_pct": 0.3,
+     "self_pct": 0.2
+    },
+    "sklearn/utils/validation.py:check_array": {
+     "ncalls": 67,
+     "cum_pct": 0.1,
+     "self_pct": 0.0
+    },
+    "sklearn/covariance/_empirical_covariance.py:empirical_covariance": {
+     "ncalls": 51,
+     "cum_pct": 0.4,
+     "self_pct": 0.0
+    },
+    "sklearn/covariance/_graph_lasso.py:graphical_lasso_path": {
+     "ncalls": 20,
+     "cum_pct": 86.6,
+     "self_pct": 0.0
+    },
+    "sklearn/covariance/_graph_lasso.py:_graphical_lasso": {
+     "ncalls": 81,
+     "cum_pct": 98.8,
+     "self_pct": 89.3
+    }
+   }
+  },
+  "basic.cov.MinCovDet__118x1024": {
+   "unit_id": "basic.cov.MinCovDet",
+   "identifier": "cov_MinCovDet",
+   "shape": "118x1024",
+   "pstats": "audit/profiles/micro/prof_basic.cov.MinCovDet__118x1024.pstats",
+   "opaque_share": 0.0597,
+   "frames": {
+    "compute_spi_cum_s": 4.2271,
+    "scipy/linalg/_decomp.py:eigh": {
+     "ncalls": 1154,
+     "cum_pct": 57.4,
+     "self_pct": 56.8
+    },
+    "scipy/linalg/_basic.py:pinvh": {
+     "ncalls": 1154,
+     "cum_pct": 62.5,
+     "self_pct": 3.8
+    },
+    "numpy/lib/_function_base_impl.py:cov": {
+     "ncalls": 1652,
+     "cum_pct": 8.4,
+     "self_pct": 5.7
+    },
+    "sklearn/utils/validation.py:check_array": {
+     "ncalls": 1655,
+     "cum_pct": 4.9,
+     "self_pct": 0.6
+    },
+    "sklearn/covariance/_robust_covariance.py:_c_step": {
+     "ncalls": 528,
+     "cum_pct": 99.1,
+     "self_pct": 14.9
+    },
+    "sklearn/covariance/_empirical_covariance.py:empirical_covariance": {
+     "ncalls": 1652,
+     "cum_pct": 13.5,
+     "self_pct": 0.2
+    }
+   },
+   "reproduction_frames": {
+    "compute_spi_cum_s": 3.8372,
+    "scipy/linalg/_decomp.py:eigh": {
+     "ncalls": 1154,
+     "cum_pct": 60.2,
+     "self_pct": 59.9
+    },
+    "scipy/linalg/_basic.py:pinvh": {
+     "ncalls": 1154,
+     "cum_pct": 64.3,
+     "self_pct": 3.1
+    },
+    "numpy/lib/_function_base_impl.py:cov": {
+     "ncalls": 1652,
+     "cum_pct": 7.6,
+     "self_pct": 5.5
+    },
+    "sklearn/utils/validation.py:check_array": {
+     "ncalls": 1655,
+     "cum_pct": 3.7,
+     "self_pct": 0.4
+    },
+    "sklearn/covariance/_robust_covariance.py:_c_step": {
+     "ncalls": 528,
+     "cum_pct": 96.7,
+     "self_pct": 13.9
+    },
+    "sklearn/covariance/_empirical_covariance.py:empirical_covariance": {
+     "ncalls": 1652,
+     "cum_pct": 11.4,
+     "self_pct": 0.1
+    }
+   }
+  }
+ },
+ "graphical_lasso_cv_refit": {
+  "shape": "118x1024",
+  "alpha_": 0.07239174304767239,
+  "n_iter_": 100,
+  "warnings": [
+   "ConvergenceWarning: graphical_lasso: did not converge after 100 iteration: dual gap: -5.065e-04"
+  ]
+ }
+}

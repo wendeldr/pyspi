@@ -1,0 +1,156 @@
+{
+ "family": "dcorr_hsic",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/distance-similarity.md"
+ ],
+ "hypotheses": [
+  "does hyppo return dCor or dCor^2 (biased variant takes sqrt, unbiased does not?)",
+  "HSIC: hyppo uses 1 - K/max(K) fed into Dcorr (normalised kernel-dcorr), median-heuristic bandwidth computed from x only and reused for y"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/distance.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    225,
+    236
+   ],
+   "section": "1.2.1",
+   "title": "Distance correlation (dcorr)"
+  },
+  {
+   "lines": [
+    268,
+    277
+   ],
+   "section": "1.2.5",
+   "title": "Hilbert-Schmidt Independence Criterion (hsic)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/hyppo/independence/dcorr.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/hyppo/independence/hsic.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/hyppo/tools/common.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "biased": false
+   },
+   "identifier_params": {
+    "dcorr": {
+     "biased": false
+    }
+   },
+   "identifiers": [
+    "dcorr"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "hyppo unbiased",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "DistanceCorrelation",
+   "representative": "dcorr",
+   "source": "config",
+   "unit_id": "distance.dcorr.biased-False"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "biased": true
+   },
+   "identifier_params": {
+    "dcorr_biased": {
+     "biased": true
+    }
+   },
+   "identifiers": [
+    "dcorr_biased"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "hyppo biased",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "DistanceCorrelation",
+   "representative": "dcorr_biased",
+   "source": "config",
+   "unit_id": "distance.dcorr.biased-True"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "biased": false
+   },
+   "identifier_params": {
+    "hsic": {
+     "biased": false
+    }
+   },
+   "identifiers": [
+    "hsic"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "hyppo unbiased",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "HilbertSchmidtIndependenceCriterion",
+   "representative": "hsic",
+   "source": "config",
+   "unit_id": "distance.hsic.biased-False"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "biased": true
+   },
+   "identifier_params": {
+    "hsic_biased": {
+     "biased": true
+    }
+   },
+   "identifiers": [
+    "hsic_biased"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "hyppo biased",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "HilbertSchmidtIndependenceCriterion",
+   "representative": "hsic_biased",
+   "source": "config",
+   "unit_id": "distance.hsic.biased-True"
+  }
+ ]
+}

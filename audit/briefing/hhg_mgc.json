@@ -1,0 +1,90 @@
+{
+ "family": "hhg_mgc",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/distance-similarity.md"
+ ],
+ "hypotheses": [
+  "HHG statistic is symmetric in (x, y) yet the class is Directed (both orders computed)",
+  "MGC via scipy.stats.multiscale_graphcorr (same lineage as hyppo); requires n>=5"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/distance.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    249,
+    259
+   ],
+   "section": "1.2.3",
+   "title": "Multiscale graph correlation (mgc)"
+  },
+  {
+   "lines": [
+    278,
+    285
+   ],
+   "section": "1.2.6",
+   "title": "Heller-Heller-Gorfine Independence Criterion (hhg)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/hyppo/independence/hhg.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/hyppo/independence/mgc.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/stats/_mgc.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "mgc": null
+   },
+   "identifiers": [
+    "mgc"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "MultiscaleGraphCorrelation",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "MultiscaleGraphCorrelation",
+   "representative": "mgc",
+   "source": "config",
+   "unit_id": "distance.mgc"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "hhg": null
+   },
+   "identifiers": [
+    "hhg"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "distance",
+    "nonlinear",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "HellerHellerGorfine",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "HellerHellerGorfine",
+   "representative": "hhg",
+   "source": "config",
+   "unit_id": "distance.hhg"
+  }
+ ]
+}

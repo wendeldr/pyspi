@@ -1,0 +1,481 @@
+schema: 1
+rows:
+- unit_id: family:undirected-upper
+  title: Undirected.multivariate evaluates both (i,j) and (j,i) and keeps one; evaluate i<j only
+  scope:
+  - basic.spearmanr
+  - basic.kendalltau
+  - distance.dcorr.biased-False
+  - distance.dcorr.biased-True
+  - distance.mgc
+  - distance.hsic.biased-False
+  - distance.hsic.biased-True
+  - distance.dtw.constraint-None
+  - distance.dtw.constraint-itakura
+  - distance.dtw.constraint-sakoe_chiba
+  - distance.softdtw
+  - distance.lcss.constraint-None
+  - distance.lcss.constraint-itakura
+  - distance.lcss.constraint-sakoe_chiba
+  - distance.gwtau
+  - infotheory.si.gaussian
+  - infotheory.si.kozachenko
+  - infotheory.si.kernel
+  - infotheory.mi.gaussian
+  - infotheory.mi.kraskov
+  - infotheory.mi.kraskov_DCE
+  - infotheory.mi.kernel
+  - infotheory.phi.star_norm-0
+  - infotheory.phi.star_norm-1
+  - infotheory.phi.Geo_norm-0
+  - infotheory.phi.Geo_norm-1
+  eeg_relevant: true
+  complexity_P_T: P(P-1) bivariate calls per SPI (13806 at P=118) -> P(P-1)/2 (6903); the per-pair cost is the SPI's own and is unchanged
+  hotspot_1: pyspi/base.py:parsed_function (the bivariate wrapper, base.py:28, pyspi) 96.2-100% of the profiled SPI call in all 26 scope units at 8x1024 (basic.spearmanr 99.4%, infotheory.mi.gaussian
+    98.3%, distance.gwtau 96.2%, the distance/kraskov/phi units 99.5-100%); half of these calls are overwritten at base.py:136-137
+  hotspot_2: pyspi/base.py:Directed.multivariate + Undirected.multivariate + parse_bivariate own time 0.0005-1.86% (median 0.065%) of the profiled call over the 84 loop-unit profiles
+    at 8x1024
+  hotspot_owner: pyspi
+  profile_file: audit/profiles/basic.spearmanr__8x1024.pstats; audit/profiles/basic.kendalltau__8x1024.pstats; audit/profiles/distance.dcorr.biased-False__8x1024.pstats; audit/profiles/distance.dcorr.biased-True__8x1024.pstats; audit/profiles/distance.mgc__8x1024.pstats; audit/profiles/distance.hsic.biased-False__8x1024.pstats; audit/profiles/distance.hsic.biased-True__8x1024.pstats; audit/profiles/distance.dtw.constraint-None__8x1024.pstats; audit/profiles/distance.dtw.constraint-itakura__8x1024.pstats; audit/profiles/distance.dtw.constraint-sakoe_chiba__8x1024.pstats; audit/profiles/distance.softdtw__8x1024.pstats; audit/profiles/distance.lcss.constraint-None__8x1024.pstats; audit/profiles/distance.lcss.constraint-itakura__8x1024.pstats; audit/profiles/distance.lcss.constraint-sakoe_chiba__8x1024.pstats; audit/profiles/distance.gwtau__8x1024.pstats; audit/profiles/infotheory.si.gaussian__8x1024.pstats; audit/profiles/infotheory.si.kozachenko__8x1024.pstats; audit/profiles/infotheory.si.kernel__8x1024.pstats; audit/profiles/infotheory.mi.gaussian__8x1024.pstats; audit/profiles/infotheory.mi.kraskov__8x1024.pstats; audit/profiles/infotheory.mi.kraskov_DCE__8x1024.pstats; audit/profiles/infotheory.mi.kernel__8x1024.pstats; audit/profiles/infotheory.phi.star_norm-0__8x1024.pstats; audit/profiles/infotheory.phi.star_norm-1__8x1024.pstats; audit/profiles/infotheory.phi.Geo_norm-0__8x1024.pstats; audit/profiles/infotheory.phi.Geo_norm-1__8x1024.pstats
+  evidence:
+  - pyspi/base.py:84-94 Directed.multivariate calls bivariate for every ordered pair (j outer, i != j inner)
+  - 'pyspi/base.py:132-138 Undirected.multivariate runs that loop and then sets A[tril] = A.T[tril]: the P(P-1)/2 lower-triangle (j,i) results are discarded'
+  - 'Scope = the 26 Undirected-mirror units with no per-pair state: none consumes the global RNG (probe p9_mirror_rng.py, audit/notes/preprocessing_base.md ''RNG-stream coupling: not
+    found''); mi.kraskov_DCE fills data.theiler for all pairs on its first call, independent of visiting order'
+  - 'Excluded: basic.xcorr.* (4 units), misc.coint.* (5), infotheory.je.* (3): their first-visited (j,i) call fills the (i,j) cache, so visiting i<j only changes the stored value (xcorr
+    up to 0.081, coint_aeg up to 7.41, je_kozachenko 1.6e-7, coint_johansen <= 2.6e-13; check runs base.pair_handling|iid_gaussian|256|pipeline|upper-basic.CrossCorrelation, |upper-misc.Cointegration and |upper-infotheory.JointEntropy), and their underlying computation
+    already runs once per unordered pair (28 scipy correlate / statsmodels coint / JIDT entropy calls for 56 bivariate calls at 8x1024), so little time would be saved'
+  - 'audit/checks/out/results/preprocessing_base.json, the 12 scope-class runs named in the xc-undirected-upper risk_evidence below (base.pair_handling|iid_gaussian|256|pipeline|upper-basic.SpearmanR
+    and the 11 others listed there, one per scope class): the identifiers of all 12 scope classes give max_abs 0.0 when A is built from the i<j calls only (iid_gaussian, T=256)'
+  - 'Retained EEG units in scope: basic.spearmanr, basic.kendalltau, infotheory.mi.gaussian (22.3 s of the 229.1 s retained-selection window summed over configured identifiers, family-warm projections; 17.8 s on
+    their retained identifiers, because the EEG selection keeps kendalltau-sq and not kendalltau). build_csv.py ranks this row in per-tier parts (README ''Optimisation columns'', ranking
+    rule 1): family:undirected-upper/retained counts only these three units, on their retained identifiers (10,662 s per patient), and
+    the 6 non-retained EEG-FC-family units (family:undirected-upper/eeg-fc-family) and the 17 other units (family:undirected-upper/other) are ranked in their own tiers'
+  - 'Overlap with unit avenues (subsumed_by): rank_corr-1 (basic.spearmanr, one corrcoef of the ranked channels), rank_corr-2 (basic.kendalltau, whose basis already counts this
+    factor 2), it_gaussian-1 (infotheory.mi.gaussian) and it_gaussian-2 (infotheory.si.gaussian) compute every pair without the bivariate loop, so on those four units this avenue
+    saves nothing on top of them and build_csv ranks it there with no saving (ranking rule 4). The same holds on distance.lcss.constraint-itakura and -sakoe_chiba under
+    dtw_family-5 (their matrix is a copy of the unconstrained lcss matrix, so no bivariate call is left). On the other 20 units it stacks with the unit avenues that name it in depends_on
+    (dcorr_hsic-1/-2/-3, gwtau-1, hhg_mgc-3, dtw_family-1/-4), which build_csv ranks on the residual after it; a unit avenue with no link and a larger lower-bound
+    speedup is stacked before it on that unit, so the two savings never add up past the unit''s basis (ranking rule 4). Those pairs act on different factors and are listed in
+    independent_of, so their savings multiply: this avenue halves the number of calls, it_kernel-2, it_kozachenko-2, it_gaussian-4, phi-1, phi-2, phi-4 and dtw_family-2 cut
+    the cost of each call, it_kernel-1 and it_kozachenko-1 move the per-channel terms out of the pair loop, and phi-3 and dtw_family-3 serve one identifier from another
+    identifier''s per-pair result, which the remaining i<j loop still reads once per pair; rank_corr-3 (basic.spearmanr) is listed for the same reason: it serves the -sq
+    identifier from the other identifier''s cached matrix, a different factor from the number of bivariate calls'
+  - Undirected classes that override multivariate (spectral, cov/prec, pdist, wavelet, pec, ids) and Directed classes (including the cached Barycenter) are outside this avenue
+  opportunities:
+  - opportunity_id: xc-undirected-upper
+    opportunity: In pyspi/base.py:Undirected.multivariate loop over i<j only, call bivariate once per unordered pair and mirror, instead of calling Directed.multivariate over all ordered
+      pairs and overwriting the lower triangle.
+    opp_type: algorithmic
+    expected_speedup: ~2x
+    speedup_basis: profile:audit/profiles/basic.spearmanr__8x1024.pstats pyspi/base.py:28:parsed_function 99.4%, audit/profiles/basic.kendalltau__8x1024.pstats 99.3% and
+      audit/profiles/infotheory.mi.gaussian__8x1024.pstats 98.3% (the three retained units), audit/profiles/distance.gwtau__8x1024.pstats 96.2% (the lowest; the other 22 scope
+      units' 8x1024 pstats listed in profile_file give 99.5-100%) of the call, half of it discarded (Amdahl 1/(1-0.481) = 1.93x for gwtau up to 2.0x) + complexity:P(P-1) -> P(P-1)/2 bivariate calls with a symmetric per-pair cost; assumes the dropped (j,i) call costs the same as the kept (i,j) call (same operations on
+      swapped arguments for these symmetric estimators; the two directions were not timed separately)
+    output_risk: unverified-bit-identical
+    risk_evidence: the (j,i) results are overwritten (base.py:136-137) and the scope classes keep no per-pair state or RNG draws, so the kept (i,j) calls are the same calls; the 12 check runs
+      base.pair_handling|iid_gaussian|256|pipeline|upper-basic.SpearmanR, |upper-basic.KendallTau, |upper-distance.DistanceCorrelation, |upper-distance.MultiscaleGraphCorrelation,
+      |upper-distance.HilbertSchmidtIndependenceCriterion, |upper-distance.DynamicTimeWarping, |upper-distance.SoftDynamicTimeWarping, |upper-distance.LongestCommonSubsequence,
+      |upper-distance.GromovWasserstainTau, |upper-infotheory.StochasticInteraction, |upper-infotheory.MutualInfo and |upper-infotheory.IntegratedInformation (one per scope class)
+      gave max_abs 0.0 for every scope identifier (audit/checks/out/results/preprocessing_base.json), not a micro-benchmark; one dataset (iid_gaussian, T=256) only
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - rank_corr-1
+    - rank_corr-2
+    - it_gaussian-1
+    - it_gaussian-2
+    - dtw_family-5
+    independent_of:
+    - it_kernel-2
+    - it_kozachenko-2
+    - it_kernel-1
+    - it_kozachenko-1
+    - it_gaussian-4
+    - phi-1
+    - phi-2
+    - phi-3
+    - phi-4
+    - dtw_family-2
+    - dtw_family-3
+    - rank_corr-3
+- unit_id: family:window-parallel
+  title: Window-level process parallelism for the retained EEG selection (vs pair-level)
+  scope:
+  - basic.cov.EmpiricalCovariance
+  - basic.cov.GraphicalLasso
+  - basic.cov.GraphicalLassoCV
+  - basic.cov.LedoitWolf
+  - basic.cov.MinCovDet
+  - basic.cov.OAS
+  - basic.cov.ShrunkCovariance
+  - basic.prec.EmpiricalCovariance
+  - basic.prec.EllipticEnvelope
+  - basic.prec.GraphicalLasso
+  - basic.prec.GraphicalLassoCV
+  - basic.prec.LedoitWolf
+  - basic.prec.MinCovDet
+  - basic.prec.OAS
+  - basic.prec.ShrunkCovariance
+  - basic.spearmanr
+  - basic.kendalltau
+  - basic.xcorr.mean_sig-False
+  - distance.pdist.euclidean
+  - distance.pdist.cityblock
+  - distance.pdist.cosine
+  - distance.pdist.chebyshev
+  - distance.pdist.canberra
+  - distance.pdist.braycurtis
+  - distance.bary.euclidean
+  - causal.reci
+  - infotheory.je.gaussian
+  - infotheory.ce.gaussian
+  - infotheory.mi.gaussian
+  - infotheory.tlmi.gaussian
+  - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1
+  - infotheory.te.symbolic
+  - spectral.phase
+  - spectral.cohmag
+  - spectral.icoh
+  - spectral.psi
+  - spectral.plv
+  - spectral.pli
+  - spectral.wpli
+  - spectral.dspli
+  - spectral.dswpli
+  - spectral.ppc
+  - spectral.gd
+  - misc.lmfit.Ridge
+  - misc.lmfit.Lasso
+  - misc.lmfit.SGDRegressor
+  - misc.lmfit.ElasticNet
+  - misc.lmfit.BayesianRidge
+  - misc.pec.orth-False_log-False
+  - misc.pec.orth-True_log-False
+  - misc.pec.orth-False_log-True
+  - misc.pec.orth-True_log-True
+  - basic.xcorr.max_sig-False
+  eeg_relevant: true
+  projected_patient_s: 137463.6
+  basis_scope: configured-identifiers-approx
+  basis_scope_note: 'the explicit projected_patient_s sums the 53 retained units'' family-warm projections over their configured identifiers (229.1 s per window).
+    36.0 s of that window are configured identifiers outside the EEG selection (spectral.gd 11.06 s, spectral.psi 9.03 s, spectral.plv 8.12 s, basic.kendalltau 4.52 s,
+    spectral.phase 2.68 s, the rest under 0.1 s each), and the EEG band variants of the 11 spectral units were never timed. The sum also leaves out two cache fills that an
+    EEG run pays on retained units, because the family-warm runs filled those caches on identifiers outside the EEG selection: the EllipticEnvelope fit on
+    basic.prec.EllipticEnvelope (fresh 3.48 s per window against family-warm 0.0002 s) and the per-pair cross-correlations on basic.xcorr.max_sig-False (fresh 1.24 s
+    against 0.086 s). The figure therefore approximates the EEG selection''s window; the tier-0 unit bases of README ''Optimisation columns'', ranking rule 1
+    (basic.kendalltau on its retained identifier, spectral.plv on its retained build, those two units on their fresh projections) sum to 221.1 s, still without the
+    untimed spectral bands'
+  complexity_P_T: 600 independent windows per patient; per-window cost unchanged
+  evidence:
+  - 'Serial today: pyspi/workflow/_run.py:339-344 ''Execute serially'' and ''No RNG seed/reset''; 229.1 s per 118x1024 window for the 53 retained units (sum of family-warm projected_window_s_118,
+    configured identifiers only; EEG band variants not timed), 38.2 h per 600-window patient (historical ~185 s per window, ~31 core-hours)'
+  - 'Peak RSS per process at 118x1024 (summary records): spectral_phase_sync family 3409 MB (family-warm, family scope), spectral.plv fresh 3069 MB, spectral_coherence/psi_gd 1887 MB;
+    every other retained unit <= 642 MB (JIDT units with the JVM, mi.gaussian fresh); import baseline ~345 MB'
+  - 'Machine: 64 logical CPUs (AMD Threadripper 3970X), 31 GB RAM (free -g)'
+  - 'Uniform workers (every worker runs the whole retained selection): 31 GB / 3.41 GB = 9 -> 8 workers with OS headroom: 4.8 h per patient (~8x)'
+  - 'Split pools: spectral units 82.6 s/window at <= 3.41 GB, the rest 146.5 s/window at <= 0.64 GB; 6 spectral + 11 other workers (27.5 GB) would finish both pools in ~2.3 h per patient
+    (~16x, an upper scenario, not the headline); not measured (no new throughput run), memory-bandwidth contention unknown'
+  - 'Pair-level alternative: units that run the generic Directed/Undirected loop account for 137.1 s of the 229.1 s window; the other 92.0 s (spectral, cov/prec, pdist, pec) compute
+    all pairs in one multivariate call, so splitting pairs caps at 229.1/92.0 = 2.5x per window without code changes and needs a JVM and a Data copy per worker'
+  - Per-worker BLAS must stay at 1 thread where the JVM is loaded (see family:blas-threads)
+  - 'Pair-level process pools listed per unit (lmfit-5, gpfit-2, ccm-1, cov_prec_robust-2, cov_prec_glasso-1) and BLAS threads (xc-blas-threads) are alternatives for the same
+    32 physical cores, not factors on top of this avenue: the ~8 memory-bounded window workers leave about 4 physical cores each, so a pair pool inside a worker can add at most
+    about 4x for its unit, and combined throughput stays bounded by the core count. All of them carry speedup_kind throughput and build_csv ranks them after every per-window
+    row (README ''Optimisation columns'', ranking rule 3). Because they are alternatives, none of them lists xc-window-parallel in depends_on'
+  - 'xc-window-parallel lists xc-blas-threads in depends_on for that avenue''s first part only: BLAS at 1 thread in every worker that hosts the JIDT JVM (the JVM + multi-threaded
+    OpenBLAS segfault, family:blas-threads), a precondition for running the JIDT units in workers. Its second part (more BLAS threads around the gpfit fits) is the
+    alternative use of the cores described above. A depends_on entry that names a throughput avenue is a deployment precondition, not a ranking prerequisite'
+  opportunities:
+  - opportunity_id: xc-window-parallel
+    opportunity: Run windows (or recordings) in separate worker processes, each with its own JVM and BLAS at 1 thread, sized by peak RSS (about 8 uniform workers, or about 6 spectral
+      + 11 other workers in split pools), instead of the serial window loop in pyspi/workflow/_run.py; prefer this to pair-level splitting.
+    opp_type: parallel
+    speedup_kind: throughput
+    expected_speedup: ~8x
+    speedup_basis: 'complexity:patient wall-clock throughput, not per-window CPU (the per-window cost of every unit is unchanged, so this figure is not comparable with the per-window
+      unit speedups of other rows): 600 independent windows; worker count bounded by memory (31 GB / 3.41 GB peak RSS at 118x1024 = 8-9 uniform workers, ~8x). Split RSS pools (6 spectral
+      + 11 other workers) could reach ~16x but that is an unmeasured upper scenario with unknown memory-bandwidth contention. Pair-level splitting is capped at 229.1/92.0 = 2.5x per
+      window (multivariate-override share 92.0 s). Estimated from recorded RSS and walls, not measured'
+    output_risk: unverified-rng-stream
+    risk_evidence: per-window arithmetic is unchanged, but the workflow never reseeds between windows (pyspi/workflow/_run.py:344), so the retained units that draw from the global numpy
+      RNG (cov/prec MinCovDet and prec EllipticEnvelope, tests/README.md:145) get a different stream when windows run in separate processes; all other units repeat the same calls on
+      the same window
+    effort: M
+    depends_on:
+    - xc-blas-threads
+- unit_id: family:jni-overhead
+  title: JPype/JNI per-call overhead of the JIDT Gaussian estimators
+  scope:
+  - infotheory.je.gaussian
+  - infotheory.ce.gaussian
+  - infotheory.cce.gaussian
+  - infotheory.xme.gaussian_k1
+  - infotheory.xme.gaussian_k10
+  - infotheory.di.gaussian
+  - infotheory.si.gaussian
+  - infotheory.mi.gaussian
+  - infotheory.tlmi.gaussian
+  - infotheory.te.gaussian_auto-MAX_CORR_AIS_kmax-10_taumax-2
+  - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1
+  - infotheory.te.symbolic
+  eeg_relevant: true
+  complexity_P_T: 'one JIDT call sequence (initialise, two JArray copies, setObservations, computeAverageLocalOfObservations) per ordered pair: 13806 per SPI per 118-channel window (6903
+    for the cached joint entropy)'
+  hotspot_1: pyspi/statistics/infotheory.py:MutualInfo.bivariate (pyspi; JPype method calls hidden in its self time) 94.7% self / 97.9% cumulative of the profiled call (audit/profiles/infotheory.mi.gaussian__8x1024.pstats);
+    jpype/_jarray.py:__new__ 2.5%
+  hotspot_owner: third-party:jpype
+  profile_file: audit/profiles/infotheory.mi.gaussian__8x1024.pstats; audit/profiles/micro/opp_xc-jni-overhead.json
+  evidence:
+  - 'cProfile cannot separate the JNI crossing from the Java work: JPype method calls are invisible frames, so the time sits in MutualInfo.bivariate''s self time (94.7% at 8x1024)'
+  - 'Micro loop (audit/profiles/micro/opp_xc-jni-overhead.json, MutualInfoCalculatorMultiVariateGaussian): full sequence on T=16 arrays 14.9 us (the per-pair JNI/marshalling floor);
+    on T=1024 0.73 ms in a tight loop, of which initialise+setObservations 0.55 ms (Java-side work on the observations), two JArray copies 20.9 us, compute 1.1 us'
+  - 'In situ the pyspi mi_gaussian SPI costs 0.17 ms per pair at 8x1024 (micro) and 0.24-0.33 ms per pair at 118x1024 (summary: 3.26 s family-warm / 4.59 s fresh over 13806 pairs); the
+    tight-loop figure is higher, so per-call times vary about 2-4x with JVM state'
+  - 'Floor x pairs: 0.21 s per ordered Gaussian SPI per 118-channel window; retained JIDT Gaussian SPIs make 5 x 13806 (mi, tlmi, te_k1, two te_symbolic identifiers) + 6903 (je) + 118
+    (ce entropies; its joint entropies come from je''s cache) = 76051 sequences = 1.14 s per window, against 34.6 s of family-warm projections for those six units (~3%)'
+  - 'The Java-side setObservations cost at T=1024 is estimator work, not call overhead; removing it means not calling JIDT (closed-form numpy Gaussian estimators: it_gaussian group,
+    audit/profiles/micro/opp_it_gaussian-1.py)'
+  - Kraskov/kernel/kozachenko SPIs spend 10-100x longer per pair inside Java, so the JNI floor is below 1% of them (not in scope)
+  - 'Ranking basis: build_csv.py splits the 12 scope units by tier (README ''Optimisation columns'', ranking rule 1). family:jni-overhead/retained counts only the six retained
+    units (je, ce, mi, tlmi, te_k1, te.symbolic: 34.6 s per window, 20,737 s per patient); the six non-retained it_gaussian units form family:jni-overhead/eeg-fc-family'
+  - 'Overlap (subsumed_by): it_gaussian-1 (je, ce, mi, tlmi, te_k1, te.symbolic) and it_gaussian-2 (si, xme_k1, xme_k10, cce, di, te auto) replace every JIDT call of the scope
+    units with closed-form numpy, which removes this per-call cost entirely (audit/notes/it_gaussian.md:506), so build_csv ranks this avenue with no saving on top of them
+    (ranking rule 4)'
+  opportunities:
+  - opportunity_id: xc-jni-overhead
+    opportunity: Run the per-pair loop of the Gaussian JIDT SPIs on the JVM side (one Java helper call per SPI over all pairs, passing the window once) instead of one Python->Java call
+      sequence per ordered pair from pyspi/statistics/infotheory.py bivariate methods.
+    opp_type: vectorise-batch
+    expected_speedup: 1.01-1.07x
+    speedup_basis: 'profile:audit/profiles/infotheory.mi.gaussian__8x1024.pstats MutualInfo.bivariate 94.7% self (the JPype calls are hidden in its self time) + complexity:the
+      per-pair JNI/marshalling floor is a fixed cost per call sequence; a T=16 sequence costs 14.9 us per pair against 0.24-0.45 ms per pair in situ at 118x1024 (mi.gaussian 3.26 s,
+      te.gaussian_k1 6.23 s over 13806 pairs; je.gaussian 7.18 s over 6903 sequences), so the floor is 1.4-6% of the unit. Context, a measurement only and not a microbench basis:
+      audit/profiles/micro/opp_xc-jni-overhead.json times the pyspi mi_gaussian SPI and a raw JIDT MutualInfoCalculatorMultiVariateGaussian call loop at T=16 and T=1024; no candidate
+      was written, no output was compared, and the other 11 of the 12 scope units were not run there'
+    output_risk: unverified-bit-identical
+    risk_evidence: 'the same JIDT estimator code runs on the same double arrays; only the call boundary moves (no micro diff: no candidate was written)'
+    effort: L
+    depends_on: []
+    subsumed_by:
+    - it_gaussian-1
+    - it_gaussian-2
+- unit_id: family:blas-threads
+  title: OpenBLAS threads (threadpoolctl) for BLAS-heavy units, and the JVM + multi-threaded OpenBLAS segfault
+  scope:
+  - misc.gpfit.*
+  eeg_relevant: false
+  hotspot_1: scipy/linalg/_decomp_cholesky.py:cho_solve (third-party:scipy, via sklearn GaussianProcessRegressor) 34.2% and cholesky 17.1% of the profiled call (audit/profiles/misc.gpfit.DotProduct__8x256.pstats)
+  hotspot_owner: third-party:scipy
+  profile_file: audit/profiles/misc.gpfit.DotProduct__8x256.pstats; audit/profiles/micro/opp_xc-blas-threads.json
+  evidence:
+  - 'gpfit_DotProduct one pair at T=1024 in a JVM-free process: 1 thread 1.94 s, 4 threads 1.45 s (1.34x), 8 threads 1.38 s (1.40x); max_abs_diff 7.8e-16 vs 1 thread'
+  - 'cov_GraphicalLassoCV at 118x1024 (retained): 5.15 s at 1 thread, 5.42 s at 8 (no gain); max_abs_diff 1.3e-15'
+  - 'Data construction at 118x1024 (detrend lstsq + zscore): 3.0 ms at 1 thread, no gain with 4 or 8'
+  - 'JVM + OpenBLAS (pyspi/__init__.py:1 comment): reproduced with OpenBLAS 0.3.34 (scipy_openblas64) and OpenJDK 21.0.12.1 in isolated subprocesses: after jpype.startJVM, numpy.linalg.solve
+    on 1500x1500 is killed by SIGSEGV (returncode -11) with 2 and with 8 BLAS threads; it completes with 1 thread, and with 8 threads when no JVM is started; GEMM, 20000 batched 8x8
+    solves and eigh complete with 8 threads under the JVM'
+  - pyspi/__init__.py:4 sets OMP_NUM_THREADS=1, which only reaches OpenBLAS if numpy/scipy were not imported first (audit/notes/gpfit.md); threadpoolctl raises the count at run time
+    regardless
+  - BLAS threads on 8 cores give at best 1.4x (17% parallel efficiency) on the most BLAS-heavy unit; the same cores give ~8x as window-level worker processes (family:window-parallel)
+  opportunities:
+  - opportunity_id: xc-blas-threads
+    opportunity: Keep OpenBLAS at 1 thread (threadpool_limits(1) around compute, not only OMP_NUM_THREADS at import) in every process that hosts the JIDT JVM; in JVM-free workers raise
+      BLAS threads only around the 1024x1024 GP fits of gpfit, and spend other cores on process-level parallelism.
+    opp_type: parallel
+    speedup_kind: throughput
+    expected_speedup: ~1.4x
+    speedup_basis: microbench:audit/profiles/micro/opp_xc-blas-threads.json gpfit_DotProduct pair 1.34x at 4 threads, 1.40x at 8 (DotProduct only; misc.gpfit.RBF not run);
+      GraphicalLassoCV and Data construction 1.0x; wall-clock from 4-8 threads (more core-hours), not a per-window CPU saving
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_xc-blas-threads.json: max_abs_diff 7.8e-16 (gpfit) and 1.3e-15 (GraphicalLassoCV) against the 1-thread output; threaded reductions change
+      the summation order'
+    effort: S
+    depends_on: []
+- unit_id: family:gpu-spectral
+  title: 'GPU projection: multitaper cross-spectral matrix and connectivity kernels (retained spectral units except spectral.gd)'
+  scope:
+  - spectral.phase
+  - spectral.cohmag
+  - spectral.icoh
+  - spectral.psi
+  - spectral.plv
+  - spectral.pli
+  - spectral.wpli
+  - spectral.dspli
+  - spectral.dswpli
+  - spectral.ppc
+  eeg_relevant: true
+  hotspot_1: spectral_connectivity/connectivity.py:fcn (PLV kernel, third-party:spectral_connectivity) 78.5% self and connectivity.py:_complex_inner_product (CSM) 11.0% of the profiled
+    spectral.plv call at 118x1024 (audit/profiles/micro/prof_spectral.plv__118x1024.pstats; _expectation_cross_spectral_matrix 96.4% cumulative)
+  hotspot_owner: third-party:spectral_connectivity
+  profile_file: audit/profiles/micro/prof_spectral.plv__118x1024.pstats
+  evidence:
+  - 'cupy is not installed; torch 2.14.1+cpu has no CUDA build; GPU: NVIDIA GeForce RTX 2060, 6144 MiB (nvidia-smi). Projection only, nothing run on the GPU'
+  - RTX 2060 FP64 throughput is 1/32 of its FP32 rate, so float64 kernels gain mainly from memory bandwidth; float32 would change values
+  - CSM (1, 1, 5 tapers, 1024 bins, 118, 118) complex128 = 1.14 GB at 118x1024 (shape read from spectral_connectivity 1.1.2 on a 4-channel run); the Fourier coefficients are 9.7 MB,
+    so only the input crosses PCIe
+  - 'Peak RSS 3409 MB for the phase-sync family at 118x1024: one CSM plus a same-size temporary (~2.3 GB) fits in 6 GB; three resident copies do not, so the kernel must work per frequency
+    block or one-sided (512 bins)'
+  - 'Retained spectral units: 82.6 s per window (family-warm projections, configured identifiers); the 10 scope units 71.6 s, spectral.gd 11.1 s'
+  - 'spectral.gd is outside the scope: in an EEG run gd is a later consumer of the shared coherency (GroupDelay at pyspi/workflow/retained185.yaml:518, after CoherencePhase
+    at :218), so spectral_csm-shared-csm, stacked first on gd at 2-3.6x, removes its Multitaper and coherency (about 53% of its ranking basis un-profiled: 11.06 -> 5.25 s per
+    window, records/spectral.gd.yaml) and the one shared build is credited on spectral.phase, as for cohmag, icoh and psi. What stays is mostly per-pair Python callbacks
+    (1.32-1.55 s per band un-profiled, 4.22 of the 5.16-5.25 s residual per window), which this avenue does not move; spectral_psi_gd-1 is the avenue for that share. A 2x
+    lower bound on gd''s residual would credit the GPU with CPU work it does not touch. (Until Workflow 4c close this line gave the cProfile coherency share, 18.7% per band,
+    Amdahl 1.23x, as the reason; cProfile inflates the callbacks, so that share understated the coherency.)'
+  - DPSS tapers (transforms.py:tridisolve, 58% at 8x1024 but 0.4% at 118x1024) stay on the CPU and are cached by spectral_csm-dpss-cache
+  - 'Overlap (depends_on, README ''Optimisation columns'' ranking rule 4): the GPU kernel works on a CSM shared per Data (spectral_csm-shared-csm) or per measure group
+    (spectral_phase_sync-1), one-sided and in frequency blocks as spectral_csm-1 does on the CPU, so its 2-10x is a factor on top of those avenues and build_csv ranks it on
+    the residual they leave, not on today''s cost; spectral_csm-dpss-cache is on spectral.multitaper_csm only and does not change the residual of the scope units. On
+    spectral.cohmag, spectral.icoh and spectral.psi, later consumers of the shared coherency (CoherencePhase runs first, pyspi/workflow/retained185.yaml:218), spectral_csm-1
+    is ranked at 1x and the opportunity''s scope_speedup gives this avenue 1x too, so the one shared build is credited once, on spectral.phase (see the scope_speedup reason)'
+  - 'Evidence class: projection only (cupy absent, no GPU code run), so the opportunity carries speedup_kind projection and build_csv ranks it after the other per-window
+    rows of its tier (README ''Optimisation columns'', ranking rules 3 and 5)'
+  opportunities:
+  - opportunity_id: xc-gpu-spectral
+    opportunity: Move the cross-spectral matrix and the elementwise connectivity kernels (coherency/PLV/PLI families in spectral_connectivity/connectivity.py) to the GPU once the CSM
+      is shared per Data, working in frequency blocks to stay inside 6 GB.
+    opp_type: gpu
+    speedup_kind: projection
+    expected_speedup: 2-10x
+    speedup_basis: profile:audit/profiles/micro/prof_spectral.plv__118x1024.pstats connectivity.py:_expectation_cross_spectral_matrix 96.4% (Amdahl bound 28x) + complexity:memory-bound
+      elementwise work on P^2 x 1024 x 5 complex values; RTX 2060 bandwidth ~336 GB/s vs one CPU core; projection only
+    output_risk: unverified-within-tolerance
+    risk_evidence: different reduction order on the GPU (and float32 if used) changes the last bits or more; no GPU code was run
+    effort: L
+    depends_on:
+    - spectral_csm-shared-csm
+    - spectral_csm-dpss-cache
+    - spectral_csm-1
+    - spectral_phase_sync-1
+    scope_speedup:
+    - scope:
+      - spectral.cohmag
+      - spectral.icoh
+      - spectral.psi
+      expected_speedup: 1x
+      reason: later consumers of the shared coherency. In an EEG run phase builds it (pyspi/workflow/retained185.yaml:218), spectral_csm-shared-csm is ranked at its
+        later-consumer lower bound on these units (cohmag 6x, icoh 2.7x, psi 6.7x), so their residual holds no coherency build, and this avenue's figure on that build
+        is credited on spectral.phase. The remaining elementwise work (abs/imag, psi's frequency-pair combination, band reductions) has no GPU projection of its own,
+        so build_csv credits no saving here
+- unit_id: family:gpu-distance
+  title: 'GPU projection: per-pair distance-matrix statistics (dcorr, hsic)'
+  scope:
+  - distance.dcorr.*
+  - distance.hsic.*
+  eeg_relevant: false
+  hotspot_1: hyppo/independence/dcorr.py:statistic (third-party:hyppo, numba-compiled work hidden in its self time) 84.5% self / 99.1% cumulative of the profiled distance.dcorr.biased-False
+    call; sklearn euclidean_distances 13.9% (audit/profiles/distance.dcorr.biased-False__8x1024.pstats)
+  hotspot_owner: third-party:hyppo
+  profile_file: audit/profiles/distance.dcorr.biased-False__8x1024.pstats
+  evidence:
+  - 'cupy is not installed; torch 2.14.1+cpu has no CUDA build; GPU: NVIDIA GeForce RTX 2060, 6144 MiB (nvidia-smi). Projection only, nothing run on the GPU'
+  - RTX 2060 FP64 throughput is 1/32 of its FP32 rate, so float64 kernels gain mainly from memory bandwidth; float32 would change values
+  - 'Per-channel 1024x1024 float64 distance matrices: 8.4 MB each, 0.99 GB for 118 channels, plus the same again double-centred: fits in 6 GB'
+  - With the per-channel cache (audit/profiles/micro/opp_dcorr_hsic-1.json, 10-11x at 8x1024, bit-identical) the remaining per-pair work is a sum of elementwise products, i.e. one (118
+    x 1M) by (1M x 118) product per window. This holds for dcorr only
+  - 'hsic is not GEMM-shaped: hyppo/tools/common.py:compute_kern takes the RBF bandwidth gamma_x from the x channel''s median distance and uses it for both Grams
+    (hyppo/independence/hsic.py:Hsic.statistic), so the y-side Gram exp(-gamma_x D2_y) depends on the pair. After the x-side cache (dcorr_hsic-3) each pair still needs that
+    elementwise exp over T^2 entries, its centring and two inner products; on the GPU this is batched elementwise work per x channel (all y channels share gamma_x), not one
+    product. The 3-10x is projected from the dcorr profile; hsic has no separate projection, so the opportunity''s scope_speedup gives the hsic units 1x and build_csv
+    credits the GPU no saving on them (README ''Optimisation columns'', ranking rule 4)'
+  opportunities:
+  - opportunity_id: xc-gpu-distance
+    opportunity: After caching each channel's centred distance matrix (dcorr_hsic-1), compute all pairwise dcorr distance covariances as one batched product on the GPU.
+      For hsic the y-side Gram uses the x channel's bandwidth, so after the x-side cache (dcorr_hsic-3) the per-pair exp(-gamma_x D2_y), its centring and two inner products
+      run on the GPU as batched elementwise kernels per x channel, not as one product.
+    opp_type: gpu
+    speedup_kind: projection
+    expected_speedup: 3-10x
+    speedup_basis: profile:audit/profiles/distance.dcorr.biased-False__8x1024.pstats hyppo dcorr.py:statistic 99.1% + complexity:for dcorr, P^2/2 elementwise products of 1024x1024 matrices become
+      one GEMM-shaped reduction; for hsic the per-pair exp(-gamma_x D2_y), centring and inner products stay elementwise (P^2/2 x T^2 exps), so the 3-10x is the dcorr
+      projection and hsic has none of its own; FP64 rate of the RTX 2060 limits the gain over the CPU per-channel cache; projection only
+    output_risk: unverified-within-tolerance
+    risk_evidence: GPU summation order (and float32 if used) differs from hyppo's numba loop; no GPU code was run
+    effort: L
+    depends_on:
+    - dcorr_hsic-1
+    - dcorr_hsic-3
+    scope_speedup:
+    - scope:
+      - distance.hsic.*
+      expected_speedup: 1x
+      reason: no GPU projection of its own; the y-side Gram uses the x channel's bandwidth, so the per-pair exp, centring and inner products stay elementwise and the dcorr
+        3-10x does not carry over, so build_csv credits no saving on these units
+- unit_id: family:calc-vs-storage
+  title: Calculation seconds per window next to the published storage write cost
+  scope:
+  - basic.cov.EmpiricalCovariance
+  - basic.cov.GraphicalLasso
+  - basic.cov.GraphicalLassoCV
+  - basic.cov.LedoitWolf
+  - basic.cov.MinCovDet
+  - basic.cov.OAS
+  - basic.cov.ShrunkCovariance
+  - basic.prec.EmpiricalCovariance
+  - basic.prec.EllipticEnvelope
+  - basic.prec.GraphicalLasso
+  - basic.prec.GraphicalLassoCV
+  - basic.prec.LedoitWolf
+  - basic.prec.MinCovDet
+  - basic.prec.OAS
+  - basic.prec.ShrunkCovariance
+  - basic.spearmanr
+  - basic.kendalltau
+  - basic.xcorr.mean_sig-False
+  - distance.pdist.euclidean
+  - distance.pdist.cityblock
+  - distance.pdist.cosine
+  - distance.pdist.chebyshev
+  - distance.pdist.canberra
+  - distance.pdist.braycurtis
+  - distance.bary.euclidean
+  - causal.reci
+  - infotheory.je.gaussian
+  - infotheory.ce.gaussian
+  - infotheory.mi.gaussian
+  - infotheory.tlmi.gaussian
+  - infotheory.te.gaussian_k-1_kt-1_l-1_lt-1
+  - infotheory.te.symbolic
+  - spectral.phase
+  - spectral.cohmag
+  - spectral.icoh
+  - spectral.psi
+  - spectral.plv
+  - spectral.pli
+  - spectral.wpli
+  - spectral.dspli
+  - spectral.dswpli
+  - spectral.ppc
+  - spectral.gd
+  - misc.lmfit.Ridge
+  - misc.lmfit.Lasso
+  - misc.lmfit.SGDRegressor
+  - misc.lmfit.ElasticNet
+  - misc.lmfit.BayesianRidge
+  - misc.pec.orth-False_log-False
+  - misc.pec.orth-True_log-False
+  - misc.pec.orth-False_log-True
+  - misc.pec.orth-True_log-True
+  - basic.xcorr.max_sig-False
+  eeg_relevant: true
+  projected_patient_s: 137463.6
+  basis_scope: configured-identifiers-approx
+  basis_scope_note: 'the explicit projected_patient_s sums the 53 retained units'' family-warm projections over their configured identifiers (229.1 s per window).
+    36.0 s of that window are configured identifiers outside the EEG selection (spectral.gd 11.06 s, spectral.psi 9.03 s, spectral.plv 8.12 s, basic.kendalltau 4.52 s,
+    spectral.phase 2.68 s, the rest under 0.1 s each), and the EEG band variants of the 11 spectral units were never timed. The sum also leaves out two cache fills that an
+    EEG run pays on retained units, because the family-warm runs filled those caches on identifiers outside the EEG selection: the EllipticEnvelope fit on
+    basic.prec.EllipticEnvelope (fresh 3.48 s per window against family-warm 0.0002 s) and the per-pair cross-correlations on basic.xcorr.max_sig-False (fresh 1.24 s
+    against 0.086 s). The figure therefore approximates the EEG selection''s window; the tier-0 unit bases of README ''Optimisation columns'', ranking rule 1
+    (basic.kendalltau on its retained identifier, spectral.plv on its retained build, those two units on their fresh projections) sum to 221.1 s, still without the
+    untimed spectral bands'
+  evidence:
+  - 'Calculation: 229.1 s per 118x1024 window for the 53 retained units (185 EEG identifiers; sum of family-warm projected_window_s_118 from audit/profiles/summary.json, configured identifiers
+    only, EEG band variants not timed), 137464 s per 600-window patient; historical EEG runs ~185 s per window'
+  - 'Storage (tests/storage/PRODUCTION_RESULTS.md, ''Median milliseconds for one 118-channel metric over 600 windows''): durable write total 174.3 ms (sym, zstd) to 812.0 ms (full, pcodec)
+    per metric per 600 windows'
+  - 185 metrics x 0.17-0.81 s = 32-150 s per patient = 0.05-0.25 s per window, i.e. 0.02-0.11% of the calculation time
+  - The 185-metric batch of tiny 4x4x7 arrays (5.70 s) measures fixed manifest/durability overhead, not patient throughput (same file)
+  - Preprocessing (Data construction with detrend + z-score) costs 3.0 ms per 118x1024 window (audit/profiles/micro/opp_xc-blas-threads.json data_construction_118x1024)
+  opportunities: []

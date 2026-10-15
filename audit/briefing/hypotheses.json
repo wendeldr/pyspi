@@ -1,0 +1,158 @@
+{
+ "barycenters": [
+  "bary_euclidean_mean is identically 0 on z-scored data ((x+y)/2 has zero mean); sq-mean = (1+r)(T-1)/(2T)",
+  "max_time statistic exists in code but not in config",
+  "sgddtw uses the global RNG; DBA max_iter 30 tol 1e-5; softdtw barycenter L-BFGS-B"
+ ],
+ "ccm": [
+  "E=None picks max E (known bug 2)",
+  "libSizes string lowerE/upperE/inc and first-22-rows truncation; sample=100 seed=42 random libraries (pyEDM RNG)",
+  "orientation: ccmf[i,j] = rho(target j predicted from embedding of i), which in Sugihara's convention indicates j -> i",
+  "statistic diff = nanmean(ccmf - ccmf^T)"
+ ],
+ "cdt_pairwise": [
+  "ANM monkeypatch: GP with sklearn default kernel C*RBF (hyperparameters optimised by fmin_l_bfgs_b), random_state=42 has no effect with zero restarts; HSIC subsampled to 200 points with 1/m scaling",
+  "RECI = OLS of y on [1, x^3] after min-max scaling (PolynomialFeatures columns 1,2 zeroed)",
+  "IGCI entropy estimator with gaussian reference measure: antisymmetric, sign convention",
+  "CDS ffactor=2 maxdev=3 minc=12 discretisation"
+ ],
+ "coint": [
+  "johansen trace/max-eig at r=0 from coint_johansen(det_order, k_ar_diff); both statistics share one fit; statsmodels deterministic-term placement vs urca ecdet",
+  "aeg: statsmodels coint t-stat; regression is asymmetric (dependent = the first computed order; with the Directed loop order the HIGHER index is the dependent variable) and the cache symmetrises",
+  "__init__ branches on =='johansen' but _from_cache on =='aeg'"
+ ],
+ "cov_prec_glasso": [
+  "GraphicalLasso alpha=0.01 fixed; precision comes from the solver, covariance from its inverse; CV path selects alpha over 4x4 refinements with 5-fold CV"
+ ],
+ "cov_prec_robust": [
+  "EllipticEnvelope is MinCovDet with contamination only setting a threshold: cov/prec outputs may be identical",
+  "FastMCD draws from the global numpy RNG (random_state=None); reproducible only via seeding"
+ ],
+ "cov_prec_simple": [
+  "EmpiricalCovariance divides by T (np.cov bias=1) so on z-scored (ddof=1) input cov = (T-1)/T * r, while the docs call it equivalent to correlation",
+  "prec is unnormalised precision (pinvh of the estimate), not partial correlation as a reader might expect",
+  "squared variants are plain elementwise squares of the same matrix"
+ ],
+ "dcorr_hsic": [
+  "does hyppo return dCor or dCor^2 (biased variant takes sqrt, unbiased does not?)",
+  "HSIC: hyppo uses 1 - K/max(K) fed into Dcorr (normalised kernel-dcorr), median-heuristic bandwidth computed from x only and reused for y"
+ ],
+ "dtw_family": [
+  "tslearn dtw returns sqrt of accumulated squared differences (not abs-sum as in Sakoe-Chiba 1978)",
+  "default Sakoe-Chiba radius 1 and Itakura max slope 2 when the constraint is named without parameters",
+  "lcss eps=1 similarity normalised by the shorter length",
+  "softdtw gamma=1 and the constraint is ignored (known bug 3)"
+ ],
+ "gpfit": [
+  "kernel = Constant + White + {DotProduct, RBF}; hyperparameters optimised (fmin_l_bfgs_b), n_restarts 0, random_state None; in-sample MSE",
+  "local optimum dependence; compare own posterior mean at fitted hyperparameters"
+ ],
+ "gwtau": [
+  "pyspi-native: trajectory (t, x_t) arc length cumulative sum, sorted-descending 1-D Wasserstein RMS; the unequal-length branch is unreachable in pyspi; confirm against the supplement's stated definition (Kravtsova et al.)"
+ ],
+ "hhg_mgc": [
+  "HHG statistic is symmetric in (x, y) yet the class is Directed (both orders computed)",
+  "MGC via scipy.stats.multiscale_graphcorr (same lineage as hyppo); requires n>=5"
+ ],
+ "ids": [
+  "Radhakrishnan 2025 interdependence score: features exp(-B y^2) y^k/sqrt(k!) k=0..5, B=0.5, corrcoef over K*P columns, max |corr| over term blocks; importing the module reseeds the global numpy RNG (seed 1717)",
+  "finite-sample bias: max over 36 |corr| values on independent data"
+ ],
+ "it_gaussian": [
+  "te_symbolic configs are Gaussian TE (known bug 1)",
+  "cce = sum_{i=1..5} H(Y_t | Y past i-1, X past i) with n=5 (docs may say 10)",
+  "di = sum_i H(Y^(i))/i - cce uses block entropy / i, not the entropy-rate sum H(Y^n) = sum H(Y_i | Y^{i-1})",
+  "xme uses source lags 1..k-1 (range(2,k)), so k=1 and k=2 may coincide",
+  "Gaussian entropy in nats; JIDT NORMALISE defaults differ between entropy (true) and MI/TE (false); JIDT covariance ddof to be established"
+ ],
+ "it_kernel": [
+  "box kernel width 0.5 (entropy-based classes) vs 0.25 (mi/tlmi/te) in bits; kernel TE accepts only k_HISTORY (l_history ignored)",
+  "kernel <= vs < comparison and self-inclusion to be established"
+ ],
+ "it_kozachenko": [
+  "KL estimator with max-norm, NORMALISE=true and 1e-8 noise (NOISE_SEED=42); output in nats",
+  "same composed quantities as the gaussian family (je/ce/cce/xme/di/si)"
+ ],
+ "it_kraskov": [
+  "KSG1 k=4 max-norm with 1e-8 jitter; NUM_THREADS defaults to all cores",
+  "DCE Theiler window = int(2 * dot(acf(src), acf(targ))) may overestimate Bartlett's effective-sample formula (1 + 2 sum_{tau>=1}) by 1; recomputed per pair",
+  "auto-embed MAX_CORR_AIS k<=10 tau<=4 chooses (k,tau) per pair; equals fixed k=1 on cml7",
+  "tlmi lag convention src[:-1], targ[1:] = I(X_t; Y_{t+1})"
+ ],
+ "lagged_dcorr_mgc": [
+  "for lag>=1 hyppo recomputes Euclidean distances of the sliced DISTANCE matrices (distance of distances) rather than of the series",
+  "output is the SUM over lags weighted by (n-j)/n, docs may say average",
+  "mgcx runs an extra discarded MGC test per pair"
+ ],
+ "lmfit": [
+  "Lasso alpha=1 and ElasticNet alpha=1 l1_ratio=0.5 soft-threshold the single coefficient to 0 on z-scored data whenever |r|(T-1)/T <= alpha*l1_ratio, giving the constant MSE (T-1)/T",
+  "Ridge alpha=1: w = r (T-1)/T after centring; BayesianRidge evidence iterations; SGDRegressor random_state=42 shuffle",
+  "in-sample MSE of z_j regressed on z_i; random_state passed only when the signature has it"
+ ],
+ "pdist": [
+  "on z-scored data cosine = 1 - r and euclidean = sqrt(2(T-1)(1-r)); all metrics symmetric"
+ ],
+ "pec": [
+  "mne envelope_correlation: scipy hilbert with next_fast_len padding, envelope |analytic|, log uses log(|.|^2), pairwise orthogonalisation Im(x conj(y)/|y|) (Hipp 2012), absolute only acts when orth; symmetrised (C+C^T)/2 when orth",
+  "pec/pec_log can be negative (M8); last-bit reciprocal asymmetry (M2)"
+ ],
+ "phi": [
+  "phi_star via L-BFGS-B with finite-difference gradient where the MATLAB original had an analytic one; inv(C_D_cond) recomputed per objective evaluation",
+  "phi_G augmented Lagrangian with eigenvalue clamp absent in MATLAB",
+  "normalization=1 divides by (N_c-1) * min H; phi* <= MI relationship"
+ ],
+ "preprocessing_base": [
+  "Data: truncate -> detrend (optional, scipy linear) -> zscore(ddof=1); the historical patient stores used z-score THEN detrend",
+  "two raw arrays to parse_bivariate: only the first is z-scored (data.py:230-238)",
+  "Undirected.multivariate computes every ordered pair then overwrites the lower triangle (double work); classes overriding multivariate bypass the mirror (bug 5 / M1)",
+  "parse_bivariate builds Warning(...) without raising when i, j unset"
+ ],
+ "rank_corr": [
+  "kendalltau is tau-b (tie-corrected); spearman is Pearson on ranks; both symmetric so the Undirected double computation is pure waste"
+ ],
+ "sgc": [
+  "nonparametric: Dhamala 2008 pairwise Geweke from Wilson factors, ln(S_yy/(S_yy - (Sigma_xx - Sigma_xy^2/Sigma_yy)|H_yx|^2)), values <= 0 set to NaN; fmin forced to 1e-5",
+  "parametric: nitime BIC loop range(1, max_order) (max 49) with early break at first BIC increase, LWR recursion, 513-point grid; pyspi assembles F from causality_xy/yx; ValueError -> all-NaN matrix",
+  "NaN threshold 50% per cell"
+ ],
+ "spectral_coherence": [
+  "coherence_magnitude is |coherency|^2 (squared) despite the name 'magnitude'",
+  "coherence phase: arithmetic mean/max of principal angles over the band (M4), DC bin included in full/low bands",
+  "imaginary coherence is |Im S_xy|/sqrt(S_xx S_yy) (absolute value) whereas Nolte 2004 is signed"
+ ],
+ "spectral_csm": [
+  "NW=3, 5 DPSS tapers, whole series as one window, constant detrend, n_fft=next_fast_len(T) via scipy.fftpack; expectation over the 5 tapers; non-negative frequencies keep DC and drop Nyquist for even n_fft",
+  "every measure variant rebuilds Multitaper and the full two-sided CSM; first-insert cache keyed by string",
+  "band selection: inclusive (>=, <=) in the multivariate path, strict in the bivariate path and in PSI/GD _bandpass; narrow EEG bands at T=1024 leave 2-3 bins (delta 2, theta 3, alpha 3) and PSI/GD strict bandpass leaves 1"
+ ],
+ "spectral_directed": [
+  "bivariate: each ordered pair gets a fresh 2-channel multitaper and Wilson factorisation; DTF_ij == PDC_ij is an exact 2x2 identity (H = adj(A)/det A), so the real deviation is 'bivariate, unconditioned'; dDTF degenerate (partial coherence with no third signal)",
+  "measures squared (|.|^2) vs modulus conventions of Baccala/Kaminski",
+  "properties re-run Wilson 2-4 times per call"
+ ],
+ "spectral_phase_sync": [
+  "PLV/PLI/wPLI/dsPLI/dswPLI/PPC take their expectation over K=5 tapers (not trials/time); null PLV ~ sqrt(pi/(4K))",
+  "PLI and wPLI signed (M3); dspli = (K PLI^2 - 1)/(K-1); PPC = (|K PLV_c|^2 - K)/(K^2 - K); negatives valid (M7)",
+  "plv statfn wraps np.absolute"
+ ],
+ "spectral_psi_gd": [
+  "PSI sums all unordered frequency pairs in the band (M5) after strict bandpass and decimation to resolution (fmax-fmin)/50; Nolte 2008 eq. 3 uses adjacent pairs with a fixed step; no jackknife normalisation",
+  "group delay: Fisher-z significance with coherence_bias(5), BH 0.05, independent-frequency decimation, groups >= 3, linregress of phase on frequency, delay = slope/2pi; antisymmetric fill (M6); all-NaN when no significant group",
+  "narrow bands at T=512/1024 leave 0-1 usable bins (IndexError or NaN)"
+ ],
+ "wavelet_measures": [
+  "cwt_n_cycles = freqs/7 makes sigma_t = 1/(14 pi) ~ 0.023 samples so every Morlet wavelet is one sample long (constant 1.414): the 'CWT' is the raw signal; with a single epoch coh = plv = 1, ppc and pli2_unbiased divide by zero, wpli2_debiased = 0 (tests/README flagged)",
+  "statistic over frequency AND time; pyspi mirrors lower->upper triangle",
+  "mt_adaptive is unused in cwt mode"
+ ],
+ "wavelet_psi": [
+  "n_cycles=7 default (real wavelets, 10 freqs linspace(0.2,0.5,10)); mne computes adjacent-pair slope per time point; result shape (N,N,1,T) and pyspi indexes the TIME axis with frequency indices (EEG notes), so band variants average the first <=10 time samples",
+  "single-epoch coherency has unit modulus so PSI(t) = sum sin(delta phi)"
+ ],
+ "xcorr": [
+  "normalised by ddof=0 std * (T-1): on z-scored input lag-0 = r * T/(T-1)",
+  "slice r[T-T//4 : T+T//4] covers lags -(T//4-1)..+T//4 so the window centre N=len//2 is lag +1 (sigonly origin off by one)",
+  "sigonly threshold is 1.96/sqrt(T//4), docs say 1.96/sqrt(T)",
+  "which series leads for positive lag: establish the sign convention of scipy.signal.correlate(x, y)"
+ ]
+}

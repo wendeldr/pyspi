@@ -1,0 +1,239 @@
+unit_id: distance.pdist.cosine
+status: profiled
+correctness:
+  metric_name_standard: Cosine distance (1 - cosine similarity) between z-scored series; equals 1 - Pearson r on default input
+  canonical_ref: Salton & McGill 1983, Introduction to Modern Information Retrieval (McGraw-Hill), cosine similarity; Deza & Deza 2016, Encyclopedia of
+    Distances, entry 'cosine similarity' (cosine distance = 1 - cos, not a metric)
+  canonical_definition: d(x,y) = 1 - (sum_t x_t y_t) / (||x||_2 ||y||_2)
+  documented_definition: 'GitBook distance-similarity.md ''Pairwise Distance'' (lines 297-321): "Pairwise distance between time-series, computed using sklearn''s
+    pairwise distance function using the following distance metrics: Euclidean, Cityblock, Cosine, Chebyshev, Canberra, Braycurtis"; keywords "undirected,
+    nonlinear, unsigned, unordered". No formula is given. pdist is absent from the supplement: supplement §1.2 ''Distance similarity (26 SPIs)'', p.5 (heading
+    line 209) lists SPIs 22-47 (dcorr, dcorrx, mgc, mgcx, hsic, hhg, dtw, lcss, softdtw, bary) and no pdist entry.'
+  delegate_lib: scikit-learn==1.9.1 sklearn.metrics.pairwise.cosine_distances (row-normalise, X X^T, 1 - S, clip [0,2])
+  implemented_as: 'Rows z-scored (ddof=1) by default; sklearn normalises each row to unit L2 norm, forms S = Xn Xn^T, returns clip(1 - S, 0, 2) with the
+    true diagonal set to 0. On zero-mean rows cos = Pearson r, so the value is 1 - r (probe: max |A - (1 - r)| = 7.8e-16).'
+  implementation_trace:
+  - pyspi/calculator.py:277 Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend) (Calculator defaults detrend=False, normalise=True,
+    calculator.py:48-50; lines at HEAD a1f20c7)
+  - pyspi/data.py:184-195 optional scipy.signal.detrend(axis=1), then zscore(data, axis=1, nan_policy='omit', ddof=1) per process
+  - pyspi/calculator.py:329-335 S = self._spis[spi].multivariate(self.dataset); np.fill_diagonal(S, np.nan); self._table[spi] = S (HEAD a1f20c7)
+  - 'pyspi/base.py:51-68 parse_multivariate: passes the Data object through unchanged'
+  - pyspi/statistics/distance.py:28-36 class PairwiseDistance(Undirected, Unsigned); __init__ stores metric, identifier 'pdist_<metric>'
+  - 'pyspi/statistics/distance.py:38-40 multivariate overrides Undirected.multivariate (base.py:132-138, never called): return pairwise_distances(data.to_numpy(squeeze=True),
+    metric=self._metric)'
+  - pyspi/data.py:108-118 to_numpy(squeeze=True) -> (M processes, T observations) float64; each row is one vector in R^T
+  - sklearn/metrics/pairwise.py:2309 pairwise_distances(X, Y=None, metric, n_jobs=None, ensure_all_finite=True) (scikit-learn 1.9.1)
+  - sklearn/metrics/pairwise.py:2463-2464 metric in PAIRWISE_DISTANCE_FUNCTIONS -> func (table at sklearn/metrics/pairwise.py:1919-1931)
+  - sklearn/metrics/pairwise.py:2494 -> _parallel_pairwise; sklearn/metrics/pairwise.py:1971-1981 Y=None -> Y=X; effective_n_jobs(None)==1 -> func(X, X)
+  - sklearn/metrics/pairwise.py:1136 cosine_distances; sklearn/metrics/pairwise.py:1174 S = cosine_similarity(X, Y)
+  - sklearn/metrics/pairwise.py:1703 cosine_similarity; sklearn/metrics/pairwise.py:1748 check_pairwise_arrays; sklearn/metrics/pairwise.py:1750 X_normalized
+    = normalize(X); sklearn/metrics/pairwise.py:1756 K = safe_sparse_dot(Xn, Yn.T)
+  - sklearn/metrics/pairwise.py:1175-1177 S = clip(1 - S, 0.0, 2.0); sklearn/metrics/pairwise.py:1178-1181 X is Y or Y is None -> fill diagonal 0
+  deviation_from_documented: 'None in substance: the code is sklearn.metrics.pairwise_distances with metric=''cosine'' as the GitBook page states. Not stated
+    on the page: inputs are z-scored per process (ddof=1) by Data by default (optionally detrended first), and the Calculator sets the diagonal to NaN.
+    No formula or normalisation (e.g. per-sample scaling) is documented.'
+  deviation_from_canonical: 'Formula: none (clip to [0,2] is a no-op in exact arithmetic). Domain: with default z-scoring the quantity is exactly 1 - Pearson
+    r (centred cosine), i.e. a linear-correlation measure; with normalise=False it becomes the uncentred cosine and depends on offsets (probe: 0.379 ->
+    0.710 after x -> 3x + 5).'
+  units_and_range: 'Dimensionless, [0, 2]: 0 for r=1, 1 for r=0, 2 for r=-1 (probe y=-x: 2.0). Independent of T in expectation. Never negative (clipped).'
+  direction_convention: 'A[i,j] = d(z_i, z_j) for rows i, j of the (z-scored) M x T data; the metric is symmetric so A[i,j] = A[j,i]; no direction is encoded;
+    diagonal NaN after Calculator.compute (confirmed in the check stage: sym runs).'
+  symmetry_expected: sym
+  already_documented: docs/storage_comparison/REVIEW.md M1 (PairwiseDistance overrides Undirected.multivariate; output exactly symmetric in probes)
+  new_finding_candidates:
+  - 'Candidate: on default z-scored input pdist_cosine = 1 - Pearson r (probe max deviation 7.8e-16), duplicating the correlation SPI up to an affine map;
+    the ''nonlinear'' label is not supported for this metric.'
+  - 'Candidate (labels): although non-negative (''unsigned''), the value is sign-sensitive: values in (1, 2] encode negative correlation, unlike magnitude-type
+    unsigned SPIs. It is also a dissimilarity (larger = less coupled).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - anm
+    path: kernel
+    reference: 'from-scratch numpy loop over row pairs: 1 - x.y / (norm(x) norm(y)) (no sklearn, no scipy.spatial)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: PairwiseDistance(metric).multivariate(Data(x, normalise=False)) equals the numpy reference off the diagonal to rel 1e-12 at every
+      T
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - iid_gaussian
+    path: pipeline
+    reference: A versus A.T (direction convention) and A[i,j] versus the numpy reference d(z_i, z_j) on the z-scored rows
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'A[i,j] = A[j,i] = d(z_i, z_j): symmetric, no direction; diagonal NaN after Calculator; reciprocal entries bit-identical'
+  - datasets:
+    - bivariate_gaussian
+    - scaled_offset
+    path: pipeline
+    reference: pipeline output on scaled_offset compared with pipeline output on bivariate_gaussian (same draw; positive scale + offset removed by z-scoring)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'identical to rel 1e-12: default z-scoring makes every pdist metric invariant to positive per-channel scale and offset'
+  - datasets:
+    - trending
+    - bivariate_gaussian
+    path: pipeline-detrend
+    reference: pipeline-detrend output on trending compared with pipeline-detrend output on bivariate_gaussian; plain pipeline on trending for contrast
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: with detrend the two agree to rel 1e-10 (linear trend removed exactly by scipy detrend); without detrend trending values differ markedly
+      (trend dominates the distance)
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: same data with a common random permutation of the time index (numpy permutation)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'unchanged to rel 1e-12: every pdist metric is invariant to a joint reordering of samples (supports the ''unordered'' label; shows
+      no temporal structure is used)'
+  - datasets:
+    - delayed_noise
+    path: pipeline
+    reference: qualitative comparison of d(x0, x_k) for delays 1,3,5 against d on iid_gaussian pairs
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'delayed copies look as dissimilar as independent noise (e.g. cosine ~ 1): the metric is lag-0 only and cannot see delayed coupling'
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    - sparse_precision
+    - contaminated
+    path: pipeline
+    reference: analytic identity 1 - r_ij with r from a from-scratch numpy Pearson correlation of the raw rows
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: agreement to abs 1e-12 at every T
+  check_method: analytic
+  check_reference: 'audit/checks/refs/pdist.py handlers run for this unit (run tag in parentheses): ref_def -> audit/checks/refs/_kernels_basic_misc.py:pdist_metric
+    (def); ref_cdist = same-lineage scipy==1.18.1 cdist (cdist); ref_ident, cosine branch 1 - r (ident); ref_scaleinv (scaleinv); ref_detrendinv
+    (detrendinv); ref_trend_nodetrend (trend-nodetrend); ref_perm (perm); ref_sym, bit-exact branch max|A-A.T| == 0 (sym, sym-wide64); ref_pop with
+    population() cosine branch 1 - rho and a 2000-pair Monte-Carlo se from mc_sample (pop, pop-negated); ref_delayed, Monte-Carlo rho=0 null band
+    (delayed-null); ref_dup (dup); ref_near, stable_metric cosine branch |u/|u| - v/|v||^2 / 2 (near); ref_edge (edge); probes
+    audit/checks/probes/pdist_derived.py (permuted, wide64, negated, near_identical, edge)'
+  check_data: 'kernel: bivariate_gaussian (T 64/1024/4096), iid_gaussian, nonlinear_dependence, anm (T 1024); pipeline: bivariate_gaussian (T 64/256/1024/4096),
+    scaled_offset (T 64/1024/4096), nonlinear_dependence, contaminated, sparse_precision, trending, var2_bivariate, gauss_ar1_pair, iid_gaussian (T 1024/4096),
+    delayed_noise, shared_envelope (T 64-4096); pipeline-detrend: bivariate_gaussian, trending; probe-derived inputs (probes/pdist_derived.py): joint time
+    permutation, 64-row mixture of iid_gaussian, negated rows (rho -> -rho), near-identical rows x0 + eps x1, edge rows (x, -x, shared zeros)'
+  agreement_criterion: 'exact rtol = atol = 1e-12 for from-definition runs (def, kernel/pipeline/pipeline-detrend), dup and edge; tolerance rtol 1e-10 /
+    atol 1e-12 for analytic identities and invariances (ident, scaleinv, detrendinv, perm); rtol 1e-6 / atol 1e-12 for near-identical rows (near); statistical
+    |pyspi - population| <= 2 se with se = Monte-Carlo sd x Bonferroni factor (1.319 for 6 pairs, 1.404 for 10 pairs: family-wise 5 %); qualitative pass_flag
+    for symmetry (bit-exact, euclidean last-bit), delayed-null band, signed/edge/downstream cases'
+  closeness: identity 1 - r (ident, 5 runs) max_abs 4.44e-16, max_rel 2.19e-15; from-definition kernel 6 runs max_abs 8.9e-16 (max_rel 6.5e-15), pipeline
+    8 runs max_rel 2.48e-15; same-lineage cdist max_abs 2.2e-16; scaleinv 1.28e-15, detrendinv 4.9e-15, perm 5.5e-16; population 1 - rho pass 7/7, max_z
+    1.40, rel error 0.17 (T=64) -> 0.026 (4096); rho=-0.8 pair 1.797 (T=1024); dup d(x0,x2) <= 2.2e-16; near pass at atol 1e-12 (rtol 1e-6) against
+    the cancellation-free form |u/|u| - v/|v||^2 / 2, max_abs 3.79e-16, relative error 2.3e-10 / 2.2e-06 / 7.7e-02 / 1.0 at eps 1e-3 / 1e-5 / 1e-7
+    / 1e-9 (at eps 1e-9 pyspi returns 0.0 against 4.95e-19), so the per-value 1e-8 relative bar is missed for eps <= 1e-5. The canonical 1 - u.v/(|u||v|)
+    evaluated from definition (audit kernel pdist_metric) on the same rows misses the stable form in the same way (rel 5.4e-02 at eps 1e-7, -2.2e-16 at
+    eps 1e-9) and agrees with pyspi to <= 4.4e-16 absolute (probe wf4b_high-eeg/fix_cosine_near.py)
+  verdict: matches
+  score_0_10: 10
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: Anchor 10's 1e-8 relative bar fails on near-identical rows. Against the cancellation-free form the relative error is 2.2e-6 at eps 1e-5 and 1.0
+    at eps 1e-9 (pyspi 0.0 vs 4.95e-19). The supplement also does not mention pdist.
+  documentation_status: silent
+  verdict_adjusted: matches
+  score_adjusted: 10
+  score_adjustment_rules: R2;R3
+  score_adjustment_reason: 'R2: max_abs 3.8e-16 <= 1e-12 and pyspi equals the canonical 1-S from definition to 4.4e-16; R3: GitBook names sklearn pairwise_distances
+    cosine, reproduced to 8.9e-16'
+  identifier_exceptions: ''
+  what_changed: 'None in the formula (canonical cosine distance; on ddof=1 z-scored rows it equals 1 - Pearson r to 4.4e-16). It is therefore an affine
+    map of the Pearson correlation: the ''nonlinear'' label does not describe it on default input, and values in (1, 2] encode negative correlation although
+    the SPI is labelled unsigned. Score basis: 10 is applied with the floating-point tolerance read as rtol plus an absolute floor at the [0, 2]
+    value scale. pyspi agrees with the canonical 1 - S definition evaluated from definition to <= 4.4e-16 absolute on every input, including
+    near-identical rows. Its relative error against a cancellation-free reformulation reaches 1.0 when the true distance is 4.95e-19 (near run), and
+    the canonical formula evaluated directly shows the same cancellation, so this is the conditioning of 1 - cos itself, not a pyspi deviation. This
+    differs from distance.pdist.euclidean (score 9): there pyspi''s dot-product expansion departs from the canonical direct-difference form, with
+    absolute error 1.56e-07 that fails atol 1e-12 on the near and dup runs. pdist is absent from the supplement, so the anchor-10 supplement clause
+    is met only through the GitBook description (sklearn pairwise_distances, metric cosine); this applies to the whole pdist family and is left to
+    synthesis.
+    Rubric reading is nearest-anchor 9 (score_rubric_note), because anchor 10''s 1e-8 relative bar fails on near-identical rows and the supplement does not
+    mention pdist; the score-10 basis above is the original reasoning for score_0_10, and score_adjusted is 10 under R2 and R3.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: cheap (every pyspi run < 0.03 s; whole family incl. 2000-pair Monte-Carlo references < 1 min; T up to 4096)
+  symmetry_observed: 'self-consistency check (pyspi''s matrix against its own transpose; sym runs labelled same-lineage in results.json): sym: max|A - A.T|
+    = 0.0 (bit-exact) on var2_bivariate, gauss_ar1_pair, iid_gaussian (T=1024) and on the 64-row probe (...|iid_gaussian|1024|pipeline|sym-wide64: n_asym_pairs
+    0); diagonal NaN in every run'
+  direction_observed: 'A[i,j] = A[j,i] = d(z_i, z_j) on the z-scored rows; no direction is encoded: on var2_bivariate (x0 -> x1) the matrix is exactly symmetric,
+    and on delayed_noise the lagged copies x_k = x0(t - d_k) + noise sit inside the rho = 0 null band (...|delayed_noise|1024|pipeline|delayed-null pass),
+    so the metric is lag-0 only. Larger value = less similar (dissimilarity); anti-correlated pairs give the largest values (pop-negated runs).'
+  candidate_resolutions:
+  - candidate: pdist_cosine = 1 - Pearson r on default input, so 'nonlinear' is not supported
+    outcome: confirmed
+    evidence: 'distance.pdist.cosine|{bivariate_gaussian,iid_gaussian,sparse_precision,contaminated}|1024|pipeline|ident and |bivariate_gaussian|4096|pipeline|ident:
+      max_abs 4.44e-16'
+  - candidate: 'non-negative but sign-sensitive: (1, 2] encodes negative correlation; dissimilarity orientation'
+    outcome: confirmed
+    evidence: 'distance.pdist.cosine|bivariate_gaussian|{1024,4096}|pipeline|pop-negated pass: rho=-0.8 pair 1.797 / 1.795, rho=-0.3 pair 1.281 / 1.309
+      vs 0.2025 / 0.719 for the positive pairs; distance.pdist.cosine|iid_gaussian|1024|kernel|edge: d(x,-x) = 2.0'
+  checks_run:
+  - run_ids:
+    - distance.pdist.cosine|*|kernel|def
+    - distance.pdist.cosine|*|pipeline|def
+    - distance.pdist.cosine|*|pipeline-detrend|def
+    reference: audit/checks/refs/pdist.py:ref_def -> _kernels_basic_misc.pdist_metric (independent-impl)
+    outcome: pass 15/15, max_rel 6.5e-15
+  - run_ids:
+    - distance.pdist.cosine|bivariate_gaussian|1024|pipeline|cdist
+    reference: audit/checks/refs/pdist.py:ref_cdist -> scipy==1.18.1 scipy.spatial.distance.cdist (same-lineage)
+    outcome: pass, max_abs 2.2e-16 (same-lineage)
+  - run_ids:
+    - distance.pdist.cosine|scaled_offset|*|pipeline|scaleinv
+    - distance.pdist.cosine|trending|1024|pipeline-detrend|detrendinv
+    - distance.pdist.cosine|trending|1024|pipeline|trend-nodetrend
+    - distance.pdist.cosine|bivariate_gaussian|1024|pipeline|perm
+    reference: audit/checks/refs/pdist.py:ref_scaleinv, ref_detrendinv, ref_trend_nodetrend, ref_perm (analytic invariances)
+    outcome: 'pass 6/6; trending without detrend: pair (1,3) 0.0028 vs 0.98 untrended'
+  - run_ids:
+    - distance.pdist.cosine|var2_bivariate|1024|pipeline|sym
+    - distance.pdist.cosine|gauss_ar1_pair|1024|pipeline|sym
+    - distance.pdist.cosine|iid_gaussian|1024|pipeline|sym
+    - distance.pdist.cosine|iid_gaussian|1024|pipeline|sym-wide64
+    reference: 'audit/checks/refs/pdist.py:ref_sym (qualitative symmetry, NaN diagonal; self-consistency: pyspi''s matrix against its own transpose, reference_kind
+      same-lineage)'
+    outcome: pass 4/4, max|A-A.T| = 0.0
+  - run_ids:
+    - distance.pdist.cosine|bivariate_gaussian|*|pipeline|pop
+    - distance.pdist.cosine|iid_gaussian|4096|pipeline|pop
+    - distance.pdist.cosine|bivariate_gaussian|*|pipeline|pop-negated
+    reference: audit/checks/refs/pdist.py:ref_pop (analytic population value, Monte-Carlo se)
+    outcome: pass 7/7, max_z 1.40
+  - run_ids:
+    - distance.pdist.cosine|delayed_noise|1024|pipeline|delayed-null
+    reference: audit/checks/refs/pdist.py:ref_delayed (Monte-Carlo rho=0 null band)
+    outcome: 'pass: 1.024, 0.992, 0.946 inside [0.922, 1.083]'
+  - run_ids:
+    - distance.pdist.cosine|shared_envelope|*|pipeline|dup
+    reference: audit/checks/refs/pdist.py:ref_dup (identical rows -> 0)
+    outcome: pass 4/4, d(x0,x2) <= 2.2e-16
+  - run_ids:
+    - distance.pdist.cosine|iid_gaussian|1024|pipeline|near
+    reference: audit/checks/refs/pdist.py:ref_near (cancellation-free direct forms)
+    outcome: 'pass at atol 1e-12: max_abs 3.79e-16, max_rel 1.0 (eps 1e-9: pyspi 0.0 vs 4.95e-19; eps 1e-7: 5.33e-15 vs 4.95e-15, rel 7.7e-02).
+      The from-definition 1 - S form gives the same cancellation (probe wf4b_high-eeg/fix_cosine_near.py)'
+  - run_ids:
+    - distance.pdist.cosine|iid_gaussian|1024|kernel|edge
+    reference: audit/checks/refs/pdist.py:ref_edge (from-definition on (x, -x) and shared zeros)
+    outcome: 'pass: d(x,-x) = 2.0'
+  - run_ids:
+    - distance.pdist.cosine|*|pipeline|ident
+    reference: audit/checks/refs/pdist.py:ref_ident (analytic 1 - r)
+    outcome: pass 5/5, max_abs 4.44e-16
+optimisation:
+  complexity_P_T: 'O(P^2 T) in one call (pyspi/statistics/distance.py:PairwiseDistance.multivariate -> sklearn pairwise_distances, compiled scipy/sklearn
+    kernel), but at EEG sizes the fixed per-call cost dominates: measured 0.70 ms at 8x1024 and 1.77 ms at 118x1024 (P_exponent 0.02-0.45, T_exponent
+    about 0.1 between 8x256 and 8x1024).'
+  hotspot_1: 'sklearn/metrics/pairwise.py:check_pairwise_arrays -> sklearn/utils/validation.py:check_array (third-party:sklearn) 22.3% of the profiled SPI call at 8x1024 (1.30 ms profiled; called from cosine_similarity): fixed per-call input validation, the largest deep frame at 8x1024. Everything runs under the sklearn/utils/_param_validation.py:wrapper (about 95%, a wrapper). At 118x1024 the compute grows with P^2 and this fixed cost becomes a small share'
+  hotspot_2: 'sklearn/preprocessing/_data.py:normalize (third-party:sklearn) 19.3% (row normalisation, with its own check_array); cosine_distances 57.7% includes the validation above'
+  hotspot_owner: third-party:sklearn
+  opaque_share: 0.2525
+  profile_file: audit/profiles/distance.pdist.cosine__8x1024.pstats
+  no_opportunity_reason: 'No opportunity is listed: pdist is one compiled call per window, and the six pdist units together cost about 24 ms per 118x1024 window (about 14 core-seconds per 600-window patient). Calling scipy pdist + squareform directly would skip sklearn''s validation, a few percent of the call at 118x1024, and is not material at these walls (notes/pdist.md, Optimisation, Opportunities).'
+  opportunities: []

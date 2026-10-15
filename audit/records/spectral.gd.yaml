@@ -1,0 +1,251 @@
+unit_id: spectral.gd
+status: profiled
+correctness:
+  metric_name_standard: group delay (time delay from the slope of the coherency phase spectrum over frequencies with significant coherence)
+  canonical_ref: 'Gotman J (1983), Measurement of small time differences between EEG channels: method and application to epileptic seizure propagation, Electroencephalography and Clinical Neurophysiology 56(5), 501-514 (as cited by the supplement [61] and by the library docstring connectivity.py:922-927). The exact Gotman procedure (coherence threshold, regression weighting, intercept handling) is from memory and not re-checked against the paper; see Open questions.'
+  canonical_definition: phi_ij(f) = arg C_ij(f) (unwrapped); over the frequencies in the band where coherence is significant, fit phi_ij(f) = a + b f by linear regression; delay tau_ij = b / (2 pi) (in samples when fs = 1); positive tau when i leads j under S_ij = X_i X_j^*
+  documented_definition: "supplement \xA71.5.3, p.13-14 (heading at supplement.txt line 630): \"The group delay [61] infers a directed, average time-delay between two signals by measuring the slope of the phase differences (coherence phase, Sec. 1.5.2) as a function of the frequency (obtained through linear regression). The slope is only computed for statistically significant coherence values and the time delay is obtained by a simple rescaling of the slope by 2 pi.\" Keywords \"directed, linear, unsigned, bivariate, frequency-dependent\"; identifiers 107-109 gd_multitaper_delay_fs-1_fmin-0_fmax-0-5 / fmin-0_fmax-0-25 / fmin-0-25_fmax-0-5; frequency grid and bands from \xA71.5, p.12-13 (heading at supplement.txt line 570). Same text on GitBook spectral.md:130-148 (Group Delay)."
+  delegate_lib: spectral_connectivity==1.1.2 Connectivity.group_delay(frequencies_of_interest=[fmin, fmax], frequency_resolution=(fmax-fmin)/50, significance_threshold=0.05) -> (delay, slope, r_value); pyspi takes delay[0]; regression by scipy==1.17.1 scipy.stats.mstats.linregress
+  implemented_as: 'Same multitaper coherency as PSI (NW=3, 5 tapers, constant detrend, n_fft = next_fast_len(T), strict band fmin < f < fmax at full 1/n_fft resolution). For every unordered pair (i<j): z = (atanh(min(|C|, 1-eps)) - b) / sqrt(b) with b = coherence_bias(5) = 1/(2*5-2) = 0.125; one-sided p = 1 - Phi(z); Benjamini-Hochberg at 0.05 applied jointly over ALL (frequency x pair) entries of the band (the whole flattened array, so the set of other channels changes each pair''s threshold); per pair keep the largest contiguous run of significant bins (scipy.ndimage.label; ties -> first), take every s-th bin of that run (s = ceil(((fmax-fmin)/50) n_fft)), discard if fewer than 3 points. Phase = numpy.unwrap(angle(C)) along the full in-band grid (before masking), masked to the kept points; OLS of phase on frequency with free intercept (mstats.linregress); slope -> A[i,j] = slope/(2 pi), A[j,i] = -slope/(2 pi); all-masked -> slope None -> NaN for the pair. Units: samples (fs = 1). Diagonal NaN.'
+  implementation_trace:
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1) then scipy.stats.zscore(axis=1, ddof=1) when normalise=True (default); coherency is scale-invariant, so normalise has no effect beyond round-off (probe scaled_offset T=256: max|diff| 2.5e-14 PSI, 4e-17 GD) whereas detrend changes values (probe trending T=256: max|diff| 10.7 PSI, 1.07 GD)'
+  - pyspi/calculator.py:295-355 Calculator.compute (cited at HEAD a1f20c7): :329 spi.multivariate(dataset); :332 np.fill_diagonal(S, nan); :336-339 any exception sets the whole SPI table to NaN and records a failed MetricReport; :354-355 warning
+  - pyspi/_spectral_compat.py:15-28 replaces spectral_connectivity.connectivity.np with a namespace whose in1d is np.isin on the raveled input (needed by connectivity.py:1405 under NumPy 2); estimators unchanged
+  - 'pyspi/statistics/spectral.py:20-43 NonparametricSpectral.__init__: fs=1, fmax default fs/2; statistic ''mean'' -> _statfn=np.nanmean, ''delay'' -> _statfn=None; identifier suffix _multitaper_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g} with ''.''->''-'''
+  - pyspi/statistics/spectral.py:45-50 key = (measure, fmin, fmax) for GroupDelay/PhaseSlopeIndex (band-specific cache key)
+  - 'pyspi/statistics/spectral.py:64-83 NonparametricSpectralMultivariate._get_cache: :69 z = data.to_numpy(squeeze=True).T (T x P); :70 sc.Multitaper(z, sampling_frequency=1) with library defaults; :71 Connectivity.from_multitaper(m); :73 getattr(conn, measure)() called WITHOUT arguments raises TypeError in 1.1.2 (frequencies_of_interest=None / frequency_resolution=None) and :75 falls back to self._get_statistic(conn), which forwards the band (spy probe: first call kwargs {}, second call {''frequencies_of_interest'': [0, 0.25], ''frequency_resolution'': 0.005}); :78-81 the first insert into a fresh Data is keyed by the string self.measure, later inserts by self.key (probe cache keys [''freq'', ''phase_slope_index'', (''group_delay'', 0, 0.25)])'
+  - 'pyspi/statistics/spectral.py:85-102 multivariate: :91 group_delay returns a 3-tuple (delay, slope, r_value), so the argument expression adj_freq[0, freq_id, :, :] raises ''TypeError: tuple indices must be integers or slices, not tuple'' before the None _statfn would be called (probe); :94 catches TypeError; :94-100 stat_id = index of ''delay'' in [''delay'',''slope'',''rvalue''] = 0 and adj = adj_freq[0][0] (delay, time window 0); :101 fill_diagonal on the cached array (shares memory, probe True)'
+  - 'pyspi/statistics/spectral.py:304-317 GroupDelay(NonparametricSpectralMultivariate, Directed): labels [''unsigned'',''spectral'',''directed'',''lagged'']; _get_statistic -> C.group_delay(frequencies_of_interest=[fmin, fmax], frequency_resolution=(fmax-fmin)/50) (default significance_threshold 0.05)'
+  - 'pyspi/base.py:84-94 Directed.multivariate (pairwise bivariate loop) is not used: the decorated multivariate at spectral.py:85 comes first in the MRO (probe)'
+  - pyspi/config.yaml:1068-1087 GroupDelay configs (fmin, fmax, statistic='delay') for the three bands
+  - spectral_connectivity 1.1.2 .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:74-102 Multitaper defaults time_halfbandwidth_product=3, detrend_type='constant' (per-window mean removal), single window = whole series, is_low_bias=True
+  - 'transforms.py:155-164 n_tapers = floor(2*NW-1) = 5; :535-541 and :668-673 keep tapers with eigenvalue > 0.9 (probe: 5 tapers kept at T=64..4096)'
+  - transforms.py:181-190 n_fft = scipy.fftpack.next_fast_len(T) (= T for T in {64,256,512,1024,4096}); frequencies = fftfreq(n_fft, 1/fs)
+  - 'transforms.py:238-260 fft(); :335-354 _multitaper_fft: fft(x * taper, n=n_fft) / fs (scipy.fftpack, e^{-i2pi kn/N} convention)'
+  - connectivity.py:157-172 Connectivity.from_multitaper (expectation_type='trials_tapers'); :45-53 EXPECTATION['trials_tapers'] = mean over axes (1, 2)
+  - connectivity.py:174-180 frequencies property with :73-89 _non_negative_frequencies -> first (n_fft+1)//2 bins, i.e. 0 .. (n_fft/2-1)/n_fft for even n_fft (Nyquist bin never present)
+  - 'connectivity.py:195-208 _cross_spectral_matrix and :1187-1190 _complex_inner_product: S[i,j] = X_i * conj(X_j) averaged over tapers; :189-193 _power'
+  - 'connectivity.py:295-313 coherency(): C_ij(f) = S_ij / sqrt(S_ii S_jj), diagonal set to NaN, non-negative frequencies only'
+  - 'connectivity.py:1313-1335 _bandpass: keeps bins with fmin < f < fmax (both endpoints strictly excluded)'
+  - connectivity.py:1338-1357 _get_independent_frequency_step = int(ceil(frequency_resolution / (1/n_fft))) with frequency_resolution supplied by pyspi as (fmax-fmin)/50
+  - 'connectivity.py:902-987 Connectivity.group_delay: :930-934 step; :935-937 _bandpass(coherency); :938 bias = coherence_bias(n_observations) with :280-287 n_observations = n_trials*n_tapers = 5; :940-944 select upper-triangle pairs via itertools.combinations; :946-951 _find_significant_frequencies(..., significance_threshold=0.05); :952-960 masked array of xp.unwrap(angle(coherency), axis=-2) with mask ~is_significant; :962-967 np.ma.apply_along_axis(mstats.linregress(bandpassed_frequencies, phase)) over the frequency axis; :968-975 slope[i,j] = fit slope, slope[j,i] = -slope; :977 delay = slope/(2 pi); :979-985 r_value mirrored unchanged, diagonal 1'
+  - 'connectivity.py:1432-1482 _find_significant_frequencies: fisher_z_transform -> get_normal_distribution_p_values -> adjust_for_multiple_comparisons(p_values, alpha=0.05) over the whole array, then np.apply_along_axis(_find_largest_independent_group, -2, ...)'
+  - connectivity.py:1360-1387 _find_largest_significant_group (scipy.ndimage.label; largest run, first on ties); :1390-1405 _get_independent_frequencies (index[0::step] of that run; uses np.in1d via the pyspi shim); :1408-1429 _find_largest_independent_group (fewer than min_group_size=3 points -> all False)
+  - 'spectral_connectivity/statistics.py:89-122 fisher_z_transform: (arctanh(|C|) - bias)/sqrt(bias) with |C| >= 1 clipped to 1-eps; :125-132 p = 1 - norm.cdf(z) (one-sided); :135-159 coherence_bias = 1/(2 n - 2); :9-34 Benjamini_Hochberg_procedure on p_values.flatten() (threshold line linspace(0, alpha, size+1)[1:]); :63-86 adjust_for_multiple_comparisons'
+  - 'scipy 1.17.1 .venv/lib/python3.12/site-packages/scipy/stats/_mstats_basic.py:1043 linregress(x, y): :1167 np.amax(x) on the x array raises ValueError when the band holds zero bins (probe); :1171-1182 masked: fit on unmasked points (:1176) or all-masked -> LinregressResult(slope=None, ...) -> NaN after np.asarray(dtype=float) at connectivity.py:972'
+  deviation_from_documented: '(1) ''unsigned'' keyword/label vs signed antisymmetric output (A[j,i] = -A[i,j]; already REVIEW M6). (2) ''bivariate'' keyword vs implementation: the Benjamini-Hochberg threshold is computed over all channel pairs jointly, so a pair''s delay (and whether it is NaN) depends on which other channels are in the dataset (probe: var2_bivariate T=256 full band pair alone -0.4725, same pair plus 5 iid channels NaN; narrowband_f0-0.1 T=256 full band -0.0277 vs -0.9866; gauss_ar1_pair T=1024 full band -1.793 vs NaN). (3) ''statistically significant coherence values'' is implemented as: one-sided Fisher-z test with bias 1/8, BH-FDR 0.05 over all frequencies x pairs, then only the LARGEST contiguous significant run, decimated to every s-th bin, minimum 3 points; none of these rules is documented. (4) Frequency grid/endpoints as for PSI: n_fft/2 bins (not 125 bins from 4/T), strict endpoints so f = 0.25 is in neither half band and DC is excluded. (5) Missing outputs are frequent and undocumented: all-NaN pairs whenever no run of >= 3 ''independent'' significant bins exists (probe NaN fractions: iid_gaussian 20/20 for most T and bands, var2_bivariate 2/2 for the high band at T >= 256, narrowband_f0-0.25 6/6 at T >= 1024, logistic_maps 2/2 everywhere); bands with zero bins raise ValueError (whole matrix NaN) and bands with one bin give all-NaN (EEG bands 0.5-2, 2-4, 4-6 /1024 at T=512 and T=1024).'
+  deviation_from_canonical: 'Core estimator (OLS slope of unwrapped coherency phase vs frequency over significant frequencies, divided by 2 pi) matches the canonical group-delay idea; intercept is free. Differences: significance is FDR-controlled across all pairs of the dataset (a pair''s estimate depends on unrelated channels); only the largest contiguous significant cluster is used; the ''independent frequency'' spacing is band-relative ((fmax-fmin)/50 rounded up to bins) rather than the multitaper resolution 2W = 6/T, so at T = 64 adjacent, strongly correlated bins count as independent (s = 1 < 6) and iid_gaussian yields spurious finite delays (probe T=64 full band: A[0,2] = 0.716, A[2,3] = -0.744), while at large T the spacing exceeds the coherence bandwidth of narrowband couplings so they never reach 3 points (narrowband_f0-0.25 all NaN at T >= 1024); phase is unwrapped across the whole in-band grid before masking (check stage: this does NOT change the slope, because the kept points lie in one contiguous significant run and a grid unwrap equals the run''s own unwrap up to a constant 2 pi k absorbed by the free intercept; max difference 2.8e-14 over 125 replica runs); regression is unweighted (no coherence weighting). Gotman''s exact selection and weighting rules are not re-checked (open question).'
+  units_and_range: Samples (fs = 1; cycles/sample frequency axis), signed, unbounded in principle (|delay| limited in practice by the phase slope over the band); antisymmetric (A[j,i] = -A[i,j] exactly, probe max|A + A.T| = 0 when finite); NaN on the diagonal and for every pair without a qualifying significant run; whole matrix NaN when the band has no bins (exception).
+  direction_convention: 'S_ij = X_i X_j^*; if x_j(t) = x_i(t - tau) then arg C_ij(f) = +2 pi f tau, slope = 2 pi tau and A[i,j] = +tau. Probe delayed_noise T=256 band 0-0.25 (x0 leads x1, x2, x3 by 1, 3, 5): A[0,1] = +1.033, A[0,2] = +3.008, A[0,3] = +5.081, A[1,2] = +1.973, A[2,3] = +2.075, A[1,0] = -1.033. So A[i,j] > 0 means row i leads column j by A[i,j] samples. For var2_bivariate (X -> Y) the population group delay from the true spectrum is +1.13 samples (A[0,1] > 0, X leads); pyspi''s A[0,1] = -0.47 at T=256 full band is a finite-sample artefact of the significance selection, not a property of group delay (check stage, popgd runs). Workflow 4b challenge probe (scratchpad wf4b_mid-eeg/gd_localslope.py): on the 7-bin run pyspi kept at T = 256 (f = 0.176-0.199) the true VAR coherency phase has local slope +1.53 samples (whole band +1.13), while the replica gives -0.4725 (full band) and -0.5550 (low band), so the negative sign is not a local property of the true phase.'
+  symmetry_expected: antisym
+  already_documented: docs/storage_comparison/REVIEW.md M6 (directional/antisymmetric reverse slope = negative; all-NaN cases in saved data; unsigned label conflicts with signed delay); tests/README.md:249 (the three gd_multitaper_delay_* goldens are 'partial_nan' snapshots at both sizes; table rows :481-483); DEPENDENCY_COMPATIBILITY_REVIEW.md:51 (np.in1d removal broke group delay under NumPy 2; pyspi/_spectral_compat.py shim); KNOWN_ISSUES 'tests/README.md worth knowing' (spectral cache first insert keyed by self.measure)
+  new_finding_candidates:
+  - 'CANDIDATE (new): group delay is not bivariate. Benjamini-Hochberg runs on p_values.flatten() over every (frequency, pair) entry (statistics.py:26-34, called from connectivity.py:1473), so adding unrelated channels changes the FDR threshold of an existing pair. Probe (pair alone vs pair + 5 iid_gaussian channels): var2_bivariate T=256 band 0-0.5 -0.4725 vs NaN, band 0-0.25 -0.5550 vs -0.0427; gauss_ar1_pair T=1024 band 0-0.5 -1.7927 vs NaN; narrowband_f0-0.1 T=256 band 0-0.5 -0.0277 vs -0.9866. PSI under the same probe is unchanged.'
+  - 'CANDIDATE (pack hypothesis 2 confirmed by code and an independent re-implementation): Fisher-z with coherence_bias(5) = 0.125, one-sided p, BH 0.05, largest contiguous run, decimation by s = ceil(((fmax-fmin)/50) n_fft), minimum 3 points, OLS slope of unwrapped phase, delay = slope/(2 pi), antisymmetric fill, NaN when no group. A numpy/scipy re-implementation (no spectral_connectivity) reproduced pyspi''s NaN pattern exactly and finite values to <= 4e-13 on 6 dataset/T combinations x 3 bands (feasibility probe p6_indep.py).'
+  - 'CANDIDATE (pack hypothesis 3 confirmed): narrow EEG bands fail. 0 in-band bins -> ValueError ''zero-size array to reduction operation maximum'' from scipy mstats linregress (_mstats_basic.py:1167) -> whole matrix NaN in Calculator; 1 bin -> no run of 3 -> all-NaN matrix. Probe on delayed_noise: bands (0.5-2), (2-4), (4-6)/1024 raise at T=512 and are all-NaN at T=1024.'
+  - 'CANDIDATE (new): the ''independent frequency'' step is band-relative ((fmax-fmin)/50) instead of the multitaper bandwidth 2W = 6/T. At T=64 (s = 1) correlated adjacent bins pass as 3 independent points and iid_gaussian gives finite spurious delays (probe full band 4/20 entries finite: A[0,2] = 0.716, A[2,3] = -0.744; high band 6/20 finite); at T >= 1024 narrowband couplings never span 3 decimated points (narrowband_f0-0.25 6/6 NaN at T >= 1024; narrowband_f0-0.1 6/6 NaN in the 0.25-0.5 band at every T and in the full band at T=4096, finite in the 0-0.25 band).'
+  - 'CANDIDATE: the coupling frequency 0.25 is excluded from both half bands (strict endpoints, connectivity.py:1329-1331); narrowband_f0-0.25 gives all-NaN in all three bands at T >= 1024 (probe NaN table).'
+  - 'CANDIDATE (hypothesis, not demonstrated): unwrap is applied over the whole in-band grid including non-significant noisy bins (connectivity.py:954) before masking; a 2 pi jump introduced by noise between two kept points inside the run would bias the slope. To be tested with a synthetic coherency whose phase crosses pi inside the significant run.'
+  - 'CANDIDATE (minor): the returned matrix is a view of the cached delay array and np.fill_diagonal writes into it (spectral.py:100-101; probe np.shares_memory True).'
+  proposed_checks:
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    - gauss_ar1_pair
+    - iid_gaussian
+    - narrowband_f0-0.1
+    - narrowband_f0-0.25
+    - shared_envelope
+    - bivariate_gaussian
+    path: kernel
+    reference: 'from-scratch numpy/scipy implementation of the literal algorithm: scipy.signal.windows.dpss(T, 3, 5) multitaper coherency; strict band; Fisher z with bias 1/8; scipy.stats.norm one-sided p; hand-written Benjamini-Hochberg over the flattened (frequency x pair) array; scipy.ndimage.label largest run; every s-th point; >= 3; numpy.unwrap; scipy.stats.linregress; delay = slope/(2 pi), antisymmetric fill (no spectral_connectivity import)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'identical NaN pattern and finite values within 1e-10 absolute for all 3 bands and T in {64, 256, 1024, 4096} (trace-feasibility probe: NaN pattern equal, max|diff| <= 4e-13)'
+  - datasets:
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic: pure delays d = (0, 1, 3, 5) samples, so the true group delay of pair (i, j) is d_j - d_i'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'sign(A[i,j]) = sign(d_j - d_i) for every pair and band (A[i,j] > 0 means row i leads column j); |A[i,j] - (d_j - d_i)| < 0.2 samples at T >= 256 (probe T=256 band 0-0.25: 1.033, 3.008, 5.081, 1.973, 4.046, 2.075)'
+  - datasets:
+    - delayed_noise
+    path: kernel
+    reference: 'analytic canonical group delay: Gotman-style OLS of the unwrapped phase over all in-band bins with significant coherence, without cross-pair FDR, cluster or decimation rules (numpy only)'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: pyspi and canonical estimates agree within 0.1 samples on delayed_noise at T >= 256 (pure delay, high coherence), showing the extra rules do not bias the clean case
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - narrowband_f0-0.1
+    - delayed_noise
+    path: pipeline
+    reference: 'self-consistency: the pair evaluated alone vs embedded with the 5 iid_gaussian channels of the same T (a bivariate measure must not change)'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'fails (documents channel-set dependence): probe var2_bivariate T=256 full band -0.4725 vs NaN, narrowband_f0-0.1 T=256 full band -0.0277 vs -0.9866; delayed_noise unchanged (all p-values tiny)'
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic null: independent white series have no coherence, so the canonical output is ''no significant frequencies'' (NaN or 0); count finite entries per T and band'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: finite (false-positive) delays occur at T=64 (probe 4/20 full band, 6/20 high band) where the decimation step is 1 bin < 2W = 6 bins; all NaN at T >= 256
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic bin count for the EEG bands (Hz/1024: 0.5-2, 2-4, 4-6) at T = 64, 256 and truncations to 512, 1024'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 0 bins -> ValueError (Calculator all-NaN); 1-2 bins -> all-NaN (fewer than 3 points); >= 3 bins -> finite only when 3 decimated significant points exist
+  - datasets:
+    - narrowband_f0-0.25
+    - narrowband_f0-0.1
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic: a sinusoid pair with phase shift Delta has coherency phase Delta at f0 only; the group delay over a band containing f0 is ill-defined/zero-slope; f0 = 0.25 lies outside both half bands under strict endpoints'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: narrowband_f0-0.25 all NaN at T >= 1024 for every band; narrowband_f0-0.1 NaN in the 0.25-0.5 band at every T and in the full band at T=4096; record NaN fractions per band and T
+  - datasets:
+    - trending
+    - scaled_offset
+    path: pipeline-detrend
+    reference: same independent implementation applied to raw, z-scored and detrended inputs
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: normalise on/off identical to 1e-12 (probe 4e-17); detrend changes trending (probe max|diff| 1.07) and the reference tracks both paths
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/spectral_psi_gd.py:gd_pyspi (numpy/scipy replica: Fisher z with coherence_bias(5) = 1/8, scipy.stats.norm one-sided p, hand-written Benjamini-Hochberg over the flattened frequency x pair array, largest contiguous run, every s-th bin, >= 3 points, numpy.unwrap over the in-band grid, OLS slope / 2 pi; no spectral_connectivity import); analytic delays (delayed_noise, long-delay probe), _kernels_spectral.group_delay_fit (plain Gotman-style OLS) and the population group delay from make_data S_true (var2_bivariate, var2_chain); EEG bands via audit/checks/probes/spectral_psi_gd_probe.py:eeg_band'
+  check_data: delayed_noise, var2_bivariate, var2_chain, gauss_ar1_pair, iid_gaussian, bivariate_gaussian, narrowband_f0-0.1, narrowband_f0-0.25, shared_envelope, trending, scaled_offset at T = 64/256/1024/4096; long-delay probe data at T = 1024; EEG bands of pyspi/workflow/retained185.yaml at T = 256/1024/4096
+  agreement_criterion: 'replica: tolerance rtol 1e-9, atol 1e-10 with identical NaN mask; delayed_noise: direction and |A[i,j] - (d_j - d_i)| <= 0.2; plain OLS: atol 0.1; null: qualitative all-NaN; population VAR delay: direction; embedding/permutation: exact (self-consistency); EEG bands with 0 bins: qualitative ValueError and all-NaN'
+  closeness: 'replica 114/114 rep + 11/11 alone/base + 37/37 EEG tolerance runs pass, max_abs 4.2e-11 (spectral.gd|delayed_noise|4096|pipeline-detrend|eeg:0.00195312-0.00390625); max_rel 1.0 in the 12 spectral.gd|shared_envelope|*|kernel|rep:* runs (pair (0,2), x2 bit-identical to x0: pyspi 0.0, |reference| <= 8.3e-18, max_abs <= 1.3e-12 in these runs), max_rel 3.7e-11 over the other 150 replica runs (same eeg run 3.68e-11); NaN masks identical in every run (including all-NaN cases). NaN fractions from the rep runs (ref_n_finite of P(P-1) off-diagonal entries): narrowband_f0-0.1 (P = 3) high band 0/6 finite at every T, full band 6/6 at T = 64/256/1024 and 0/6 at T = 4096, low band 6/6 at every T; shared_envelope (P = 4) 12/12 at T = 64 full/low, 6/12 at T = 64 high, 8/12 at T = 256 low, 6/12 in the other 7 runs (the six entries involving x3 are NaN); narrowband_f0-0.25 (P = 3) 6/6 at T = 64/256 and 0/6 at T = 1024/4096 in every band. unwrap over the grid vs over the run only: max 2.8e-14. delayed_noise: direction 9/9 (agreement 1.0), max |A - (d_j - d_i)| 0.081 (T=256 low band), 0.045 (T=1024), vs plain OLS max_abs 0.033; long delays up to 80 samples recovered (60.03, 77.94; pair with delay 100 NaN). Null iid_gaussian: all-NaN for T >= 256 (9/9) and at T=64 low band; T=64 full 4/20 and high 6/20 finite (max |delay| 0.96) with step 1, 0/20 with step 2W = 6. Embedding: 6/8 fail (var2_bivariate T=256 full -0.4725 -> NaN, low -0.5550 -> -0.0427; narrowband_f0-0.1 T=256 full -0.0277 -> -0.9866; gauss_ar1_pair T=1024 full -1.7927 -> NaN), delayed_noise 2/2 unchanged; the replica reproduces the embedded values. Population VAR delay (+1.13 samples for X -> Y): 3/12 popgd pass; var2_bivariate T=256 sign wrong (-0.47, -0.56), NaN at T >= 1024 in the full band; population |C| 0.39-0.62 against a one-sided per-bin threshold |C| > 0.61 before BH with 5 tapers.'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 6 names the group-delay significance machinery: BH-FDR pooled over pairs, the largest run only, and a band-relative step.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: 'gd_multitaper_delay_fs-1_fmin-0-000488_fmax-0-00195=0 (degenerate): all-NaN at the EEG window T=1024 because the strict band holds 1 bin (spectral.gd|*|eeg:*
+    runs) | gd_multitaper_delay_fs-1_fmin-0-00195_fmax-0-00391=0 (degenerate): same, 1 strict in-band bin at T=1024 gives all-NaN | gd_multitaper_delay_fs-1_fmin-0-00391_fmax-0-00586=0
+    (degenerate): same, 1 strict in-band bin at T=1024 gives all-NaN'
+  what_changed: 'The estimator core (OLS slope of the unwrapped coherency phase, delay = slope/2 pi, A[j,i] = -A[i,j]) is the canonical group delay and is exact on pure delays, but which bins enter is decided by library machinery that neither the supplement nor Gotman 1983 (as cited) specifies: a per-bin Fisher-z test with only 5 tapers (power does not grow with T), Benjamini-Hochberg pooled over all channel pairs (a pair''s delay changes or becomes NaN when unrelated channels are added), only the largest contiguous run, and decimation by the band-relative step ceil(((fmax-fmin)/50) n_fft) instead of the multitaper bandwidth (spurious delays on white noise at T=64 and in EEG bands at T=1024; narrowband couplings never reach 3 points at large T). Result: frequent NaN, unstable or wrong-sign delays for moderately coherent couplings (var2_bivariate). Signed and antisymmetric despite the ''unsigned'' label (REVIEW M6). EEG consequence (elaborates the all-NaN cases of REVIEW M6): the retained selection holds 10 gd bands with edges at k/2048 cycles/sample; at the workflow window T = 1024 (2048 Hz, 0.5 s) the 0.5-2, 2-4 and 4-6 /1024 bands (1-4, 4-8 and 8-12 Hz) hold one bin each under the strict endpoint rule and are all-NaN by construction (spectral.gd|*|eeg:* runs), and at T = 512 they hold no bin (analytic bin count), so the delegate raises ValueError and the Calculator returns an all-NaN matrix (as observed at T = 256). Rubric anchor 6 (group-delay significance machinery).'
+  new_finding: true
+  definition_under_review: true
+  check_cost: 'cheap: all 446 family runs take ~40 s on the pyspi side and ~10 s on the reference side; T up to 4096'
+  symmetry_observed: 'antisym: max|A + A.T| = 0.0 exactly over all 234 square GD matrices in out/pyspi (158 of them with at least one finite off-diagonal entry); NaN pattern symmetric in every run; max|A - A.T| = 155.9'
+  direction_observed: 'A[i,j] = +tau when row i leads column j by tau samples: delayed_noise 9/9 runs (max error 0.081 samples), long-delay probe 9/9 finite pairs agree with the analytic delay sign (delays 15-80); var2_bivariate (X -> Y, population delay +1.13) gives A[0,1] = -0.47 (T=256 full band, wrong sign) and NaN at T >= 1024 full band, so the sign is reliable only where coherence is high over a broad run'
+  candidate_resolutions:
+  - candidate: 'not bivariate: Benjamini-Hochberg pooled over all (frequency x pair) entries, so other channels change a pair''s delay'
+    outcome: confirmed
+    evidence: spectral.gd|*|embed:* 6/8 fail exact equality (e.g. var2_bivariate|256 full -0.4725 -> NaN; narrowband_f0-0.1|256 full -0.0277 -> -0.9866; gauss_ar1_pair|1024 full -1.7927 -> NaN); ref_replica_embedded_01 reproduces each embedded value; PSI under the same probe unchanged (8/8)
+  - candidate: library pipeline (Fisher z bias 1/8, BH 0.05, largest run, decimation, >= 3 points, OLS, slope/2 pi, antisymmetric fill, NaN when no group) reproduced independently
+    outcome: confirmed
+    evidence: spectral.gd|*|rep:* 114/114, alone/base 11/11, eeg tolerance 37/37; max_abs 4.2e-11; NaN masks identical
+  - candidate: 'narrow EEG bands fail: 0 bins -> ValueError (whole matrix NaN), 1 bin -> all-NaN'
+    outcome: confirmed
+    evidence: spectral.gd|delayed_noise|256|pipeline-detrend|eeg:{0.000488281-0.00195312, 0.00195312-0.00390625, 0.00390625-0.00585938} ValueError + all-NaN (3/3 qualitative); same bands at T=1024 (1 bin) and 0.00585938-0.0146484 at T=256 (2 bins) all-NaN, equal to the replica. Diagnoses part of the all-NaN cases already noted in REVIEW M6.
+  - candidate: 'band-relative ''independent frequency'' step instead of 2W = 6/T: spurious delays at T=64, narrowband couplings lost at large T'
+    outcome: confirmed
+    evidence: 'spectral.gd|iid_gaussian|64|pipeline|null:full 4/20 and null:high 6/20 finite (step 1) vs 0/20 with step 6 (ref_n_finite_replica_step_2W); EEG bands 0.000488-0.0342 and 0.0146-0.0342 on iid_gaussian T=1024: 4/20 finite, 0 with step 2W; narrowband_f0-0.25 excl25 runs: largest run 9-29 bins but at most 2 (T=1024) or 1 (T=4096) decimated points'
+  - candidate: f = 0.25 excluded from both half bands; narrowband_f0-0.25 all-NaN at T >= 1024
+    outcome: confirmed
+    evidence: 'spectral.gd|narrowband_f0-0.25|{1024,4096}|pipeline|excl25:* 6/6: half bands do not contain 0.25 and are all-NaN; the full band contains 0.25 but is all-NaN as well because of the decimation step, so the exclusion is not the only cause'
+  - candidate: np.unwrap over non-significant bins before masking biases the slope
+    outcome: refuted
+    evidence: ref_unwrap_grid_vs_run_max_abs <= 2.8e-14 over all 125 replica runs (refs/spectral_psi_gd.py:gd_pyspi unwrap='run'); the kept points lie in one contiguous significant run, where the grid unwrap equals the run's own unwrap up to a constant 2 pi k absorbed by the free intercept
+  - candidate: returned matrix is a view of the cached delay array
+    outcome: confirmed
+    evidence: 'spectral.gd|delayed_noise|256|pipeline|shares:full: shares_memory 1; second-result mutation visible on the third call 1; first-result mutation not visible (first insert keyed by self.measure)'
+  checks_run:
+  - run_ids:
+    - spectral.gd|*|rep:*
+    - spectral.gd|*|alone:*
+    - spectral.gd|*|base:*
+    reference: audit/checks/refs/spectral_psi_gd.py:gd_pyspi
+    outcome: pass 125/125, max_abs 2.0e-11, NaN masks identical; max_rel 1.0 in the 12 shared_envelope rep runs (degenerate pair (0,2), |reference| <= 8.3e-18, max_abs <= 1.3e-12), 7.4e-12 in the other 113
+  - run_ids:
+    - spectral.gd|delayed_noise|*|pipeline|dir:*
+    - spectral.gd|delayed_noise|*|pipeline|delay:*
+    reference: audit/checks/refs/spectral_psi_gd.py:handle dir/delay (analytic d_j - d_i)
+    outcome: pass 18/18, max |error| 0.081 samples
+  - run_ids:
+    - spectral.gd|delayed_noise|*|pipeline|gotman:*
+    reference: _kernels_spectral.group_delay_fit (plain OLS over all in-band bins)
+    outcome: pass 9/9, max_abs 0.033
+  - run_ids:
+    - spectral.gd|iid_gaussian|*|pipeline|null:*
+    reference: audit/checks/refs/spectral_psi_gd.py:handle null (analytic all-NaN)
+    outcome: 10/12 pass; T=64 full (4/20) and high (6/20) spurious finite delays
+  - run_ids:
+    - spectral.gd|var2_*|*|pipeline|popgd:*
+    reference: population group delay from make_data S_true via _kernels_spectral.group_delay_fit
+    outcome: 3/12 pass; wrong sign at var2_bivariate T=256, NaN elsewhere
+  - run_ids:
+    - spectral.gd|*|embed:*
+    - spectral.gd|*|perm:*
+    reference: pyspi self-consistency (same-lineage)
+    outcome: embed 2/8 pass (fails confirm channel-set dependence); perm 3/3 pass
+  - run_ids:
+    - spectral.gd|narrowband_f0-0.25|*|pipeline|excl25:*
+    reference: audit/checks/refs/spectral_psi_gd.py:handle excl25 (strict band rule)
+    outcome: pass 6/6
+  - run_ids:
+    - spectral.gd|narrowband_f0-0.1|*|kernel|rep:*
+    - spectral.gd|shared_envelope|*|kernel|rep:*
+    - spectral.gd|narrowband_f0-0.25|*|kernel|rep:*
+    reference: audit/checks/refs/spectral_psi_gd.py:gd_pyspi (ref_n_finite; NaN fraction per band and T read from the replica runs, no dedicated run family)
+    outcome: 'NaN fractions as expected: narrowband_f0-0.1 high band all-NaN at every T and full band all-NaN at T = 4096 only; shared_envelope 6/12 finite from T = 256 on (8/12 at T = 256 low), all 12 at T = 64 full/low; narrowband_f0-0.25 all-NaN at T >= 1024 in every band'
+  - run_ids:
+    - spectral.gd|delayed_noise|1024|pipeline|longdelay:full
+    reference: audit/checks/probes/spectral_psi_gd_probe.py:build_longdelay; analytic sign
+    outcome: pass, agreement 1.0 (9 finite pairs, delay-100 pair NaN)
+  - run_ids:
+    - spectral.gd|*|eeg:*
+    reference: audit/checks/refs/spectral_psi_gd.py:gd_pyspi and bin count; audit/checks/probes/spectral_psi_gd_probe.py:eeg_band
+    outcome: pass 40/40 (3 qualitative ValueError/all-NaN, 37 tolerance)
+  - run_ids:
+    - spectral.gd|delayed_noise|256|pipeline|spy:low
+    - spectral.gd|delayed_noise|256|pipeline|shares:full
+    reference: audit/checks/probes/spectral_psi_gd_probe.py:spy, shares
+    outcome: pass 2/2
+optimisation:
+  complexity_P_T: 'Per band: O(K*P*T log T) FFT + O(K*n_fft*P^2) taper-level CSM + per unordered pair (P(P-1)/2) a Python callback: scipy.ndimage.label cluster search and a masked scipy.stats.mstats.linregress over the band bins (O(P^2 * m) work with a large per-pair constant). Measured P exponent 1.44 (fit 8->32), 2.26 between 32x1024 and 118x1024, T exponent 0.45 (the per-pair Python overhead does not grow with T); in the cProfile run at 118x1024 the per-pair callbacks (41.3% + 25.7%) exceed the CSM (coherency 18.7%), but cProfile inflates those callbacks: un-profiled they took 1.32-1.55 s per band, 22-29% of the pyspi gd bands of the Workflow 4c paired run, while the Multitaper plus coherency is about 53% of the ranking basis (11.06 -> 5.25 s per window when the 3 bands read one shared coherency; spectral_csm-shared-csm speedup_basis), so without the profiler the coherency is the larger part.'
+  hotspot_1: .venv/lib/python3.12/site-packages/numpy/ma/extras.py:apply_along_axis -> scipy/stats/_mstats_basic.py:linregress (called from spectral_connectivity connectivity.py:960-967, 6903 calls) 41.3% of the profiled SPI call at 118x1024; linregress itself is 27.0%, the rest masked-array bookkeeping. These are cProfile shares, which inflate the per-pair callbacks (2.76 s of the 4.12 s profiled band against 1.32-1.55 s per band un-profiled, see spectral_psi_gd-1 speedup_basis). hotspot_owner names the call-site owner (spectral_connectivity), where the replacement lands; the time itself is in third-party:numpy and third-party:scipy frames
+  hotspot_2: '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:_find_significant_frequencies 33.4% at 118x1024, of which np.apply_along_axis of _find_largest_independent_group (scipy.ndimage.label per pair) 25.7%; coherency 18.7% (cProfile shares, which inflate the per-pair callbacks and understate the coherency; un-profiled, the Multitaper plus coherency is about 53% of the ranking basis, see spectral_csm-shared-csm speedup_basis) | opaque_share is the 8x1024 profile-JSON value (audit/profiles/spectral.gd__8x1024__profile.json, builtin tottime over the whole profile); the 118x1024 pstats named in profile_file gives a builtin tottime share of 0.318 of the compute_spi frame (audit/profiles/micro/prof_spectral__index.json). Both are lower bounds: numpy ufunc work sits in the self time of the calling Python frame.'
+  hotspot_owner: third-party:spectral_connectivity
+  opaque_share: 0.204
+  profile_file: audit/profiles/micro/prof_spectral.gd__118x1024.pstats
+  basis_scope_note: 'The cache key includes the band (pyspi/statistics/spectral.py:46-50), so each of the 10 EEG bands pays its own build; none of them was timed and the 3 timed configured bands (3.50-3.97 s each at
+    118x1024, family-warm) are all outside the EEG selection, so the configured basis understates the EEG cost, about 10/3 of it if the EEG bands cost like the timed ones (not timed)'
+  opportunities:
+  - opportunity_id: spectral_psi_gd-1
+    opportunity: 'Replace gd''s per-pair Python callbacks by array code: vectorised masked least squares (slope and r over the significant independent bins of all P(P-1)/2 pairs at once) instead of numpy.ma.apply_along_axis + scipy.stats.mstats.linregress (connectivity.py:960-967), and a vectorised largest-cluster / independent-step / min-group search instead of np.apply_along_axis of _find_largest_independent_group with scipy.ndimage.label (connectivity.py:1360-1430, 1476-1481). The NaN pattern (min_group_size 3, empty masks) must be kept.'
+    opp_type: vectorise-batch
+    expected_speedup: '1.3-1.6x'
+    speedup_basis: 'profile:audit/profiles/micro/opp_spectral_csm-shared-csm.json (key paired; quoted as a profile basis and not tagged microbench, because it times no candidate of this avenue (README ''Optimisation columns'', profiles/micro file kinds): the per-pair callback drivers np.ma.apply_along_axis -> linregress and np.apply_along_axis -> _find_largest_independent_group timed inside the pyspi gd calls by wrapping the two numpy entry points, no profiler; a timing of the frames this avenue replaces, not a candidate) + profile:audit/profiles/micro/prof_spectral.gd__118x1024.pstats ma.apply_along_axis(linregress) 41.3% + apply_along_axis(group search) 25.7%. The profile overstates the callbacks: under cProfile they took 2.76 s of the 4.12 s band, while the un-profiled drivers took 1.32-1.55 s per band (1.54, 1.33 and 1.34 s for the 3 config bands, the same in all 3 repeats and in the shared-coherency candidate) at 118x1024, 22-29% of the pyspi gd bands of that run (4.6-6.6 s per band; Amdahl 1.28-1.41x). On the ranking basis (family-warm increments 3.97, 3.50 and 3.59 s, 11.06 s per window) the callbacks are 4.22 s, 38%, Amdahl ceiling 1.62x if the vectorised code cost nothing; the 1.3x lower bound leaves up to about 0.55 s per band (1.67 s per window) for the vectorised masked least squares and group search. The share depends on the memory state, because the callbacks are compute-bound while the coherency is memory-bound: under memory contention (a Workflow 4c cProfile re-run while other agents ran: coherency 60.6%, callbacks 32.5%) the ceiling falls toward 1.3-1.5x. The 118x1024 synthetic data give an all-NaN gd output in every band and the 32x1024 data in one of the three config bands (fmin-0_fmax-0-25; key paired, diffs.*.all_nan, empty significance masks); at 8x1024, where the output is not all-NaN, a pair''s callbacks cost 0.27 ms against 0.20-0.21 ms at 32x1024 and 118x1024, so EEG data with significant clusters may raise the callback share by about that factor. On the residual after spectral_csm-shared-csm (5.16-5.25 s per window, of which callbacks 4.22 s) this avenue''s ceiling is about 5x; it is recorded independent_of that avenue (disjoint frames: the same seconds come off a smaller residual), so residual_speedup gives its figure there (README ''Optimisation columns'', rule 4): the 1.3x lower bound''s 2.55 s per window (11.06 x (1 - 1/1.3)) taken off the 5.53 s residual the ranking stacks on (11.06 / 2x) is 1.86x, rounded down to 1.8x; the 1.6x upper end''s 4.15 s per window gives about 4x'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'closed-form masked OLS re-orders the sums of linregress; the significance mask and NaN pattern (min_group_size 3, empty masks) must be reproduced exactly. A diff should use data where gd''s output is not all-NaN (8x1024 or the 7x100 golden set): at 118x1024 the synthetic output is all-NaN and only NaN masks could be compared'
+    effort: M
+    depends_on: []
+    independent_of:
+    - spectral_csm-shared-csm
+    residual_speedup: '1.8-4x'
+  - opportunity_id: spectral_csm-shared-csm
+    opportunity: Compute the multitaper Fourier coefficients once per Data and memoise the taper-averaged CSM, power and coherency on the Data under a key without measure or band (pyspi/statistics/spectral.py:46-50, 64-83; this also removes the first-insert string key at :81 that makes the first spectral SPI on a Data compute twice). Every undirected measure, every psi/gd band, the 2x2 blocks of the bivariate directed path and the sgc nonparametric pair loop read from it; the phase-sync measures take their per-taper products from the shared coefficients.
+    opp_type: cache-sharing
+    expected_speedup: '2-3.6x'
+    speedup_basis: 'microbench:audit/profiles/micro/opp_spectral_csm-shared-csm.json key paired at 118x1024 (Workflow 4c, 3 repeats, same run): gd''s 3 config bands through pyspi on one fresh Data (18.5, 19.2 and 14.4 s) against the 3 gd segments reading one shared coherency (5.16, 5.25 and 5.17 s), 2.8-3.7x as a later consumer; gd is one in an EEG run (GroupDelay at pyspi/workflow/retained185.yaml:518, after CoherencePhase at :218), so the shared build is credited on spectral.phase. The gd segments are stable across repeats and match the ''shapes'' run''s 1.55-2.04 s per band, so against the ranking basis (family-warm increments 3.97, 3.50 and 3.59 s, 11.06 s per window) the figure is 11.06/5.25 = 2.1x, the 2x lower bound rounded down; 3.6x is the same-run upper end. The earlier ~1.2x came from the coherency share of the cProfile run (prof_spectral.gd__118x1024.pstats, coherency 18.7%), which cProfile deflates by inflating the per-pair Python callbacks (2.76 s profiled against 1.32-1.55 s un-profiled per band). Independent of spectral_psi_gd-1 (independent_of): that avenue removes the per-pair callbacks and this one the Multitaper and coherency, disjoint frames. With the larger lower bound this avenue is now stacked first; spectral_psi_gd-1 keeps its own 1.3x on the residual'
+    output_risk: bit-identical
+    risk_evidence: 'audit/profiles/micro/opp_spectral_csm-shared-csm.json: cohmag, phase, psi x3, gd x3 bit-identical with equal NaN masks at 32x1024 and 118x1024 (same library methods fed one memoised coherency); the paired run repeats it for gd x3 at 8x1024, where the output is not all-NaN, as well as at 32x1024 (where the fmin-0_fmax-0-5 and fmin-0-25_fmax-0-5 bands are not all-NaN and fmin-0_fmax-0-25 is) and 118x1024 (all-NaN in every band); key paired, diffs.*.all_nan'
+    effort: M
+    depends_on: []
+    independent_of:
+    - spectral_psi_gd-1

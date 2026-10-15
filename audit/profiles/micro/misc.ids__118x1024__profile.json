@@ -1,0 +1,123 @@
+{
+ "unit_id": "misc.ids",
+ "identifier": "ids",
+ "shape": "118x1024",
+ "warmup_shape": "8x256",
+ "wall_profiled_s": 0.03316977899521589,
+ "result_status": "ok",
+ "pstats": "audit/profiles/micro/misc.ids__118x1024.pstats",
+ "env": {
+  "omp_num_threads": "1",
+  "numba_num_threads": "1"
+ },
+ "written_by": "Workflow 3 causal-misc analyst (cProfile around harness.compute_spi, one call, after one untimed warm-up call at warmup_shape)",
+ "total_tt_s": 0.03313308900000002,
+ "top10_cumulative": [
+  {
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "tottime_s": 2.0488e-05,
+   "cumtime_s": 0.033104049,
+   "owner": "harness",
+   "opaque": false
+  },
+  {
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 1,
+   "tottime_s": 4.58e-06,
+   "cumtime_s": 0.033028791,
+   "owner": "pyspi",
+   "opaque": false
+  },
+  {
+   "function": "pyspi/statistics/misc.py:multivariate",
+   "line": 194,
+   "ncalls": 1,
+   "tottime_s": 6.130000000000001e-06,
+   "cumtime_s": 0.033023971,
+   "owner": "pyspi",
+   "opaque": false
+  },
+  {
+   "function": "pyspi/lib/ids/dependence.py:compute_IDS",
+   "line": 9,
+   "ncalls": 1,
+   "tottime_s": 0.00025891600000000004,
+   "cumtime_s": 0.033013891000000004,
+   "owner": "pyspi",
+   "opaque": false
+  },
+  {
+   "function": "pyspi/lib/ids/numpy_dependence.py:compute_IDS_numpy",
+   "line": 60,
+   "ncalls": 1,
+   "tottime_s": 0.0005253790000000001,
+   "cumtime_s": 0.032754975,
+   "owner": "pyspi",
+   "opaque": false
+  },
+  {
+   "function": "numpy/lib/_function_base_impl.py:corrcoef",
+   "line": 2911,
+   "ncalls": 1,
+   "tottime_s": 0.000498321,
+   "cumtime_s": 0.017362675,
+   "owner": "third-party:numpy",
+   "opaque": false
+  },
+  {
+   "function": "numpy/lib/_function_base_impl.py:cov",
+   "line": 2688,
+   "ncalls": 1,
+   "tottime_s": 0.014318322000000001,
+   "cumtime_s": 0.016660247,
+   "owner": "third-party:numpy",
+   "opaque": false
+  },
+  {
+   "function": "pyspi/lib/ids/numpy_dependence.py:transform",
+   "line": 16,
+   "ncalls": 1,
+   "tottime_s": 0.011149131000000001,
+   "cumtime_s": 0.011152831,
+   "owner": "pyspi",
+   "opaque": false
+  },
+  {
+   "function": "~:<built-in method numpy.array>",
+   "line": 0,
+   "ncalls": 4,
+   "tottime_s": 0.002180109,
+   "cumtime_s": 0.002180109,
+   "owner": "third-party:numpy",
+   "opaque": true
+  },
+  {
+   "function": "pyspi/lib/ids/numpy_dependence.py:center",
+   "line": 25,
+   "ncalls": 1,
+   "tottime_s": 0.001866615,
+   "cumtime_s": 0.002088541,
+   "owner": "pyspi",
+   "opaque": false
+  }
+ ],
+ "opaque_share": 0.08932780158227924,
+ "opaque_share_by_owner": {
+  "third-party:numpy": 0.08815525772438539,
+  "builtin": 0.0008764652157847398,
+  "pyspi": 0.00019044406031686322,
+  "harness": 7.303876798206164e-05,
+  "python": 3.2595813810176266e-05
+ },
+ "self_time_share_by_owner": {
+  "third-party:numpy": 0.5810399990172965,
+  "pyspi": 0.417027853937796,
+  "harness": 0.0009156405549751183,
+  "builtin": 0.0008764652157847398,
+  "python": 0.00014004127414742398
+ },
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)"
+}

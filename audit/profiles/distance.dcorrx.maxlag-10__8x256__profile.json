@@ -1,0 +1,229 @@
+{
+ "P": 8,
+ "T": 256,
+ "baseline_rss_mb": 495.5,
+ "budget_s": 120.0,
+ "data_kind": "synthetic",
+ "data_sha256": "a6c5dd874346693aeda09056450c365fa2abecb6b5b4b52908361d0ce002b1ed",
+ "edf": null,
+ "entry_sources": {
+  "dcorrx_maxlag-10": "config"
+ },
+ "env": {
+  "java": null,
+  "omp_num_threads": "1",
+  "packages": {
+   "cdt": "0.6.0",
+   "hyppo": "0.5.2",
+   "jpype1": "1.7.1",
+   "mne": "1.13.2",
+   "nitime": "0.12.1",
+   "numpy": "2.5.4",
+   "pandas": "3.0.6",
+   "pyEDM": "1.15.2.0",
+   "pyyaml": "6.0.3",
+   "scikit-learn": "1.9.1",
+   "scipy": "1.17.1",
+   "sktime": "1.2.0",
+   "spectral-connectivity": "1.1.2",
+   "statsmodels": "0.15.0",
+   "torch": "2.14.1+cpu",
+   "tslearn": "0.9.0"
+  },
+  "platform": "linux",
+  "pyspi_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+  "pyspi_version": "2.0.2",
+  "python": "3.12.3"
+ },
+ "error": null,
+ "family": "lagged_dcorr_mgc",
+ "finished_at": "2026-10-15T05:39:43+00:00",
+ "fit": null,
+ "git_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+ "hwm_reset": true,
+ "identifiers": [
+  "dcorrx_maxlag-10"
+ ],
+ "jvm_requested": false,
+ "jvm_started": false,
+ "measure_mode": "measured",
+ "mode": "profile",
+ "n_pairs": 56,
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)",
+ "opaque_share": 0.08932487580195632,
+ "opaque_share_by_owner": {
+  "builtin": 1.131091042332732e-05,
+  "pyspi": 3.9082974268429605e-06,
+  "python": 0.017100461579793332,
+  "third-party:narwhals": 0.001395085784319948,
+  "third-party:numpy": 0.03813797826886417,
+  "third-party:scipy": 0.017109449561393427,
+  "third-party:sklearn": 0.015566681399735246
+ },
+ "pair_basis": "ordered",
+ "peak_rss_delta_mb": 3.4,
+ "peak_rss_mb": 499.0,
+ "process_peak_rss_mb": 554.1,
+ "pstats": "audit/profiles/distance.dcorrx.maxlag-10__8x256.pstats",
+ "pyspi_dirty": false,
+ "reason": null,
+ "repeats": 1,
+ "repeats_extended": null,
+ "repeats_planned": null,
+ "representative": "dcorrx_maxlag-10",
+ "result_status": "ok",
+ "ru_maxrss_mb": 495.1,
+ "schema": 1,
+ "self_time_share_by_owner": {
+  "builtin": 1.131091042332732e-05,
+  "harness": 1.6354763943159915e-05,
+  "pyspi": 0.00019159366996515572,
+  "python": 0.08511322173100185,
+  "third-party:hyppo": 0.3258936328543558,
+  "third-party:joblib": 0.0001030836874064759,
+  "third-party:narwhals": 0.017741981867229747,
+  "third-party:numpy": 0.051136970549376465,
+  "third-party:scipy": 0.02012754818504757,
+  "third-party:sklearn": 0.49966430178125126
+ },
+ "shape": "8x256",
+ "spi_seed": 42,
+ "started_at": "2026-10-15T05:39:41+00:00",
+ "status": "ok",
+ "synth_seed": 20261014,
+ "t_cold_s": 112.08466498100461,
+ "t_per_pair_ms": null,
+ "threads": {
+  "affinity_cpus": 64,
+  "jvm_running": false,
+  "numba_threads": 64,
+  "omp_num_threads": "1",
+  "os_threads": 1,
+  "threadpools": [
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   }
+  ],
+  "torch_threads": 1
+ },
+ "timeout_s": 360.0,
+ "top10_cumulative": [
+  {
+   "cumtime_s": 1.814068642,
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "harness",
+   "tottime_s": 1.059e-05
+  },
+  {
+   "cumtime_s": 1.814024853,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 4.52e-06
+  },
+  {
+   "cumtime_s": 1.814020023,
+   "function": "pyspi/base.py:multivariate",
+   "line": 84,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 9.819700000000001e-05
+  },
+  {
+   "cumtime_s": 1.813914736,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 28,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 6.579800000000001e-05
+  },
+  {
+   "cumtime_s": 1.8138419780000001,
+   "function": "pyspi/statistics/distance.py:bivariate",
+   "line": 125,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.00016035300000000001
+  },
+  {
+   "cumtime_s": 1.8135404300000002,
+   "function": "hyppo/time_series/dcorrx.py:statistic",
+   "line": 86,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "third-party:hyppo",
+   "tottime_s": 0.000111824
+  },
+  {
+   "cumtime_s": 1.8134286060000002,
+   "function": "hyppo/time_series/_utils.py:compute_stat",
+   "line": 85,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "third-party:hyppo",
+   "tottime_s": 0.001969581
+  },
+  {
+   "cumtime_s": 1.7403063150000002,
+   "function": "hyppo/independence/dcorr.py:statistic",
+   "line": 123,
+   "ncalls": 616,
+   "opaque": false,
+   "owner": "third-party:hyppo",
+   "tottime_s": 0.585285888
+  },
+  {
+   "cumtime_s": 1.224915935,
+   "function": "hyppo/tools/common.py:compute_dist",
+   "line": 436,
+   "ncalls": 672,
+   "opaque": false,
+   "owner": "third-party:hyppo",
+   "tottime_s": 0.003581781
+  },
+  {
+   "cumtime_s": 1.2210038140000001,
+   "function": "sklearn/utils/_param_validation.py:wrapper",
+   "line": 187,
+   "ncalls": 2688,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 0.014762683
+  }
+ ],
+ "total_tt_s": 1.814089160999999,
+ "traceback_tail": null,
+ "unit_id": "distance.dcorrx.maxlag-10",
+ "wall_cv": null,
+ "wall_median_s": null,
+ "wall_profiled_s": 1.814129549995414,
+ "wall_s": null,
+ "walls_s": null,
+ "warmup_error": null,
+ "warmup_shape": "8x1024"
+}

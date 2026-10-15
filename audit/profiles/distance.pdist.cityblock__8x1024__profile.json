@@ -1,0 +1,228 @@
+{
+ "P": 8,
+ "T": 1024,
+ "baseline_rss_mb": 442.9,
+ "budget_s": 120.0,
+ "data_kind": "synthetic",
+ "data_sha256": "8e7e5fadc565fde86c145bcd58801cc90799abd9427b553b966b0df36ab32ada",
+ "edf": null,
+ "entry_sources": {
+  "pdist_cityblock": "config"
+ },
+ "env": {
+  "java": null,
+  "omp_num_threads": "1",
+  "packages": {
+   "cdt": "0.6.0",
+   "hyppo": "0.5.2",
+   "jpype1": "1.7.1",
+   "mne": "1.13.2",
+   "nitime": "0.12.1",
+   "numpy": "2.5.4",
+   "pandas": "3.0.6",
+   "pyEDM": "1.15.2.0",
+   "pyyaml": "6.0.3",
+   "scikit-learn": "1.9.1",
+   "scipy": "1.17.1",
+   "sktime": "1.2.0",
+   "spectral-connectivity": "1.1.2",
+   "statsmodels": "0.15.0",
+   "torch": "2.14.1+cpu",
+   "tslearn": "0.9.0"
+  },
+  "platform": "linux",
+  "pyspi_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+  "pyspi_version": "2.0.2",
+  "python": "3.12.3"
+ },
+ "error": null,
+ "family": "pdist",
+ "finished_at": "2026-10-15T04:15:30+00:00",
+ "fit": null,
+ "git_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+ "hwm_reset": true,
+ "identifiers": [
+  "pdist_cityblock"
+ ],
+ "jvm_requested": false,
+ "jvm_started": false,
+ "measure_mode": "measured",
+ "mode": "profile",
+ "n_pairs": null,
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)",
+ "opaque_share": 0.3055800776742882,
+ "opaque_share_by_owner": {
+  "builtin": 0.014317207653519638,
+  "python": 0.13869819463742988,
+  "third-party:joblib": 0.004644745692808497,
+  "third-party:narwhals": 0.004143938017685382,
+  "third-party:numpy": 0.0432943325264765,
+  "third-party:scipy": 0.06686960833893874,
+  "third-party:sklearn": 0.033612050807429614
+ },
+ "pair_basis": "multivariate",
+ "peak_rss_delta_mb": 0.0,
+ "peak_rss_mb": 442.9,
+ "process_peak_rss_mb": 442.9,
+ "pstats": "audit/profiles/distance.pdist.cityblock__8x1024.pstats",
+ "pyspi_dirty": false,
+ "reason": null,
+ "repeats": 1,
+ "repeats_extended": null,
+ "repeats_planned": null,
+ "representative": "pdist_cityblock",
+ "result_status": "ok",
+ "ru_maxrss_mb": 441.0,
+ "schema": 1,
+ "self_time_share_by_owner": {
+  "builtin": 0.014317207653519638,
+  "harness": 0.014001993410942147,
+  "pyspi": 0.019246726338064808,
+  "python": 0.34093022570714515,
+  "third-party:joblib": 0.03462348591601158,
+  "third-party:narwhals": 0.07040570331564136,
+  "third-party:numpy": 0.09336331632878508,
+  "third-party:scipy": 0.08128403159998228,
+  "third-party:sklearn": 0.33182730972990737
+ },
+ "shape": "8x1024",
+ "spi_seed": 42,
+ "started_at": "2026-10-15T04:15:30+00:00",
+ "status": "ok",
+ "synth_seed": 20261014,
+ "t_cold_s": 0.0048422939944430254,
+ "t_per_pair_ms": null,
+ "threads": {
+  "affinity_cpus": 64,
+  "jvm_running": false,
+  "numba_threads": 64,
+  "omp_num_threads": "1",
+  "os_threads": 1,
+  "threadpools": [
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   }
+  ],
+  "torch_threads": 1
+ },
+ "timeout_s": 360.0,
+ "top10_cumulative": [
+  {
+   "cumtime_s": 0.0010037750000000002,
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "harness",
+   "tottime_s": 8.639e-06
+  },
+  {
+   "cumtime_s": 0.000969227,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 2.9300000000000003e-06
+  },
+  {
+   "cumtime_s": 0.0009658780000000001,
+   "function": "pyspi/statistics/distance.py:multivariate",
+   "line": 38,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 8.220000000000001e-06
+  },
+  {
+   "cumtime_s": 0.000940968,
+   "function": "sklearn/utils/_param_validation.py:wrapper",
+   "line": 187,
+   "ncalls": 2,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 3.1689e-05
+  },
+  {
+   "cumtime_s": 0.000529912,
+   "function": "sklearn/metrics/pairwise.py:pairwise_distances",
+   "line": 2299,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 4.75e-06
+  },
+  {
+   "cumtime_s": 0.000525162,
+   "function": "sklearn/metrics/pairwise.py:_parallel_pairwise",
+   "line": 1971,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 7.15e-06
+  },
+  {
+   "cumtime_s": 0.000429265,
+   "function": "sklearn/metrics/pairwise.py:manhattan_distances",
+   "line": 1048,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 1.0680000000000001e-05
+  },
+  {
+   "cumtime_s": 0.00033477800000000004,
+   "function": "sklearn/metrics/pairwise.py:check_pairwise_arrays",
+   "line": 85,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 1.2940000000000001e-05
+  },
+  {
+   "cumtime_s": 0.00031168900000000003,
+   "function": "sklearn/utils/validation.py:check_array",
+   "line": 733,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 3.7248e-05
+  },
+  {
+   "cumtime_s": 0.000192864,
+   "function": "sklearn/utils/_param_validation.py:validate_parameter_constraints",
+   "line": 28,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 1.735e-05
+  }
+ ],
+ "total_tt_s": 0.0010183550000000007,
+ "traceback_tail": null,
+ "unit_id": "distance.pdist.cityblock",
+ "wall_cv": null,
+ "wall_median_s": null,
+ "wall_profiled_s": 0.0010601140020298772,
+ "wall_s": null,
+ "walls_s": null,
+ "warmup_error": null,
+ "warmup_shape": "8x1024"
+}

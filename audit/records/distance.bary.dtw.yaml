@@ -1,0 +1,183 @@
+unit_id: distance.bary.dtw
+status: profiled
+correctness:
+  metric_name_standard: Summary (time-mean or time-max) of the DTW barycenter (DBA / Fréchet mean under DTW) of two z-scored series; squared variant summarises its square
+  canonical_ref: 'Petitjean, Ketterlin & Gançarski 2011, Pattern Recognit. 44(3):678-693 (DBA, §4 Alg. 5); Schultz & Jain 2018, Pattern Recognit. 74:340-358 (Fréchet function, MM algorithm Alg. 2). Mean/max summary: pyspi construction (supplement §1.2.10).'
+  canonical_definition: 'b* in argmin_b F(b) = (1/n) sum_k DTW(b, x_k)^2 with DTW(b,x)^2 = min over warping paths of sum (b_t - x_s)^2 (unconstrained); DBA/MM iterate: align each x_k to b by DTW, set b_t = average of all x_k samples aligned to t; non-convex, returns a local minimiser. SPI = mean_t b(t) or max_t b(t) (squared: of b(t)^2).'
+  documented_definition: 'supplement §1.2.10, p.7 (supplement.txt lines 321-335): "A barycenter (or Fréchet mean) [21, 22] is a (univariate) time series that minimizes the sum of squared distances between MTS ... For each pair of (bivariate) time series ... we compute the raw barycenters then summarize them by taking their mean (modifier mean) and maximum (max), yielding seven SPIs" (keywords: undirected, nonlinear, unsigned, bivariate, time-dependent). GitBook distance-similarity.md:41-75 repeats this, adds "timepoint at which the maximum occurs (max_time)" and lists 12 identifiers bary_{euclidean,dtw,softdtw,sgddtw}_{mean,max,max_time}; neither source documents the squared (bary-sq_*) variants. Mode dtw is documented as "alignment via expectation maximization".'
+  delegate_lib: tslearn==0.9.0 tslearn.barycenters.dtw_barycenter_averaging (Majorize-Minimize variant; defaults n_init=1, max_iter=30, tol=1e-5, barycenter_size=T, init=None, metric_params=None) with numba 0.68.0 _njit_dtw_path
+  implemented_as: 'z-scored pair (ddof=1). Init b0 = nanmean of the two series = Euclidean barycenter (dba.py:23-25, 707). Up to 30 iterations: DTW path of b against each x_k (squared-Euclidean local cost, no global constraint), cost = mean_k DTW^2 (weights ones/2); valence V = sum of path counts per barycenter index, b <- diag(1/V) sum_k W_k x_k (Petitjean averaging); stop when |cost_prev - cost| < 1e-5 (absolute) or the cost increases (ConvergenceWarning). The returned b is the update after the last assignment step. Single initialisation; deterministic; input order irrelevant (probe2 order-diff 0). Then nanmean/nanmax of b or b**2.'
+  implementation_trace:
+  - pyspi/statistics/distance.py:4-9 imports euclidean_barycenter, dtw_barycenter_averaging, dtw_barycenter_averaging_subgradient, softdtw_barycenter from tslearn.barycenters
+  - pyspi/statistics/distance.py:211-215 class Barycenter(Directed, Signed); class labels ['distance','signed','undirected','temporal','nonlinear']
+  - pyspi/statistics/distance.py:220-221 mode 'dtw' -> self._fn = dtw_barycenter_averaging
+  - pyspi/statistics/distance.py:230-234 squared=True sets preproc x**2 and identifier prefix 'bary-sq'
+  - 'pyspi/statistics/distance.py:236-243 statistic: mean -> np.nanmean(preproc(bc)); max -> np.nanmax(preproc(bc)); max_time -> np.argmax(preproc(bc)) (not in any config)'
+  - pyspi/statistics/distance.py:245 identifier suffix _{mode}_{statistic}
+  - 'pyspi/statistics/distance.py:247-263 bivariate: looks up data.barycenter[mode][(i,j)]; on miss z = data.to_numpy(squeeze=True); bc = self._fn(z[[i, j]]) with library defaults; caches bc under (i,j) AND (j,i) (line 261); returns statfn(bc)'
+  - pyspi/base.py:27-48 parse_bivariate (wraps raw arrays in a Data object, default normalise=True)
+  - 'pyspi/base.py:85-94 Directed.multivariate: j outer, i inner, A[i,j] = bivariate(i, j); the first call for pair {a<b} is (i=b, j=a), so the cached barycenter is computed from z[[b, a]] and reused for A[a,b]'
+  - pyspi/data.py:59-71 Data defaults detrend=False, normalise=True; pyspi/data.py:184-195 optional scipy detrend then zscore(axis=1, ddof=1)
+  - pyspi/data.py:108-116 to_numpy(squeeze=True) -> (P, T) array
+  - pyspi/calculator.py:252-266 configs instantiated as Barycenter(**params); spi.labels come from the class (config labels at pyspi/config.yaml:256-261 are not applied); pyspi/calculator.py:329 every SPI's multivariate() receives the same self.dataset, so all statistics/squared variants of one mode share one cached barycenter per pair
+  - 'pyspi/config.yaml:255-311 Barycenter configs: 4 modes x {mean,max} x {squared False, True} = 16 identifiers'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/utils.py:7-13 _set_weights(None, 2) -> numpy.ones(2) (unnormalised uniform weights)
+  - '.venv/lib/python3.12/site-packages/tslearn/utils/utils.py:215 to_time_series_dataset: (2, T) -> (2, T, 1)'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:485-496 dtw_barycenter_averaging signature (max_iter=30, tol=1e-5, n_init=1)
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:599-618 n_init loop keeps the lowest-loss barycenter (one init here)
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:621-631 dtw_barycenter_averaging_one_init; 702-707 to_time_series_dataset, _set_weights, _init_avg
+  - '.venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:23-25 _init_avg: numpy.nanmean(X, axis=0) when barycenter_size == T'
+  - '.venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:715-736 MM loop: _mm_assignment, _mm_valence_warping, _mm_update_barycenter; 729-734 stopping (abs change < tol, or increase -> warning + break)'
+  - '.venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:229-305 _mm_assignment: _njit_dtw_path(barycenter, X[i]) per series, cost += dist^2 * w_i, cost /= sum(w)'
+  - .venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:308-352 _subgradient_valence_warping (W_k path indicator, V_k = row sums); 355-397 _mm_valence_warping sums V_k
+  - '.venv/lib/python3.12/site-packages/tslearn/barycenters/dba.py:400-434 _mm_update_barycenter: diag(1/sum V_k) . sum_k W_k x_k'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:325-344 _njit_accumulated_matrix: local cost sum_d (s1-s2)^2, recursion min of three predecessors'
+  - '.venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py:415-443 _njit_dtw_path: mask, accumulated matrix, path; returns sqrt(cum_sum[-1,-1]) (line 435)'
+  - .venv/lib/python3.12/site-packages/tslearn/metrics/utils.py:18-50 _njit_compute_path backtracking of the optimal warping path
+  deviation_from_documented: 'Documented keyword "unsigned", but the class is Signed (issigned() True, class label "signed"); the config labels (undirected, nonlinear, unsigned, bivariate, time-dependent) are never attached to the SPI (calculator.py:252-266 uses class labels). Documented "undirected", but the class inherits Directed; symmetry comes only from the per-Data cache writing (j,i) = (i,j) (distance.py:261), not from Undirected.multivariate mirroring. Supplement says "seven SPIs" (lists euclidean_max, dtw_mean/max, softdtw_mean/max, sgddtw_mean/max); config computes 16, including bary_euclidean_mean and all eight bary-sq_* variants, none of which are documented; GitBook lists max_time variants that exist in code (distance.py:240-241) but are absent from every config. "Expectation maximization" is loose wording: tslearn runs the Majorize-Minimize mean algorithm (Schultz & Jain 2018 Alg. 2), whose update equals the DBA averaging step; the tslearn docstring itself says "Expectation-Maximization".
+    bary-sq_dtw_* undocumented.'
+  deviation_from_canonical: 'Algorithm matches DBA/MM. Differences from Petitjean 2011 practice: initialised at the Euclidean mean (Petitjean initialises from a selected input sequence), one initialisation, max_iter 30 and absolute tol 1e-5, so the result is a local minimiser near the Euclidean mean. Probe2: on narrowband_f0-0.25 (phase-shifted sinusoids) the final cost equals the cost of the Euclidean init (9.5464, 37.6819, 151.2988 at T=64/256/1024) after 2 iterations, i.e. DBA did not move; on bivariate_gaussian it lowers the cost (65.13 -> 44.69 at T=256). The mean/max summaries are pyspi-defined.'
+  units_and_range: 'z-score units. mean: near 0 but not structurally zero, either sign; max over pairs of |bary_dtw_mean| (cleanup probe p_dtwmean.py, Barycenter(mode=''dtw'', statistic=''mean'').multivariate on audit/checks/data) is 0.016-0.090 at T=64 (logistic_maps 0.0901, delayed_noise 0.0757, iid_gaussian 0.0707, narrowband_f0-0.25 0.0519, bivariate_gaussian 0.0508), 0.006-0.063 at T=256 and 0.004-0.012 at T=1024 except logistic_maps (0.0712). max: typically positive, of order max of the inputs (bary_dtw_max 1.16-3.20 on the same datasets). sq variants >= 0. Finite for finite input. Symmetric.'
+  direction_convention: 'undirected: A[i,j] = A[j,i] bit-identical via the cache; DBA with mean init is invariant to input order (probe2 max|b(x,y) - b(y,x)| = 0)'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate: for some pairs DBA returns its Euclidean initialisation unchanged, so bary_dtw_* equals bary_euclidean_* there. Evidence: probe2 narrowband_f0-0.25 pair (1,0): DBA epochs=2, cost == cost_init_eu (37.6819 at T=256), mean 0.0000; hypothesis: the initial DTW path from the mean is the diagonal, a fixed point of the MM update.'
+  - 'Candidate: bary_dtw_mean is near-degenerate (small relative to bary_dtw_max of 1.2-3.2), inheriting the zero mean of the Euclidean init; it only departs from 0 through warping-induced duplicated samples. Evidence: cleanup probe p_dtwmean.py (Barycenter(mode=''dtw'', statistic=''mean'').multivariate on audit/checks/data), max over pairs of |bary_dtw_mean| up to ~0.09 at T=64 (logistic_maps 0.0901, delayed_noise 0.0757, iid_gaussian 0.0707, narrowband_f0-0.25 0.0519, bivariate_gaussian 0.0508), shrinking to 0.004-0.012 at T=1024 except logistic_maps (0.0712). The earlier probe2 values (0.0334, -0.0052, 0.0199) were single pairs, not a bound.'
+  - 'Candidate: the label inconsistencies (Signed vs documented unsigned; Directed base vs "undirected") and the undocumented bary-sq_dtw_* identifiers, see deviation_from_documented.'
+  - 'Candidate: DBA is a local optimiser started at a fixed point; the returned barycenter may not be the Fréchet mean, so values depend on the init rule (to be quantified by the optimality check).'
+  proposed_checks:
+  - datasets:
+    - bivariate_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    - logistic_maps
+    path: kernel
+    reference: 'from-scratch numpy DBA: O(T^2) DTW dynamic programme with squared local cost and the same tie-breaking order as the tslearn backtrack, Petitjean averaging, init (x+y)/2, max_iter 30, tol 1e-5 absolute, same stopping rule'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: barycenter and all four statistics match pyspi to atol 1e-10 at T=64 and 256 (ties in path backtracking may cause isolated differences; report them)
+  - datasets:
+    - bivariate_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    path: kernel
+    reference: Fréchet cost F(b) = mean_k DTW(b,x_k)^2 from the from-scratch DTW; compare pyspi barycenter vs Euclidean mean, vs each input series, and vs best of 20 random/medoid-initialised from-scratch DBA runs
+    reference_kind: independent-impl
+    criterion: optimality
+    expected_outcome: F(pyspi) <= F(Euclidean mean) always; report relative gap to the best multi-start solution (expected small for bivariate_gaussian, possibly large for narrowband where DBA does not move)
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic: DBA of (x, x) is x (Fréchet mean of identical series)'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: barycenter equals x exactly; bary_dtw_mean = mean(x) = 0, bary_dtw_max = max(x) (probe3 confirmed max|b-x| = 0 for one case)
+  - datasets:
+    - delayed_noise
+    - narrowband_f0-0.25
+    path: pipeline
+    reference: pyspi bary_euclidean_* on the same pairs
+    reference_kind: same-lineage
+    criterion: qualitative
+    expected_outcome: for delayed copies bary_dtw_max > bary_euclidean_max (warping re-aligns the delayed copy); for narrowband pairs equality is expected if DBA stays at its init
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    - logistic_maps
+    path: pipeline
+    reference: 'SELF-CONSISTENCY (pyspi vs pyspi): numpy comparison of A and A.T from Calculator-style Barycenter(mode=''dtw'').multivariate(Data(x)) plus a cold-cache call bivariate(Data(x), i=0, j=1) vs bivariate(Data(x), i=1, j=0) on fresh Data objects (direction convention). Can establish symmetry/order-invariance only, not what A[i,j] means'
+    reference_kind: same-lineage
+    criterion: direction
+    expected_outcome: A[i,j] == A[j,i] bit-identically in multivariate (cache, distance.py:261); establishes that A[i,j] carries no direction; cold-cache swapped-order calls equal for deterministic modes (euclidean, dtw, softdtw) and possibly unequal for sgddtw
+  check_method: independent-impl
+  check_reference: audit/checks/refs/_kernels_distance.py:dba, dtw_path, dtw_dp (from-scratch DBA, Petitjean et al. 2011, tslearn init/stopping mirrored) via audit/checks/refs/barycenters.py:h_dba, h_dba_bc, h_cold; audit/checks/refs/barycenters.py:h_opt_dtw (Frechet cost and 8-start DBA); audit/checks/refs/barycenters.py:h_xx (analytic); audit/checks/refs/barycenters.py:h_vs_eucl, h_sym (same-lineage)
+  check_data: bivariate_gaussian, delayed_noise, narrowband_f0-0.25, logistic_maps (kernel T=64/256, all four identifiers + raw barycenters); the same plus iid_gaussian (pipeline T=64/256/1024); iid_gaussian processes [0,0] (analytic); bivariate_gaussian, delayed_noise, narrowband_f0-0.25 T=256 (optimality); var2_bivariate, delayed_noise, logistic_maps_chaotic, anm T=1024 (symmetry)
+  agreement_criterion: 'from-scratch DBA statistics and barycenters: rtol 1e-9, atol 1e-10; analytic DBA(x, x) = x: exact; optimality: F(pyspi) <= F(Euclidean init) for every pair, with the gap to an 8-start DBA reported; symmetry: max|A - A.T| == 0'
+  closeness: 'Statistics: 52/52 runs pass, max_abs 1.1e-16, max_rel 4.2e-14 (kernel T=64/256 four identifiers; pipeline T=64/256/1024). Raw barycenters: 8/8 pass, max_abs 4.4e-16 (*|dba-bc|*). Iterations 2-12 per pair, all stopped by the tolerance/increase rule well before max_iter 30. DBA(x, x) = x: 4/4 exact. Optimality (*|256|pipeline|opt|*): F(pyspi) <= F(Euclidean init) on every pair (pass), but the 8-start minimum is much lower: rel_gap_best 0.12-0.56 on bivariate_gaussian, 1.85-44.5 on delayed_noise (F 49.1 vs 1.08 for pair (0,1); a raw input series has F 2.14), 0.13 / 13.5 / 0.12 on narrowband_f0-0.25. Narrowband pair (0,1): DBA returns the Euclidean init (2 iterations, stalled_at_init 1 at T=64/256/1024), the init alignment paths are diagonal with 0 backtrack ties and min dF over 20 random perturbations +1e-6 > 0, so it is a strict local minimum, not a tie artefact. bary_dtw_mean range (max over pairs |A|, pipeline): 0.051-0.090 at T=64, 0.005-0.063 at T=256, 0.004-0.012 at T=1024 except logistic_maps 0.071; bary_dtw_max 1.20-3.04 at T=1024. Symmetry: max|A - A.T| = 0 on all four direction datasets; cold-cache ordered pairs on delayed_noise T=256: max|M - M.T| = 0.'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 7, first clause: pyspi runs the DBA the supplement names, and the from-scratch DBA reproduces it (52/52 runs, max_rel 4.2e-14). It differs
+    from the canonical Frechet mean: one mean-initialised run has a cost a relative 0.12-0.56 (bivariate_gaussian) and 1.85-44.5 (delayed_noise) above the best of 8
+    starts.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: pyspi/tslearn compute DBA exactly as the from-scratch reference (single run, init = (x+y)/2, absolute tol 1e-5). This is the variant the supplement names ("alignment via expectation maximization"), so the score is anchor 7 (supplement variant, value-changing difference from canonical), not 6; the descent check F(pyspi) <= F(init) is not counted as an optimality pass. The canonical target is the DTW Frechet mean argmin_b F(b); a single mean-initialised DBA run returns a local minimiser whose cost is 12-56% above an 8-start minimum on Gaussian pairs and 1.9-45x above it on delayed copies (where it is worse than simply returning one input series). The value of every bary_dtw_* identifier therefore depends on the initialisation rule; Petitjean et al. initialise from an input sequence. On one narrowband pair DBA stays at the Euclidean mean (a strict local minimum), so bary_dtw_max equals bary_euclidean_max there. bary_dtw_mean is near zero (<= 0.09) because the barycenter starts at a zero-mean average.
+  new_finding: true
+  definition_under_review: false
+  check_cost: cheap on the pyspi side (numba DTW; <= 4.6 s per run, T <= 1024); the from-scratch reference costs ~1 s per DBA at T=1024 and 8-17 s per optimality run at T=256
+  symmetry_observed: 'sym: max|A - A.T| = 0 on var2_bivariate, delayed_noise, logistic_maps_chaotic, anm (T=1024, bary_dtw_max, *|sym|* runs); cold-cache bivariate(i,j) vs bivariate(j,i) on delayed_noise T=256: max|M - M.T| = 0, i.e. DBA with mean init is order-invariant, not only cache-symmetric'
+  direction_observed: 'none: A[i,j] = A[j,i] bit-identically on var2_bivariate, delayed_noise, logistic_maps_chaotic, anm; the statistic carries no direction'
+  candidate_resolutions:
+  - candidate: DBA can return its Euclidean initialisation unchanged, so bary_dtw_* equals bary_euclidean_* there
+    outcome: confirmed
+    evidence: 'narrowband_f0-0.25 pair (0,1) only (1 of 3 pairs): stalled_at_init 1 in distance.bary.dtw|narrowband_f0-0.25|{64,256,1024}|*|dba|*; bary_dtw_max 1.3317 = bary_euclidean_max 1.3317 in distance.bary.dtw|narrowband_f0-0.25|1024|pipeline|vs-eucl|bary_dtw_max (the other two pairs move: 1.521 vs 0.864, 1.340 vs 0.628, so that qualitative run fails its all-pairs expectation)'
+  - candidate: bary_dtw_mean is near-degenerate
+    outcome: confirmed
+    evidence: 'pipeline *|dba|bary_dtw_mean runs: max over pairs |A| 0.051-0.090 (T=64), 0.005-0.063 (T=256), 0.004-0.012 (T=1024) except logistic_maps 0.071, vs bary_dtw_max 1.20-3.04 (T=1024); not identically zero'
+  - candidate: label inconsistencies and undocumented bary-sq_dtw_* identifiers
+    outcome: confirmed
+    evidence: static (distance.py:211-215, config.yaml:255-311, supplement lines 321-329); bary_dtw_mean takes both signs (e.g. bivariate_gaussian T=64 pipeline min -0.051, max 0.033)
+  - candidate: DBA returns a local minimiser that depends on the init rule
+    outcome: confirmed
+    evidence: 'distance.bary.dtw|{bivariate_gaussian,delayed_noise,narrowband_f0-0.25}|256|pipeline|opt|bary_dtw_mean: rel_gap_best 0.12-0.56, 1.85-44.5, 0.12-13.5'
+  checks_run:
+  - run_ids:
+    - distance.bary.dtw|*|{64,256}|kernel|dba|*
+    - distance.bary.dtw|*|{64,256,1024}|pipeline|dba|*
+    reference: refs/_kernels_distance.py:dba via refs/barycenters.py:h_dba (independent-impl)
+    outcome: pass 52/52; max_rel 4.2e-14
+  - run_ids:
+    - distance.bary.dtw|*|{64,256}|kernel|dba-bc|bary_dtw_mean
+    reference: audit/checks/refs/barycenters.py:h_dba_bc (independent-impl)
+    outcome: pass 8/8; max_abs 4.4e-16
+  - run_ids:
+    - distance.bary.dtw|iid_gaussian|256|kernel|xx|*|p0-0
+    reference: audit/checks/refs/barycenters.py:h_xx (analytic)
+    outcome: pass 4/4; exact
+  - run_ids:
+    - distance.bary.dtw|*|256|pipeline|opt|bary_dtw_mean
+    reference: audit/checks/refs/barycenters.py:h_opt_dtw (independent-impl, optimality)
+    outcome: pass 3/3 (descent); rel_gap_best up to 44.5
+  - run_ids:
+    - distance.bary.dtw|{delayed_noise,narrowband_f0-0.25}|1024|pipeline|vs-eucl|bary_dtw_max
+    reference: audit/checks/refs/barycenters.py:h_vs_eucl (same-lineage, qualitative)
+    outcome: delayed_noise pass (dtw_max > euclid_max on 6/6 pairs); narrowband fail (equal on 1/3 pairs only)
+  - run_ids:
+    - distance.bary.dtw|*|1024|pipeline|sym|bary_dtw_max
+    - distance.bary.dtw|delayed_noise|256|pipeline|cold|bary_dtw_max
+    reference: audit/checks/refs/barycenters.py:h_sym (same-lineage), h_cold (independent-impl)
+    outcome: pass 5/5; max|A - A.T| 0
+optimisation:
+  complexity_P_T: 'O(P^2 n_iter T^2): one DBA per unordered pair (Barycenter caches (i, j) and (j, i) on the Data object, pyspi/statistics/distance.py:Barycenter.bivariate),
+    up to 30 iterations each with two numba DTW paths (O(T^2)) and dense T x T path matrices. Measured P_exponent 2.02 (8 -> 32), T_exponent 2.45;
+    118x1024 projected from 32 by pair count (738 s fresh; 766 s family-warm from 8). The pair term dominates (t_fixed 0.24 s).'
+  hotspot_1: tslearn/barycenters/dba.py:_subgradient_valence_warping (third-party:tslearn, via _mm_valence_warping) 48.1% cumulative, 30.8% self
+    time of the profiled SPI call at 8x1024 (Python loop over the path filling dense zeros; numpy.zeros 11.2% overall)
+  hotspot_2: tslearn/barycenters/dba.py:_mm_assignment (third-party:tslearn) 28.7% (numba _njit_dtw_path hidden in it); _mm_update_barycenter
+    19.7% (dense dot 13.3% overall, diag 5.7%)
+  hotspot_owner: third-party:tslearn
+  opaque_share: 0.3442
+  profile_file: audit/profiles/distance.bary.dtw__8x1024.pstats
+  opportunities:
+  - opportunity_id: barycenters-1
+    opportunity: 'Replace the dense T x T path matrices in tslearn''s barycenter updates with path-index accumulation: _subgradient_valence_warping
+      (tslearn/barycenters/dba.py:308-352) allocates numpy.zeros((T, T)) per series per iteration and sets w_k[i, j] = 1 in a Python loop over
+      the path; _mm_update_barycenter / _subgradient_update_barycenter then multiply the dense matrices (w_k.dot(x_k), numpy.diag(1/V).dot(...)).
+      A numba pass over the path gives the valence and the warped sums in O(T).'
+    opp_type: rewrite-numba-rust-cpp
+    expected_speedup: ~2x
+    speedup_basis: profile:audit/profiles/distance.bary.dtw__8x1024.pstats _subgradient_valence_warping 48.1% + most of _mm_update_barycenter
+      19.7% removable (Amdahl 2.5-3x; DTW paths 28.7% remain)
+    output_risk: unverified-within-tolerance
+    risk_evidence: sums over path entries change order from a dense BLAS dot to a sequential pass; DBA's |cost change| < 1e-5 stopping test could
+      occasionally stop at a different iteration
+    effort: M
+    depends_on:
+    - xc-window-parallel

@@ -1,0 +1,193 @@
+{
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "golden_missing": [
+  "xcorr_max_sig-False",
+  "xcorr-sq_max_sig-False"
+ ],
+ "notes": "Timings include Data construction (make()) for both. Baseline = one identifier on a fresh Data (pays the per-pair correlate). Candidate covers the four sig-False identifiers (signed and -sq); sigonly=True is not covered.",
+ "opportunity_id": "xcorr-1",
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_xcorr-1.py",
+ "shapes": {
+  "118x1024:xcorr-sq_max_sig-False": {
+   "baseline_s": 1.1766734039993025,
+   "bit_identical": false,
+   "candidate_s": 0.06879170499450993,
+   "max_abs_diff": 6.38378239159465e-16,
+   "max_rel_diff": 3.992946238187709e-15,
+   "n_entries": 13924,
+   "nan_mask_equal": true,
+   "speedup": 17.104873386888862
+  },
+  "118x1024:xcorr-sq_mean_sig-False": {
+   "baseline_s": 1.1931071650033118,
+   "bit_identical": false,
+   "candidate_s": 0.06899556999269407,
+   "max_abs_diff": 5.0306980803327406e-17,
+   "max_rel_diff": 4.641583630045084e-15,
+   "n_entries": 13924,
+   "nan_mask_equal": true,
+   "speedup": 17.29251842009059
+  },
+  "118x1024:xcorr_max_sig-False": {
+   "baseline_s": 1.1541484170011245,
+   "bit_identical": false,
+   "candidate_s": 0.06810061700525694,
+   "max_abs_diff": 7.771561172376096e-16,
+   "max_rel_diff": 2.2079223489708996e-15,
+   "n_entries": 13924,
+   "nan_mask_equal": true,
+   "speedup": 16.947693982156306
+  },
+  "118x1024:xcorr_mean_sig-False": {
+   "baseline_s": 1.1806663909956114,
+   "bit_identical": false,
+   "candidate_s": 0.07614877399464604,
+   "max_abs_diff": 1.8041124150158794e-16,
+   "max_rel_diff": 3.311588926874769e-11,
+   "n_entries": 13924,
+   "nan_mask_equal": true,
+   "speedup": 15.504732762718191
+  },
+  "32x1024:xcorr-sq_max_sig-False": {
+   "baseline_s": 0.08521764099714346,
+   "bit_identical": false,
+   "candidate_s": 0.0066744979994837195,
+   "max_abs_diff": 8.326672684688674e-16,
+   "max_rel_diff": 4.889255243211005e-15,
+   "n_entries": 1024,
+   "nan_mask_equal": true,
+   "speedup": 12.767647994461178
+  },
+  "32x1024:xcorr-sq_mean_sig-False": {
+   "baseline_s": 0.08719853100774344,
+   "bit_identical": false,
+   "candidate_s": 0.006697627002722584,
+   "max_abs_diff": 8.153200337090993e-17,
+   "max_rel_diff": 5.2504646390270455e-15,
+   "n_entries": 1024,
+   "nan_mask_equal": true,
+   "speedup": 13.019317285405302
+  },
+  "32x1024:xcorr_max_sig-False": {
+   "baseline_s": 0.08409955499519128,
+   "bit_identical": false,
+   "candidate_s": 0.006634249002672732,
+   "max_abs_diff": 9.992007221626409e-16,
+   "max_rel_diff": 2.4907058653624683e-15,
+   "n_entries": 1024,
+   "nan_mask_equal": true,
+   "speedup": 12.676574991579333
+  },
+  "32x1024:xcorr_mean_sig-False": {
+   "baseline_s": 0.08576731399807613,
+   "bit_identical": false,
+   "candidate_s": 0.006627750000916421,
+   "max_abs_diff": 6.938893903907228e-17,
+   "max_rel_diff": 2.0466196988064465e-12,
+   "n_entries": 1024,
+   "nan_mask_equal": true,
+   "speedup": 12.940638072681839
+  },
+  "7x100:golden:xcorr-sq_mean_sig-False": {
+   "bit_identical": false,
+   "max_abs_diff": 1.3877787807814457e-17,
+   "max_rel_diff": 5.273880007702226e-16,
+   "n_entries": 49,
+   "nan_mask_equal": true
+  },
+  "7x100:golden:xcorr_mean_sig-False": {
+   "bit_identical": false,
+   "max_abs_diff": 7.806255641895632e-18,
+   "max_rel_diff": 2.896523103570394e-14,
+   "n_entries": 49,
+   "nan_mask_equal": true
+  },
+  "7x100:xcorr-sq_max_sig-False": {
+   "baseline_s": 0.0038634929951513186,
+   "bit_identical": false,
+   "candidate_s": 0.0008310249977512285,
+   "max_abs_diff": 3.3306690738754696e-16,
+   "max_rel_diff": 1.1007581712471665e-15,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 4.649069529323442
+  },
+  "7x100:xcorr-sq_mean_sig-False": {
+   "baseline_s": 0.003954950007027946,
+   "bit_identical": false,
+   "candidate_s": 0.000870403993758373,
+   "max_abs_diff": 1.3877787807814457e-17,
+   "max_rel_diff": 5.273880007702226e-16,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 4.543809581974245
+  },
+  "7x100:xcorr_max_sig-False": {
+   "baseline_s": 0.003928910999093205,
+   "bit_identical": false,
+   "candidate_s": 0.0008390049915760756,
+   "max_abs_diff": 2.220446049250313e-16,
+   "max_rel_diff": 5.243754283994905e-16,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 4.682821959989443
+  },
+  "7x100:xcorr_mean_sig-False": {
+   "baseline_s": 0.004051417010487057,
+   "bit_identical": false,
+   "candidate_s": 0.0009044729958986863,
+   "max_abs_diff": 7.806255641895632e-18,
+   "max_rel_diff": 2.896523103570394e-14,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 4.479312294405827
+  },
+  "8x1024:xcorr-sq_max_sig-False": {
+   "baseline_s": 0.006163013997138478,
+   "bit_identical": false,
+   "candidate_s": 0.001685508992522955,
+   "max_abs_diff": 2.7755575615628914e-16,
+   "max_rel_diff": 2.7874881979665613e-15,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 3.656470552502581
+  },
+  "8x1024:xcorr-sq_mean_sig-False": {
+   "baseline_s": 0.006239891008590348,
+   "bit_identical": false,
+   "candidate_s": 0.0016588799917371944,
+   "max_abs_diff": 1.3877787807814457e-17,
+   "max_rel_diff": 2.971637201261008e-15,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 3.7615083910053535
+  },
+  "8x1024:xcorr_max_sig-False": {
+   "baseline_s": 0.006062537009711377,
+   "bit_identical": false,
+   "candidate_s": 0.0016548499988857657,
+   "max_abs_diff": 1.3877787807814457e-16,
+   "max_rel_diff": 1.0047982539549082e-15,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 3.6634963977359707
+  },
+  "8x1024:xcorr_mean_sig-False": {
+   "baseline_s": 0.006150184010039084,
+   "bit_identical": false,
+   "candidate_s": 0.001652439997997135,
+   "max_abs_diff": 4.85722573273506e-17,
+   "max_rel_diff": 3.319131825624876e-15,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 3.7218803814320083
+  }
+ },
+ "written_at": "2026-10-15T10:10:28-0400"
+}

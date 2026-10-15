@@ -1,0 +1,29 @@
+{
+ "schema": 1,
+ "scripts": ["audit/profiles/micro/prof_wavelet.py", "audit/profiles/micro/retime_wavelet.py"],
+ "written_at": "2026-10-15",
+ "stage": "Workflow 3 fix stage, group base-wavelet-crosscutting (reviewer items on the wavelet 32x1024 / 118x1024 walls)",
+ "threads": {"OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1 (retime only)", "NUMBA_NUM_THREADS": "1", "JIDT": "n/a (JVM started by _bench's catalogue loader, idle on these paths)"},
+ "notes": "Isolated re-times: one process per identifier, warm-up at 8x1024, then n timed harness.compute_spi calls on a fresh Data (representative identifier, cache build included), run 2026-10-15 10:21-10:25 EDT while other Workflow 3 groups were running (load average 1.7-6.2 on 64 CPUs). Profiles: cProfile around one compute_spi call after a warm-up at 8x256, run 10:25-10:27 EDT (load 3.0-4.4); quote frame shares of the compute_spi frame from these, not walls. The re-times are 1.6-7x below the summary.json 32x1024 fresh walls and 4x below the 118x1024 psi wall, while the reviewer's independent re-times (scratch wf3_verify_base-wavelet-crosscutting) agree with these within ~40%. The cause of the summary.json inflation was not established. builtin_tottime_share is the tottime of '~' entries over the compute_spi frame (a lower bound on opaque time).",
+ "retime": {
+  "wavelet.psi":    {"identifier": "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean", "shape": "118x1024", "walls_s": [8.811], "reviewer_walls_s": [6.221, 6.366], "summary_fresh_s": 35.052, "ru_maxrss_mb": 4178},
+  "wavelet.cohmag": {"identifier": "cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5", "shape": "32x1024", "walls_s": [14.347], "reviewer_walls_s": [15.288, 15.347], "summary_fresh_s": 41.963, "ru_maxrss_mb": 5105},
+  "wavelet.phase":  {"identifier": "phase_wavelet_mean_fs-1_fmin-0_fmax-0-5", "shape": "32x1024", "walls_s": [32.236], "reviewer_walls_s": [35.055], "summary_fresh_s": 56.310, "ru_maxrss_mb": 5978},
+  "wavelet.icoh":   {"identifier": "icoh_wavelet_mean_fs-1_fmin-0_fmax-0-5", "shape": "32x1024", "walls_s": [13.944], "reviewer_walls_s": [], "summary_fresh_s": 35.712, "ru_maxrss_mb": 4688},
+  "wavelet.plv":    {"identifier": "plv_wavelet_mean_fs-1_fmin-0_fmax-0-5", "shape": "32x1024", "walls_s": [5.246], "reviewer_walls_s": [], "summary_fresh_s": 29.612, "ru_maxrss_mb": 3680},
+  "wavelet.ppc":    {"identifier": "ppc_wavelet_mean_fs-1_fmin-0_fmax-0-5", "shape": "32x1024", "walls_s": [9.565], "reviewer_walls_s": [], "summary_fresh_s": 30.278, "ru_maxrss_mb": 4164},
+  "wavelet.pli":    {"identifier": "pli_wavelet_mean_fs-1_fmin-0_fmax-0-5", "shape": "32x1024", "walls_s": [4.345, 4.224], "reviewer_walls_s": [4.467, 4.576, 3.741, 4.033], "summary_fresh_s": 21.959, "ru_maxrss_mb": 3696},
+  "wavelet.dswpli": {"identifier": "dspli_wavelet_mean_fs-1_fmin-0_fmax-0-5", "shape": "32x1024", "walls_s": [11.016], "reviewer_walls_s": [], "summary_fresh_s": 22.399, "ru_maxrss_mb": 3693},
+  "wavelet.wspli":  {"identifier": "wspli_wavelet_mean_fs-1_fmin-0_fmax-0-5", "shape": "32x1024", "walls_s": [3.621], "reviewer_walls_s": [], "summary_fresh_s": 25.462, "ru_maxrss_mb": 3693},
+  "wavelet.dwspli": {"identifier": "dwspli_wavelet_mean_fs-1_fmin-0_fmax-0-5", "shape": "32x1024", "walls_s": [14.314, 14.571], "reviewer_walls_s": [10.337], "summary_fresh_s": 38.160, "ru_maxrss_mb": 5138}
+ },
+ "re_derived_P_exponent_8_to_32_fresh": {"_basis": "log4(re-timed 32x1024 range / summary.json fresh 8x1024 wall); psi is 32 -> 118 against summary.json 32x1024 0.298 s",
+  "wavelet.psi": "2.33-2.60 (32 -> 118)", "wavelet.cohmag": "3.05-3.10", "wavelet.phase": "3.32-3.38", "wavelet.icoh": "3.06", "wavelet.plv": "2.38", "wavelet.ppc": "2.72",
+  "wavelet.pli": "2.26-2.40", "wavelet.dswpli": "2.98", "wavelet.wspli": "2.19", "wavelet.dwspli": "2.63-2.87"},
+ "profiles": {
+  "wavelet.cohmag__32x1024": {"unit_id": "wavelet.cohmag", "identifier": "cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5", "pstats": "audit/profiles/micro/prof_wavelet.cohmag__32x1024.pstats", "compute_spi_cum_s": 11.130, "builtin_tottime_share": 0.145, "process_ru_maxrss_mb": 5078},
+  "wavelet.psi__118x1024":   {"unit_id": "wavelet.psi", "identifier": "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean", "pstats": "audit/profiles/micro/prof_wavelet.psi__118x1024.pstats", "compute_spi_cum_s": 8.009, "builtin_tottime_share": 0.043, "process_ru_maxrss_mb": 4270},
+  "wavelet.pli__32x1024":    {"unit_id": "wavelet.pli", "identifier": "pli_wavelet_mean_fs-1_fmin-0_fmax-0-5", "pstats": "audit/profiles/micro/prof_wavelet.pli__32x1024.pstats", "compute_spi_cum_s": 4.845, "builtin_tottime_share": 0.390, "process_ru_maxrss_mb": 3649},
+  "wavelet.phase__32x1024":  {"unit_id": "wavelet.phase", "identifier": "phase_wavelet_mean_fs-1_fmin-0_fmax-0-5", "pstats": "audit/profiles/micro/prof_wavelet.phase__32x1024.pstats", "compute_spi_cum_s": 25.977, "builtin_tottime_share": 0.189, "process_ru_maxrss_mb": 5971}
+ }
+}

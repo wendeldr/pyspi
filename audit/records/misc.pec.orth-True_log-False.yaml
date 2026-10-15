@@ -1,0 +1,396 @@
+unit_id: misc.pec.orth-True_log-False
+status: profiled
+correctness:
+  metric_name_standard: Orthogonalised amplitude envelope correlation (Hipp 2012 pairwise orthogonalisation, "AEC-orth"), broadband; pec_orth_abs averages the absolute directional correlations
+  canonical_ref: 'Hipp J.F., Hawellek D.J., Corbetta M., Siegel M., Engel A.K. 2012, "Large-scale cortical correlation structure of spontaneous oscillatory activity", Nat Neurosci 15(6):884-890, Methods "Orthogonalization"
+    (supplement ref [82]); MNE implementation and absolute option per Khan et al. 2018 NeuroImage 174:57-68 (ref [83]) [check stage: Online Methods re-read in the PMC author manuscript PMC3861400: Y_perp_X(t,f) = imag(Y(t,f)
+    X(t,f)*/|X(t,f)|), power = |.|^2, log-transformed, Pearson correlation, computed in both orthogonalisation directions and averaged, Morlet wavelets 2-128 Hz in 1/4-octave steps]'
+  canonical_definition: Y_perp_X(t,f) = Im(Y(t,f) X*(t,f) / |X(t,f)|); c(Y->X) = corr_t(env X, env Y_perp_X), c(X->Y) likewise; reported value (c(Y->X) + c(X->Y)) / 2 per carrier frequency f (Hipp 2012 correlates log-transformed
+    power envelopes; that is the orth-log unit)
+  documented_definition: 'supplement §1.6.4, p.19 (heading at supplement.txt line 915): keywords "undirected, linear, unsigned, bivariate, time-dependent"; "The envelope correlation [82, 83] is the correlation between the
+    two amplitude envelopes of x and y. Power envelope correlation is computed using MNE, where we use six combinations of parameters, including whether the method was orthogonalized (modifier orth), the envelopes were squared
+    and logs were taken prior to correlation (log), or the absolute of the correlation coefficient was used (abs)"; refs [82] Hipp et al. 2012 Nat Neurosci 15:884, [83] Khan et al. 2018 NeuroImage 174:57, [63] MNE v0.23.0.
+    GitBook spi-descriptions/miscellaneous.md:92-113 repeats the text and lists pec, pec_orth, pec_log, pec_orth_log, pec_orth_abs, pec_orth_log_abs. Neither source names a frequency band, the orthogonalisation formula, or
+    whether "abs" is applied before or after averaging the two directions.'
+  delegate_lib: mne-connectivity==0.9.0 mne_connectivity.envelope_correlation (with mne==1.13.2 mne.filter.next_fast_len, scipy==1.17.1 scipy.signal.hilbert, numpy==2.5.4); result post-processed by EpochTemporalConnectivity.combine("mean").get_data(output="dense")
+  implemented_as: 'z-scored broadband channels; analytic signal as for pec. For each ordered pair (seed i, reference k): o_ik(t) = |Im(z_i(t) conj(z_k(t)) / |z_k(t)|)| = |z_i| |sin(phi_i - phi_k)|; c_ik = centred Pearson(o_ik,
+    |z_k|) (amplitudes, not powers); self row forced constant. pec_orth = (c_ik + c_ki) / 2; pec_orth_abs = (|c_ik| + |c_ki|) / 2 (abs per direction before averaging). Upper triangle mirrored; diagonal NaN.'
+  implementation_trace:
+  - pyspi/config.yaml:1360-1391 PowerEnvelopeCorrelation, six configs (orth, log, absolute) = (F,F,F) (T,F,F) (F,T,F) (T,T,F) (T,F,T) (T,T,T); YAML labels undirected/linear/unsigned/bivariate/time-dependent
+  - pyspi/calculator.py:252-259 Calculator._load_yaml instantiates getattr(module, fcn)(**params); YAML labels are not read, instance labels come from the class
+  - 'pyspi/data.py:184-203 preprocessing before any SPI: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1, ddof=1); NaN after this raises ValueError'
+  - pyspi/calculator.py:329 S = self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan); :336-337 any exception -> whole matrix NaN
+  - 'pyspi/base.py:51-68 parse_multivariate: a Data object passes straight through'
+  - pyspi/statistics/misc.py:150-153 class PowerEnvelopeCorrelation(Undirected, Unsigned); labels = ["unsigned", "misc", "undirected"]
+  - 'pyspi/statistics/misc.py:155-166 __init__(orth=False, log=False, absolute=False): orth=True -> self._orth = "pairwise", identifier += "_orth"; log -> "_log"; absolute -> "_abs"'
+  - 'pyspi/statistics/misc.py:168-176 multivariate (overrides Undirected.multivariate, base.py:132-138 never runs; REVIEW M1): z = np.moveaxis(data.to_numpy(), 2, 0) -> (R=1, P, T); mnec.envelope_correlation(z, orthogonalize=self._orth,
+    log=self._log, absolute=self._absolute).combine("mean").get_data(output="dense"), np.squeeze -> (P, P); fill_diagonal NaN'
+  - pyspi/data.py:108-118 to_numpy returns the (P, T, R) array
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:20-23 envelope_correlation(data, names=None, orthogonalize="pairwise", log=False, absolute=True): library defaults differ from
+    pyspi (pyspi passes all three explicitly)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:74 _check_option orthogonalize in (False, "pairwise"); :118-134 loop over epochs (one epoch here), each (n_nodes, n_times)
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:138-140 float input: n_fft = next_fast_len(n_times); epoch_data = hilbert(epoch_data, N=n_fft, axis=-1)[..., :n_times] (zero-pad
+    to a 5-smooth length, truncate back)'
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne/filter.py:42-64, 238-247 next_fast_len: smallest 5-smooth integer >= target; powers of two returned unchanged (probe: 64->64, 1000->1000, 1001->1024, 1031->1080,
+    4097->4320)'
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy/signal/_signaltools.py:2410 hilbert(x, N, axis); :2519 Xf = fft(x, N); :2520-2525 even N: bins 1..N/2-1 doubled, N/2+1..N-1 zeroed (DC and Nyquist kept
+    once); :2529 ifft -> analytic signal x + iH(x)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:146-148 data_mag = |z|; data_conj_scaled = conj(z) / |z| (division by zero would give NaN/inf)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:154 data_mag_nomean = data_mag - mean over time; :157 data_mag_std = linalg.norm(data_mag_nomean) (sqrt of sum of squares, no 1/T);
+    :158 exact-zero norms replaced by 1
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:167-168 orthogonalize "pairwise": label_data_orth[k, t] = Im(z_li(t) * conj(z_k(t)) / |z_k(t)|) for every k (z_li orthogonalised
+    with respect to z_k, Hipp 2012)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:169 np.abs -> |z_li| |sin(phi_li - phi_k)|; :172 label_data_orth[li] = 1.0 (self row made constant, gives corr 0 on the diagonal)
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:173-175 if log: label_data_orth = log(label_data_orth**2)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:176-178 seed centred over time, norm, exact-zero norms -> 1
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:181-183 corr[li, k] = Pearson(orth(z_li wrt z_k) envelope, envelope |z_k|) (both centred)
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:184-188 orthogonalize truthy: if absolute: corr = |corr|; corr = (corr.T + corr) / 2 (average of the two orthogonalisation directions)'
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:201-212 flatten per epoch, keep only np.triu_indices(n_nodes, k=0) (upper triangle incl. diagonal)
+  - /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/envelope.py:214-225 EpochTemporalConnectivity(data, indices="symmetric", n_epochs_used=1)
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/base.py:135-185 combine("mean"): xr.apply_ufunc over the epochs dim with fun from /media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne/utils/check.py:1011-1016
+    (np.mean(axis=0)); one epoch -> identity'
+  - '/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/mne_connectivity/base.py:721-812 get_data(output="dense"): for indices "symmetric" (:802-810) data[row_triu, col_triu] = stored and data[col_triu, row_triu]
+    = stored, i.e. the upper triangle is mirrored -> exactly symmetric output (probe: lower triangle != pre-mirror row-wise matrix, upper == it)'
+  - '/home/dan/anaconda3/envs/pyspi/lib/python3.9/site-packages/mne/connectivity/envelope.py:15-152 (historical MNE 0.23.0, supplement ref [63]; read-only comparison): same algorithm line for line, but returns the full row-wise
+    matrix (corr = fun(corrs), :151) without upper-triangle mirroring'
+  deviation_from_documented: 'Orthogonalisation method is not specified in the documentation; the code uses Hipp 2012 pairwise orthogonalisation (consistent with ref [82]). "the absolute of the correlation coefficient was
+    used (abs)": implemented as the mean of the absolute directional coefficients, which is >= |pec_orth| and differs from abs(pec_orth) whenever the two directions differ in sign. Metadata: pec_orth labelled unsigned but
+    signed (probe minimum -0.385 on shared_envelope_T256; extends REVIEW M8, which names only pec/pec_log); pec_orth_abs is in [0,1], consistent with the label.'
+  deviation_from_canonical: (1) Broadband, no carrier frequency. (2) Amplitude envelopes correlated, not (log) power envelopes as in Hipp 2012. (3) pec_orth_abs is an MNE option (absolute=True default in the library), not
+    part of Hipp 2012. (4) Hilbert zero-padding to 5-smooth length. (5) Exactly collinear channels give roundoff-driven values instead of 0/undefined (candidate).
+  units_and_range: dimensionless; pec_orth signed in [-1,1]; pec_orth_abs in [0,1] with positive bias under independence; exactly symmetric; NaN diagonal; bounded numerically (seed centred) but arbitrary for constant envelopes
+    or collinear channels
+  direction_convention: 'undirected: A[i,j] = A[j,i] exactly; the value is MNE row min(i,j), column max(i,j) of the row-wise matrix, mirrored by get_data (mne_connectivity/base.py:802-810); for orth variants that row already
+    holds the average of both orthogonalisation directions (envelope.py:188). Zero-lag, no direction. Probe: bit-exact symmetry on iid_gaussian, bivariate_gaussian, shared_envelope, narrowband_f0-0.25, delayed_noise at T=64
+    and 1024.'
+  symmetry_expected: sym
+  already_documented: 'REVIEW M1 (PowerEnvelopeCorrelation.multivariate overrides Undirected.multivariate); REVIEW M2 (pec/pec_log last-bit reciprocal asymmetry from MNE row-wise normalisation, measured on historical saved
+    data); REVIEW M8 (pec and pec_log can be negative despite the unsigned label; orthogonalised absolute variants need their own metadata); DEPENDENCY_COMPATIBILITY_REVIEW.md:69 (MNE 0.23 vs mne-connectivity agree to ~1e-15
+    for ordinary, log and pairwise-orth); DEPENDENCY_MIGRATION.md:78-79 (dense conversion and explicit combine("mean")); REVIEW M2 elaboration in the current environment (not a new finding): the output is now exactly symmetric
+    because envelope.py:210-212 keeps only the upper triangle and mne_connectivity/base.py:802-810 mirrors it. Probe on iid_gaussian_T1024 (pec): pre-mirror row-wise matrix max |C - C^T| = 5.2e-16; dense upper triangle ==
+    C upper (True), dense lower == C lower (False); exact symmetry held for all six identifiers on every probed dataset. The M2 roundoff asymmetry therefore does not reproduce with mne-connectivity 0.9.0, and current lower-triangle
+    values differ from those of the historical MNE 0.23 path (full row-wise matrix, mne 0.23 envelope.py:140-151) at roundoff level'
+  new_finding_candidates:
+  - 'CANDIDATE (numerical, degenerate input): for bit-identical or exactly proportional channels the orthogonalised signal is zero in exact arithmetic, but envelope.py:168 computes Im(z_i * (conj(z_k)/|z_k|)) with residue
+    ~1e-16 that scales with |z| and therefore correlates with the envelope. The zero-variance guard (:178) only catches exact zeros. Probe: shared_envelope (x2 bit-identical to x0) pec_orth A[0,2] = 0.218, 0.360, 0.326, 0.314
+    at T = 64, 256, 1024, 4096 (pec_orth_abs identical); synthetic [a, 2a] gives 0.387 (probe: a, b = successive np.random.default_rng(0).standard_normal(1024) draws, channels [a, 2a, a + 0.3 b, b], pipeline z-scoring, pair
+    (0,1)); the value is roundoff-driven and draw-dependent (2 channels [a, 2a] with a = np.random.default_rng(0).standard_normal(256): 0.4645); max |Im residue| 1.2e-16 to 1.8e-16 with no exact zeros. Expected 0 (or NaN).
+    Relevant to duplicated or bridged EEG channels.'
+  - 'CANDIDATE (semantics of abs): envelope.py:186-188 applies abs before the symmetric average, so pec_orth_abs = (|c_ik| + |c_ki|)/2, not |pec_orth|; under independence it is positively biased (probe iid_gaussian_T1024 range
+    0.0045..0.040, all > 0).'
+  - 'CANDIDATE (preprocessing sensitivity): scipy.signal.hilbert keeps the DC bin (_signaltools.py:2520-2525), so |z| of x + c is not the envelope of x; with normalise=False the value depends on per-channel offsets. Probe:
+    bivariate_gaussian_T1024 + offsets [0,1,-2,5] on the kernel path changes the matrix by up to 1.32 (pec), 1.14 (pec_log), 0.176 (pec_orth); scaling alone changes it by <= 1.6e-15. The default z-scoring removes this; trends
+    are not removed without detrend (trending_T1024 pec (2,3): 0.964 plain pipeline, 0.612 detrended, 0.611 clean).'
+  - 'CANDIDATE (definition scope): no band-pass filter or carrier frequency is applied anywhere (misc.py:168-176 passes the z-scored broadband series; envelope.py:138-140 only Hilbert-transforms). The canonical AEC/PEC (Bruns
+    2000; Hipp 2012) is defined on narrow-band signals per frequency; here the "envelope" of a broadband signal is used and one broadband value is returned.'
+  - 'CANDIDATE (metadata): instance labels are ["unsigned", "misc", "undirected"] for all six identifiers (probe); the config keywords linear/bivariate/time-dependent are never attached (calculator.py:252-259 does not read
+    YAML labels). "linear" is questionable for an envelope (nonlinear transform) statistic, and "time-dependent" describes a contemporaneous zero-lag statistic. The pairwise value does depend only on the pair (probe: iid_gaussian_T1024
+    pair (1,3) bit-identical when computed from the 2-channel subset), so "bivariate" is accurate.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - narrowband_f0-0.25
+    - shared_envelope
+    - nonlinear_dependence
+    path: kernel
+    reference: 'from-scratch numpy (no mne, no mne_connectivity, no scipy.signal): analytic signal by np.fft.fft with zero-padding to the next 5-smooth length >= T, multiplier h (DC and Nyquist x1, positive bins x2, negative
+      bins 0), np.fft.ifft and truncation to T; envelope |z| (log variants: log(|z|^2)); centred Pearson sum(a_c b_c)/sqrt(sum a_c^2 sum b_c^2); orth variants: o_ik = |Im(z_i conj(z_k)/|z_k|)| (log: log(o_ik^2)), c_ik = Pearson(o_ik,
+      env_k), output (c_ik + c_ki)/2, abs variants (|c_ik| + |c_ki|)/2'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'pec_orth and pec_orth_abs: max |pyspi - reference| <= 1e-12 at every T in 64..4096 (probe gave <= 2.1e-14 on these datasets); for orth variants exclude shared_envelope pair (0,2) (bit-identical channels,
+      see the duplicate-channel check)'
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic: for z_y = rho z_x + sqrt(1-rho^2) w with w circular and independent, Im(z_y conj(z_x)/|z_x|) = sqrt(1-rho^2) Im(w e^{-i phi_x}) is independent of |z_x|, so the population orthogonalised correlation
+      is 0 in both directions (zero-lag linear mixing removed, Hipp 2012)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'signed variant: |value| <= 3/sqrt(T) for pairs (0,1) and (2,3) of bivariate_gaussian at T=1024 and 4096, while the corresponding non-orth unit is ~0.61 (pair 2,3); abs variant: positive with mean of
+      order sqrt(2/(pi T)) under the null (iid_gaussian), i.e. positively biased (probe iid T=1024 range 0.0045..0.040)'
+  - datasets:
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic: x2 is bit-identical to x0, so the orthogonalised signal Im(z_0 conj(z_2)/|z_2|) is identically 0 in exact arithmetic; the correlation is undefined (0/0) and the library zero-variance guard (envelope.py:178)
+      would return 0'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'documents a candidate defect: pyspi returns a finite, clearly nonzero value from floating-point residue (probe pec_orth A[0,2] = 0.218, 0.360, 0.326, 0.314 at T = 64, 256, 1024, 4096; pec_orth_log 0.181,
+      0.339, 0.294, 0.241) instead of 0 or NaN'
+  - datasets:
+    - shared_envelope
+    - delayed_noise
+    path: kernel
+    reference: from-scratch numpy directional values c_ik = Pearson(|Im(z_i conj(z_k)/|z_k|)|, |z_k|) for both orders (no symmetrisation)
+    reference_kind: independent-impl
+    criterion: exact
+    expected_outcome: pec_orth[i,j] == (c_ij + c_ji)/2 and pec_orth_abs[i,j] == (|c_ij| + |c_ji|)/2 within 1e-12; pec_orth_abs >= |pec_orth| elementwise, with strict inequality wherever c_ij and c_ji differ in sign (abs is
+      applied per direction before averaging, not to the final value)
+  - datasets:
+    - shared_envelope
+    - delayed_noise
+    - var2_bivariate
+    path: pipeline
+    reference: 'from-scratch numpy (no mne, no mne_connectivity, no scipy.signal): analytic signal by np.fft.fft with zero-padding to the next 5-smooth length >= T, multiplier h (DC and Nyquist x1, positive bins x2, negative
+      bins 0), np.fft.ifft and truncation to T; envelope |z| (log variants: log(|z|^2)); centred Pearson sum(a_c b_c)/sqrt(sum a_c^2 sum b_c^2); orth variants: o_ik = |Im(z_i conj(z_k)/|z_k|)| (log: log(o_ik^2)), c_ik = Pearson(o_ik,
+      env_k), output (c_ik + c_ki)/2, abs variants (|c_ik| + |c_ki|)/2; matrix compared in both orientations'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: 'undirected: A[i,j] == A[j,i] bit-exactly (upper triangle mirrored by get_data), diagonal NaN; A[i,j] equals the reference for the unordered pair (no lag, no direction); for shared_envelope (0,1) and
+      (1,2) high (> 0.95 at T >= 256), (0,3)/(1,3) near 0'
+  - datasets:
+    - narrowband_f0-0.25
+    path: pipeline
+    reference: centred from-scratch Pearson on noise-free sinusoids built inside the check from the dataset parameters (f0=0.25, phase shifts 0, pi/4, -pi/2, noise_std set to 0) and on amplitude-modulated versions (1 + m a_i(t))
+      sin(...), a_i = first T samples of a 45-point moving average of standard normals from a fixed np.random.default_rng seed, for m in 1e-1..1e-12 and 0; inputs pass through the default pipeline z-scoring (the kernel path
+      differs for log variants, see expected_outcome)
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: 'orth variants stay within [-1,1] (seed is centred) but are arbitrary for constant envelopes (probe, pipeline path, T=256 pure sinusoids sin(2 pi 0.25 t) and sin(2 pi 0.25 t + 0.7), pair (0,1): pec_orth
+      -0.282, pec_orth_log -0.281; kernel path -0.280 for both): qualitative documentation that the value is driven by roundoff when envelopes do not vary'
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'invariance: scaled_offset = positive scale * bivariate_gaussian + offset (same draw)'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'pipeline (z-scored) matrices agree within 1e-13 (probe <= 1.3e-15); on the kernel path (normalise=False) they differ because the Hilbert envelope includes the DC offset (probe offset-only max change:
+      pec 1.32, pec_log 1.14, pec_orth 0.176; scale-only <= 1.6e-15)'
+  - datasets:
+    - trending
+    path: pipeline-detrend
+    reference: 'from-scratch numpy (no mne, no mne_connectivity, no scipy.signal): analytic signal by np.fft.fft with zero-padding to the next 5-smooth length >= T, multiplier h (DC and Nyquist x1, positive bins x2, negative
+      bins 0), np.fft.ifft and truncation to T; envelope |z| (log variants: log(|z|^2)); centred Pearson sum(a_c b_c)/sqrt(sum a_c^2 sum b_c^2); orth variants: o_ik = |Im(z_i conj(z_k)/|z_k|)| (log: log(o_ik^2)), c_ik = Pearson(o_ik,
+      env_k), output (c_ik + c_ki)/2, abs variants (|c_ik| + |c_ki|)/2, applied to series detrended by an np.linalg.lstsq line fit and z-scored (ddof=1)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'pipeline-detrend output matches the reference within 1e-12; for pec pair (2,3) the plain pipeline is inflated by the trend (probe T=1024: 0.964 vs clean 0.611) and detrending restores it (0.612)'
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'from-scratch numpy (no mne, no mne_connectivity, no scipy.signal): analytic signal by np.fft.fft with zero-padding to the next 5-smooth length >= T, multiplier h (DC and Nyquist x1, positive bins x2, negative
+      bins 0), np.fft.ifft and truncation to T; envelope |z| (log variants: log(|z|^2)); centred Pearson sum(a_c b_c)/sqrt(sum a_c^2 sum b_c^2); orth variants: o_ik = |Im(z_i conj(z_k)/|z_k|)| (log: log(o_ik^2)), c_ik = Pearson(o_ik,
+      env_k), output (c_ik + c_ki)/2, abs variants (|c_ik| + |c_ki|)/2; series truncated inside the check to T=1031 (iid_gaussian_T4096[:, :1031], z-scored; next_fast_len(1031) = 1080) and compared with and without the zero-padding
+      step'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'matches the padded reference within 1e-12 (probe: on z-scored iid_gaussian_T4096[:, :1031] an explicitly 1080-padded scipy.signal.hilbert reference agrees with pyspi pec to 5.5e-16) and differs from
+      the unpadded analytic signal by O(1e-3) (probe pec, max over the 10 pairs of iid_gaussian_T4096[:, :1031]: 7.1e-3; over the 3 pairs of z-scored np.random.default_rng(3).standard_normal((3, 1031)): 2.2e-3), documenting
+      that results for non-5-smooth T depend on MNE padding; no effect at the audit T values (powers of two)'
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/_kernels_basic_misc.py:envelope_correlation(orth=True, log=False) (Hipp 2012 pairwise orthogonalisation from numpy/scipy primitives, never imports mne; the kernel''s analytic signal uses
+    scipy.signal.hilbert, the same primitive mne calls (allowed as a numpy/scipy building block, but weaker than the np.fft-only reference proposed at the trace stage); definitional order in explicit real form (Im a_i Re a_j
+    - Re a_i Im a_j)/|a_j|, plus mne_order=True to isolate the delegate''s rounding and refs/pec.py:orth_complex_product (complex-multiply form) for the duplicated pair) and audit/checks/refs/pec.py:directional; analytic null
+    0 for zero-lag Gaussian mixing, Monte Carlo mean/se otherwise; probes audit/checks/probes/pec_probes.py; supplementary probe scratchpad pec_check/npfft_only_ref.py: an np.fft-only re-implementation (no scipy.signal, no
+    mne) applied to the input pyspi saw agrees with pyspi on all 114 kern/pipe/invar/detrend/trendraw/offsetkern runs of the six identifiers to <= 9.3e-14 (pec 3.1e-14, pec_log 3.9e-15, pec_orth 5.3e-16, pec_orth_log 9.3e-14;
+    orth variants exclude the bit-identical shared_envelope pair) and on all 24 stat/lagstat runs to <= 1.2e-14'
+  check_data: 'kernel: iid_gaussian T64/1024/4096, bivariate_gaussian T1024, delayed_noise T64/1024, narrowband_f0-0.25 T1024, shared_envelope T64/256/1024/4096, nonlinear_dependence T256, scaled_offset T1024; pipeline: bivariate_gaussian
+    T1024/4096, iid_gaussian T4096, delayed_noise T1024/4096, var2_bivariate, narrowband_f0-0.25, shared_envelope T64/256/1024/4096, scaled_offset, trending plain/detrend, T=1031 probe, [a, 2a, a+0.3b, b] probe; constant-envelope
+    probe (pipeline and kernel)'
+  agreement_criterion: 'exact rtol 1e-10 / atol 1e-12 against the kernel (definitional order in explicit real form; mne order for the duplicated pair); statistical |pyspi - value| <= 2 x MC sd per pair (compare.py rule, no
+    multiplicity correction; the Bonferroni reading z* = 2.638 for 6 pairs / 2.807 for 10 is reported as results key ref_bonferroni_pass for information only); qualitative: |value| <= 1e-8 for duplicated/proportional channels,
+    abs variant == (|c_ij| + |c_ji|)/2, |r| <= 1'
+  closeness: 'kern runs: all non-degenerate pairs max_abs <= 1.1e-16 (both pec_orth and pec_orth_abs); shared_envelope pair (0,2) (x2 bit-identical to x0) pyspi T64 0.13, T256 0.304, T1024 0.342, T4096 0.332 (kernel path)
+    and T64 0.218, T256 0.36, T1024 0.326, T4096 0.314 (pipeline, dupchan) vs definitional 0 (explicit real form; a complex-product implementation gives kernel T64 0.068, T256 0.294, T1024 0.321, T4096 0.365, pipeline T64
+    0.22, T256 0.353, T1024 0.363, T4096 0.314); the mne-order reference reproduces these to <= 2.2e-16; [a, 2a] proportional pair 0.387; abs variant equals (|c_ij| + |c_ji|)/2 to <= 1.1e-16 and exceeds |pec_orth| by up to
+    0.0149; null bias of pec_orth_abs: iid_gaussian T4096 pyspi off-diagonal mean 0.0122 (min 0.0033) vs MC mean 0.0136; statistical (2-MC-sd rule, max_z = raw z): bivariate_gaussian T1024 pec_orth max_z 1.129, pec_orth_abs
+    1.296; bivariate_gaussian T4096 pec_orth 2.207 (fail), pec_orth_abs 2.534 (fail); delayed_noise T4096 lagstat pec_orth 1.485, pec_orth_abs 1.102; iid_gaussian T4096 pec_orth 1.404, pec_orth_abs 1.160; 6/8 pass; both failures
+    are pair (2,3) of the single bivariate_gaussian_T4096 draw: misc.pec.orth-True_log-False|bivariate_gaussian|4096|pipeline|pec_orth-stat (pair (2,3): pyspi 0.0341 vs analytic 0, MC mean -0.0003, MC sd 0.0155, z 2.207; MC
+    fraction of 400 replicates at or above 0.0025, two-sided 0.0175) and misc.pec.orth-True_log-False|bivariate_gaussian|4096|pipeline|pec_orth_abs-stat (pair (2,3): pyspi 0.0341 vs MC mean 0.0139, MC sd 0.0080, z 2.534; MC
+    fraction above 0.0225); pyspi equals the np.fft-only reference on these inputs to <= 6.6e-17, so they are a single-draw exceedance (one event shared by the signed and abs variants, and by pec_orth/pec_orth_log), not an
+    estimator difference; delayed_noise T4096 (0,1) 0.4359 vs MC mean 0.429'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 7: Hipp 2012 orthogonalisation is reproduced to 1.1e-16 on non-degenerate pairs. It uses broadband amplitude envelopes where Hipp uses
+    per-carrier log power.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Hipp 2012 orthogonalisation reproduced to fp precision on non-degenerate input and matches the supplement (orth via MNE), but differs from canonical in value-changing ways: broadband instead of per-carrier
+    (Morlet) and amplitude instead of log power; the abs variant averages the absolute directional coefficients (|c_ij| + |c_ji|)/2, not |pec_orth|, and is positively biased under independence; pec_orth is signed (extends
+    REVIEW M8); for bit-identical or exactly proportional channels the delegate''s complex-arithmetic orthogonalisation a_i*(conj(a_j)/|a_j|) leaves a rounding residue that correlates with the envelope, giving 0.1-0.44 instead
+    of 0 (any complex-multiply form does the same; only the explicit real form gives exactly 0)'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: every pyspi run < 0.02 s, T up to 4096; Monte Carlo se 400 reps per (kind, T), cached'
+  symmetry_observed: 'sym: max|A - A.T| = 0 exactly on every pec run (results key ref_pyspi_max_asym = 0 on all kern, pipe, dir, stat, lagstat, detrend, trendraw runs); get_data mirrors the stored upper triangle (mne_connectivity/base.py:802-810),
+    so the REVIEW M2 last-bit asymmetry does not reproduce with mne-connectivity 0.9.0; for orth variants MNE also symmetrises (C + C.T)/2 before mirroring (envelope.py:184-188)'
+  direction_observed: 'undirected, zero-lag: A[i,j] = A[j,i] exactly and each entry is the average of both orthogonalisation directions. shared_envelope (pec_orth-dir): (0,1) 0.998 (constant pi/3 phase lag survives orthogonalisation),
+    (1,2) bitwise equal to (0,1), (0,3) 0.0498; delayed_noise T4096: imaginary (lagged) coherence survives orthogonalisation, (0,1) 0.4359 vs MC 0.429, with no lead/lag direction; bivariate_gaussian (zero-lag mixing) gives
+    ~0 as expected'
+  candidate_resolutions:
+  - candidate: bit-identical or exactly proportional channels give a roundoff-driven nonzero value instead of 0 (complex-arithmetic orthogonalisation in the delegate)
+    outcome: confirmed
+    evidence: 'the 4 run ids misc.pec.orth-True_log-False|shared_envelope|*|pipeline|pec_orth-dupchan for T = 64, 256, 1024, 4096 (pyspi (0,2) T64 0.218, T256 0.36, T1024 0.326, T4096 0.314; ref_ref_def_order_02 = 0;
+      ref_maxdiff_vs_mne_order_full <= 1.1e-16), the 4 run ids misc.pec.orth-True_log-False|shared_envelope|*|kernel|pec_orth-kern for the same T, which fail only at (0,2), while the 4 run ids
+      misc.pec.orth-True_log-False|shared_envelope|*|kernel|pec_orth-kern-mneorder pass (<= 2.2e-16); misc.pec.orth-True_log-False|iid_gaussian|1024|pipeline|pec_orth-propchan ([a, 2a]: 0.387, z-scored channels
+      bit-identical). Finding about the delegate mne-connectivity 0.9.0 (envelope.py:147-148, 168): the orthogonal part is formed in complex floating-point arithmetic, Im(z_i * (conj(z_j)/|z_j|)), which is not exactly 0
+      for z_i == z_j (residue ~1e-16 at every sample), and the zero-variance guard (:178) only catches an exact 0. The residue is not specific to mne''s divide-first order: the complex-product form Im(z_i *
+      conj(z_j))/|z_j| is also nonzero on this machine (numpy 2.5.4; scratchpad pec_check/complex_product_residue.py: max 1.05e-16, 1024 of 1024 samples nonzero) and gives (0,2) T64 0.068, T256 0.294, T1024 0.321, T4096
+      0.365 on the kernel path and T64 0.22, T256 0.353, T1024 0.363, T4096 0.314 on the pipeline path, [a, 2a] 0.4225 (results keys ref_ref_complex_product_order_02 / _01). Only the explicit real-arithmetic form (Im z_i
+      Re z_j - Re z_i Im z_j)/|z_j|, as coded in the kernel, gives exactly 0. pyspi inherits the residue'
+  - candidate: abs is applied per direction before averaging; abs variant positively biased under independence
+    outcome: confirmed
+    evidence: 'misc.pec.orth-True_log-False|delayed_noise|1024|kernel|pec_orth_abs-abssem: max|pyspi - (|c_ij|+|c_ji|)/2| 1.1e-16, 3 pairs with abs > |signed|; misc.pec.orth-True_log-False|iid_gaussian|1024|kernel|pec_orth_abs-abssem:
+      max|pyspi - (|c_ij|+|c_ji|)/2| 1e-17, 2 pairs with abs > |signed|; misc.pec.orth-True_log-False|iid_gaussian|4096|pipeline|pec_orth_abs-stat: all off-diagonal values > 0 (min 0.0033), mean 0.0122 vs MC mean 0.0136 for
+      independent channels'
+  - candidate: 'Hilbert envelope keeps the DC bin: value depends on per-channel offsets without z-scoring; trends survive the default pipeline'
+    outcome: confirmed
+    evidence: 'misc.pec.orth-True_log-False|scaled_offset|1024|kernel|pec_orth-offsetkern: pyspi matches the raw-input reference; reference-side offset-only effect 0.176 (pec_orth), 0.175 (pec_orth_abs); scale-only <= 2e-15;
+      pipeline invariance holds: *|scaled_offset|1024|pipeline|*-invar runs agree with the reference on the unscaled draw (max_abs <= 1.3e-15); trending pec (2,3): plain pipeline 0.964 (ref_pyspi_23, *-trendraw) vs detrended
+      0.612 (*-detrend) vs clean 0.611 (ref_clean_ref_23)'
+  - candidate: 'no band-pass or carrier frequency: broadband envelope, one value per pair'
+    outcome: confirmed
+    evidence: every *-kern run (raw input) and *-pipe run (z-scored input) matches the kernel reference, which applies no filter, to <= 3.1e-14 (pec narrowband_f0-0.25 kern); a band-limited canonical AEC/PEC would differ
+  - candidate: instance labels unsigned/misc/undirected only; linear/time-dependent never attached; bivariate accurate
+    outcome: confirmed
+    evidence: 'scratchpad pec_check/labels_probe.py: all six instances carry [''unsigned'', ''misc'', ''undirected'']; signed outputs contradict ''unsigned'' (ref_pyspi_min down to -0.442 pec, -0.378 pec_log, -0.386 pec_orth,
+      -0.336 pec_orth_log on kern runs; REVIEW M8 already documents pec/pec_log); the kernel computes each pair from that pair only and matches pyspi on every kern run, so the value is bivariate'
+  checks_run:
+  - run_ids:
+    - misc.pec.orth-True_log-False|bivariate_gaussian|1024|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|bivariate_gaussian|1024|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|delayed_noise|1024|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|delayed_noise|1024|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|delayed_noise|64|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|delayed_noise|64|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|iid_gaussian|1024|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|iid_gaussian|1024|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|iid_gaussian|4096|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|iid_gaussian|4096|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|iid_gaussian|64|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|iid_gaussian|64|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|narrowband_f0-0.25|1024|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|narrowband_f0-0.25|1024|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|nonlinear_dependence|256|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|nonlinear_dependence|256|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|shared_envelope|1024|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|shared_envelope|1024|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|shared_envelope|256|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|shared_envelope|256|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|shared_envelope|4096|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|shared_envelope|4096|kernel|pec_orth_abs-kern
+    - misc.pec.orth-True_log-False|shared_envelope|64|kernel|pec_orth-kern
+    - misc.pec.orth-True_log-False|shared_envelope|64|kernel|pec_orth_abs-kern
+    reference: 'audit/checks/refs/_kernels_basic_misc.py:envelope_correlation(orth=True, log=False, mne_order=False: definitional order in explicit real form), raw input, exact'
+    outcome: '16/24 pass: every dataset except shared_envelope max_abs <= 1.1e-16; the 8 shared_envelope runs fail only at pair (0,2) (pyspi T64 0.13, T256 0.304, T1024 0.342, T4096 0.332 vs definitional 0; other pairs <=
+      2.2e-16)'
+  - run_ids:
+    - misc.pec.orth-True_log-False|shared_envelope|1024|kernel|pec_orth-kern-mneorder
+    - misc.pec.orth-True_log-False|shared_envelope|1024|kernel|pec_orth_abs-kern-mneorder
+    - misc.pec.orth-True_log-False|shared_envelope|256|kernel|pec_orth-kern-mneorder
+    - misc.pec.orth-True_log-False|shared_envelope|256|kernel|pec_orth_abs-kern-mneorder
+    - misc.pec.orth-True_log-False|shared_envelope|4096|kernel|pec_orth-kern-mneorder
+    - misc.pec.orth-True_log-False|shared_envelope|4096|kernel|pec_orth_abs-kern-mneorder
+    - misc.pec.orth-True_log-False|shared_envelope|64|kernel|pec_orth-kern-mneorder
+    - misc.pec.orth-True_log-False|shared_envelope|64|kernel|pec_orth_abs-kern-mneorder
+    reference: 'audit/checks/refs/_kernels_basic_misc.py:envelope_correlation(orth=True, log=False, mne_order=True: mne evaluation order), shared_envelope, exact'
+    outcome: 'pass 8/8: mne-order reference reproduces pyspi including pair (0,2), max_abs <= 2.2e-16'
+  - run_ids:
+    - misc.pec.orth-True_log-False|delayed_noise|1024|pipeline|pec_orth-pipe
+    - misc.pec.orth-True_log-False|delayed_noise|1024|pipeline|pec_orth_abs-pipe
+    - misc.pec.orth-True_log-False|iid_gaussian|4096|pipeline|pec_orth-pad1031
+    - misc.pec.orth-True_log-False|iid_gaussian|4096|pipeline|pec_orth_abs-pad1031
+    - misc.pec.orth-True_log-False|narrowband_f0-0.25|1024|pipeline|pec_orth-pipe
+    - misc.pec.orth-True_log-False|narrowband_f0-0.25|1024|pipeline|pec_orth_abs-pipe
+    - misc.pec.orth-True_log-False|scaled_offset|1024|pipeline|pec_orth-invar
+    - misc.pec.orth-True_log-False|scaled_offset|1024|pipeline|pec_orth_abs-invar
+    - misc.pec.orth-True_log-False|trending|1024|pipeline-detrend|pec_orth-detrend
+    - misc.pec.orth-True_log-False|trending|1024|pipeline-detrend|pec_orth_abs-detrend
+    - misc.pec.orth-True_log-False|trending|1024|pipeline|pec_orth-trendraw
+    - misc.pec.orth-True_log-False|trending|1024|pipeline|pec_orth_abs-trendraw
+    - misc.pec.orth-True_log-False|var2_bivariate|1024|pipeline|pec_orth-pipe
+    - misc.pec.orth-True_log-False|var2_bivariate|1024|pipeline|pec_orth_abs-pipe
+    reference: audit/checks/refs/pec.py:run_pipe/run_invar/run_pad, exact
+    outcome: 'pass 14/14: max_abs <= 2.8e-14 (detrend), pad1031 unpadded differs by 0.00373'
+  - run_ids:
+    - misc.pec.orth-True_log-False|scaled_offset|1024|kernel|pec_orth-offsetkern
+    - misc.pec.orth-True_log-False|scaled_offset|1024|kernel|pec_orth_abs-offsetkern
+    reference: audit/checks/refs/pec.py:run_offsetkern, exact
+    outcome: 'pass 2/2: max_abs <= 6.3e-17; reference-side offset-only effect 0.176 (pec_orth)'
+  - run_ids:
+    - misc.pec.orth-True_log-False|bivariate_gaussian|1024|pipeline|pec_orth-stat
+    - misc.pec.orth-True_log-False|bivariate_gaussian|1024|pipeline|pec_orth_abs-stat
+    - misc.pec.orth-True_log-False|bivariate_gaussian|4096|pipeline|pec_orth-stat
+    - misc.pec.orth-True_log-False|bivariate_gaussian|4096|pipeline|pec_orth_abs-stat
+    - misc.pec.orth-True_log-False|delayed_noise|4096|pipeline|pec_orth-lagstat
+    - misc.pec.orth-True_log-False|delayed_noise|4096|pipeline|pec_orth_abs-lagstat
+    - misc.pec.orth-True_log-False|iid_gaussian|4096|pipeline|pec_orth-stat
+    - misc.pec.orth-True_log-False|iid_gaussian|4096|pipeline|pec_orth_abs-stat
+    reference: audit/checks/refs/pec.py:analytic_white (0 for zero-lag Gaussian mixing) or MC mean, se from audit/checks/refs/pec.py:mc, statistical, pass iff |pyspi - value| <= 2 MC sd per pair
+    outcome: '6/8 pass; fail: misc.pec.orth-True_log-False|bivariate_gaussian|4096|pipeline|pec_orth-stat (pair (2,3): pyspi 0.0341 vs analytic 0, MC mean -0.0003, MC sd 0.0155, z 2.207; MC fraction of 400 replicates at or
+      above 0.0025, two-sided 0.0175) and misc.pec.orth-True_log-False|bivariate_gaussian|4096|pipeline|pec_orth_abs-stat (pair (2,3): pyspi 0.0341 vs MC mean 0.0139, MC sd 0.0080, z 2.534; MC fraction above 0.0225) (single-draw
+      exceedance, see closeness); bivariate_gaussian T1024 pec_orth max_z 1.129, pec_orth_abs 1.296; bivariate_gaussian T4096 pec_orth 2.207 (fail), pec_orth_abs 2.534 (fail); delayed_noise T4096 lagstat pec_orth 1.485, pec_orth_abs
+      1.102; iid_gaussian T4096 pec_orth 1.404, pec_orth_abs 1.160'
+  - run_ids:
+    - misc.pec.orth-True_log-False|shared_envelope|1024|pipeline|pec_orth-dir
+    - misc.pec.orth-True_log-False|shared_envelope|1024|pipeline|pec_orth_abs-dir
+    reference: audit/checks/refs/pec.py:run_dir, direction
+    outcome: 'pass 2/2: (0,1) 0.998, (1,2) bitwise equal to (0,1); (0,2) 0.326 excluded'
+  - run_ids:
+    - misc.pec.orth-True_log-False|iid_gaussian|1024|pipeline|pec_orth-propchan
+    - misc.pec.orth-True_log-False|iid_gaussian|1024|pipeline|pec_orth_abs-propchan
+    - misc.pec.orth-True_log-False|shared_envelope|1024|pipeline|pec_orth-dupchan
+    - misc.pec.orth-True_log-False|shared_envelope|1024|pipeline|pec_orth_abs-dupchan
+    - misc.pec.orth-True_log-False|shared_envelope|256|pipeline|pec_orth-dupchan
+    - misc.pec.orth-True_log-False|shared_envelope|256|pipeline|pec_orth_abs-dupchan
+    - misc.pec.orth-True_log-False|shared_envelope|4096|pipeline|pec_orth-dupchan
+    - misc.pec.orth-True_log-False|shared_envelope|4096|pipeline|pec_orth_abs-dupchan
+    - misc.pec.orth-True_log-False|shared_envelope|64|pipeline|pec_orth-dupchan
+    - misc.pec.orth-True_log-False|shared_envelope|64|pipeline|pec_orth_abs-dupchan
+    reference: audit/checks/refs/pec.py:run_dupchan/run_propchan, qualitative pass iff |value| <= 1e-8 for the duplicated/proportional pair
+    outcome: 'fail 10/10 (expected, confirms candidate 0): shared_envelope (0,2) T64 0.218, T256 0.36, T1024 0.326, T4096 0.314; [a, 2a] pair 0.387; mne-order reference reproduces all of them to <= 1.1e-16; complex-product
+      form (refs/pec.py:orth_complex_product) is also nonzero: dupchan T64 0.22, T256 0.353, T1024 0.363, T4096 0.314, [a, 2a] 0.4225'
+  - run_ids:
+    - misc.pec.orth-True_log-False|delayed_noise|1024|kernel|pec_orth_abs-abssem
+    - misc.pec.orth-True_log-False|iid_gaussian|1024|kernel|pec_orth_abs-abssem
+    reference: audit/checks/refs/pec.py:directional (c_ij before symmetrisation), qualitative
+    outcome: 'pass 2/2: delayed_noise max|pyspi - (|c_ij|+|c_ji|)/2| 1.1e-16, 3 pairs with opposite directional signs, max(abs - |signed|) 0.00555; iid_gaussian max|pyspi - (|c_ij|+|c_ji|)/2| 1e-17, 2 pairs with opposite directional
+      signs, max(abs - |signed|) 0.0149'
+  - run_ids:
+    - misc.pec.orth-True_log-False|narrowband_f0-0.25|256|kernel|pec_orth-constenv
+    - misc.pec.orth-True_log-False|narrowband_f0-0.25|256|kernel|pec_orth_abs-constenv
+    - misc.pec.orth-True_log-False|narrowband_f0-0.25|256|pipeline|pec_orth-constenv
+    - misc.pec.orth-True_log-False|narrowband_f0-0.25|256|pipeline|pec_orth_abs-constenv
+    reference: audit/checks/refs/pec.py:run_constenv, qualitative |r| <= 1
+    outcome: 'pass 4/4 (bounded) but arbitrary for constant envelopes: pure sinusoids give -0.282 (pipeline)'
+optimisation:
+  complexity_P_T: O(P T log T) Hilbert + O(P^2 T) envelope correlation with a per-row orthogonalisation loop (P^2 T complex products) + O(P^2) Python-level work in mne-connectivity's combine/get_data (pyspi/statistics/misc.py:167-176). Measured power-law P_exponent 0.70 (fixed container overhead dominates up to P=32), T_exponent 0.05-0.18. At 118x1024 the O(P^2) combine and the O(P^2 T) loop share the time; measured 0.177 (pec_orth 0.088 + pec_orth_abs 0.089) s per window at 118x1024 (family-warm, measured).
+  hotspot_1: mne_connectivity/base.py:combine (third-party:mne_connectivity, xarray apply_ufunc with numpy.vectorize, one np.mean per connection) 51.2% of the profiled SPI call at 8x1024
+  hotspot_2: mne_connectivity/envelope.py:envelope_correlation (third-party:mne_connectivity) 45.3% of the profiled SPI call at 8x1024; scipy hilbert only 4.1%
+  hotspot_owner: third-party:mne_connectivity
+  opaque_share: 0.222
+  profile_file: audit/profiles/misc.pec.orth-True_log-False__8x1024.pstats
+  opportunities:
+  - opportunity_id: pec-2
+    opportunity: Compute the directional orthogonalised correlation matrix once per (orth, log) and Data, and derive both the signed and the _abs identifiers from it (MNE applies abs and (C + C.T)/2 only after the loop, envelope.py:184-188); today pec_orth and pec_orth_abs (and the log pair) each recompute the analytic signal and the O(P^2 T) loop.
+    opp_type: cache-sharing
+    expected_speedup: ~2x
+    speedup_basis: 'complexity: family-warm 118x1024 increments pec_orth 0.088 s + pec_orth_abs 0.089 s, pec_orth_log 0.152 s + pec_orth_log_abs 0.152 s, no cache between them; with the shared matrix the second identifier is an O(P^2) abs/symmetrise; profile:audit/profiles/micro/misc.pec.orth-True_log-True__118x1024.pstats envelope_correlation 64.1% (51.5% self in the per-row orthogonalisation loop)'
+    output_risk: unverified-bit-identical
+    risk_evidence: both identifiers run the same per-row loop on the same analytic signal and differ only in the post-loop abs; caching C and applying the two post-steps repeats the same floating-point operations
+    effort: S
+    depends_on: []
+  - opportunity_id: pec-1
+    opportunity: Skip mne-connectivity's combine('mean') for the single epoch pyspi passes and read the stored upper triangle directly (PowerEnvelopeCorrelation.multivariate, pyspi/statistics/misc.py:170-174); combine runs xarray.apply_ufunc(vectorize=True), one np.mean call per connection (7,021 at P=118).
+    opp_type: replace-library
+    expected_speedup: ~1.5x
+    speedup_basis: 'profile:audit/profiles/misc.pec.orth-True_log-False__8x1024.pstats mne_connectivity/base.py:combine 51.2% at 8x1024 (cProfile share, inflated); unprofiled wall share at 118x1024 0.38 (audit/profiles/micro/probe_pec_combine.json: combine 31.9 ms of 84.8 ms; the orthogonalisation loop is untouched) -> Amdahl bound 1.6x + complexity: O(P^2) Python-level calls that do no arithmetic for one epoch.
+      Independent of pec-2 (independent_of), because pec-2 serves the abs identifier from the other identifier''s matrix (one envelope_correlation call instead of two) and this avenue
+      cuts the combine cost inside each call that remains (fewer calls times a cheaper call), so the savings multiply'
+    output_risk: unverified-bit-identical
+    risk_evidence: the mean of one value per connection is that value exactly, and get_data mirrors the stored upper triangle; reading and mirroring the same triangle repeats the same operations
+    effort: S
+    depends_on: []
+    independent_of:
+    - pec-2

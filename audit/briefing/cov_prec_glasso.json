@@ -1,0 +1,184 @@
+{
+ "family": "cov_prec_glasso",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/basic-statistics.md"
+ ],
+ "hypotheses": [
+  "GraphicalLasso alpha=0.01 fixed; precision comes from the solver, covariance from its inverse; CV path selects alpha over 4x4 refinements with 5-fold CV"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/basic.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    139,
+    161
+   ],
+   "section": "1.1.1",
+   "title": "Covariance (cov)"
+  },
+  {
+   "lines": [
+    162,
+    175
+   ],
+   "section": "1.1.2",
+   "title": "Precision (prec)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/sklearn/covariance/_graph_lasso.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [
+    "cov-sq_GraphicalLasso"
+   ],
+   "hyperparameters": {
+    "estimator": "GraphicalLasso"
+   },
+   "identifier_params": {
+    "cov-sq_GraphicalLasso": {
+     "estimator": "GraphicalLasso",
+     "squared": true
+    },
+    "cov_GraphicalLasso": {
+     "estimator": "GraphicalLasso"
+    }
+   },
+   "identifiers": [
+    "cov_GraphicalLasso",
+    "cov-sq_GraphicalLasso"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "GraphicalLasso",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Covariance",
+   "representative": "cov_GraphicalLasso",
+   "source": "config",
+   "unit_id": "basic.cov.GraphicalLasso"
+  },
+  {
+   "eeg_identifiers": [
+    "cov-sq_GraphicalLassoCV",
+    "cov_GraphicalLassoCV"
+   ],
+   "hyperparameters": {
+    "estimator": "GraphicalLassoCV"
+   },
+   "identifier_params": {
+    "cov-sq_GraphicalLassoCV": {
+     "estimator": "GraphicalLassoCV",
+     "squared": true
+    },
+    "cov_GraphicalLassoCV": {
+     "estimator": "GraphicalLassoCV"
+    }
+   },
+   "identifiers": [
+    "cov_GraphicalLassoCV",
+    "cov-sq_GraphicalLassoCV"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "GraphicalLassoCV",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Covariance",
+   "representative": "cov_GraphicalLassoCV",
+   "source": "config",
+   "unit_id": "basic.cov.GraphicalLassoCV"
+  },
+  {
+   "eeg_identifiers": [
+    "prec-sq_GraphicalLasso",
+    "prec_GraphicalLasso"
+   ],
+   "hyperparameters": {
+    "estimator": "GraphicalLasso"
+   },
+   "identifier_params": {
+    "prec-sq_GraphicalLasso": {
+     "estimator": "GraphicalLasso",
+     "squared": true
+    },
+    "prec_GraphicalLasso": {
+     "estimator": "GraphicalLasso"
+    }
+   },
+   "identifiers": [
+    "prec_GraphicalLasso",
+    "prec-sq_GraphicalLasso"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "GraphicalLasso",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Precision",
+   "representative": "prec_GraphicalLasso",
+   "source": "config",
+   "unit_id": "basic.prec.GraphicalLasso"
+  },
+  {
+   "eeg_identifiers": [
+    "prec-sq_GraphicalLassoCV",
+    "prec_GraphicalLassoCV"
+   ],
+   "hyperparameters": {
+    "estimator": "GraphicalLassoCV"
+   },
+   "identifier_params": {
+    "prec-sq_GraphicalLassoCV": {
+     "estimator": "GraphicalLassoCV",
+     "squared": true
+    },
+    "prec_GraphicalLassoCV": {
+     "estimator": "GraphicalLassoCV"
+    }
+   },
+   "identifiers": [
+    "prec_GraphicalLassoCV",
+    "prec-sq_GraphicalLassoCV"
+   ],
+   "in_eeg_selection": true,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "undirected",
+    "unordered"
+   ],
+   "method_or_estimator": "GraphicalLassoCV",
+   "module": "basic",
+   "pair_basis": "multivariate",
+   "pyspi_class": "Precision",
+   "representative": "prec_GraphicalLassoCV",
+   "source": "config",
+   "unit_id": "basic.prec.GraphicalLassoCV"
+  }
+ ]
+}

@@ -1,0 +1,206 @@
+unit_id: infotheory.je.kozachenko
+status: profiled
+correctness:
+  metric_name_standard: Joint differential entropy H(X_i, X_j) of the paired samples, Kozachenko-Leonenko estimate
+  canonical_ref: 'Cover TM, Thomas JA (2006) Elements of Information Theory, 2nd ed., Wiley, §8.4 (joint differential entropy h(X,Y) = -∫ f(x,y) log f(x,y)); estimator: Kozachenko & Leonenko (1987) Probl.
+    Inf. Transm. 23(2):95-101, in the form of Kraskov, Stoegbauer & Grassberger (2004) Phys Rev E 69:066138 Eq. (20), k=1'
+  canonical_definition: H(X,Y) = -E[log f_{XY}(X,Y)] for the joint density of contemporaneous pairs (x_t, y_t); KL estimate -psi(1) + psi(N) + log(pi/4) + (2/N) sum_t log(2 rho_t) with rho_t the Euclidean
+    NN distance in R^2.
+  documented_definition: 'Supplement §1.4.1, p.10 (supplement.txt:444; the pack lists 454): "The joint entropy [33] quantifies the uncertainty over the paired observations"; keywords "undirected, nonlinear,
+    unsigned, bivariate, contemporaneous"; SPI 59 je_kozachenko. GitBook information-theory.md lines 139-155 (same text).'
+  delegate_lib: JIDT jar (labelled 1.6.1, post-tag build matching commit a9b6b3e77c) EntropyCalculatorMultiVariateKozachenko.computeAverageLocalOfObservations, d=2
+  implemented_as: 'Calculator default z-scoring (ddof=1). For pair (i,j): x, y = data.to_numpy()[[i, j]] (each (T,1)), concatenated to a (T,2) array, initialise(2), setObservations, computeAverageLocalOfObservations,
+    using the shared Kozachenko estimator (Euclidean NN, 1e-8 noise with seed 42, nats; see infotheory.est.kozachenko). The result is cached in data.joint_entropy[(estimator,)] at both [i,j] and [j,i].
+    Undirected.multivariate then mirrors the upper triangle. All T samples are used, with no Theiler window.'
+  implementation_trace:
+  - 'pyspi/calculator.py:277 load_dataset: Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend) (normalise=True default, :50); pyspi/calculator.py:329 S = self._spis[spi].multivariate(self.dataset);
+    pyspi/calculator.py:332 np.fill_diagonal(S, np.nan) (HEAD lines)'
+  - pyspi/base.py:132-138 Undirected.multivariate -> Directed.multivariate (base.py:85-94, A[i,j] = bivariate(data, i=i, j=j) for all i != j) then A[li] = A.T[li]
+  - pyspi/statistics/infotheory.py:223-234 JointEntropy.bivariate -> _compute_joint_entropy
+  - 'pyspi/statistics/infotheory.py:159-177 _compute_joint_entropy: initialise(2); setObservations(JArray(np.concatenate([x, y], axis=1))); cache [i,j] and [j,i]'
+  - pyspi/statistics/infotheory.py:103-110 _getcalc('entropy') -> EntropyCalculatorMultiVariateKozachenko(); pyspi/statistics/infotheory.py:91 calc.setProperty(self._SEED, '42') (NOISE_SEED=42, in _setup
+    :84-93)
+  - JIDT@a9b6b3e77c java/source/infodynamics/measures/continuous/EntropyCalculatorMultiVariateCommon.java:179-219 finaliseAddObservations / setObservations (noise added, no normalisation)
+  - JIDT@a9b6b3e77c java/source/infodynamics/measures/continuous/kozachenko/EntropyCalculatorMultiVariateKozachenko.java:82-115 computeAverageLocalOfObservations
+  - JIDT v1.6.1 java/source/infodynamics/utils/EuclideanUtils.java:69-75 (fast path N<=2000, naive path N>2000)
+  deviation_from_documented: 'Label: the class labels this SPI ''linear'' (infotheory.py:53-54 else-branch), but the supplement, GitBook and config.yaml:400 say ''nonlinear''. Otherwise none.'
+  deviation_from_canonical: 'Estimator-level only (see infotheory.est.kozachenko): 1e-8 tie-breaking noise (|delta| ~4e-8 nat at T=256, probe3) and the JIDT naive-distance defect for N > 2000. At d=2 that
+    defect is rare (probe5: 1 wrong NN distance of 2001 at N=2001, 0 of 4096 at N=4096; var2_bivariate T=4096 je 2.821 vs reference 2.821). The time series are treated as iid samples (no Theiler window),
+    which the supplement allows for je (''intended to operate on serially independent observations'').'
+  units_and_range: 'Nats; real, can be negative (differential entropy). After z-scoring, independent Gaussian pairs give about log(2 pi e) = 2.838. Tends to -inf for near-deterministic pairs: shared_envelope
+    T=1024 pairs among rows 0-2 give -28.809 to 3 decimals (probe7, probe9), which is dominated by sub-1e-9 near-ties and the 1e-8 noise. Labelled ''unsigned''; the sign is not constrained.'
+  direction_convention: 'Undirected: A[i,j] = A[j,i] = H(z_i, z_j). The cache writes both cells (infotheory.py:174-175) and Undirected.multivariate mirrors. Probe7: je matrices exactly symmetric on gauss_ar1_pair
+    and shared_envelope.'
+  symmetry_expected: sym
+  already_documented: docs/storage_comparison/REVIEW.md M8 (differential entropies can be negative; stated there for the Gaussian joint entropy and applying equally here)
+  new_finding_candidates:
+  - 'Candidate (label): je_kozachenko carries the label ''linear'' (probe1: [''unsigned'',''infotheory'',''unordered'',''undirected'',''linear'']), set by the infotheory.py:53-54 else-branch for every non-kraskov/kernel/symbolic
+    estimator. Supplement §1.4.1 and config.yaml:400 say ''nonlinear''. The KL estimator is nonparametric.'
+  - 'Candidate (data sensitivity): with tied or near-tied samples the value is set by the 1e-8 noise. shared_envelope T=1024: je(0,1), je(0,2), je(1,2) are equal to 3 decimals (-28.809) but not identical:
+    JointEntropy.bivariate gives -28.8093911325, -28.8093892384 and -28.8093878131 (probe9; they differ at the 1e-6 level through the noise layout). Rows 0-2 have only 181 distinct values when rounded to
+    1e-9 (unique-count probe).'
+  - 'Candidate (copy path, added at the check stage): in a CalculatorFrame the SPI''s entropy calculator is a deep copy (CalculatorFrame.init_from_list, pyspi/calculator.py:559 calc = copy.deepcopy(base_calc);
+    JIDTBase.__deepcopy__, pyspi/statistics/infotheory.py:77-82, deep-copies the JPype proxy without re-running _setup). The copy reads NOISE_SEED ''NONE'' while NOISE_LEVEL_TO_ADD stays 1e-8, so every
+    CalculatorFrame computation draws an unseeded jitter and is not reproducible. Same mechanism as the KERNEL_WIDTH reset confirmed in it_kernel (infotheory.est.kernel|bivariate_gaussian|256|pipeline|copy-props).
+    The Calculator path and a pickle round trip (__setstate__ -> _getcalc -> _setup) keep NOISE_SEED=42.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - var2_bivariate
+    - anm
+    path: pipeline
+    reference: from-scratch KL (scipy cKDTree k=2, Euclidean; H = -digamma(1)+digamma(N)+log(pi)-gammaln(2)+ 2*mean(log rho)) on scipy.stats.zscore(row, ddof=1) pairs; compare with the Calculator matrix
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: '|A[i,j] - ref| <= 1e-6 nat for T in {64,256,1024} (noise-level differences; probe3 4e-8). At T=4096 still <= 1e-3, because the d=2 naive-distance defect is rare.'
+  - datasets:
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'analytic Gaussian: H = log(2 pi e) + 0.5*log(1 - r^2), r = sample correlation of the pair (z-scored data)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: Bias of A[0,1] and A[2,3] relative to the analytic value shrinks with T. |bias| < 0.1 nat at T=1024 and does not grow at T=4096.
+  - datasets:
+    - iid_gaussian
+    - gauss_ar1_pair
+    path: pipeline
+    reference: analytic symmetry A[i,j] == A[j,i]; direct bivariate(i,j) vs bivariate(j,i) on a fresh Data object
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'Direction convention: matrix is exactly symmetric. The fresh-object bivariate(j,i) differs from bivariate(i,j) only at noise level (<= 1e-6), because the column order changes the
+      noise layout.'
+  - datasets:
+    - shared_envelope
+    - logistic_maps
+    path: pipeline
+    reference: unique-value count of each row; KL with noise off vs default noise
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: Pairs with near-tied rows (shared_envelope rows 0-2; logistic_maps row 1, a period-4 orbit with 4 distinct values) give values that move by many nats when the noise level changes.
+      This documents that these datasets are degenerate for KL-based checks.
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_kozachenko.py:chk_comp (canonical KL via audit/checks/refs/_kernels_infotheory.py:entropy_kozachenko, cKDTree Euclidean, Kraskov 2004 eq. 20 k=1; jitter replica =
+    canonical KL on the input plus 1e-8 * java.util.Random(42).nextGaussian() added row-major per JIDT call (audit/checks/refs/it_kozachenko.py:JavaRandom; EntropyCalculatorMultiVariateCommon.java a9b6b3e7
+    :200-211); mode jidt = port of JIDT EuclideanUtils naive routine, same-lineage, used only to explain T = 4096), audit/checks/refs/it_kozachenko.py:chk_noiseoff with audit/checks/probes/it_kozachenko_probes.py:spi_noiseoff,
+    audit/checks/refs/it_kozachenko.py:chk_truth (population 2 H1 + 0.5 ln(1 - rho^2)), chk_order, chk_noise_sens, chk_je_shift, chk_frame (Calculator vs two CalculatorFrame objects vs pickle round trip,
+    audit/checks/probes/it_kozachenko_probes.py:frame)
+  check_data: iid_gaussian T256; bivariate_gaussian T256/T1024/T4096 (pairs 0-1, 2-3); var2_bivariate T1024/T4096; anm T1024; gauss_ar1_pair T1024; shared_envelope and logistic_maps T1024; scaled_offset
+    T1024 (kernel); trending T1024 (pipeline-detrend)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-10 against the jitter replica, the noise-off probe and the JIDT-naive-routine port; tolerance: atol 5e-4 nat (rtol 0) against the canonical KL without
+    jitter, 5e-4 = about 2x the largest jitter residual measured on the reference side at T <= 1024 (2.7e-4, si logistic_maps_bidir; ref_jitter_residual_maxabs); statistical: |pyspi - population| <= 2 SD
+    of a Monte Carlo of the canonical estimator (MC mean and z vs MC mean stored); qualitative: rule stated in each run'
+  closeness: 'Canonical KL (kl, 5 runs incl. T4096): max_abs 1.3e-7 (the jitter). Jitter replica (jrand, 6 runs incl. scaled_offset kernel and trending pipeline-detrend): max_abs 1.2e-14; noise-off probe
+    0.0. T4096 var2_bivariate: 2.82078501 vs canonical 2.82078503 (d = 2 is unaffected by the > 2000-row defect). Population 2 H1 + 0.5 ln(1 - rho^2): 6/6 pass, max_z <= 1.82 (T4096 rho=0.3: 2.7503 vs 2.7907,
+    MC SD 0.022). Order probe exact (A01 - A10 = 0; fresh bivariate(0,1) vs (1,0) differ by 4.2e-8, jitter layout). Ties: shared_envelope rows 0-2 je = -28.809 and moves by 9.2103 nat (= 2 ln 100) when
+    the jitter goes 1e-8 -> 1e-6, pairs with row 3 move <= 7.8e-5; logistic_maps pair (period-4 row) moves 3.9e-3 nat, above the 1e-3 I set beforehand (run fails). CalculatorFrame path (|frame runs): Calculator
+    and pickle equal the seeded replica (8.9e-16 var2, 5.3e-14 shared_envelope); two CalculatorFrame objects differ from the Calculator by 6.3e-8 / 7.7e-8 on var2_bivariate T1024 and by 0.061 / 0.042 on
+    shared_envelope T1024 (A[0,1] -28.8094 vs -28.7913 / -28.7975), and from each other by 1.4e-8 / 0.078.'
+  verdict: matches
+  score_0_10: 9
+  score_rubric: 9
+  score_rubric_basis: nearest-anchor
+  score_rubric_note: 'Anchor 10''s fp clause fails against canonical KL without jitter: kl runs reach max_abs 1.3e-7 (5.5e-8 relative on je|anm|1024|pipeline|kl). The
+    1.2e-14 agreement (jrand, 6/6) includes JIDT''s seeded 1e-8 jitter, which no anchor-9 clause names.'
+  documentation_status: metadata-conflict
+  verdict_adjusted: matches
+  score_adjusted: 9
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'Canonical Kozachenko-Leonenko joint entropy of the z-scored pair in nats, columns [z_max, z_min]; convention: JIDT''s seeded 1e-8 jitter (<= 1.3e-7 nat here). d = 2 is practically untouched
+    by the > 2000-row NN defect. Labelled ''linear'' although the estimator is nonparametric (documented ''nonlinear''). On near-tied rows the value is set by the jitter level (shared_envelope: shifts by
+    exactly d ln of the jitter ratio). CalculatorFrame path: the deep-copied calculator reads NOISE_SEED ''NONE'', so frame-path values carry an unseeded jitter and are not reproducible (carried as a finding,
+    not scored: path-dependent).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: <= 0.2 s per pyspi run (T4096), 0.03 s at T1024'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 on all runs (kl/jrand on iid_gaussian, bivariate_gaussian, var2_bivariate T1024/T4096, anm)'
+  direction_observed: 'undirected: A[i,j] = A[j,i] = H_KL([z_b, z_a]) for a < b (the (i=b, j=a) visit fills the joint-entropy cache first); orientation of the columns only moves the jitter layout (4.2e-8)'
+  candidate_resolutions:
+  - candidate: label 'linear' for the nonparametric KL variant
+    outcome: confirmed
+    evidence: infotheory.est.kozachenko|var2_bivariate|64|kernel|labels
+  - candidate: value set by the jitter on tied or near-tied rows
+    outcome: confirmed
+    evidence: 'infotheory.je.kozachenko|shared_envelope|1024|pipeline|ties (rows 0-2: -28.809, move 9.2103 nat for jitter 1e-8 -> 1e-6, replica to 5.3e-14): confirmed for shared_envelope. For logistic_maps
+      the trace''s expectation of a many-nat move is refuted: |logistic_maps|1024|pipeline|ties moves 3.9e-3 nat (about 2400 times smaller than shared_envelope; the run fails its own 1e-3 rule).'
+  - candidate: 'CalculatorFrame (deepcopy) path drops NOISE_SEED=42: unseeded jitter, outputs not reproducible'
+    outcome: confirmed
+    evidence: 'infotheory.je.kozachenko|var2_bivariate|1024|pipeline|frame (frame - Calculator 6.3e-8 / 7.7e-8), |shared_envelope|1024|pipeline|frame (A[0,1]: Calculator -28.8094, frames -28.7913 / -28.7975;
+      frames differ by 0.0776); infotheory.est.kozachenko|var2_bivariate|64|pipeline|copy-props'
+  checks_run:
+  - run_ids:
+    - infotheory.je.kozachenko|anm|1024|pipeline|jrand
+    - infotheory.je.kozachenko|bivariate_gaussian|1024|pipeline|jrand
+    - infotheory.je.kozachenko|iid_gaussian|256|pipeline|jrand
+    - infotheory.je.kozachenko|scaled_offset|1024|kernel|jrand
+    - infotheory.je.kozachenko|trending|1024|pipeline-detrend|jrand
+    - infotheory.je.kozachenko|var2_bivariate|1024|pipeline|jrand
+    reference: audit/checks/refs/it_kozachenko.py:chk_comp mode jrand (canonical KL on input + java.util.Random(42) jitter replica, exact rtol/atol 1e-10)
+    outcome: 6/6 pass; max_abs <= 1.2e-14
+  - run_ids:
+    - infotheory.je.kozachenko|anm|1024|pipeline|kl
+    - infotheory.je.kozachenko|bivariate_gaussian|1024|pipeline|kl
+    - infotheory.je.kozachenko|iid_gaussian|256|pipeline|kl
+    - infotheory.je.kozachenko|var2_bivariate|1024|pipeline|kl
+    - infotheory.je.kozachenko|var2_bivariate|4096|pipeline|kl
+    reference: audit/checks/refs/it_kozachenko.py:chk_comp mode kl (canonical KL via audit/checks/refs/_kernels_infotheory.py:entropy_kozachenko, tolerance atol 5e-4)
+    outcome: 5/5 pass; max_abs <= 1.3e-07
+  - run_ids:
+    - infotheory.je.kozachenko|bivariate_gaussian|1024|pipeline|truth-p01
+    - infotheory.je.kozachenko|bivariate_gaussian|1024|pipeline|truth-p23
+    - infotheory.je.kozachenko|bivariate_gaussian|256|pipeline|truth-p01
+    - infotheory.je.kozachenko|bivariate_gaussian|256|pipeline|truth-p23
+    - infotheory.je.kozachenko|bivariate_gaussian|4096|pipeline|truth-p01
+    - infotheory.je.kozachenko|bivariate_gaussian|4096|pipeline|truth-p23
+    reference: audit/checks/refs/it_kozachenko.py:chk_truth (population value, se = Monte Carlo SD of the canonical estimator)
+    outcome: 6/6 pass; max_z bivariate_gaussian T1024 1.28, bivariate_gaussian T1024 0.76, bivariate_gaussian T256 0.44, bivariate_gaussian T256 0.28, bivariate_gaussian T4096 1.82, bivariate_gaussian T4096
+      1.40
+  - run_ids:
+    - infotheory.je.kozachenko|gauss_ar1_pair|1024|pipeline|je-order
+    reference: audit/checks/refs/it_kozachenko.py:chk_order with audit/checks/probes/it_kozachenko_probes.py:order_check
+    outcome: 1/1 pass; max_abs <= 6.2e-15
+  - run_ids:
+    - infotheory.je.kozachenko|logistic_maps|1024|pipeline|ties
+    - infotheory.je.kozachenko|shared_envelope|1024|pipeline|ties
+    reference: audit/checks/refs/it_kozachenko.py:chk_noise_sens with audit/checks/probes/it_kozachenko_probes.py:noise_sensitivity
+    outcome: 1/2 pass
+  - run_ids:
+    - infotheory.je.kozachenko|scaled_offset|1024|kernel|shift-d2
+    reference: audit/checks/refs/it_kozachenko.py:chk_je_shift with audit/checks/probes/it_kozachenko_probes.py:je_scaled_shift
+    outcome: 1/1 pass; max_abs <= 5.5e-08
+  - run_ids:
+    - infotheory.je.kozachenko|var2_bivariate|1024|pipeline|noiseoff
+    reference: audit/checks/refs/it_kozachenko.py:chk_noiseoff with audit/checks/probes/it_kozachenko_probes.py:spi_noiseoff (exact vs canonical KL)
+    outcome: 1/1 pass; max_abs <= 0
+  - run_ids:
+    - infotheory.je.kozachenko|var2_bivariate|4096|pipeline|jidt
+    reference: audit/checks/refs/it_kozachenko.py:chk_comp mode jidt (port of JIDT naive NN routine, same-lineage, mechanism only)
+    outcome: 1/1 pass; max_abs <= 2.3e-14
+  - run_ids:
+    - infotheory.je.kozachenko|var2_bivariate|1024|pipeline|frame
+    - infotheory.je.kozachenko|shared_envelope|1024|pipeline|frame
+    reference: audit/checks/refs/it_kozachenko.py:chk_frame with audit/checks/probes/it_kozachenko_probes.py:frame
+    outcome: 2/2 pass; Calculator and pickle = seeded replica <= 5.3e-14; frames differ from the Calculator by <= 7.7e-8 (var2) and 0.061 (shared_envelope)
+optimisation:
+  complexity_P_T: 'O(P^2 T^2 d): JIDTBase._compute_joint_entropy, P(P-1)/2 JIDT EntropyCalculatorMultiVariateKozachenko calls (cached symmetrically), each a brute-force nearest-neighbour pass (EuclideanUtils.computeMinEuclideanDistances)
+    over T x 2 jittered observations. Measured fresh P exponent 1.98, T exponent 2.21. At 118x1024 the pair term dominates: 89.9 s measured fresh.'
+  hotspot_1: pyspi/statistics/infotheory.py:JIDTBase._compute_joint_entropy (third-party:jidt Kozachenko, self time) 99.8% cum / 99.6% self of the profiled SPI call at 8x1024
+  hotspot_2: 'none visible inside Java. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0027
+  profile_file: audit/profiles/infotheory.je.kozachenko__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_kozachenko-2
+    opportunity: Replace the brute-force nearest-neighbour search behind EntropyCalculatorMultiVariateKozachenko (EuclideanUtils.computeMinEuclideanDistances, O(N^2 d); measured T exponent 2.0-2.3) with
+      a kd-tree query (scipy cKDTree, k=1, Euclidean) on the same normalised, jittered observations, keeping JIDT's digamma formula.
+    opp_type: replace-library
+    expected_speedup: 5-20x
+    speedup_basis: 'profile:audit/profiles/infotheory.je.kozachenko__8x1024.pstats pyspi/statistics/infotheory.py:159 _compute_joint_entropy 99.8% (JIDT Java time booked as pyspi self time) + complexity:
+      brute force evaluates N^2 = 1.05e6 distances of dimension 2 per call at T=1024 (measured T exponent 2.21); a kd-tree needs ~N log N queries in d <= 4 and loses most of its advantage near d = 10'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'check stage: a cKDTree-based replica with the java.util.Random(42) jitter port reproduces JIDT to <= 1.2e-14 (je.kozachenko jrand runs), 3.7e-14 (cce), 2.1e-14 (xme_k1) for <= 2000 rows;
+      above 2000 rows JIDT switches to the naive routine whose distances differ (infotheory.est.kozachenko finding), so there the change is semantic'
+    effort: M
+    depends_on: []

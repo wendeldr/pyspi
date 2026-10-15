@@ -1,0 +1,417 @@
+unit_id: distance.mgc
+status: profiled
+correctness:
+  metric_name_standard: 'Sample multiscale graph correlation (Sample MGC): smoothed maximum local distance correlation over k/l-nearest-neighbour scales'
+  canonical_ref: Shen C, Priebe CE, Vogelstein JT (2020) From distance correlation to multiscale graph correlation. J Am Stat Assoc 115(529):280-291, §3.1 eq.(6) and the local covariance/correlation definitions,
+    §4.1 eqs.(7)-(9), Corollary 3 (threshold); see also Vogelstein et al. 2019 eLife 8:e41690
+  canonical_definition: A_ij = D^x_ij - (1/(n-1)) sum_s D^x_sj for i!=j, A_ii = 0 (column centring), B likewise. R^A_ij is the ascending rank of D^x_ij within column j, with minimal (consecutive) rank for
+    ties. A^k = A ∘ I(R^A <= k), B^l = B ∘ I(R^B <= l), and Ê(M) = (1/(n(n-1))) sum_{i!=j} M_ij. dCov^{k,l} = Ê(A^k ∘ B^l') - Ê(A^k)Ê(B^l'), where ' is the transpose, and dVar is analogous. dCorr^{k,l}
+    = dCov/sqrt(dVar^k dVar^l), set to 0 if a local variance < ε. Sample MGC is the max of dCorr over R, where R is the largest connected component of {dCorr^{k,l} > max(τ_n, dCorr^{n,n})}. τ_n = 2 F^{-1}_{Beta((v-1)/2,(v-1)/2)}(1
+    - 0.02/n) - 1 with v = n(n-3)/2. The statistic falls back to dCorr^{n,n} if |R| < 2n or if the max is <= dCorr^{n,n}.
+  documented_definition: 'supplement §1.2.3, p.6 (supplement.txt:243-252; the pack listed 249-259): keywords ''undirected, nonlinear, unsigned, bivariate, contemporaneous''; ''Multiscale graph correlation
+    (MGC) [14] is a generalization of distance correlation ... the algorithm truncates the Euclidean distance matrices ... at an optimal threshold. MGC also includes a smoothing function that is intended
+    to remove any bias introduced by disconnected components ... Only this unbiased estimator is included here (as in hyppo)''. [14] = Shen, Priebe, Vogelstein, JASA 115, 280 (2020). GitBook spi-descriptions/distance-similarity.md:251-266
+    has the same text, but its ''Key References'' link (line 257) points to researchgate ''3943235_Discovering_similar_multidimensional_trajectories'', an LCSS paper, not MGC.'
+  delegate_lib: hyppo==0.5.2 hyppo.independence.MGC().statistic -> scipy==1.17.1 scipy.stats.multiscale_graphcorr(distx, disty, compute_distance=None, reps=0) -> scipy.stats._stats._local_correlations (Cython,
+    scipy v1.17.1 _stats.pyx); distance matrices from scikit-learn==1.9.1 pairwise_distances(metric='euclidean') via hyppo.tools.compute_dist
+  implemented_as: 'Preprocessing is the Calculator default: per-process z-score (ddof=1) and no detrend. Each pair uses x = process i and y = process j as (T,1) arrays, with sklearn dot-product Euclidean
+    distance matrices, which are not exactly |x_a - x_b| and not bit-symmetric. Column-wise dense ranks come from np.unique(return_inverse)+1, so the diagonal (self, distance 0) gets rank 1. Column centring
+    is D - colmean*n/(n-1) with the diagonal zeroed. The local covariance sum_{ab} A_ab B_ba I(rA_ab <= k) I(rB_ba <= l) - S_A(k) S_B(l)/n^2 is computed by rank binning, cumsum and a 2-D cumulative recurrence.
+    Local variances are the diagonals of the same construction with (A, A''), and correlation = cov/sqrt(varx vary), clipped to <= 1, with rows or columns whose variance is <= 0 set to 0. The map is m x
+    n'', where m and n'' are the numbers of distinct ranks (equal to T for continuous data). The threshold uses samp_size = n-1: Beta shape (n-1)(n-4)/4 - 1/2 at percentile 1 - 0.02/(n-1), maxed with the
+    global-scale value. R is the largest 4-connected component (scipy.ndimage.label, first label on size ties). It is used only if |R| >= ceil(0.02*max(m,n''))*min(m,n''), and then stat = max(global, max
+    over R). The permutation test is skipped (reps=0, warnings suppressed). Undirected: all ordered pairs are computed, and then the lower triangle is overwritten by the upper.'
+  implementation_trace:
+  - pyspi/calculator.py:46-53 defaults detrend=False, normalise=True; :277 Data(...)
+  - pyspi/data.py:184-197 detrend/zscore(ddof=1); :257-260 realisation axis; :108-118 to_numpy
+  - 'pyspi/base.py:84-94 Directed.multivariate computes A[i,j] = bivariate(data,i,j) for all ordered pairs; :132-138 Undirected.multivariate: li = np.tril_indices(P,-1); A[li] = A.T[li] (upper triangle
+    kept)'
+  - pyspi/statistics/distance.py:10-15 imports hyppo.independence.MGC; :100-105 class MultiscaleGraphCorrelation(Undirected, Unsigned); :107-111 x, y = data.to_numpy()[[i, j]]; stat = MGC().statistic(x,
+    y)
+  - pyspi/config.yaml:155-163 MultiscaleGraphCorrelation, labels undirected/unsigned, no configs
+  - '.venv/lib/python3.12/site-packages/hyppo/independence/mgc.py:126-131 MGC.__init__(compute_distance=''euclidean''); :151-166 statistic: compute_dist (154-157), multiscale_graphcorr(distx, disty, compute_distance=None,
+    reps=0) under warnings ignore (159-161), return mgc.stat'
+  - .venv/lib/python3.12/site-packages/hyppo/tools/common.py:436-503 compute_dist -> sklearn pairwise_distances at :499
+  - .venv/lib/python3.12/site-packages/sklearn/metrics/pairwise.py:403-421 float64 dot-product Euclidean distances, clip at 0, zero diagonal
+  - .venv/lib/python3.12/site-packages/scipy/stats/_mgc.py:100-101 multiscale_graphcorr; :302-310 1-D -> (n,1); :331-333 raises ValueError if n < 5; :358-364 compute_distance None -> _mgc_stat(x, y); :368-370
+    _perm_test with reps=0
+  - '.venv/lib/python3.12/site-packages/scipy/stats/_mgc.py:383-429 _mgc_stat: _local_correlations(distx, disty, global_corr=''mgc'') (408); samp_size = len(distx) - 1 (418)'
+  - '.venv/lib/python3.12/site-packages/scipy/stats/_mgc.py:432-474 _threshold_mgc_map: per_sig = 1 - 0.02/samp_size; beta.ppf(per_sig, s(s-3)/4 - 1/2, same)*2 - 1; threshold = max(threshold, map[m-1][n-1]);
+    largest component via _measurements.label, argmax(label_counts[1:])'
+  - '.venv/lib/python3.12/site-packages/scipy/stats/_mgc.py:477-525 _smooth_mgc_map: default global stat; requires np.sum(sig_connect) >= np.ceil(0.02*max(m,n))*min(m,n) (509); stat = max_corr if max_corr
+    >= stat'
+  - https://github.com/scipy/scipy/blob/v1.17.1/scipy/stats/_stats.pyx :323-332 _dense_rank_data/_rank_distance_matrix (np.unique return_inverse + 1, column-wise); :337-357 _center_distance_matrix (distx
+    - colmean*n/(n-1), fill_diagonal 0 for 'mgc'); :418-446 _local_covariance (rank binning, cumsums, _covar_map, centring with /n**2 at :444); :451-491 _local_correlations (cov with cent_disty.T/rank_disty.T,
+    variances as diagonals, clip > 1, zero where variance <= 0)
+  deviation_from_documented: '(1) The supplement says ''Only this unbiased estimator is included here (as in hyppo)''. The global-scale value of the map is the column-centred dCorr^{n,n} of Shen et al.
+    eq. (6), not hyppo''s U-centred unbiased Dcorr. Probe on iid_gaussian T=256 pair (0,1): MGC global -0.0059473 vs Dcorr unbiased -0.0059357, close but different. (2) The label is ''unsigned'' (supplement
+    keywords, config.yaml and class; GitBook glossary-of-terms.md:21, ''Signed'' keyword row, gives distance correlation ''defined in the range [0,1]'' as the example of an unsigned SPI), but values are
+    negative whenever the statistic falls back to the global scale under near-independence. Probe minimum was -0.0264 on iid_gaussian T=64, and most iid pairs were negative. (3) The GitBook ''Key References''
+    link (distance-similarity.md:257) points to ''Discovering similar multidimensional trajectories'', an LCSS paper; the supplement cites Shen et al. 2020 as the MGC source. (4) The verbal description of truncation
+    and smoothing is consistent with the code.'
+  deviation_from_canonical: 'The code follows the authors'' R reference implementation (neurodata/r-mgc, GitHub master fetched 2026-10-14) rather than the paper text on three constants. (a) Subtractive centring term: /n^2 (_stats.pyx:444,
+    matching r-mgc MGCLocalCorr.R:167) instead of the paper''s Ê = 1/(n(n-1)). This is irrelevant at the global scale, where column sums are 0, and changes local correlations by O(1/n). Probe: nonlinear_dependence
+    T=64 0.58183 vs 0.58028 with n(n-1), T=1024 0.534318 vs 0.534201. (b) Threshold sample size n-1 (_mgc.py:418, 454-456; R MGCSampleStat.R:99, 122-126) instead of n (Corollary 3). No effect was seen in
+    the probes. (c) Minimum region size: ceil(0.02*max(m,n))*min(m,n) (_mgc.py:509), versus the paper''s 2n and r-mgc''s 2*min(m,n) (MGCSampleStat.R:172). For continuous data (m = n = T) this means n (T<=50),
+    2n (51-100), 6n (T=256), 21n (T=1024) or 82n (T=4096): stricter than the paper for T > 100. With tied data (m < n) it can be far laxer: on logistic_maps T=64 (map 64x8) the code gives 0.3707 vs 0.3157
+    under the 2n rule. (d) Equal-size largest components: the code takes the first label (argmax at _mgc.py:469), whereas the paper takes the union. (e) Variance cut-off is <= 0 rather than < ε. (f) Dense
+    rank equals the paper''s ''minimal rank'' consecutive indexing (consistent). (g) Input distances are sklearn dot-product distances: rounding reorders near-tied neighbours. Probe on shared_envelope T=256
+    pair (0,1): 0.708 (pyspi) vs 0.769 with exact |x_a - x_b| (optimal scale (2,2)); logistic_maps T=256: 0.3176 vs 0.3221. Check-stage correction to (c): the SciPy region rule DOES change values on continuous
+    data. At T=256 (required region 6n) the r-mgc rule 2*min(m,n) and the paper rule 2n accept local regions that SciPy rejects: anm pair (1,3), independent by construction, gives 0.0319 under the r-mgc
+    rule vs pyspi 0.0051 (global fallback), and narrowband_f0-0.1 pair (1,2) gives 0.5364 vs pyspi 0.4751 (distance.mgc|anm|256|kernel|rmgc, distance.mgc|narrowband_f0-0.1|256|kernel|rmgc). On logistic_maps
+    the r-mgc rule coincides with SciPy''s (map 64 x 8: ceil(0.02*64)*8 = 16 = 2*min(m,n); identical values at T=64 and T=256), so the 0.3157 value is the paper''s 2n rule only, not r-mgc''s.'
+  units_and_range: 'A dimensionless correlation in [-1, 1], always >= the global-scale dCorr^{n,n}. It is negative under independence when the fallback to the global scale occurs, and equals 1 for identical
+    series (probe on the shared_envelope bit-identical copy). Mathematically symmetric: bivariate(i,j) and bivariate(j,i) differ by <= 1.1e-14 in probes, and the published matrix is exactly symmetric through
+    the Undirected mirror. Raises ValueError for T < 5 (_mgc.py:331-333).'
+  direction_convention: Undirected. Directed.multivariate computes every ordered pair (base.py:91-93), and Undirected.multivariate copies the upper triangle into the lower (base.py:136-137). Hence A[i,j]
+    = A[j,i] = MGC(x = process min(i,j), y = process max(i,j)). No direction information.
+  symmetry_expected: sym
+  already_documented: 'partly: REVIEW M2 (root cause of the distance-rounding consequence only; consequence new); the class ''unsigned label on a legitimately negative bias-corrected estimator'' is documented for other SPIs in REVIEW M7 (docs/storage_comparison/REVIEW.md:189-193) and M8 (REVIEW.md:197) and EEG_OPTIMIZATION_NOTES.md:169, none of which names mgc, so the negative values are a new instance of that class (same treatment as dcorr_hsic). The region-rule, centring and documentation findings are not in KNOWN_ISSUES.md'
+  new_finding_candidates:
+  - 'CANDIDATE: ''unsigned'' label but negative outputs. The label comes from the supplement keywords and config.yaml, and GitBook glossary-of-terms.md:21 (''Signed'' keyword row) says ''Other SPIs, such
+    as distance correlation (defined in the range [0,1]) are unsigned''; MGC generalises distance correlation and returns its global-scale dCorr on fallback. Probe p3_mgc.py found pyspi mgc minimum -0.0264
+    (iid_gaussian T=64) and -0.0075 (T=256), with most independent pairs negative, because _smooth_mgc_map returns the global-scale value stat_mgc_map[m-1][n-1] (_mgc.py:502) when no region qualifies. REVIEW
+    M7 (docs/storage_comparison/REVIEW.md:189-193; dspli/dswpli/ppc; in pyspi these measures exist as multitaper identifiers and, for dspli and ppc, also as wavelet identifiers, which REVIEW M7 does not name) and M8 (REVIEW.md:195-198; pec/pec_log, Gaussian joint/conditional entropy), KNOWN_ISSUES.md:31-32, document legitimately negative estimates under unsigned labels for other SPIs; none names mgc, so this is a new instance of that class, not a new finding by itself.'
+  - 'CANDIDATE: the minimum-region rule differs from both the paper and the authors'' R code. _mgc.py:509 ''if np.sum(sig_connect) >= np.ceil(0.02 * max(m, n)) * min(m, n)'' differs from Shen 2020 §4.1
+    (''less than 2n'') and from r-mgc MGCSampleStat.R:172 ''sum(R)>=2*(min(m,n))''. The probe p4_mgc_variants.py on logistic_maps T=64 gave pyspi=0.3706714311 vs region2n=0.3157202560. On continuous data
+    the rule did not change any probed value, because the regions were large.'
+  - 'CANDIDATE: the subtractive term uses n^2 rather than the paper''s n(n-1) (_stats.pyx:444 ''cov_xy - ((expectx...) @ expecty...T) / n**2)''). This matches r-mgc (MGCLocalCorr.R:167 ''/n/(n)''), so it
+    is a paper-vs-reference-code discrepancy, not a pyspi bug. Probe effect: up to 1.5e-3 absolute at T=64 and 1.2e-4 at T=1024.'
+  - 'CANDIDATE: rounding in sklearn dot-product Euclidean distances changes nearest-neighbour ranks and hence the local correlation map. Probe p7_rounding_scope.py at T=256 reported ''shared_envelope MGC
+    max abs diff 6.14e-02'' and ''logistic_maps 4.47e-03'' versus exact |x_a - x_b| distances, with <= 7e-14 on the 17 other datasets. This has the same root cause as REVIEW.md M2, which was reported only
+    as last-bit asymmetry for pdist.'
+  - 'CANDIDATE (documentation): the supplement''s ''unbiased estimator'' wording does not match the global-scale estimator (column-centred, Shen eq. 6), which differs from hyppo Dcorr unbiased (probe -0.0059473
+    vs -0.0059357). The GitBook reference link points to an unrelated LCSS paper.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - nonlinear_dependence
+    - anm
+    - narrowband_f0-0.1
+    - contaminated
+    path: kernel
+    reference: From-scratch numpy implementation of the local correlation map and Sample MGC. Exact distances |x_a - x_b|, column centring with 1/(n-1) and zero diagonal, column-wise dense ranks via np.unique,
+      rank-binned 2-D cumulative sums for the local covariance (A with B transposed) and variances. Thresholding uses scipy.stats.beta.ppf and the scipy.ndimage.label primitive. The reference does not import
+      hyppo or scipy.stats.multiscale_graphcorr. Run it with the implementation's constants (n^2, samp = n-1, region ceil(0.02 max)·min) at T in {64, 256, 1024}. The prototype probes/mgc_scratch.py in the
+      scratchpad reproduced pyspi to 1e-10 on these kinds of data.
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: Absolute difference <= 1e-10 on continuous datasets.
+  - datasets:
+    - nonlinear_dependence
+    - logistic_maps
+    - narrowband_f0-0.1
+    - anm
+    path: kernel
+    reference: 'The same from-scratch reference under two parameterisations. Paper constants: Ê = 1/(n(n-1)), τ_n with n, region >= 2n. r-mgc constants: n^2, n-1, region >= 2·min(m,n). Report the pyspi
+      difference from each.'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: Paper variant differs from pyspi by <= ~2e-3 absolute on continuous data, mostly from n^2 vs n(n-1). On logistic_maps T=64, both the paper and r-mgc region rules give about 0.316 vs
+      pyspi 0.371, which quantifies the region-rule deviation.
+  - datasets:
+    - logistic_maps
+    - shared_envelope
+    path: kernel
+    reference: From-scratch exact-distance reference vs pyspi, to attribute the rounding-sensitivity candidate. As a same-lineage aid, also run scipy.stats.multiscale_graphcorr on the exact distance matrices.
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: pyspi is expected to DISAGREE with the exact-distance reference by about 0.06 (shared_envelope T=256 pair (0,1)) and about 0.0045 (logistic_maps T=256). The same-lineage run on exact
+      distances should agree with the reference, confirming that sklearn distance rounding is the cause.
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    path: kernel
+    reference: 'Analytic global-scale identity: dCorr^{n,n} = sum_{a!=b} A_ab B_ba / sqrt(sum A_ab A_ba · sum B_ab B_ba) with column-centred A, B. Compare with dcor.u_distance_correlation_sqr from the comparison
+      venv (dcor==0.7, U-centred) as a related quantity.'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: Where pyspi falls back to the global scale (typical for iid pairs), pyspi equals the analytic column-centred value to <= 1e-12. The U-centred dcor value differs at the 1e-5 level (a
+      related quantity, not the same estimator).
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    - logistic_maps
+    - delayed_noise
+    path: pipeline
+    reference: 'Symmetry and direction convention: compare the full pyspi matrix with direct bivariate(i,j) and bivariate(j,i) calls and with the from-scratch reference for both argument orders.'
+    reference_kind: independent-impl
+    criterion: direction
+    expected_outcome: The pyspi matrix is exactly symmetric, and A[i,j] (i<j) equals bivariate(i,j). bivariate(j,i) differs by <= 1e-13 (floating summation order); in the rare case of equal-size components
+      the tie-break can differ, which should be reported. No direction information.
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: Permutation null from the from-scratch reference (200 permutations per pair). Check the sign distribution of the pyspi values.
+    reference_kind: independent-impl
+    criterion: statistical
+    expected_outcome: Percentiles are consistent with uniform, and a substantial fraction of null values are negative, contradicting the 'unsigned' label.
+  - datasets:
+    - shared_envelope
+    - nonlinear_dependence
+    path: pipeline
+    reference: Analytic and qualitative anchors. A bit-identical copy (shared_envelope (0,2)) must give 1. Parabola and circle (nonlinear_dependence) must give clearly positive values, well above the iid
+      level.
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'mgc(0,2) on shared_envelope = 1.0 exactly (probe: 1.0 at T=64 and 256). nonlinear_dependence pairs are about 0.44-0.58, against |iid| < 0.03.'
+  - datasets:
+    - scaled_offset
+    - bivariate_gaussian
+    path: pipeline
+    reference: 'Invariance: scaled_offset should equal bivariate_gaussian after z-scoring, since MGC is invariant to per-variable affine maps.'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: Matrices agree to <= 1e-12 absolute.
+  - datasets:
+    - trending
+    - bivariate_gaussian
+    path: pipeline-detrend
+    reference: 'Qualitative: shared linear trends create spurious distance dependence. Compare trending with and without detrend against bivariate_gaussian.'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: Without detrend, values are inflated towards 1 for pairs that are independent in bivariate_gaussian. With detrend=True, values fall back near the bivariate_gaussian levels. They are
+      not identical, because detrend removes each realised series' least-squares line.
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/hhg_mgc.py:mgc_from_dist (from scratch in numpy: Shen, Priebe & Vogelstein 2020 eq. 6 column centring, dense column ranks, rank-binned 2-D cumulative local covariances,
+    Corollary 3 Beta threshold via scipy.stats.beta.ppf, largest 4-connected component via scipy.ndimage.label; does not import hyppo or scipy.stats.multiscale_graphcorr; constants selectable: SciPy (n^2,
+    n-1, ceil(0.02 max)min), paper (n(n-1), n, 2n), r-mgc (n^2, n-1, 2 min)); audit/checks/refs/hhg_mgc.py:mgc_global (analytic global-scale identity); audit/checks/refs/_kernels_distance.py:dcorr_from_dist
+    (U-centred dCor^2, related quantity); audit/checks/refs/hhg_mgc.py:dcor2_gauss (population dCor^2, Szekely, Rizzo & Bakirov 2007 Thm 7); audit/checks/refs/hhg_mgc.py:mc_quantile_band; probes audit/checks/probes/hhg_mgc_probes.py:optscale
+    (hyppo''s compute_dist + multiscale_graphcorr with mgc_dict exported), ordered, copies, small_n, hyppo_exact (same-lineage attribution aid). The definition itself is literature-only (Shen et al. 2020;
+    Vogelstein et al. 2019 eLife 8:e41690); no implementation outside the hyppo/SciPy/r-mgc lineage exists in the environment, so the SciPy constants were mirrored from the SciPy code; audit/checks/refs/hhg_mgc.py:ref_perm
+    (per-pair conditional permutation null, 200 permutations of y on exact distances; trace proposed check [5]); calibration probes scratchpad hhg_mgc_check/p_perm_ks_calibration.py and p_perm_other_draws.py'
+  check_data: iid_gaussian, bivariate_gaussian, nonlinear_dependence, anm, narrowband_f0-0.1, contaminated T64/T256/T1024 kernel; bivariate_gaussian T256 pipeline; nonlinear_dependence, logistic_maps, narrowband_f0-0.1,
+    anm T64/T256 (paper and r-mgc constants); logistic_maps and shared_envelope T64/T256 kernel and T256 pipeline (tied-data attribution); iid_gaussian and bivariate_gaussian T64/T256/T1024 (global identity,
+    U-centred dCor); optimal-scale probe on bivariate_gaussian T64/T256/T1024 and iid_gaussian, nonlinear_dependence, narrowband_f0-0.1, logistic_maps T256; iid_gaussian, var2_bivariate, logistic_maps_chaotic,
+    delayed_noise T256 pipeline (symmetry); iid_gaussian T64/T256/T1024 (null); shared_envelope (0,2) T64/T256; iid_gaussian copies T64/T256; ordering T256; scaled_offset T256/T1024; trending T256; bivariate_gaussian
+    T64/T256/T1024 (population dCor^2); n = 4/5 edge; iid_gaussian T64/T256 kernel (per-pair permutation null)
+  agreement_criterion: 'tolerance atol 1e-10 against the from-scratch statistic with SciPy''s constants on exact distances (continuous data) or sklearn-mirrored distances (tied data); exact rtol 1e-10/atol
+    1e-12 for the global-scale identity, the optimal scale and the copy value 1; related quantity: atol 1/n against the U-centred bias-corrected dCor^2; statistical |pyspi - target| <= z_(1-0.025/m) Monte
+    Carlo SD; qualitative ordering inside/above the empirical family-wise null band (2000 draws); paper constants atol 2e-3 and r-mgc constants atol 1e-10 as deviation measurements; qualitative per-pair
+    permutation null (200 permutations of y): pass = KS of the 10 pair percentiles vs U(0,1) p >= 0.05 and no upper-tail permutation p < 0.05/10'
+  closeness: 'SciPy-constant reference: all 19 def runs pass (6 datasets x T64/T256/T1024 kernel plus bivariate_gaussian T256 pipeline), max_abs <= 5.8e-14 (distance.mgc|anm|1024|kernel|def); dir/ordered/trend/detrend/scaleinv
+    max_abs <= 8.6e-14. Global-scale identity: every bivariate_gaussian and iid_gaussian pair falls back to the global scale at T64/T256/T1024 (optscale probe: 12/12 and 20/20 pairs at opt_scale (n,n);
+    scale and global map value match the reference, max_abs <= 2.9e-14), and pyspi equals the column-centred dCorr^{n,n} sum A_ab B_ba / sqrt(sum A_ab A_ba sum B_ab B_ba) to max_abs 2.6e-15 / 1.0e-14 /
+    3.8e-14 (|global runs). It is NOT equal to the U-centred unbiased dCor^2 that hyppo''s Dcorr returns: max |global - udcorr| 1.79e-3 / 1.64e-4 / 1.23e-5 on bivariate_gaussian and 1.39e-3 / 1.55e-4 /
+    3.24e-5 on iid_gaussian at T64/T256/T1024 (within the O(1/n) tolerance). Local scales chosen: nonlinear_dependence T256 (42,89) and (5,5), narrowband_f0-0.1 (65,26) and (50,48), logistic_maps (249,6).
+    Population: |pop runs max_z 0.86 / 0.64 / 0.72; Monte Carlo means 0.0723 (rho=0.3) and 0.5674 (rho=0.8) at T1024 against dCor^2 0.0724 and 0.5699. Anchors: shared_envelope (0,2) = 1.0 exactly at T64/T256;
+    copies = 1 within 2.2e-15; nonlinear_dependence (0,1) 0.524 and (2,3) 0.477 at T256 against the null band [-0.0072, 0.0373]. Null: |null max_z 0.67 / 0.75 / 1.98; 90% / 90% / 80% of pyspi iid values
+    negative, minimum -0.0264 (T64). Paper constants: max_abs 1.5e-3 (nonlinear_dependence T64), 5.2e-4 (T256), 2.4e-3 (narrowband T64), 0.0564 (logistic_maps T64), 0.0464 (T256), 0.0610 (narrowband T256),
+    0.0269 (anm T256); r-mgc constants: 0.0 where the region rule does not bind, 0.0613 (narrowband T256) and 0.0269 (anm T256) where it does. Tied data against EXACT distances: shared_envelope|256|pipeline|exact
+    max_abs 6.14e-2 (0.708 vs 0.769), |256|kernel|exact 4.99e-2, logistic_maps|256|pipeline|exact 4.47e-3; skdist and hyppo-exact runs pass at <= 1.2e-14. Permutation null (|perm, 200 permutations per pair,
+    iid_gaussian kernel): T64 passes (KS p 0.288, mean percentile 0.411, smallest upper-tail p 0.114); T256 FAILS the uniformity criterion (KS p 0.0122, mean percentile 0.2475, lower tail; smallest upper-tail
+    p 0.134, so no pair is flagged as dependent). Sign: 63.3% (T64) and 62.6% (T256) of the 2000 permutation-null values are negative and 90% of the pyspi values are negative in both runs. Calibration probe
+    (400 fresh 5 x 64 iid draws): the KS criterion fails on 4.25% of null draws and reaches KS p <= 0.012 on 1.0%; a fresh MGC iid_gaussian T1024 draw gives KS p 0.180 (probe p_perm_other_draws.py). The T256 draw (iid_gaussian_T256.npz,
+    dataset seed 1000256, audit/checks/data/MANIFEST.json) is the one on which dcorr_hsic''s four distance.*|iid_gaussian|256|pipeline|null runs fail (mean dCor^2 at the 0.15% lower
+    permutation tail; notes/dcorr_hsic.md) and to which lagged_dcorr_mgc traces its null exceedance; MGC on iid data falls back to
+    the global-scale column-centred dCorr, so that shared draw is the common explanation.'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: SciPy's region rule matches neither the paper (2n) nor r-mgc and moves values by up to 0.061 at T=256. The global fallback is column-centred dCorr,
+    not the supplement's unbiased estimator (differs by 1.79e-3 at T=64).
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'pyspi computes SciPy''s multiscale_graphcorr statistic exactly as SciPy''s code states. That statistic deviates from the Shen et al. 2020 text in an interpretable way: the minimum region
+    size ceil(0.02*max(m,n))*min(m,n) is SciPy''s own rule, matching neither the paper (2n) nor the authors'' r-mgc code (2*min(m,n)), and it changes values by up to 0.061 at T=256 on continuous data; the
+    centring term n^2 and threshold size n-1 follow r-mgc, not the paper (<= 2.4e-3). It also deviates from the supplement: the label ''unsigned'' (and the glossary''s ''distance correlation (defined in
+    the range [0,1])'') is contradicted by negative values on 80-90% of independent pairs, and ''unbiased estimator (as in hyppo)'' is inaccurate because the global fallback is the column-centred dCorr^{n,n},
+    not hyppo''s U-centred dCor^2. Rubric 6: deviates from both the supplement and the canonical text in an interpretable way. The same-lineage cap does not apply and is not the basis of the score: the
+    reference does not import or port SciPy''s multiscale_graphcorr or hyppo (check_method independent-impl); it takes only three constants (n^2, n-1, the region rule) from SciPy''s code, and those constants
+    are what is being described, while the paper''s and r-mgc''s constants are measured as deviations. Separately, sklearn dot-product distances move values by up to 0.061 on tied data (root cause REVIEW
+    M2).'
+  new_finding: true
+  definition_under_review: true
+  check_cost: 'moderate: 0.28 s per pyspi call at T=1024 and 16.6 s at T=4096 (timed probe, T=4096 not in the manifest); the 97 MGC runs took 109.2 s of pyspi time in the forced re-run (123 s for 95 runs
+    in the first run). Reference side: the per-pair permutation null took 24.9 s at T=256 (10 pairs x 200). The trace proposed check [5] (200-permutation null per pair, iid_gaussian kernel, percentiles
+    and sign) was run as proposed at T64/T256 (|perm runs); the Monte Carlo null (|null runs) is additional, not a replacement. Not run: the permutation null at T=1024 in the manifest (about 40 min serial;
+    one parallel probe draw only)'
+  symmetry_observed: 'sym: the published matrix has max|A - A.T| = 0.0 on every run (Undirected mirror). Unmirrored Directed.multivariate (probe ''ordered'') gives max|MGC(i,j) - MGC(j,i)| = 1.07e-14 (iid_gaussian),
+    5.8e-15 (delayed_noise), 5.4e-15 (var2_bivariate), 5.6e-17 (logistic_maps_chaotic) at T=256'
+  direction_observed: 'No direction information. A[i,j] = A[j,i] = MGC(process min(i,j), process max(i,j)): var2_bivariate (x0 -> x1) 0.0476 and logistic_maps_chaotic (x -> y) 0.0670 in both orders; delayed_noise
+    pairs are at null level (|values| <= 0.0037), as expected for a contemporaneous measure on lagged white noise (distance.mgc|*|256|pipeline|dir and |ordered).'
+  candidate_resolutions:
+  - candidate: '''unsigned'' label (supplement, config.yaml, GitBook glossary-of-terms.md:21) but negative outputs when the statistic falls back to the global scale'
+    outcome: confirmed
+    evidence: 'distance.mgc|iid_gaussian|{64,256,1024}|pipeline|null: pyspi_frac_neg 0.9 / 0.9 / 0.8, minimum -0.0264 (T64); the from-scratch null is negative in 61-68% of draws (mc_frac_neg 0.675 / 0.617
+      / 0.667; 61% of the 2000 draws at T=256); independent pairs negative in the order runs (e.g. bivariate_gaussian (1,2) -0.0057). A new instance of the class documented in REVIEW M7/M8 (KNOWN_ISSUES.md lines 31-32), which do not name mgc; per-pair permutation nulls:
+      63.3% (T64) and 62.6% (T256) of null values negative, 90% of pyspi values negative (distance.mgc|iid_gaussian|{64,256}|kernel|perm)'
+  - candidate: SciPy's minimum-region rule differs from the paper (2n) and from r-mgc (2*min(m,n))
+    outcome: confirmed
+    evidence: 'distance.mgc|anm|256|kernel|rmgc max_abs 0.0269 (independent pair (1,3): 0.0319 under r-mgc vs pyspi 0.0051), distance.mgc|narrowband_f0-0.1|256|kernel|rmgc 0.0613 (0.5364 vs 0.4751); paper
+      rule on logistic_maps|64|kernel|paper 0.0564. Scope correction to the trace: the rule also changes continuous-data values at T=256, and on logistic_maps the r-mgc rule equals SciPy''s (logistic_maps|{64,256}|kernel|rmgc
+      max_abs <= 6.3e-15), so only the paper rule gives about 0.316 there'
+  - candidate: Subtractive centring term divides by n^2 (r-mgc convention) rather than the paper's n(n-1)
+    outcome: confirmed
+    evidence: The paper-constant variant (n(n-1), threshold with n, region 2n) differs from pyspi by 1.5e-3 (nonlinear_dependence|64|kernel|paper), 5.2e-4 (|256|kernel|paper) and 2.4e-3 (narrowband_f0-0.1|64|kernel|paper)
+      where the region rule does not bind, while the r-mgc constants (n^2, n-1) reproduce pyspi to <= 6.3e-15 there (|rmgc runs). A paper-vs-author-code discrepancy, not a pyspi defect
+  - candidate: sklearn dot-product distance rounding changes nearest-neighbour ranks and hence the local correlation map
+    outcome: confirmed
+    evidence: distance.mgc|shared_envelope|256|pipeline|exact max_abs 6.14e-2 (0.708 vs 0.769), |256|kernel|exact 4.99e-2, |64|kernel|exact 5.9e-3; distance.mgc|logistic_maps|256|pipeline|exact 4.47e-3,
+      |256|kernel|exact 1.44e-3; the skdist runs (sklearn-mirrored distances) and the hyppo-exact runs (SciPy fed exact distances) all pass at <= 1.2e-14. Root cause REVIEW M2; the consequence is new
+  - candidate: Supplement 'unbiased estimator (as in hyppo)' does not match the column-centred global-scale estimator; GitBook key-reference link points to an LCSS paper
+    outcome: confirmed
+    evidence: 'distance.mgc|{iid_gaussian,bivariate_gaussian}|{64,256,1024}|kernel|global pass at <= 3.8e-14 (column-centred dCorr^{n,n}) while |udcorr shows the U-centred dCor^2 differs by up to 1.79e-3
+      (T64), 1.64e-4 (T256), 3.24e-5 (T1024): near-equal at O(1/n), not equal. GitBook distance-similarity.md:257 links researchgate 3943235_Discovering_similar_multidimensional_trajectories (re-read at
+      check stage)'
+  checks_run:
+  - run_ids:
+    - distance.mgc|iid_gaussian|64|kernel|def
+    - distance.mgc|bivariate_gaussian|64|kernel|def
+    - distance.mgc|nonlinear_dependence|64|kernel|def
+    - distance.mgc|anm|64|kernel|def
+    - distance.mgc|narrowband_f0-0.1|64|kernel|def
+    - distance.mgc|contaminated|64|kernel|def
+    - distance.mgc|iid_gaussian|256|kernel|def
+    - distance.mgc|bivariate_gaussian|256|kernel|def
+    - distance.mgc|nonlinear_dependence|256|kernel|def
+    - distance.mgc|anm|256|kernel|def
+    - distance.mgc|narrowband_f0-0.1|256|kernel|def
+    - distance.mgc|contaminated|256|kernel|def
+    - distance.mgc|iid_gaussian|1024|kernel|def
+    - distance.mgc|bivariate_gaussian|1024|kernel|def
+    - distance.mgc|nonlinear_dependence|1024|kernel|def
+    - distance.mgc|anm|1024|kernel|def
+    - distance.mgc|narrowband_f0-0.1|1024|kernel|def
+    - distance.mgc|contaminated|1024|kernel|def
+    - distance.mgc|bivariate_gaussian|256|pipeline|def
+    reference: audit/checks/refs/hhg_mgc.py:ref_def -> mgc_from_dist (SciPy constants, exact distances)
+    outcome: pass 19/19; max_abs <= 5.8e-14
+  - run_ids:
+    - distance.mgc|nonlinear_dependence|64|kernel|paper
+    - distance.mgc|nonlinear_dependence|64|kernel|rmgc
+    - distance.mgc|logistic_maps|64|kernel|paper
+    - distance.mgc|logistic_maps|64|kernel|rmgc
+    - distance.mgc|narrowband_f0-0.1|64|kernel|paper
+    - distance.mgc|narrowband_f0-0.1|64|kernel|rmgc
+    - distance.mgc|anm|64|kernel|paper
+    - distance.mgc|anm|64|kernel|rmgc
+    - distance.mgc|nonlinear_dependence|256|kernel|paper
+    - distance.mgc|nonlinear_dependence|256|kernel|rmgc
+    - distance.mgc|logistic_maps|256|kernel|paper
+    - distance.mgc|logistic_maps|256|kernel|rmgc
+    - distance.mgc|narrowband_f0-0.1|256|kernel|paper
+    - distance.mgc|narrowband_f0-0.1|256|kernel|rmgc
+    - distance.mgc|anm|256|kernel|paper
+    - distance.mgc|anm|256|kernel|rmgc
+    reference: audit/checks/refs/hhg_mgc.py:ref_variant (mgc_from_dist with paper / r-mgc constants, sklearn-mirrored distances)
+    outcome: 'deviation measurement: paper pass 3/8 (<= 1.5e-3), fail 5/8 (up to 0.061); r-mgc pass 6/8 (<= 6.3e-15), fail 2/8 (anm T256 0.027, narrowband T256 0.061)'
+  - run_ids:
+    - distance.mgc|logistic_maps|64|kernel|exact
+    - distance.mgc|logistic_maps|64|kernel|skdist
+    - distance.mgc|logistic_maps|64|kernel|hyppo-exact
+    - distance.mgc|logistic_maps|256|kernel|exact
+    - distance.mgc|logistic_maps|256|kernel|skdist
+    - distance.mgc|logistic_maps|256|kernel|hyppo-exact
+    - distance.mgc|shared_envelope|64|kernel|exact
+    - distance.mgc|shared_envelope|64|kernel|skdist
+    - distance.mgc|shared_envelope|64|kernel|hyppo-exact
+    - distance.mgc|shared_envelope|256|kernel|exact
+    - distance.mgc|shared_envelope|256|kernel|skdist
+    - distance.mgc|shared_envelope|256|kernel|hyppo-exact
+    - distance.mgc|logistic_maps|256|pipeline|exact
+    - distance.mgc|shared_envelope|256|pipeline|exact
+    reference: audit/checks/refs/hhg_mgc.py:ref_def (exact and sklearn-mirrored distances), audit/checks/refs/hhg_mgc.py:ref_hyppo_exact with probe audit/checks/probes/hhg_mgc_probes.py:hyppo_exact
+    outcome: 'exact: fail 6/6 as the rounding candidate predicts (up to 6.14e-2); skdist pass 4/4, hyppo-exact pass 4/4 (<= 1.2e-14)'
+  - run_ids:
+    - distance.mgc|iid_gaussian|64|kernel|global
+    - distance.mgc|iid_gaussian|64|kernel|udcorr
+    - distance.mgc|bivariate_gaussian|64|kernel|global
+    - distance.mgc|bivariate_gaussian|64|kernel|udcorr
+    - distance.mgc|iid_gaussian|256|kernel|global
+    - distance.mgc|iid_gaussian|256|kernel|udcorr
+    - distance.mgc|bivariate_gaussian|256|kernel|global
+    - distance.mgc|bivariate_gaussian|256|kernel|udcorr
+    - distance.mgc|iid_gaussian|1024|kernel|global
+    - distance.mgc|iid_gaussian|1024|kernel|udcorr
+    - distance.mgc|bivariate_gaussian|1024|kernel|global
+    - distance.mgc|bivariate_gaussian|1024|kernel|udcorr
+    reference: audit/checks/refs/hhg_mgc.py:ref_global (analytic column-centred dCorr^(n,n)), ref_udcorr (_kernels_distance.dcorr_from_dist U-centred)
+    outcome: pass 12/12; global identity <= 3.8e-14; U-centred dCor^2 differs by 1.2e-5 to 1.8e-3 (related quantity, within 1/n)
+  - run_ids:
+    - distance.mgc|bivariate_gaussian|64|kernel|optscale
+    - distance.mgc|bivariate_gaussian|256|kernel|optscale
+    - distance.mgc|bivariate_gaussian|1024|kernel|optscale
+    - distance.mgc|iid_gaussian|256|kernel|optscale
+    - distance.mgc|nonlinear_dependence|256|kernel|optscale
+    - distance.mgc|narrowband_f0-0.1|256|kernel|optscale
+    - distance.mgc|logistic_maps|256|kernel|optscale
+    reference: audit/checks/refs/hhg_mgc.py:ref_optscale with probe audit/checks/probes/hhg_mgc_probes.py:optscale
+    outcome: pass 7/7; optimal scale and global map value match; bivariate_gaussian and iid_gaussian all pairs at the global scale
+  - run_ids:
+    - distance.mgc|iid_gaussian|256|pipeline|dir
+    - distance.mgc|iid_gaussian|256|pipeline|ordered
+    - distance.mgc|var2_bivariate|256|pipeline|dir
+    - distance.mgc|var2_bivariate|256|pipeline|ordered
+    - distance.mgc|logistic_maps_chaotic|256|pipeline|dir
+    - distance.mgc|logistic_maps_chaotic|256|pipeline|ordered
+    - distance.mgc|delayed_noise|256|pipeline|dir
+    - distance.mgc|delayed_noise|256|pipeline|ordered
+    reference: audit/checks/refs/hhg_mgc.py:ref_dir (both argument orders) with probe audit/checks/probes/hhg_mgc_probes.py:ordered
+    outcome: pass 8/8; published max|A - A.T| 0.0, unmirrored <= 1.07e-14
+  - run_ids:
+    - distance.mgc|iid_gaussian|64|pipeline|null
+    - distance.mgc|iid_gaussian|256|pipeline|null
+    - distance.mgc|iid_gaussian|1024|pipeline|null
+    - distance.mgc|bivariate_gaussian|64|pipeline|pop
+    - distance.mgc|bivariate_gaussian|256|pipeline|pop
+    - distance.mgc|bivariate_gaussian|1024|pipeline|pop
+    reference: audit/checks/refs/hhg_mgc.py:ref_null (Monte Carlo null), ref_pop (dcor2_gauss + Monte Carlo SD)
+    outcome: pass 6/6; null max_z 0.67 / 0.75 / 1.98; population max_z 0.86 / 0.64 / 0.72
+  - run_ids:
+    - distance.mgc|shared_envelope|64|pipeline|dup
+    - distance.mgc|shared_envelope|256|pipeline|dup
+    - distance.mgc|iid_gaussian|64|kernel|copies
+    - distance.mgc|iid_gaussian|256|kernel|copies
+    - distance.mgc|nonlinear_dependence|256|pipeline|order
+    - distance.mgc|bivariate_gaussian|256|pipeline|order
+    - distance.mgc|anm|256|pipeline|order
+    - distance.mgc|iid_gaussian|64|kernel|smalln
+    reference: audit/checks/refs/hhg_mgc.py:ref_dup, ref_copies (analytic 1), ref_order with mc_quantile_band, ref_smalln with probe audit/checks/probes/hhg_mgc_probes.py:small_n
+    outcome: pass 8/8; copies exactly 1 (<= 2.2e-15); dependent pairs 0.075 to 0.913 above the band [-0.0072, 0.0373]; ValueError at n=4, n=5 value -0.34544 matches
+  - run_ids:
+    - distance.mgc|scaled_offset|256|pipeline|scaleinv
+    - distance.mgc|scaled_offset|1024|pipeline|scaleinv
+    - distance.mgc|trending|256|pipeline|trend
+    - distance.mgc|trending|256|pipeline-detrend|detrend
+    - distance.mgc|trending|256|pipeline-detrend|trendqual
+    reference: audit/checks/refs/hhg_mgc.py:ref_scaleinv, ref_def (own preprocessing), ref_trendqual
+    outcome: pass 5/5; scaleinv <= 8.6e-14; trending independent pairs 0.634 and 0.908 without detrend, -0.0054 and -0.0042 after
+  - run_ids:
+    - distance.mgc|iid_gaussian|64|kernel|perm
+    - distance.mgc|iid_gaussian|256|kernel|perm
+    reference: audit/checks/refs/hhg_mgc.py:ref_perm (200 permutations per pair of mgc_from_dist on exact distances; KS vs U(0,1))
+    outcome: 'pass 1/2, fail 1/2: T64 passes (KS p 0.288); T256 fails the KS uniformity criterion (p 0.0122, lower tail; no upper-tail rejection; same iid_gaussian T256 draw as dcorr_hsic''s failing *|iid_gaussian|256|pipeline|null runs). 62.6-63.3% of permutation-null values negative, 90% of
+      pyspi values negative'
+optimisation:
+  complexity_P_T: 'O(P^2 T^2 log T): per ordered pair (Undirected over Directed.multivariate) two T x T distance matrices, a column-wise rank
+    transform of each (np.unique per column, T sorts of length T) and scipy''s local-correlation map over all (k, l) scales (scipy/stats/_mgc.py:_mgc_stat
+    -> _stats._local_correlations, O(T^2)) plus thresholding/smoothing. Measured T_exponent 2.03 (8x256 0.82 s -> 8x1024 13.7 s); 118x1024 projected
+    by pair count only (3377 s). The pair term dominates.'
+  hotspot_1: scipy/stats/_mgc.py:_mgc_stat (third-party:scipy) 93.4% cumulative, 50.5% self time of the profiled SPI call at 8x1024 (the compiled
+    _local_correlations kernel is hidden in the self time)
+  hotspot_2: numpy/lib/_arraysetops_impl.py:unique called per distance-matrix column from _local_correlations (third-party:numpy, rank transform)
+    28.9% (114688 calls; argsort 9.8%), plus numpy hstack 7.7% in the same call
+  hotspot_owner: third-party:scipy
+  opaque_share: 0.2709
+  profile_file: audit/profiles/distance.mgc__8x1024.pstats
+  opportunities:
+  - opportunity_id: hhg_mgc-3
+    opportunity: 'Cache per channel what scipy''s MGC derives from one distance matrix: the distance matrix, its column ranks and its centring,
+      so each pair only runs the local-correlation map. Needs a port of scipy''s _local_correlations that accepts precomputed ranks (scipy exposes
+      no such entry point).'
+    opp_type: cache-sharing
+    expected_speedup: ~1.5x
+    speedup_basis: profile:audit/profiles/distance.mgc__8x1024.pstats numpy unique 28.9% + hstack 7.7% + compute_dist 3.2% = about 40% per-channel
+      work (Amdahl bound 1.66x)
+    output_risk: unverified-within-tolerance
+    risk_evidence: re-implemented local-correlation sums may change the summation order; the ranks themselves are integer and identical
+    effort: L
+    depends_on:
+    - xc-undirected-upper

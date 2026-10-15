@@ -1,0 +1,225 @@
+{
+ "P": 8,
+ "T": 1024,
+ "baseline_rss_mb": 428.1,
+ "budget_s": 120.0,
+ "data_kind": "synthetic",
+ "data_sha256": "8e7e5fadc565fde86c145bcd58801cc90799abd9427b553b966b0df36ab32ada",
+ "edf": null,
+ "entry_sources": {
+  "lmfit_SGDRegressor": "config"
+ },
+ "env": {
+  "java": null,
+  "omp_num_threads": "1",
+  "packages": {
+   "cdt": "0.6.0",
+   "hyppo": "0.5.2",
+   "jpype1": "1.7.1",
+   "mne": "1.13.2",
+   "nitime": "0.12.1",
+   "numpy": "2.5.4",
+   "pandas": "3.0.6",
+   "pyEDM": "1.15.2.0",
+   "pyyaml": "6.0.3",
+   "scikit-learn": "1.9.1",
+   "scipy": "1.17.1",
+   "sktime": "1.2.0",
+   "spectral-connectivity": "1.1.2",
+   "statsmodels": "0.15.0",
+   "torch": "2.14.1+cpu",
+   "tslearn": "0.9.0"
+  },
+  "platform": "linux",
+  "pyspi_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+  "pyspi_version": "2.0.2",
+  "python": "3.12.3"
+ },
+ "error": null,
+ "family": "lmfit",
+ "finished_at": "2026-10-15T05:11:39+00:00",
+ "fit": null,
+ "git_commit": "a42ebc1f36a0ab80df32ee91d7a9b3fd3fb7d6c0",
+ "hwm_reset": true,
+ "identifiers": [
+  "lmfit_SGDRegressor"
+ ],
+ "jvm_requested": false,
+ "jvm_started": false,
+ "measure_mode": "measured",
+ "mode": "profile",
+ "n_pairs": 56,
+ "opaque_heuristic": "tottime of builtin entries (file '~'); every Python frame is transparent; tests/ frames are owner 'harness'; builtins attributed to their dominant caller's owner; numba/JPype/C-type calls hidden in caller tottime (lower bound)",
+ "opaque_share": 0.19229193128451455,
+ "opaque_share_by_owner": {
+  "builtin": 9.754877955618551e-05,
+  "python": 0.052976979176879005,
+  "third-party:narwhals": 0.034263597257831964,
+  "third-party:numpy": 0.044836553955035524,
+  "third-party:sklearn": 0.06011725211521182
+ },
+ "pair_basis": "ordered",
+ "peak_rss_delta_mb": 0.2,
+ "peak_rss_mb": 428.4,
+ "process_peak_rss_mb": 428.4,
+ "pstats": "audit/profiles/misc.lmfit.SGDRegressor__8x1024.pstats",
+ "pyspi_dirty": false,
+ "reason": null,
+ "repeats": 1,
+ "repeats_extended": null,
+ "repeats_planned": null,
+ "representative": "lmfit_SGDRegressor",
+ "result_status": "ok",
+ "ru_maxrss_mb": 422.4,
+ "schema": 1,
+ "self_time_share_by_owner": {
+  "builtin": 9.754877955618551e-05,
+  "harness": 0.00010945778675514532,
+  "pyspi": 0.006756324211138889,
+  "python": 0.23814324940787387,
+  "third-party:narwhals": 0.08947875174503431,
+  "third-party:numpy": 0.11083394842771722,
+  "third-party:scipy": 0.0021477135576002514,
+  "third-party:sklearn": 0.552433006084323
+ },
+ "shape": "8x1024",
+ "spi_seed": 42,
+ "started_at": "2026-10-15T05:11:39+00:00",
+ "status": "ok",
+ "synth_seed": 20261014,
+ "t_cold_s": 0.1659567109963973,
+ "t_per_pair_ms": null,
+ "threads": {
+  "affinity_cpus": 64,
+  "jvm_running": false,
+  "numba_threads": 64,
+  "omp_num_threads": "1",
+  "os_threads": 1,
+  "threadpools": [
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openmp",
+    "num_threads": 1,
+    "user_api": "openmp"
+   },
+   {
+    "internal_api": "openblas",
+    "num_threads": 1,
+    "user_api": "blas"
+   }
+  ],
+  "torch_threads": 1
+ },
+ "timeout_s": 360.0,
+ "top10_cumulative": [
+  {
+   "cumtime_s": 0.171504755,
+   "function": "/media/dan/Data/git/pyspi/tests/regression/harness.py:compute_spi",
+   "line": 264,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "harness",
+   "tottime_s": 1.1710000000000001e-05
+  },
+  {
+   "cumtime_s": 0.17147108600000002,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 52,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 4.259e-06
+  },
+  {
+   "cumtime_s": 0.17146644700000002,
+   "function": "pyspi/base.py:multivariate",
+   "line": 84,
+   "ncalls": 1,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.000111088
+  },
+  {
+   "cumtime_s": 0.171347459,
+   "function": "pyspi/base.py:parsed_function",
+   "line": 28,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.00019301800000000001
+  },
+  {
+   "cumtime_s": 0.171146191,
+   "function": "pyspi/statistics/misc.py:bivariate",
+   "line": 115,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "pyspi",
+   "tottime_s": 0.000836486
+  },
+  {
+   "cumtime_s": 0.10896990200000001,
+   "function": "sklearn/base.py:wrapper",
+   "line": 1381,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 0.000398281
+  },
+  {
+   "cumtime_s": 0.082934166,
+   "function": "sklearn/linear_model/_stochastic_gradient.py:fit",
+   "line": 1639,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 7.303600000000001e-05
+  },
+  {
+   "cumtime_s": 0.07969071700000001,
+   "function": "sklearn/linear_model/_stochastic_gradient.py:_fit",
+   "line": 1580,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 9.9133e-05
+  },
+  {
+   "cumtime_s": 0.079591584,
+   "function": "sklearn/linear_model/_stochastic_gradient.py:_partial_fit",
+   "line": 1492,
+   "ncalls": 56,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 0.00045336800000000005
+  },
+  {
+   "cumtime_s": 0.044611250000000005,
+   "function": "sklearn/utils/validation.py:validate_data",
+   "line": 2932,
+   "ncalls": 112,
+   "opaque": false,
+   "owner": "third-party:sklearn",
+   "tottime_s": 0.000562071
+  }
+ ],
+ "total_tt_s": 0.17129891400000022,
+ "traceback_tail": null,
+ "unit_id": "misc.lmfit.SGDRegressor",
+ "wall_cv": null,
+ "wall_median_s": null,
+ "wall_profiled_s": 0.1715654639992863,
+ "wall_s": null,
+ "walls_s": null,
+ "warmup_error": null,
+ "warmup_shape": "8x1024"
+}

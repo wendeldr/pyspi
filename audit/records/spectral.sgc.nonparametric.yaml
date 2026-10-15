@@ -1,0 +1,477 @@
+unit_id: spectral.sgc.nonparametric
+status: profiled
+correctness:
+  metric_name_standard: nonparametric (Wilson-factorisation) spectral Granger causality, Geweke frequency-domain causality
+    f_{j->i}(f), pairwise bivariate, summarised by mean or max over a frequency band
+  canonical_ref: 'Geweke J. 1982, J. Am. Stat. Assoc. 77(378):304-313 (frequency-domain decomposition of linear feedback;
+    the f_{y->x}(lambda) formula, and (1/2pi) integral of f_{y->x} = F_{y->x} under his regularity condition); nonparametric
+    estimation: Dhamala, Rangarajan & Ding 2008, Phys. Rev. Lett. 100:018701 and NeuroImage 41:354-362 (spectral matrix from
+    Fourier/multitaper transforms, factorised by Wilson 1972, SIAM J. Appl. Math. 23:420-426). Equation numbers not re-checked
+    against the papers (from memory; formula also in Ding, Chen & Bressler 2006, Handbook of Time Series Analysis, ch. 17).'
+  canonical_definition: S(f) = psi(f) psi(f)^H (minimum-phase Wilson factor), Sigma = psi_0 psi_0^T, H(f) = psi(f) psi_0^{-1};
+    f_{y->x}(f) = ln( S_xx(f) / [ S_xx(f) - (Sigma_yy - Sigma_xy^2/Sigma_xx) |H_xy(f)|^2 ] ) >= 0, with S estimated consistently
+    (spectral smoothing / tapers or trials growing with the data). Band summary (mean/max over a band) is a pyspi construction;
+    the mean over the full band [-1/2, 1/2] approximates the time-domain Geweke F_{y->x}.
+  documented_definition: 'supplement §1.5.12, p.17 (supplement.txt lines 809-818: heading 809, quoted text 811-818): "Spectral
+    Granger causality [40] is the frequency domain equivalent to Granger causality, computed via the spectral transfer matrix
+    and noise covariance that are estimated using either a parametric (VAR model) approach [41] or nonparametric (spectral
+    factorization) approach [57, 58]. We implement the nonparametric form from the Spectral Connectivity Toolbox [56] and
+    the parametric implementation from v0.9 of NiTime [74]. The VAR model is estimated via least squares using the same order
+    for both processes, where the order is either inferred (denoted by modifier order-None) or fixed. We infer a VAR model
+    order from the Bayesian information criterion (with a maximum lag of 50, implemented in the NiTime toolkit), as well as
+    choosing fixed orders of one (denoted by order-1) and 20 (order-20)." Keywords: "directed, linear, unsigned, bivariate,
+    frequency-dependent". Band rule, supplement §1.5, p.12 (supplement.txt heading line 570, quoted text lines 589-599): "We
+    use 125 uniformly sampled bins across the entire frequency range, f in [f0, fs/2] ... f0 = 4/T ... fmin-0_fmax-0-5: the
+    full-frequency range, f in [0, fs/2]; fmin-0_fmax-0-25: f in [0, fs/4]; fmin-0-25_fmax-0-5: f in [fs/4, fs/2]"; summary
+    = mean or max over the band. Same text on GitBook spectral.md:350-358 (Spectral Granger Causality). Matrix convention
+    for directed SPIs, GitBook glossary-of-terms.md:27: "entry calc.table[...][0,1] will be the directed information from
+    process 0 to process 1. The rows in this table reflect the sources while the columns reflect the targets." Refs: [40]
+    Granger 1969 Econometrica 37:424; [41] Geweke 1982 JASA 77:304; [56] spectral_connectivity (Denovellis et al.); [57,58]
+    Dhamala, Rangarajan & Ding 2008 NeuroImage 41:354 and PRL 100:018701; [74] Rokem et al. NiTime.'
+  delegate_lib: spectral_connectivity==1.1.2 Connectivity.pairwise_spectral_granger_prediction (with Multitaper defaults and
+    minimum_phase_decomposition), numpy==2.5.4, scipy==1.17.1 (scipy.fftpack fft/fftfreq/next_fast_len); band selection and
+    summary native pyspi
+  implemented_as: 'Input z-scored per channel (ddof=1; optional detrend). Whole (T x P) array transformed once by a single-window
+    multitaper DFT: NW=3, 5 DPSS tapers, constant detrend, n_fft = next_fast_len(T) = T (no zero padding), fs=1; cross-spectral
+    matrix = mean over the 5 tapers (one trial). For each unordered pair the 2x2 two-sided CSM is Wilson-factorised (tol 1e-8,
+    <= 60 iterations, warning only), Sigma and H derived from the factor, and predictive_power[k,l] = ln S_kk - ln(S_kk -
+    (Sigma_ll - Sigma_kl^2/Sigma_kk)|H_kl|^2) = Geweke causality FROM l TO k, with S_kk the multitaper auto-spectrum; values
+    <= 0 and logs of negative intrinsic power become NaN. Frequencies k/T for k = 0..T/2-1 (Nyquist dropped). pyspi forces
+    fmin <= 0 to 1e-5 (excludes DC), keeps fmin <= f <= fmax (both inclusive; 0.25 bin in both half-bands), takes np.nanmean
+    or np.nanmax over the kept bins per cell, NaNs cells with > 50% NaN bins, and returns A[a, b] = summary of predictive_power[a,
+    b] = GC from b to a. Pairwise bivariate (no conditioning on third processes).'
+  implementation_trace:
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1), then scipy.stats.zscore(axis=1,
+    ddof=1) when normalise=True (default)'
+  - 'pyspi/calculator.py:325-339 Calculator.compute: S = spi.multivariate(dataset); any exception escaping multivariate sets
+    the whole SPI table to NaN with a warning'
+  - pyspi/statistics/spectral.py:320-323 class SpectralGrangerCausality(NonparametricSpectralMultivariate, Directed, Unsigned);
+    identifier "sgc"; labels unsigned/embedding/spectral/directed/lagged
+  - pyspi/statistics/spectral.py:325-358 __init__ defaults fs=1, fmin=1e-5, fmax=0.5, method="nonparametric", order=None,
+    max_order=50, statistic="mean", ignore_nan=True, nan_threshold=0.5; statistic mean -> np.nanmean, max -> np.nanmax (ignore_nan=True)
+  - 'pyspi/statistics/spectral.py:343-345 if fmin <= 0: warning and self._fmin = 1e-5 (the identifier at :363/:369 is still
+    built from the ORIGINAL fmin argument, so "fmin-0" identifiers run with fmin=1e-5; probe: sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5
+    -> _fmin 1e-05)'
+  - pyspi/config.yaml:1099-1127 six nonparametric configs (fmin 0 or 0.25, fmax 0.25 or 0.5, statistic mean or max)
+  - 'pyspi/statistics/spectral.py:361-365 nonparametric: self._measure = "pairwise_spectral_granger_prediction"; identifier
+    _nonparametric_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}'
+  - 'pyspi/statistics/spectral.py:381-390 _get_cache: cache miss -> super()._get_cache(data), i.e. NonparametricSpectralMultivariate._get_cache'
+  - 'pyspi/statistics/spectral.py:64-83 NonparametricSpectralMultivariate._get_cache: z = transpose(data.to_numpy(squeeze=True))
+    (T x P); m = sc.Multitaper(z, sampling_frequency=1) with library defaults; conn = sc.Connectivity.from_multitaper(m);
+    res = conn.pairwise_spectral_granger_prediction(); freq = conn.frequencies; stored in data.spectral_mv (first insert keyed
+    by self.measure at :81, not self.key)'
+  - pyspi/_spectral_compat.py:10-28 imports spectral_connectivity 1.1.2 and gives its connectivity module a numpy namespace
+    with np.in1d mapped to np.isin (does not touch minimum_phase_decomposition.py)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:74-102 Multitaper defaults: time_halfbandwidth_product=3,
+    detrend_type="constant", one window spanning the whole series, is_low_bias=True'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:155-164 n_tapers = floor(2*NW - 1) = 5; :668-673
+    low-bias filter keeps tapers with eigenvalue > 0.9 (probe: 5 tapers at T = 64..4096)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:167-185 n_time_samples_per_window = T; n_fft_samples
+    = next_fast_len(T) (= T for T in {64,256,1024,4096}, no zero padding); :188-190 frequencies = fftfreq(n_fft, 1/fs)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:238-260 fft(): sliding window (1 window), detrend
+    (constant), _multitaper_fft :335-354 = fft(x * taper, n_fft)/fs; tapers from dpss_windows * sqrt(fs) :357-387'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:45-53 EXPECTATION["trials_tapers"] = mean over
+    axes (1, 2) (1 trial x 5 tapers); :156-172 from_multitaper; :189-193 _power = E[X X*].real; :195-220 cross-spectral matrix
+    E[X X^H] (two-sided, n_fft frequencies)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:73-89 and :174-180 frequencies: non-negative
+    indices 0 .. (n+1)//2 - 1, so for even n_fft the Nyquist bin (-fs/2 in fftfreq) is dropped; probe max freq 0.484375 at
+    T=64, 0.499756 at T=4096'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:697-748 pairwise_spectral_granger_prediction:
+    for each unordered pair (combinations) minimum_phase_decomposition of the 2x2 CSM, H = _estimate_transfer_function(psi)[non-negative
+    freqs], rotated = _remove_instantaneous_causality(_estimate_noise_covariance(psi)), predictive_power[..., pair, pair.T]
+    = _estimate_predictive_power(total_power[..., pair], rotated, H); np.linalg.LinAlgError -> NaN for that pair; diagonal
+    NaN (:745-746)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:1116-1142 _estimate_noise_covariance: psi0 =
+    real(ifft(psi))[lag 0]; Sigma = psi0 psi0^T'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:1145-1170 _estimate_transfer_function: H(f)
+    = psi(f) psi0^{-1}'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:1193-1211 _remove_instantaneous_causality: rotated[k,
+    l] = Sigma_ll - Sigma_kl^2 / Sigma_kk'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:1173-1180 _estimate_predictive_power: intrinsic[k,
+    l] = S_kk - rotated[k, l] |H_kl|^2 (S_kk = multitaper auto-spectrum, not the factor reconstruction); intrinsic == 0 ->
+    eps; predictive[k, l] = ln S_kk - ln intrinsic[k, l]; predictive <= 0 -> NaN (negative intrinsic gives NaN through the
+    log)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:161-222 Wilson (1972) iteration
+    psi <- psi [psi^{-1} S psi^{-H} + I]_+ (:128-158, plus operator :66-99: half of lag 0, lag-0 made upper triangular, lags
+    >= (n+1)//2 zeroed); tolerance 1e-8 (inf-norm change), max_iterations 60; non-convergence only logs a warning (:216-222)'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:29-63 _get_intial_conditions:
+    Cholesky of real(ifft(S))[lag 0]; on failure the handler at :48 is "except xp.linalg.linalg.LinAlgError", and numpy 2.5.4
+    has no numpy.linalg.linalg (probe: AttributeError module numpy.linalg has no attribute linalg), so the random-start fallback
+    (:49-63) is unreachable and an AttributeError escapes'
+  - 'pyspi/statistics/spectral.py:410-413 per-Data cache data.spectral_gc[key] = {"freq", "F"}; key from _getkey :375-379
+    (nonparametric: ("nonparametric",-1,-1); parametric: ("parametric", order, max_order)), shared by the six band/statistic
+    identifiers of a unit'
+  - 'pyspi/statistics/spectral.py:417-423 multivariate: freq_id = where((freq >= fmin) & (freq <= fmax)) (both ends inclusive);
+    result = statfn(cache[0, freq_id, :, :], axis=0), i.e. A[a, b] = nanmean/nanmax over band of cache[0, f, a, b]'
+  - pyspi/statistics/spectral.py:425-435 nan_pct = fraction of NaN frequencies per cell (diagonal forced to 0); cells with
+    nan_pct > nan_threshold (0.5, strict) set to NaN with a warning
+  - 'pyspi/statistics/spectral.py:438-440 except ValueError as err (includes numpy LinAlgError, a ValueError subclass; probe:
+    LinAlgError MRO (LinAlgError, ValueError, ...)). The intended outcome, return np.full((P, P), nan) at :440, is not reached
+    under the message-regex warnings filters numpy installs on import: :439 warnings.warn(err) passes the exception INSTANCE as the message, warnings
+    wraps it as a UserWarning but matches the raw object against message-regex filters, and numpy registers three message-regex
+    ignore filters on import (.venv/lib/python3.12/site-packages/numpy/__init__.py:696-698; four after importing pyspi.calculator),
+    so :439 itself raises TypeError "expected string or bytes-like object, got ValueError" (or "got LinAlgError"). Probe (scratchpad
+    sgc_fix/r1.py, fresh interpreter, filters as installed by numpy on import): narrowband_f0-0.1 T=256 order-None and shared_envelope T=256 order-1
+    and order-20 all raise TypeError at spectral.py:439; a bare python -c "import numpy, warnings; warnings.warn(ValueError(1))"
+    raises the same TypeError. The all-NaN return at :440 executes only when no message-regex filter is reached first (after
+    warnings.resetwarnings(), or inside catch_warnings(record=True) + simplefilter("always"); probe nanfrac 1.0). Resulting
+    behaviour under the message-regex warnings filters numpy installs on import: a direct multivariate() call (tests/regression/harness.py:264-272 compute_spi; audit/checks/pyspi_outputs.py:148-162
+    run_one) raises TypeError; Calculator.compute (calculator.py:336-337, except Exception) sets the whole SPI table to NaN
+    with the warning "Caught <class TypeError> ..." instead of the original message. Other exception types propagate to calculator.py:336-337
+    directly.'
+  deviation_from_documented: '(1) Direction: documented matrix convention is rows = sources, columns = targets (glossary-of-terms.md:27);
+    implemented A[i, j] = GC from j to i (target-by-source). Probe var2_bivariate (true 0 -> 1 only): T=4096 A[0,1]=0.1231,
+    A[1,0]=0.4024; delayed_noise T=1024 (x0 leads): column 0 of rows 1-3 = 2.57, 2.56, 2.75 while row 0 = 0.11-0.13. (2) Frequency
+    grid: documented "125 uniformly sampled bins across f in [f0, fs/2], f0 = 4/T"; implemented T/2 - 1 bins k/T, k = 1..T/2-1
+    for the full band (31 at T=64, 127 at T=256, 2047 at T=4096; probe), DC excluded by the fmin override, Nyquist excluded
+    by the library slice (the Nyquist drop is already documented: DEPENDENCY_COMPATIBILITY_REVIEW.md, REVIEW M4). (3) Identifiers
+    with "fmin-0" run with fmin = 1e-5 (spectral.py:343-345), so the documented band [0, fs/2] actually excludes the DC bin.
+    (4) "values <= 0 -> NaN" and the >50%-NaN cell rule are undocumented; NaN bins are silently dropped from the mean/max
+    (nanmean/nanmax). (5) Not documented: when the Cholesky initialisation fails (e.g. two identical channels) the run raises
+    AttributeError and the whole matrix is NaN in the Calculator (probe shared_envelope T=256, x2 == x0).'
+  deviation_from_canonical: 'Formula per frequency matches Geweke 1982 / Dhamala 2008 (rotated noise variance, |H_xy|^2),
+    and the kernel reproduces Sigma to 1e-6 on an exact VAR spectrum (probe: Wilson on the exact two-sided var2 spectrum,
+    reconstruction rel. error 3e-9, Sigma_hat = Sigma). Value-changing estimator choices: spectral estimate from a single
+    window with only 5 tapers (fixed NW=3) whatever T, so the per-frequency estimate has ~10 degrees of freedom and its positive
+    bias does not shrink with T (probe iid_gaussian null: full-band mean 0.146/0.106 at T=256, 0.127/0.121 at T=4096; with
+    NW=10 (19 tapers) 0.025, NW=40 (78 tapers) 0.0044 at T=4096); no zero padding (n_fft = T), and the Wilson factor of the
+    rough single-window estimate does not reproduce S (probe: max |psi psi^H - S|/max|S| 3e-3 to 0.38 across datasets, with
+    NaN bins and "Maximum iterations reached" on logistic_maps T>=1024 and trending T=256/1024), while S_kk in the formula
+    is the raw multitaper auto-spectrum, so S and the factor disagree. Pairwise bivariate, not conditional (canonical for
+    a bivariate definition). Band mean/max is a pyspi construction (no canonical summary); the mean over (0, 1/2) excluding
+    DC and Nyquist approximates, but is not, the time-domain F.'
+  units_and_range: nats (natural log), per-frequency >= 0 in theory; output >= 0 or NaN (non-positive bins are NaN, then dropped);
+    unbounded above; finite-sample null level about 0.1-0.15 nats with the default 5 tapers. Directed, asymmetric. Diagonal
+    NaN.
+  direction_convention: 'A[i, j] = spectral GC from process j (source, column) to process i (target, row), i.e. TARGET-by-SOURCE,
+    the transpose of the documented sources-in-rows convention (GitBook glossary-of-terms.md:27) and of other pyspi directed
+    SPIs (e.g. infotheory.py:274 src, targ = data[[i, j]]). Derivation: predictive_power[k, l] = ln(S_kk/(S_kk - rotated[k,l]|H_kl|^2))
+    is Geweke f_{l->k} (connectivity.py:1173-1211), and pyspi takes cache[0, f, i, j] without transposing (spectral.py:423).
+    Empirical: var2_bivariate (0 drives 1) A[1,0] > A[0,1] at all T (0.41/0.10 at T=256, 0.40/0.12 at T=4096); gauss_ar1_pair
+    (A_true[0,1]=0.3 > A_true[1,0]=0.2, i.e. 1->0 stronger) A[0,1]=0.24-0.28 > A[1,0]=0.14-0.17.'
+  symmetry_expected: asym
+  already_documented: tests/README.md dependency constraints (spectral-connectivity pinned at 1.1.2; 2.x changes input layout
+    and frequency grid); tests/README.md worth knowing (spectral cache first insert keyed by self.measure, one redundant recompute;
+    applies to the shared NonparametricSpectralMultivariate._get_cache used here); DEPENDENCY_COMPATIBILITY_REVIEW.md band
+    forwarding and Nyquist handling (1.1.2 drops the even-n Nyquist bin; REVIEW M4 states the same for the nonnegative slice).
+    None of these documents the direction, bias or error-path findings below.
+  new_finding_candidates:
+  - 'CANDIDATE (direction): the matrix is target-by-source, A[i, j] = GC j -> i, opposite to the documented rows-are-sources
+    convention (glossary-of-terms.md:27) and to TE/GC in infotheory.py (src = data[i]). Evidence: connectivity.py:1174-1178
+    indexes total_power[k] with H[k, l] (Geweke f_{l->k}); spectral.py:423 uses cache[0, freq_id, :, :] untransposed; probe
+    var2_bivariate T=4096 A[0,1]=0.1231 vs A[1,0]=0.4024 with truth 0 -> 1 only; delayed_noise T=1024 large values in column
+    0 (x0 leads).'
+  - 'CANDIDATE (estimator inconsistency): with the default Multitaper (NW=3, 5 tapers, one window) the null bias does not
+    decrease with T. Probe iid_gaussian full-band nanmean: T=64 0.356/0.153, T=256 0.146/0.106, T=1024 0.114/0.121, T=4096
+    0.127/0.121 nats; same data with NW=10: 0.025, NW=40: 0.0044 at T=4096. The reverse (non-causal) direction of var2_bivariate
+    stays at 0.10-0.13 for T=256..4096 and the causal direction at 0.40-0.44 versus an analytic full-band mean of 0.289.'
+  - 'CANDIDATE (error path): minimum_phase_decomposition.py:48 "except xp.linalg.linalg.LinAlgError" raises AttributeError
+    under numpy 2.5.4 whenever the Cholesky initialisation fails; the AttributeError is neither the LinAlgError caught per
+    pair (spectral_connectivity/connectivity.py:742) nor the ValueError caught by pyspi (spectral.py:438; that handler itself raises TypeError at
+    :439 under the message-regex warnings filters numpy installs on import, see trace), so the Calculator NaNs every sgc_nonparametric identifier. Probe: shared_envelope
+    T=256 (x2 bit-identical to x0) -> "RAISES AttributeError: module numpy.linalg has no attribute linalg". Under numpy < 2.4
+    as checked (2.2.6 and 2.3.3 resolve xp.linalg.linalg.LinAlgError with a DeprecationWarning; 2.4.6 and 2.5.4 raise AttributeError)
+    the fallback would use a random start (np.random, unseeded).'
+  - 'CANDIDATE (factorisation accuracy): on single-window estimates the Wilson factor does not reproduce the CSM (probe relative
+    reconstruction error 2.8e-3 iid T=4096 up to 0.38 logistic_maps T=4096, 0.323 logistic_maps T=1024; "Maximum iterations
+    reached. 0 of 1 converged" logged for logistic_maps T=1024/4096 and trending T=256/1024) and NaN bins appear among the
+    kept full-band bins (probe sgc_fix/r2.py: logistic_maps T=1024 cell [0,1] (GC 1 -> 0) 9.0%, cell [1,0] (GC 0 -> 1) 40.9%,
+    25% averaged over the two directions; trending T=256 6.4% averaged over the 12 off-diagonal cells, largest cell [1,3]
+    (GC 3 -> 1) 66.9%, above the 50% rule, so that cell is NaN in the pyspi output), whereas on an exact smooth spectrum the
+    same routine reconstructs S to 3e-9. Hypothesis: lack of spectral smoothing/zero padding, not a bug in the iteration.'
+  - 'CANDIDATE (bin/label conventions, low impact): "fmin-0" identifiers run with fmin=1e-5 (probe _fmin 1e-05), DC never
+    included; both half-bands include the f = 0.25 bin; documented 125-bin grid with f0 = 4/T is not what any path uses. The
+    even-n Nyquist drop by the 1.1.2 non-negative slice is not part of this candidate: it is already documented (DEPENDENCY_COMPATIBILITY_REVIEW.md
+    Nyquist handling; REVIEW M4).'
+  - 'CANDIDATE (NaN handling): NaN bins (predictive <= 0 or log of negative intrinsic power) are dropped by nanmean/nanmax,
+    so a cell with up to 50% failed bins is a summary over the remaining bins only (spectral.py:423-435); the hypothesis that
+    non-positive values are set to NaN is confirmed at connectivity.py:1179, but non-positive values cannot arise from an
+    exact factor (rotated variance >= 0 by Cauchy-Schwarz), so NaNs mark factorisation failure rather than "no causality".'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    path: kernel
+    reference: 'from-scratch numpy Geweke 1982 formula: for a bivariate VAR x_t = sum_k A_k x_{t-k} + e_t, H(f) = (I - sum_k
+      A_k e^{-i2pi f k})^{-1}, S = H Sigma H^H, f_{y->x}(f) = ln(S_xx / (S_xx - (Sigma_yy - Sigma_xy^2/Sigma_xx)|H_xy|^2))
+      (no nitime, no spectral_connectivity); input to the library kernel is an exact two-sided spectrum built from the true
+      (A_k, Sigma): fourier_coefficients with 2 pseudo-tapers X_m(f) = sqrt(2) H(f) L e_m (Sigma = L L^T) so that the taper
+      mean equals S_true, passed to Connectivity(...).pairwise_spectral_granger_prediction()'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: per-frequency agreement |pred[k,l](f) - f_{l->k}(f)| <= 1e-6 at all non-negative frequencies (Wilson
+      tol 1e-8); confirms the formula and that pred[k,l] is l -> k
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    - gauss_ar1_pair
+    - delayed_noise
+    path: pipeline
+    reference: 'from-scratch independent implementation without spectral_connectivity: scipy.signal.windows.dpss(T, NW=3,
+      Kmax=5) tapers with the same eigenvalue>0.9 rule, constant detrend, numpy.fft, taper-mean CSM, numpy Wilson factorisation
+      (same tolerance/iteration cap), Geweke formula with the multitaper S_kk, NaN for non-positive values, pyspi band rule
+      (k/T, 1e-5 <= f <= fmax, Nyquist dropped) and nanmean/nanmax; applied to z-scored (ddof=1) data'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: agreement <= 1e-6 absolute per cell and identifier (iteration-path round-off); establishes that pyspi
+      = library kernel + documented band rule
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    - delayed_noise
+    path: pipeline
+    reference: 'ground truth from the generating model: var2_bivariate (0 -> 1 only), gauss_ar1_pair (A[0,1]=0.3 so 1 -> 0
+      stronger than 0 -> 1 with A[1,0]=0.2), delayed_noise (x0 leads x1..x3)'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A[target, source] > A[source, target] for every true link at T >= 256 (A[1,0] > A[0,1] on var2_bivariate;
+      A[0,1] > A[1,0] on gauss_ar1_pair; column 0 dominant on delayed_noise), i.e. A[i,j] = GC j -> i, the transpose of the
+      documented rows-are-sources convention
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    path: pipeline
+    reference: 'from-scratch numpy Geweke 1982 formula: for a bivariate VAR x_t = sum_k A_k x_{t-k} + e_t, H(f) = (I - sum_k
+      A_k e^{-i2pi f k})^{-1}, S = H Sigma H^H, f_{y->x}(f) = ln(S_xx / (S_xx - (Sigma_yy - Sigma_xy^2/Sigma_xx)|H_xy|^2))
+      (no nitime, no spectral_connectivity), averaged over the same frequency bins pyspi keeps (k/T, k=1..T/2-1, and the two
+      half-bands)'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: 'record per-T bias and spread of pyspi minus analytic band mean; expected: causal direction overestimated
+      by about 0.1 nats and non-causal direction about 0.1 nats above 0 at every T (bias not shrinking with T, 5 tapers)'
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: 'analytic null: true spectral GC is 0 at all frequencies; additionally the same from-scratch pipeline with
+      NW in {3, 10, 40} to show the bias depends on taper count, not T'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: pyspi null mean about 0.1-0.15 nats at T = 256..4096 (no decay with T); from-scratch with more tapers
+      decays roughly as 1/K
+  - datasets:
+    - var2_bivariate
+    - gauss_ar1_pair
+    path: pipeline
+    reference: time-domain Geweke F_{y->x} = ln(var of restricted AR residual / var of full VAR residual) from numpy least
+      squares at the true order, compared with pyspi full-band mean (Geweke integral identity)
+    reference_kind: independent-impl
+    criterion: statistical
+    expected_outcome: pyspi full-band mean exceeds the time-domain F by the estimator bias above; relation documented, not
+      equality
+  - datasets:
+    - shared_envelope
+    path: pipeline
+    reference: 'qualitative error-path check: run Calculator-style multivariate on shared_envelope (x2 identical to x0) and
+      on a 2-channel identical pair'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: AttributeError from minimum_phase_decomposition.py:48 escapes, whole sgc_nonparametric table NaN; record
+      whether any other dataset in the suite triggers it
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/sgc.py:chk_impl/chk_bins/chk_wilsonlib (from-scratch pipeline with audit/checks/refs/_kernels_spectral.py:
+    multitaper_fft, cross_spectral_matrix, wilson_factorise, granger_nonparametric; no spectral_connectivity); audit/checks/refs/sgc.py:chk_exact
+    (analytic Geweke 1982 / Dhamala 2008 from the true VAR, var_transfer_function); audit/checks/refs/sgc.py:chk_truth/chk_mcexp/chk_null/chk_conv
+    (population values, 200-draw Monte Carlo of the from-scratch estimator); audit/checks/refs/sgc.py:chk_dir; audit/checks/refs/sgc.py:chk_err/chk_dup/chk_sweep
+    (probes in audit/checks/probes/sgc_probes.py, real Calculator); audit/checks/refs/sgc.py:chk_affine'
+  check_data: var2_bivariate T256/T1024/T4096 (pipeline, kernel); gauss_ar1_pair T1024; delayed_noise T1024; iid_gaussian
+    processes 0-2 T256/T1024/T4096; trending T256 (pipeline and pipeline-detrend); logistic_maps T1024; shared_envelope T256/T1024;
+    every MANIFEST dataset at T256/T1024 plus five EEG-like constructed inputs (sweep)
+  agreement_criterion: 'tolerance rtol 1e-6, atol 1e-8 for the from-scratch pipeline, the per-bin cache and the library-CSM
+    factorisation (atol 1e-6 for the exact-spectrum kernel); statistical: |pyspi - value| <= z_(1-0.05/2m) x Monte Carlo SD
+    (200 draws, familywise over the m judged cells); conv: Monte Carlo bias at T=4096 <= 1/4 of that at T=256; dir: A[target,
+    source] > A[source, target] on every true link'
+  closeness: 'Formula and implementation: 44/44 impl runs (all six identifiers on 7 dataset/path combinations plus var2 T256/T4096)
+    agree with the from-scratch pipeline to max_abs 3.9e-11 (max_rel 8.4e-12) with equal NaN masks, including logistic_maps
+    (Wilson not converged, 25% NaN bins) and trending (cell [1,3] NaN by the 50% rule); per-bin cache (bins) max_abs <= 8.4e-11;
+    Wilson+Geweke on the library CSM (wilsonlib) <= 4.6e-12; the library kernel on an exact VAR spectrum (exact) matches the
+    analytic Geweke values to 1.9e-15 (var2) and 4.2e-10 (gauss_ar1_pair). Estimator: on var2_bivariate the mean-full A[1,0]
+    is 0.412 / 0.436 / 0.402 at T=256/1024/4096 against the population 0.289 (integral identity holds: Kolmogorov F 0.289056
+    = integral of f 0.289056), and the non-causal A[0,1] is 0.103 / 0.133 / 0.123 against 0; all 7 truth runs fail (max_z
+    up to 17.1) while the Monte Carlo expectation of the same estimator is matched (mcexp max_z 0.59/0.60). The Monte Carlo
+    bias does not shrink with T (conv: 0.128/0.126/0.125 on var2, 0.125/0.127/0.126 on iid; ratio 1.02/0.99). iid null off-diagonal
+    mean 0.113 / 0.122 / 0.126 at T=256/1024/4096 (null runs fail, max_z 4.0/7.1/15.0); the same data with NW=10 (19 tapers)
+    gives 0.023 and NW=40 0.0051. gauss_ar1_pair: A[0,1] (GC 1->0) 0.283 vs 0.0995, A[1,0] 0.138 vs 0.047.'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: anchor
+  score_rubric_note: Anchor 7 names the expectation over 5 tapers. The band bias is about 0.125 nats and does not fall with T (conv 0.128/0.126/0.125).
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The per-frequency quantity is Geweke''s (1982) spectral GC from the Wilson factors of the multitaper CSM
+    (Dhamala, Rangarajan & Ding 2008), reproduced fp-exactly from scratch and on an exact spectrum. The value-changing difference
+    from the canonical consistent estimator is the spectral estimate: one window, NW = 3, 5 tapers whatever T, about 10 degrees
+    of freedom per bin, so the band statistic carries a positive bias of about 0.125 nats that does not decrease with T (conv
+    runs; the bias falls to 0.023 / 0.005 with 19 / 78 tapers). Rubric anchor 7 (''expectation over 5 tapers''): matches the
+    supplement''s ''nonparametric form from the Spectral Connectivity Toolbox'' but differs from the canonical estimator in
+    a value-changing way. Also: A[i, j] = GC j -> i (row = target), the transpose of the glossary convention; bins k/T with
+    DC excluded by the fmin override and Nyquist dropped (not the documented 125 bins); NaN bins (values <= 0, including every
+    bin of an exactly zero GC) are dropped by nanmean/nanmax; a duplicated channel either aborts the whole SPI with AttributeError
+    (numpy >= 2.4 as checked: minimum_phase_decomposition.py:48) or, depending on round-off, returns finite values for the copy pair.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: pyspi time per run <= 0.29 s at the last forced rerun (iid_gaussian T=4096 null 0.289 s, delayed_noise T=1024 P=4 impl 0.258 s, var2_bivariate T=4096 impl 0.174 s;
+    sweep probes over 26 inputs up to 13.3 s); 83 runs, 39.4 s pyspi time in total (out/pyspi/index/sgc.json, last forced rerun); reference side
+    dominated by the 200-draw Monte Carlo (about 65 s for iid T=4096)'
+  symmetry_observed: 'asym: max|A - A.T| = 0.30 (var2_bivariate T1024), 2.64 (delayed_noise T1024), 0.014 (iid_gaussian T1024)
+    on the impl:mean-full runs; diagonal NaN'
+  direction_observed: 'row = target, column = source: A[i, j] estimates GC x_j -> x_i. var2_bivariate (x0 -> x1): A[1,0] 0.412
+    / 0.436 / 0.402 vs A[0,1] 0.103 / 0.133 / 0.123 at T=256/1024/4096; gauss_ar1_pair (1 -> 0 stronger, analytic F 0.0996
+    vs 0.0470): A[0,1] 0.283 > A[1,0] 0.138; delayed_noise (smaller delay leads): A[target, source] 2.45-2.75 vs 0.11-0.13
+    on all 6 links. The documented rows = sources reading holds on 0 of 9 links.'
+  candidate_resolutions:
+  - candidate: 'direction: A[i, j] = GC j -> i (target-by-source), opposite to the documented rows = sources convention'
+    outcome: confirmed
+    evidence: 'spectral.sgc.nonparametric|var2_bivariate|256|pipeline|dir, |1024|pipeline|dir, |4096|pipeline|dir, |gauss_ar1_pair|1024|pipeline|dir,
+      |delayed_noise|1024|pipeline|dir: row = target on 9/9 links, rows = sources on 0/9; |var2_bivariate|1024|kernel|exact:
+      the library''s [1,0] bins equal the analytic GC 0 -> 1 (max_abs 1.9e-15) and every [0,1] bin is NaN (exact zero GC 1
+      -> 0). Not in KNOWN_ISSUES.md.'
+  - candidate: 'estimator inconsistency: with NW=3 / 5 tapers the null bias does not decrease with T'
+    outcome: confirmed
+    evidence: 'spectral.sgc.nonparametric|var2_bivariate|4096|pipeline|conv and |iid_gaussian|4096|pipeline|conv fail (Monte
+      Carlo bias 0.128/0.126/0.125 and 0.125/0.127/0.126 at T=256/1024/4096); null runs fail at all three T (mean 0.113/0.122/0.126);
+      mcexp runs pass (pyspi = the estimator); |iid_gaussian|1024|pipeline|null:mean-full extra keys: NW=10 0.023, NW=40 0.0051.'
+  - candidate: 'error path: minimum_phase_decomposition.py:48 xp.linalg.linalg raises AttributeError under numpy 2.5.4 when
+      the Cholesky start fails, NaN-ing every sgc_nonparametric identifier'
+    outcome: confirmed
+    evidence: 'spectral.sgc.nonparametric|shared_envelope|256|pipeline|err pass (library and direct call raise AttributeError,
+      real Calculator table all NaN); refinement: the failure is round-off dependent: |shared_envelope|1024|pipeline|err fails
+      (no exception) and |shared_envelope|1024|pipeline|dup shows finite A[0,2] = 0.2457, A[2,0] = 1.1e-12 for a channel and
+      its exact copy (lag-0 eigenvalues 0.0 and 1.96); |iid_gaussian|256|pipeline|sweep: shared_envelope, eeg:duplicate_channel,
+      eeg:near_duplicate_1e-9 raise; |iid_gaussian|1024|pipeline|sweep: none raise.'
+  - candidate: 'factorisation accuracy: the Wilson factor of single-window estimates does not reproduce the CSM; NaN bins'
+    outcome: confirmed
+    evidence: 'spectral.sgc.nonparametric|logistic_maps|1024|pipeline|bins: recon error 0.323, not converged, NaN bins 25.0%
+      (cell [0,1] 9.0%, [1,0] 40.9%); |trending|256|pipeline|bins: not converged, NaN 6.4%, cell [1,3] 66.9%; |var2_bivariate|1024|pipeline|bins
+      recon 0.0206, |iid_gaussian|1024|pipeline|bins 0.0132. Zero padding to 4T cuts the recon error to 0.185 / 0.026 / 3e-5
+      / 1.5e-4 and NaN bins to 0.12% / 0.03%; NW=20 removes the NaN bins. The from-scratch pipeline reproduces the NaN pattern
+      exactly (impl, bins pass), so this is the library''s estimator, not a pyspi error.'
+  - candidate: 'bin/label conventions: fmin-0 runs with fmin=1e-5, both half-bands include 0.25, 125-bin grid not used'
+    outcome: confirmed
+    evidence: spectral.sgc.nonparametric|*|impl:* (44 runs) pass only with the k/T grid, DC excluded, Nyquist dropped and
+      inclusive edges (max_abs 3.9e-11). Low impact.
+  - candidate: 'NaN handling: NaN bins dropped by nanmean/nanmax; NaN marks factorisation failure rather than no causality'
+    outcome: confirmed
+    evidence: 'Dropping confirmed by the impl runs on logistic_maps/trending (cells with up to 50% NaN bins are summaries
+      of the remaining bins). Correction to the second clause: with an exact factor an exactly zero GC gives ln 1 = 0 and
+      is also turned into NaN (|var2_bivariate|1024|kernel|exact: all 512 bins of GC 1 -> 0 are NaN), so a true zero becomes
+      an all-NaN cell; on estimated spectra this has probability 0.'
+  checks_run:
+  - run_ids:
+    - spectral.sgc.nonparametric|var2_bivariate|1024|pipeline|impl:*
+    - spectral.sgc.nonparametric|gauss_ar1_pair|1024|pipeline|impl:*
+    - spectral.sgc.nonparametric|delayed_noise|1024|pipeline|impl:*
+    - spectral.sgc.nonparametric|iid_gaussian|1024|pipeline|impl:*
+    - spectral.sgc.nonparametric|trending|256|pipeline-detrend|impl:*
+    - spectral.sgc.nonparametric|trending|256|pipeline|impl:*
+    - spectral.sgc.nonparametric|logistic_maps|1024|pipeline|impl:*
+    - spectral.sgc.nonparametric|var2_bivariate|256|pipeline|impl:mean-full
+    - spectral.sgc.nonparametric|var2_bivariate|4096|pipeline|impl:mean-full
+    reference: 'audit/checks/refs/sgc.py:chk_impl (np_perbin: _kernels_spectral multitaper_fft, cross_spectral_matrix, wilson_factorise,
+      granger_nonparametric; pyspi band rule)'
+    outcome: 44/44 pass (tolerance 1e-6/1e-8); max_abs 3.9e-11, max_rel 8.4e-12, NaN masks equal (logistic_maps 25% NaN bins,
+      trending pipeline cell [1,3] NaN by the 50% rule)
+  - run_ids:
+    - spectral.sgc.nonparametric|var2_bivariate|1024|kernel|exact
+    - spectral.sgc.nonparametric|gauss_ar1_pair|1024|kernel|exact
+    reference: audit/checks/refs/sgc.py:chk_exact (analytic Geweke from the true A_k, Sigma via _kernels_spectral:var_transfer_function)
+    outcome: '2/2 pass; library kernel on the exact spectrum vs analytic per bin: max_abs 1.9e-15 (var2) and 4.2e-10 (gauss_ar1_pair)'
+  - run_ids:
+    - spectral.sgc.nonparametric|var2_bivariate|1024|pipeline|libcsm
+    - spectral.sgc.nonparametric|delayed_noise|1024|pipeline|libcsm
+    - spectral.sgc.nonparametric|logistic_maps|1024|pipeline|libcsm
+    reference: audit/checks/refs/sgc.py:chk_libcsm
+    outcome: 3/3 pass; library CSM vs from-scratch max_abs <= 7.8e-12
+  - run_ids:
+    - spectral.sgc.nonparametric|var2_bivariate|1024|pipeline|wilsonlib
+    - spectral.sgc.nonparametric|delayed_noise|1024|pipeline|wilsonlib
+    - spectral.sgc.nonparametric|logistic_maps|1024|pipeline|wilsonlib
+    reference: audit/checks/refs/sgc.py:chk_wilsonlib
+    outcome: 3/3 pass; Wilson+Geweke on the library CSM vs pyspi per bin max_abs <= 4.6e-12; band mean/max differences 0.0
+  - run_ids:
+    - spectral.sgc.nonparametric|var2_bivariate|1024|pipeline|bins
+    - spectral.sgc.nonparametric|iid_gaussian|1024|pipeline|bins
+    - spectral.sgc.nonparametric|logistic_maps|1024|pipeline|bins
+    - spectral.sgc.nonparametric|trending|256|pipeline|bins
+    - spectral.sgc.nonparametric|var2_bivariate|4096|pipeline|bins
+    reference: audit/checks/refs/sgc.py:chk_bins
+    outcome: 5/5 pass per bin (max_abs <= 8.4e-11); extra keys give recon error and NaN fractions under zero padding and more
+      tapers
+  - run_ids:
+    - spectral.sgc.nonparametric|var2_bivariate|256|pipeline|dir
+    - spectral.sgc.nonparametric|var2_bivariate|1024|pipeline|dir
+    - spectral.sgc.nonparametric|var2_bivariate|4096|pipeline|dir
+    - spectral.sgc.nonparametric|gauss_ar1_pair|1024|pipeline|dir
+    - spectral.sgc.nonparametric|delayed_noise|1024|pipeline|dir
+    reference: audit/checks/refs/sgc.py:chk_dir
+    outcome: 5/5 pass under row = target (9/9 links); 0/9 links under the documented rows = sources
+  - run_ids:
+    - spectral.sgc.nonparametric|var2_bivariate|256|pipeline|truth:mean-full
+    - spectral.sgc.nonparametric|var2_bivariate|1024|pipeline|truth:mean-full
+    - spectral.sgc.nonparametric|var2_bivariate|4096|pipeline|truth:mean-full
+    - spectral.sgc.nonparametric|var2_bivariate|1024|pipeline|truth:mean-low
+    - spectral.sgc.nonparametric|var2_bivariate|1024|pipeline|truth:mean-high
+    - spectral.sgc.nonparametric|var2_bivariate|1024|pipeline|truth:max-full
+    - spectral.sgc.nonparametric|gauss_ar1_pair|1024|pipeline|truth:mean-full
+    reference: audit/checks/refs/sgc.py:chk_truth
+    outcome: '0/7 pass: A[1,0] 0.412 / 0.436 / 0.402 at T=256/1024/4096 vs population 0.289, null direction 0.103 / 0.133
+      / 0.123 vs 0 (max_z 3.4 / 9.7 / 17.1)'
+  - run_ids:
+    - spectral.sgc.nonparametric|var2_bivariate|1024|pipeline|mcexp:mean-full
+    - spectral.sgc.nonparametric|iid_gaussian|1024|pipeline|mcexp:mean-full
+    reference: audit/checks/refs/sgc.py:chk_mcexp
+    outcome: '2/2 pass (max_z 0.59, 0.60): pyspi behaves as the 5-taper estimator'
+  - run_ids:
+    - spectral.sgc.nonparametric|var2_bivariate|4096|pipeline|conv
+    - spectral.sgc.nonparametric|iid_gaussian|4096|pipeline|conv
+    reference: audit/checks/refs/sgc.py:chk_conv
+    outcome: '0/2 pass: Monte Carlo bias 0.128 / 0.126 / 0.125 (var2) and 0.125 / 0.127 / 0.126 (iid) at T=256/1024/4096,
+      ratio 1.02 and 0.99'
+  - run_ids:
+    - spectral.sgc.nonparametric|iid_gaussian|256|pipeline|null:mean-full
+    - spectral.sgc.nonparametric|iid_gaussian|1024|pipeline|null:mean-full
+    - spectral.sgc.nonparametric|iid_gaussian|4096|pipeline|null:mean-full
+    reference: audit/checks/refs/sgc.py:chk_null
+    outcome: '0/3 pass: off-diagonal mean 0.113 / 0.122 / 0.126 vs 0 (max_z 4.0 / 7.1 / 15.0); same data from scratch with
+      NW=10 0.023, NW=40 0.0051'
+  - run_ids:
+    - spectral.sgc.nonparametric|shared_envelope|256|pipeline|err
+    - spectral.sgc.nonparametric|shared_envelope|1024|pipeline|err
+    - spectral.sgc.nonparametric|shared_envelope|1024|pipeline|dup
+    reference: audit/checks/refs/sgc.py:chk_err, chk_dup (probe outcome)
+    outcome: '256 pass (AttributeError from library and direct call, real Calculator table all NaN); 1024 fail (no exception:
+      the Cholesky start succeeds on a numerically singular lag-0 matrix); dup pass: finite A[0,2] 0.2457 and A[2,0] 1.1e-12
+      for an exact copy'
+  - run_ids:
+    - spectral.sgc.nonparametric|iid_gaussian|256|pipeline|sweep
+    - spectral.sgc.nonparametric|iid_gaussian|1024|pipeline|sweep
+    reference: audit/checks/refs/sgc.py:chk_sweep
+    outcome: 2/2 pass; AttributeError at T=256 on shared_envelope, eeg:duplicate_channel, eeg:near_duplicate_1e-9; none at
+      T=1024; flat channel rejected by Data()
+  - run_ids:
+    - spectral.sgc.nonparametric|var2_bivariate|1024|kernel|affine
+    - spectral.sgc.nonparametric|var2_bivariate|1024|kernel|scale
+    reference: audit/checks/refs/sgc.py:chk_affine
+    outcome: '0/2 pass at 1e-6: max_abs 1.1e-4 for both (offset removed by the constant detrend; the residual is Wilson non-equivariance
+      under channel scaling)'
+optimisation:
+  complexity_P_T: 'One multivariate Multitaper + two-sided expectation CSM O(K*n_fft*P^2), then a Python loop over P(P-1)/2 unordered pairs (spectral_connectivity/connectivity.py:722-743) with one Wilson factorisation of the 2x2 x n_fft block each: O(P^2 * iter * n_fft log n_fft). Measured T exponent 0.79; never run above 8x1024. summary.json projects it by unordered pair count from the 8x1024 wall (0.594 s for 28 pairs -> 146.4 s per window at 118 channels, extrapolated-pairs-from-8; the class is multivariate, so profile_units.py PAIR_LOOP_BASIS supplies the pair count of the delegate''s pair loop). The extra 32x1024 profile (496 pairs, 11.2 s profiled) keeps the same shares, so the pair loop dominates at every P.'
+  hotspot_1: .venv/lib/python3.12/site-packages/spectral_connectivity/minimum_phase_decomposition.py:minimum_phase_decomposition (third-party:spectral_connectivity) 95.9% of the profiled SPI call at 8x1024 (97.6% at 32x1024, audit/profiles/micro/prof_spectral.sgc.nonparametric__32x1024.pstats)
+  hotspot_2: numpy/linalg/_linalg.py:solve on 2x2 stacks 65.5% at 8x1024 (65.5% at 32x1024); minimum_phase_decomposition self 14.7%
+  hotspot_owner: third-party:spectral_connectivity
+  opaque_share: 0.083
+  profile_file: audit/profiles/spectral.sgc.nonparametric__8x1024.pstats
+  opportunities:
+  - opportunity_id: spectral_directed-2
+    opportunity: Run one batched Wilson factorisation over all pairs with the pairs on the leading axis (the library checks convergence per leading index, minimum_phase_decomposition.py:102-125, 161-222) and replace np.linalg.solve on stacks of 2x2 matrices (_get_linear_predictor, :128-158) by the closed-form 2x2 inverse, removing the per-pair Python loop (pyspi/base.py:85-94 for the directed units, spectral_connectivity/connectivity.py:722-743 for sgc).
+    opp_type: vectorise-batch
+    expected_speedup: 3-10x
+    speedup_basis: 'profile:audit/profiles/spectral.sgc.nonparametric__8x1024.pstats minimum_phase_decomposition 95.9% (solve 65.5%) + complexity: batched closed-form 2x2 Wilson over all unordered pairs replaces the library pair loop. Ranking basis: the pairs-only projection of the 8x1024 wall in summary.json (146.4 s per window fresh, 147.0 s family-warm; t_fixed assumed 0, so the Multitaper + CSM part, under 5% of the 8x1024 profile, is scaled by pair count as well).'
+    output_risk: unverified-within-tolerance
+    risk_evidence: 'closed-form 2x2 inverse rounds differently and the 1e-8 stop rule can shift by an iteration; a batch must also keep two failure paths: (a) per pair, the library pair loop catches np.linalg.LinAlgError (e.g. a singular solve) and writes NaN for that pair (spectral_connectivity/connectivity.py:724-743; a closed-form inverse does not raise, so singular pairs must be detected and set to NaN explicitly); (b) whole SPI, a failed Cholesky initial condition: the handler at minimum_phase_decomposition.py:48 names xp.linalg.linalg.LinAlgError, which numpy 2.5.4 does not have, so the failure raises AttributeError, which is neither the LinAlgError the pair loop catches (connectivity.py:742-743) nor the ValueError the pyspi wrapper catches (pyspi/statistics/spectral.py:438), and the Calculator sets the whole sgc_nonparametric table to NaN (pyspi/calculator.py:336-337; probe p7, notes/sgc.md "Error path"); no RNG is drawn. A batch must keep (b) as a whole-SPI failure or record the change. The random start from the global numpy RNG (minimum_phase_decomposition.py:54-63), which in a batched call would hit every pair, is reachable only under a numpy that still has the deprecated numpy.linalg.linalg shim (numpy < 2.4 as checked: 2.2.6 and 2.3.3 resolve xp.linalg.linalg.LinAlgError with a DeprecationWarning, 2.4.6 and 2.5.4 raise AttributeError) or a spectral_connectivity release whose handler catches xp.linalg.LinAlgError; that rng-stream risk is conditional on such a numpy or library version and does not apply in this environment (pyproject.toml pins numpy>=2.5.4,<2.6)'
+    effort: L
+    depends_on: []

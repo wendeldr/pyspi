@@ -1,0 +1,193 @@
+unit_id: infotheory.xme.gaussian_k1
+status: profiled
+correctness:
+  metric_name_standard: Conditional differential entropy of the target given lagged source values, H(Y_t | X_(t-1..t-1)) (pyspi 'cross-map entropy', no standard name)
+  canonical_ref: 'none found: ''cross-map entropy'' is not a standard named quantity and pyspi documents no reference; nearest standard quantity is conditional differential entropy (Cover T.M. & Thomas
+    J.A. 2006, Elements of Information Theory, 2nd ed., Wiley, §8.6). Not related in code to convergent cross mapping (Sugihara et al. 2012).'
+  canonical_definition: H(Y_t | X_{t-1}, ..., X_{t-m}) = H(Y_t, X_past) - H(X_past), m = history length; under the Gaussian model 0.5*ln(2*pi*e*sigma^2(Y_t | X_past))
+  documented_definition: Not defined in the supplement (no section for xme in §1.4, supplement.txt:405-565) nor in GitBook information-theory.md; only listed in GitBook table-of-spis.md:73 as 'Cross-Map
+    Entropy', base identifier xme, estimators xme_kozachenko_k1/k10, xme_gaussian_k1/k10, xme_kernel_k1/k10. No formula, keywords or reference are documented.
+  delegate_lib: 'JIDT infodynamics.jar bundled at pyspi/lib/jidt (labelled 1.6.1 by version-1.6.1.txt, but its class inventory includes EntropyCalculatorMultiVariateCommon, added upstream in commit 3d1f3fe
+    on 2024-04-20; between tag v1.6.1 and commit a9b6b3e the Gaussian MI/CMI/TE/AIS leaf classes, MatrixUtils, MathsUtils and ChiSquareMeasurementDistribution are byte-identical, their MultiVariateCommon/Via
+    parents differ only in observation-ID/noise-seed bookkeeping, and EntropyCalculatorMultiVariateGaussian was refactored onto EntropyCalculatorMultiVariateCommon with its value path unchanged; details
+    in infotheory.est.gaussian) via JPype1==1.7.1 on OpenJDK 21; gaussian.EntropyCalculatorMultiVariateGaussian (two calls: joint and source-past)'
+  implemented_as: 'history_length=1: target future y_j(t) for t = 1..T-1 (N = T-1 samples); source past uses 1 lag of x_i (lags 1 and range(2,k) -> 1). Value = H([x_i past, y_j(t)]) - H(x_i past) with ddof=1
+    Gaussian entropies on z-scored data = 0.5*ln(2*pi*e*RSS/(N-1)) of the OLS (with intercept) regression of y_j(t) on the source lags. The target''s own past is not conditioned on.'
+  implementation_trace:
+  - pyspi/calculator.py:329 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset); :332 fill_diagonal NaN; :336-339 any exception from any pair -> the whole SPI entry becomes NaN (:337) and the error is recorded, warning issued at :354-355
+  - 'pyspi/data.py:184-195 preprocessing in Data.set_data: optional scipy.signal.detrend(axis=1), then (default normalise=True) scipy.stats.zscore(axis=1, ddof=1)'
+  - 'pyspi/base.py:84-94 Directed.multivariate: for every ordered pair i != j, A[i,j] = self.bivariate(data, i=i, j=j)'
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: _entropy_calc = _getcalc(''entropy'') (:36); identifier += ''_gaussian'' (:38); estimator ''gaussian'' -> labels += [''linear''], _dyn_corr_excl
+    = None (:53-55)'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: every calculator gets setProperty(''BIAS_CORRECTION'',''false'') and setProperty(''NOISE_SEED'',''42''); no NORMALISE property is set'
+  - 'pyspi/statistics/infotheory.py:103-134 _getcalc: ''gaussian'' (and any unrecognised estimator) falls to the else branches -> gaussian.EntropyCalculatorMultiVariateGaussian (:111-112), gaussian.MutualInfoCalculatorMultiVariateGaussian
+    (:120-123), gaussian.TransferEntropyCalculatorGaussian (:129-130)'
+  - 'pyspi/statistics/infotheory.py:394-403 CrossmapEntropy(JIDTBase, Directed).__init__(history_length=10): identifier += f''_k{history_length}'''
+  - 'pyspi/statistics/infotheory.py:405-414 bivariate: src, targ = data.to_numpy(squeeze=True)[[i, j]]; k = history_length; targ_future = targ[k:]; src_past first column src[k-1:-1] (lag 1); loop ''for
+    i in range(2, k)'' appends src[k-i:-i] (lags 2..k-1; shadows the argument i, harmless)'
+  - pyspi/statistics/infotheory.py:416-426 joint = [src_past, targ_future]; H_xy = Gaussian entropy of joint; H_y = Gaussian entropy of src_past; return H_xy - H_y = H(targ_future | src_past)
+  - 'pyspi/config.yaml:439-464 CrossmapEntropy configs: estimator gaussian with history_length 1 and 10'
+  - 'https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/gaussian/EntropyCalculatorMultiVariateGaussian.java EntropyCalculatorMultiVariateGaussian
+    (extends EntropyCalculatorMultiVariateCommon, :53-54): finaliseAddObservations :87-96 computes means and MatrixUtils.covarianceMatrix(observations, means); setCovariance :110-123 takes MatrixUtils.CholeskyDecomposition
+    (throws on non-PD); computeAverageLocalOfObservations :162-175 returns 0.5*(d*(1+ln 2pi) + ln det(Sigma)) in nats'
+  - https://github.com/jlizier/jidt/blob/a9b6b3e77ca8c051f1031003474e2e35dd4a3269/java/source/infodynamics/measures/continuous/EntropyCalculatorMultiVariateCommon.java :66 normalise = true by default, but
+    finaliseAddObservations :178-212 only stacks observations and adds noise if addNoise (default false, :70); no normalisation is applied for the Gaussian estimator; NOISE_SEED handled :133-139 (no effect
+    without addNoise)
+  - https://github.com/jlizier/jidt/blob/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java [JIDT line numbers at tag v1.6.1; the bundled pyspi/lib/jidt/infodynamics.jar is labelled 1.6.1 but is a later build (entries dated 2024-04-21, near upstream a9b6b3e, exact commit not established; see delegate_lib)] covarianceMatrix(double[][], double[]) :3426-3439 -> covarianceTwoColumns :3370-3377 divides by (n-1) (ddof=1);
+    CholeskyDecomposition :4496-4498 (tol 10e-10 = 1e-9) / :4528-4560 throws NonPositiveDefiniteMatrixException when a pivot <= tol; determinantViaCholeskyResult :4673-4680
+  deviation_from_documented: No documented definition exists (only a table entry), so the implementation cannot be compared with documentation; the history parameter named 'k' does not equal the number
+    of source lags used (k=1 -> 1 lag, as the name suggests). The name suggests a cross-mapping (CCM-like) construct but the code is a plain lagged conditional entropy.
+  deviation_from_canonical: 'none relative to H(Y_t | X_{t-1}) under the Gaussian model (probe var2_bivariate_T1024 A[0,1] = 1.25161306 equals numpy H([x0(t-1), x1(t)]) - H(x0(t-1)) = 1.2516130588681806).
+    History lengths k=1 and k=2 both use only lag 1 (probe: k=1 1.2516131, k=2 1.2520804, k=3 1.2509918 on the same pair; k=2 differs from k=1 only by dropping one sample).'
+  units_and_range: 'nats; real (differential entropy): <= approx 1.4189 under z-scoring and negative when the source past predicts the target well (analytic delayed_noise 0->1 with lag 1: approx -0.889);
+    asymmetric; scale-dependent without normalisation'
+  direction_convention: 'A[i,j] = H(x_j(t) | x_i(t-1..)): row i is the conditioning source, column j the target (infotheory.py:407-426). Probe var2_bivariate_T1024: A[0,1]=1.2516 < A[1,0]=1.4158 (lower
+    = more predictable target)'
+  symmetry_expected: asym
+  already_documented: REVIEW M8 (Gaussian joint/conditional entropies can be negative despite 'unsigned') covers the sign behaviour by the same mechanism
+  new_finding_candidates:
+  - 'CANDIDATE (documentation gap): xme has no definition, keywords or reference in the supplement or GitBook SPI descriptions; only GitBook table-of-spis.md:73 lists it.'
+  - 'CANDIDATE (off-by-one, hypothesis partly confirmed): the source-lag loop is range(2, k) (infotheory.py:411), so history_length k uses lags 1..k-1 for k >= 2 and lag 1 for k = 1; k=1 and k=2 therefore
+    use the same lag set and differ only by one sample (probe 1.2516131 vs 1.2520804). Affects xme_gaussian_k10 (9 lags); xme_gaussian_k1 is as named.'
+  - 'CANDIDATE (interpretation): the target''s own past is not conditioned on, so A[i,j] is dominated by the target''s marginal entropy (constant 1.4189 under z-scoring) minus the lagged linear predictability
+    from the source; for autocorrelated targets it mixes common drive and autocorrelation; it is not a causal (TE-like) measure and is unrelated to cross mapping.'
+  proposed_checks:
+  - datasets:
+    - var2_bivariate
+    - delayed_noise
+    - gauss_ar1_pair
+    - iid_gaussian
+    path: pipeline
+    reference: 'from-scratch numpy: y = z_j[1:], X = z_i lags {1} aligned to y; H(X,y) - H(X) with ddof=1 slogdet Gaussian entropies'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: abs difference <= 1e-12 on every ordered pair and T
+  - datasets:
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic: x1(t) = x0(t-1) + 0.1 noise (x0 white, unit variance), z-scored: H(x1(t) | x0(t-1)) = 0.5*ln(2*pi*e*0.01/1.01) = -0.8886217; reverse H(x0(t) | x1(t-1..)) approx 1.4189 (x0 white)'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: A[0,1] near -0.889 (statistical at T=4096), A[1,0] near 1.419; establishes A[i,j] = H(x_j | past of x_i)
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'constructed shift test from an iid_gaussian row u: target y(t) = u(t-d) + 0.1 noise for d = 9 and d = 10 (built inside the check, numpy only), reference H(y | lags) by numpy'
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: xme_gaussian_k1 captures d = 1 only; history_length=2 gives nearly the same value as k=1 (same lag set)
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_gaussian.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:gaussian_xme(k=1) (H(y_t, x_{t-1}) - H(x_{t-1}), slogdet); audit/checks/refs/it_gaussian.py:chk_xme_truth
+    (analytic delayed_noise conditional entropies, Monte Carlo SE); audit/checks/refs/it_gaussian.py:chk_k2_numpy and chk_k2_equals_k1_shifted with audit/checks/probes/it_gaussian_probes.py:xme_k2; audit/checks/refs/it_gaussian.py:chk_shift_numpy
+    / chk_shift_pattern with audit/checks/probes/it_gaussian_probes.py:xme_shift_stack
+  check_data: var2_bivariate T1024; delayed_noise T1024 and pairs (0,1)/(0,3) at T4096; gauss_ar1_pair T1024; iid_gaussian T256 and T4096 (constructed shift data [u, u(t-9)+0.1v1, u(t-10)+0.1v2])
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12; statistical: |pyspi - Monte Carlo mean| <= 2 Monte Carlo SD; qualitative pattern on the shift data'
+  closeness: 'Numpy: 4/4 exact runs pass, max_abs <= 5.5e-14. delayed_noise T=4096: A[0,1] population H1 + 0.5 ln(1 - 1/1.01) = -0.88862, |pyspi - population| 0.0159 (max_z 0.97); pair (0,3) (lag 5, not
+    used) population 1.41894, 6.1e-5 (max_z 0.54). history_length=2 equals history_length=1 on samples t = 2..T-1 to 6.7e-16 (var2_bivariate) and 3.1e-14 (delayed_noise); var2_bivariate 0->1: k=1 1.25161,
+    k=2 1.25208 (max difference 4.7e-4, one dropped sample). Shift data: u -> u(t-9) 1.4179, u -> u(t-10) 1.4186 (both approx H1 = 1.4189: only lag 1 is used).'
+  verdict: related-quantity
+  score_0_10: 5
+  score_rubric: 5
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 5: ''cross-map entropy'' has no literature definition. The code computes the Gaussian H(x_j(t) | x_i(t-1)) as it states (numpy 4/4, max_abs
+    <= 5.5e-14).'
+  documentation_status: silent
+  verdict_adjusted: related-quantity
+  score_adjusted: 5
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: No documented definition exists; the code computes H(x_j(t) | x_i(t-1)) under the Gaussian model, without conditioning on the target's own past, and is unrelated to cross mapping. Computed
+    exactly as the code states. history_length=1 and =2 use the same lag set {1}.
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap (pyspi time_s in out/pyspi/index/it_gaussian.json, single runs of the review-stage forced re-run, made under machine load: the shift-pattern and shift-numpy probes (xme with k = 1, 2 and 10
+    on 3-channel shift data built from iid_gaussian T = 4096) took 0.65 s and 0.26 s; every other run <= 0.04 s; 12 runs, 1.1 s in total; an earlier run quoted <= 0.45 s per pyspi run (first run
+    including warm-up), typically 0.01 s (not stored in the index or results files))'
+  symmetry_observed: 'asym: max|A - A.T| = 0.164 (var2_bivariate T1024), 2.27 (delayed_noise T1024), 0.078 (gauss_ar1_pair), 0.0069 (iid_gaussian T256)'
+  direction_observed: 'A[i,j] = H(x_j(t) | x_i(t-1)): row i is the lagged source, column j the target; lower = more predictable. delayed_noise T1024: A[0,1] = -0.851 vs A[1,0] = 1.418; var2_bivariate: A[0,1]
+    = 1.2516 vs A[1,0] = 1.4158'
+  candidate_resolutions:
+  - candidate: 'documentation gap: no definition, keywords or reference for xme'
+    outcome: confirmed
+    evidence: supplement.txt section 1.4 (lines 405-565) and GitBook information-theory.md have no xme entry; only GitBook table-of-spis.md:73 lists 'Cross-Map Entropy' (documentation reading)
+  - candidate: range(2, k) makes history_length=1 and =2 use the same lag set, differing by one sample
+    outcome: confirmed
+    evidence: infotheory.xme.gaussian_k1|var2_bivariate|1024|pipeline|k2-equals-k1-shifted (6.7e-16) and |delayed_noise|1024|pipeline|k2-equals-k1-shifted (3.1e-14); infotheory.xme.gaussian_k1|var2_bivariate|1024|pipeline|k2-numpy
+      (k1 1.25161 vs k2 1.25208)
+  - candidate: the target's own past is not conditioned on, so A[i,j] mixes target autocorrelation and common drive and is not TE-like
+    outcome: confirmed
+    evidence: 'infotheory.xme.gaussian_k1|*|numpy: the reference with source lags only and no target past reproduces pyspi to <= 5.5e-14; delayed_noise truth runs match the population values of H(x_j(t)
+      | x_i(t-1)) (max_z <= 0.97)'
+  checks_run:
+  - run_ids:
+    - infotheory.xme.gaussian_k1|var2_bivariate|1024|pipeline|numpy
+    - infotheory.xme.gaussian_k1|delayed_noise|1024|pipeline|numpy
+    - infotheory.xme.gaussian_k1|gauss_ar1_pair|1024|pipeline|numpy
+    - infotheory.xme.gaussian_k1|iid_gaussian|256|pipeline|numpy
+    reference: audit/checks/refs/it_gaussian.py:chk_numpy (audit/checks/refs/_kernels_infotheory.py:gaussian_xme k=1)
+    outcome: 4/4 pass; max_abs <= 5.5e-14
+  - run_ids:
+    - infotheory.xme.gaussian_k1|delayed_noise|4096|pipeline|truth-p01
+    - infotheory.xme.gaussian_k1|delayed_noise|4096|pipeline|truth-p03
+    reference: audit/checks/refs/it_gaussian.py:chk_xme_truth (analytic + Monte Carlo SE)
+    outcome: 2/2 pass; max_z 0.97 / 0.54
+  - run_ids:
+    - infotheory.xme.gaussian_k1|var2_bivariate|1024|pipeline|k2-numpy
+    - infotheory.xme.gaussian_k1|var2_bivariate|1024|pipeline|k2-equals-k1-shifted
+    - infotheory.xme.gaussian_k1|delayed_noise|1024|pipeline|k2-equals-k1-shifted
+    reference: audit/checks/refs/it_gaussian.py:chk_k2_numpy / chk_k2_equals_k1_shifted (audit/checks/probes/it_gaussian_probes.py:xme_k2)
+    outcome: 3/3 pass; max_abs <= 3.1e-14
+  - run_ids:
+    - infotheory.xme.gaussian_k1|iid_gaussian|4096|pipeline|shift-numpy
+    - infotheory.xme.gaussian_k1|iid_gaussian|4096|pipeline|shift-pattern
+    reference: audit/checks/refs/it_gaussian.py:chk_shift_numpy / chk_shift_pattern (audit/checks/probes/it_gaussian_probes.py:xme_shift_stack)
+    outcome: 2/2 pass; max_abs 1.7e-13; both shifts approx H1
+  - run_ids:
+    - infotheory.xme.gaussian_k1|delayed_noise|1024|pipeline|direction
+    reference: audit/checks/refs/it_gaussian.py:chk_direction
+    outcome: 1/1 pass; A[0,1] < A[1,0]
+optimisation:
+  complexity_P_T: 'O(P^2 T k): CrossmapEntropy.bivariate (infotheory.py:405-428) builds the source-lag matrix with np.append, then two JIDT Gaussian entropy calls per ordered pair (joint T x 2 and source
+    T x 1), each with a JArray(JDouble, 2) conversion. Measured fresh P exponent 2.09, T exponent 0.97 (row-by-row conversion is linear in T). At 118x1024 the pair term is everything: 43.7 s measured fresh.'
+  hotspot_1: pyspi/statistics/infotheory.py:CrossmapEntropy.bivariate (third-party:jpype 2-D conversion + jidt, self time) 99.7% cum / 98.3% self of the profiled SPI call at 8x1024
+  hotspot_2: 'numpy/lib/_function_base_impl.py:append (third-party:numpy) below 1% at k=1. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time
+    is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jpype
+  opaque_share: 0.0081
+  profile_file: audit/profiles/infotheory.xme.gaussian_k1__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_gaussian-2
+    opportunity: 'Closed-form numpy for the composite Gaussian SPIs, batched over pairs: si from one lag-1 covariance (three conditional entropies as log-det ratios), xme from the source-lag block with
+      and without the target sample, cce/di from one lagged covariance per term m = 1..5 (each term has its own sample window), and the gc auto MAX_CORR_AIS search from Gaussian AIS of every (k, tau) candidate
+      per channel; replaces 2-10 JIDT entropy calls per pair, each with a 2-D JArray conversion.'
+    opp_type: replace-library
+    expected_speedup: 30-100x
+    speedup_basis: 'profile:audit/profiles/infotheory.xme.gaussian_k1__8x1024.pstats pyspi/statistics/infotheory.py:405 CrossmapEntropy.bivariate 99.7% + complexity: per pair the JIDT path costs ~1 ms per
+      2-D entropy call (component timings in audit/profiles/micro/opp_it_gaussian-1.json: a 1023x4 JArray(JDouble, 2) conversion 1.01 ms of a 1.05 ms 4-D JIDT entropy call; the entropy itself on a prebuilt
+      array 0.043 ms) while a batched slogdet of a <= 11x11 sub-matrix costs microseconds; the measured closed forms of it_gaussian-1 ran 271-643x faster than the same-run pyspi baseline at 32x1024
+      in the latest run (te_symbolic_k-10 224x; 399-454x and 174x in the first)'
+    output_risk: unverified-within-tolerance
+    risk_evidence: same Gaussian log-det quantities on the same samples with different float operations; the check stage's numpy closed forms reproduce pyspi to <= 5.5e-14 (4/4 numpy runs)
+    effort: M
+    depends_on: []
+  - opportunity_id: it_gaussian-4
+    opportunity: 'Cut JPype marshalling of the 2-D observations in the JIDT entropy paths (Gaussian and box-kernel estimators alike): pass them with jpype.JArray.of(ndarray) (one buffer copy) instead
+      of JArray(JDouble, 2)(ndarray) (row-by-row conversion, ~1 ms per call at T=1024 whatever the column count) in JIDTBase._compute_joint_entropy, JIDTBase._compute_conditional_entropy and
+      CrossmapEntropy.bivariate, and build the cce/di delay embeddings in numpy instead of MatrixUtils.makeDelayEmbeddingVector followed by np.concatenate over the returned Java double[][]
+      (CausalEntropy._compute_causal_entropy). Which of these calls a unit makes is named in its speedup_basis.'
+    opp_type: vectorise-batch
+    expected_speedup: ~3x
+    speedup_basis: profile:audit/profiles/infotheory.xme.gaussian_k1__8x1024.pstats pyspi/statistics/infotheory.py:405 CrossmapEntropy.bivariate (self) 98.3%
+      + component timings in audit/profiles/micro/opp_it_gaussian-1.json, components block (1023x4 conversion 1.01 ms -> 0.17 ms with JArray.of, conversion_2d_by_shape;
+      4-D Gaussian entropy call including the conversion 1.05 ms -> 0.22 ms; written by the it_gaussian-1 script, and no it_gaussian-4 candidate was run on this unit, so this is not a microbench basis);
+      scope here = the joint and source-past 2-D arrays in CrossmapEntropy.bivariate.
+      Subsumed_by it_gaussian-2 on this unit, whose closed-form numpy replaces every JIDT entropy call and with it every 2-D JArray conversion and Java delay embedding, so build_csv credits this
+      avenue no saving on top of it
+    output_risk: unverified-bit-identical
+    risk_evidence: 'the same doubles reach JIDT: the component check in audit/profiles/micro/opp_it_gaussian-1.json gives a bitwise-equal 4-D entropy with JArray.of; numpy delay embeddings are copies of
+      the same samples in the same column order'
+    effort: S
+    depends_on: []
+    subsumed_by:
+    - it_gaussian-2

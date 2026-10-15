@@ -1,0 +1,102 @@
+{
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "notes": "Timings include Data construction (make()) for baseline and candidate alike. Baseline computes one identifier per call (no sharing between spearmanr and spearmanr-sq).",
+ "opportunity_id": "rank_corr-1",
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_rank_corr-1.py",
+ "shapes": {
+  "118x1024:spearmanr": {
+   "baseline_s": 5.103055469007813,
+   "bit_identical": true,
+   "candidate_s": 0.010015776992077008,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 13924,
+   "nan_mask_equal": true,
+   "speedup": 509.5017064621738
+  },
+  "118x1024:spearmanr-sq": {
+   "baseline_s": 5.069602473988198,
+   "bit_identical": true,
+   "candidate_s": 0.013750675992923789,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 13924,
+   "nan_mask_equal": true,
+   "speedup": 368.68023627326085
+  },
+  "32x1024:spearmanr": {
+   "baseline_s": 0.40712665299361106,
+   "bit_identical": true,
+   "candidate_s": 0.003358784000738524,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 1024,
+   "nan_mask_equal": true,
+   "speedup": 121.21251408369598
+  },
+  "32x1024:spearmanr-sq": {
+   "baseline_s": 0.4396844669972779,
+   "bit_identical": true,
+   "candidate_s": 0.004534252002486028,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 1024,
+   "nan_mask_equal": true,
+   "speedup": 96.96957000982938
+  },
+  "7x100:golden:spearmanr-sq": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 49,
+   "nan_mask_equal": true
+  },
+  "7x100:spearmanr": {
+   "baseline_s": 0.01179432199569419,
+   "bit_identical": true,
+   "candidate_s": 0.0008492540073348209,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 13.887861457030775
+  },
+  "7x100:spearmanr-sq": {
+   "baseline_s": 0.011924359991098754,
+   "bit_identical": true,
+   "candidate_s": 0.0009451009973417968,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 12.617021910502013
+  },
+  "8x1024:spearmanr": {
+   "baseline_s": 0.022327316997689195,
+   "bit_identical": true,
+   "candidate_s": 0.0017526659939903766,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 12.73905985181783
+  },
+  "8x1024:spearmanr-sq": {
+   "baseline_s": 0.02220194900291972,
+   "bit_identical": true,
+   "candidate_s": 0.0017594960081623867,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 12.618357131771717
+  }
+ },
+ "written_at": "2026-10-15T09:48:47-0400"
+}

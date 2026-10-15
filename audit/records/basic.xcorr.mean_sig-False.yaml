@@ -1,0 +1,474 @@
+unit_id: basic.xcorr.mean_sig-False
+status: profiled
+correctness:
+  metric_name_standard: mean of the sample cross-correlation function over lags |h| <= T/4 (and of its square for the -sq
+    identifier)
+  canonical_ref: 'Brockwell & Davis, Time Series: Theory and Methods (Springer Science & Business Media, 2009, as cited in
+    the supplement; edition not stated there), the supplement''s reference [8] (supplement.txt:1987-1988): sample cross-covariance
+    gamma_hat_ij(h), sample cross-correlation rho_hat_ij(h) and the +-1.96 n^-1/2 bound for two independent series of which
+    one is white noise. UNVERIFIED locator: the section/theorem numbers (§11.2, Theorem 11.2.2) were recalled from memory
+    and no copy of the book was consulted; see Open questions. Lag truncation: the supplement (§1.1.5, p.5; supplement.txt:197-198)
+    cites [9] Afyouni, Smith & Nichols 2019, NeuroImage 199:609 and [10] Cliff, Novelli, Fulcher, Shine & Lizier 2021, Phys
+    Rev Res 3:013145 (supplement.txt:1990-1995) for the practice of truncating the CCF "at a given level"; the specific T/4
+    cut is pyspi''s choice, and no canonical source for it was consulted.'
+  canonical_definition: rho_hat_xy(h) = gamma_hat_xy(h) / sqrt(gamma_hat_xx(0) gamma_hat_yy(0)), gamma_hat_xy(h) = (1/n) sum_{t=1}^{n-h}
+    (x_{t+h} - xbar)(y_t - ybar) for 0 <= h < n and gamma_hat_xy(h) = gamma_hat_yx(-h) for h < 0 (mean-centred, divisor n
+    at every lag, so |rho_hat| <= 1); lag-h sample CCF considered significant when |rho_hat| > 1.96/sqrt(n) (valid under independence
+    with at least one white series). The scalar summary (max or mean of the CCF over a lag window) is a pyspi construction
+    with no canonical source.
+  documented_definition: 'supplement §1.1.5, p.5 (pack lines 197-213; heading at supplement.txt line 192): "The cross-correlation
+    function is defined as the Pearson correlation between two time series for all lags [8], giving values in [-1, 1] for
+    each lag ... the correlation from the MLE of the cross-covariance at a given lag, normalised by the autocovariance ...
+    we do by only using the first T/4 lags ... a correlation below 1.96/sqrt(T) is considered statistically insignificant
+    [8], thus we optionally cut-off the lags at this level (sig-True means we only use the statistically significant values,
+    and sig-False means we use all values) ... the maximum over the considered lags (max), and the average over the considered
+    lags (mean)." Same text on GitBook basic-statistics.md:55-57 (Cross Correlation), which lists xcorr_max_sig-True, xcorr_mean_sig-True,
+    xcorr_mean_sig-False and their -sq versions (lines 63-75). [8] = Brockwell & Davis, Time Series: Theory and Methods (supplement.txt:1987).'
+  delegate_lib: scipy==1.17.1 scipy.signal.correlate(x, y, 'full') (method 'auto' -> fftconvolve for the (T,1) inputs); normalisation,
+    lag slicing, sigonly window and summary are native pyspi (numpy 2.5.4)
+  implemented_as: Input z-scored per channel with ddof=1 (Data default; optional detrend first). For the pair (x=x_hi, y=x_lo)
+    pyspi computes z = scipy.signal.correlate(x, y, 'full'), r = z / (std0(x) std0(y) (T-1)) which for z-scored input equals
+    T/(T-1) times the Brockwell-Davis sample CCF at every lag, keeps lags -(T//4-1)..+T//4 (2*(T//4) values, one more positive
+    than negative lag); sigonly=False uses all 2*(T//4) lags; returns np.mean of r (signed) or of r**2 (-sq). No mean removal
+    inside the SPI. Result mirrored to a symmetric matrix from the (hi, lo) orientation.
+  implementation_trace:
+  - pyspi/config.yaml:99-124 CrossCorrelation configs (max, max-sq, mean, mean-sq, mean sig-False, mean-sq sig-False); defaults
+    squared=False, statistic='max', sigonly=True from pyspi/statistics/basic.py:80
+  - 'pyspi/data.py:184-195 Data.set_data preprocessing: optional scipy.signal.detrend(axis=1) then scipy.stats.zscore(axis=1,
+    nan_policy=''omit'', ddof=1) when normalise=True (default)'
+  - pyspi/calculator.py:327-339 (HEAD a1f20c7) Calculator.compute calls self._spis[spi].multivariate(self.dataset) (:329);
+    any exception (except branch :336-339) sets the whole SPI table to NaN, records a failed MetricReport and warns (:355)
+  - 'pyspi/base.py:132-138 Undirected.multivariate: calls Directed.multivariate then mirrors A[lower] = A.T[lower] (upper
+    triangle kept)'
+  - 'pyspi/base.py:85-94 Directed.multivariate: outer loop j, inner loop i != j, A[i,j] = bivariate(data, i=i, j=j); for a
+    pair a<b the first call is bivariate(i=b, j=a) (outer j=a comes first)'
+  - pyspi/base.py:27-49 parse_bivariate wrapper (wraps two raw arrays into a Data object, passes i, j)
+  - 'pyspi/statistics/basic.py:75-92 CrossCorrelation(Undirected, Signed): identifier ''xcorr'' [+''-sq''] + f''_{statistic}_sig-{sigonly}'';
+    squared sets issigned False'
+  - pyspi/statistics/basic.py:97-104 T = n_observations; x, y = data.to_numpy()[[i, j]] (each shape (T,1)); r = squeeze(scipy.signal.correlate(x,
+    y, 'full')) / x.std() / y.std() / (T-1)  (numpy std ddof=0, no mean removal inside the SPI)
+  - 'pyspi/statistics/basic.py:107 r = r[T - T//4 : T + T//4] -> 2*(T//4) values at lags -(T//4-1) .. +T//4 (probe: T=64 lags
+    -15..16; T=256 lags -63..64; lag 0 at position T//4-1)'
+  - 'pyspi/statistics/basic.py:109-113 cache: data.xcorr[(i,j)] = r and data.xcorr[(j,i)] = the SAME unreversed array (r_ji(k)
+    should equal r_ij(-k)); the cache is shared by all six xcorr SPIs on the same Data'
+  - 'pyspi/statistics/basic.py:116-120 sigonly branch: N = len(r)//2 (= T//4, the element at lag +1); thr = 1.96/sqrt(N);
+    fzf = first index in r[N:] with |r| <= thr; fzr = LAST index in r[:N] with |r| <= thr; r = r[N - fzr : N + fzf]; [0][0]
+    / [0][-1] on an empty np.where raise IndexError'
+  - 'pyspi/statistics/basic.py:122-133 statistic: max -> np.max(r) or np.max(r**2); mean -> np.mean(r) or np.mean(r**2)'
+  - scipy 1.17.1 .venv/lib/python3.12/site-packages/scipy/signal/_signaltools.py:104 correlate(in1, in2, mode='full', method='auto');
+    docstring :168-170 z[k] = sum_l x_l conj(y_{l-k}), k = -(M-1)..(N-1), output index k+(M-1)
+  - scipy _signaltools.py:258-259 method 'auto' -> convolve(in1, _reverse_and_conj(in2, xp), mode, method); :1165-1182 _reverse_and_conj
+    reverses every axis (both axes of the (T,1) input)
+  - 'scipy _signaltools.py:1377 convolve; :1490-1494 method ''auto'' -> choose_conv_method(volume, kernel, mode) -> fftconvolve;
+    :1236-1374 choose_conv_method (:1371 _fftconv_faster). Probe: for (T,1) float64 inputs it returns ''fft'' at T = 64, 256,
+    1024, 4096'
+  - scipy _signaltools.py:591 fftconvolve -> :706-708 _freq_domain_conv + _apply_conv_mode (FFT-based linear correlation;
+    round-off ~1e-16 relative, not exact sums)
+  deviation_from_documented: '(1) Normalisation: documented as ''Pearson correlation ... giving values in [-1, 1]'', but r
+    = z/(std_ddof0(x) std_ddof0(y)(T-1)) on ddof=1 z-scored input equals T/(T-1) times the sample correlation at every lag
+    (probe T=64: lag-0 ratio to Pearson r 1.0158730 = 64/63; ratio to the B&D CCF 1.0158730 at every lag), so identical series
+    give 1.0159 > 1 at T=64. (2) Lag window: documented ''first T/4 lags''; implemented lags -(T//4-1)..+T//4 (both sides,
+    2*(T//4) lags, asymmetric by one lag).'
+  deviation_from_canonical: Constant inflation by T/(T-1) relative to the B&D sample CCF (divisor (T-1)^2/T instead of T-1
+    for z-scored data); window not symmetric about lag 0 (+T//4 included, -T//4 excluded); with normalise=False no centring
+    at all (non-centred cross-product), whereas rho_hat is mean-centred; the max/mean summary over lags has no canonical definition
+    (pyspi construction); signed max ignores negative peaks (max |rho_hat| is the more common peak-CCF summary; -sq covers
+    it). The mean over 2*(T//4) lags is dominated by dilution (a single-lag correlation rho contributes rho/(2*(T//4))).
+  units_and_range: Dimensionless, signed (plain) / non-negative (-sq). Nominally in [-1, 1] / [0, 1] but scaled by T/(T-1)
+    so can slightly exceed 1 (1.0159 at T=64 for identical series). Symmetric by construction (mirror), yet the value depends
+    on channel order. No error path; finite for finite input. In the EEG selection.
+  direction_convention: 'Undirected; A is symmetric by the mirror in pyspi/base.py:137. A[i,j] = A[j,i] = statistic over a
+    lag window of r from scipy.signal.correlate(x_hi, x_lo) where hi = max(i,j), lo = min(i,j) (first bivariate call is (i=hi,
+    j=lo), and the cache at basic.py:113 returns the same unreversed array for (lo,hi)); probe: data.xcorr[(0,1)] equals the
+    slice computed from correlate(x1, x0). Sign convention of the lag axis (probe and scipy docstring :168): a peak at positive
+    lag k in correlate(x, y) means x(t) ~ y(t-k), i.e. y leads x by k; so positive lags in the stored r mean the LOWER-index
+    channel leads. Same orientation as Brockwell & Davis gamma_12(h) = Cov(X_{t+h,1}, X_{t,2}) with series 1 = x_hi.'
+  symmetry_expected: sym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'CANDIDATE: values exceed the documented [-1, 1] by T/(T-1) because of ddof mismatch (std ddof=0 times (T-1) on ddof=1
+    z-scored data); probe: identical series at T=64 give xcorr_max_sig-False = 1.015873015873016; lag-0 ratio to Pearson r
+    1.0158730 = 64/63; ratio to the B&D CCF constant over lags (1.01587301587301 to ...302). Pack hypothesis confirmed.'
+  - 'CANDIDATE: lag window -(T//4-1)..+T//4 (basic.py:107) is asymmetric by one lag, so the value depends on channel order
+    through the end lag: probe on iid_gaussian max|A - A(reversed channel order)| = 1.05e-3 at T=256 and 1.09e-4 at T=1024'
+  - 'CANDIDATE: with normalise=False the SPI does not centre the series (basic.py:103-104 has no mean removal), so the value
+    is not a correlation (probe scaled_offset T=1024: mean_sig-False pair (1,3) 0.207 raw vs ~0.000 z-scored)'
+  - 'CANDIDATE (interpretation): for z-scored (mean-zero) series the sum of r over all 2T-1 lags is proportional to (sum x)(sum
+    y) = 0, so it vanishes up to round-off, so mean_sig-False over the +-T/4 window equals minus the sum of the omitted tail
+    lags divided by 2*(T//4). The lag-0 correlation does enter the statistic, but only with weight 1/(2*(T//4)) (bivariate_gaussian
+    T=1024 pair (2,3), lag-0 r 0.7983: contribution 0.7983/512 = 0.00156), and the other window lags offset it so that the
+    window mean equals -tail/(2L) (probe: sum all lags -1.1e-16, window mean -0.000208, -tail/(2L) -0.000208). What the value
+    is depends on how much CCF mass lies outside the window, not on the lag-0 correlation: for short-memory data it stays
+    small (default pipeline, max|A| var2_bivariate 0.0078 (T=256) / 0.0009 (T=1024), gauss_ar1_pair 0.0110 / 0.0083, bivariate_gaussian
+    0.0024 / 0.0013), while for long-memory or trending data it is large (cointegrated 0.4580 / 0.4684 with A[0,1] = 0.4236
+    / 0.4555; trending 0.6124 / 0.6319; random-walk pair at T=1024 0.6176; probe: session scratchpad xcorr_fix/p1.py, which
+    checks the identity on pair (0,1) of each dataset). The identity -tail/(2L) held on all of these to the printed precision.
+    Whether this makes it a weak dependence measure is for the check stage to assess (check stage: tolerance check of this
+    identity across short- and long-memory datasets).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - gauss_ar1_pair
+    - var2_bivariate
+    path: kernel
+    reference: from-scratch numpy re-implementation of pyspi's literal algorithm (explicit lag loop sum_t x[t] y[t-k] for
+      z-scored ddof=1 inputs, divisor x.std()*y.std()*(T-1), slice lags -(T//4-1)..T//4, mean) without scipy.signal.correlate; applied
+      in the pyspi orientation (x = higher-index channel)
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: agreement to <= 1e-12 absolute for every pair and identifier (plain and -sq); confirms the trace (FFT
+      path vs direct sum differs only by round-off)
+  - datasets:
+    - iid_gaussian
+    - bivariate_gaussian
+    - delayed_noise
+    - gauss_ar1_pair
+    - var2_bivariate
+    - scaled_offset
+    path: kernel
+    reference: Brockwell & Davis sample CCF rho_hat(h) (mean-centred, divisor n, ddof=0 auto-covariances) computed with numpy
+      loops over the symmetric window |h| <= T//4; summary = mean (and mean of rho_hat^2)
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'lag-wise: pyspi r_k / rho_hat(k) = T/(T-1) to 1e-12 on every lag (constant inflation); summary values
+      differ from the canonical/documented summary by the T/(T-1) factor and by the one-lag window asymmetry; record abs/rel
+      differences'
+  - datasets:
+    - delayed_noise
+    path: kernel
+    reference: 'analytic: delayed_noise has x_k(t) = x0(t - d_k) + noise, d = (0,1,3,5); numpy argmax of a from-scratch lag
+      loop gives the peak lag of correlate(x_i, x_j) per ordered pair'
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'correlate(x_hi, x_lo) peaks at lag +(d_hi - d_lo) (lower-index channel leads, positive lag); bivariate(i,j)
+      evaluated fresh in both orders gives the peak at +d for (later, earlier) and -d for (earlier, later); A from multivariate
+      is symmetric and uses the (hi, lo) orientation (probe: cache (0,1) == correlate(x1, x0) slice)'
+  - datasets:
+    - delayed_noise
+    - iid_gaussian
+    - gauss_ar1_pair
+    - var2_bivariate
+    path: pipeline
+    reference: 'self-consistency of pyspi under channel permutation: A(X[perm])[inv perm, inv perm] vs A(X) for reversed channel
+      order (no external reference; the canonical CCF summary over a symmetric window is invariant to swapping x and y)'
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: 'max: equal to ~1e-16 unless the maximum sits on lag +-T//4; mean: differs by ~1e-3 (T=256) / ~1e-4
+      (T=1024) on iid_gaussian because of the one-lag asymmetric window'
+  - datasets:
+    - narrowband_f0-0.25
+    - logistic_maps
+    - cointegrated
+    - trending
+    path: pipeline-detrend
+    reference: 'analytic: sigonly=False has no np.where indexing, so no IndexError path'
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: finite values for every pair on every dataset where the sig-True units raise IndexError (record the
+      values; no closed-form target asserted)
+  - datasets:
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic: x2 is bit-identical to x0 in shared_envelope, so the canonical lag-0 rho_hat = 1 exactly'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: A[0,2] equals T/(T-1) times the canonical mean of rho_hat(h) over the (pyspi) window to 1e-12; the lag-0
+      element of the cached r equals T/(T-1) to 1e-12 (not bit-exact on the FFT path, probe T=256 gives 1.0039215686274512
+      vs T/(T-1) = 1.003921568627451, 2.2e-16 apart; equal at T=1024)
+  - datasets:
+    - scaled_offset
+    path: kernel
+    reference: Brockwell & Davis rho_hat (mean-centred) on the raw (non-z-scored) series vs pyspi bivariate on Data(normalise=False)
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'pyspi does not remove the mean inside the SPI, so with normalise=False the value is a non-centred cross-product
+      scaled by ddof=0 stds and differs from rho_hat (probe at T=1024: max_sig-False pair (2,3) 0.597 vs 0.798 with normalise=True;
+      mean_sig-False pair (1,3) 0.207 vs ~0)'
+  - datasets:
+    - bivariate_gaussian
+    - iid_gaussian
+    - gauss_ar1_pair
+    - var2_bivariate
+    - cointegrated
+    - trending
+    path: pipeline
+    reference: 'analytic identity: for mean-zero series sum over all 2T-1 lags of the cross-products is (sum x)(sum y) = 0;
+      reference computed with numpy loops over the omitted tail lags |h| > T//4 (and h = -T//4)'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'pyspi mean_sig-False = -(tail sum of r)/(2*(T//4)) to 1e-12 on every dataset. The magnitude is data-dependent,
+      not a fixed property: for short-memory data (iid, bivariate_gaussian, gauss_ar1_pair, var2_bivariate) the tail is small
+      and the value stays near 0 whatever the lag-0 correlation (probe rho=0.8 pair at T=1024: -0.000208; lag-0 weight 0.00156),
+      whereas for long-memory or trending data (cointegrated, trending) the tail is large and the value is O(0.5) (probe default
+      pipeline: cointegrated max|A| 0.458 / 0.468, trending 0.612 / 0.632 at T=256 / 1024); record the values'
+  check_method: analytic
+  check_reference: audit/checks/refs/xcorr.py (ref_replica -> _kernels_basic_misc.pyspi_xcorr_replica, np.convolve direct
+    sum, does not use scipy.signal.correlate; the shared kernel module imports scipy.signal.hilbert at module level, _kernels_basic_misc.py:25,
+    but the xcorr kernels use np.dot/np.convolve only; ref_canon/canon_steps -> Brockwell & Davis rho_hat via _kernels_basic_misc.xcorr_full(ddof=1); ref_cached_r,
+    ref_selfcopy, ref_zerosum, ref_pop (truth arrays + Bartlett variance), ref_null, ref_errsweep/predict_status, ref_crafted,
+    ref_perm_replica, ref_perm_selfcons (same-lineage)); probes audit/checks/probes/xcorr_probes.py (cached_r, peak_lag_cached,
+    peak_lag_fresh, null_exceed, sig_status, crafted_window); manifest audit/checks/manifest/xcorr.json
+  check_data: delayed_noise, var2_bivariate, bivariate_gaussian, iid_gaussian, gauss_ar1_pair at T=64/256/1024/4096 (pipeline;
+    pipeline-detrend for var2_bivariate, delayed_noise); scaled_offset T=1024 (kernel, raw input); shared_envelope processes
+    [0,2] T=64-4096; zero-sum identity on bivariate_gaussian, iid_gaussian, gauss_ar1_pair, var2_bivariate, cointegrated,
+    trending (T=256/1024 pipeline, T=1024 pipeline-detrend); narrowband_f0-0.1/0.25/0.4, logistic_maps, logistic_maps_bidir,
+    cointegrated, shared_envelope, trending at T=1024/4096 (pipeline) and T=1024 (pipeline-detrend); reversed channel order
+    on delayed_noise, iid_gaussian, gauss_ar1_pair, var2_bivariate (T=256/1024)
+  agreement_criterion: 'replica, perm-replica: exact (rtol 1e-10, atol 1e-12); selfcopy, zerosum: tolerance atol 1e-12; canon
+    (Brockwell & Davis mean over |h|<=T//4): tolerance rtol 1e-8 (gap decomposition recorded); lag-*: direction; perm-selfcons:
+    exact, same-lineage'
+  closeness: 'Literal replica 52/52 pass, max_abs 4.1e-16 (finite on all 8 datasets where sig-True raises). T/(T-1) fact as
+    for the family: replica lag-0 ratio 1.0009775171065494 = T/(T-1) at T=1024 (ref_lag0_ratio_minus_factor 0.0 on bivariate_gaussian,
+    var2_bivariate, delayed_noise). Canonical B&D mean over the symmetric window |h|<=T//4: 0/22 pass. On z-scored data gap_d0
+    3.4e-5 to 8.5e-4 abs, but max_rel up to 0.54, because the values are near 0. gap_d1 (x T/(T-1) only) is 3.3e-5 to 8.1e-4.
+    gap_d2 (+ pyspi window -(T//4-1)..T//4) is <= 6.1e-18, so the whole deviation is factor + one-lag-asymmetric window. Raw
+    scaled_offset gap 0.206 (ref_raw_literal_A13 0.2069 vs ref_canon_centred_A13 0.00038). Zero-sum identity (zerosum, 18/18
+    pass, max_abs 4.1e-16): mean = -(T/(T-1)) sum_outside rho_hat / (2 T//4). Short-memory |A| stays small: iid 0.0102 / 0.0021,
+    var2_bivariate 0.0078 / 0.00086, gauss_ar1_pair 0.011 / 0.0083, bivariate_gaussian 0.0024 / 0.0013 at T=256 / 1024 (ref_max_abs_value).
+    Long-memory data is large: cointegrated 0.458 / 0.468, trending 0.612 / 0.632. On bivariate_gaussian T=1024 the rho=0.8
+    pair gives A[2,3] = -0.0002 against a lag-0 weight r(0)/(2L) = 0.00156 (ref_max_abs_lag0_contrib), while the rho=0.3 pair
+    gives 0.0013. shared_envelope selfcopy 8/8 pass (<= 1.7e-16). Channel reversal (same-lineage perm-selfcons) 0/16 pass:
+    max order gap 1.05e-3 (iid T=256, |A| <= 0.0102), 1.09e-4 (iid T=1024), 1.64e-3 (var2 T=256).'
+  verdict: variant
+  score_0_10: 6
+  score_rubric: 6
+  score_rubric_basis: anchor
+  score_rubric_note: The constant factor T/(T-1) plus the one-lag-shifted window account for the whole gap (gap_d2 <= 6.1e-18 once both are applied). The shift changes
+    the value (relative gap_d0 up to 0.54), so anchor 8 fails. Anchor 7 fails as well, because its first clause needs the supplement's variant and pyspi differs from
+    it in a value-changing way (the supplement documents a Pearson correlation in [-1, 1] averaged over the 'first T/4 lags', while pyspi carries the T/(T-1) factor,
+    1.0159 for identical series at T=64, and averages over lags -(T//4-1)..T//4; documentation_status misdescribed). Anchor 6, a library formula that deviates from both
+    the supplement and the canonical CCF in an interpretable way, is the highest anchor whose conditions all hold.
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 6
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'The quantity is the supplement''s ''average over the considered lags'', computed as T/(T-1) times the mean
+    of the Brockwell-Davis CCF over lags -(T//4-1)..T//4. The documented symmetric ''first T/4 lags'' differs by one end lag,
+    and the value depends on channel order by up to 1.6e-3, about 10-20% of the typical |A| on short-memory data. For z-scored
+    data the CCF sums to 0 over all lags, so the value equals -(sum outside the window)/(2 T//4). It therefore tracks long-memory
+    or trend mass outside +-T//4 (0.46-0.63 on cointegrated and trending) and not the dependence at small lags: the rho=0.8
+    pair scores -0.0002, below the rho=0.3 pair''s 0.0013. normalise=False gives a non-centred quantity. These are
+    properties of the documented quantity, recorded here and not scored. Rubric anchor 6: the library formula deviates from
+    both the supplement (''average over the considered lags'', ''first T/4 lags'') and the canonical CCF in an interpretable way,
+    a constant factor T/(T-1) plus the one-lag-shifted window -(T//4-1)..T//4 (gap_d2 <= 6.1e-18 after both are applied);
+    the window shift changes the value (relative gap_d0 up to 0.54), so anchor 8 (constant factor only) does not apply.'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap (every pyspi run <= 0.011 s; T up to 4096). Path substitution:
+    proposed_checks 0-2 (replica, Brockwell-Davis, delayed_noise direction) named path kernel but ran on path pipeline (Data
+    default, z-score ddof=1), with the reference z-scoring the raw dataset itself (refs/xcorr.py:zscore1/prep), so the comparison
+    still covers the SPI on known input while matching the EEG default; path kernel (no z-score, no centring in the SPI) was
+    used only for scaled_offset (proposed check 6), where the raw-input effect is the point.'
+  symmetry_observed: 'sym: max|A - A.T| = 0.0 over all 132 SPI-matrix runs of this unit (no off-diagonal NaN)'
+  direction_observed: 'Undirected: A[i,j] = A[j,i] carries no direction. Lag convention measured on delayed_noise T=1024 (x_k
+    = x0 delayed by d = 0,1,3,5): the cached r that multivariate uses for both (i,j) and (j,i) is correlate(x_hi, x_lo) and
+    peaks at lag +(d_hi - d_lo) for every pair (|lag-cached run, max_abs 0, direction agreement 1.0), so a positive lag means
+    the LOWER-index channel leads; bivariate(i,j) evaluated first on a fresh Data peaks at d_i - d_j (|lag-fresh run, max_abs
+    0), i.e. a positive lag means x_j leads x_i (x_i is x_j delayed).'
+  candidate_resolutions:
+  - candidate: values exceed [-1, 1] by T/(T-1) (ddof mismatch)
+    outcome: confirmed
+    evidence: '|replica runs ref_lag0_ratio 1.0009775171065494 = T/(T-1), ref_lag0_ratio_minus_factor 0.0; canon gap_d1 vs
+      gap_d0 decomposition; selfcopy runs (mean of T/(T-1) x B&D acf, pass)'
+  - candidate: asymmetric window makes mean_sig-False channel-order dependent
+    outcome: confirmed
+    evidence: basic.xcorr.mean_sig-False|iid_gaussian|256|pipeline|perm-selfcons max_abs 1.05e-3, |iid_gaussian|1024|pipeline|perm-selfcons
+      1.09e-4, |var2_bivariate|256|pipeline|perm-selfcons 1.64e-3 (same-lineage, fail); independent replica reproduces both
+      orders exactly (|perm-replica 16/16 pass, ref_replica_order_gap equals ref_pyspi_order_gap)
+  - candidate: 'normalise=False: no centring inside the SPI'
+    outcome: confirmed
+    evidence: basic.xcorr.mean_sig-False|scaled_offset|1024|kernel|replica (exact pass; ref_raw_literal_A13 0.2069 vs ref_canon_centred_A13
+      0.00038) and |kernel|canon (gap 0.206)
+  - candidate: mean over the window = -(tail sum)/(2 T//4); lag 0 has weight 1/(2L); magnitude data-dependent
+    outcome: confirmed
+    evidence: basic.xcorr.mean_sig-False|*|zerosum 18/18 pass (atol 1e-12, max_abs 4.1e-16; ref_max_abs_total_sum <= 5.7e-14);
+      bivariate_gaussian T=1024 ref_max_abs_lag0_contrib 0.00156 vs A[2,3] -0.0002; cointegrated ref_max_abs_value 0.458/0.468,
+      trending 0.612/0.632 (T=256/1024)
+  checks_run:
+  - run_ids:
+    - basic.xcorr.mean_sig-False|delayed_noise|256|pipeline|replica
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|var2_bivariate|256|pipeline|replica
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|256|pipeline|replica
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|iid_gaussian|256|pipeline|replica
+    - basic.xcorr.mean_sig-False|iid_gaussian|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|256|pipeline|replica
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|64|pipeline|replica
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline-detrend|replica
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline-detrend|replica
+    - basic.xcorr.mean_sig-False|scaled_offset|1024|kernel|replica
+    - basic.xcorr.mean_sig-False|delayed_noise|256|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|var2_bivariate|256|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|256|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|1024|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|iid_gaussian|256|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|iid_gaussian|1024|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|256|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|1024|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|64|pipeline|replica-sq
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline-detrend|replica-sq
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline-detrend|replica-sq
+    - basic.xcorr.mean_sig-False|scaled_offset|1024|kernel|replica-sq
+    - basic.xcorr.mean_sig-False|narrowband_f0-0.1|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|narrowband_f0-0.1|4096|pipeline|replica
+    - basic.xcorr.mean_sig-False|narrowband_f0-0.1|1024|pipeline-detrend|replica
+    - basic.xcorr.mean_sig-False|narrowband_f0-0.25|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|narrowband_f0-0.25|4096|pipeline|replica
+    - basic.xcorr.mean_sig-False|narrowband_f0-0.25|1024|pipeline-detrend|replica
+    - basic.xcorr.mean_sig-False|narrowband_f0-0.4|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|narrowband_f0-0.4|4096|pipeline|replica
+    - basic.xcorr.mean_sig-False|narrowband_f0-0.4|1024|pipeline-detrend|replica
+    - basic.xcorr.mean_sig-False|logistic_maps|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|logistic_maps|4096|pipeline|replica
+    - basic.xcorr.mean_sig-False|logistic_maps|1024|pipeline-detrend|replica
+    - basic.xcorr.mean_sig-False|logistic_maps_bidir|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|logistic_maps_bidir|4096|pipeline|replica
+    - basic.xcorr.mean_sig-False|logistic_maps_bidir|1024|pipeline-detrend|replica
+    - basic.xcorr.mean_sig-False|cointegrated|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|cointegrated|4096|pipeline|replica
+    - basic.xcorr.mean_sig-False|cointegrated|1024|pipeline-detrend|replica
+    - basic.xcorr.mean_sig-False|shared_envelope|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|shared_envelope|4096|pipeline|replica
+    - basic.xcorr.mean_sig-False|shared_envelope|1024|pipeline-detrend|replica
+    - basic.xcorr.mean_sig-False|trending|1024|pipeline|replica
+    - basic.xcorr.mean_sig-False|trending|4096|pipeline|replica
+    - basic.xcorr.mean_sig-False|trending|1024|pipeline-detrend|replica
+    reference: refs/xcorr.py:ref_replica (_kernels_basic_misc.pyspi_xcorr_replica)
+    outcome: pass (52/52; max_abs 4.07e-16)
+  - run_ids:
+    - basic.xcorr.mean_sig-False|delayed_noise|256|pipeline|canon
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline|canon
+    - basic.xcorr.mean_sig-False|var2_bivariate|256|pipeline|canon
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline|canon
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|256|pipeline|canon
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|1024|pipeline|canon
+    - basic.xcorr.mean_sig-False|iid_gaussian|256|pipeline|canon
+    - basic.xcorr.mean_sig-False|iid_gaussian|1024|pipeline|canon
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|256|pipeline|canon
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|1024|pipeline|canon
+    - basic.xcorr.mean_sig-False|scaled_offset|1024|kernel|canon
+    - basic.xcorr.mean_sig-False|delayed_noise|256|pipeline|canon-sq
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline|canon-sq
+    - basic.xcorr.mean_sig-False|var2_bivariate|256|pipeline|canon-sq
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline|canon-sq
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|256|pipeline|canon-sq
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|1024|pipeline|canon-sq
+    - basic.xcorr.mean_sig-False|iid_gaussian|256|pipeline|canon-sq
+    - basic.xcorr.mean_sig-False|iid_gaussian|1024|pipeline|canon-sq
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|256|pipeline|canon-sq
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|1024|pipeline|canon-sq
+    - basic.xcorr.mean_sig-False|scaled_offset|1024|kernel|canon-sq
+    reference: refs/xcorr.py:ref_canon (Brockwell & Davis via _kernels_basic_misc.xcorr_full ddof=1)
+    outcome: fail (0/22; max_abs 0.206) - expected deviation from the documented/canonical value, decomposed by gap_d0..gap_d4
+  - run_ids:
+    - basic.xcorr.mean_sig-False|delayed_noise|256|pipeline|perm-replica
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline|perm-replica
+    - basic.xcorr.mean_sig-False|iid_gaussian|256|pipeline|perm-replica
+    - basic.xcorr.mean_sig-False|iid_gaussian|1024|pipeline|perm-replica
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|256|pipeline|perm-replica
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|1024|pipeline|perm-replica
+    - basic.xcorr.mean_sig-False|var2_bivariate|256|pipeline|perm-replica
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline|perm-replica
+    - basic.xcorr.mean_sig-False|delayed_noise|256|pipeline|perm-replica-sq
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline|perm-replica-sq
+    - basic.xcorr.mean_sig-False|iid_gaussian|256|pipeline|perm-replica-sq
+    - basic.xcorr.mean_sig-False|iid_gaussian|1024|pipeline|perm-replica-sq
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|256|pipeline|perm-replica-sq
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|1024|pipeline|perm-replica-sq
+    - basic.xcorr.mean_sig-False|var2_bivariate|256|pipeline|perm-replica-sq
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline|perm-replica-sq
+    reference: refs/xcorr.py:ref_perm_replica (replica on reversed channel order)
+    outcome: pass (16/16; max_abs 5.2e-18)
+  - run_ids:
+    - basic.xcorr.mean_sig-False|delayed_noise|256|pipeline|perm-selfcons
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline|perm-selfcons
+    - basic.xcorr.mean_sig-False|iid_gaussian|256|pipeline|perm-selfcons
+    - basic.xcorr.mean_sig-False|iid_gaussian|1024|pipeline|perm-selfcons
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|256|pipeline|perm-selfcons
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|1024|pipeline|perm-selfcons
+    - basic.xcorr.mean_sig-False|var2_bivariate|256|pipeline|perm-selfcons
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline|perm-selfcons
+    - basic.xcorr.mean_sig-False|delayed_noise|256|pipeline|perm-selfcons-sq
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline|perm-selfcons-sq
+    - basic.xcorr.mean_sig-False|iid_gaussian|256|pipeline|perm-selfcons-sq
+    - basic.xcorr.mean_sig-False|iid_gaussian|1024|pipeline|perm-selfcons-sq
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|256|pipeline|perm-selfcons-sq
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|1024|pipeline|perm-selfcons-sq
+    - basic.xcorr.mean_sig-False|var2_bivariate|256|pipeline|perm-selfcons-sq
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline|perm-selfcons-sq
+    reference: 'refs/xcorr.py:ref_perm_selfcons (same-lineage: pyspi forward-order output)'
+    outcome: fail (0/16; max_abs 0.00164) - channel-order dependence
+  - run_ids:
+    - basic.xcorr.mean_sig-False|shared_envelope|64|pipeline|selfcopy
+    - basic.xcorr.mean_sig-False|shared_envelope|256|pipeline|selfcopy
+    - basic.xcorr.mean_sig-False|shared_envelope|1024|pipeline|selfcopy
+    - basic.xcorr.mean_sig-False|shared_envelope|4096|pipeline|selfcopy
+    - basic.xcorr.mean_sig-False|shared_envelope|64|pipeline|selfcopy-sq
+    - basic.xcorr.mean_sig-False|shared_envelope|256|pipeline|selfcopy-sq
+    - basic.xcorr.mean_sig-False|shared_envelope|1024|pipeline|selfcopy-sq
+    - basic.xcorr.mean_sig-False|shared_envelope|4096|pipeline|selfcopy-sq
+    reference: refs/xcorr.py:ref_selfcopy (analytic T/(T-1) / mean of B&D acf)
+    outcome: pass (8/8; max_abs 1.67e-16)
+  - run_ids:
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline|lag-cached
+    - basic.xcorr.mean_sig-False|delayed_noise|1024|pipeline|lag-fresh
+    reference: refs/xcorr.py:ref_lag_cached / ref_lag_fresh (delayed_noise construction); probes/xcorr_probes.py
+    outcome: pass (2/2; max_abs 0)
+  - run_ids:
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|256|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|1024|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|bivariate_gaussian|1024|pipeline-detrend|zerosum
+    - basic.xcorr.mean_sig-False|iid_gaussian|256|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|iid_gaussian|1024|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|iid_gaussian|1024|pipeline-detrend|zerosum
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|256|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|1024|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|gauss_ar1_pair|1024|pipeline-detrend|zerosum
+    - basic.xcorr.mean_sig-False|var2_bivariate|256|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|var2_bivariate|1024|pipeline-detrend|zerosum
+    - basic.xcorr.mean_sig-False|cointegrated|256|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|cointegrated|1024|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|cointegrated|1024|pipeline-detrend|zerosum
+    - basic.xcorr.mean_sig-False|trending|256|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|trending|1024|pipeline|zerosum
+    - basic.xcorr.mean_sig-False|trending|1024|pipeline-detrend|zerosum
+    reference: refs/xcorr.py:ref_zerosum (analytic zero-sum identity)
+    outcome: pass (18/18; max_abs 4.06e-16)
+optimisation:
+  complexity_P_T: 'O(P^2 T log T): pyspi/statistics/basic.py:CrossCorrelation.bivariate runs scipy.signal.correlate(x, y, ''full'') once per unordered pair (data.xcorr caches the second ordered call); method=''auto''
+    picks fftconvolve at T=1024 (all 28 calls in the 8x1024 profile), then O(T) std, normalisation and window slicing. Measured fresh P_exponent 2.05, T_exponent 0.10; at 118x1024 the pair term dominates
+    (6903 correlate calls, ~0.18 ms each).'
+  hotspot_1: scipy/signal/_signaltools.py:correlate -> fftconvolve (third-party:scipy) 70.4% of the profiled SPI call at 8x1024
+  hotspot_2: numpy/_core/_methods.py:_std (third-party:numpy) 13.6% at 8x1024 (two std calls per pair); pyspi/statistics/basic.py:CrossCorrelation.bivariate self time 7.6%
+  hotspot_owner: third-party:scipy
+  opaque_share: 0.308
+  profile_file: audit/profiles/basic.xcorr.mean_sig-False__8x1024.pstats
+  eeg_basis: family-warm
+  basis_scope_note: 'The family-warm increments read the per-pair cross-correlation cache (pyspi/statistics/basic.py:95-113) that xcorr_max_sig-True, outside the EEG selection, filled in that
+    run. In an EEG run the retained xcorr_max_sig-False fills the same cache first (pyspi/workflow/retained185.yaml:98-109 lists statistic max before mean), so this unit reads it
+    there too and its family-warm figure (0.127 s per window) stands for its EEG cost; the fill is counted on basic.xcorr.max_sig-False (eeg_basis fresh)'
+  opportunities:
+  - opportunity_id: xcorr-1
+    opportunity: 'Compute every pair''s cross-correlation from one rfft per channel: for each a, one batched irfft of F[b]*conj(F[a]) over b>a, keep the 2*(T//4) lags of pyspi''s window in its (higher index,
+      lower index) orientation, normalise by the channel std once, and cache the (P, P, 2*(T//4)) array on Data for all eight xcorr identifiers (replaces scipy.signal.correlate per pair in basic.py:CrossCorrelation.bivariate).'
+    opp_type: vectorise-batch
+    expected_speedup: ~15x
+    speedup_basis: 'microbench:audit/profiles/micro/opp_xcorr-1.json (118x1024: xcorr_mean_sig-False 1.18 s -> 0.076 s = 15.5x; xcorr_max_sig-False 1.15 s -> 0.068 s = 16.9x; xcorr-sq_mean_sig-False 1.19
+      s -> 0.069 s = 17.3x; xcorr-sq_max_sig-False 1.18 s -> 0.069 s = 17.1x; 32x1024 12.7-13.0x; 8x1024 3.7-3.8x) + profile:audit/profiles/basic.xcorr.mean_sig-False__8x1024.pstats scipy/signal/_signaltools.py:correlate
+      70.4% (fftconvolve for all 28 calls: method=''auto'' picks fft at T=1024) + numpy std 13.6%'
+    output_risk: within-tolerance
+    risk_evidence: 'audit/profiles/micro/opp_xcorr-1.json covers all four sig-False identifiers (signed and -sq): max_abs_diff at 118x1024 7.8e-16 (max), 1.8e-16 (mean, max_rel 3.3e-11 on near-zero means),
+      6.4e-16 (-sq max), 5.0e-17 (-sq mean), nan_mask_equal true at every shape; 7x100 golden max_abs 7.8e-18 (xcorr_mean_sig-False) and 1.4e-17 (xcorr-sq_mean_sig-False), no golden exists for the two max
+      identifiers; not bit-identical (rfft of x_b times conj rfft of x_a instead of fftconvolve with the reversed series)'
+    effort: M
+    depends_on: []

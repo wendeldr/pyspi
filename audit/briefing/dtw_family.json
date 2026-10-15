@@ -1,0 +1,261 @@
+{
+ "family": "dtw_family",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/distance-similarity.md"
+ ],
+ "hypotheses": [
+  "tslearn dtw returns sqrt of accumulated squared differences (not abs-sum as in Sakoe-Chiba 1978)",
+  "default Sakoe-Chiba radius 1 and Itakura max slope 2 when the constraint is named without parameters",
+  "lcss eps=1 similarity normalised by the shorter length",
+  "softdtw gamma=1 and the constraint is ignored (known bug 3)"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/distance.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    286,
+    301
+   ],
+   "section": "1.2.7",
+   "title": "Dynamic time warping (dtw)"
+  },
+  {
+   "lines": [
+    302,
+    311
+   ],
+   "section": "1.2.8",
+   "title": "Longest common subsequence (lcss)"
+  },
+  {
+   "lines": [
+    312,
+    320
+   ],
+   "section": "1.2.9",
+   "title": "Soft dynamic time warping (softdtw)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/tslearn/metrics/_dtw.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/tslearn/metrics/dtw_variants.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/tslearn/metrics/softdtw_variants.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/tslearn/metrics/soft_dtw_fast.py",
+  "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/tslearn/metrics/_masks.py"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "global_constraint": null
+   },
+   "identifier_params": {
+    "dtw": {
+     "global_constraint": null
+    }
+   },
+   "identifiers": [
+    "dtw"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "tslearn global_constraint=None",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "DynamicTimeWarping",
+   "representative": "dtw",
+   "source": "config",
+   "unit_id": "distance.dtw.constraint-None"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "global_constraint": "itakura"
+   },
+   "identifier_params": {
+    "dtw_constraint-itakura": {
+     "global_constraint": "itakura"
+    }
+   },
+   "identifiers": [
+    "dtw_constraint-itakura"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "tslearn global_constraint=itakura",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "DynamicTimeWarping",
+   "representative": "dtw_constraint-itakura",
+   "source": "config",
+   "unit_id": "distance.dtw.constraint-itakura"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "global_constraint": "sakoe_chiba"
+   },
+   "identifier_params": {
+    "dtw_constraint-sakoe-chiba": {
+     "global_constraint": "sakoe_chiba"
+    }
+   },
+   "identifiers": [
+    "dtw_constraint-sakoe-chiba"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "tslearn global_constraint=sakoe_chiba",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "DynamicTimeWarping",
+   "representative": "dtw_constraint-sakoe-chiba",
+   "source": "config",
+   "unit_id": "distance.dtw.constraint-sakoe_chiba"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {
+    "softdtw": {
+     "global_constraint": null
+    },
+    "softdtw_constraint-itakura": {
+     "global_constraint": "itakura"
+    },
+    "softdtw_constraint-sakoe-chiba": {
+     "global_constraint": "sakoe_chiba"
+    }
+   },
+   "identifiers": [
+    "softdtw",
+    "softdtw_constraint-itakura",
+    "softdtw_constraint-sakoe-chiba"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "tslearn soft_dtw gamma=1 (constraint ignored)",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "SoftDynamicTimeWarping",
+   "representative": "softdtw",
+   "source": "config",
+   "unit_id": "distance.softdtw"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "global_constraint": null
+   },
+   "identifier_params": {
+    "lcss": {
+     "global_constraint": null
+    }
+   },
+   "identifiers": [
+    "lcss"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "tslearn global_constraint=None",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "LongestCommonSubsequence",
+   "representative": "lcss",
+   "source": "config",
+   "unit_id": "distance.lcss.constraint-None"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "global_constraint": "itakura"
+   },
+   "identifier_params": {
+    "lcss_constraint-itakura": {
+     "global_constraint": "itakura"
+    }
+   },
+   "identifiers": [
+    "lcss_constraint-itakura"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "tslearn global_constraint=itakura",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "LongestCommonSubsequence",
+   "representative": "lcss_constraint-itakura",
+   "source": "config",
+   "unit_id": "distance.lcss.constraint-itakura"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "global_constraint": "sakoe_chiba"
+   },
+   "identifier_params": {
+    "lcss_constraint-sakoe-chiba": {
+     "global_constraint": "sakoe_chiba"
+    }
+   },
+   "identifiers": [
+    "lcss_constraint-sakoe-chiba"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "distance",
+    "nonlinear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "tslearn global_constraint=sakoe_chiba",
+   "module": "distance",
+   "pair_basis": "ordered",
+   "pyspi_class": "LongestCommonSubsequence",
+   "representative": "lcss_constraint-sakoe-chiba",
+   "source": "config",
+   "unit_id": "distance.lcss.constraint-sakoe_chiba"
+  }
+ ]
+}

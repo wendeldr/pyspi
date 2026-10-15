@@ -1,0 +1,302 @@
+unit_id: spectral.dspli
+status: profiled
+correctness:
+  metric_name_standard: debiased (unbiased) estimator of the squared phase lag index, with tapers as observations, band mean / band max
+  canonical_ref: Vinck, Oostenveld, van Wingerden, Battaglia & Pennartz 2011, NeuroImage 55:1548-1565, unbiased estimator of the squared PLI (pairwise-product form; equation number not re-checked)
+  canonical_definition: PLI^2_unbiased = (1/(N(N-1))) sum_{j != k} sign(Im X_j) sign(Im X_k) over N independent observations; when no sign is zero this equals (N PLI_hat^2 - 1)/(N - 1) with PLI_hat = (1/N) sum sign(Im X). Targets PLI^2 (can be negative in finite samples), symmetric.
+  documented_definition: 'supplement §1.5.8, p.15 (supplement.txt:715-750): "... weighted variations that make the measure more robust against electrophysical artifacts (namely, field spread), noise, and sample-size bias by weighting components based on the imaginary coherence [68]: ... the debiased squared phase lag index (dspli) ..." Labels undirected, unsigned (config.yaml:824-830). GitBook spectral.md:241, 269-280. Grid/band text: supplement §1.5, pp.12-13 (heading supplement.txt:570; grid text :582-599; the pack line ranges for §1.5.6-1.5.8 are offset, actual headings at :686, :701, :715): "Each measure is based on the cross- and power-spectral densities at a given frequency and sampling rate, which is estimated via the multitaper technique ... We use 125 uniformly sampled bins across the entire frequency range, f in [f0, fs/2], where fs/2 is the Nyquist frequency and f0 = 4/T ... we take the mean (mean) and the maximum (max) values of each measure over three ranges ... fmin-0_fmax-0-5: f in [0, fs/2]; fmin-0_fmax-0-25: f in [0, fs/4]; fmin-0-25_fmax-0-5: f in [fs/4, fs/2]." Same text on GitBook spectral.md:16-20.'
+  delegate_lib: spectral_connectivity==1.1.2 Multitaper.fft + Connectivity.debiased_squared_phase_lag_index (numpy 2.5.4); band mean/max native pyspi
+  implemented_as: 'Per bin: dsPLI_ij(f) = (K PLI_ij(f)^2 - 1)/(K - 1) with K = n_observations = 5 and PLI the signed taper-mean of sign(Im S) (already restricted to non-negative frequencies). For non-DC bins (no zero signs) values are in {-0.2, 0.2, 1}; at DC (Im S = 0 exactly) PLI = 0 and dsPLI = -1/(K-1) = -0.25. pyspi: np.nanmean / np.nanmax over bins with fmin <= f <= fmax.'
+  implementation_trace:
+  - 'pyspi/config.yaml:824-851 DebiasedSquaredPhaseLagIndex configs: (fs=1), (fmin=0, fmax=0.25), (fmin=0.25, fmax=0.5), and the same three with statistic=max; labels undirected, linear, unsigned, bivariate, frequency-dependent'
+  - 'pyspi/statistics/spectral.py:200-207 DebiasedSquaredPhaseLagIndex(NonparametricSpectralMultivariate, Undirected): identifier "dspli", _measure "debiased_squared_phase_lag_index", labels ["unsigned", "spectral", "undirected"]'
+  - 'pyspi/data.py:184-195 Data preprocessing: optional scipy.signal.detrend(axis=1), then zscore(axis=1, nan_policy="omit", ddof=1) (default normalise=True, detrend=False)'
+  - 'pyspi/calculator.py:295-355 Calculator.compute (cited at HEAD a1f20c7): :329 S = spi.multivariate(dataset); :332 np.fill_diagonal(S, nan); :336-337 any exception -> whole SPI table NaN (error recorded :338-339); :354-355 warning'
+  - 'pyspi/statistics/spectral.py:20-43 NonparametricSpectral.__init__: fmax None -> fs/2; statistic "mean" -> np.nanmean, "max" -> np.nanmax; identifier suffix f"_multitaper_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}" with "." -> "-"'
+  - 'pyspi/statistics/spectral.py:45-50 key = (self.measure,) for these classes: one cached spectrum per measure, shared by all band/statistic variants on a Data object'
+  - 'pyspi/statistics/spectral.py:64-83 _get_cache: z = data.to_numpy(squeeze=True).T (T x P); m = sc.Multitaper(z, sampling_frequency=fs) (all other arguments default); conn = sc.Connectivity.from_multitaper(m); res = getattr(conn, measure)(); freq = conn.frequencies; first insert keyed by the bare string measure at :81 (one redundant recompute, tests/README.md worth knowing)'
+  - 'pyspi/statistics/spectral.py:85-91 multivariate (parse_multivariate, pyspi/base.py:51-68): freq_id = np.where((freq >= fmin) * (freq <= fmax)); adj = statfn(res[0, freq_id, :, :], axis=0)'
+  - 'pyspi/statistics/spectral.py:101-102 np.fill_diagonal(adj, nan); returned as is. MRO (probe): [cls, NonparametricSpectralMultivariate, NonparametricSpectral, Unsigned, Undirected, Directed, object], so Undirected.multivariate (pyspi/base.py:132-138) is never reached (REVIEW M1; tests/README.md bug 5 before b2f6d7e)'
+  - pyspi/_spectral_compat.py:15-28 replaces spectral_connectivity.connectivity.np by a namespace whose in1d maps to np.isin; all other numpy calls unchanged (not on the path of these measures)
+  - 'spectral_connectivity==1.1.2 .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:74-100 Multitaper.__init__ defaults: time_halfbandwidth_product=3, detrend_type="constant", n_tapers=None, n_fft_samples=None, time_window_duration=None (one window = the whole series), is_low_bias=True'
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:155-164 n_tapers = floor(2*NW - 1) = 5; :469-543 dpss_windows, :668-673 _get_low_bias_tapers keeps eigenvalues > 0.9 (probe: 5 tapers kept at T = 64, 256, 1024, 4096)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:167-190 n_time_samples_per_window = T; n_fft_samples = scipy.fftpack.next_fast_len(T); frequencies = fftfreq(n_fft, 1/fs)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/transforms.py:238-260 fft(): _sliding_window (single window), detrend(type="constant") (:701-, subtracts each channel mean), _multitaper_fft (:335-354) fft(x * taper, n=n_fft)/fs -> fourier_coefficients (1 window, 1 trial, K=5 tapers, n_fft, P)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:156-172 from_multitaper(expectation_type="trials_tapers"); :45-53 EXPECTATION["trials_tapers"] = mean over axes (1, 2) = 1 trial x 5 tapers; :276-287 n_observations = 5
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:195-208 _cross_spectral_matrix = _complex_inner_product(X[..., None], X[..., None]) (:1187-1190 matmul(a, conj(b).T), :1485-1487) -> S_ij,k = X_i,k * conj(X_j,k)
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:210-220 _expectation_cross_spectral_matrix(fcn): blocks None -> mean over tapers of fcn(S)'
+  - .venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:73-89 _non_negative_frequencies keeps indices 0..(n_fft+1)//2 - 1 (DC kept, Nyquist dropped for even n_fft); :174-180 frequencies uses the same slice
+  - '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:603-624 debiased_squared_phase_lag_index: n_observations = 5; return (n * phase_lag_index()**2 - 1.0)/(n - 1.0) (no decorator of its own; phase_lag_index (:541-574) is already non-negative-frequency sliced)'
+  deviation_from_documented: '(1) dsPLI involves no weighting by imaginary coherence (the text groups it with the weighted variations). (2) Labelled unsigned but takes negative values (M7). (3) Frequency grid: documented 125 uniform bins on [f0 = 4/T, fs/2]; implemented n_fft/2 bins (n_fft = next_fast_len(T) = T for the probed powers of two) at f = m/n_fft, m = 0..n_fft/2-1, i.e. DC included, Nyquist excluded, f0 = 0 not 4/T (probe: 32/128/512/2048 bins at T = 64/256/1024/4096, first bin 0.0, last 0.484375 at T=64). Band rule freq >= fmin & freq <= fmax is inclusive at both ends, so the f = 0.25 bin is counted in both the low and the high band whenever 0.25 is a grid point, i.e. when n_fft = scipy.fftpack.next_fast_len(T) is a multiple of 4; this holds for every manifest size (T = 64/256/1024/4096) and for the 512- and 1024-sample EEG windows (probe: low band 17 bins 0..0.25, high band 16 bins 0.25..0.484 at T=64), but not in general (probe grid_tie.py: at T = 30 and 250, n_fft = 30 and 250 has no 0.25 bin and the inclusive low/high counts are 8/7 and 63/62). Taper count: K = 5 tapers pass the eigenvalue > 0.9 filter at every probed T >= 10 (10, 16, 30, 64, 100, 250, 256, 512, 1000, 1024, 4096); at T = 7 and 8 (n_fft = 8) only 4 tapers are kept and n_observations = 4, so every K = 5 statement in this record assumes T >= 10.'
+  deviation_from_canonical: '(1) Observations are the 5 tapers of one window, not trials; the estimator is unbiased only if the 5 taper estimates are independent (approximately, for locally flat spectra; hypothesis). (2) The closed form (K PLI^2 - 1)/(K - 1) differs from the pairwise-product definition whenever some sign(Im S) = 0: then sum_k sign^2 < K. This happens exactly at DC for real input (probe: dsPLI(DC) = -0.25 on delayed_noise T=256, pairwise form gives 0) and at every bin for identical channels (shared_envelope x2==x0: A[0,2] = -0.25, pairwise form 0). Bands with fmin = 0 therefore carry an offset of -0.25/n_bins (-0.0078 full band and -0.0147 low band at T=64). (3) Band max over a 3-valued per-bin statistic reaches 1 under independence for every pair of the audit iid_gaussian dataset at T >= 256, for 0.997 of off-diagonal entries at T = 256 over 30 fresh seeds (minimum per seed 0.9; review probe, upper triangle, 1.0) and for every entry at T >= 1024 (probe sat.py; 0.78 at T = 64).'
+  units_and_range: 'dimensionless; per bin in {-0.25 (DC or zero Im only), -0.2, 0.2, 1}; band values in [-0.25, 1]; negative values are valid finite-sample outcomes (M7); symmetric (probe max |A - A^T| = 0.0); null band mean ~0 (probe iid: -0.0016, -0.0223, -0.0074, -0.0004 at T = 64..4096); dspli_max = 1.0 under independence for every pair of the audit iid_gaussian dataset at T >= 256 and for every entry over 30 fresh seeds at T >= 1024, but for 0.997 of entries at T = 256 (probe sat.py), so not universally at T = 256.'
+  direction_convention: 'Undirected: PLI^2 is invariant to conjugation, so A[i,j] = A[j,i] exactly (probe). No lead/lag information.'
+  symmetry_expected: sym
+  already_documented: REVIEW M7 and EEG_OPTIMIZATION_NOTES.md §review (legitimate negative estimators) (negative dspli valid; closed form (K PLI^2 - 1)/(K - 1) noted there); REVIEW M1 (no symmetrisation; no effect, symmetric; tests/README.md bug 5 before b2f6d7e); REVIEW M4 and DEPENDENCY_COMPATIBILITY_REVIEW.md (DC included).
+  new_finding_candidates:
+  - 'CANDIDATE: the closed form (K PLI^2 - 1)/(K - 1) (connectivity.py:621-624) is not the Vinck pairwise estimator when some sign(Im S) = 0; at the DC bin Im S is exactly 0 for real input, giving -0.25 instead of 0 (probe2: dspli DC [0,1] = -0.25), which biases every fmin=0 band by -0.25/n_bins.'
+  - 'CANDIDATE: identical (or exactly zero-lag, real cross-spectrum) channels return the minimum value -0.25 rather than 0: probe4 shared_envelope (x2 bit-identical to x0) dspli mean and max A[0,2] = -0.25 at T = 256 and 1024, below the independence level (~0).'
+  - 'CANDIDATE: dspli_max saturates at 1.0 under independence: every pair of the audit iid_gaussian dataset at T >= 256 (probe3), 0.997 of off-diagonal entries at T = 256 and all entries at T >= 1024 over 30 fresh seeds (probe sat.py), because per-bin values are 1 whenever all 5 signs agree (probability 1/16).'
+  - 'CANDIDATE (pack hypothesis confirmed): dspli = (K PLI^2 - 1)/(K - 1) with K = 5 tapers (probe n_observations = 5; probe2 reproduction from the same coefficients max diff 0.0).'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - var2_bivariate
+    - var2_chain
+    - delayed_noise
+    - narrowband_f0-0.1
+    - shared_envelope
+    path: kernel
+    reference: 'from-scratch numpy/scipy multitaper that does not import spectral_connectivity: per-channel mean removal, scipy.signal.windows.dpss(T, NW=3, Kmax=5), numpy.fft.fft(x * taper), S_ij,k = X_i,k conj(X_j,k) on bins m = 0..n_fft/2-1, the measure formula written out per taper, inclusive band mask, np.nanmean / np.nanmax over bins (feasibility probe probe6.py: PLV and wPLI per-bin agreement <= 1e-11 at T <= 1024, DC excluded); canonical pairwise estimator (1/(K(K-1))) sum_{j != k} sign(Im S_j) sign(Im S_k), and separately the closed form (K PLI^2 - 1)/(K - 1)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: 'closed form agrees to <= 1e-12 on all bins of off-diagonal entries provided |Im S_ij,k| <= 1e-12 * max_k |S_ij,k| is set to exactly 0 (a sign tie) before the measure formula. Measured in the check stage (refs/spectral_phase_sync.py:csm, keys tie_* in results.json): the elementwise product X[:, None] * conj(X[None, :]) gives Im S exactly 0.0 at DC on every off-diagonal entry of every dataset (iid_gaussian, delayed_noise, var2_bivariate, narrowband_f0-0.25, shared_envelope at T = 64/256/1024), because the DC coefficient of real input is real; it leaves rounding noise only on the diagonal (1.1e-16 to 3.5e-15) and for the bit-identical channels shared_envelope (0,2) (2.6e-16 to 1.3e-15), where the library matmul (connectivity.py:1187-1190) returns exactly 0. Without the rule the identical pair differs by 1.0 for PLI, 1.25 for dsPLI, up to 0.993 (T=256) / 1.0 (T=1024) for wPLI, and dswPLI is finite where the library gives NaN (runs spectral.dspli|shared_envelope|{64,256,1024}|kernel|perbin, key no_tie_rule_*); the rule zeroed exactly the 5 x 2 x (n_bins - 1) identical-pair entries and nothing else (tie_zeroed_offdiag_nonDC 1270 at T=256). The diagonal is masked (pyspi NaN-fills it). pairwise form agrees on all non-DC bins and differs by exactly 0.25 at DC (band means in fmin=0 bands differ by 0.25/n_bins); shared_envelope (0,2): pairwise 0 vs implemented -0.25'
+  - datasets:
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic null: per-bin E[dsPLI] = 0 for independent signs; distribution of the max over n_bins of a variable taking 1 w.p. 1/16, 0.2 w.p. 10/32, -0.2 w.p. 20/32'
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: dspli_mean consistent with -0.25/n_bins (fmin=0 bands) or 0 (high band); dspli_max = 1 for nearly all pairs at T >= 256
+  - datasets:
+    - var2_bivariate
+    path: kernel
+    reference: population target PLI_pop(f)^2 from S_true via Monte Carlo of circular complex Gaussian pairs with coherency rho(f) (numpy only)
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: band mean at T=4096 within sampling error of mean_f PLI_pop(f)^2 (minus the DC offset); tests the taper-independence assumption behind unbiasedness
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    path: pipeline
+    reference: 'analytic: invariant to swapping channels'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: A == A.T exactly for all identifiers (undirected; no orientation information)
+  - datasets:
+    - shared_envelope
+    path: pipeline
+    reference: 'analytic: x2 == x0 so Im S = 0 at every bin; canonical pairwise estimator = 0'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: implemented A[0,2] = -0.25 exactly (records the deviation from the canonical 0)
+  - datasets:
+    - scaled_offset
+    path: pipeline
+    reference: 'analytic invariance: per-taper phase quantities are invariant to positive per-channel scaling, and the constant offset is removed by the dependency detrend; compare Data(normalise=True) vs Data(normalise=False)'
+    reference_kind: analytic
+    criterion: tolerance
+    expected_outcome: 'max |A_norm - A_raw| <= 1e-12 for every identifier (probe at T=256: <= 1.1e-16 for all six measures)'
+  - datasets:
+    - var2_chain
+    - iid_gaussian
+    path: kernel
+    reference: 'analytic: the measure for pair (i, j) depends only on channels i and j (shared tapers, per-channel FFT); compare the P-channel matrix entry with the same pyspi call on the 2-channel subset'
+    reference_kind: analytic
+    criterion: exact
+    expected_outcome: 'identical values (probe var2_chain T=256 pair (0,2): difference 0.0 for all six measures), confirming "multivariate" is a batched bivariate computation'
+  - datasets:
+    - trending
+    path: pipeline-detrend
+    reference: pyspi with detrend=True vs detrend=False (the dependency removes only the mean, not a linear trend)
+    reference_kind: analytic
+    criterion: qualitative
+    expected_outcome: 'values differ when linear trends are present (probe T=256: PLV max diff 0.109, PPC 0.173, PLI 0.056); record which bands change (expected mostly the low band)'
+  check_method: independent-impl
+  check_reference: 'audit/checks/refs/spectral_phase_sync.py:h_rep/h_perbin (closed form (K PLI^2 - 1)/(K - 1), K = 5) and :pairwise_forms (Vinck 2011 pairwise estimator by explicit double loop); external: mne_connectivity==0.9.0 method=''pli2_unbiased'' (epochs = tapers); analytic null E = 0'
+  check_data: as spectral.pli
+  agreement_criterion: exact replication to 1e-10; canonical pairwise form at 1e-10 (a failure records the deviation); statistical |pyspi| <= 2 se
+  closeness: 'rep 150/150 and per-bin 15/15 max abs 0.0; mne per-bin 8/8 and band 6/6 max abs 0.0 (mne uses the same closed form and also gives -0.25 at DC); canonical pairwise form: non-DC bins agree to 5.6e-17, DC differs by exactly 0.25 (library -0.25, pairwise 0) and the identical pair shared_envelope (0,2) is -0.25 vs 0 at every bin (canon-pairwise runs fail by 0.25); null mean -0.010 / -0.019 / -0.0056 / -0.0005 (|z| <= 1.61); dspli_max == 1.0 in 0.78 / 1.0 / 1.0 / 1.0 of null entries; population pyspi 0.1383 vs target 0.1318 (se 0.012, z 0.56); negative values observed (min band mean -0.10 scaled_offset T=256 high band; per bin -0.25)'
+  verdict: variant
+  score_0_10: 7
+  score_rubric: 7
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 7: the supplement''s per-taper debiased PLI^2, in Vinck''s closed form over the 5 tapers, reproduced with max abs 0.0 (150/150 runs). The
+    closed form gives -0.25 instead of the pairwise 0 at DC and on identical channels (offset -0.25/n_bins in fmin=0 bands). Grid deviations are scored under spectral.band_selection.'
+  documentation_status: misdescribed
+  verdict_adjusted: variant
+  score_adjusted: 7
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: Vinck debiased PLI^2 over the 5 tapers in closed form; because sign(0) = 0 the closed form equals the pairwise estimator only when no Im S is exactly 0, so the DC bin (real cross-spectrum) contributes -0.25 instead of 0 (offset -0.25/n_bins in fmin = 0 bands) and identical channels give -0.25 instead of 0; band max saturates at 1 under independence. Negative values are valid (M7).
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap (pyspi time_s in out/pyspi/index/spectral_phase_sync.json, single runs: the 30-seed saturation probe took 2.43 s at T = 4096, 0.54 s at T = 1024 and 0.15 s at T = 256; every other run < 0.1 s; 226 runs, 5.3 s in total)'
+  symmetry_observed: 'sym: max |A - A.T| = 0.0 on every sym and rep run'
+  direction_observed: 'no orientation: A[i,j] = A[j,i] exactly on delayed_noise; identical channels shared_envelope A[0,2] = -0.25 in every identifier'
+  candidate_resolutions:
+  - candidate: closed form != pairwise estimator at DC (-0.25 vs 0)
+    outcome: confirmed
+    evidence: 'spectral.dspli|delayed_noise|256|kernel|canon-pairwise: max_abs_diff_DC 0.25, nonDC 5.6e-17; perbin DC values {-0.25} on every dataset'
+  - candidate: identical channels return -0.25
+    outcome: confirmed
+    evidence: 'spectral.dspli|shared_envelope|256|kernel|canon-pairwise: pyspi pair (0,2) {-0.25} vs pairwise {0.0}; sym runs A[0,2] = -0.25'
+  - candidate: dspli_max saturates at 1.0 under independence
+    outcome: confirmed
+    evidence: 'spectral.dspli|iid_gaussian|{64,256,1024,4096}|pipeline|sat: 0.78 / 1.0 / 1.0 / 1.0 (independent-bin prediction 0.87 / 0.9997 / 1 / 1)'
+  - candidate: dspli = (K PLI^2 - 1)/(K - 1) with K = 5 tapers
+    outcome: confirmed
+    evidence: perbin and mne-perbin runs, max abs 0.0
+  checks_run:
+  - run_ids:
+    - spectral.dspli|iid_gaussian|1024|kernel|rep|mean_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|delayed_noise|1024|kernel|rep|max_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|shared_envelope|256|kernel|rep|mean_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|trending|256|pipeline-detrend|rep|mean_fs-1_fmin-0_fmax-0-5
+    - 'spectral.dspli|*|*|*|rep|* (150 runs in checks/out/results: 7 datasets x T 64/256/1024 x 6 identifiers, plus scaled_offset/trending)'
+    reference: audit/checks/refs/spectral_phase_sync.py:h_rep
+    outcome: pass 150/150 (exact replication of all six identifiers, both orientations, kernel, pipeline and pipeline-detrend paths, tolerance 1e-10)
+  - run_ids:
+    - spectral.dspli|iid_gaussian|64|kernel|perbin
+    - spectral.dspli|iid_gaussian|256|kernel|perbin
+    - spectral.dspli|iid_gaussian|1024|kernel|perbin
+    - spectral.dspli|delayed_noise|64|kernel|perbin
+    - spectral.dspli|delayed_noise|256|kernel|perbin
+    - spectral.dspli|delayed_noise|1024|kernel|perbin
+    - spectral.dspli|var2_bivariate|64|kernel|perbin
+    - spectral.dspli|var2_bivariate|256|kernel|perbin
+    - spectral.dspli|var2_bivariate|1024|kernel|perbin
+    - spectral.dspli|narrowband_f0-0.25|64|kernel|perbin
+    - spectral.dspli|narrowband_f0-0.25|256|kernel|perbin
+    - spectral.dspli|narrowband_f0-0.25|1024|kernel|perbin
+    - spectral.dspli|shared_envelope|64|kernel|perbin
+    - spectral.dspli|shared_envelope|256|kernel|perbin
+    - spectral.dspli|shared_envelope|1024|kernel|perbin
+    reference: audit/checks/refs/spectral_phase_sync.py:h_perbin
+    outcome: pass 15/15 (per-bin estimator from independent taper coefficients, DC included)
+  - run_ids:
+    - spectral.dspli|iid_gaussian|256|kernel|mne-perbin
+    - spectral.dspli|iid_gaussian|1024|kernel|mne-perbin
+    - spectral.dspli|delayed_noise|256|kernel|mne-perbin
+    - spectral.dspli|delayed_noise|1024|kernel|mne-perbin
+    - spectral.dspli|var2_bivariate|256|kernel|mne-perbin
+    - spectral.dspli|var2_bivariate|1024|kernel|mne-perbin
+    - spectral.dspli|narrowband_f0-0.25|256|kernel|mne-perbin
+    - spectral.dspli|narrowband_f0-0.25|1024|kernel|mne-perbin
+    reference: audit/checks/refs/spectral_phase_sync.py:h_mne_perbin (mne_connectivity==0.9.0, mne==1.13.2)
+    outcome: pass 8/8
+  - run_ids:
+    - spectral.dspli|iid_gaussian|256|pipeline|sym|mean_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|iid_gaussian|256|pipeline|sym|mean_fs-1_fmin-0_fmax-0-25
+    - spectral.dspli|iid_gaussian|256|pipeline|sym|mean_fs-1_fmin-0-25_fmax-0-5
+    - spectral.dspli|iid_gaussian|256|pipeline|sym|max_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|iid_gaussian|256|pipeline|sym|max_fs-1_fmin-0_fmax-0-25
+    - spectral.dspli|iid_gaussian|256|pipeline|sym|max_fs-1_fmin-0-25_fmax-0-5
+    - spectral.dspli|delayed_noise|256|pipeline|sym|mean_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|delayed_noise|256|pipeline|sym|mean_fs-1_fmin-0_fmax-0-25
+    - spectral.dspli|delayed_noise|256|pipeline|sym|mean_fs-1_fmin-0-25_fmax-0-5
+    - spectral.dspli|delayed_noise|256|pipeline|sym|max_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|delayed_noise|256|pipeline|sym|max_fs-1_fmin-0_fmax-0-25
+    - spectral.dspli|delayed_noise|256|pipeline|sym|max_fs-1_fmin-0-25_fmax-0-5
+    - spectral.dspli|shared_envelope|256|pipeline|sym|mean_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|shared_envelope|256|pipeline|sym|mean_fs-1_fmin-0_fmax-0-25
+    - spectral.dspli|shared_envelope|256|pipeline|sym|mean_fs-1_fmin-0-25_fmax-0-5
+    - spectral.dspli|shared_envelope|256|pipeline|sym|max_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|shared_envelope|256|pipeline|sym|max_fs-1_fmin-0_fmax-0-25
+    - spectral.dspli|shared_envelope|256|pipeline|sym|max_fs-1_fmin-0-25_fmax-0-5
+    reference: 'audit/checks/refs/spectral_phase_sync.py:h_sym (same-lineage: pyspi self-consistency)'
+    outcome: pass 18/18
+  - run_ids:
+    - spectral.dspli|scaled_offset|256|pipeline|inv|mean_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|scaled_offset|256|pipeline|inv|mean_fs-1_fmin-0_fmax-0-25
+    - spectral.dspli|scaled_offset|256|pipeline|inv|mean_fs-1_fmin-0-25_fmax-0-5
+    - spectral.dspli|scaled_offset|256|pipeline|inv|max_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|scaled_offset|256|pipeline|inv|max_fs-1_fmin-0_fmax-0-25
+    - spectral.dspli|scaled_offset|256|pipeline|inv|max_fs-1_fmin-0-25_fmax-0-5
+    reference: 'audit/checks/refs/spectral_phase_sync.py:h_inv (same-lineage: pyspi self-consistency)'
+    outcome: pass 6/6 (max abs <= 7.8e-16 across the family)
+  - run_ids:
+    - spectral.dspli|var2_chain|256|kernel|sep02|mean_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|var2_chain|256|kernel|sep02|max_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|iid_gaussian|256|kernel|sep13|mean_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|iid_gaussian|256|kernel|sep13|max_fs-1_fmin-0_fmax-0-5
+    reference: 'audit/checks/refs/spectral_phase_sync.py:h_sep (same-lineage: pyspi self-consistency)'
+    outcome: pass 4/4 (difference 0.0)
+  - run_ids:
+    - spectral.dspli|iid_gaussian|64|pipeline|null
+    - spectral.dspli|iid_gaussian|256|pipeline|null
+    - spectral.dspli|iid_gaussian|1024|pipeline|null
+    - spectral.dspli|iid_gaussian|4096|pipeline|null
+    reference: audit/checks/refs/spectral_phase_sync.py:h_null
+    outcome: pass 4/4 (statistical, |z| <= 2)
+  - run_ids:
+    - spectral.dspli|iid_gaussian|64|pipeline|sat
+    - spectral.dspli|iid_gaussian|256|pipeline|sat
+    - spectral.dspli|iid_gaussian|1024|pipeline|sat
+    - spectral.dspli|iid_gaussian|4096|pipeline|sat
+    reference: audit/checks/refs/spectral_phase_sync.py:h_sat
+    outcome: pass 4/4 (same 30 seeds replicated exactly)
+  - run_ids:
+    - spectral.dspli|var2_bivariate|4096|kernel|pop|mean_fs-1_fmin-0_fmax-0-5
+    reference: audit/checks/refs/spectral_phase_sync.py:h_pop
+    outcome: pass (statistical)
+  - run_ids:
+    - spectral.dspli|trending|256|pipeline|detrend-effect|mean_fs-1_fmin-0_fmax-0-5
+    reference: 'audit/checks/refs/spectral_phase_sync.py:main detrend-effect (same-lineage: two pyspi runs)'
+    outcome: pass (values change with detrend=True)
+  - run_ids:
+    - spectral.dspli|delayed_noise|256|kernel|canon-pairwise
+    - spectral.dspli|shared_envelope|256|kernel|canon-pairwise
+    reference: audit/checks/refs/spectral_phase_sync.py:pairwise_forms
+    outcome: 'fail 0/2 by design: DC and identical-pair offset 0.25; non-DC 5.6e-17'
+  - run_ids:
+    - spectral.dspli|iid_gaussian|1024|kernel|mne-band|mean_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|iid_gaussian|1024|kernel|mne-band|mean_fs-1_fmin-0_fmax-0-25
+    - spectral.dspli|iid_gaussian|1024|kernel|mne-band|mean_fs-1_fmin-0-25_fmax-0-5
+    - spectral.dspli|delayed_noise|1024|kernel|mne-band|mean_fs-1_fmin-0_fmax-0-5
+    - spectral.dspli|delayed_noise|1024|kernel|mne-band|mean_fs-1_fmin-0_fmax-0-25
+    - spectral.dspli|delayed_noise|1024|kernel|mne-band|mean_fs-1_fmin-0-25_fmax-0-5
+    reference: audit/checks/refs/spectral_phase_sync.py:h_mne_band
+    outcome: pass 6/6 (max abs 0.0)
+  - run_ids:
+    - spectral.dspli|narrowband_f0-0.1|256|kernel|nb-lock
+    - spectral.dspli|narrowband_f0-0.1|1024|kernel|nb-lock
+    - spectral.dspli|narrowband_f0-0.25|256|kernel|nb-lock
+    - spectral.dspli|narrowband_f0-0.25|1024|kernel|nb-lock
+    - spectral.dspli|narrowband_f0-0.4|256|kernel|nb-lock
+    - spectral.dspli|narrowband_f0-0.4|1024|kernel|nb-lock
+    reference: audit/checks/refs/spectral_phase_sync.py:h_nb_lock
+    outcome: pass 6/6 (1.0 at the checked bins)
+optimisation:
+  complexity_P_T: 'O(K*P*T log T) FFT + O(K*n_fft*P^2) two-sided taper-level CSM materialised as (1,1,5,n_fft,P,P) complex128 (connectivity.py:196-257) + O(K*n_fft*P^2) elementwise fcn on the per-taper tensor before the taper mean, K=5 tapers, n_fft=T; plus a P-independent DPSS cost (~17-20 ms, pure Python). Measured P exponent 0.91 (fit 8->32) and 2.89 between the 32x1024 and 118x1024 walls, T exponent 0.93: at P<=32 the fixed DPSS cost dominates (dpss_windows 74.0% of the 8x1024 profile), at 118x1024 the P^2 taper-level CSM term dominates (DPSS 2.4%) and the local exponent above 2 reflects GB-sized temporaries (memory-bound), not extra arithmetic.'
+  hotspot_1: '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:_expectation_cross_spectral_matrix (third-party:spectral_connectivity) 84.5% of the profiled SPI call at 118x1024 (via phase_lag_index): _complex_inner_product 50.6%, fcn sign(Im) 22.2%'
+  hotspot_2: '.venv/lib/python3.12/site-packages/spectral_connectivity/connectivity.py:_complex_inner_product 50.6% at 118x1024; at 8x1024 transforms.py:dpss_windows 74.0% (audit/profiles/spectral.dspli__8x1024.pstats) | opaque_share is the 8x1024 profile-JSON value (audit/profiles/spectral.dspli__8x1024__profile.json, builtin tottime over the whole profile); the 118x1024 pstats named in profile_file gives a builtin tottime share of 0.140 of the compute_spi frame (audit/profiles/micro/prof_spectral__index.json). Both are lower bounds: numpy ufunc work sits in the self time of the calling Python frame.'
+  hotspot_owner: third-party:spectral_connectivity
+  opaque_share: 0.063
+  profile_file: audit/profiles/micro/prof_spectral.dspli__118x1024.pstats
+  basis_scope_note: 'Cache key (measure,) (pyspi/statistics/spectral.py:46-50): the retained fmin-0_fmax-0-5 identifier pays the unit''s one build (3.60 s at 118x1024, family-warm) and the 10 untimed EEG bands read
+    that cached array as the 5 timed non-retained bands do (0.007-0.022 s each), so the configured sum (one build plus 5 band reads) stands in for one build plus 10 band reads'
+  opportunities:
+  - opportunity_id: spectral_csm-1
+    opportunity: Form the taper-level products only on the (n_fft+1)//2 non-negative bins (slice the Fourier coefficients before connectivity.py:196-257 instead of dropping the negative bins afterwards), in frequency blocks so the per-taper temporaries stay small; for the linear measures (coherency, icoh, psi, gd) replace the (1,1,5,n_fft,N,N) complex128 tensor and its taper mean by one batched matmul over the taper axis.
+    opp_type: algorithmic
+    expected_speedup: 1.7-2.5x
+    speedup_basis: 'complexity:dspli applies the sign(Im) fcn of pli (connectivity.py:543-575, debiased at :604-625) to the same per-taper products as plv, and forming them on the (n_fft+1)//2
+      non-negative bins only halves the elements of every taper-level frame; dspli itself was not run, so this is not a microbench basis. Halving those frames alone gives Amdahl
+      1/(0.155 + 0.845/2) = 1.732x by element count on the profiled call, and 3.670/(3.670 - 0.845 x 3.596/2) = 1.707x on the configured sum, the ranking basis
+      (3.670 s per window at 118x1024, family-warm: the 3.596 s build of the profiled identifier plus 5 band reads that this avenue does not shorten). Context, plv only, carried over and not measured on dspli: the same slicing gave plv 1.8-2.5x (audit/profiles/micro/opp_spectral_csm-1.json
+      plv sliced, min of 3 repeats, 2.45x at 118x1024, ratio of medians 2.88x, and 1.81x at 32x1024; a Workflow 3 recheck re-run of the same script gave 1.89x min of 3 at 118x1024,
+      ratio of medians 1.86x, not saved to the JSON). The lower bound 1.7x is this unit''s own element-count figure on the ranking basis rounded down, so it does not exceed the evidence against the
+      ranking basis; the 2.5x upper end is plv''s 2.45x min of 3 at 118x1024, which beat plv''s own element count
+      + profile:audit/profiles/micro/prof_spectral.dspli__118x1024.pstats
+      taper-level CSM frames: _expectation_cross_spectral_matrix 84.5% of the profiled call (_complex_inner_product 50.6%, fcn sign(Im) 22.2%, taper mean (np.mean) 10.6%)'
+    output_risk: unverified-bit-identical
+    risk_evidence: 'audit/profiles/micro/opp_spectral_csm-1.json: plv sliced bit-identical at 32x1024, 118x1024 and the 7x100 golden set; this measure applies another elementwise fcn to the same sliced per-taper products (pure re-ordering of which bins are computed)'
+    effort: M
+    depends_on: []
+  - opportunity_id: spectral_phase_sync-1
+    opportunity: 'Evaluate the per-taper CSM once per call and once per measure group: plv/ppc share the x/|x| taper average (connectivity.py:512-516, 673-696), pli/dspli the sign(Im) average (:543-575, 604-625), wpli/dswpli the Im, |Im| and Im^2 averages (:578-601, 628-670); today dswpli builds the 1.14 GB per-taper CSM three times and wpli twice.'
+    opp_type: cache-sharing
+    expected_speedup: 1-6x
+    speedup_basis: 'profile:audit/profiles/micro/prof_spectral.dspli__118x1024.pstats _expectation_cross_spectral_matrix 84.5% + complexity: shares the sign(Im) taper average with pli.
+      Ranked after spectral_csm-1 (depends_on), as on spectral.wpli and spectral.dswpli: that avenue halves the taper-level frames (84.5% of the profiled call) but not the rest
+      of the call, so the build this avenue saves the second pli/dspli consumer is a smaller share of its residual than of today''s cost and the two factors do not multiply.
+      On the ranking basis (3.670 s per window at 118x1024, family-warm: the 3.596 s build plus 5 band reads) the ceiling falls from 3.670/(3.670 - 0.845 x 3.596) = 5.8x today to
+      (3.670 - 0.845 x 3.596/2)/(3.670 - 0.845 x 3.596) = 3.4x on the residual, so residual_speedup is 1-3.4x; its lower bound stays 1x, the case where this unit pays the shared build'
+    output_risk: unverified-bit-identical
+    risk_evidence: the same per-taper CSM values feed each fcn; only repeated evaluations are removed
+    effort: S
+    depends_on:
+    - spectral_csm-1
+    residual_speedup: 1-3.4x

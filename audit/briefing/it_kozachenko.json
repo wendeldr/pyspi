@@ -1,0 +1,308 @@
+{
+ "family": "it_kozachenko",
+ "gitbook_pages": [
+  "/media/dan/Data/git/pyspiDocumentation/information-about-pyspi/spis/spi-descriptions/information-theory.md"
+ ],
+ "hypotheses": [
+  "KL estimator with max-norm, NORMALISE=true and 1e-8 noise (NOISE_SEED=42); output in nats",
+  "same composed quantities as the gaussian family (je/ce/cce/xme/di/si)"
+ ],
+ "known_issues_file": "/media/dan/Data/git/pyspi/audit/briefing/KNOWN_ISSUES.md",
+ "pyspi_files": [
+  "pyspi/statistics/infotheory.py"
+ ],
+ "supplement_sections": [
+  {
+   "lines": [
+    414,
+    453
+   ],
+   "section": "1.4",
+   "title": "Information theory (37 SPIs)"
+  },
+  {
+   "lines": [
+    454,
+    460
+   ],
+   "section": "1.4.1",
+   "title": "Joint entropy (je)"
+  },
+  {
+   "lines": [
+    461,
+    468
+   ],
+   "section": "1.4.2",
+   "title": "Conditional entropy (ce)"
+  },
+  {
+   "lines": [
+    469,
+    476
+   ],
+   "section": "1.4.3",
+   "title": "Mutual information (mi)"
+  },
+  {
+   "lines": [
+    477,
+    485
+   ],
+   "section": "1.4.4",
+   "title": "Time-lagged mutual information (tlmi)"
+  },
+  {
+   "lines": [
+    524,
+    536
+   ],
+   "section": "1.4.7",
+   "title": "Causally conditioned entropy (cce)"
+  },
+  {
+   "lines": [
+    537,
+    550
+   ],
+   "section": "1.4.8",
+   "title": "Directed information (di)"
+  },
+  {
+   "lines": [
+    551,
+    561
+   ],
+   "section": "1.4.9",
+   "title": "Stochastic interaction (si)"
+  }
+ ],
+ "supplement_txt": "/media/dan/Data/git/pyspiDocumentation/supplement/supplement.txt",
+ "third_party": [
+  "JIDT: infodynamics/measures/continuous/kozachenko/EntropyCalculatorMultiVariateKozachenko.java"
+ ],
+ "units": [
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kozachenko"
+   },
+   "identifier_params": {
+    "je_kozachenko": {
+     "estimator": "kozachenko"
+    }
+   },
+   "identifiers": [
+    "je_kozachenko"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "infotheory",
+    "linear",
+    "undirected",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kozachenko",
+   "module": "infotheory",
+   "pair_basis": "unordered",
+   "pyspi_class": "JointEntropy",
+   "representative": "je_kozachenko",
+   "source": "config",
+   "unit_id": "infotheory.je.kozachenko"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kozachenko"
+   },
+   "identifier_params": {
+    "ce_kozachenko": {
+     "estimator": "kozachenko"
+    }
+   },
+   "identifiers": [
+    "ce_kozachenko"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "unordered",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kozachenko",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "ConditionalEntropy",
+   "representative": "ce_kozachenko",
+   "source": "config",
+   "unit_id": "infotheory.ce.kozachenko"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kozachenko"
+   },
+   "identifier_params": {
+    "cce_kozachenko": {
+     "estimator": "kozachenko"
+    }
+   },
+   "identifiers": [
+    "cce_kozachenko"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kozachenko",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "CausalEntropy",
+   "representative": "cce_kozachenko",
+   "source": "config",
+   "unit_id": "infotheory.cce.kozachenko"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kozachenko",
+    "history_length": 1
+   },
+   "identifier_params": {
+    "xme_kozachenko_k1": {
+     "estimator": "kozachenko",
+     "history_length": 1
+    }
+   },
+   "identifiers": [
+    "xme_kozachenko_k1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kozachenko",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "CrossmapEntropy",
+   "representative": "xme_kozachenko_k1",
+   "source": "config",
+   "unit_id": "infotheory.xme.kozachenko_k1"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kozachenko",
+    "history_length": 10
+   },
+   "identifier_params": {
+    "xme_kozachenko_k10": {
+     "estimator": "kozachenko",
+     "history_length": 10
+    }
+   },
+   "identifiers": [
+    "xme_kozachenko_k10"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kozachenko",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "CrossmapEntropy",
+   "representative": "xme_kozachenko_k10",
+   "source": "config",
+   "unit_id": "infotheory.xme.kozachenko_k10"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kozachenko"
+   },
+   "identifier_params": {
+    "di_kozachenko": {
+     "estimator": "kozachenko"
+    }
+   },
+   "identifiers": [
+    "di_kozachenko"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "directed",
+    "infotheory",
+    "linear",
+    "temporal",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kozachenko",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "DirectedInfo",
+   "representative": "di_kozachenko",
+   "source": "config",
+   "unit_id": "infotheory.di.kozachenko"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {
+    "estimator": "kozachenko"
+   },
+   "identifier_params": {
+    "si_kozachenko_k-1": {
+     "estimator": "kozachenko"
+    }
+   },
+   "identifiers": [
+    "si_kozachenko_k-1"
+   ],
+   "in_eeg_selection": false,
+   "labels": [
+    "infotheory",
+    "linear",
+    "temporal",
+    "undirected",
+    "unsigned"
+   ],
+   "method_or_estimator": "JIDT kozachenko",
+   "module": "infotheory",
+   "pair_basis": "ordered",
+   "pyspi_class": "StochasticInteraction",
+   "representative": "si_kozachenko_k-1",
+   "source": "config",
+   "unit_id": "infotheory.si.kozachenko"
+  },
+  {
+   "eeg_identifiers": [],
+   "hyperparameters": {},
+   "identifier_params": {},
+   "identifiers": [],
+   "in_eeg_selection": false,
+   "labels": [],
+   "method_or_estimator": "JIDT Kozachenko-Leonenko entropy (nats, 1e-8 noise, NORMALISE=true)",
+   "module": "infotheory",
+   "pair_basis": "n/a",
+   "pyspi_class": "JIDTBase",
+   "representative": null,
+   "source": "infrastructure",
+   "unit_id": "infotheory.est.kozachenko"
+  }
+ ]
+}

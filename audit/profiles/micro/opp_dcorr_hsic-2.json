@@ -1,0 +1,75 @@
+{
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "golden_7x100": {
+  "dcorr": {
+   "bit_identical": false,
+   "max_abs_diff": 6.217248937900877e-15,
+   "max_rel_diff": 1.5025858309094763e-13,
+   "n_entries": 49,
+   "nan_mask_equal": true
+  },
+  "dcorr_biased": {
+   "bit_identical": false,
+   "max_abs_diff": 4.3298697960381105e-15,
+   "max_rel_diff": 1.4562373755044927e-14,
+   "n_entries": 49,
+   "nan_mask_equal": true
+  }
+ },
+ "notes": "Baseline = seeded pyspi call. Candidate = hyppo Dcorr with is_fast=True (hyppo dcorr.py:_fast_1d_dcov), same bias flag, every ordered pair, mirrored. Agreement with the baseline says only that the candidate reproduces current output within the quoted differences. 32x1024 not run (baseline 66 s). The baseline is O(T^2) per pair and the candidate O(T log T), so the ratio grows roughly as T / log T.",
+ "opportunity_id": "dcorr_hsic-2",
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_dcorr_hsic-2.py",
+ "shapes": {
+  "dcorr_biased|7x100": {
+   "baseline_s": 0.023496384994359687,
+   "bit_identical": false,
+   "candidate_s": 0.01238275300420355,
+   "max_abs_diff": 4.3298697960381105e-15,
+   "max_rel_diff": 1.4562373755044927e-14,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 1.8975089777195275
+  },
+  "dcorr_biased|8x1024": {
+   "baseline_s": 4.148323414992774,
+   "bit_identical": false,
+   "candidate_s": 0.22805273300036788,
+   "max_abs_diff": 8.890804759076332e-14,
+   "max_rel_diff": 1.6172769150159746e-12,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 18.19019382234758
+  },
+  "dcorr|7x100": {
+   "baseline_s": 0.02380165600334294,
+   "bit_identical": false,
+   "candidate_s": 0.012323389004450291,
+   "max_abs_diff": 6.217248937900877e-15,
+   "max_rel_diff": 1.5025858309094763e-13,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 1.9314212993477324
+  },
+  "dcorr|8x1024": {
+   "baseline_s": 3.8858947700064164,
+   "bit_identical": false,
+   "candidate_s": 0.2301055069983704,
+   "max_abs_diff": 9.631218619941123e-15,
+   "max_rel_diff": 2.1432154010922194e-10,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 16.887447939409533
+  }
+ },
+ "threads": {
+  "NUMBA_NUM_THREADS": "1",
+  "OMP_NUM_THREADS": "1"
+ },
+ "written_at": "2026-10-15T09:50:56-0400"
+}

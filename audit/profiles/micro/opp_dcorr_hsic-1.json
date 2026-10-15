@@ -1,0 +1,115 @@
+{
+ "env": {
+  "cpu_count": 64,
+  "numpy": "2.5.4",
+  "omp_num_threads": "1",
+  "python": "3.12.3"
+ },
+ "golden_7x100": {
+  "dcorr": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 49,
+   "nan_mask_equal": true
+  },
+  "dcorr_biased": {
+   "bit_identical": true,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 49,
+   "nan_mask_equal": true
+  }
+ },
+ "notes": "Baseline = seeded pyspi call (both ordered pairs, mirrored). Candidate = per-channel cache of hyppo distance, _center_distmat and self _dcov; per pair only _dcov(A_i, A_j). 'upper_only' adds the cross-cutting upper-triangle avenue. Agreement with the baseline says only that the candidate reproduces current output. 32x1024 not run (baseline 66 s); per-pair cost of both is O(T^2), so the ratio is expected to be roughly independent of P and T apart from the (P-1)-fold cache reuse.",
+ "opportunity_id": "dcorr_hsic-1",
+ "schema": 1,
+ "script": "audit/profiles/micro/opp_dcorr_hsic-1.py",
+ "shapes": {
+  "dcorr_biased|7x100": {
+   "baseline_s": 0.023536364999017678,
+   "bit_identical": true,
+   "candidate_s": 0.003310770000098273,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 7.109030527133885,
+   "upper_only": {
+    "baseline_s": 0.023536364999017678,
+    "bit_identical": true,
+    "candidate_s": 0.003160114007187076,
+    "max_abs_diff": 0.0,
+    "max_rel_diff": 0.0,
+    "n_entries": 49,
+    "nan_mask_equal": true,
+    "speedup": 7.447948063104278
+   }
+  },
+  "dcorr_biased|8x1024": {
+   "baseline_s": 4.275401234001038,
+   "bit_identical": true,
+   "candidate_s": 0.3869323779945262,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 11.04947912645739,
+   "upper_only": {
+    "baseline_s": 4.275401234001038,
+    "bit_identical": true,
+    "candidate_s": 0.32994348800275475,
+    "max_abs_diff": 0.0,
+    "max_rel_diff": 0.0,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 12.957980349548047
+   }
+  },
+  "dcorr|7x100": {
+   "baseline_s": 0.024538576995837502,
+   "bit_identical": true,
+   "candidate_s": 0.0033795710041886196,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 49,
+   "nan_mask_equal": true,
+   "speedup": 7.260855583570974,
+   "upper_only": {
+    "baseline_s": 0.024538576995837502,
+    "bit_identical": true,
+    "candidate_s": 0.003134134996798821,
+    "max_abs_diff": 0.0,
+    "max_rel_diff": 0.0,
+    "n_entries": 49,
+    "nan_mask_equal": true,
+    "speedup": 7.829457576301276
+   }
+  },
+  "dcorr|8x1024": {
+   "baseline_s": 4.093590748991119,
+   "bit_identical": true,
+   "candidate_s": 0.39380334300221875,
+   "max_abs_diff": 0.0,
+   "max_rel_diff": 0.0,
+   "n_entries": 64,
+   "nan_mask_equal": true,
+   "speedup": 10.395012692840586,
+   "upper_only": {
+    "baseline_s": 4.093590748991119,
+    "bit_identical": true,
+    "candidate_s": 0.3519975339877419,
+    "max_abs_diff": 0.0,
+    "max_rel_diff": 0.0,
+    "n_entries": 64,
+    "nan_mask_equal": true,
+    "speedup": 11.62960064695702
+   }
+  }
+ },
+ "threads": {
+  "NUMBA_NUM_THREADS": "1",
+  "OMP_NUM_THREADS": "1"
+ },
+ "written_at": "2026-10-15T09:49:49-0400"
+}

@@ -1,0 +1,235 @@
+unit_id: infotheory.xme.kernel_k10
+status: profiled
+correctness:
+  metric_name_standard: Conditional entropy of the target's present given the source's recent past, H(Y_t | X_{t-1}, ..., X_{t-9}) ('cross-map entropy', history_length=10), box-kernel plug-in, bits
+  canonical_ref: No canonical 'cross-map entropy' found; quantity is h(Y_t | X_{t-1..t-m}) (Cover & Thomas 2006 Ch. 8); name evokes Sugihara et al. 2012 Science 338:496 (CCM), not what is computed.
+  canonical_definition: h(Y_t | X^{(m)}_{t-1}) = h(X^{(m)}_{t-1}, Y_t) - h(X^{(m)}_{t-1}) with m = history_length (intended 10)
+  documented_definition: Not described in the supplement or GitBook information-theory.md; GitBook table-of-spis.md:73 lists xme_kernel_k10 under 'Cross-Map Entropy'; config.yaml:463-464 history_length
+    10.
+  delegate_lib: 'JIDT jar pyspi/lib/jidt/infodynamics.jar (labelled 1.6.1 by pyspi/lib/jidt/version-1.6.1.txt; contents match post-1.6.1 master a9b6b3e, see infotheory.est.kernel): EntropyCalculatorMultiVariateKernel
+    (10-D joint, 9-D source past)'
+  implemented_as: 'Code (infotheory.py:405-426): src, targ = z_i, z_j; k = history_length; targ_future = targ[k:]; src_past starts with src[k-1:-1] (x_{t-1}) and the loop ''for i in range(2, k)'' appends
+    x_{t-i}; joint = [src_past, targ_future]; value = H_kernel(joint) - H_kernel(src_past) with the W-0.5 kernel entropy (half-width 0.5*sampleSD of each sub-series column, closed box, self-included). The
+    loop gives max(1, k-1) source lags, not k. For k=10: 9 source lags x_{t-1}..x_{t-9} (columns from src[9:-1], src[8:-2], ..., src[1:-9]) and target y_t for t = 10..T-1 (T-10 samples); joint is 10-D,
+    past 9-D. With half-width 0.5 SD per dimension the 9/10-D boxes contain almost only the query point for T <= 4096, so both entropies are ~ log2(T-10) + log2(volume) and the difference is ~0.'
+  implementation_trace:
+  - pyspi/calculator.py:48-51 Calculator `__init__` defaults detrend=False, normalise=True
+  - pyspi/calculator.py:277 Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend)
+  - 'pyspi/data.py:193-195 scipy.stats.zscore(data, axis=1, nan_policy=''omit'', ddof=1) (each series: mean 0, sample SD 1)'
+  - pyspi/calculator.py:329 S = self._spis[spi].multivariate(self.dataset); :332 np.fill_diagonal(S, np.nan)
+  - 'pyspi/base.py:85-94 Directed.multivariate: A[i,j] = self.bivariate(data, i=i, j=j) for every i != j'
+  - pyspi/base.py:27-47 parse_bivariate (Data objects pass through; raw arrays are wrapped by Data()/add_process)
+  - 'pyspi/statistics/infotheory.py:28-58 JIDTBase.__init__: estimator=''kernel'' -> identifier += ''_W-{kernel_width}'', labels += [''nonlinear'']; JIDTBase default kernel_width=0.5; _entropy_calc built
+    at :36'
+  - 'pyspi/statistics/infotheory.py:84-93 _setup: calc.setProperty(''KERNEL_WIDTH'', str(kernel_width)); also BIAS_CORRECTION=''false'' and NOISE_SEED=''42''. BIAS_CORRECTION is not a property of any kernel
+    class and is ignored; NOISE_SEED is stored by EntropyCalculatorMultiVariateKernel and MutualInfoCalculatorMultiVariateKernel but has no numerical effect because NOISE_LEVEL_TO_ADD stays 0, and TransferEntropyCalculatorKernel
+    ignores it (see infotheory.est.kernel)'
+  - 'pyspi/statistics/infotheory.py:60-82 JIDTBase.__getstate__/__setstate__/__deepcopy__ (copy path; not used by Calculator.compute): pickling drops _entropy_calc and _calc (:60-69) and __setstate__ (:71-75)
+    rebuilds _entropy_calc with _getcalc, which re-applies _setup (probe it_kernel_fix/p4_pickle.py: KERNEL_WIDTH 0.5 kept after a pickle round trip); __deepcopy__ (:77-82) builds type(self)() and then
+    deep-copies every attribute, and copy.deepcopy of the JPype proxy returns a new Java object of the same class in its default state without _setup (probe it_kernel_fix/p1_frame_all.py: KERNEL_WIDTH 0.25,
+    NOISE_SEED ''NONE''); pyspi/calculator.py:556-562 CalculatorFrame.init_from_list deep-copies the base Calculator for every dataset (copy.deepcopy at :559)'
+  - pyspi/statistics/infotheory.py:103-106,134 _getcalc('entropy') -> infodynamics.measures.continuous.kernel.EntropyCalculatorMultiVariateKernel (then _setup)
+  - pyspi/config.yaml:463-464 CrossmapEntropy estimator kernel, history_length 10
+  - pyspi/statistics/infotheory.py:394-403 CrossmapEntropy.__init__ identifier '_k10'
+  - 'pyspi/statistics/infotheory.py:405-426 bivariate: targ_future = targ[10:]; src_past = src[9:-1]; for i in range(2, 10): append src[10-i:-i] -> lags 1..9; H(joint 10-D) - H(src_past 9-D)'
+  - 'JIDT master commit a9b6b3e (2024-04-20; the build shipped in pyspi/lib/jidt/infodynamics.jar, see infotheory.est.kernel delegate_lib) java/source/infodynamics/measures/continuous/kernel/EntropyCalculatorMultiVariateKernel.java
+    (rewritten after the v1.6.1 tag): extends EntropyCalculatorMultiVariateCommon (L47-48); default kernelWidth 0.25 (DEFAULT_EPSILON L57, field L61); setProperty L195-220 sets kernelWidth for KERNEL_WIDTH/EPSILON
+    and passes every other name to EntropyCalculatorMultiVariateCommon.setProperty; initialise(int) L81-83 -> initialise(int, double) L96-100 (Common.initialise L107-113 resets isComputed, then mvke.initialise);
+    setObservations is inherited (Common L215-219 / L229-233: startAddObservations, addObservations, finaliseAddObservations) and the override finaliseAddObservations L102-106 hands the stored observations
+    to mvke.setObservations; computeAverageLocalOfObservations L108-125 = -(1/N) sum_b ln p(x_b) / ln 2 (bits), returned from the isComputed memo on repeat calls'
+  - 'JIDT master a9b6b3e java/source/infodynamics/measures/continuous/EntropyCalculatorMultiVariateCommon.java (the file does not exist at the v1.6.1 tag): setProperty L115-148 stores NORMALISE (L122-123),
+    NOISE_LEVEL_TO_ADD (L124-132) and NOISE_SEED (L133-139) and ignores any other name such as BIAS_CORRECTION (L140-142); defaults addNoise = false, noiseLevel = 0 (L70-74); finaliseAddObservations L178-212
+    adds Gaussian noise from a Random seeded with noiseSeed only when addNoise is true (L200-211), so pyspi''s NOISE_SEED=''42'' is stored but changes nothing while NOISE_LEVEL_TO_ADD stays at its default
+    0'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/measures/continuous/kernel/KernelEstimatorMultiVariate.java (byte-identical to master a9b6b3e, the shipped
+    build; line numbers valid for both): setObservations L189-242 kernelWidthsInUse[d] = width * MatrixUtils.stdDev(data, d) (normalise=true by default, L72), kernelVolumeInUse = prod_d 2*kernelWidthsInUse[d]
+    (L215-219); getProbability L388-394 -> getProbabilityFromBins L732-738 or getProbabilityComparingToAll L811-817 = count / N / kernelVolume; getCountFromBins L589-719 counts the query''s own bin (self
+    included) plus +-1 neighbour bins; stepKernel L959-967 returns 0 only when |dx_d| > w_d in some dimension (closed max-norm box)'
+  - 'JIDT v1.6.1 tag https://raw.githubusercontent.com/jlizier/jidt/v1.6.1/java/source/infodynamics/utils/MatrixUtils.java (byte-identical to master a9b6b3e, the shipped build; line numbers valid for both):
+    stdDev(double[][], int) L2384-2393 -> stdDev(double[][], int, double) L2436-2447 divides by (n-1) (sample SD)'
+  deviation_from_documented: No definition documented; identifier in table-of-spis.md lacks W-0.5. 'k10' suggests 10 lags but 9 are used.
+  deviation_from_canonical: '(1) Off-by-one: 9 source lags instead of 10 (range(2, k) should run to k inclusive), and the first usable sample is discarded. (2) Estimator degeneracy: the 0.5-SD box in 9-10
+    dimensions is empty except for the query point for nearly all samples, so the plug-in collapses to ~0 independent of coupling. (3) Name as in xme k1.'
+  units_and_range: bits; observed in [-0.003, 0.033] on iid data T=256..4096 and 0.006-0.024 on coupled data; can be slightly negative (sub-series SD != 1); asymmetric; finite.
+  direction_convention: 'A[i,j] = h_hat(X_j,t | X_i,t-1..t-9); low = predictable from i''s past. In practice no usable direction: probe delayed_noise T=1024 A[0,1] = 0.0058, A[1,0] = 0.0117; var2_bivariate
+    T=1024 A[0,1] = 0.0238, A[1,0] = 0.0094 (the coupled direction is the LARGER value here).'
+  symmetry_expected: asym
+  already_documented: 'no'
+  new_finding_candidates:
+  - 'Candidate (off-by-one): history_length=10 builds 9 source lags. Evidence: infotheory.py:410-414 (''src_past = src[k-1:-1]'' then ''for i in range(2, k)''); numpy reference with lags 1..9 on T-10 samples
+    matched pyspi to 2.3e-14 (var2_bivariate T=256: 0.0282161171753117).'
+  - 'Candidate (degenerate estimator): at W-0.5 the 10-D joint and 9-D past box counts are 1 (self only) for 100% of points at T=256, 99.6%/98.3% at T=1024 and 98.7%/95.5% at T=4096 (probe on independent
+    Gaussian pairs), so xme_kernel_W-0.5_k10 ~ 0 regardless of dependence (iid: -0.0025, 0.0168, 0.0332 at T=256, 1024, 4096; delayed_noise coupled pair 0.0058).'
+  - 'Candidate (undocumented SPI / identifier mismatch): see infotheory.xme.kernel_k1.'
+  - 'Candidate (copy path, confirmed by probe): a CalculatorFrame computes xme_kernel_W-0.5_k10 with kernel width 0.25 while the identifier still reads W-0.5. JIDTBase.__deepcopy__ (infotheory.py:77-82)
+    copies _entropy_calc with copy.deepcopy, which yields an EntropyCalculatorMultiVariateKernel in its default state (JIDT default KERNEL_WIDTH 0.25) without re-running _setup, and CalculatorFrame.init_from_list
+    deep-copies the base Calculator (calculator.py:556-562). Probe it_kernel_fix/p1_frame_all.py, A[0,1]: bivariate_gaussian T=256 Calculator 0.0037640804 vs CalculatorFrame -0.9962359196; var2_bivariate
+    T=256 Calculator 0.0282161172 vs CalculatorFrame -0.9799139641; the frame values are negative because the W-0.25 box volume is below 1. A pickle round trip keeps width 0.5 (__setstate__ re-applies _setup).
+    Not in the already-documented list; the kraskov TE records describe the same copy mechanism for TE embedding settings.'
+  proposed_checks:
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - var2_bivariate
+    - logistic_maps
+    path: pipeline
+    reference: 'from-scratch numpy box-kernel resubstitution entropy: per column w_d = 0.5*std(col, ddof=1); C_b = #{t : max_d |X_td - X_bd|/w_d <= 1} (self included); H = -mean(log2(C_b / (N * prod_d 2
+      w_d))); past = [z_i[10-l : T-l] for l = 1..9], value = H([past, z_j[10:]]) - H(past)'
+    reference_kind: independent-impl
+    criterion: tolerance
+    expected_outcome: Agreement to abs <= 1e-12 with 9 lags; a 10-lag variant differs (quantifies the off-by-one).
+  - datasets:
+    - iid_gaussian
+    - delayed_noise
+    - var2_bivariate
+    path: pipeline
+    reference: 'count diagnostics from the numpy reference: fraction of points with C = 1 in the joint and past spaces'
+    reference_kind: independent-impl
+    criterion: qualitative
+    expected_outcome: Fraction with C = 1 above 0.9 for all T <= 4096; |value| < 0.05 bits for every pair and dataset (degenerate).
+  - datasets:
+    - delayed_noise
+    - var2_bivariate
+    path: pipeline
+    reference: ground-truth coupling direction (x0 -> x1)
+    reference_kind: analytic
+    criterion: direction
+    expected_outcome: 'Direction convention A[i,j] = H(X_j,t | X_i past): expected sign A[0,1] < A[1,0] for a working estimator; anticipated outcome is no reliable ordering (probe var2_bivariate shows the
+      reverse ordering).'
+  - datasets:
+    - iid_gaussian
+    path: pipeline
+    reference: analytic truth h(N(0,1)) = 2.047 bits for independent pairs
+    reference_kind: analytic
+    criterion: statistical
+    expected_outcome: Values near 0, i.e. about 2 bits below the truth at every T (documents degeneracy).
+  - datasets:
+    - bivariate_gaussian
+    - var2_bivariate
+    path: pipeline
+    reference: CalculatorFrame (deepcopy, calculator.py:559) vs Calculator on the same data and config, plus a direct call of the same SPI class with kernel_width=0.25 and getProperty('KERNEL_WIDTH') on
+      the copied _entropy_calc
+    reference_kind: same-lineage
+    criterion: exact
+    expected_outcome: 'Differs: the CalculatorFrame value equals the W-0.25 value and the copied calculator reads KERNEL_WIDTH 0.25 (probe A[0,1] bivariate_gaussian 0.0037640804 vs -0.9962359196); documents
+      the copy bug'
+  check_method: independent-impl
+  check_reference: audit/checks/refs/it_kernel.py:chk_numpy -> audit/checks/refs/_kernels_infotheory.py:xme_embedding(k=10, source lags 1..9) + entropy_box_kernel (0.5, bits), ten-lag variant as extra;
+    audit/checks/refs/it_kernel.py:chk_degenerate (fraction of points whose box count is 1); audit/checks/refs/it_kernel.py:chk_direction; audit/checks/refs/it_kernel.py:chk_truth_iid (Monte Carlo; h(N(0,1)));
+    audit/checks/refs/it_kernel.py:chk_frame
+  check_data: iid_gaussian T256/T1024 and pair (0,1) at T256/T1024; delayed_noise, var2_bivariate, logistic_maps, logistic_maps_chaotic T1024; scaled_offset T1024 (kernel); bivariate_gaussian T256 (frame)
+  agreement_criterion: 'exact: rtol 1e-10, atol 1e-12 (bits); statistical: |pyspi - Monte Carlo mean of the same box estimator under the generating model| <= 2 Monte Carlo SD, population values reported
+    as convergence information only; qualitative: stated rule'
+  closeness: 'Numpy with lags 1..9: 7/7 exact runs pass, max_abs <= 1.2e-12 (kernel path; pipeline <= 3.8e-13); the intended ten-lag variant differs by 6.2e-15 (ref_ten_lag_variant_maxabs_diff, iid T256: every count is 1, so 9 and 10 lags
+    give the same value to fp precision), 0.0079-0.0146 (Gaussian data T1024) and 0.060-0.073 (logistic maps). Saturation: fraction of points alone in their 10-D joint box >= 0.990 (delayed_noise), 0.995 (var2_bivariate),
+    0.998 (iid T1024); |values| <= 0.024 bits on every stochastic dataset vs truth 2.047 (iid Monte Carlo mean 0.0025 / 0.0068 at T = 256 / 1024). Direction: delayed_noise 0.0058 < 0.0117 (pass, at noise
+    level), var2_bivariate 0.0238 > 0.0094 (FAIL: reversed), logistic_maps_chaotic 0.977 < 1.777 (pass: low-dimensional deterministic data is not saturated). Statistical: iid T256 fails at max_z 2.05 (family
+    calibration 8/130 beyond 2 SD vs 5.92 expected, ref_calib_* on infotheory.est.kernel|iid_gaussian|1024|pipeline|entropy-1d-truth), T1024 passes. CalculatorFrame -0.996236 = numpy width 0.25 vs Calculator 0.003764.'
+  verdict: related-quantity
+  score_0_10: 4
+  score_rubric: 4
+  score_rubric_basis: anchor
+  score_rubric_note: 'Anchor 4: 9 source lags are used instead of the 10 the identifier names (numpy with lags 1..9 gives 7/7, max_abs <= 1.2e-12). The record counts
+    the near-zero values from box saturation (>= 99% of points alone in their box) as convergence evidence, not as part of the formula score.'
+  documentation_status: silent
+  verdict_adjusted: related-quantity
+  score_adjusted: 4
+  score_adjustment_rules: ''
+  score_adjustment_reason: ''
+  identifier_exceptions: ''
+  what_changed: 'No documented definition; computes H(x_j(t) | x_i(t-1..t-9)) (box kernel, bits): history_length=10 builds 9 source lags (range(2, k)) instead of the 10 lags the identifier names (anchor
+    4, related but different quantity: the hyperparameter is applied off by one, not ignored, so anchor 3 does not apply; as infotheory.xme.gaussian_k10 and infotheory.xme.kozachenko_k10; moved 3 -> 4 in Workflow 4b, the 3 had matched a temporary kozachenko_k10 value that was later restored to 4). At W-0.5 the 10-D joint and 9-D past boxes contain only the query point for >= 99% of samples at T <= 1024, so on stochastic data the value is ~0 (|v| <= 0.024 bits
+    vs a 2.05-bit truth) whatever the coupling, and the var2_bivariate ordering is reversed; this saturation is finite-sample behaviour of the configured estimator and is reported as convergence evidence,
+    not as the formula score. CalculatorFrame path: width 0.25 (copy path).'
+  new_finding: true
+  definition_under_review: false
+  check_cost: 'cheap: pyspi <= 5.5 s per SPI run and <= 12 s for the CalculatorFrame probe (P <= 5, T <= 1024); numpy references O(T^2) all-pairs counting, T <= 1024 (the box estimator is O(T^2) on both
+    sides; no T = 4096 runs)'
+  symmetry_observed: 'asym but tiny on stochastic data: max|A - A.T| = 0.029 (iid T256), 0.012 (iid T1024), 0.020 (delayed_noise), 0.014 (var2_bivariate); 0.68 / 0.80 on logistic_maps / logistic_maps_chaotic'
+  direction_observed: 'A[i,j] = H(x_j(t) | x_i(t-1..t-9)): row lagged source, column target. No usable direction on stochastic data: delayed_noise A[0,1] = 0.0058 vs A[1,0] = 0.0117, var2_bivariate 0.0238
+    vs 0.0094 (reversed); on logistic_maps_chaotic 0.977 < 1.777 (x -> y recovered)'
+  candidate_resolutions:
+  - candidate: history_length=10 builds 9 source lags
+    outcome: confirmed
+    evidence: 'infotheory.xme.kernel_k10|*|numpy: lags 1..9 reproduce pyspi to <= 1.2e-12 on 7 runs; ten-lag variant differs by up to 0.073 bits (ref_ten_lag_variant_maxabs_diff)'
+  - candidate: 'degenerate at W-0.5: counts saturate, value ~0 regardless of dependence'
+    outcome: confirmed
+    evidence: 'infotheory.xme.kernel_k10|*|degenerate: count-1 fraction >= 0.990 in the joint box, |values| <= 0.024; |truth-iid: pyspi mean -0.0077 / 0.0048 vs truth 2.047; |var2_bivariate|1024|pipeline|direction
+      FAIL (0.0238 > 0.0094)'
+  - candidate: undocumented SPI / identifier mismatch
+    outcome: confirmed
+    evidence: see infotheory.xme.kernel_k1 (documentation reading, table-of-spis.md:73)
+  - candidate: CalculatorFrame computes xme_k10 at width 0.25 under the W-0.5 identifier
+    outcome: confirmed
+    evidence: 'infotheory.xme.kernel_k10|bivariate_gaussian|256|pipeline|frame: frame -0.996236 = numpy width 0.25 (6.2e-14) vs Calculator 0.003764'
+  checks_run:
+  - run_ids:
+    - infotheory.xme.kernel_k10|iid_gaussian|256|pipeline|numpy
+    - infotheory.xme.kernel_k10|iid_gaussian|1024|pipeline|numpy
+    - infotheory.xme.kernel_k10|delayed_noise|1024|pipeline|numpy
+    - infotheory.xme.kernel_k10|var2_bivariate|1024|pipeline|numpy
+    - infotheory.xme.kernel_k10|logistic_maps|1024|pipeline|numpy
+    - infotheory.xme.kernel_k10|logistic_maps_chaotic|1024|pipeline|numpy
+    - infotheory.xme.kernel_k10|scaled_offset|1024|kernel|numpy
+    reference: audit/checks/refs/it_kernel.py:chk_numpy
+    outcome: 7/7 pass (exact); max_abs <= 1.2e-12
+  - run_ids:
+    - infotheory.xme.kernel_k10|iid_gaussian|256|pipeline|truth-iid
+    - infotheory.xme.kernel_k10|iid_gaussian|1024|pipeline|truth-iid
+    reference: audit/checks/refs/it_kernel.py:chk_truth_iid
+    outcome: 1/2 pass (statistical); max_z 2.05, 1.1
+  - run_ids:
+    - infotheory.xme.kernel_k10|var2_bivariate|1024|pipeline|direction
+    - infotheory.xme.kernel_k10|delayed_noise|1024|pipeline|direction
+    - infotheory.xme.kernel_k10|logistic_maps_chaotic|1024|pipeline|direction
+    reference: audit/checks/refs/it_kernel.py:chk_direction
+    outcome: 2/3 pass (qualitative); var2_bivariate reversed (0.0238 > 0.0094), consistent with count saturation
+  - run_ids:
+    - infotheory.xme.kernel_k10|iid_gaussian|1024|pipeline|degenerate
+    - infotheory.xme.kernel_k10|delayed_noise|1024|pipeline|degenerate
+    - infotheory.xme.kernel_k10|var2_bivariate|1024|pipeline|degenerate
+    reference: audit/checks/refs/it_kernel.py:chk_degenerate
+    outcome: 3/3 pass (qualitative)
+  - run_ids:
+    - infotheory.xme.kernel_k10|bivariate_gaussian|256|pipeline|frame
+    reference: audit/checks/refs/it_kernel.py:chk_frame (audit/checks/probes/it_kernel_probes.py:frame)
+    outcome: 1/1 pass (exact); max_abs <= 6.2e-14; Calculator and pickle slices equal the configured-width numpy value; the CalculatorFrame slice equals the width-0.25 numpy value
+optimisation:
+  complexity_P_T: 'O(P^2 T^1.8 k): as xme_k1 with a 10-D joint and 9-D source embedding. Measured fresh T exponent 1.78; 251 s projected at 118 (extrapolated-pairs-from-8).'
+  hotspot_1: pyspi/statistics/infotheory.py:CrossmapEntropy.bivariate (third-party:jidt, self time) 100.0% cum / 99.4% self of the profiled SPI call at 8x1024
+  hotspot_2: 'none visible inside Java. opaque_share is a lower bound: JPype dispatches Java methods without cProfile entries, so the JIDT (Java) time is booked as self time of the calling pyspi frame'
+  hotspot_owner: third-party:jidt
+  opaque_share: 0.0014
+  profile_file: audit/profiles/infotheory.xme.kernel_k10__8x1024.pstats
+  opportunities:
+  - opportunity_id: it_kernel-1
+    opportunity: 'Cache the per-channel entropy terms that do not depend on the partner at Data level (like data.entropy): si''s H(x_t | x_{t-1}) per channel, xme''s H(source past) per source, di''s target
+      entropy-rate sum per target, so each JIDT box-kernel call runs P times instead of P(P-1) times.'
+    opp_type: cache-sharing
+    expected_speedup: ~1.9x
+    speedup_basis: 'profile:audit/profiles/infotheory.xme.kernel_k10__8x1024.pstats pyspi/statistics/infotheory.py:405 CrossmapEntropy.bivariate 100.0% + complexity: H(source past) (9-D) depends only on
+      the source: by dimension 9 of 19 parts of the work become P cached calls, ~1.9x.
+      Ranked on the residual after it_kernel-2 (depends_on) with residual_speedup 1-1.9x. The bitsets change the cost of every count, and their gain differs with the number of ANDed rows (10-50x for d
+      <= 3, 5-20x where up to ten lag windows are ANDed, audit/notes/it_kernel.md:743), so the share of the per-channel terms in that residual is not known and the lower bound credits no saving there;
+      this figure holds on today''s JIDT cost'
+    output_risk: unverified-bit-identical
+    risk_evidence: the same JIDT call on the same array, made once instead of once per pair; the box-kernel path adds no noise, and the Kozachenko path re-seeds its jitter with NOISE_SEED 42 at every setObservations,
+      so a cached call returns the same value
+    effort: S
+    depends_on:
+    - it_kernel-2
+    residual_speedup: 1-1.9x
+  - opportunity_id: it_kernel-2
+    opportunity: 'Replace JIDT''s box-kernel counting with per-(channel, width, lag window) neighbourhood bitsets: one T x T bit matrix marks |x(t) - x(s)| <= w_d (w_d = width x the column''s ddof=1 SD,
+      as KernelEstimatorMultiVariate sets it) and every joint count of je/ce/mi/tlmi/te/si/xme/cce/di is a popcount of ANDed rows, so the neighbourhood search is shared by all P-1 partners and all composed
+      terms.'
+    opp_type: algorithmic
+    expected_speedup: 5-20x
+    speedup_basis: 'profile:audit/profiles/infotheory.xme.kernel_k10__8x1024.pstats pyspi/statistics/infotheory.py:405 CrossmapEntropy.bivariate 100.0% (JIDT Java time booked as pyspi self time) + complexity:
+      one joint count over all t is T x T/64 = 16k word AND+popcount operations at T=1024 (~10-50 us) against the measured 18.2 ms per ordered pair (8x1024 fresh; T exponent 1.78); bitsets are built once
+      per channel and lag window (9 lag windows per source, ANDed per pair)'
+    output_risk: unverified-within-tolerance
+    risk_evidence: max-norm box counts are products of per-dimension indicators, so integer counts are exact if the closed-box test and the per-column widths match JIDT; the log-sum order changes. The check
+      stage's all-pairs numpy counts (audit/checks/refs/_kernels_infotheory.py:entropy_box_kernel / mi_box_kernel / te_box_kernel) reproduce JIDT to <= 2.6e-13 (infotheory.est.kernel closeness)
+    effort: L
+    depends_on: []
