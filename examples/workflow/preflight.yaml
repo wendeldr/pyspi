@@ -1,10 +1,20 @@
 # Replace the paths for your input recordings and intended output location.
 # Preflight reads headers only and does not create or write output_directory.
+# Use the same configuration with `python -m pyspi.workflow run` to calculate.
 version: 1
 edf_glob: /path/to/baseline_edfs/*.[Ee][Dd][Ff]
 metrics:
   preset: retained185
 sampling_rate_hz: 2048
+bandpass:
+  low_hz: 0.5
+  high_hz: 500
+reference: car  # Required: use none explicitly to retain the original reference.
+notch:
+  line_frequency_hz: 60
+  width_hz: 1
+  transition_hz: 1
+  enabled: true
 window:
   length_seconds: 0.5
   step_seconds: 0.5

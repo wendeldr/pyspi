@@ -76,9 +76,10 @@ def test_unselected_and_annotation_rates_do_not_force_resampling(edf, workflow):
     assert preflight(workflow(source, recordings=[{"path": str(source), "channels": [0]}])).ready
 
 
-def test_rate_inferred_only_if_all_selected_signals_agree(edf, workflow):
-    assert preflight(workflow(edf(), sampling_rate_hz=None)).sampling_rate_hz == 8
-    with pytest.raises(WorkflowError, match="configure sampling_rate_hz"):
+def test_rate_required_even_if_all_selected_signals_agree(edf, workflow):
+    with pytest.raises(WorkflowError, match="sampling_rate_hz"):
+        preflight(workflow(edf(), sampling_rate_hz=None))
+    with pytest.raises(WorkflowError, match="sampling_rate_hz"):
         preflight(workflow(edf(samples=(8, 16)), sampling_rate_hz=None))
 
 
@@ -86,7 +87,7 @@ def test_rates_checked_across_recordings(edf, workflow):
     a, b = edf(name="a.EDF"), edf(name="b.EDF", samples=(16, 16))
     path = workflow(a, recordings=[{"path": str(a)}, {"path": str(b)}])
     assert [r["status"] for r in preflight(path).recordings] == ["ready", "requires_resampling"]
-    with pytest.raises(WorkflowError, match="different native rates"):
+    with pytest.raises(WorkflowError, match="sampling_rate_hz"):
         preflight(workflow(a, recordings=[{"path": str(a)}, {"path": str(b)}], sampling_rate_hz=None))
 
 
@@ -119,6 +120,7 @@ def test_nonintegral_window_grid_rejected_even_before_resampling(edf, workflow, 
 def test_fractional_native_rate_and_sample_grid(edf, workflow):
     source = edf(samples=(1, 1), duration="2", records=3)
     report = preflight(workflow(source, sampling_rate_hz=.5,
+                               bandpass={"low_hz": .025, "high_hz": .1},
                                window={"length_seconds": 2, "step_seconds": 2}))
     assert report.sampling_rate_hz == Fraction(1, 2)
     assert list(report.recordings[0]["windows"].ranges()) == [(0, 1), (1, 2), (2, 3)]
@@ -132,7 +134,7 @@ def test_window_helper_rejects_invalid_sample_counts(length, step):
 
 @pytest.mark.parametrize("count", [1, 2000])
 def test_no_arbitrary_channel_count_bound(count, edf, workflow):
-    source = edf(labels=tuple(f"ch{i}" for i in range(count)), samples=(8,) * count)
+    source = edf(labels=tuple(f"EEG ch{i}" for i in range(count)), samples=(8,) * count)
     report = preflight(workflow(source))
     assert report.ready and len(report.recordings[0]["channels"]) == count
 

@@ -21,7 +21,7 @@ independent references, mutation checks, coverage, and remaining limitations.
 | `test_calc.py`, `test_utils.py`, `test_phi_native.py` | original tests, unchanged |
 | `test_SPIs.py` | original CML7 z-score benchmark (`legacy`, `slow`) |
 | `storage/` | storage-format suite, run separately (below) |
-| `workflow/` | strict workflow/metric configuration, EDF headers, channel identity/order, sampling checks, window plans, and terminal preflight; no signal Data or connectivity calculation |
+| `workflow/` | strict configuration/header-only preflight plus serial EEG preparation, bounded output, ordering, partial reads, interruption/retry/resume and terminal execution in `execution/` |
 
 ## Environment
 

@@ -4,8 +4,13 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from fractions import Fraction
 from pathlib import Path
+import warnings
 
 from ._config import WorkflowError, fields, text
+
+
+class SkippedChannelsWarning(UserWarning):
+    """Metadata-free selection skipped channels without the EEG-space token."""
 
 
 @dataclass(frozen=True)
@@ -21,12 +26,7 @@ class Signal:
 
     @property
     def default_eeg(self):
-        # EDF has no mandatory channel-type field. Honor explicit prefixes;
-        # untyped labels are assumed EEG, as in MNE's EDF type inference.
-        prefix = self.label.split(" ", 1)[0].upper()
-        other = {"ECG", "EKG", "EOG", "EMG", "BIO", "RESP", "STIM", "MISC",
-                 "TEMP", "SAO2", "CO2", "GSR"}
-        return not self.annotation and prefix not in other
+        return not self.annotation and "eeg " in self.label.lower()
 
 
 @dataclass(frozen=True)
@@ -95,6 +95,10 @@ def select_channels(header: Header, selection=None):
     selectors = selection
     if selectors is None:
         selectors = [signal.index for signal in header.signals if signal.default_eeg]
+        skipped = [s.label for s in header.signals if not s.annotation and not s.default_eeg]
+        if skipped:
+            warnings.warn(f"{header.path}: no channel metadata; skipped channels without 'EEG ': {skipped}",
+                          SkippedChannelsWarning, stacklevel=2)
     if not selectors:
         raise WorkflowError(f"{header.path}: no EEG channels selected")
     out, indices, names = [], set(), set()

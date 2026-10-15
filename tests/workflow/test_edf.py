@@ -78,7 +78,8 @@ def test_missing_input_and_short_header(tmp_path):
 def test_default_eeg_and_explicit_order_mapping(edf):
     path = edf(labels=("ECG ECG1", "SEEG A1", "B2", "EDF Annotations"), samples=(8, 8, 8, 16))
     header = read_header(path)
-    assert [(s.index, name) for s, name in select_channels(header)] == [(1, "SEEG A1"), (2, "B2")]
+    with pytest.warns(UserWarning, match="B2"):
+        assert [(s.index, name) for s, name in select_channels(header)] == [(1, "SEEG A1")]
     selected = select_channels(header, [{"index": 2, "name": "second"},
                                         {"label": "SEEG A1", "name": "first"}])
     assert [(s.index, s.label, name) for s, name in selected] == [(2, "B2", "second"), (1, "SEEG A1", "first")]
@@ -103,7 +104,7 @@ def test_duplicate_and_empty_labels_require_disambiguation(edf):
     with pytest.raises(WorkflowError, match="2 matches"):
         select_channels(header, ["A"])
     with pytest.raises(WorkflowError, match="duplicate"):
-        select_channels(header)
+        select_channels(header, [0, 1])
     with pytest.raises(WorkflowError, match="empty EDF"):
         select_channels(header, [2])
     assert [name for _, name in select_channels(header, [{"index": 1, "name": "A"},

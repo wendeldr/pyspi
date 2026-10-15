@@ -9,7 +9,7 @@ import yaml
 @pytest.fixture
 def edf(tmp_path):
     def write(labels=("EEG B2", "EEG A1"), samples=(8, 8), records=3,
-              duration="1", reserved="", name="source.EDF", declared_records=None):
+              duration="1", reserved="", name="source.EDF", declared_records=None, values=None):
         path = tmp_path / name
         count = len(labels)
 
@@ -23,13 +23,20 @@ def edf(tmp_path):
                  field(reserved, 44) + field(records if declared_records is None else declared_records, 8) +
                  field(duration, 8) + field(count, 4))
         signals = b"".join(field(label, 16) for label in labels)
-        for size, values in ((80, [""] * count), (8, ["uV"] * count),
+        for size, header_values in ((80, [""] * count), (8, ["uV"] * count),
                              (8, [-1] * count), (8, [1] * count),
                              (8, [-32768] * count), (8, [32767] * count),
                              (80, [""] * count), (8, samples), (32, [""] * count)):
-            signals += b"".join(field(value, size) for value in values)
+            signals += b"".join(field(value, size) for value in header_values)
         assert len(fixed) == 256 and len(signals) == count * 256
-        path.write_bytes(fixed + signals + bytes(records * 2 * sum(samples)))
+        if values is None:
+            payload = bytes(records * 2 * sum(samples))
+        else:
+            import numpy as np
+            assert all(len(v) == records * n for v, n in zip(values, samples))
+            payload = b"".join(np.asarray(v[r*n:(r+1)*n], dtype="<i2").tobytes()
+                               for r in range(records) for v, n in zip(values, samples))
+        path.write_bytes(fixed + signals + payload)
         return path
 
     return write
@@ -49,8 +56,8 @@ def metric_config(tmp_path):
 def workflow(tmp_path, metric_config):
     def write(path, *, config=None, **changes):
         cfg = {"version": 1, "recordings": [{"path": str(path)}],
-               "metrics": {"config": str(metric_config())},
-               "sampling_rate_hz": 8}
+               "metrics": changes["metrics"] if "metrics" in changes else {"config": str(metric_config())},
+               "sampling_rate_hz": 8, "bandpass": {"low_hz": .5, "high_hz": 3}, "reference": "none"}
         if config is not None:
             cfg = config
         cfg.update(changes)

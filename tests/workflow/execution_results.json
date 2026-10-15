@@ -1,0 +1,412 @@
+{
+  "schema": "pyspi-serial-workflow-verification/1",
+  "date_utc": "2026-10-15",
+  "base_commit": "a1f20c7",
+  "checks": {
+    "workflow": {
+      "scope": "Final checkout workflow tests",
+      "summary": "177 passed, 86 warnings in 21.77s",
+      "log_path": "/tmp/pyspi-workflow-tests-unsandboxed.txt",
+      "log_sha256": "ff0098c1f43aeb891ce0407300b2489faac7a5095f23d75c3f8410f4224d5a39"
+    },
+    "installed_wheel": {
+      "scope": "Final noneditable installed-wheel workflow tests outside checkout",
+      "summary": "177 passed, 86 warnings in 14.08s",
+      "log_path": "/tmp/pyspi-workflow-installed-tests.txt",
+      "log_sha256": "36efb59a9d95c690ee96debeecd838336fc729d6b495e3f595ae969d33ae0adf"
+    },
+    "full_size": {
+      "scope": "Full-size calculation/regression tier plus 174-case workflow checkpoint; final three ordering/recovery cases verified in the 177-case focused suites",
+      "summary": "924 passed, 10 xfailed, 357 warnings in 578.01s (0:09:38)",
+      "log_path": "/tmp/pyspi-workflow-full-suite.txt",
+      "log_sha256": "0808010d32b9507c4bddfbbe8eb03c5431c2dda976dcc19aef77d95f9966b0fb"
+    },
+    "storage": {
+      "scope": "Unchanged production storage and analysis suite",
+      "summary": "439 passed in 19.35s",
+      "log_path": "/tmp/pyspi-workflow-storage-suite.txt",
+      "log_sha256": "6444600744b597673f8bb1327b9622562ef1b493c121d0772b33405b7c84fcf6"
+    }
+  },
+  "coverage": {
+    "scope": "pyspi.workflow, focused suite; statement/branch coverage",
+    "totals": {
+      "covered_lines": 1150,
+      "num_statements": 1238,
+      "percent_covered": 90.71510957324107,
+      "percent_covered_display": "91",
+      "missing_lines": 88,
+      "excluded_lines": 0,
+      "percent_statements_covered": 92.89176090468497,
+      "percent_statements_covered_display": "93",
+      "num_branches": 496,
+      "num_partial_branches": 71,
+      "covered_branches": 423,
+      "missing_branches": 73,
+      "percent_branches_covered": 85.28225806451613,
+      "percent_branches_covered_display": "85"
+    }
+  },
+  "wheel": {
+    "path": "/tmp/pyspi-eeg-acceptance-wheel/pyspi-2.0.2-py3-none-any.whl",
+    "sha256": "e94bdc78b7ba98f4c868220eda8fe1b82a322b75168a68875ef3a75b94cf10f7",
+    "all_packaged_python_matches_checkout": true
+  },
+  "implementation_sha256": {
+    "pyspi/workflow/__init__.py": "203e5e36806916bc1f9d223f61603d7de7dd21f012d8c3f90beb9c42d41feb84",
+    "pyspi/workflow/__main__.py": "710a0394434c802a50a837e454162b6a22d7b90e7d70bb43046a9bfc63f7f961",
+    "pyspi/workflow/_config.py": "daee0302a537ce4932a0cc5b22eaf6560ed41159174c4b95bfd0b8348691b380",
+    "pyspi/workflow/_edf.py": "a1eda00669d50343c78262d7140fe9df2a8b2ed29dff09ff4042cdee3f750f71",
+    "pyspi/workflow/_metadata.py": "b6a8baba13bb4ba92b9b78cce3ae15e1f75ce55751eee85a678e3676be616bb6",
+    "pyspi/workflow/_metrics.py": "b14855a7b7fb09e3c8767c50a2ff888b91ae8d4036dfddf335fd07cab0e34bbb",
+    "pyspi/workflow/_output.py": "8140c26fba7219d16a8574c715d8f6198177c8045d807b52ac2013c8cf827f31",
+    "pyspi/workflow/_preflight.py": "cbc1599c779a7c08bb8bcb2a899ef09fb07d08b077584b8280dda02d3e10d0e9",
+    "pyspi/workflow/_prepare.py": "dbf29790fd9cb40499c333f6e75b40875449ed09267314481cce85780fdc289f",
+    "pyspi/workflow/_run.py": "9264f0b80a26931c341d9c6eed8293c379fa92d71cc318672fb6a38617bea274",
+    "pyspi/workflow/_windows.py": "e4cc59389544b8dd6e415671886d87dba68a3c305e5a9658cf14f6a8f3e13840"
+  },
+  "calculator_statistics_storage_dependencies_unchanged_from_base": true,
+  "real_data": {
+    "schema": "pyspi-real-workflow-validation/1",
+    "records": [
+      {
+        "patient_id": "004",
+        "exported_contacts": 40,
+        "calculated_contacts": 4,
+        "windows": 3,
+        "metrics": [
+          "cov_EmpiricalCovariance",
+          "prec_EmpiricalCovariance",
+          "spearmanr",
+          "cohmag_multitaper_mean_fs-1_fmin-0-01_fmax-0-4",
+          "pli_multitaper_mean_fs-1_fmin-0-01_fmax-0-4"
+        ],
+        "native_rate_groups": [
+          {
+            "native_sampling_rate_hz": 1024.0,
+            "notch_frequencies_hz": [
+              60.0,
+              120.0,
+              180.0,
+              240.0,
+              300.0,
+              360.0,
+              420.0,
+              480.0
+            ],
+            "channels": [
+              "B1",
+              "B2",
+              "B3",
+              "B4"
+            ],
+            "resampled": true
+          }
+        ],
+        "sampling_rate_hz": 2048,
+        "step_seconds": 0.5,
+        "wall_seconds_including_setup": 1.7540189300052589,
+        "session": {
+          "preparation_seconds": 0.6200496410019696,
+          "window_preprocessing_seconds": 0.0057654949996504,
+          "calculation_wall_seconds": 0.2610834250008338,
+          "metric_elapsed_seconds": 0.24631330302509014,
+          "output_seconds": 0.4133509260136634,
+          "elapsed_seconds": 1.3199534319937811,
+          "resume": false,
+          "retry_failures": false,
+          "status": "complete",
+          "invocation_setup_seconds": 0.42761075499583967
+        },
+        "batch_count": 3,
+        "output_files": 59,
+        "output_bytes": 53094,
+        "direct_calculator_bit_exact": true,
+        "resume_bit_exact": true,
+        "reference_uses_fresh_calculator_each_window": true,
+        "source_stats_unchanged": true,
+        "run": "/tmp/pyspi-eeg-acceptance-real/results/004/calculations/baseline"
+      },
+      {
+        "patient_id": "037",
+        "exported_contacts": 94,
+        "calculated_contacts": 4,
+        "windows": 3,
+        "metrics": [
+          "cov_EmpiricalCovariance",
+          "prec_EmpiricalCovariance",
+          "spearmanr",
+          "cohmag_multitaper_mean_fs-1_fmin-0-01_fmax-0-4",
+          "pli_multitaper_mean_fs-1_fmin-0-01_fmax-0-4"
+        ],
+        "native_rate_groups": [
+          {
+            "native_sampling_rate_hz": 512.0,
+            "notch_frequencies_hz": [
+              60.0,
+              120.0,
+              180.0,
+              240.0
+            ],
+            "channels": [
+              "E'1",
+              "E'2",
+              "E'3",
+              "E'4"
+            ],
+            "resampled": true
+          }
+        ],
+        "sampling_rate_hz": 2048,
+        "step_seconds": 0.25,
+        "wall_seconds_including_setup": 0.9879982929996913,
+        "session": {
+          "preparation_seconds": 0.22575189900089754,
+          "window_preprocessing_seconds": 0.006463511992478743,
+          "calculation_wall_seconds": 0.16940819399314933,
+          "metric_elapsed_seconds": 0.15467279001313727,
+          "output_seconds": 0.5297304729974712,
+          "elapsed_seconds": 0.948470259005262,
+          "resume": false,
+          "retry_failures": false,
+          "status": "complete",
+          "invocation_setup_seconds": 0.035273927001981065
+        },
+        "batch_count": 3,
+        "output_files": 59,
+        "output_bytes": 53363,
+        "direct_calculator_bit_exact": true,
+        "resume_bit_exact": true,
+        "reference_uses_fresh_calculator_each_window": true,
+        "source_stats_unchanged": true,
+        "run": "/tmp/pyspi-eeg-acceptance-real/results/037/calculations/baseline"
+      },
+      {
+        "patient_id": "009",
+        "exported_contacts": 71,
+        "calculated_contacts": 4,
+        "windows": 3,
+        "metrics": [
+          "cov_EmpiricalCovariance",
+          "prec_EmpiricalCovariance",
+          "spearmanr",
+          "cohmag_multitaper_mean_fs-1_fmin-0-01_fmax-0-4",
+          "pli_multitaper_mean_fs-1_fmin-0-01_fmax-0-4"
+        ],
+        "native_rate_groups": [
+          {
+            "native_sampling_rate_hz": 2048.0,
+            "notch_frequencies_hz": [
+              60.0,
+              120.0,
+              180.0,
+              240.0,
+              300.0,
+              360.0,
+              420.0,
+              480.0,
+              540.0,
+              600.0,
+              660.0,
+              720.0,
+              780.0,
+              840.0,
+              900.0,
+              960.0,
+              1020.0
+            ],
+            "channels": [
+              "A'1",
+              "A'2",
+              "A'3",
+              "A'4"
+            ],
+            "resampled": false
+          }
+        ],
+        "sampling_rate_hz": 2048,
+        "step_seconds": 0.5,
+        "wall_seconds_including_setup": 1.1914619150047656,
+        "session": {
+          "preparation_seconds": 0.4086881050025113,
+          "window_preprocessing_seconds": 0.006560777997947298,
+          "calculation_wall_seconds": 0.16804456899990328,
+          "metric_elapsed_seconds": 0.15365062701312127,
+          "output_seconds": 0.5511040210039937,
+          "elapsed_seconds": 1.1511074890004238,
+          "resume": false,
+          "retry_failures": false,
+          "status": "complete",
+          "invocation_setup_seconds": 0.03531990599731216
+        },
+        "batch_count": 3,
+        "output_files": 59,
+        "output_bytes": 53730,
+        "direct_calculator_bit_exact": true,
+        "resume_bit_exact": true,
+        "reference_uses_fresh_calculator_each_window": true,
+        "source_stats_unchanged": true,
+        "run": "/tmp/pyspi-eeg-acceptance-real/results/009/calculations/baseline"
+      }
+    ],
+    "max_rss_kib": 506828,
+    "limits": "Bounded contacts/windows, entire continuous preparation; not a 185-metric cohort benchmark or scientific validation."
+  },
+  "bounded_output_benchmark": {
+    "schema": "pyspi-bounded-output-benchmark/1",
+    "records": [
+      {
+        "channels": 50,
+        "metrics": 12,
+        "windows": 8,
+        "batch_windows": 1,
+        "write_seconds_including_packing_and_durability": 2.4160209390029195,
+        "selective_metric_read_seconds": 0.033293194996076636,
+        "files": 304,
+        "bytes": 1320598,
+        "exact_selected_metric": true
+      },
+      {
+        "channels": 50,
+        "metrics": 12,
+        "windows": 8,
+        "batch_windows": 4,
+        "write_seconds_including_packing_and_durability": 0.6044051760036382,
+        "selective_metric_read_seconds": 0.008069887000601739,
+        "files": 76,
+        "bytes": 1151139,
+        "exact_selected_metric": true
+      },
+      {
+        "channels": 50,
+        "metrics": 12,
+        "windows": 8,
+        "batch_windows": 8,
+        "write_seconds_including_packing_and_durability": 0.34655136999936076,
+        "selective_metric_read_seconds": 0.0047981180032365955,
+        "files": 38,
+        "bytes": 1122448,
+        "exact_selected_metric": true
+      },
+      {
+        "channels": 128,
+        "metrics": 12,
+        "windows": 8,
+        "batch_windows": 1,
+        "write_seconds_including_packing_and_durability": 2.450244211999234,
+        "selective_metric_read_seconds": 0.03864829400117742,
+        "files": 304,
+        "bytes": 7473564,
+        "exact_selected_metric": true
+      },
+      {
+        "channels": 128,
+        "metrics": 12,
+        "windows": 8,
+        "batch_windows": 4,
+        "write_seconds_including_packing_and_durability": 0.8265717790054623,
+        "selective_metric_read_seconds": 0.013261311993119307,
+        "files": 76,
+        "bytes": 7298267,
+        "exact_selected_metric": true
+      },
+      {
+        "channels": 128,
+        "metrics": 12,
+        "windows": 8,
+        "batch_windows": 8,
+        "write_seconds_including_packing_and_durability": 0.5299099129988463,
+        "selective_metric_read_seconds": 0.009735210995131638,
+        "files": 38,
+        "bytes": 7267979,
+        "exact_selected_metric": true
+      },
+      {
+        "channels": 300,
+        "metrics": 12,
+        "windows": 8,
+        "batch_windows": 1,
+        "write_seconds_including_packing_and_durability": 3.396429578999232,
+        "selective_metric_read_seconds": 0.040172701999836136,
+        "files": 304,
+        "bytes": 40221760,
+        "exact_selected_metric": true
+      },
+      {
+        "channels": 300,
+        "metrics": 12,
+        "windows": 8,
+        "batch_windows": 4,
+        "write_seconds_including_packing_and_durability": 1.540161855999031,
+        "selective_metric_read_seconds": 0.026885961000516545,
+        "files": 76,
+        "bytes": 40041652,
+        "exact_selected_metric": true
+      },
+      {
+        "channels": 300,
+        "metrics": 12,
+        "windows": 8,
+        "batch_windows": 8,
+        "write_seconds_including_packing_and_durability": 0.9382653039938305,
+        "selective_metric_read_seconds": 0.01599792000342859,
+        "files": 38,
+        "bytes": 40234630,
+        "exact_selected_metric": true
+      }
+    ],
+    "limits": "One repeat, synthetic directed/symmetric/antisymmetric Gaussian matrices; no calculator, preprocessing, or cohort-runtime claim."
+  },
+  "requirements_evidence": {
+    "required_configuration_and_inputs": [
+      "tests/workflow/test_config.py",
+      "tests/workflow/execution/test_metadata_output.py"
+    ],
+    "read_only_selection_export": [
+      "tests/workflow/execution/test_metadata_output.py::test_legacy_export_is_read_only_and_maps_real_header_order",
+      "tests/workflow/validate_real.py"
+    ],
+    "native_notches_polyphase_continuous_bandpass_reference": [
+      "tests/workflow/execution/test_prepare.py"
+    ],
+    "window_preprocessing_order_and_exact_axes": [
+      "tests/workflow/execution/test_run.py::test_order_exact_roundtrip_and_independent_covariance"
+    ],
+    "shared_window_cache_and_preserved_randomness": [
+      "tests/workflow/execution/test_run.py::test_two_metrics_share_only_current_window_cache",
+      "tests/workflow/execution/test_run.py::test_interruption_reuses_batches_and_preserves_random_draws"
+    ],
+    "bounded_output_buffers": [
+      "tests/workflow/execution/test_metadata_output.py::test_output_buffer_bound_is_independent_of_total_windows",
+      "tests/workflow/benchmark_output.py"
+    ],
+    "diagnostics_nan_failure_unfinished_and_explicit_retry": [
+      "tests/workflow/execution/test_run.py::test_pending_failures_skip_automatically_and_retry_only_explicitly",
+      "tests/workflow/execution/test_run.py::test_window_preprocessing_failure_is_recorded_not_a_success"
+    ],
+    "resume_publication_compatibility_cohort_and_unknown_final_time": [
+      "tests/workflow/execution/test_run.py"
+    ],
+    "portable_metadata_selective_partial_reads": [
+      "tests/workflow/execution/test_metadata_output.py::test_relocation_partial_reads_and_successful_nan_availability",
+      "tests/workflow/execution/test_run.py::test_two_metrics_share_only_current_window_cache"
+    ],
+    "commands_and_limits": [
+      "docs/workflow.md",
+      "examples/workflow/preflight.yaml",
+      "tests/workflow/EXECUTION_RESULTS.md"
+    ]
+  },
+  "limitations": [
+    "Coarse batch resume recomputes unfinished successful work; recorded failures retry only explicitly.",
+    "Output matrix buffering is bounded, with a one-window minimum; continuous EEG and estimator/packing caches are additional RAM.",
+    "More small batches increase file count and fixed I/O cost; no universal optimal batch size claimed.",
+    "No new seeding policy; stochastic recomputation after resume may differ.",
+    "Resume verifies source size/mtime/header hash and declarations, not full-file checksums or a complete prior-payload scan.",
+    "Uncatchable termination cannot provide final session wall time; resume records it as unknown.",
+    "Composite reader supports ordinary NumPy time means; the existing packed mean helper targets individual production stores.",
+    "Real tests use four contacts, three windows and five representative metrics per patient; not a full-patient/cohort benchmark or comprehensive mathematical validation.",
+    "POSIX advisory locking; no automatic concurrency, parallelization, scientific corrections, custom referencing or separate data-lake/cache changes.",
+    "Zarr async I/O stalled in the sandbox; integration/storage/real-data verification used approved execution outside it, writing only temporary output."
+  ]
+}

@@ -8,6 +8,7 @@ from ._config import Configuration, WorkflowError, load_config
 from ._edf import read_header, select_channels
 from ._metrics import resolve_metrics
 from ._windows import plan_windows
+from ._prepare import reference_names
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,9 @@ class PreflightReport:
                 "window": {"length_seconds": float(cfg.window_seconds), "step_seconds": float(cfg.step_seconds)},
                 "preprocessing": [operation for enabled, operation in
                                   ((cfg.detrend, "detrend"), (cfg.zscore, "zscore")) if enabled],
+                "preparation": {"bandpass": {"low_hz": cfg.bandpass[0], "high_hz": cfg.bandpass[1]},
+                                "notch": cfg.notch, "reference": cfg.reference,
+                                "resampling_method": "polyphase"},
                 "output_directory": str(cfg.output_directory) if cfg.output_directory is not None else None,
                 "metrics": [metric.as_dict() for metric in self.metrics], "recordings": recordings}
 
@@ -44,8 +48,7 @@ def preflight(config) -> PreflightReport:
     """Validate config/metric constructors and plan already matching-rate EDFs.
 
     A mismatch yields requires_resampling and no calculation sample ranges.
-    The resampling method/location is deliberately not chosen by preflight.
-    With no configured rate, only a single common native rate can be inferred.
+    Resampled ranges are confirmed against the prepared signal during execution.
     """
     cfg = config if isinstance(config, Configuration) else load_config(config)
     selected = []
@@ -56,12 +59,7 @@ def preflight(config) -> PreflightReport:
         except WorkflowError as exc:
             raise WorkflowError(f"{recording.patient_id}/{recording.recording_id} ({header.path}): {exc}") from exc
         selected.append((recording, header, channels))
-    rates = {signal.rate for _, _, channels in selected for signal, _ in channels}
     target = cfg.sampling_rate_hz
-    if target is None:
-        if len(rates) != 1:
-            raise WorkflowError("selected signals have different native rates; configure sampling_rate_hz to identify the required resampling")
-        target = next(iter(rates))
     # Validate the intended sample grid even when every source needs resampling.
     for seconds in (cfg.window_seconds, cfg.step_seconds):
         if (seconds * target).denominator != 1:
@@ -69,6 +67,7 @@ def preflight(config) -> PreflightReport:
     metrics = resolve_metrics(cfg.metric_config)
     recordings = []
     for recording, header, channels in selected:
+        output_names = reference_names([name for _, name in channels], cfg.reference)
         matching = all(signal.rate == target for signal, _ in channels)
         windows = None
         if matching:
@@ -78,6 +77,7 @@ def preflight(config) -> PreflightReport:
         recordings.append({"patient_id": recording.patient_id, "recording_id": recording.recording_id,
                            "path": str(header.path), "status": "ready" if matching else "requires_resampling",
                            "duration_seconds": float(header.records * header.record_seconds),
+                           "output_channels": output_names,
                            "channels": [{"source_index": signal.index, "source_label": signal.label,
                                          "name": name, "native_sampling_rate_hz": float(signal.rate),
                                          "native_samples": header.records * signal.samples_per_record}

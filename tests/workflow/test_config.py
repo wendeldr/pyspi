@@ -96,9 +96,11 @@ def test_presets_resolve_to_packaged_files(preset, edf, workflow):
     assert cfg.metric_config.is_file()
 
 
-def test_rate_inference_and_explicit_preprocessing_flags(edf, workflow):
-    cfg = load_config(workflow(edf(), sampling_rate_hz=None,
+def test_required_rate_and_explicit_preprocessing_flags(edf, workflow):
+    with pytest.raises(WorkflowError, match="sampling_rate_hz"):
+        load_config(workflow(edf(), sampling_rate_hz=None))
+    cfg = load_config(workflow(edf(), sampling_rate_hz=8,
                                window={"length_seconds": 2},
                                preprocessing={"detrend": False, "zscore": False}))
-    assert cfg.sampling_rate_hz is None and cfg.window_seconds == cfg.step_seconds == 2
+    assert cfg.sampling_rate_hz == 8 and cfg.window_seconds == cfg.step_seconds == 2
     assert not cfg.detrend and not cfg.zscore

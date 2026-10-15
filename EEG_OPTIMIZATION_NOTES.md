@@ -4,7 +4,7 @@ Updated 2026-10-14.
 
 The goal is to make pyspi easier to run for this EEG/sEEG workload and investigate improvements to total processing time and output size. Changes may include Python orchestration, lower-level implementation changes, or faster compatible dependencies. Improvements must be assessed against the actual workload and scientific interpretation.
 
-**Current state:** production storage and the adversarial test review are complete. Local workflow configuration and read-only EDF preflight are implemented in `pyspi.workflow`; validation is recorded in [the workflow guide](docs/workflow.md) and [its receipt](tests/workflow/verification.json). Calculator now exposes [per-metric completion/failure reports, timing, and an optional callback](docs/calculation_reporting.md). Signal loading/execution, resampling, checkpointing, and parallelization remain subsequent goals. Scientific/numerical review is being carried out separately and will be audited when complete. Production storage is in `pyspi.storage`, with an explicit Calculator adapter and separate `pyspi.analysis.time_mean` helper. Calculation, storage, and workflow tests share the root lock. See the [earlier full test review](tests/TEST_REVIEW.md), [storage API](docs/storage.md), and [initial production validation and timings](tests/storage/PRODUCTION_RESULTS.md). The [comparison archive](docs/storage_comparison/README.md) preserves historical evidence. Existing EDFs and patient stores remain unchanged; no cohort recalculation or conversion is authorized.
+**Current state:** production storage and the adversarial test review are complete. `pyspi.workflow` now connects strict configuration/header-only preflight, read-only electrode-selection export, continuous MNE preparation, serial windowed Calculator execution, bounded production storage batches, diagnostics/timings, and coarse resume with explicit failure retries. Usage and limitations are in [the workflow guide](docs/workflow.md); execution evidence is in [its receipt](tests/workflow/execution_results.json), with the [original preflight receipt](tests/workflow/verification.json) preserved as a historical checkpoint. Calculator exposes [per-metric completion/failure reports, timing, and an optional callback](docs/calculation_reporting.md). Parallelization remains later work. Scientific/numerical review is being carried out separately and will be audited when complete. Production storage is in `pyspi.storage`, with an explicit Calculator adapter and separate `pyspi.analysis.time_mean` helper for individual production stores; composite workflow runs support ordinary NumPy time reduction. Calculation, storage, and workflow tests share the root lock. See the [earlier full test review](tests/TEST_REVIEW.md), [storage API](docs/storage.md), and [initial production validation and timings](tests/storage/PRODUCTION_RESULTS.md). The [comparison archive](docs/storage_comparison/README.md) preserves historical evidence. Existing EDFs and patient stores remain unchanged; no cohort recalculation or conversion is authorized.
 
 ## Working agreement
 
@@ -38,10 +38,10 @@ The goal is to make pyspi easier to run for this EEG/sEEG workload and investiga
 ## Sampling and preprocessing
 
 - The project normally records at 2048 Hz, with a few exceptions. Sampling rate must remain configurable rather than hardcoded to 2048 Hz.
-- Recordings not at the configured expected rate must be upsampled or downsampled before calculation. Where and how resampling happens remains for discussion during workflow implementation or after the other pieces are implemented. The current preflight goal only checks native rates and identifies preparation needed; it does not resample.
+- Recordings not at the explicitly configured target rate are upsampled or downsampled with MNE polyphase in the EEG-preparation helper before windowing. Preflight checks native rates and identifies preparation needed without reading signal payloads. Target rate is required rather than inferred.
 - Use pyspi's existing preprocessing with both operations enabled: **detrend first, then z-score, within each window**.
 - Historical output metadata records the old order of z-scoring and then detrending. That historical order is not the desired behavior for new calculations.
-- The planned runner accepts a fixed, externally supplied channel selection/order for the recording. Deciding which electrodes are bad belongs to the data lake or preprocessing utilities. Rereferencing and additional EEG preprocessing remain later work.
+- The planned runner accepts a fixed, externally supplied channel selection/order for the recording. Deciding which electrodes are bad belongs to the data lake or preprocessing utilities. The user has now included filtering and MNE-based rereferencing in the upcoming workflow; custom reference implementations and other EEG preprocessing remain later work.
 
 ## Execution and resource use
 
@@ -118,12 +118,12 @@ The subsequent [adversarial test review](tests/TEST_REVIEW.md) strengthens recor
 - Difficult diagnosis can come last. Straightforward fixes can happen earlier, but nonconvergence or genuinely undefined results may be acceptable for the moment.
 - During storage comparisons, preserve the existing values exactly, including invalid values. Storage testing is not a cleanup or recalculation step.
 
-## Deferred EEG loading utilities
+## EEG preparation utilities
 
-- Later preprocessing utilities may live beside data loading rather than inside metric implementations.
-- Desired reference schemes include common average, bipolar, and possibly others.
-- The runner's planned input contract accepts fixed channel inclusions/order supplied externally. Existing project Zarr files contain bad-electrode information; deciding those exclusions and generating the selection belong to the data lake/preprocessing utilities. All EEG channels can be the default when no selection is supplied.
-- Additional EEG preprocessing belongs in this later discussion; it is not part of metric implementations or storage.
+- Preparation lives beside data loading rather than inside metric implementations or storage.
+- MNE-based rereferencing is now part of the upcoming workflow, with explicit configuration required, including an explicit choice of none. CAR is the initial project setting; custom reference implementations remain later work. Other MNE reference modes may need additional channel/model metadata.
+- The runner's planned input contract accepts fixed channel inclusions/order supplied externally. Existing project Zarr files contain bad-electrode information; deciding those exclusions and generating the selection belong to the data lake/preprocessing utilities. Without metadata, select labels containing `EEG ` case-insensitively and warn with skipped signal names.
+- Additional EEG preprocessing beyond the agreed filtering/resampling/referencing remains later discussion.
 
 ## Read only findings relevant to later work
 
@@ -162,24 +162,178 @@ Completed:
 - The [dependency migration](DEPENDENCY_MIGRATION.md) is complete: Python 3.12/NumPy 2.5.4, upgraded MNE/MNE-Connectivity and CDT, packaged compatibility fixes, and one root dependency lock. SciPy 1.17, pyEDM 1.15.2.0, and spectral-connectivity 1.1.2 are retained with documented reasons. Local full/slow and installation checks passed. Unused GitHub Actions workflows were removed; verification is local.
 - Production storage is integrated into `pyspi.storage`, including single/windowed matrices, an explicit Calculator adapter, native precision, ordering/metadata, integrity/recovery, selection, and shard sizing. Initial integration counts, bounded benchmarks, and installation evidence are in [production results](tests/storage/PRODUCTION_RESULTS.md); the subsequent [test review](tests/TEST_REVIEW.md) records the expanded suites and latest verification.
 - Time averaging is separate in `pyspi.analysis.time_mean`; its antisymmetric subnormal signed-zero defect is fixed and tested. Lossy tolerance packing and precision conversion are excluded from production. The comparison implementation, reports, scientific findings, and evidence are [archived](docs/storage_comparison/README.md). Existing patient stores remain untouched.
+- The serial local workflow is implemented and validated: strict configuration/preflight, read-only selection export, continuous MNE preparation, detrend-then-z-score windows, grouped calculations, bounded exact production output, diagnostics/timings, and coarse resume with explicit failure retries. Target sampling rate, both filter edges, and reference choice are required. The existing storage format was reused without an append/refactor project. See [execution results](tests/workflow/EXECUTION_RESULTS.md).
 
 Remaining, in recommended order:
 
-1. **Scientific and numerical review, one finding at a time.** Resolve standard versus historical PSI, spectral band forwarding, wavelet PSI axis selection, signed PLI/wPLI, phase aggregation/endpoints, parameter-specific labels and shared label state, legitimate negative estimators, and automatic CCM embedding selection. Evaluate newer spectral-connectivity and pyEDM, and SciPy/ANM drift, through separate numerical decisions. MNE/CDT upgrades are completed; their regression agreement does not replace independent mathematical checks. Add independent oracles for each proposed correction before changing definitions or expected results. This remains targeted review work, not a completed audit of all 185 calculations.
-2. **Local calculation workflow.** Configuration and header-only EDF preflight are implemented as the first goal. Subsequent stages connect loading, detrend-then-z-score preprocessing, grouped calculations/shared intermediates, memory-aware batching, resumability, diagnostics, timing capture, and production storage output. Benchmark representative workloads before choosing concurrency. Resampling to the expected rate is required for mismatched inputs; its method and location remain for discussion. Arbitrary channel/window/patient bounds are not part of the design.
-3. **Calculation and end-to-end optimization.** Prioritize the retained 185, relevant exploratory features, and EEG/sEEG measures. Evaluate shared computation, batching, existing faster implementations, compiled code, and GPU options where measurements justify them. Include loading and output costs. Preserve selected metric definitions unless a separate change is agreed.
-4. **Runtime estimator.** Build estimates from accumulated timings and optional short calibration, allowing configuration, cohort/window counts, and available compute to inform a conservative range. The estimator is not a prerequisite or a reason to wait for all metrics to finish.
-5. **Later utilities and expanded scope.** Rereferencing, project-specific bad-electrode selection/preparation, additional metrics, and difficult calculation failures remain later work. The planned runner can consume an externally supplied fixed channel list without implementing that project-specific logic. Straightforward failures can be addressed when encountered; distinguish unavailable output from calculated NaNs and nonconvergence. Precision reduction and conversion of existing patient stores each require separate justification and discussion.
-6. **Simplify calculation naming and parameter representation, near the end of EEG optimization.** Discuss simple metric names with explicit parameters in metadata/configuration or a companion file. Current identifiers embed cumbersome and inconsistent decimal/percentage representations. Preserve unambiguous identification of parameter variants; final names and the representation will be discussed before changing them.
+1. **Audit the separate scientific/numerical review, then discuss findings individually.** Check its evidence and independent mathematical tests before accepting corrections. Outstanding topics include standard versus historical PSI, spectral band forwarding, wavelet PSI axes, signed PLI/wPLI, phase aggregation/endpoints, parameter-specific/shared labels, legitimate negative estimates, CCM embedding selection, and numerical changes from newer spectral-connectivity, pyEDM and SciPy/ANM. MNE/CDT upgrades are completed; regression agreement does not establish mathematical correctness. Do not change definitions or goldens without the agreed scientific decision.
+2. **Establish representative end-to-end performance baselines.** Measure short, typical and larger-channel workloads using selected metric families; include loading, preparation, calculation, packing/writing, file count and peak memory. Existing validation uses bounded samples and does not establish full-patient runtime or an optimal batch size. Avoid waiting for every expensive metric or a full cohort before identifying bottlenecks.
+3. **Optimize selected calculations and shared work.** Prioritize the retained 185, relevant exploratory features and common EEG/sEEG measures. Evaluate algorithm/code improvements, shared intermediates, faster compatible implementations, compiled code and GPU options when measurements justify them. Include workflow/output costs and the extra files from small batches. Preserve the selected mathematics unless a separate change is agreed; assess expensive outliers individually.
+4. **Choose parallelization and resource control from measurements.** After mathematical validation and calculation optimization have progressed, compare patient-level and window-batch execution. Account for estimator/BLAS threads, use spawned processes where JPype requires them, bound in-flight work and choose concurrency from CPU/RAM availability and measured working sets. Keep ordering, single-writer output and recovery correct. Arbitrary channel/patient bounds and automatic 24-hour termination are not part of the design.
+5. **Develop the runtime estimator alongside optimization.** Use saved timings and optional short calibration to estimate a conservative range from configuration, cohort/window counts and available compute. The estimator is not a prerequisite or a reason to wait for all metrics to finish.
+6. **Simplify calculation names and parameter representation near the end of EEG optimization.** Discuss simple metric names with explicit parameters in metadata/configuration or a companion file. Preserve unambiguous parameter variants and update relevant interfaces/tests/documentation after the naming decision. Current identifiers remain unchanged until then.
+
+Later or separately scoped work: data-lake/prediction-cache integration, custom
+rereferencing, project-specific bad-electrode selection utilities, additional
+metrics and difficult failure diagnosis. MNE references and externally supplied
+fixed channel selections already work. Straightforward failures can be addressed
+when encountered. Precision reduction and conversion of existing patient stores
+each require separate justification and discussion.
 
 Current assignments: scientific/numerical review is being carried out separately.
 This agent will audit that work when it is complete. The local workflow stages
-are recorded below. Configuration/EDF preflight are complete. The calculation
-reporting goal adds diagnostics and callback exposure to Calculator; it does not
-authorize cohort execution, resampling, checkpointing, or parallelization.
+are recorded below. The user subsequently authorized the combined serial
+execution goal after settling EEG preparation and the complexity limit for
+resume. This permits bounded validation, not cohort execution or parallelization.
 
 ## Local workflow planning discussion
 
+- Latest scope discussion: the user selected bounded output/resume, serial
+  execution, and workflow validation/documentation as the next work. Defer
+  parallelization until scientific validation and calculation optimization
+  have progressed. The combined goal was accepted through the attached goal
+  text after the preparation decisions below were settled.
+  Subsequent restriction: resumability is optional if it cannot be added
+  simply. Do not undertake a major storage refactor or rewrite for resume.
+  Prefer reusing the existing writer and a coarse completion boundary; omit
+  resume if even that requires substantial complexity.
+- Agreed input direction: one calculation command accepts raw EDFs from an
+  explicit file list or a directory, with optional matching metadata. It calls
+  a separate EEG-preparation helper rather than putting EDF-specific operations
+  in Calculator. Without metadata, select signal channels whose labels contain
+  the literal `EEG ` case-insensitively. Do not automatically include untyped
+  or misnamed channels. Emit a warning listing the skipped signal-channel names
+  when metadata is absent. With metadata, use its explicit selection and order.
+  Preflight and execution now use this same selection rule.
+- Resampling order/location is now agreed: the runner's separate EEG-preparation
+  helper resamples mismatched recordings before calculation windowing.
+  Detrending followed by z-scoring remains per calculation window. The
+  bounded implementation uses coarse output batches below.
+- The user accepted this preparation order, adding rereferencing before windows:
+  select/order channels → notch at native rates → resample to the required
+  target → bandpass the continuous recording → rereference → calculation
+  windows → detrend then z-score each window → grouped metrics. MNE handles
+  the supported reference operations; custom implementations remain later work.
+  Reference choice must be explicit in config, including an explicit none.
+  CAR is the initial configured value, not an implicit default. The user agreed
+  that CAR averages exactly the retained calculation channels, excluding all
+  omitted contacts. Record this reference pool with the results. A separate
+  CAR reference pool is not part of the initial workflow.
+- Use MNE's existing resampling functionality with explicit `method="polyphase"`,
+  as agreed after discussing FFT versus polyphase. Apply it before windowing
+  and record the method and effective preparation settings with the results.
+  Do not introduce a custom resampler as an assumed requirement.
+- The user has now explicitly included EEG filtering in the preparation scope:
+  remove very low/high frequencies and 60 Hz line interference and its valid
+  harmonics. The historical band was 0.5–300 Hz; the new upper passband edge
+  is agreed at 500 Hz. The user accepts that the few lower-rate source recordings
+  lack some of that bandwidth and does not want this to block using 500 Hz for
+  the cohort. The initial project band is 0.5–500 Hz. Both lower and upper
+  filter edges must be explicitly supplied in the configuration and remain
+  changeable; neither has an implicit default, matching the explicit target-rate
+  policy. Apply the filters to continuous data before calculation windowing.
+  Notch policy and initial width are agreed below. Preparation order is now
+  agreed above. The user accepted MNE's standard zero-phase FIR bandpass
+  (`firwin`, Hamming) with
+  automatically chosen filter length and transition widths, recording the
+  effective design. At 2048 Hz with a 500 Hz upper passband edge, the automatic
+  upper transition extends to 625 Hz; the edge is not a hard cutoff.
+  The 250–500 Hz fast-ripple range provides a research reason to preserve the
+  extra bandwidth, not evidence that every broadband connectivity estimator
+  will improve: https://academic.oup.com/brain/article/147/7/2496/7603217.
+  A read-only check of six EDF headers (001, 004, 009, 037, 038, 041) found
+  blank prefilter fields, so their hardware filtering is not established by
+  those headers. No signal data or source files were modified in this check.
+- The user authorized a representative spectral inspection to choose notch
+  settings. The read-only [line-noise survey](docs/eeg_line_noise_survey.md)
+  sampled 12 patients, 144 historically included contacts, and three 60-second
+  sections per patient at native rates. It covers all 60 Hz harmonics available
+  through 960 Hz, with 5,040 contact/section/harmonic observations. Odd harmonics
+  were generally stronger; even harmonics varied rather than being universally
+  absent. Higher harmonics above 500 Hz also occur. Blank cells for 512 Hz input
+  represent unavailable bands above native Nyquist, not measured missing peaks.
+  A temporary-array comparison on seven patients found 1 Hz full-width FIR
+  notches sufficient to suppress the sampled central peaks (minimum measured
+  suppression 51.7 dB); 2 Hz notches also worked. The user accepted the
+  recommendation: use 1 Hz full stopband widths initially, retain configurable
+  settings, make the base line frequency configurable, and
+  generate all harmonics whose notch and transition fit below Nyquist at the
+  filtering stage. At 2048 Hz, valid 60 Hz harmonics extend through 1020 Hz with
+  these widths. The earlier survey stopped at 960 Hz because its ±6 Hz
+  background comparison could not fit around 1020 Hz below Nyquist. This covers
+  a low-pass transition band and adapts to upper-cutoff changes; frequencies
+  already removed by low-pass filtering make some notches redundant. MNE's
+  standard FIR bandpass design is implemented in the preparation helper. Source EDFs/Zarrs were not
+  modified, and no source connectivity arrays were read.
+- Target sampling rate must be explicitly supplied: no default and no native-rate
+  inference. The existing YAML `sampling_rate_hz` field is the initial
+  interface; missing/null values must fail validation before calculation.
+  For this project, specify `sampling_rate_hz: 2048`. This supersedes the
+  preceding proposal to default to 2048 Hz. Preflight and execution now reject
+  missing/null target rates. Metric-specific frequency parameters remain separate and need
+  explicit validation as part of the workflow/scientific-review boundary.
+- Existing patient Zarrs at
+  `/media/dan/Data/outputs/calculated_seeg_patient_data` must not be modified.
+  A small standalone metadata export generated read-only from the existing
+  Zarrs is now agreed as the initial input interface. It identifies the
+  patient/recording and supplies the selected electrode names in their required
+  order; broader patient metadata remains with the data lake. The calculation
+  runner consumes this export, rather than depending on the legacy Zarr schema.
+  The future data-lake metadata producer should target the same input contract
+  so it can survive changes to connectivity storage. The user has selected the
+  existing Zarr calculated electrode list and its order as the initial
+  authoritative selection. Do not rebuild that selection from bad flags or
+  anatomical rules. Map those selected contacts to actual EDF headers, rather
+  than assuming the provenance inventory has the same membership or order.
+  Investigation of the original exclusion rules is being delegated by the
+  user to another agent and does not block this workflow discussion.
+- A read-only inspection of metadata JSON in `001.zarr` confirmed separate
+  electrode, EDF-channel-name, inclusion, and bad-channel arrays. No array
+  payloads or connectivity values were read. An optional single-patient
+  conversion test can be considered after the new metadata/output interface is
+  settled, with all converted output written separately; conversion has not
+  been requested or started.
+- Follow-up QC check read the four small selection/provenance arrays across all
+  72 stores, opening Zarr in read-only mode. Across 9,924 calculated contacts
+  and 10,439 provenance contacts, 66 contacts in 31 patients were flagged bad;
+  none were marked included or present in the calculated contact lists. Every
+  calculated contact matched provenance, and inclusion flags agreed with the
+  calculation lists, with no normalization collisions. Of the 515 provenance
+  contacts excluded from calculation, 449 were not flagged bad, so the historical
+  selection remains more restrictive than merely removing recorded bad flags
+  from that provenance inventory. These are checks of stored flags, not an
+  independent reassessment of signal quality. Size/mtime checks found no change
+  in the 535 existing files under the inspected arrays. The per-patient report
+  is `/tmp/pyspi-bad-channel-metadata-check.json`; no connectivity arrays or EDF
+  signal payloads were read. Reusing the stored electrode list/order is therefore
+  the recommended initial metadata input, subject to EDF channel mapping.
+- Example follow-up: patient `089` has three historical exclusions. `IP'13`
+  and `IP'14` are flagged bad and have use=0/use2=0 in the original QC review.
+  `G'12` is not flagged bad (use=1/use2=1, blank rev), is present in the EDF,
+  and contains finite, nonconstant samples over the full recording. All three
+  are absent from `089_chnames.csv`; the Zarr contact order matches that CSV.
+  `G'12` lacks all five atlas assignments in the source XYZ CSV, while included
+  neighbor `G'11` has AAL/AAL2 assignments. Missing anatomical labels are a
+  possible historical exclusion reason, but the stored reason is only
+  `not_in_chnames`; the original selection rule has not been established.
+  This check also confirmed a data-lake provenance defect: `in_edf_file` is
+  assigned from historical inclusion, so it is false for all three contacts
+  despite their actual presence in the EDF. Future channel matching must use
+  actual EDF headers rather than that flag. No source metadata was corrected.
+  Detailed read-only findings: `/tmp/pyspi-excluded-contacts-089.json`.
+- Smaller example `009`: 71 calculated contacts and 87 EEG-prefixed EDF
+  channels. Its 18 exclusions comprise four recorded bad contacts (`C'7`,
+  `I'1`, `I'2`, `I'5`), two XYZ contacts absent from both the EDF and QC review
+  (`A'7`, `A'8`), and 12 contacts present in the EDF with use=1/use2=1/blank rev
+  but no AAL/AAL2 or MICCAI assignments (`G'10`, `R'8`, `I'9`, `I'10`, `O'4`,
+  `O'5`, `O'6`, `P'6`, `S'7`, `S'8`, `S'9`, `S'10`). `O'4` has Brainnetome
+  and Harvard Oxford labels; `O'5` has a Harvard Oxford label, so absence of
+  AAL/MICCAI does not mean every atlas is blank. All 71 included contacts have
+  at least one AAL or MICCAI assignment. This supports an anatomical-selection
+  hypothesis but does not establish the historical preprocessing rule. The
+  source-data comparison is `/tmp/009_excluded_contact_comparison.csv` and the
+  metadata report is `/tmp/pyspi-excluded-contacts-009.json`. Existing source
+  files and Zarrs remain untouched.
 - Logical output should remain connectivity matrices with a known corresponding
   channel/window order. Reporting the actual order used is acceptable so the
   project's own Zarr metadata can use it. Project-specific patient metadata is
@@ -238,6 +392,20 @@ authorize cohort execution, resampling, checkpointing, or parallelization.
   complexity and recomputing is significantly simpler. Assess that tradeoff
   before selecting an implementation; do not equate finishing computation with
   durable storage. Checkpoint/write costs belong in end-to-end measurements.
+  The user subsequently made the complexity limit explicit: skip resumability
+  rather than perform a major refactor/rewrite to support it. Fine-grained
+  metric/window recovery is therefore not a required outcome. A possible
+  lightweight approach is bounded window-batch stores written through the
+  existing production API, a small run index for logical per-metric access,
+  and reuse only of completed batches; unfinished batches may be recalculated.
+  This coarse design is now implemented; bounded real trials record its file
+  count, bytes and timing overhead. Recorded calculation failures remain explicit.
+- Scope clarification for the revised goal: a mandatory comparison implemented
+  as two competing writers, separate instrumentation of every output stage,
+  and a new stochastic-seeding scheme are not agreed requirements. Reuse the
+  current writer where practical, capture existing per-metric timings plus
+  preparation/output/total elapsed time, and preserve existing estimator
+  randomness. Do not promise identical stochastic recomputation after resume.
 - Resume must not automatically retry previously failed calculations. Record
   failed attempts and their diagnostics; retry them only when explicitly
   requested. A successful calculation returning NaNs is completed work, not a
@@ -248,8 +416,8 @@ authorize cohort execution, resampling, checkpointing, or parallelization.
   or an EDF+D discontinuity marker. Native signal counts were 71–263 and
   durations 252–305.1875 seconds; these include channels not yet classified or
   excluded. No EEG sample payloads were read in this inspection. Mismatched
-  inputs require resampling before calculation; its method/location remain
-  undecided, and preflight itself does not resample.
+  inputs require resampling in the EEG-preparation helper before windowing;
+  MNE polyphase has been selected, and preflight itself does not resample.
 - The current storage writer consumes a whole supplied metric array; it has no
   streaming window append API. Accumulating every result for 185 metrics and
   600 windows would require about 11.52 GiB at 118 channels or 74.43 GiB at
@@ -262,9 +430,29 @@ authorize cohort execution, resampling, checkpointing, or parallelization.
 
 ## Workflow implementation stages
 
-The first two stages are implemented. Later stages remain a
-plan for discussion, not authorization to implement every stage. Each stage
-should be a separately scoped goal. Scientific changes remain with
+Serial workflow acceptance: the final checkout and noneditable wheel each pass
+177 workflow cases. The full-size calculation tier passed 924 cases with ten
+known expected failures at its 174-workflow-case checkpoint; the later three
+ordering/recovery cases are included in focused verification. All 439 storage
+cases pass. Bounded installed-wheel trials at native 512/1024/2048 Hz match a
+fresh Calculator for every tested window bit-for-bit, preserve committed output
+on resume, and leave accessed source EDF/Zarr files unchanged. Evidence and
+scope are in [execution results](tests/workflow/EXECUTION_RESULTS.md) and
+[the machine-readable receipt](tests/workflow/execution_results.json).
+
+The implemented checkpoint boundary is one bounded window batch. A small run
+index supplies per-metric `(N, N, time)` access across existing production
+stores. Unfinished successful work can be recomputed; durable failures require
+an explicit retry. Cohort resume also starts unvisited recordings. Continuous
+EEG preparation and estimator caches remain additional RAM outside the output
+matrix-buffer target. Synthetic measurements confirm that smaller batches add
+substantial file-count and fixed I/O overhead; batch sizing is configurable and
+is not claimed optimal. Scientific corrections, concurrency and algorithm
+optimization remain separate work.
+
+Stages 1–4 are implemented together under the accepted serial-workflow goal.
+Later stages remain a plan for discussion, not authorization to implement
+every stage. Scientific changes remain with
 the separate review; audit its completed work before depending on any changed
 definitions. Existing EDFs and patient stores remain reference inputs.
 
@@ -284,7 +472,7 @@ definitions. Existing EDFs and patient stores remain reference inputs.
    config's 186 declared configurations with the retained 185 identifiers;
    changes to estimators are not part of that reconciliation. Identify sampling
    mismatches requiring resampling to the configured target; its implementation
-   and location remain undecided. Specify integer sample conversion and
+   is now MNE polyphase in the preparation helper. Specify integer sample conversion and
    window boundaries; discard a partial tail with a warning only. A preflight
    command reports the selected inputs, axes, metrics, and window counts; it is
    not the later runtime estimator. Verify with small fixtures and read-only
@@ -297,41 +485,42 @@ definitions. Existing EDFs and patient stores remain reference inputs.
    without becoming metric exceptions. Existing numerical behavior,
    preprocessing defaults, diagonal masking, and compute's None return are
    preserved. Successful NaNs remain successful. Reports are in-memory only;
-   window identity and persistence belong to the future runner. See the
+   window identity and persistence are supplied by the serial runner. See the
    [reporting guide](docs/calculation_reporting.md) and
    [verification receipt](tests/calculation_reporting_results.json).
 
-3. **Bounded output, checkpoints, and resume.** Design a single-writer path that
-   retains completed metric/window results without accumulating a patient's
-   full result set. Compare a bounded checkpoint/finalization approach against
-   an incremental production writer, measuring code complexity, write/fsync
-   cost, temporary space, and finalization overhead before selecting one.
-   Avoid assuming a file for every metric/window is the best design. Retain the
-   exact production packing and per-metric `(N, N, time)` reader interface under
-   the agreed patient-folder layout. Define run identity so changed input,
-   channel mapping, windows, preprocessing, metric parameters, or incompatible
-   calculation versions cannot silently share a resumed result. Distinguish
-   successful values, recorded calculation failures, and unfinished writes;
-   failed calculations are retried explicitly. Test interruption at write and
-   completion boundaries, reconstruction/order, incompatible resume, and
-   bounded working memory. Discuss a coarser checkpoint tradeoff only if the
-   preferred granularity has substantial implementation overhead.
+3. **Bounded output and lightweight resume (implemented).** Reuse the existing
+   production writer where practical without accumulating a patient's full
+   result set. The user explicitly rejects a major storage refactor/rewrite
+   for resumability; coarse checkpoints are acceptable, and resume may be
+   omitted if it is still substantially complex. Inspect the existing code
+   before choosing a design; implementing two competing writers is not a
+   requirement. Measure bounded I/O, memory, temporary space, file-count, and
+   finalization costs as applicable. Retain exact production packing and logical
+   per-metric `(N, N, time)` access under the agreed patient-folder layout.
+   If resume is implemented, reject incompatible runs and reuse only committed
+   work. Distinguish successful values, recorded calculation failures, and
+   unfinished writes; failed calculations are retried explicitly. Verify output
+   reconstruction/order, bounded working memory, and interruption handling;
+   test resume compatibility/recovery only for the supported resume behavior.
 
-4. **Serial end-to-end runner.** Connect EDF loading, fixed channel selection,
-   windowing, detrend-then-z-score preprocessing, grouped calculations, durable
-   output, and resume through terminal commands. Use a fresh Data/cache per
+4. **Serial end-to-end runner (implemented).** Connect EDF loading, fixed channel selection,
+   the agreed MNE filtering/resampling/referencing sequence, windowing,
+   detrend-then-z-score preprocessing, grouped calculations, durable output,
+   and lightweight optional resume through terminal commands. Use a fresh Data/cache per
    window and share that window's intermediates across metrics. Compare reader
    preload/memmap/lazy choices as needed; avoid repeated decoding and needless
    full-recording copies. Maintain a bounded output queue and actual saved axis
    metadata, with separate source-channel identity and project name mapping.
    Preserve all windows' values; cleaning, averaging, and prediction caches
-   remain downstream. Record loading, preprocessing, calculation, packing,
-   writing, and finalization costs alongside total wall time. Validate a small
+   remain downstream. Record existing per-metric times plus preparation,
+   output, and total wall time; subdivide further only where practical. Validate a small
    complete recording and bounded representative real-data samples against
    direct Calculator output, including a nonalphabetical channel selection,
-   overlapping windows, one-window output, and resume. Examine stochastic/shared
-   cache behavior under resume and document seeding semantics without silently
-   changing estimator parameters. Reuse of SPI instances across windows must
+   overlapping windows, one-window output, and any supported resume behavior.
+   Preserve existing estimator randomness and document limits on stochastic
+   recomputation rather than adding an unrequested seeding scheme or promising
+   identical recomputed values. Reuse of SPI instances across windows must
    be justified by agreement with fresh construction.
 
 5. **Measured parallelization and resource control.** Establish the serial
@@ -348,7 +537,7 @@ definitions. Existing EDFs and patient stores remain reference inputs.
    ordering, seeded numerical behavior, worker failures, and recovery. Do not
    impose arbitrary channel/patient counts or the discussed 24-hour kill limit.
 
-6. **Validate and document the usable workflow.** Run the relevant numerical
+6. **Validate and document the usable workflow (serial implementation complete; repeat for future parallel/optimization changes).** Run the relevant numerical
    regression and storage suites plus targeted runner integrations. Demonstrate
    selective metric loading, matching metadata/channel/window axes, downstream
    time averaging, portable relative links, and clean interruption/resume.
@@ -389,4 +578,4 @@ The [main-repository storage suite](tests/storage/README.md) has 439 passing cas
 
 The new format declares requested metrics before writing and publishes completion after payload, presence checks, and flushing. Interrupted writes remain identifiable; verification detects missing required data and deleted declared metrics. Copy verification stays with copying tools; no copying or repair system was added. The [focused integrity plan](tests/storage/INTEGRITY_PLAN.md) and [historical implementation results](tests/storage/INTEGRITY_RESULTS.md) record the contract and earlier measurements. The final production tiny 185-metric batch took 5.70 seconds median, as recorded in [production results](tests/storage/PRODUCTION_RESULTS.md); this is not a full-patient timing estimate.
 
-Time averaging now belongs to the separate analysis module. Exact residual retention and window/shard behavior are settled, and production integration and archival are complete. Scientific reports and benchmark evidence remain preserved. Metric-definition decisions, local execution, targeted calculation optimization, and difficult failure diagnosis remain separate work. Timing capture should develop alongside those pieces, with the runtime estimator added when enough useful measurements exist.
+Time averaging now belongs to the separate analysis module. Exact residual retention and window/shard behavior are settled, and production integration and archival are complete. Scientific reports and benchmark evidence remain preserved. Serial local execution is implemented. Metric-definition decisions, targeted calculation/end-to-end optimization, parallelization and difficult failure diagnosis remain separate work. Timing evidence now develops with the workflow, with the runtime estimator added when enough useful measurements exist.

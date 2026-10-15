@@ -1,4 +1,4 @@
-"""Strict, data-only configuration for EDF preflight."""
+"""Strict, data-only configuration for the serial EEG workflow."""
 
 from dataclasses import dataclass
 from fractions import Fraction
@@ -72,6 +72,57 @@ def _path(value, base, where):
     return (base / path).resolve() if not path.is_absolute() else path.resolve()
 
 
+def safe_id(value, where):
+    value = text(value, where)
+    if value in (".", "..") or any(c in value for c in ("/", "\\", "\0")):
+        raise WorkflowError(f"{where} must be a single filesystem name")
+    return value
+
+
+def reference_config(value, base):
+    if isinstance(value, str):
+        value = {"method": value}
+    fields(value, {"method", "channels", "mapping", "anode", "cathode", "names", "drop_refs", "forward"}, "reference")
+    method = value.get("method")
+    options = {"none": set(), "car": set(), "channels": {"channels"},
+               "mapping": {"mapping"}, "bipolar": {"anode", "cathode", "names", "drop_refs"},
+               "rest": {"forward"}}
+    if not isinstance(method, str) or method not in options:
+        raise WorkflowError(f"reference.method must be one of {list(options)}")
+    fields(value, {"method"} | options[method], "reference")
+    result = dict(value)
+    for key in ("channels", "anode", "cathode", "names"):
+        if key in options[method] and key != "names":
+            if not isinstance(value.get(key), list) or not value[key]:
+                raise WorkflowError(f"reference.{key} must be a nonempty list")
+        if key in value:
+            if not isinstance(value[key], list) or not value[key]:
+                raise WorkflowError(f"reference.{key} must be a nonempty list")
+            result[key] = [text(v, f"reference.{key}") for v in value[key]]
+    if method == "mapping":
+        mapping = value.get("mapping")
+        if not isinstance(mapping, dict) or not mapping:
+            raise WorkflowError("reference.mapping must be a nonempty mapping")
+        for target, refs in mapping.items():
+            text(target, "reference.mapping target")
+            if not isinstance(refs, list) or not refs:
+                raise WorkflowError("each reference.mapping value must be a nonempty list")
+            for ref in refs:
+                text(ref, "reference.mapping channel")
+    if method == "bipolar":
+        if len(result["anode"]) != len(result["cathode"]):
+            raise WorkflowError("bipolar anode/cathode lengths must agree")
+        result.setdefault("names", [f"{a}-{c}" for a, c in zip(result["anode"], result["cathode"])])
+        if len(result["names"]) != len(result["anode"]) or len(set(result["names"])) != len(result["names"]):
+            raise WorkflowError("bipolar names must be unique and match the pair count")
+        result.setdefault("drop_refs", True)
+        if type(result["drop_refs"]) is not bool:
+            raise WorkflowError("reference.drop_refs must be a boolean")
+    if method == "rest":
+        result["forward"] = str(_path(value.get("forward"), base, "reference.forward"))
+    return result
+
+
 @dataclass(frozen=True)
 class Recording:
     path: Path
@@ -85,12 +136,18 @@ class Configuration:
     source: Path
     recordings: tuple[Recording, ...]
     metric_config: Path
-    sampling_rate_hz: Fraction | None
+    sampling_rate_hz: Fraction
     window_seconds: Fraction
     step_seconds: Fraction
     detrend: bool
     zscore: bool
     output_directory: Path | None
+    bandpass: tuple[float, float]
+    notch: dict
+    reference: dict
+    run_name: str | None
+    output_batch_mib: float
+    metadata: Path | None
 
 
 def load_config(path) -> Configuration:
@@ -98,11 +155,17 @@ def load_config(path) -> Configuration:
     path = Path(path).resolve()
     base = path.parent
     cfg = fields(read_yaml(path), {"version", "recordings", "edf_glob", "metrics",
-                 "sampling_rate_hz", "window", "preprocessing", "output_directory"}, "workflow")
+                 "edf_directory", "metadata", "sampling_rate_hz", "window", "preprocessing",
+                 "bandpass", "notch", "reference", "run_name", "output_batch_mib", "output_directory"}, "workflow")
     if type(cfg.get("version")) is not int or cfg["version"] != 1:
         raise WorkflowError("workflow version must be 1")
-    if ("recordings" in cfg) == ("edf_glob" in cfg):
-        raise WorkflowError("provide exactly one of recordings or edf_glob")
+    if sum(key in cfg for key in ("recordings", "edf_glob", "edf_directory")) != 1:
+        raise WorkflowError("provide exactly one of recordings, edf_glob or edf_directory")
+    if "edf_directory" in cfg:
+        directory = _path(cfg["edf_directory"], base, "edf_directory")
+        if not directory.is_dir():
+            raise WorkflowError(f"edf_directory is not a directory: {directory}")
+        raw = [{"path": str(p)} for p in sorted(directory.iterdir()) if p.is_file() and p.suffix.lower() == ".edf"]
     if "edf_glob" in cfg:
         import glob
 
@@ -111,17 +174,41 @@ def load_config(path) -> Configuration:
         if not Path(pattern).is_absolute():
             pattern = str(base / pattern)
         raw = [{"path": p} for p in sorted(glob.glob(pattern))]
-    else:
+    elif "edf_directory" not in cfg:
         raw = cfg["recordings"]
     if not isinstance(raw, list) or not raw:
         raise WorkflowError("recordings must select at least one EDF")
+    metadata = _path(cfg["metadata"], base, "metadata") if "metadata" in cfg else None
+    metadata_entries = {}
+    if metadata is not None:
+        document = fields(read_yaml(metadata), {"schema", "recordings"}, "metadata")
+        if document.get("schema") != "pyspi-channel-selection/1" or not isinstance(document.get("recordings"), list):
+            raise WorkflowError("metadata must use pyspi-channel-selection/1 with a recordings list")
+        for entry in document["recordings"]:
+            fields(entry, {"path", "patient_id", "recording_id", "channels", "source_metadata"}, "metadata recording")
+            source = _path(entry.get("path"), metadata.parent, "metadata.path")
+            if source in metadata_entries:
+                raise WorkflowError(f"duplicate metadata source {source}")
+            if not isinstance(entry.get("channels"), list) or not entry["channels"]:
+                raise WorkflowError("metadata recording must supply a nonempty channels list")
+            metadata_entries[source] = entry
     recordings, identities, sources = [], set(), set()
     for index, entry in enumerate(raw):
+        if isinstance(entry, str):
+            entry = {"path": entry}
         where = f"recordings[{index}]"
         fields(entry, {"path", "patient_id", "recording_id", "channels"}, where)
         source = _path(entry.get("path"), base, f"{where}.path")
-        patient = text(entry.get("patient_id", source.stem), f"{where}.patient_id")
-        recording = text(entry.get("recording_id", source.stem), f"{where}.recording_id")
+        if metadata is not None:
+            if source not in metadata_entries:
+                raise WorkflowError(f"no matching metadata for {source}")
+            matched = metadata_entries[source]
+            for key in ("patient_id", "recording_id", "channels"):
+                if key in entry and key in matched and entry[key] != matched[key]:
+                    raise WorkflowError(f"{where}.{key} conflicts with metadata")
+            entry = {**matched, **entry}
+        patient = safe_id(entry.get("patient_id", source.stem), f"{where}.patient_id")
+        recording = safe_id(entry.get("recording_id", source.stem), f"{where}.recording_id")
         if (patient, recording) in identities:
             raise WorkflowError(f"duplicate patient/recording identity: {(patient, recording)!r}")
         if source in sources:
@@ -153,9 +240,25 @@ def load_config(path) -> Configuration:
     detrend, zscore = preprocessing.get("detrend", True), preprocessing.get("zscore", True)
     if type(detrend) is not bool or type(zscore) is not bool:
         raise WorkflowError("preprocessing detrend/zscore must be booleans")
-    rate = cfg.get("sampling_rate_hz")
-    rate = positive_number(rate, "sampling_rate_hz") if rate is not None else None
+    rate = positive_number(cfg.get("sampling_rate_hz"), "sampling_rate_hz (required)")
+    band = fields(cfg.get("bandpass"), {"low_hz", "high_hz"}, "bandpass (required)")
+    low = positive_number(band.get("low_hz"), "bandpass.low_hz (required)")
+    high = positive_number(band.get("high_hz"), "bandpass.high_hz (required)")
+    if not low < high < rate / 2:
+        raise WorkflowError("bandpass must satisfy 0 < low_hz < high_hz < sampling_rate_hz/2")
+    notch = fields(cfg.get("notch", {}), {"line_frequency_hz", "width_hz", "transition_hz", "enabled"}, "notch")
+    notch = {"line_frequency_hz": float(positive_number(notch.get("line_frequency_hz", 60), "notch.line_frequency_hz")),
+             "width_hz": float(positive_number(notch.get("width_hz", 1), "notch.width_hz")),
+             "transition_hz": float(positive_number(notch.get("transition_hz", 1), "notch.transition_hz")),
+             "enabled": notch.get("enabled", True)}
+    if type(notch["enabled"]) is not bool:
+        raise WorkflowError("notch.enabled must be a boolean")
+    if notch["width_hz"] + notch["transition_hz"] >= notch["line_frequency_hz"]:
+        raise WorkflowError("notch stopbands/transitions must be separated between harmonics")
+    reference = reference_config(cfg.get("reference"), base)
     output = cfg.get("output_directory")
     output = _path(output, base, "output_directory") if output is not None else None
     return Configuration(path, tuple(recordings), metric_config, rate, length, step,
-                         detrend, zscore, output)
+                         detrend, zscore, output, (float(low), float(high)), notch, reference,
+                         safe_id(cfg["run_name"], "run_name") if "run_name" in cfg else None,
+                         float(positive_number(cfg.get("output_batch_mib", 64), "output_batch_mib")), metadata)

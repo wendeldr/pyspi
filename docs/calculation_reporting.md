@@ -21,7 +21,7 @@ def completed(report, values):
     print(json.dumps(report.as_dict()))
     if report.status == "success":
         assert values.shape == (3, 3)
-        # A future runner can hand this completed matrix to its writer.
+        # The EEG runner buffers this matrix in its current bounded batch.
     else:
         assert values is None
         print(report.error.type, report.error.message)
@@ -64,7 +64,7 @@ dataset is loaded. Only finished attempts appear. `KeyboardInterrupt` and
 An interrupted repeated computation can leave old values for unattempted
 metrics in the table; use the current reports to identify finished attempts.
 
-Calculator handles one loaded dataset at a time. A future window runner can
+Calculator handles one loaded dataset at a time. The [EEG runner](workflow.md) can
 associate window/recording identity with its callback; Calculator does not
 invent window indices or implement retry policy.
 
@@ -105,8 +105,9 @@ cannot distinguish a successful all-NaN result from a caught exception.
 
 Notification means calculation finished, not that values were saved durably.
 A writer failure remains a consumer failure even when its input metric
-succeeded. Checkpoints, write completion, explicit retries, bounded output, and
-resume orchestration remain subsequent goals.
+succeeded. The [serial EEG workflow](workflow.md) supplies bounded batch output,
+write completion, explicit retries, and coarse resume orchestration around this
+callback. Calculator itself remains independent of EDF and durable storage.
 
 The existing `write_calculator` adapter continues to save table values without
 consulting these reports. Its behavior and storage format are unchanged; see
