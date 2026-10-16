@@ -181,6 +181,18 @@ class Data:
         if n_observations is not None:
             data = data[:, :n_observations]
 
+        invalid = ~np.isfinite(data)
+        if invalid.any():
+            raise ValueError(
+                f"Dataset {name} contains non-finite values (NaNs or infinity) "
+                f"in processes: {np.unique(np.where(invalid)[0])}."
+            )
+        if self.normalise:
+            if data.shape[1] < 2:
+                raise ValueError("Z-scoring requires at least two observations.")
+            scale_data = data if data.dtype.kind in "fc" else data.astype(float)
+            input_scale = np.max(np.abs(scale_data), axis=1, keepdims=True)
+
         if self.detrend:
             print(Fore.GREEN + "[1/2] Detrending time series in the dataset...")
             try:
@@ -192,7 +204,16 @@ class Data:
 
         if self.normalise:
             print(Fore.GREEN + "[2/2] Normalising (z-scoring) each time series in the dataset...\n")
-            data = zscore(data, axis=1, nan_policy="omit", ddof=1)
+            with np.errstate(over="ignore", invalid="ignore"):
+                std = np.std(data, axis=1, ddof=1, keepdims=True)
+            # Reject roundoff relative to input scale, not small EEG amplitudes.
+            unusable = ~np.isfinite(std) | (std <= 10 * np.finfo(std.dtype).eps * input_scale)
+            if unusable.any():
+                raise ValueError(
+                    f"Dataset {name} has zero or numerically unusable variance "
+                    f"in processes: {np.unique(np.where(unusable)[0])}."
+                )
+            data = zscore(data, axis=1, nan_policy="raise", ddof=1)
         else:
             print(Fore.RED + "[2/2] Skipping normalisation of time series in the dataset...\n")
 
@@ -217,7 +238,7 @@ class Data:
             )
 
     def add_process(self, proc, verbose=False):
-        """Appends a univariate process to the dataset.
+        """Preprocess and append a univariate process using this dataset's flags.
 
         Args:
             proc (ndarray):
@@ -229,9 +250,10 @@ class Data:
 
         if hasattr(self, "_data"):
             try:
-                self._data = np.append(
-                    self._data, np.reshape(proc, (1, self.n_observations, 1)), axis=0
-                )
+                processed = Data(
+                    proc, dim_order="s", detrend=self.detrend, normalise=self.normalise
+                ).to_numpy()
+                self._data = np.append(self._data, processed, axis=0)
             except IndexError:
                 raise IndexError()
         else:

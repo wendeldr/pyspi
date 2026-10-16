@@ -105,3 +105,33 @@ def test_inplace_false_deep_copies():
 def test_get_group_asserts_on_subset_classes():
     with pytest.raises(AssertionError, match="is a subset of class"):
         ToyDirected().get_group([["toy"], ["toy", "other"]])
+
+
+def test_two_array_preprocessing_matches_complete_data():
+    raw = np.random.default_rng(11).normal(size=(2, 1024))
+    raw = raw * np.array([[3.], [20.]]) + np.array([[12.], [-90.]])
+    before = raw.copy()
+    seen, i, j = ParsedBivariate().bivariate(raw[0], raw[1])
+    np.testing.assert_array_equal(seen.to_numpy(), Data(raw).to_numpy())
+    np.testing.assert_array_equal(raw, before)
+    assert (i, j) == (0, 1)
+
+
+@pytest.mark.parametrize("value", [np.nan, np.inf, 3.])
+def test_invalid_second_array_is_rejected(value):
+    raw = np.random.default_rng(12).normal(size=(2, 1024))
+    if np.isfinite(value):
+        raw[1] = value
+    else:
+        raw[1, 17] = value
+    with pytest.raises(ValueError):
+        ParsedBivariate().bivariate(raw[0], raw[1])
+
+
+def test_raw_multivariate_matches_data_for_scale_sensitive_metric():
+    from pyspi.statistics.basic import Covariance
+    raw = np.random.default_rng(13).normal(size=(3, 1024))
+    raw = raw * np.array([[1.], [20.], [.001]]) + np.array([[12.], [-90.], [3.]])
+    np.testing.assert_array_equal(
+        Covariance().multivariate(list(raw)), Covariance().multivariate(Data(raw))
+    )

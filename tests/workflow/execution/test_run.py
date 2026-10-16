@@ -227,7 +227,7 @@ def test_window_preprocessing_failure_is_recorded_not_a_success(execution_config
     reader = open_run(path)
     events = list(reader.diagnostics())
     assert all(e["stage"] == "window_preprocessing" and e["report"]["status"] == "failed" for e in events)
-    assert all("NaNs" in e["report"]["error"]["message"] for e in events)
+    assert all("zero or numerically unusable variance" in e["report"]["error"]["message"] for e in events)
     assert np.isnan(reader.load(reader.metrics[0])).all()
 
 

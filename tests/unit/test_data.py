@@ -10,7 +10,7 @@ from scipy.stats import zscore
 
 from pyspi.data import Data, load_dataset
 
-NAN_MSG = "non-numerics (NaNs) in processes"
+NONFINITE_MSG = "non-finite values (NaNs or infinity)"
 
 
 def _random(shape, seed=0):
@@ -56,36 +56,41 @@ def test_detrend_then_zscore_order():
 def test_nan_raises_value_error():
     x = _random((3, 50), seed=4)
     x[1, 10] = np.nan
-    with pytest.raises(ValueError, match=r"non-numerics \(NaNs\) in processes"):
+    with pytest.raises(ValueError, match="non-finite values"):
         Data(x)
 
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_inf_raises_value_error():
-    # zscore turns a row containing inf into NaN, which then trips the NaN check.
+    # Reject infinity before preprocessing.
     x = _random((3, 50), seed=5)
     x[2, 7] = np.inf
     with pytest.raises(ValueError) as excinfo:
         Data(x)
-    assert NAN_MSG in str(excinfo.value)
+    assert NONFINITE_MSG in str(excinfo.value)
     assert "[2]" in str(excinfo.value)
 
 
-def test_add_process_appends_raw_unnormalised():
+@pytest.mark.parametrize("normalise,detrended", [(False, False), (True, False), (False, True), (True, True)])
+def test_add_process_preprocesses_every_channel(normalise, detrended):
     rng = np.random.default_rng(6)
     first = rng.standard_normal(60) * 4.0 + 2.0
     second = rng.standard_normal(60) * 4.0 + 2.0
 
-    d = Data()
+    d = Data(normalise=normalise, detrend=detrended)
     d.add_process(first)
+    before = d.to_numpy().copy()
     d.add_process(second)
 
     assert (d.n_processes, d.n_observations, d.n_replications) == (2, 60, 1)
     arr = d.to_numpy(squeeze=True)
-    # First process goes through set_data (normalise=True by default) ...
-    np.testing.assert_allclose(arr[0], zscore(first, ddof=1), rtol=1e-12, atol=1e-12)
-    # ... but later processes are appended raw.
-    np.testing.assert_array_equal(arr[1], second)
+    expected = np.stack([first, second])
+    if detrended:
+        expected = detrend(expected, axis=1)
+    if normalise:
+        expected = zscore(expected, axis=1, ddof=1)
+    np.testing.assert_allclose(arr, expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_array_equal(d.to_numpy()[:1], before)
 
 
 def test_add_process_rejects_2d():
@@ -131,3 +136,55 @@ def test_to_numpy_squeeze_shapes():
     assert d.to_numpy().shape == (4, 30, 1)
     assert d.to_numpy(squeeze=True).shape == (4, 30)
     assert d.to_numpy(realisation=0).shape == (4, 30)
+
+
+@pytest.mark.parametrize("value", [np.nan, np.inf, -np.inf])
+@pytest.mark.parametrize("normalise,detrended", [(False, False), (True, False), (False, True), (True, True)])
+def test_nonfinite_input_rejected_under_all_flags(value, normalise, detrended):
+    x = _random((3, 1024))
+    x[2, 11] = value
+    with pytest.raises(ValueError, match=r"non-finite values.*processes: \[2\]"):
+        Data(x, normalise=normalise, detrend=detrended)
+
+
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+@pytest.mark.parametrize("kind", ["zero", "constant", "small_constant", "linear"])
+def test_zscore_rejects_unusable_variance(dtype, kind):
+    t = np.arange(1024, dtype=dtype)
+    x = _random((3, 1024)).astype(dtype)
+    x[1] = {"zero": np.zeros_like(t), "constant": np.full_like(t, 3.),
+            "small_constant": np.full_like(t, .001), "linear": .37*t + 1.1}[kind]
+    with pytest.raises(ValueError, match=r"zero or numerically unusable variance.*processes: \[1\]"):
+        Data(x, detrend=True)
+
+
+@pytest.mark.parametrize("dtype", [np.float32, np.float64])
+@pytest.mark.parametrize("scale", [1e-12, 1e-6, 1., 1e6])
+def test_zscore_preserves_valid_signals_and_sample_sd(dtype, scale):
+    x = (_random((3, 1024)) * scale).astype(dtype)
+    np.testing.assert_array_equal(
+        Data(x).to_numpy(squeeze=True), zscore(x, axis=1, ddof=1)
+    )
+
+
+@pytest.mark.parametrize("value", [0., 3., .001])
+def test_constant_channel_rejected_without_detrend(value):
+    x = _random((3, 1024))
+    x[1] = value
+    with pytest.raises(ValueError, match="zero or numerically unusable variance"):
+        Data(x)
+
+
+def test_zscore_requires_two_samples():
+    with pytest.raises(ValueError, match="at least two observations"):
+        Data(np.ones((3, 1)))
+
+
+def test_invalid_append_leaves_existing_data_unchanged():
+    data = Data(_random((2, 1024)))
+    before = data.to_numpy().copy()
+    bad = _random((1024,))
+    bad[10] = np.nan
+    with pytest.raises(ValueError, match="non-finite values"):
+        data.add_process(bad)
+    np.testing.assert_array_equal(data.to_numpy(), before)
