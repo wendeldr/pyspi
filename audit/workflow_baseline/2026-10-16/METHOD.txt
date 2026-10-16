@@ -1,0 +1,75 @@
+Bounded EEG workflow baseline: 2026-10-16
+
+Scope
+Three initial 0.5-second windows, zero overlap, in separate serial processes at
+50, 118 and 249 channels. This is one trial per size, not a full-patient or
+full-185 benchmark. Continuous preparation reads and prepares the full recording.
+
+The 39 configurations are copied from pyspi/workflow/retained185.yaml:
+  4 empirical covariance/precision variants, including their squared forms;
+  2 Spearman variants;
+  11 coherence-phase, 11 coherence-magnitude and 11 phase-lag-index variants.
+All original metric parameters, including normalized sampling/band conventions,
+are preserved. Scientific definitions have not been corrected or optimized.
+
+Channels follow the stored electrode order, mapped to actual EDF headers.
+The 50-channel case uses the first 50 contacts from patient 001's 118-contact
+selection. The 118- and 249-channel cases use the full stored selections for
+patients 001 and 111. CAR uses exactly each case's selected channels.
+
+Preparation: native-rate 60 Hz harmonic notches (1 Hz width/transition), MNE
+polyphase resampling to 2048 Hz, continuous 0.5-500 Hz FIR bandpass, CAR, then
+per-window detrending and z-scoring. Numerical library thread limits are 1.
+Output uses the existing writer and its default 64 MiB matrix-buffer target.
+The new output folder is on the same drive as the existing EEG/results data.
+
+Timing and memory
+The main timer surrounds pyspi.workflow.run, including its preflight/setup,
+loading, preparation, calculations, diagnostics and durable output. Process
+startup, harness imports, selection export, later readback and the separate
+writer comparisons are outside this timer.
+
+The harness observes the existing prepare, compute, callback and commit calls.
+Callback duration is subtracted from compute duration before reporting phases.
+The remaining setup/journal/other duration makes the phases sum to observed
+total time. Original workflow session fields are preserved but overlap and
+must not be added together. Verification hash capture inside run is measured
+separately; its duration can be subtracted from observed total.
+
+Peak RSS is the process high-water value taken immediately after run returns.
+It includes imports, JVM, continuous EEG, caches and output buffers. It excludes
+the later reader verification and writer comparisons. It is not incremental
+memory per metric or a complete concurrency sizing model.
+
+Verification and output comparison
+Each saved metric is checked against hashes of the writer's input buffers,
+including NaN bits. Every metric/window must report success. Read availability,
+shape, channel/window order, NaN diagonals and infinities are also checked.
+Exact round trips establish storage agreement, not mathematical correctness.
+Source EDF and accessed legacy-metadata sizes/mtimes are checked for changes.
+Legacy connectivity arrays are never read and existing stores are never written.
+
+The separate write-only comparison uses the exact same calculated arrays in
+one-window versus three-window batches. Timers include packing/compression and
+durable writes, but exclude readback validation, workflow journal and run metadata.
+Every compared metric must round-trip bit exactly. Each choice is measured once,
+in the order one-window then three-window. Compression and cache effects can vary.
+With all 185 metrics, the same 64 MiB buffer would fit fewer windows; these batch
+results do not establish a global optimum or a full-185 workflow throughput.
+
+Files and repeat use
+summary.csv and summary.json summarize the completed trials; case-*.json retain
+phases, per-metric reports, validity, preparation settings and machine context.
+metrics.yaml, configs/, inputs.json and measure.py preserve the exact inputs and
+measurement procedure. csv_order.json maps the reorganized review tracker.
+Generated stores are under work/ and logs are case-*.log; both are Git-ignored.
+
+To repeat, put measure.py alone in a new empty sibling dated directory, then run
+with the project's .venv Python and OPENBLAS_NUM_THREADS=OMP_NUM_THREADS=
+MKL_NUM_THREADS=1 set before Python starts:
+  measure.py --prepare
+  measure.py --case 50
+  measure.py --case 118
+  measure.py --case 249
+Run cases sequentially. The script refuses to overwrite an existing trial.
+Zarr I/O needs execution outside the Codex sandbox in this environment.

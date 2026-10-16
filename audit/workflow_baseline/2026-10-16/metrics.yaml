@@ -1,0 +1,127 @@
+.statistics.basic:
+  Covariance:
+    labels:
+    - undirected
+    - linear
+    - signed
+    - multivariate
+    - contemporaneous
+    dependencies: null
+    configs:
+    - estimator: EmpiricalCovariance
+    - estimator: EmpiricalCovariance
+      squared: true
+  Precision:
+    labels:
+    - undirected
+    - linear
+    - signed
+    - multivariate
+    - contemporaneous
+    dependencies: null
+    configs:
+    - estimator: EmpiricalCovariance
+    - estimator: EmpiricalCovariance
+      squared: true
+  SpearmanR:
+    labels:
+    - undirected
+    - nonlinear
+    - signed
+    - bivariate
+    - contemporaneous
+    dependencies: null
+    configs:
+    - squared: true
+    - squared: false
+.statistics.spectral:
+  CoherencePhase:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  CoherenceMagnitude:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
+  PhaseLagIndex:
+    labels:
+    - undirected
+    - linear
+    - unsigned
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125

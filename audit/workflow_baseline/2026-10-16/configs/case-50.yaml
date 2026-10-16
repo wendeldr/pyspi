@@ -1,0 +1,126 @@
+version: 1
+recordings:
+- path: /media/dan/Data/data/baseline_patients/baseline_edfs/001_Baseline.EDF
+  patient_id: '001'
+  recording_id: channels-50
+  channels:
+  - index: 100
+    name: B1
+  - index: 101
+    name: B2
+  - index: 102
+    name: B3
+  - index: 103
+    name: B4
+  - index: 104
+    name: B5
+  - index: 105
+    name: B6
+  - index: 106
+    name: B7
+  - index: 107
+    name: B8
+  - index: 108
+    name: B9
+  - index: 109
+    name: B10
+  - index: 90
+    name: C1
+  - index: 91
+    name: C2
+  - index: 92
+    name: C3
+  - index: 93
+    name: C4
+  - index: 94
+    name: C5
+  - index: 95
+    name: C6
+  - index: 96
+    name: C7
+  - index: 97
+    name: C8
+  - index: 98
+    name: C9
+  - index: 99
+    name: C10
+  - index: 10
+    name: E1
+  - index: 11
+    name: E2
+  - index: 12
+    name: E3
+  - index: 13
+    name: E4
+  - index: 14
+    name: E5
+  - index: 15
+    name: E6
+  - index: 16
+    name: E7
+  - index: 17
+    name: E8
+  - index: 0
+    name: G1
+  - index: 1
+    name: G2
+  - index: 2
+    name: G3
+  - index: 3
+    name: G4
+  - index: 4
+    name: G5
+  - index: 5
+    name: G6
+  - index: 6
+    name: G7
+  - index: 7
+    name: G8
+  - index: 8
+    name: G9
+  - index: 9
+    name: G10
+  - index: 110
+    name: I1
+  - index: 111
+    name: I2
+  - index: 112
+    name: I3
+  - index: 113
+    name: I4
+  - index: 114
+    name: I5
+  - index: 115
+    name: I6
+  - index: 116
+    name: I7
+  - index: 117
+    name: I8
+  - index: 118
+    name: I9
+  - index: 119
+    name: I10
+  - index: 24
+    name: M1
+  - index: 25
+    name: M2
+metrics:
+  config: ../metrics.yaml
+sampling_rate_hz: 2048
+bandpass:
+  low_hz: 0.5
+  high_hz: 500
+reference: car
+notch:
+  enabled: true
+  line_frequency_hz: 60
+  width_hz: 1
+  transition_hz: 1
+preprocessing:
+  detrend: true
+  zscore: true
+window:
+  length_seconds: 0.5
+  step_seconds: 0.5
+output_directory: ../work/case-50
+output_batch_mib: 64

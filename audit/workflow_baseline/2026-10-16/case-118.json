@@ -1,0 +1,1909 @@
+{
+  "schema": "pyspi-workflow-baseline/1",
+  "case_channels": 118,
+  "patient_id": "001",
+  "windows": 3,
+  "metric_variants": 39,
+  "date_utc": "2026-10-16T14:29:19.798281+00:00",
+  "observed_total_seconds": 102.7660878040042,
+  "total_excluding_verification_capture_seconds": 102.75385700899642,
+  "nonoverlapping_phases": {
+    "load_and_prepare_seconds": 5.549283120009932,
+    "window_preprocessing_seconds": 0.022916703994269483,
+    "calculation_and_orchestration_excluding_callback_seconds": 95.52152504092373,
+    "output_callback_seconds": 0.06608471806976013,
+    "batch_commit_seconds": 1.1127080360020045,
+    "verification_capture_seconds": 0.012230795007781126,
+    "setup_journal_and_other_seconds": 0.48133938999671955
+  },
+  "original_workflow_session_fields": {
+    "preparation_seconds": 5.549415545989177,
+    "window_preprocessing_seconds": 0.022916703994269483,
+    "calculation_wall_seconds": 95.58764086698648,
+    "metric_elapsed_seconds": 95.41368918296939,
+    "output_seconds": 1.1783267410064582,
+    "elapsed_seconds": 102.30921389399737,
+    "resume": false,
+    "retry_failures": false,
+    "status": "complete",
+    "invocation_setup_seconds": 0.4474534839973785
+  },
+  "per_metric_reports": [
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cov_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.008828227000776678,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cov-sq_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.00012694600445684046,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "prec_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.00010822599870152771,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "prec-sq_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.00011896599608007818,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "spearmanr-sq",
+        "status": "success",
+        "elapsed_seconds": 4.798821008997038,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "spearmanr",
+        "status": "success",
+        "elapsed_seconds": 4.76957159799349,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+        "status": "success",
+        "elapsed_seconds": 5.6650958779937355,
+        "warnings": [
+          {
+            "category": "builtins.RuntimeWarning",
+            "message": "Mean of empty slice",
+            "filename": "/media/dan/Data/git/pyspi/pyspi/statistics/spectral.py",
+            "lineno": 91
+          }
+        ],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+        "status": "success",
+        "elapsed_seconds": 5.9464046280045295,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+        "status": "success",
+        "elapsed_seconds": 0.00039412599289789796,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+        "status": "success",
+        "elapsed_seconds": 0.0002637209981912747,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+        "status": "success",
+        "elapsed_seconds": 0.0009411159990122542,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0022923479991732165,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+        "status": "success",
+        "elapsed_seconds": 0.0028897870070068166,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.0033804089907789603,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0016386120114475489,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.006401143007678911,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.009934457004419528,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+        "status": "success",
+        "elapsed_seconds": 5.409905458000139,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+        "status": "success",
+        "elapsed_seconds": 0.0016445219953311607,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+        "status": "success",
+        "elapsed_seconds": 0.0005110720085212961,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+        "status": "success",
+        "elapsed_seconds": 0.00040574499871581793,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+        "status": "success",
+        "elapsed_seconds": 0.0012744940031552687,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0019290810014354065,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+        "status": "success",
+        "elapsed_seconds": 0.002939576006610878,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.0026815750024979934,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0015786540025146678,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.005822312989039347,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.010417279991088435,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+        "status": "success",
+        "elapsed_seconds": 5.63348587800283,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+        "status": "success",
+        "elapsed_seconds": 0.0002628909860504791,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+        "status": "success",
+        "elapsed_seconds": 0.0002609509974718094,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+        "status": "success",
+        "elapsed_seconds": 0.00023729099484626204,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+        "status": "success",
+        "elapsed_seconds": 0.000485263008158654,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0008099910046439618,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+        "status": "success",
+        "elapsed_seconds": 0.001444169000023976,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.0021930419898126274,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0017714959976729006,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.0059546889970079064,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 0,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.010683390006306581,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cov_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.0035345740034244955,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cov-sq_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.000139764990308322,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "prec_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.00011077600356657058,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "prec-sq_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.0001188850001199171,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "spearmanr-sq",
+        "status": "success",
+        "elapsed_seconds": 4.75749471198651,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "spearmanr",
+        "status": "success",
+        "elapsed_seconds": 4.747997708996991,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+        "status": "success",
+        "elapsed_seconds": 5.2040632990101585,
+        "warnings": [
+          {
+            "category": "builtins.RuntimeWarning",
+            "message": "Mean of empty slice",
+            "filename": "/media/dan/Data/git/pyspi/pyspi/statistics/spectral.py",
+            "lineno": 91
+          }
+        ],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+        "status": "success",
+        "elapsed_seconds": 5.189328280001064,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+        "status": "success",
+        "elapsed_seconds": 0.0002807400014717132,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+        "status": "success",
+        "elapsed_seconds": 0.00023113199858926237,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+        "status": "success",
+        "elapsed_seconds": 0.0005693999992217869,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0009513859986327589,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+        "status": "success",
+        "elapsed_seconds": 0.003813964009168558,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.00291609599662479,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.00191634199291002,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.006144112005131319,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.00823972700163722,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+        "status": "success",
+        "elapsed_seconds": 5.193671625005663,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+        "status": "success",
+        "elapsed_seconds": 0.0002691300032893196,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+        "status": "success",
+        "elapsed_seconds": 0.00026092999905813485,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+        "status": "success",
+        "elapsed_seconds": 0.00021763199765700847,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+        "status": "success",
+        "elapsed_seconds": 0.0005205619963817298,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0009004280000226572,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+        "status": "success",
+        "elapsed_seconds": 0.0021709129941882566,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.0020614370005205274,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.002189081991673447,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.005860710996785201,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.008449800006928854,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+        "status": "success",
+        "elapsed_seconds": 5.219024953999906,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+        "status": "success",
+        "elapsed_seconds": 0.00027200099430046976,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+        "status": "success",
+        "elapsed_seconds": 0.00024277101329062134,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+        "status": "success",
+        "elapsed_seconds": 0.0002157620037905872,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+        "status": "success",
+        "elapsed_seconds": 0.000465812991023995,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0009031679946929216,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+        "status": "success",
+        "elapsed_seconds": 0.002170581996324472,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.0021215049928287044,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0021191639971220866,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.005315300993970595,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 1,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.008435280004050583,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cov_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.003581851997296326,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cov-sq_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.00012692500604316592,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "prec_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.00010536599438637495,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "prec-sq_EmpiricalCovariance",
+        "status": "success",
+        "elapsed_seconds": 0.00012836499081458896,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "spearmanr-sq",
+        "status": "success",
+        "elapsed_seconds": 4.76492259799852,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "spearmanr",
+        "status": "success",
+        "elapsed_seconds": 4.750740514005884,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+        "status": "success",
+        "elapsed_seconds": 4.911731011001393,
+        "warnings": [
+          {
+            "category": "builtins.RuntimeWarning",
+            "message": "Mean of empty slice",
+            "filename": "/media/dan/Data/git/pyspi/pyspi/statistics/spectral.py",
+            "lineno": 91
+          }
+        ],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+        "status": "success",
+        "elapsed_seconds": 5.120611051999731,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+        "status": "success",
+        "elapsed_seconds": 0.0002810099977068603,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+        "status": "success",
+        "elapsed_seconds": 0.0002255120052723214,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+        "status": "success",
+        "elapsed_seconds": 0.0005749900010414422,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0018700229993555695,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+        "status": "success",
+        "elapsed_seconds": 0.0035940420057158917,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.003090169993811287,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.001923681003972888,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.006247558005270548,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.008563784998841584,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+        "status": "success",
+        "elapsed_seconds": 5.808803107007407,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+        "status": "success",
+        "elapsed_seconds": 0.0002867989969672635,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+        "status": "success",
+        "elapsed_seconds": 0.0002579610008979216,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+        "status": "success",
+        "elapsed_seconds": 0.00022068200632929802,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+        "status": "success",
+        "elapsed_seconds": 0.0005289409891702235,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.001005034995614551,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+        "status": "success",
+        "elapsed_seconds": 0.0018276850023539737,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.0020925659919157624,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.001959230998181738,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.006029575000866316,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.008340782995219342,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+        "status": "success",
+        "elapsed_seconds": 7.28297372799716,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195",
+        "status": "success",
+        "elapsed_seconds": 0.00027288000273983926,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391",
+        "status": "success",
+        "elapsed_seconds": 0.00024196199956350029,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586",
+        "status": "success",
+        "elapsed_seconds": 0.00022499200713355094,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146",
+        "status": "success",
+        "elapsed_seconds": 0.0005025120044592768,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0009899050055537373,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732",
+        "status": "success",
+        "elapsed_seconds": 0.0017513180064270273,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.0020456969941733405,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342",
+        "status": "success",
+        "elapsed_seconds": 0.0019386210042284802,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.005136527004651725,
+        "warnings": [],
+        "error": null
+      }
+    },
+    {
+      "window": 2,
+      "stage": "calculation",
+      "report": {
+        "identifier": "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122",
+        "status": "success",
+        "elapsed_seconds": 0.008320754001033492,
+        "warnings": [],
+        "error": null
+      }
+    }
+  ],
+  "all_reports_success": true,
+  "all_saved_values_match_writer_input_bit_exactly": true,
+  "output_validity": {
+    "cov_EmpiricalCovariance": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cov-sq_EmpiricalCovariance": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "prec_EmpiricalCovariance": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "prec-sq_EmpiricalCovariance": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "spearmanr-sq": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "spearmanr": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "phase_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "cohmag_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-00195": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-00195_fmax-0-00391": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-00391_fmax-0-00586": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-00586_fmax-0-0146": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-0146_fmax-0-0342": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-0732": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-0732_fmax-0-122": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-0342": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-0342_fmax-0-122": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    },
+    "pli_multitaper_mean_fs-1_fmin-0-000488_fmax-0-122": {
+      "finite": 41418,
+      "nan": 354,
+      "infinite": 0
+    }
+  },
+  "source_stats_unchanged": true,
+  "workflow_peak_process_rss_kib": 2719028,
+  "workflow_files": 131,
+  "workflow_bytes": 4559595,
+  "batch_count": 1,
+  "writer_batch_trials": [
+    {
+      "batch_windows": 1,
+      "write_seconds": 2.858070037997095,
+      "files": 375,
+      "bytes": 4663542,
+      "all_metrics_bit_exact": true,
+      "scope": "Production writer, same real calculated arrays, no workflow journal or run metadata"
+    },
+    {
+      "batch_windows": 3,
+      "write_seconds": 1.0014535000082105,
+      "files": 125,
+      "bytes": 4449003,
+      "all_metrics_bit_exact": true,
+      "scope": "Production writer, same real calculated arrays, no workflow journal or run metadata"
+    }
+  ],
+  "preparation": {
+    "sampling_rate_hz": 2048.0,
+    "samples": 624128,
+    "units": "SI (EDF physical units)",
+    "native_rate_groups": [
+      {
+        "native_sampling_rate_hz": 1024.0,
+        "notch_frequencies_hz": [
+          60.0,
+          120.0,
+          180.0,
+          240.0,
+          300.0,
+          360.0,
+          420.0,
+          480.0
+        ],
+        "channels": [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "B6",
+          "B7",
+          "B8",
+          "B9",
+          "B10",
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5",
+          "C6",
+          "C7",
+          "C8",
+          "C9",
+          "C10",
+          "E1",
+          "E2",
+          "E3",
+          "E4",
+          "E5",
+          "E6",
+          "E7",
+          "E8",
+          "G1",
+          "G2",
+          "G3",
+          "G4",
+          "G5",
+          "G6",
+          "G7",
+          "G8",
+          "G9",
+          "G10",
+          "I1",
+          "I2",
+          "I3",
+          "I4",
+          "I5",
+          "I6",
+          "I7",
+          "I8",
+          "I9",
+          "I10",
+          "M1",
+          "M2",
+          "M3",
+          "M4",
+          "M5",
+          "M6",
+          "O1",
+          "O2",
+          "O3",
+          "O4",
+          "O5",
+          "O6",
+          "O7",
+          "O8",
+          "O9",
+          "O10",
+          "O11",
+          "O12",
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "P7",
+          "P8",
+          "P9",
+          "P10",
+          "P11",
+          "P12",
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4",
+          "Q5",
+          "Q6",
+          "Q7",
+          "Q8",
+          "Q9",
+          "Q10",
+          "Q11",
+          "Q12",
+          "R1",
+          "R2",
+          "R3",
+          "R4",
+          "R5",
+          "R6",
+          "RPI1",
+          "RPI2",
+          "RPI3",
+          "RPI4",
+          "RPI5",
+          "RPI6",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "W1",
+          "W2",
+          "W3",
+          "W4",
+          "W5",
+          "W6",
+          "W7",
+          "W8"
+        ],
+        "resampled": true
+      }
+    ],
+    "reference": {
+      "method": "car"
+    },
+    "reference_pool": [
+      "B1",
+      "B2",
+      "B3",
+      "B4",
+      "B5",
+      "B6",
+      "B7",
+      "B8",
+      "B9",
+      "B10",
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5",
+      "C6",
+      "C7",
+      "C8",
+      "C9",
+      "C10",
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6",
+      "E7",
+      "E8",
+      "G1",
+      "G2",
+      "G3",
+      "G4",
+      "G5",
+      "G6",
+      "G7",
+      "G8",
+      "G9",
+      "G10",
+      "I1",
+      "I2",
+      "I3",
+      "I4",
+      "I5",
+      "I6",
+      "I7",
+      "I8",
+      "I9",
+      "I10",
+      "M1",
+      "M2",
+      "M3",
+      "M4",
+      "M5",
+      "M6",
+      "O1",
+      "O2",
+      "O3",
+      "O4",
+      "O5",
+      "O6",
+      "O7",
+      "O8",
+      "O9",
+      "O10",
+      "O11",
+      "O12",
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5",
+      "P6",
+      "P7",
+      "P8",
+      "P9",
+      "P10",
+      "P11",
+      "P12",
+      "Q1",
+      "Q2",
+      "Q3",
+      "Q4",
+      "Q5",
+      "Q6",
+      "Q7",
+      "Q8",
+      "Q9",
+      "Q10",
+      "Q11",
+      "Q12",
+      "R1",
+      "R2",
+      "R3",
+      "R4",
+      "R5",
+      "R6",
+      "RPI1",
+      "RPI2",
+      "RPI3",
+      "RPI4",
+      "RPI5",
+      "RPI6",
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+      "S7",
+      "S8",
+      "W1",
+      "W2",
+      "W3",
+      "W4",
+      "W5",
+      "W6",
+      "W7",
+      "W8"
+    ],
+    "bandpass": {
+      "low_hz": 0.5,
+      "high_hz": 500.0,
+      "method": "fir",
+      "phase": "zero",
+      "fir_window": "hamming",
+      "fir_design": "firwin",
+      "filter_length": "auto",
+      "taps": 13517,
+      "lower_transition_hz": 0.5,
+      "upper_transition_hz": 125.0
+    },
+    "notch": {
+      "line_frequency_hz": 60.0,
+      "width_hz": 1.0,
+      "transition_hz": 1.0,
+      "enabled": true,
+      "method": "fir",
+      "phase": "zero",
+      "fir_window": "hamming",
+      "fir_design": "firwin",
+      "filter_length": "auto"
+    },
+    "resampling_method": "polyphase",
+    "warnings": []
+  },
+  "environment": {
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "cpu": "AMD Ryzen Threadripper 3970X 32-Core Processor",
+    "logical_cpus": 64,
+    "memory_total_kib": 32712640,
+    "threads": [
+      {
+        "user_api": "blas",
+        "internal_api": "openblas",
+        "num_threads": 1,
+        "prefix": "libscipy_openblas",
+        "filepath": "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scipy.libs/libscipy_openblas-6cdc3b4a.so",
+        "version": "0.3.30",
+        "threading_layer": "pthreads",
+        "architecture": "Haswell"
+      },
+      {
+        "user_api": "blas",
+        "internal_api": "openblas",
+        "num_threads": 1,
+        "prefix": "libscipy_openblas",
+        "filepath": "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/numpy.libs/libscipy_openblas64_-f48b354e.so",
+        "version": "0.3.34.106.0",
+        "threading_layer": "pthreads",
+        "architecture": "Haswell"
+      },
+      {
+        "user_api": "openmp",
+        "internal_api": "openmp",
+        "num_threads": 1,
+        "prefix": "libgomp",
+        "filepath": "/media/dan/Data/git/pyspi/.venv/lib/python3.12/site-packages/scikit_learn.libs/libgomp-e985bcbb.so.1.0.0",
+        "version": null
+      }
+    ],
+    "thread_environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    },
+    "versions": {
+      "numpy": "2.5.4",
+      "scipy": "1.17.1",
+      "pandas": "3.0.6",
+      "mne": "1.13.2",
+      "spectral-connectivity": "1.1.2",
+      "scikit-learn": "1.9.1",
+      "zarr": "3.4.1",
+      "numcodecs": "0.17.0",
+      "pcodec": "1.0.4",
+      "jpype1": "1.7.1"
+    },
+    "git_commit": "72bc39f8e0405f350a46b80993abffd19cf27825"
+  },
+  "config": "audit/workflow_baseline/2026-10-16/configs/case-118.yaml",
+  "run": "audit/workflow_baseline/2026-10-16/work/case-118/001/calculations/channels-118",
+  "limits": "One serial trial per size, three initial windows, 39 selected retained variants. Full continuous EEG preparation. All estimator mathematics unchanged. Exact storage checks do not establish scientific correctness. Per-process high-water RSS includes imports/JVM/preparation/calculation/output, excludes later verification and writer comparisons. Original session fields overlap; use nonoverlapping_phases or observed total. No cohort or full-185 runtime projection."
+}

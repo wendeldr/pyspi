@@ -1,0 +1,34 @@
+Bounded EEG workflow baseline: completed
+
+39 retained configurations; three initial 0.5-second windows per case.
+The whole continuous recording is loaded and prepared before those windows.
+Each case ran once in a fresh serial process with numerical thread limits of 1.
+Cases ran in order 50, 118, 249. OS caches were not cleared.
+
+Channels  Native Hz  Workflow sec  Prepare sec  Calculate sec  Callback+commit sec  Peak GiB
+      50     1024.0         11.00         2.00           7.48                 1.01      0.83
+     118     1024.0        102.77         5.55          95.52                 1.18      2.59
+     249     2048.0        494.30        17.36         473.91                 1.52      9.35
+
+Write-only comparison, same real calculated values:
+Channels  One-window batches sec  Three-window batch sec  Files one/three
+      50                    2.73                    0.84  375/125
+     118                    2.86                    1.00  375/125
+     249                    3.24                    1.33  375/125
+
+All 351 metric/window attempts succeeded. All saved values matched writer
+inputs bit exactly. Channel/window order, availability and expected NaN
+diagonals passed verification. No infinities or unexpected NaNs were found.
+Accessed source EDF/legacy-metadata sizes and mtimes are unchanged.
+Package code and dependency files are unchanged.
+
+Calculation dominates total time for this selected workload. Larger output
+batches reduced write time and file count. The 249-channel process peaked at
+9.35 GiB; memory must be measured when choosing future concurrency.
+
+This is not a full-185 or full-patient benchmark. Scientific correctness is
+not established by successful calculation or exact storage. No full-patient
+or cohort runtime projection is made. See METHOD.txt for scope and repeat use.
+
+The review CSV has 451 metric rows plus 13 shared units, reordered by family
+and EEG priority. All fields except metric remain blank.
