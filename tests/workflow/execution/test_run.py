@@ -227,7 +227,7 @@ def test_window_preprocessing_failure_is_recorded_not_a_success(execution_config
     reader = open_run(path)
     events = list(reader.diagnostics())
     assert all(e["stage"] == "window_preprocessing" and e["report"]["status"] == "failed" for e in events)
-    assert all("zero or numerically unusable variance" in e["report"]["error"]["message"] for e in events)
+    assert all("Fewer than two usable channels" in e["report"]["error"]["message"] for e in events)
     assert np.isnan(reader.load(reader.metrics[0])).all()
 
 
@@ -314,3 +314,40 @@ def test_module_alias_groups_preserve_requested_metric_order(execution_config, t
     [path] = run(config, max_windows=1)
     assert open_run(path).metrics == expected
     assert [e["report"]["identifier"] for e in open_run(path).diagnostics()] == expected
+
+
+def test_unusable_channels_keep_matrix_shape_and_later_windows_run(signal_edf, execution_config, monkeypatch):
+    from pyspi.workflow import _run as runner
+    from pyspi.workflow._prepare import PreparedRecording
+
+    names = ["EEG A", "EEG bad", "EEG B"]
+    source = signal_edf(rate=2048, records=2, labels=tuple(names))
+    config = execution_config(source=source, sampling_rate_hz=2048,
+                              bandpass={"low_hz": 2, "high_hz": 500}, reference="none",
+                              output_batch_mib=1)
+    samples = np.random.default_rng(17).normal(size=(3, 4096))
+    samples[1, :1024] = 3.
+    samples[2, 1024:2048] = .37 * np.arange(1024) + 1.1
+    samples[:2, 2048:3072] = 0.
+    monkeypatch.setattr(runner, "prepare_recording",
+                        lambda *a, **k: PreparedRecording(samples.copy(), names, {}, 0.))
+    with pytest.warns(UserWarning, match="skipping unusable channels"):
+        [path] = run(config, max_windows=4)
+    reader = open_run(path)
+    metric = reader.metrics[0]
+    matrices = reader.load(metric)
+    assert matrices.shape == (3, 3, 4)
+    assert reader.recording["channels"] == names
+    assert list(reader.statuses(metric)) == ["success", "success", "failed", "success"]
+    for window, valid in [(0, [0, 2]), (1, [0, 1]), (3, [0, 1, 2])]:
+        normalized = zscore(detrend(samples[valid, window*1024:(window+1)*1024], axis=1),
+                            axis=1, ddof=1)
+        expected = np.full((3, 3), np.nan)
+        covariance = np.cov(normalized, bias=True)
+        np.fill_diagonal(covariance, np.nan)
+        expected[np.ix_(valid, valid)] = covariance
+        np.testing.assert_allclose(matrices[:, :, window], expected, rtol=1e-12, atol=1e-12)
+    assert np.isnan(matrices[:, :, 2]).all()
+    events = list(reader.diagnostics(metric))
+    assert "EEG bad" in events[0]["window_preprocessing_warnings"][0]["message"]
+    assert "EEG B" in events[1]["window_preprocessing_warnings"][0]["message"]

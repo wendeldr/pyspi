@@ -13,6 +13,14 @@ import os
 VERBOSE = False
 init(autoreset=True) # automatically reset coloured outputs
 
+class InvalidChannelsError(ValueError):
+    """Invalid signal data, with process indices for workflow exclusion."""
+
+    def __init__(self, message, processes):
+        super().__init__(message)
+        self.processes = np.asarray(processes, dtype=int)
+
+
 class Data:
     """Store data for dependency analysis.
 
@@ -183,9 +191,10 @@ class Data:
 
         invalid = ~np.isfinite(data)
         if invalid.any():
-            raise ValueError(
+            raise InvalidChannelsError(
                 f"Dataset {name} contains non-finite values (NaNs or infinity) "
-                f"in processes: {np.unique(np.where(invalid)[0])}."
+                f"in processes: {np.unique(np.where(invalid)[0])}.",
+                np.unique(np.where(invalid)[0]),
             )
         if self.normalise:
             if data.shape[1] < 2:
@@ -209,9 +218,10 @@ class Data:
             # Reject roundoff relative to input scale, not small EEG amplitudes.
             unusable = ~np.isfinite(std) | (std <= 10 * np.finfo(std.dtype).eps * input_scale)
             if unusable.any():
-                raise ValueError(
+                raise InvalidChannelsError(
                     f"Dataset {name} has zero or numerically unusable variance "
-                    f"in processes: {np.unique(np.where(unusable)[0])}."
+                    f"in processes: {np.unique(np.where(unusable)[0])}.",
+                    np.unique(np.where(unusable)[0]),
                 )
             data = zscore(data, axis=1, nan_policy="raise", ddof=1)
         else:
@@ -219,8 +229,9 @@ class Data:
 
         nans = np.isnan(data)
         if nans.any():
-            raise ValueError(
-                f"Dataset {name} contains non-numerics (NaNs) in processes: {np.unique(np.where(nans)[0])}."
+            raise InvalidChannelsError(
+                f"Dataset {name} contains non-numerics (NaNs) in processes: {np.unique(np.where(nans)[0])}.",
+                np.unique(np.where(nans)[0]),
             )
 
         self._data = data

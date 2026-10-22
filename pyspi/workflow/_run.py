@@ -248,6 +248,7 @@ def _commit_batch(path, manifest, batch, buffers, journal, metrics, session):
 
 def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failures, session):
     from pyspi.calculation import MetricReport, _capture_metric_warnings, _describe_error
+    from pyspi.data import InvalidChannelsError
     from pyspi.storage import open_results
 
     identifiers, full_spis = [m.identifier for m in metrics], dict(calc.spis)
@@ -295,9 +296,20 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
             start = window * manifest["windows"]["step_samples"]
             stop = start + manifest["windows"]["length_samples"]
             before = perf_counter()
+            valid = np.arange(n)
             try:
                 with _capture_metric_warnings() as window_warnings, redirect_stdout(sys.stderr):
-                    calc.load_dataset(prepared.data[:, start:stop].copy())
+                    while valid.size >= 2:
+                        try:
+                            calc.load_dataset(prepared.data[valid, start:stop].copy())
+                            break
+                        except InvalidChannelsError as exc:
+                            excluded = [manifest["channels"][i] for i in valid[exc.processes]]
+                            warnings.warn(f"Window {window}: skipping unusable channels {excluded}: {exc}",
+                                          UserWarning)
+                            valid = np.delete(valid, exc.processes)
+                    if valid.size < 2:
+                        raise ValueError("Fewer than two usable channels remain in this window.")
             except Exception as exc:
                 error = _describe_error(exc)
                 for identifier in active:
@@ -313,13 +325,15 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
                 journal.record(window, report, window_warnings=window_warnings)
                 session["metric_elapsed_seconds"] += report.elapsed_seconds
                 if values is not None:
-                    if values.dtype not in (np.dtype("float32"), np.dtype("float64")) or values.shape != (n, n):
+                    if values.dtype not in (np.dtype("float32"), np.dtype("float64")) or values.shape != (valid.size, valid.size):
                         raise WorkflowError("Calculator produced unsupported output dtype/axes")
                     if report.identifier not in buffers:
                         buffers[report.identifier] = np.full((n, n, count), np.nan, dtype=values.dtype)
                     if buffers[report.identifier].dtype != values.dtype:
                         raise WorkflowError("Calculator dtype changed within a batch")
-                    buffers[report.identifier][:, :, window - batch["start"]] = values
+                    target = buffers[report.identifier][:, :, window - batch["start"]]
+                    target[:] = np.nan
+                    target[np.ix_(valid, valid)] = values
                 session["output_seconds"] += perf_counter() - before
 
             before = perf_counter()
