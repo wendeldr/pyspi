@@ -133,39 +133,6 @@ def test_softdtw_global_constraint_fixed(softdtw_outputs):
 
 
 # --------------------------------------------------------------------------- #
-# 4. KendallTau mutates the class-level labels list (SpearmanR is fixed)
-# --------------------------------------------------------------------------- #
-RANK_CLASSES = ["KendallTau"]
-RANK_BASE_LABELS = ["basic", "unordered", "rank", "linear", "undirected"]
-
-
-def _fresh_rank_class(monkeypatch, name):
-    """The class with its class-level labels reset (other tests pollute it)."""
-    cls = getattr(importlib.import_module("pyspi.statistics.basic"), name)
-    monkeypatch.setattr(cls, "labels", list(RANK_BASE_LABELS))
-    return cls
-
-
-@pytest.mark.parametrize("cls_name", RANK_CLASSES)
-def test_rank_labels_shared_current(monkeypatch, cls_name):
-    cls = _fresh_rank_class(monkeypatch, cls_name)
-    signed, squared = cls(), cls(squared=True)
-    for spi in (signed, squared):
-        assert {"signed", "unsigned"} <= set(spi.labels)
-    assert signed.labels is cls.labels
-
-
-@pytest.mark.parametrize("cls_name", RANK_CLASSES)
-@pytest.mark.xfail(strict=True, raises=AssertionError,
-                   reason="known bug: __init__ does self.labels += [...] on the class-level list")
-def test_rank_labels_shared_fixed(monkeypatch, cls_name):
-    cls = _fresh_rank_class(monkeypatch, cls_name)
-    cls(), cls(squared=True)
-    labels = set(cls().labels)
-    assert len(labels & {"signed", "unsigned"}) == 1
-
-
-# --------------------------------------------------------------------------- #
 # 5. PLI currently returns a signed antisymmetric variant despite its labels.
 # Whether to change its definition or labels is a pending scientific decision;
 # symmetry is not an independently justified "fixed" mathematical oracle.

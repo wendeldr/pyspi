@@ -154,6 +154,47 @@ The stochastic patterns match 12 identifiers (the `-sq` variants included); thei
 
 The iterative optimisers (`*GraphicalLassoCV*`, `phi_*`, `gpfit_*`, `anm`) have no row: seeded run to run and against the stored goldens they were measured bit-for-bit reproducible on the generating machine (the 11 matching identifiers, each recomputed twice at both sizes: maximum absolute difference from the stored goldens 0), so the default applies. If another machine shows drift for one of them, re-add a row for that pattern with the measured drift written in its reason, not a guessed tolerance. Overrides are documented exceptions; do not loosen a tolerance to make a failure go away.
 
+## Basic rank and cache refactor
+
+`pyspi/_rank.py` computes Kendall's existing tau-b coefficient with channel
+sort orders and tie counts prepared once. Each unordered pair uses SciPy
+1.17.1's compiled `_kendall_dis` counter; joint ties are counted separately.
+The SciPy wrapper's repeated preprocessing and discarded p-values are omitted.
+Ordinary and squared Kendall/Spearman variants share their signed results.
+The private SciPy kernel is covered by exhaustive short tied sequences,
+independent concordance counts, and larger comparisons with `kendalltau`.
+
+`pyspi/_cache.py` supplies one input snapshot for the reviewed basic and
+spectral calculations. It detects setters, channel insertion/removal, dtype
+changes, and edits through writable NumPy views or the caller's input array.
+Covariance/precision return independent arrays and leave their fitted model
+intact; fitting warnings are visible. A single channel now returns the proper
+1-by-1 NaN matrix instead of failing sklearn's two-dimensional input check.
+Covariance, precision, cross-correlation, and both rank correlations explicitly
+require a single realisation.
+
+Cross-correlation computes each unordered pair once, shares channel standard
+deviations, and bounds cached sequences to 256 MiB. The first requested pair
+orientation is recorded even if its sequence is evicted. Its lag window,
+normalization, significance threshold, and missing-crossing behavior are
+unchanged pending their mathematical review. The generic `Undirected` loop is
+also unchanged: cointegration's reverse-pair cache and stochastic information
+estimators require separate orientation/RNG checks before a global switch.
+
+`unit/test_basic_refactor.py` covers numerical definitions, permutations,
+constants, large integers, shared work, data mutation, output ownership, fitting
+warnings, and preserved cross-correlation behavior. Numerical golden arrays
+were not regenerated; only Kendall's signed/unsigned label metadata changed.
+The former Kendall label expected failure is replaced by passing tests.
+
+Run `.venv/bin/python -B tests/benchmark_basic.py` to reproduce
+`basic_refactor_results.json`. It compares against commit `c28512b` (which
+already includes the earlier Spearman optimization) with three paired repeats,
+fresh Data per repeat, and one numerical-library thread. A unique-pair SciPy
+alternative isolates the additional benefit of the coefficient-only Kendall
+implementation. Benchmark results describe synthetic 118-by-1024 inputs,
+not total workflow throughput.
+
 ## Spectral backend refactor
 
 `pyspi/_spectral.py` shares one multitaper transform per input and spectral
@@ -300,7 +341,7 @@ The confirmed implementation issues below are locked in `unit/test_known_bugs.py
 1. `TransferEntropy(estimator='symbolic')` falls through to the Gaussian calculator (`te_symbolic_* == gc_gaussian_*`).
 2. `ConvergentCrossMapping(embedding_dimension=None)` picks max E (10), not best-rho E (`ccm_E-None == ccm_E-10`). Both tests are `slow`.
 3. `SoftDynamicTimeWarping` ignores `global_constraint` (three identical configs).
-4. `KendallTau` mutates the class-level `labels` list (instances carry both `signed` and `unsigned`). `SpearmanR` now owns its instance labels; its label metadata in the small/full/preprocessing golden sets was corrected without regenerating numerical values.
+4. **Fixed:** `KendallTau` and `SpearmanR` own their instance labels. Their signed/unsigned label metadata in the small/full/preprocessing golden sets was corrected without regenerating numerical values.
 5. PLI currently produces signed, antisymmetric values despite its unsigned/undirected labels. The test checks finite, nonzero signed antisymmetry. The former expected-failure assertion demanding symmetry was removed because signed versus unsigned definitions and labeling remain undecided; a symmetry assertion was not a justified mathematical oracle. Related phase/PSI/wPLI findings remain in the [scientific review](../docs/storage_comparison/REVIEW.md).
 6. `Calculator` duplicate-identifier check is dead code (dict keys are unique; collisions overwrite silently).
 7. `Data(procnames=...)` is validated but never stored.

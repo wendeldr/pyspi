@@ -14,10 +14,12 @@ infotheory.est.ksg1,,,,,
 infotheory.theiler_window,,,,,
 spearmanr-sq,,1,1,,"118 channels × 1,024 observations measured ordinary Spearman at 7.642 seconds ? 0.00945 seconds, approximately 808× faster
 
-Many operations were being repeated such as the same reranking of a channel"
-spearmanr,,1,1,,'
-kendalltau-sq,,,,,
-kendalltau,,,,,
+Many operations were being repeated such as the same reranking of a channel
+Ordinary + squared, 118x1024: 19.5 ms -> 10.5 ms (~1.9x); shared ranks/result; refreshes after data edits."
+spearmanr,,1,1,,"'
+Ordinary + squared, 118x1024: 19.5 ms -> 10.5 ms (~1.9x); shared ranks/result; refreshes after data edits."
+kendalltau-sq,,,,,"Ordinary + squared, 118x1024: 13.02 s -> 0.33 s (~39.3x). Shares tau-b matrix."
+kendalltau,,,,,118x1024: 6.60 s -> 0.34 s (~19.4x). Unique pairs; shared sorting; coefficient only.
 phase_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
 cohmag_multitaper_mean_fs-1,all configured frequency bands,,,,118x1024: 1.87 s -> 0.31 s (~6.0x). Shared spectra; includes band edges/Nyquist.
 icoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
@@ -56,46 +58,46 @@ lmfit_Lasso,,,,,
 lmfit_SGDRegressor,,,,,
 lmfit_ElasticNet,,,,,
 lmfit_BayesianRidge,,,,,
-xcorr_mean_sig-False,,,,,
-xcorr-sq_mean_sig-False,,,,,
-xcorr_max_sig-False,,,,,
-xcorr-sq_max_sig-False,,,,,
-xcorr_max_sig-True,,,,,
-xcorr-sq_max_sig-True,,,,,
-xcorr_mean_sig-True,,,,,
-xcorr-sq_mean_sig-True,,,,,
-cov_EmpiricalCovariance,,,,,
-cov-sq_EmpiricalCovariance,,,,,
-cov_LedoitWolf,,,,,
-cov-sq_LedoitWolf,,,,,
-cov_OAS,,,,,
-cov-sq_OAS,,,,,
-cov_ShrunkCovariance,,,,,
-cov-sq_ShrunkCovariance,,,,,
-prec_EmpiricalCovariance,,,,,
-prec-sq_EmpiricalCovariance,,,,,
-prec_LedoitWolf,,,,,
-prec-sq_LedoitWolf,,,,,
-prec_OAS,,,,,
-prec-sq_OAS,,,,,
-prec_ShrunkCovariance,,,,,
-prec-sq_ShrunkCovariance,,,,,
-cov-sq_GraphicalLasso,,,,,
-cov_GraphicalLassoCV,,,,,
-cov-sq_GraphicalLassoCV,,,,,
-prec_GraphicalLasso,,,,,
-prec-sq_GraphicalLasso,,,,,
-prec_GraphicalLassoCV,,,,,
-prec-sq_GraphicalLassoCV,,,,,
-cov_GraphicalLasso,,,,,
-cov_MinCovDet,,,,,
-cov-sq_MinCovDet,,,,,
-prec_EllipticEnvelope,,,,,
-prec-sq_EllipticEnvelope,,,,,
-prec_MinCovDet,,,,,
-prec-sq_MinCovDet,,,,,
-cov_EllipticEnvelope,,,,,
-cov-sq_EllipticEnvelope,,,,,
+xcorr_mean_sig-False,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
+xcorr-sq_mean_sig-False,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
+xcorr_max_sig-False,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
+xcorr-sq_max_sig-False,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
+xcorr_max_sig-True,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
+xcorr-sq_max_sig-True,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
+xcorr_mean_sig-True,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
+xcorr-sq_mean_sig-True,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
+cov_EmpiricalCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov-sq_EmpiricalCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov_LedoitWolf,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov-sq_LedoitWolf,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov_OAS,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov-sq_OAS,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov_ShrunkCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov-sq_ShrunkCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec_EmpiricalCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec-sq_EmpiricalCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec_LedoitWolf,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec-sq_LedoitWolf,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec_OAS,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec-sq_OAS,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec_ShrunkCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec-sq_ShrunkCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov-sq_GraphicalLasso,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov_GraphicalLassoCV,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov-sq_GraphicalLassoCV,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec_GraphicalLasso,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec-sq_GraphicalLasso,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec_GraphicalLassoCV,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec-sq_GraphicalLassoCV,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov_GraphicalLasso,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov_MinCovDet,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov-sq_MinCovDet,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec_EllipticEnvelope,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec-sq_EllipticEnvelope,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec_MinCovDet,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+prec-sq_MinCovDet,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov_EllipticEnvelope,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
+cov-sq_EllipticEnvelope,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
 pec,,,,,
 pec_orth,,,,,
 pec_orth_abs,,,,,

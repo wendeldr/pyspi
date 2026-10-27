@@ -1,9 +1,30 @@
-import warnings
+from functools import cached_property
+
 import sklearn.covariance as cov
-from scipy import stats, signal
+from scipy import signal
 import numpy as np
 
+from pyspi._cache import ArrayCache, cached_workspace
+from pyspi._rank import KendallWorkspace, SpearmanWorkspace
 from pyspi.base import Undirected, Signed, parse_bivariate, parse_multivariate
+
+
+class _BasicWorkspace:
+    def __init__(self, source):
+        self.values = source[:, :, 0]
+        self.estimators = {}
+        self.correlations = ArrayCache()
+        self.correlation_directions = {}
+
+    @cached_property
+    def std(self):
+        return self.values.std(axis=1)
+
+
+def _basic_workspace(data):
+    if data.n_replications != 1:
+        raise ValueError("Basic covariance and cross-correlation require a single realisation.")
+    return cached_workspace(data, "basic", _BasicWorkspace)
 
 
 class Estimators(Undirected, Signed):
@@ -29,24 +50,15 @@ class Estimators(Undirected, Signed):
         self._kind = kind
 
     def _from_cache(self, data):
-        try:
-            mycov = data.covariance[self._estimator]
-        except (AttributeError, KeyError):
-            z = data.to_numpy(squeeze=True).T
-
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                mycov = getattr(cov, self._estimator)().fit(z)
-            try:
-                data.covariance[self._estimator] = mycov
-            except AttributeError:
-                data.covariance = {self._estimator: mycov}
-        return mycov
+        work = _basic_workspace(data)
+        if self._estimator not in work.estimators:
+            work.estimators[self._estimator] = getattr(cov, self._estimator)().fit(work.values.T)
+        return work.estimators[self._estimator]
 
     @parse_multivariate
     def multivariate(self, data):
         mycov = self._from_cache(data)
-        matrix = getattr(mycov, self._kind + "_")
+        matrix = getattr(mycov, self._kind + "_").copy()
         np.fill_diagonal(matrix, np.nan)
         if self._squared:
             return np.square(matrix)
@@ -93,24 +105,31 @@ class CrossCorrelation(Undirected, Signed):
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
+        return self._pair_statistic(_basic_workspace(data), i, j)
 
-        T = data.n_observations
-        try:
-            r_ij = data.xcorr[(i, j)]
-        except (KeyError, AttributeError):
-            x, y = data.to_numpy()[[i, j]]
+    @parse_multivariate
+    def multivariate(self, data):
+        work = _basic_workspace(data)
+        result = np.full((data.n_processes, data.n_processes), np.nan)
+        # Preserve the existing first-visited (higher, lower) orientation.
+        # The lag window and direction convention need a separate review.
+        for j in range(data.n_processes):
+            for i in range(j + 1, data.n_processes):
+                result[i, j] = result[j, i] = self._pair_statistic(work, i, j)
+        return result
 
-            r_ij = np.squeeze(signal.correlate(x, y, "full"))
-            r_ij = r_ij / x.std() / y.std() / (T - 1)
+    def _pair_statistic(self, work, i, j):
+        T = work.values.shape[1]
+        key = tuple(sorted((i, j)))
+        first_i, first_j = work.correlation_directions.setdefault(key, (i, j))
 
-            # Truncate to T/4
-            r_ij = r_ij[T - T // 4 : T + T // 4]
+        def correlate():
+            x, y = work.values[[first_i, first_j]]
+            r = signal.correlate(x, y, "full") / work.std[first_i] / work.std[first_j] / (T - 1)
+            # Retain only the selected window, not a view of the full buffer.
+            return r[T - T // 4 : T + T // 4].copy()
 
-            try:
-                data.xcorr[(i, j)] = r_ij
-            except AttributeError:
-                data.xcorr = {(i, j): r_ij}
-            data.xcorr[(j, i)] = data.xcorr[(i, j)]
+        r_ij = work.correlations.get(key, correlate)
 
         # Truncate at first statistically significant zero (i.e., |r| <= 1.96/sqrt(T))
         if self._sigonly:
@@ -133,12 +152,7 @@ class CrossCorrelation(Undirected, Signed):
             raise TypeError(f"Unknown statistic: {self._statistic}")
 
 
-class SpearmanR(Undirected, Signed):
-    """Spearman rank correlation for one realisation of each process."""
-
-    name = "Spearman's correlation coefficient"
-    identifier = "spearmanr"
-    labels = ["basic", "unordered", "rank", "linear", "undirected"]
+class _RankCorrelation(Undirected, Signed):
 
     def __init__(self, squared=False):
         self._squared = squared
@@ -149,55 +163,40 @@ class SpearmanR(Undirected, Signed):
     def issigned(self):
         return not self._squared
 
-    def _correlation_matrix(self, data, indices=None):
+    def _workspace(self, data):
         if data.n_replications != 1:
-            raise ValueError("Spearman correlation requires a single realisation.")
-        values = data.to_numpy(realisation=0)
-        if indices is not None:
-            values = values[indices]
-        if values.shape[1] < 2:
-            return np.full((values.shape[0], values.shape[0]), np.nan)
-
-        ranks = stats.rankdata(values, axis=1, method="average")
-        # Constant channels have undefined correlation; other pairs remain valid.
-        with np.errstate(divide="ignore", invalid="ignore"):
-            result = np.atleast_2d(np.corrcoef(ranks))
-        # Floating-point normalization can introduce tiny reciprocal differences.
-        result = (result + result.T) * 0.5
-        if self._squared:
-            np.square(result, out=result)
-        return result
+            raise ValueError(f"{self.name} requires a single realisation.")
+        return cached_workspace(data, self._workspace_type,
+                                lambda source: self._workspace_type(source[:, :, 0]))
 
     @parse_multivariate
     def multivariate(self, data):
-        result = self._correlation_matrix(data)
+        result = self._workspace(data).all_pairs().copy()
+        if self._squared:
+            np.square(result, out=result)
         np.fill_diagonal(result, np.nan)
         return result
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
-        return self._correlation_matrix(data, indices=[i, j])[0, 1]
+        value = self._workspace(data).pair(i, j)
+        return value ** 2 if self._squared else value
 
 
-class KendallTau(Undirected, Signed):
+class SpearmanR(_RankCorrelation):
+    """Spearman rank correlation for one realisation of each process."""
+
+    name = "Spearman's correlation coefficient"
+    identifier = "spearmanr"
+    labels = ["basic", "unordered", "rank", "linear", "undirected"]
+    _workspace_type = SpearmanWorkspace
+
+
+class KendallTau(_RankCorrelation):
+    """Kendall's tau-b, with tie correction and one calculation per pair."""
 
     name = "Kendall's tau"
     identifier = "kendalltau"
     labels = ["basic", "unordered", "rank", "linear", "undirected"]
 
-    def __init__(self, squared=False):
-        self._squared = squared
-        if squared:
-            self.issigned = lambda: False
-            self.identifier = self.identifier + "-sq"
-            self.labels += ["unsigned"]
-        else:
-            self.labels += ["signed"]
-
-    @parse_bivariate
-    def bivariate(self, data, i=None, j=None):
-        x, y = data.to_numpy()[[i, j]]
-        if self._squared:
-            return stats.kendalltau(x, y).correlation ** 2
-        else:
-            return stats.kendalltau(x, y).correlation
+    _workspace_type = KendallWorkspace

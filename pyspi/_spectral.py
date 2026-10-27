@@ -21,36 +21,8 @@ from spectral_connectivity.connectivity import (
 )
 from spectral_connectivity.statistics import coherence_bias
 
+from pyspi._cache import ArrayCache, cached_workspace
 from pyspi._spectral_compat import spectral_connectivity as sc
-
-
-class _ArrayCache:
-    """Bound retained derived arrays rather than retaining every full spectrum."""
-
-    def __init__(self, max_bytes=256 * 2**20):
-        self.max_bytes = max_bytes
-        self.nbytes = 0
-        self.entries = OrderedDict()
-
-    @staticmethod
-    def size(value):
-        if isinstance(value, tuple):
-            return sum(_ArrayCache.size(item) for item in value)
-        return value.nbytes
-
-    def get(self, key, compute):
-        if key in self.entries:
-            self.entries.move_to_end(key)
-            return self.entries[key]
-        value = compute()
-        size = self.size(value)
-        if size <= self.max_bytes:
-            while self.nbytes + size > self.max_bytes:
-                _, removed = self.entries.popitem(last=False)
-                self.nbytes -= self.size(removed)
-            self.entries[key] = value
-            self.nbytes += size
-        return value
 
 
 class SpectralConnectivity(sc.Connectivity):
@@ -68,7 +40,7 @@ class SpectralConnectivity(sc.Connectivity):
     def __init__(self, fourier_coefficients, frequencies, time, *, frequency_resolution=None):
         super().__init__(fourier_coefficients, frequencies=frequencies, time=time)
         self.frequency_resolution = frequency_resolution
-        self._arrays = _ArrayCache()
+        self._arrays = ArrayCache()
         self._pairs = OrderedDict()
 
     @cached_property
@@ -342,20 +314,13 @@ class SpectralConnectivity(sc.Connectivity):
 
 class _DataSpectralCache:
     def __init__(self, source):
-        # Data.to_numpy exposes a writable view. A snapshot catches both the
-        # Data mutators and edits made directly through that view or its owner.
-        self.source = source.copy()
+        self.source = source
         self.workspaces = OrderedDict()
-        self.parametric = _ArrayCache()
+        self.parametric = ArrayCache()
 
 
 def data_spectral_cache(data):
-    source = data.to_numpy()
-    cache = getattr(data, "_spectral_cache", None)
-    if (cache is None or cache.source.dtype != source.dtype
-            or not np.array_equal(cache.source, source)):
-        cache = data._spectral_cache = _DataSpectralCache(source)
-    return cache
+    return cached_workspace(data, "spectral", _DataSpectralCache)
 
 
 def spectral_workspace(data, sampling_frequency):

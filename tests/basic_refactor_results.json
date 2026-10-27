@@ -1,0 +1,301 @@
+{
+  "created_utc": "2026-10-27T17:09:00.887717+00:00",
+  "baseline_commit": "c28512be6565f7a9bdc292f027ab0fff227f510b",
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "scipy": "1.17.1",
+  "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+  "protocol": {
+    "repeats": 3,
+    "seed": 324,
+    "thread_limit": 1,
+    "timed": "Matrix calculations, including cache validation and population; excludes preprocessing and startup.",
+    "comparison": "Fresh Data each repeat; ordinary/squared/summary variants share Data within a workload.",
+    "unique_pair_scipy": "Unique-pair scipy.stats.kendalltau calls, one matrix shared by both variants; isolates the coefficient-only kernel's additional gain.",
+    "limits": "Synthetic data on this computer; not cohort throughput."
+  },
+  "source_sha256": {
+    "pyspi/statistics/basic.py": "e1896c84cf75c576167aa09c1ab4013cc80ad41523aebed2f9439003ffd6b0f3",
+    "pyspi/_rank.py": "a27994b35470e2fc8bcd8f327ebc7ef0cd5ac7f53bffe83ae6d915efd33ccec1",
+    "pyspi/_cache.py": "5606072e61a65f762cf36b9a96b856013687fafdab680e9d49edd89f549116e1",
+    "pyspi/_spectral.py": "7afcfd6eb17f6b93a7acec24619abf1e314856ec3339e659827c57cf8235747c"
+  },
+  "threadpools": [
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 1,
+      "prefix": "libgomp",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/scikit_learn.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/scipy.libs/libscipy_openblas-6cdc3b4a.so",
+      "version": "0.3.30",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/numpy.libs/libscipy_openblas64_-f48b354e.so",
+      "version": "0.3.34.106.0",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    }
+  ],
+  "measurements": {
+    "kendall": {
+      "shape": [
+        118,
+        1024
+      ],
+      "specifications": [
+        [
+          "KendallTau",
+          {}
+        ]
+      ],
+      "seconds": {
+        "baseline": [
+          6.490033576003043,
+          6.66828943497967,
+          6.595809422986349
+        ],
+        "refactor": [
+          0.3547279110061936,
+          0.33923196099931374,
+          0.3319052639999427
+        ],
+        "unique_pair_scipy": [
+          3.1178715279966127,
+          3.2043380990216974,
+          3.112227912992239
+        ]
+      },
+      "median_seconds": {
+        "baseline": 6.595809422986349,
+        "refactor": 0.33923196099931374,
+        "unique_pair_scipy": 3.1178715279966127
+      },
+      "speedup": 19.443360830613752,
+      "maximum_absolute_difference": 0.0,
+      "nan_masks_equal": true
+    },
+    "kendall_both": {
+      "shape": [
+        118,
+        1024
+      ],
+      "specifications": [
+        [
+          "KendallTau",
+          {
+            "squared": false
+          }
+        ],
+        [
+          "KendallTau",
+          {
+            "squared": true
+          }
+        ]
+      ],
+      "seconds": {
+        "baseline": [
+          12.835763023002073,
+          13.01942266500555,
+          13.528607055020984
+        ],
+        "refactor": [
+          0.3312400559952948,
+          0.32788806399912573,
+          0.3348514710087329
+        ],
+        "unique_pair_scipy": [
+          3.1124001179996412,
+          3.1282053680042736,
+          3.241264589014463
+        ]
+      },
+      "median_seconds": {
+        "baseline": 13.01942266500555,
+        "refactor": 0.3312400559952948,
+        "unique_pair_scipy": 3.1282053680042736
+      },
+      "speedup": 39.305097404012294,
+      "maximum_absolute_difference": 2.168404344971009e-19,
+      "nan_masks_equal": true
+    },
+    "spearman_both": {
+      "shape": [
+        118,
+        1024
+      ],
+      "specifications": [
+        [
+          "SpearmanR",
+          {
+            "squared": false
+          }
+        ],
+        [
+          "SpearmanR",
+          {
+            "squared": true
+          }
+        ]
+      ],
+      "seconds": {
+        "baseline": [
+          0.01954440798726864,
+          0.019893294986104593,
+          0.01751107201562263
+        ],
+        "refactor": [
+          0.01289818700752221,
+          0.0102957509807311,
+          0.010505084996111691
+        ]
+      },
+      "median_seconds": {
+        "baseline": 0.01954440798726864,
+        "refactor": 0.010505084996111691
+      },
+      "speedup": 1.8604711903333222,
+      "maximum_absolute_difference": 0.0,
+      "nan_masks_equal": true
+    },
+    "cross_correlation_eight": {
+      "shape": [
+        118,
+        1024
+      ],
+      "specifications": [
+        [
+          "CrossCorrelation",
+          {
+            "statistic": "max",
+            "squared": false,
+            "sigonly": false
+          }
+        ],
+        [
+          "CrossCorrelation",
+          {
+            "statistic": "max",
+            "squared": false,
+            "sigonly": true
+          }
+        ],
+        [
+          "CrossCorrelation",
+          {
+            "statistic": "mean",
+            "squared": false,
+            "sigonly": false
+          }
+        ],
+        [
+          "CrossCorrelation",
+          {
+            "statistic": "mean",
+            "squared": false,
+            "sigonly": true
+          }
+        ],
+        [
+          "CrossCorrelation",
+          {
+            "statistic": "max",
+            "squared": true,
+            "sigonly": false
+          }
+        ],
+        [
+          "CrossCorrelation",
+          {
+            "statistic": "max",
+            "squared": true,
+            "sigonly": true
+          }
+        ],
+        [
+          "CrossCorrelation",
+          {
+            "statistic": "mean",
+            "squared": true,
+            "sigonly": false
+          }
+        ],
+        [
+          "CrossCorrelation",
+          {
+            "statistic": "mean",
+            "squared": true,
+            "sigonly": true
+          }
+        ]
+      ],
+      "seconds": {
+        "baseline": [
+          2.7676075140188914,
+          2.8806223220017273,
+          2.861051670013694
+        ],
+        "refactor": [
+          2.0800807800260372,
+          2.014637769985711,
+          2.0537490360147785
+        ]
+      },
+      "median_seconds": {
+        "baseline": 2.861051670013694,
+        "refactor": 2.0537490360147785
+      },
+      "speedup": 1.3930872856624466,
+      "maximum_absolute_difference": 8.326672684688674e-17,
+      "nan_masks_equal": true
+    }
+  },
+  "validation": [
+    {
+      "command": ".venv/bin/python -B -m pytest tests/unit/test_basic_refactor.py tests/unit/test_spearman.py tests/unit/test_spectral.py tests/unit/test_calculation_reporting.py --tb=short -q --disable-warnings",
+      "passed": 290,
+      "seconds": 8.34
+    },
+    {
+      "command": ".venv/bin/python -B -m pytest tests/unit tests/regression tests/compatibility/test_numpy2.py --require-java --tb=short -q --disable-warnings",
+      "passed": 1028,
+      "skipped": 15,
+      "xfailed": 7,
+      "seconds": 75.85
+    },
+    {
+      "command": ".venv/bin/python -B -m pytest tests/regression/test_spi_goldens.py --pyspi-size=full --runslow --require-java -k 'cov or prec or kendall or spearman or xcorr or multitaper or sgc or catalogue' --tb=short -q --disable-warnings",
+      "passed": 196,
+      "deselected": 198,
+      "seconds": 25.37
+    }
+  ],
+  "golden_changes": "Only Kendall signed/unsigned label metadata corrected in small/full/preproc. Numerical golden arrays unchanged.",
+  "scope": {
+    "completed": [
+      "Kendall tau-b coefficient-only calculation, unique pairs, and independent labels",
+      "Signed/squared rank-result sharing",
+      "Shared snapshot validation for basic and spectral caches",
+      "Covariance/precision output ownership, fitting warnings, and one-channel matrix shape",
+      "Cross-correlation unique-pair summaries, shared standard deviations, bounded sequence cache"
+    ],
+    "deferred": [
+      "Cross-correlation lag window, significance rules, normalization, and direction convention",
+      "Generic Undirected loop: cointegration orientation and stochastic information-estimator call order require separate review"
+    ]
+  }
+}

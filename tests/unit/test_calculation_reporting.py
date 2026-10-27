@@ -428,15 +428,7 @@ def test_real_calculation_matches_default_with_callback(tmp_path, processes, nor
     np.testing.assert_array_equal(observed.dataset.to_numpy(), default.dataset.to_numpy())
     assert [r.identifier for r, _ in events] == list(observed.spis)
     for report, values in events:
-        if processes == 1:
-            # Existing Covariance squeezes a single process to 1D, which sklearn
-            # rejects. This instrumentation preserves that failure, not fixes it.
-            assert report.status == "failed" and values is None
-            assert report.error.type == "builtins.ValueError"
-            assert report.error.message.startswith("Expected 2D array")
-            assert report.error.message == default.metric_reports[report.identifier].error.message
-        else:
-            assert report.status == "success"
-            np.testing.assert_array_equal(values.view(np.uint64),
-                                          default.table[report.identifier].to_numpy().view(np.uint64))
-    assert len(visible) == (4 if processes == 1 else 0)
+        assert report.status == "success"
+        np.testing.assert_array_equal(values.view(np.uint64),
+                                      default.table[report.identifier].to_numpy().view(np.uint64))
+    assert len(visible) == 0

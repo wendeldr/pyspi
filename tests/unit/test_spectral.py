@@ -9,7 +9,8 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from pyspi._spectral import SpectralConnectivity, _ArrayCache, spectral_workspace
+from pyspi._cache import ArrayCache
+from pyspi._spectral import SpectralConnectivity, data_spectral_cache, spectral_workspace
 from pyspi._spectral_compat import spectral_connectivity as sc
 from pyspi.data import Data
 from pyspi.statistics import spectral
@@ -198,7 +199,7 @@ def test_sampling_rates_are_isolated_and_frequency_units_scale():
         expected = spi.multivariate(make_data())
         np.testing.assert_allclose(spi.multivariate(data), expected, rtol=1e-12, atol=1e-13)
         np.testing.assert_allclose(spectral_workspace(data, fs).frequencies, np.fft.rfftfreq(128, 1/fs))
-    assert len(data._spectral_cache.workspaces) == 2
+    assert len(data_spectral_cache(data).workspaces) == 2
 
 
 @pytest.mark.parametrize("kind", ["unit", "sign", "imag", "abs_imag", "imag_squared"])
@@ -224,7 +225,7 @@ def test_phase_blocks_bound_temporaries_and_preserve_expectation(monkeypatch, ki
 
 
 def test_array_and_pair_caches_evict_within_limits():
-    cache = _ArrayCache(max_bytes=32)
+    cache = ArrayCache(max_bytes=32)
     a = cache.get("a", lambda: np.arange(4, dtype=float))
     cache.get("b", lambda: np.arange(4, dtype=float))
     assert list(cache.entries) == ["b"] and cache.nbytes == 32
