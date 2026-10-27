@@ -1,5 +1,5 @@
 from pyspi.calculator import Calculator, Data, CalculatorFrame
-from pyspi.data import load_dataset
+from pyspi.data import InvalidChannelsError, load_dataset
 import numpy as np 
 import os
 import pytest
@@ -99,18 +99,20 @@ def test_pass_dataset_with_nan_into_calculator(nan_loc, expected_output):
     base_dataset = np.random.randn(5, 100)
     for loc in nan_loc:
         base_dataset[loc, 0] = np.nan
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(InvalidChannelsError) as excinfo:
         calc = Calculator(dataset=base_dataset)
-    assert f"non-numerics (NaNs) in processes: {expected_output}" in str(excinfo), "NaNs not detected in dataset when loading into Calculator!"
+    assert f"non-finite values (NaNs or infinity) in processes: {expected_output}" in str(excinfo.value)
+    np.testing.assert_array_equal(excinfo.value.processes, nan_loc)
 
 def test_pass_dataset_with_inf_into_calculator():
     """Check whether ValueError is raised when a dataset containing an inf/-inf value is passed into the calculator object"""
     base_dataset = np.random.randn(5, 100)
     base_dataset[0, 1] = np.inf
     base_dataset[2, 2] = -np.inf
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(InvalidChannelsError) as excinfo:
         calc = Calculator(dataset=base_dataset)
-    assert f"non-numerics (NaNs) in processes: [0 2]" in str(excinfo), "NaNs not detected in dataset when loading into Calculator!"
+    assert "non-finite values (NaNs or infinity) in processes: [0 2]" in str(excinfo.value)
+    np.testing.assert_array_equal(excinfo.value.processes, [0, 2])
 
 @pytest.mark.parametrize("shape, n_procs_expected, n_obs_expected", [
     ((2, 23), 2, 23),
@@ -304,5 +306,4 @@ def test_normalisation_flag():
     calc = Calculator(dataset=data, normalise=False, detrend=False)
     calc_loaded_dataset = calc.dataset.to_numpy().squeeze()
     
-    assert (calc_loaded_dataset == data).all(), f"Calculator normalise=False not producing the correct output." 
-    
+    assert (calc_loaded_dataset == data).all(), f"Calculator normalise=False not producing the correct output."

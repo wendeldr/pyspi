@@ -93,7 +93,7 @@ PREPROC_SPIS = [
     # basic
     "cov_EmpiricalCovariance",
     "prec_EmpiricalCovariance",
-    "xcorr_max_sig-True",
+    "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
     "spearmanr",
     "kendalltau",
     # distance

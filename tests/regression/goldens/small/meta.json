@@ -36,12 +36,16 @@
   "spearmanr",
   "kendalltau-sq",
   "kendalltau",
-  "xcorr_max_sig-True",
-  "xcorr-sq_max_sig-True",
-  "xcorr_mean_sig-True",
-  "xcorr-sq_mean_sig-True",
-  "xcorr_mean_sig-False",
-  "xcorr-sq_mean_sig-False",
+  "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+  "xcorr-sq_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+  "xcorr_mean_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+  "xcorr-sq_mean_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+  "xcorr_mean_sig-False_fs-1_lag-0-125",
+  "xcorr-sq_mean_sig-False_fs-1_lag-0-125",
+  "xcorr_min_sig-False_fs-1_lag-0-125",
+  "xcorr_min_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+  "xcorr_peak_sig-False_fs-1_lag-0-125",
+  "xcorr_peak_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
   "pdist_euclidean",
   "pdist_cityblock",
   "pdist_cosine",
@@ -541,6 +545,46 @@
     "pyspi/_spectral.py": "d5c07fe37b3ef48421414f8a63a3e33b01db9e36cfcf5db2d2162cb52151a640",
     "pyspi/statistics/spectral.py": "a25e74ab39896b2dab1a390086a7653bcba8dd296051e6252e05b7294620d982"
    }
+  },
+  {
+   "command": ".venv/bin/python -B tests/regression/generate_goldens.py --size all --preproc --spis 'xcorr*' --repeat 2",
+   "environment": {
+    "java": "26",
+    "omp_num_threads": "1",
+    "packages": {
+     "cdt": "0.6.0",
+     "hyppo": "0.5.2",
+     "jpype1": "1.7.1",
+     "mne": "1.13.2",
+     "nitime": "0.12.1",
+     "numpy": "2.5.4",
+     "pandas": "3.0.6",
+     "pyEDM": "1.15.2.0",
+     "pyyaml": "6.0.3",
+     "scikit-learn": "1.9.1",
+     "scipy": "1.17.1",
+     "sktime": "1.2.0",
+     "spectral-connectivity": "1.1.2",
+     "statsmodels": "0.15.0",
+     "torch": "2.14.1+cpu",
+     "tslearn": "0.9.0"
+    },
+    "platform": "linux",
+    "pyspi_commit": "3d993e074e26d583d3144bbc69257b68944eae20",
+    "pyspi_version": "2.0.2",
+    "python": "3.12.14"
+   },
+   "generated": "2026-10-27T18:00:26+00:00",
+   "reason": "Approved centered full-energy correlation, symmetric time-based lag limits, Bartlett/Holm significant-lag selection and new summaries; default fs=1 selects zero lag. Independent reference tests validate the formulas.",
+   "scope": "Cross-correlation only; new explicit lag/inference identifiers and min/peak variants",
+   "source_sha256": {
+    "pyspi/_xcorr.py": "afc038f0768076d10c854e179685ff2501f32601c97c3c9e3c0accfb917a19db",
+    "pyspi/config.yaml": "2e11d9c2c715293d2691914eb28e313739946993bf9f6c44d383a5653e52545c",
+    "pyspi/statistics/basic.py": "08d598376fd7b600103f2e480f5f820aeb174c5ed2741cc91ecf4b5ff36a429a",
+    "pyspi/workflow/_metrics.py": "73149c00fdc9fa609782ffa445e0f7dc6c316a47e1a79d23c2ee4f1e2981553f",
+    "pyspi/workflow/_preflight.py": "6d2da0d919a1beb0d530f02ab2eea795ec5892d1ab8126783c439655ab52756a"
+   },
+   "unaffected_arrays_verified_unchanged": 279
   }
  ],
  "schema": 1,
@@ -5948,7 +5992,7 @@
    "status": "ok",
    "time_s": 0.001693
   },
-  "xcorr-sq_max_sig-True": {
+  "xcorr-sq_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05": {
    "cls": "CrossCorrelation",
    "deps": [],
    "error": null,
@@ -5960,15 +6004,15 @@
     "unsigned"
    ],
    "module": ".statistics.basic",
-   "nan_offdiag": 0,
+   "nan_offdiag": 6,
    "params": {
     "squared": true,
     "statistic": "max"
    },
-   "status": "ok",
-   "time_s": 0.001732
+   "status": "partial_nan",
+   "time_s": 0.000706
   },
-  "xcorr-sq_mean_sig-False": {
+  "xcorr-sq_mean_sig-False_fs-1_lag-0-125": {
    "cls": "CrossCorrelation",
    "deps": [],
    "error": null,
@@ -5987,9 +6031,9 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.001547
+   "time_s": 0.000487
   },
-  "xcorr-sq_mean_sig-True": {
+  "xcorr-sq_mean_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05": {
    "cls": "CrossCorrelation",
    "deps": [],
    "error": null,
@@ -6001,15 +6045,15 @@
     "unsigned"
    ],
    "module": ".statistics.basic",
-   "nan_offdiag": 0,
+   "nan_offdiag": 6,
    "params": {
     "squared": true,
     "statistic": "mean"
    },
-   "status": "ok",
-   "time_s": 0.001762
+   "status": "partial_nan",
+   "time_s": 0.000809
   },
-  "xcorr_max_sig-True": {
+  "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05": {
    "cls": "CrossCorrelation",
    "deps": [],
    "error": null,
@@ -6021,14 +6065,14 @@
     "undirected"
    ],
    "module": ".statistics.basic",
-   "nan_offdiag": 0,
+   "nan_offdiag": 6,
    "params": {
     "statistic": "max"
    },
-   "status": "ok",
-   "time_s": 0.001751
+   "status": "partial_nan",
+   "time_s": 0.000703
   },
-  "xcorr_mean_sig-False": {
+  "xcorr_mean_sig-False_fs-1_lag-0-125": {
    "cls": "CrossCorrelation",
    "deps": [],
    "error": null,
@@ -6046,9 +6090,28 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.001548
+   "time_s": 0.000513
   },
-  "xcorr_mean_sig-True": {
+  "xcorr_mean_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05": {
+   "cls": "CrossCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 6,
+   "params": {
+    "statistic": "mean"
+   },
+   "status": "partial_nan",
+   "time_s": 0.000735
+  },
+  "xcorr_min_sig-False_fs-1_lag-0-125": {
    "cls": "CrossCorrelation",
    "deps": [],
    "error": null,
@@ -6062,10 +6125,71 @@
    "module": ".statistics.basic",
    "nan_offdiag": 0,
    "params": {
-    "statistic": "mean"
+    "sigonly": false,
+    "statistic": "min"
    },
    "status": "ok",
-   "time_s": 0.001751
+   "time_s": 0.000546
+  },
+  "xcorr_min_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05": {
+   "cls": "CrossCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 6,
+   "params": {
+    "sigonly": true,
+    "statistic": "min"
+   },
+   "status": "partial_nan",
+   "time_s": 0.000704
+  },
+  "xcorr_peak_sig-False_fs-1_lag-0-125": {
+   "cls": "CrossCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 0,
+   "params": {
+    "sigonly": false,
+    "statistic": "peak"
+   },
+   "status": "ok",
+   "time_s": 0.000481
+  },
+  "xcorr_peak_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05": {
+   "cls": "CrossCorrelation",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "basic",
+    "linear",
+    "signed",
+    "temporal",
+    "undirected"
+   ],
+   "module": ".statistics.basic",
+   "nan_offdiag": 6,
+   "params": {
+    "sigonly": true,
+    "statistic": "peak"
+   },
+   "status": "partial_nan",
+   "time_s": 0.000692
   },
   "xme_gaussian_k1": {
    "cls": "CrossmapEntropy",

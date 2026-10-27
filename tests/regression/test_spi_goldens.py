@@ -255,7 +255,7 @@ def test_catalogue_matches_golden_meta(golden_meta):
 
 @pytest.mark.parametrize(
     "subset, expected_n",
-    [("all", 285), ("fast", 217), ("sonnet", 14), ("fabfour", 4)],
+    [("all", 289), ("fast", 221), ("sonnet", 14), ("fabfour", 4)],
 )
 def test_spi_catalogue(subset, expected_n, golden_meta, jvm):
     from pyspi.calculator import Calculator

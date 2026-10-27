@@ -61,6 +61,10 @@ range while the existing pyEDM implementation is retained. Package versions
 and migration results are documented in [DEPENDENCY_MIGRATION.md](DEPENDENCY_MIGRATION.md);
 the [test guide](tests/README.md) describes the default and full tiers.
 
+The [reviewed calculation definitions](docs/calculation_definitions.md) explain
+cross-correlation lag selection, signed minimum/peak summaries, significance,
+and exactly when squared variants square their values.
+
 Exact single/windowed connectivity storage is available with the `storage`
 extra. See [installation, the public API, Calculator output, and recovery](docs/storage.md).
 

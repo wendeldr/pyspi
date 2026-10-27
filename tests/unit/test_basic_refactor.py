@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
-from scipy import signal, stats
+from scipy import stats
 
 from pyspi._cache import data_cache
 from pyspi._rank import KendallWorkspace
@@ -224,50 +224,6 @@ def test_fitting_warnings_are_visible():
 def test_single_channel_matrix_has_only_undefined_diagonal(cls):
     actual = cls().multivariate(make_data(np.arange(32.)[None, :]))
     assert actual.shape == (1, 1) and np.isnan(actual[0, 0])
-
-
-@pytest.mark.parametrize("statistic", ["mean", "max"])
-@pytest.mark.parametrize("squared", [False, True])
-@pytest.mark.parametrize("sigonly", [False, True])
-def test_cross_correlation_preserves_existing_window_summary_and_pair_order(statistic, squared, sigonly):
-    x = np.random.default_rng(320).normal(size=(4, 128))
-    data = make_data(x)
-    expected = np.full((4, 4), np.nan)
-    for j in range(4):
-        for i in range(j + 1, 4):
-            # Freeze the current definition pending its mathematical review.
-            r = signal.correlate(x[i, :, None], x[j, :, None], "full").squeeze()
-            r = r / x[i].std() / x[j].std() / 127
-            r = r[96:160]
-            if sigonly:
-                f = np.where(abs(r[32:]) <= 1.96 / np.sqrt(32))[0][0]
-                b = np.where(abs(r[:32]) <= 1.96 / np.sqrt(32))[0][-1]
-                r = r[32 - b:32 + f]
-            if squared:
-                r = r ** 2
-            expected[i, j] = expected[j, i] = getattr(np, statistic)(r)
-    actual = basic.CrossCorrelation(statistic=statistic, squared=squared, sigonly=sigonly).multivariate(data)
-    np.testing.assert_allclose(actual, expected, atol=1e-14, rtol=1e-14)
-
-
-def test_cross_correlation_shares_sequences_and_keeps_first_direction_after_eviction():
-    data = make_data(np.random.default_rng(321).normal(size=(3, 32)))
-    spi = basic.CrossCorrelation(statistic="mean", sigonly=False)
-    work = basic._basic_workspace(data)
-    work.correlations.max_bytes = 16 * 8
-    forward = spi.bivariate(data, i=0, j=1)
-    spi.bivariate(data, i=0, j=2)  # evicts the first sequence
-    assert list(work.correlations.entries) == [(0, 2)]
-    assert spi.bivariate(data, i=1, j=0) == forward
-
-
-def test_cross_correlation_computes_unique_pairs_once_across_variants():
-    data = make_data(np.random.default_rng(322).normal(size=(4, 128)))
-    with patch("pyspi.statistics.basic.signal.correlate", wraps=signal.correlate) as counter:
-        for squared in (False, True):
-            for statistic in ("max", "mean"):
-                basic.CrossCorrelation(squared=squared, statistic=statistic, sigonly=False).multivariate(data)
-    assert counter.call_count == 6
 
 
 def test_basic_and_spectral_share_snapshot_and_invalidate_together():

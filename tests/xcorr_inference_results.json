@@ -1,0 +1,119 @@
+{
+  "created_utc": "2026-10-27T18:00:05.893036+00:00",
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "scipy": "1.17.1",
+  "seed": 601,
+  "samples": 1024,
+  "sampling_rate_hz": 2048,
+  "maximum_lag_samples": 256,
+  "alpha": 0.05,
+  "burn_in_samples": 3072,
+  "source_sha256": {
+    "pyspi/_xcorr.py": "afc038f0768076d10c854e179685ff2501f32601c97c3c9e3c0accfb917a19db",
+    "tests/validate_xcorr_inference.py": "dc41a3f46f31515fe5019fd19803c9641045151e76512d6d0ccb9814dd303e81"
+  },
+  "interpretation": "Independent stationary simulated pairs except coupled. Any-lag rate is per pair, not per channel matrix. Approximate inference, often conservative for high autocorrelation; these simulations do not establish validity for arbitrary EEG or nonstationary signals.",
+  "measurements": [
+    {
+      "kind": 0,
+      "fraction_any_lag_selected": 0.039,
+      "pairs": 1000,
+      "detected": 39,
+      "binomial_95_percent_interval": [
+        0.02787714879533644,
+        0.05293093578544508
+      ]
+    },
+    {
+      "kind": 0.5,
+      "fraction_any_lag_selected": 0.049,
+      "pairs": 1000,
+      "detected": 49,
+      "binomial_95_percent_interval": [
+        0.036467059171953274,
+        0.06426605314016968
+      ]
+    },
+    {
+      "kind": 0.9,
+      "fraction_any_lag_selected": 0.003,
+      "pairs": 1000,
+      "detected": 3,
+      "binomial_95_percent_interval": [
+        0.0006190999316499173,
+        0.008742023238657654
+      ]
+    },
+    {
+      "kind": 0.95,
+      "fraction_any_lag_selected": 0.0,
+      "pairs": 1000,
+      "detected": 0,
+      "binomial_95_percent_interval": [
+        0.0,
+        0.003682083896639526
+      ]
+    },
+    {
+      "kind": 0.99,
+      "fraction_any_lag_selected": 0.0,
+      "pairs": 1000,
+      "detected": 0,
+      "binomial_95_percent_interval": [
+        0.0,
+        0.003682083896639526
+      ]
+    },
+    {
+      "kind": -0.8,
+      "fraction_any_lag_selected": 0.007,
+      "pairs": 1000,
+      "detected": 7,
+      "binomial_95_percent_interval": [
+        0.0028188587596180135,
+        0.014369194979269567
+      ]
+    },
+    {
+      "kind": "mixed",
+      "fraction_any_lag_selected": 0.037,
+      "pairs": 1000,
+      "detected": 37,
+      "binomial_95_percent_interval": [
+        0.02618270884399008,
+        0.0506411230599609
+      ]
+    },
+    {
+      "kind": "bandpass",
+      "fraction_any_lag_selected": 0.005,
+      "pairs": 1000,
+      "detected": 5,
+      "binomial_95_percent_interval": [
+        0.001625419517373302,
+        0.011629470559812206
+      ]
+    },
+    {
+      "kind": "narrowband",
+      "fraction_any_lag_selected": 0.0,
+      "pairs": 1000,
+      "detected": 0,
+      "binomial_95_percent_interval": [
+        0.0,
+        0.003682083896639526
+      ]
+    },
+    {
+      "kind": "coupled",
+      "fraction_any_lag_selected": 1.0,
+      "pairs": 1000,
+      "detected": 1000,
+      "binomial_95_percent_interval": [
+        0.9963179161033608,
+        1.0
+      ]
+    }
+  ]
+}

@@ -101,7 +101,7 @@ Options:
 - `--pyspi-size small|full` picks the golden set (default `small`; environment fallback `PYSPI_TEST_SIZE`). Missing committed goldens fail; restore them rather than regenerating references to make a run pass.
 - `--runslow` runs tests marked `slow`; otherwise they are reported as skipped (`slow: needs --runslow`).
 - `--require-java` fails if the JIDT JVM cannot start. Use it for complete local verification, together with `--runslow` for the slow calculations.
-- Any `--runslow` invocation makes `tests/test_SPIs.py` recompute all 285 SPIs on the CML7 benchmark while it is being collected (about 2.5 min on the generating machine, measured with `--collect-only`), whatever `-m` or `-k` selects; with `-n N` every worker repeats it. Add `--ignore=tests/test_SPIs.py` (or give explicit test paths) unless you want the legacy benchmark.
+- Any `--runslow` invocation makes `tests/test_SPIs.py` recompute all 289 SPIs on the CML7 benchmark while it is being collected (about 2.5 min on the generating machine, measured with `--collect-only`), whatever `-m` or `-k` selects; with `-n N` every worker repeats it. Add `--ignore=tests/test_SPIs.py` (or give explicit test paths) unless you want the legacy benchmark.
 - `-n 4` runs in parallel with pytest-xdist. Every test is independent; each worker starts its own JVM.
 - `--timeout=N` (pytest-timeout) overrides the default 300 s per test. It uses `signal` and cannot interrupt code inside Java or numba frames, so it is a safety net only.
 
@@ -121,7 +121,7 @@ Options:
 `slow`, `java`, `stochastic` and `nan_golden` are attached by `tests/conftest.py`:
 
 - per-SPI tests (`identifier`): `slow`, `nan_golden` and `java` from `goldens/<size>/meta.json` `spis[identifier]` (`time_s`, `status`, `deps`);
-- preprocessing variants (`preproc_key`): `slow` and `nan_golden` from `goldens/preproc/meta.json` `variants[key]` (that variant's own `time_s` and `status`), `java` from `spis[identifier].deps` in the same file. So `test_preprocessing_variant_matches_golden[xcorr_max_sig-True-n0d0]` is `nan_golden` (its variant status is `error`);
+- preprocessing variants (`preproc_key`): `slow` and `nan_golden` from `goldens/preproc/meta.json` `variants[key]` (that variant's own `time_s` and `status`), `java` from `spis[identifier].deps` in the same file;
 - `stochastic` from `spi_policy.STOCHASTIC` in both cases.
 
 `test_extra_goldens.py` attaches the same markers itself from `goldens/extra/small/meta.json` (none applies today). The `Calculator` and catalogue tests carry `java` (and the full end-to-end test `slow`) explicitly.
@@ -131,14 +131,14 @@ Options:
 ## How the SPI regression works
 
 - `test_spi_matches_golden[<identifier>]`: builds the SPI from its `meta.json` entry (module, class, params; `params: null` records default construction, otherwise recorded params are passed without fallback), makes a fresh `Data`, seeds the RNGs, runs `multivariate`, and sets the diagonal to NaN like `Calculator.compute`. Output must be a real square process matrix. The NaN mask and success/error status must match; values use the policy tolerance. A recorded calculation error must reproduce its exact exception representation (type and message). Another exception, or a successful all-NaN return replacing an error, fails. Constructor and seeding failures always propagate.
-- `test_preprocessing_variant_matches_golden[<identifier>-n?d?]` (golden key `<identifier>::n?d?`): 24 representative SPIs (`spi_policy.PREPROC_SPIS`: three to five per statistics module, except wavelet, which has one because its six SPIs are all `psi_wavelet` band variants; `anm` is included because its output changes with `normalise`, while `igci` and `reci` differ between `n1d0` and `n0d0` by at most 3e-15) under all four `(normalise, detrend)` combinations, 96 keys in all, on the small window of cml7 with a fixed per-channel affine distortion (`x * scale + offset + slope * t`, recorded in `goldens/preproc/meta.json`) so that each flag measurably changes the input. Suffix `n1d0` is the Calculator default; `n1d1` is the EEG workflow (detrend, then z-score). 95 variants have status `ok`; `xcorr_max_sig-True::n0d0` raises `IndexError` today and is locked as an error (marker `nan_golden`). No variant is `slow`; the slowest, `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1::n1d0`, measured 1.94 s, just under the 2.0 s threshold. The 24 resolved identifiers (from `goldens/preproc/meta.json` `spis`): `anm`, `bary_euclidean_mean`, `cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5`, `coint_johansen_max_eig_stat_order-1_ardiff-1`, `cov_EmpiricalCovariance`, `dcorr`, `dtw`, `gwtau`, `ids`, `igci`, `kendalltau`, `lmfit_Ridge`, `mi_gaussian`, `pdist_euclidean`, `pec`, `phi_star_t-1_norm-0`, `plv_multitaper_mean_fs-1_fmin-0_fmax-0-5`, `prec_EmpiricalCovariance`, `psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean`, `reci`, `sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5`, `spearmanr`, `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1`, `xcorr_max_sig-True`.
+- `test_preprocessing_variant_matches_golden[<identifier>-n?d?]` (golden key `<identifier>::n?d?`): 24 representative SPIs (`spi_policy.PREPROC_SPIS`: three to five per statistics module, except wavelet, which has one because its six SPIs are all `psi_wavelet` band variants; `anm` is included because its output changes with `normalise`, while `igci` and `reci` differ between `n1d0` and `n0d0` by at most 3e-15) under all four `(normalise, detrend)` combinations, 96 keys in all, on the small window of cml7 with a fixed per-channel affine distortion (`x * scale + offset + slope * t`, recorded in `goldens/preproc/meta.json`) so that each flag measurably changes the input. Suffix `n1d0` is the Calculator default; `n1d1` is the EEG workflow (detrend, then z-score). 92 variants have status `ok`; the four cross-correlation variants now return partial NaNs for pairs without significant lags, without calculation errors. No variant is `slow`; the slowest, `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1::n1d0`, measured 1.94 s, just under the 2.0 s threshold. The 24 resolved identifiers (from `goldens/preproc/meta.json` `spis`): `anm`, `bary_euclidean_mean`, `cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5`, `coint_johansen_max_eig_stat_order-1_ardiff-1`, `cov_EmpiricalCovariance`, `dcorr`, `dtw`, `gwtau`, `ids`, `igci`, `kendalltau`, `lmfit_Ridge`, `mi_gaussian`, `pdist_euclidean`, `pec`, `phi_star_t-1_norm-0`, `plv_multitaper_mean_fs-1_fmin-0_fmax-0-5`, `prec_EmpiricalCovariance`, `psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean`, `reci`, `sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5`, `spearmanr`, `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1`, `xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05`.
 - Two fixture checks: `spearmanr`, `kendalltau` and `dcorr` give the same golden for `n1d0` and `n0d0` (rank-based or per-variable scale-invariant; measured max difference 0, 0 and 1.9e-15), and `cov_EmpiricalCovariance` differs between them.
-- `test_calculator_table_matches_goldens_fast` (default tier, `java`): writes a temporary config holding every identifier of the package's `config.yaml` that has a golden and is not `slow` at the selected size (module and class order kept, so the shared caches fill in the same order as a full pass), checks that the `Calculator` loads exactly those identifiers, runs one seeded `Calculator` pass with shared caches and compares each table block with its per-SPI golden. At small size that is 274 SPIs (285 minus the 11 slow ones) measured here at 32 s when run alone (plus 4 s setup for the JVM and imports) and 17 s inside a full default run, where earlier tests have already paid the first-call costs. It is the default-tier test that notices a cache-keying change (two SPIs reading each other's cached spectra), which the per-SPI tests cannot see because each runs on a fresh `Data`.
+- `test_calculator_table_matches_goldens_fast` (default tier, `java`): writes a temporary config holding every identifier of the package's `config.yaml` that has a golden and is not `slow` at the selected size (module and class order kept, so the shared caches fill in the same order as a full pass), checks that the `Calculator` loads exactly those identifiers, runs one seeded `Calculator` pass with shared caches and compares each table block with its per-SPI golden. At small size that is 278 SPIs (289 minus the 11 slow ones) measured here at 32 s when run alone (plus 4 s setup for the JVM and imports) and 17 s inside a full default run, where earlier tests have already paid the first-call costs. It is the default-tier test that notices a cache-keying change (two SPIs reading each other's cached spectra), which the per-SPI tests cannot see because each runs on a fresh `Data`.
 - `test_calculator_table_matches_goldens` (`slow`, `java`): the same over the full `config.yaml`.
 - Both end-to-end tests skip `spi_policy.CALC_E2E_SKIP` (`cov*MinCovDet`, `prec*MinCovDet`, `bary*_sgddtw_*`; 8 identifiers): a single seeded pass draws from the global RNG in a different order than per-SPI seeding, and these then differ from their goldens. The four `*EllipticEnvelope` SPIs are `stochastic` too but reproduce their per-SPI goldens in that pass, so they are compared. All mismatches are reported together.
 - A separate shared-cache test includes all 12 stochastic identifiers, reseeding immediately before each SPI while retaining the shared `Data` caches. This provides numerical comparisons for the eight exclusions under controlled RNG conditions; the normal Calculator tests retain their existing seeding behavior.
 - `test_catalogue_matches_golden_meta` (`java`): loads the imported package's `config.yaml` through both `harness.catalogue` and `Calculator`, and asserts that the identifier sets equal the recorded ones, that the harness order and classes match what the `Calculator` loaded, and that for every identifier `module`, `cls`, `params` and `deps` equal `meta.json` (after a JSON round trip) and `labels` match as sorted sets. The per-SPI tests rebuild each SPI from the recorded params, so this is what reports a `config.yaml` parameter edit that keeps the identifier (for example `terms` of `ids`).
-- `test_spi_catalogue[all|fast|sonnet|fabfour]`: subset sizes 285/217/14/4; for `all`, identifier order equals `calculator_order` and each SPI's labels equal the recorded ones.
+- `test_spi_catalogue[all|fast|sonnet|fabfour]`: subset sizes 289/221/14/4; for `all`, identifier order equals `calculator_order` and each SPI's labels equal the recorded ones.
 
 ### Tolerance policy (`regression/spi_policy.py`)
 
@@ -173,27 +173,57 @@ intact; fitting warnings are visible. A single channel now returns the proper
 Covariance, precision, cross-correlation, and both rank correlations explicitly
 require a single realisation.
 
-Cross-correlation computes each unordered pair once, shares channel standard
-deviations, and bounds cached sequences to 256 MiB. The first requested pair
-orientation is recorded even if its sequence is evicted. Its lag window,
-normalization, significance threshold, and missing-crossing behavior are
-unchanged pending their mathematical review. The generic `Undirected` loop is
-also unchanged: cointegration's reverse-pair cache and stochastic information
+At that first basic-refactor checkpoint, cross-correlation shared channel
+standard deviations and unique-pair work while preserving the previous lag,
+normalization and significance definitions. The cross-correlation refactor
+below now supersedes that implementation. The generic `Undirected` loop is
+still unchanged: cointegration's reverse-pair cache and stochastic information
 estimators require separate orientation/RNG checks before a global switch.
 
 `unit/test_basic_refactor.py` covers numerical definitions, permutations,
 constants, large integers, shared work, data mutation, output ownership, fitting
-warnings, and preserved cross-correlation behavior. Numerical golden arrays
+warnings. Cross-correlation preservation tests were subsequently replaced by
+the independent reference tests described below. At the basic-refactor
+checkpoint, numerical golden arrays
 were not regenerated; only Kendall's signed/unsigned label metadata changed.
 The former Kendall label expected failure is replaced by passing tests.
 
-Run `.venv/bin/python -B tests/benchmark_basic.py` to reproduce
-`basic_refactor_results.json`. It compares against commit `c28512b` (which
+Run `.venv/bin/python -B tests/benchmark_basic.py` for the rank-correlation workloads
+in `basic_refactor_results.json`. Its historical cross-correlation timings are
+superseded by `benchmark_xcorr.py` because the definitions have changed.
+The basic benchmark compares against commit `c28512b` (which
 already includes the earlier Spearman optimization) with three paired repeats,
 fresh Data per repeat, and one numerical-library thread. A unique-pair SciPy
 alternative isolates the additional benefit of the coefficient-only Kendall
 implementation. Benchmark results describe synthetic 118-by-1024 inputs,
 not total workflow throughput.
+
+## Cross-correlation refactor
+
+Definitions and operation order are in [calculation definitions](../docs/calculation_definitions.md).
+`unit/test_xcorr.py` checks FFT results against independent overlap sums,
+Bartlett variances against explicit covariance-matrix products, Holm selection
+against statsmodels, channel-order invariance, delayed peaks, missing reasons,
+cache invalidation/eviction, and output ownership. Workflow tests check target
+sampling-rate propagation and conflicting parameters.
+
+Only cross-correlation golden arrays were refreshed: 279 unrelated arrays in
+each size and 92 preprocessing arrays were verified unchanged. Partial
+regeneration metadata records this scope and preserves earlier provenance.
+
+Run `.venv/bin/python -B tests/validate_xcorr_inference.py` for the simulation
+audit saved in `xcorr_inference_results.json`: 1000 independent pairs for each
+of nine null settings plus one delayed-coupling setting. It is an empirical
+check of approximate inference, not a guarantee for arbitrary recordings.
+
+Run `.venv/bin/python -B tests/benchmark_xcorr.py` for fresh 118-by-1024 windows
+at 2048 Hz, with three alternating repeats and one numerical thread. In
+`xcorr_refactor_results.json`, four all-lag summaries took 0.178 s (8.8x faster),
+four significant-lag summaries 0.506 s (3.5x), and all eight 0.576 s (3.5x).
+Twelve including min/peak took 0.546 s; the small inversion is timing noise,
+since those summaries are already produced with the shared computation.
+Comparisons are against `3d993e0`; numerical definitions intentionally differ.
+These timings exclude preprocessing and I/O and describe synthetic data.
 
 ## Spectral backend refactor
 
@@ -378,14 +408,14 @@ remain historical evidence.
 
 ## SPI coverage
 
-All 285 identifiers in `config.yaml`, in `Calculator` order, from `goldens/small/meta.json` (5 x 64) and `goldens/full/meta.json` (7 x 100). `time_s` is the generator's fastest measured time for one `multivariate` call on the generating machine (a 64-core machine with `OMP_NUM_THREADS=1`; versions and the thread setting are in `meta.json`); `slow` is the marker at that size.
+All 289 identifiers in `config.yaml`, in `Calculator` order, from `goldens/small/meta.json` (5 x 64) and `goldens/full/meta.json` (7 x 100). `time_s` is the generator's fastest measured time for one `multivariate` call on the generating machine (a 64-core machine with `OMP_NUM_THREADS=1`; versions and the thread setting are in `meta.json`); `slow` is the marker at that size.
 
 | size | ok | partial_nan | all_nan / error | slow (skipped by default) | per-SPI tests run by the default tier |
 |---|---:|---:|---:|---:|---:|
-| small (5 x 64) | 276 | 9 | 0 | 11 | 274 |
-| full (7 x 100) | 282 | 3 | 0 | 18 | 267 |
+| small (5 x 64) | 274 | 14 | 1 | 11 | 278 |
+| full (7 x 100) | 280 | 9 | 0 | 12 | 277 |
 
-The default tier's fast `Calculator` end-to-end test computes the same non-slow SPIs (274 at small size) in one pass and compares all of them except the 8 in `CALC_E2E_SKIP`. No per-SPI test carries `nan_golden` at either size; the only `nan_golden` test is the preprocessing variant `xcorr_max_sig-True-n0d0`. The `partial_nan` SPIs are the three `gd_multitaper_delay_*` at both sizes plus, at small size only, the six `sgc_parametric_*_order-20`.
+The default tier's fast `Calculator` end-to-end test computes the same non-slow SPIs (278 at small size) in one pass and compares all of them except the 8 in `CALC_E2E_SKIP`. Missing-value markers and partial-NaN statuses follow the current metadata below. Cross-correlation missing values record empty significant-lag selections; the previous preprocessing IndexError is fixed.
 
 <!-- Generated from goldens/{small,full}/meta.json with a short inline Python snippet (slow = spi_policy.is_slow(identifier, time_s), stochastic = spi_policy.is_stochastic, java = "java" in deps); regenerate rather than hand-edit. -->
 | identifier | module | status (small) | time_s (small) | slow (small) | status (full) | time_s (full) | slow (full) | stochastic | java |
@@ -426,12 +456,16 @@ The default tier's fast `Calculator` end-to-end test computes the same non-slow 
 | `spearmanr` | .statistics.basic | ok | 0.005 |  | ok | 0.011 |  |  |  |
 | `kendalltau-sq` | .statistics.basic | ok | 0.005 |  | ok | 0.010 |  |  |  |
 | `kendalltau` | .statistics.basic | ok | 0.005 |  | ok | 0.010 |  |  |  |
-| `xcorr_max_sig-True` | .statistics.basic | ok | 0.002 |  | ok | 0.004 |  |  |  |
-| `xcorr-sq_max_sig-True` | .statistics.basic | ok | 0.002 |  | ok | 0.004 |  |  |  |
-| `xcorr_mean_sig-True` | .statistics.basic | ok | 0.002 |  | ok | 0.004 |  |  |  |
-| `xcorr-sq_mean_sig-True` | .statistics.basic | ok | 0.002 |  | ok | 0.004 |  |  |  |
-| `xcorr_mean_sig-False` | .statistics.basic | ok | 0.002 |  | ok | 0.003 |  |  |  |
-| `xcorr-sq_mean_sig-False` | .statistics.basic | ok | 0.002 |  | ok | 0.003 |  |  |  |
+| `xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr-sq_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr_mean_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr-sq_mean_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr_mean_sig-False_fs-1_lag-0-125` | .statistics.basic | ok | 0.001 |  | ok | 0.001 |  |  |  |
+| `xcorr-sq_mean_sig-False_fs-1_lag-0-125` | .statistics.basic | ok | 0.000 |  | ok | 0.001 |  |  |  |
+| `xcorr_min_sig-False_fs-1_lag-0-125` | .statistics.basic | ok | 0.001 |  | ok | 0.001 |  |  |  |
+| `xcorr_min_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr_peak_sig-False_fs-1_lag-0-125` | .statistics.basic | ok | 0.000 |  | ok | 0.001 |  |  |  |
+| `xcorr_peak_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
 | `pdist_euclidean` | .statistics.distance | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `pdist_cityblock` | .statistics.distance | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `pdist_cosine` | .statistics.distance | ok | 0.000 |  | ok | 0.000 |  |  |  |

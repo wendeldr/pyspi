@@ -1,11 +1,11 @@
-from functools import cached_property
+import warnings
 
 import sklearn.covariance as cov
-from scipy import signal
 import numpy as np
 
-from pyspi._cache import ArrayCache, cached_workspace
+from pyspi._cache import cached_workspace
 from pyspi._rank import KendallWorkspace, SpearmanWorkspace
+from pyspi._xcorr import CrossCorrelationWorkspace, SUMMARY_KEYS
 from pyspi.base import Undirected, Signed, parse_bivariate, parse_multivariate
 
 
@@ -13,17 +13,11 @@ class _BasicWorkspace:
     def __init__(self, source):
         self.values = source[:, :, 0]
         self.estimators = {}
-        self.correlations = ArrayCache()
-        self.correlation_directions = {}
-
-    @cached_property
-    def std(self):
-        return self.values.std(axis=1)
 
 
 def _basic_workspace(data):
     if data.n_replications != 1:
-        raise ValueError("Basic covariance and cross-correlation require a single realisation.")
+        raise ValueError("Covariance and precision require a single realisation.")
     return cached_workspace(data, "basic", _BasicWorkspace)
 
 
@@ -84,72 +78,106 @@ class Precision(Estimators):
         super().__init__(kind="precision", squared=squared, estimator=estimator)
 
 
+class CrossCorrelationUnavailableWarning(UserWarning):
+    """Some pair summaries are undefined; diagnostics explain each reason."""
+
+
 class CrossCorrelation(Undirected, Signed):
+    """Summaries of centred, energy-normalized linear cross-correlation.
+
+    Squaring precedes aggregation. ``peak`` retains the sign of the strongest
+    magnitude, with NaN for an equal-magnitude opposite-sign tie. ``min`` is
+    the numerical minimum; ``min`` with ``squared=True`` is min(r**2).
+    See docs/calculation_definitions.md for formulas and inference assumptions.
+    """
 
     name = "Cross correlation"
     labels = ["basic", "linear", "undirected", "temporal"]
 
-    def __init__(self, squared=False, statistic="max", sigonly=True):
-        self.identifier = "xcorr"
-        self._squared = squared
-        self._statistic = statistic
-        self._sigonly = sigonly
+    def __init__(self, squared=False, statistic="max", sigonly=True, *,
+                 fs=1, max_lag_seconds=0.125, alpha=0.05):
+        if statistic not in ("mean", "max", "min", "peak"):
+            raise ValueError("Cross-correlation statistic must be mean, max, min, or peak.")
+        if type(squared) is not bool or type(sigonly) is not bool:
+            raise TypeError("squared and sigonly must be booleans.")
+        if statistic == "peak" and squared:
+            raise ValueError("Squared peak duplicates max(r**2); use statistic='max', squared=True.")
+        for name, value in (("fs", fs), ("max_lag_seconds", max_lag_seconds), ("alpha", alpha)):
+            if (isinstance(value, (bool, str)) or not np.isscalar(value)
+                    or np.iscomplexobj(value) or not np.isfinite(value)):
+                raise ValueError(f"{name} must be a finite number.")
+        if fs <= 0 or max_lag_seconds < 0 or not 0 < alpha < 1:
+            raise ValueError("Require fs > 0, max_lag_seconds >= 0, and 0 < alpha < 1.")
+        if not sigonly and alpha != 0.05:
+            raise ValueError("alpha only applies when sigonly=True.")
+        self._squared, self._statistic, self._sigonly = squared, statistic, sigonly
+        self.fs, self.max_lag_seconds, self.alpha = float(fs), float(max_lag_seconds), float(alpha)
+        self.labels = self.labels + ["unsigned" if squared else "signed"]
+        self._index = SUMMARY_KEYS.index((statistic, squared))
+        # Round-trip float strings prevent different parameters sharing an ID.
+        def token(value):
+            return str(int(value)) if value.is_integer() else repr(value).replace(".", "-")
+        self.identifier = (f"xcorr{'-sq' if squared else ''}_{statistic}_sig-{sigonly}"
+                           f"_fs-{token(self.fs)}_lag-{token(self.max_lag_seconds)}")
+        if sigonly:
+            self.identifier += f"_bartlett-holm_alpha-{token(self.alpha)}"
 
-        if self._squared:
-            self.issigned = lambda: False
-            self.identifier = self.identifier + "-sq"
-            self.labels = CrossCorrelation.labels + ["unsigned"]
-        else:
-            self.labels = CrossCorrelation.labels + ["signed"]
-        self.identifier += f"_{statistic}_sig-{sigonly}"
+    def issigned(self):
+        return not self._squared
 
-    @parse_bivariate
-    def bivariate(self, data, i=None, j=None):
-        return self._pair_statistic(_basic_workspace(data), i, j)
+    def _workspace(self, data):
+        if data.n_replications != 1:
+            raise ValueError("Cross-correlation requires a single realisation.")
+        requested = self.fs * self.max_lag_seconds
+        if not np.isfinite(requested):
+            raise ValueError("Requested lag is too large.")
+        nearest = round(requested)
+        if abs(requested-nearest) <= 8*np.finfo(float).eps*max(1, abs(requested)):
+            requested = nearest
+        lag = int(np.floor(requested))
+        if lag >= data.n_observations:
+            raise ValueError("Requested maximum lag must be shorter than the data window.")
+        work = cached_workspace(data, "xcorr", CrossCorrelationWorkspace)
+        return work, lag, self.alpha if self._sigonly else None
+
+    def _diagnostics(self, counts, status, ambiguous, lag):
+        status = np.array(status, copy=True, dtype="U24")
+        if self._statistic == "peak":
+            status[np.asarray(ambiguous)] = "ambiguous_peak"
+        return {"status": status, "selected_lag_count": np.array(counts, copy=True),
+                "maximum_lag_samples": lag, "maximum_lag_seconds": lag/self.fs,
+                "selection": "bartlett-holm" if self._sigonly else "all_lags",
+                "alpha": self.alpha if self._sigonly else None}
+
+    def _warn_unavailable(self, status):
+        status = np.asarray(status)
+        if status.ndim == 2:
+            status = status[np.triu_indices(len(status), 1)]
+        counts = {str(reason): int(np.count_nonzero(status == reason))
+                  for reason in np.unique(status) if reason not in ("ok", "diagonal")}
+        if counts:
+            warnings.warn("Cross-correlation unavailable pair summaries: "
+                          + "; ".join(f"{reason}={count}" for reason, count in counts.items()),
+                          CrossCorrelationUnavailableWarning, stacklevel=3)
 
     @parse_multivariate
     def multivariate(self, data):
-        work = _basic_workspace(data)
-        result = np.full((data.n_processes, data.n_processes), np.nan)
-        # Preserve the existing first-visited (higher, lower) orientation.
-        # The lag window and direction convention need a separate review.
-        for j in range(data.n_processes):
-            for i in range(j + 1, data.n_processes):
-                result[i, j] = result[j, i] = self._pair_statistic(work, i, j)
-        return result
+        work, lag, alpha = self._workspace(data)
+        values, counts, status, ambiguous = work.all_pairs(lag, alpha)
+        self.last_diagnostics = self._diagnostics(counts, status, ambiguous, lag)
+        self._warn_unavailable(self.last_diagnostics["status"])
+        return values[self._index].copy()
 
-    def _pair_statistic(self, work, i, j):
-        T = work.values.shape[1]
-        key = tuple(sorted((i, j)))
-        first_i, first_j = work.correlation_directions.setdefault(key, (i, j))
-
-        def correlate():
-            x, y = work.values[[first_i, first_j]]
-            r = signal.correlate(x, y, "full") / work.std[first_i] / work.std[first_j] / (T - 1)
-            # Retain only the selected window, not a view of the full buffer.
-            return r[T - T // 4 : T + T // 4].copy()
-
-        r_ij = work.correlations.get(key, correlate)
-
-        # Truncate at first statistically significant zero (i.e., |r| <= 1.96/sqrt(T))
-        if self._sigonly:
-            N = len(r_ij) // 2
-            fzf = np.where(np.abs(r_ij[len(r_ij) // 2 :]) <= 1.96 / np.sqrt(N))[0][0]
-            fzr = np.where(np.abs(r_ij[: len(r_ij) // 2]) <= 1.96 / np.sqrt(N))[0][-1]
-            r_ij = r_ij[N - fzr : N + fzf]
-
-        if self._statistic == "max":
-            if self._squared:
-                return np.max(r_ij**2)
-            else:
-                return np.max(r_ij)
-        elif self._statistic == "mean":
-            if self._squared:
-                return np.mean(r_ij**2)
-            else:
-                return np.mean(r_ij)
-        else:
-            raise TypeError(f"Unknown statistic: {self._statistic}")
+    @parse_bivariate
+    def bivariate(self, data, i=None, j=None):
+        work, lag, alpha = self._workspace(data)
+        if i == j:
+            self.last_diagnostics = self._diagnostics(0, "diagonal", False, lag)
+            return np.nan
+        values, count, status, ambiguous = work.pair(i, j, lag, alpha)
+        self.last_diagnostics = self._diagnostics(count, status, ambiguous, lag)
+        self._warn_unavailable(self.last_diagnostics["status"])
+        return values[self._index]
 
 
 class _RankCorrelation(Undirected, Signed):

@@ -58,14 +58,18 @@ lmfit_Lasso,,,,,
 lmfit_SGDRegressor,,,,,
 lmfit_ElasticNet,,,,,
 lmfit_BayesianRidge,,,,,
-xcorr_mean_sig-False,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
-xcorr-sq_mean_sig-False,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
-xcorr_max_sig-False,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
-xcorr-sq_max_sig-False,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
-xcorr_max_sig-True,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
-xcorr-sq_max_sig-True,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
-xcorr_mean_sig-True,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
-xcorr-sq_mean_sig-True,,,,,"8 variants, 118x1024: 2.86 s -> 2.05 s (~1.4x). Unique-pair summaries; shared channel scales; refreshes after data edits."
+xcorr_mean_sig-False,fs / lag limit,,,,"4 variants, 118x1024: 1.58 s -> 0.18 s (~8.8x). Shared FFTs; corrected symmetric lags/normalization."
+xcorr-sq_mean_sig-False,fs / lag limit,,,,"4 variants, 118x1024: 1.58 s -> 0.18 s (~8.8x). Shared FFTs; corrected symmetric lags/normalization."
+xcorr_max_sig-False,fs / lag limit,,,,"4 variants, 118x1024: 1.58 s -> 0.18 s (~8.8x). Shared FFTs; corrected symmetric lags/normalization."
+xcorr-sq_max_sig-False,fs / lag limit,,,,"4 variants, 118x1024: 1.58 s -> 0.18 s (~8.8x). Shared FFTs; corrected symmetric lags/normalization."
+xcorr_max_sig-True,fs / lag limit / alpha,,,,"4 variants, 118x1024: 1.77 s -> 0.51 s (~3.5x). Shared FFTs; autocorrelation-aware lag selection."
+xcorr-sq_max_sig-True,fs / lag limit / alpha,,,,"4 variants, 118x1024: 1.77 s -> 0.51 s (~3.5x). Shared FFTs; autocorrelation-aware lag selection."
+xcorr_mean_sig-True,fs / lag limit / alpha,,,,"4 variants, 118x1024: 1.77 s -> 0.51 s (~3.5x). Shared FFTs; autocorrelation-aware lag selection."
+xcorr-sq_mean_sig-True,fs / lag limit / alpha,,,,"4 variants, 118x1024: 1.77 s -> 0.51 s (~3.5x). Shared FFTs; autocorrelation-aware lag selection."
+xcorr_min_sig-False,fs / lag limit,,,,Shared FFT; signed minimum.
+xcorr_peak_sig-False,fs / lag limit,,,,Shared FFT; strongest magnitude with sign.
+xcorr_min_sig-True,fs / lag limit / alpha,,,,Shared FFT/selection; signed minimum.
+xcorr_peak_sig-True,fs / lag limit / alpha,,,,Shared FFT/selection; strongest magnitude with sign.
 cov_EmpiricalCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
 cov-sq_EmpiricalCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
 cov_LedoitWolf,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.

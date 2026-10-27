@@ -1,0 +1,259 @@
+{
+  "created_utc": "2026-10-27T18:01:59.657749+00:00",
+  "baseline_commit": "3d993e074e26d583d3144bbc69257b68944eae20",
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "scipy": "1.17.1",
+  "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+  "shape": [
+    118,
+    1024
+  ],
+  "sampling_rate_hz": 2048,
+  "maximum_lag_seconds": 0.125,
+  "protocol": "Three alternating repeats, fresh Data each run; variants share caches; one numerical thread; excludes imports, preprocessing, I/O. Synthetic data. Changed numerical and significance definitions; timings compare workloads, not identical results.",
+  "source_sha256": {
+    "pyspi/_xcorr.py": "afc038f0768076d10c854e179685ff2501f32601c97c3c9e3c0accfb917a19db",
+    "pyspi/statistics/basic.py": "08d598376fd7b600103f2e480f5f820aeb174c5ed2741cc91ecf4b5ff36a429a",
+    "tests/benchmark_xcorr.py": "bc256d5f5bf40a2ed77a5e4588e7970f041f3a0a8ee5a037555928823c280ce1"
+  },
+  "measurements": {
+    "four_all_lags": {
+      "specifications": [
+        [
+          "max",
+          false,
+          false
+        ],
+        [
+          "max",
+          true,
+          false
+        ],
+        [
+          "mean",
+          false,
+          false
+        ],
+        [
+          "mean",
+          true,
+          false
+        ]
+      ],
+      "seconds": {
+        "refactor": [
+          0.17666286998428404,
+          0.1783585000084713,
+          0.23983253698679619
+        ],
+        "baseline": [
+          1.5843804929754697,
+          1.4664523469982669,
+          1.5777301320049446
+        ]
+      },
+      "median_seconds": {
+        "refactor": 0.1783585000084713,
+        "baseline": 1.5777301320049446
+      },
+      "refactor_extrapolated_seconds": {
+        "1": 0.1783585000084713,
+        "600": 107.01510000508279,
+        "41400": 7384.041900350712
+      },
+      "speedup": 8.845836514267662
+    },
+    "four_significant_lags": {
+      "specifications": [
+        [
+          "max",
+          false,
+          true
+        ],
+        [
+          "max",
+          true,
+          true
+        ],
+        [
+          "mean",
+          false,
+          true
+        ],
+        [
+          "mean",
+          true,
+          true
+        ]
+      ],
+      "seconds": {
+        "refactor": [
+          0.5197400729812216,
+          0.505784404987935,
+          0.5039505599997938
+        ],
+        "baseline": [
+          1.7672936749877408,
+          1.7398553010134492,
+          1.841430666972883
+        ]
+      },
+      "median_seconds": {
+        "refactor": 0.505784404987935,
+        "baseline": 1.7672936749877408
+      },
+      "refactor_extrapolated_seconds": {
+        "1": 0.505784404987935,
+        "600": 303.470642992761,
+        "41400": 20939.474366500508
+      },
+      "speedup": 3.4941640302845993
+    },
+    "eight_original_variants": {
+      "specifications": [
+        [
+          "max",
+          false,
+          false
+        ],
+        [
+          "max",
+          true,
+          false
+        ],
+        [
+          "mean",
+          false,
+          false
+        ],
+        [
+          "mean",
+          true,
+          false
+        ],
+        [
+          "max",
+          false,
+          true
+        ],
+        [
+          "max",
+          true,
+          true
+        ],
+        [
+          "mean",
+          false,
+          true
+        ],
+        [
+          "mean",
+          true,
+          true
+        ]
+      ],
+      "seconds": {
+        "refactor": [
+          0.5761777919833548,
+          0.54929850998451,
+          0.60719698399771
+        ],
+        "baseline": [
+          1.864728982996894,
+          2.0239544280047994,
+          2.0708098010218237
+        ]
+      },
+      "median_seconds": {
+        "refactor": 0.5761777919833548,
+        "baseline": 2.0239544280047994
+      },
+      "refactor_extrapolated_seconds": {
+        "1": 0.5761777919833548,
+        "600": 345.7066751900129,
+        "41400": 23853.76058811089
+      },
+      "speedup": 3.5127255096691914
+    },
+    "twelve_with_min_and_peak": {
+      "specifications": [
+        [
+          "max",
+          false,
+          false
+        ],
+        [
+          "max",
+          true,
+          false
+        ],
+        [
+          "mean",
+          false,
+          false
+        ],
+        [
+          "mean",
+          true,
+          false
+        ],
+        [
+          "max",
+          false,
+          true
+        ],
+        [
+          "max",
+          true,
+          true
+        ],
+        [
+          "mean",
+          false,
+          true
+        ],
+        [
+          "mean",
+          true,
+          true
+        ],
+        [
+          "min",
+          false,
+          false
+        ],
+        [
+          "min",
+          false,
+          true
+        ],
+        [
+          "peak",
+          false,
+          false
+        ],
+        [
+          "peak",
+          false,
+          true
+        ]
+      ],
+      "seconds": {
+        "refactor": [
+          0.5455405449902173,
+          0.5493368900206406,
+          0.5456776100036222
+        ]
+      },
+      "median_seconds": {
+        "refactor": 0.5456776100036222
+      },
+      "refactor_extrapolated_seconds": {
+        "1": 0.5456776100036222,
+        "600": 327.40656600217335,
+        "41400": 22591.05305414996
+      }
+    }
+  }
+}

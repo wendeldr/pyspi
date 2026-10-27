@@ -64,7 +64,7 @@ def preflight(config) -> PreflightReport:
     for seconds in (cfg.window_seconds, cfg.step_seconds):
         if (seconds * target).denominator != 1:
             raise WorkflowError("window length/step must each span a whole number of samples at the target sampling_rate_hz")
-    metrics = resolve_metrics(cfg.metric_config)
+    metrics = resolve_metrics(cfg.metric_config, sampling_rate_hz=float(target))
     recordings = []
     for recording, header, channels in selected:
         output_names = reference_names([name for _, name in channels], cfg.reference)

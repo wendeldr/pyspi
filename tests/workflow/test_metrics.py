@@ -13,9 +13,27 @@ def test_defaults_and_configured_order(metric_config):
     path = metric_config({"Covariance": {"configs": [{"squared": True}, {}]},
                           "CrossCorrelation": {"configs": None}})
     metrics = resolve_metrics(path)
-    assert [m.identifier for m in metrics] == ["cov-sq_EmpiricalCovariance", "cov_EmpiricalCovariance", "xcorr_max_sig-True"]
+    assert [m.identifier for m in metrics] == ["cov-sq_EmpiricalCovariance", "cov_EmpiricalCovariance",
+                                             "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05"]
     assert metrics[0].parameters == {"squared": True}
     assert "EmpiricalCovariance" in metrics[0].constructor_signature
+
+
+@pytest.mark.parametrize("fs", [None, 2048])
+def test_xcorr_uses_workflow_sampling_rate(metric_config, fs):
+    params = {"statistic": "min", "sigonly": False}
+    if fs is not None:
+        params["fs"] = fs
+    path = metric_config({"CrossCorrelation": {"configs": [params]}})
+    metric = resolve_metrics(path, sampling_rate_hz=2048)[0]
+    assert metric.parameters["fs"] == 2048
+    assert metric.identifier == "xcorr_min_sig-False_fs-2048_lag-0-125"
+
+
+def test_xcorr_conflicting_workflow_sampling_rate_rejected(metric_config):
+    path = metric_config({"CrossCorrelation": {"configs": [{"fs": 1000}]}})
+    with pytest.raises(WorkflowError, match="fs differs"):
+        resolve_metrics(path, sampling_rate_hz=2048)
 
 
 @pytest.mark.parametrize("classes,match", [
@@ -117,7 +135,7 @@ def test_rng_and_shared_label_state_restored_even_on_failure(metric_config):
 
 
 @pytest.mark.java
-def test_retained_preset_matches_saved_inventory_exactly():
+def test_retained_preset_preserves_inventory_with_explicit_xcorr_definitions():
     import pyspi
     path = Path(pyspi.__file__).parent / "workflow/retained185.yaml"
     metrics = resolve_metrics(path)
@@ -125,11 +143,16 @@ def test_retained_preset_matches_saved_inventory_exactly():
     root = Path(__file__).resolve().parents[2]
     for patient in ("004", "105", "111"):
         survey = json.loads((root / f"docs/storage_comparison/explore/properties_{patient}_64.json").read_text())
-        assert {m.identifier for m in metrics} == {row["metric"] for row in survey["rows"]}
+        historical = {row["metric"] for row in survey["rows"]}
+        assert {m.identifier for m in metrics if m.class_name != "CrossCorrelation"} == {
+            identifier for identifier in historical if not identifier.startswith("xcorr")}
+        assert {m.identifier for m in metrics if m.class_name == "CrossCorrelation"} == {
+            f"xcorr{sq}_{stat}_sig-False_fs-1_lag-0-125"
+            for sq in ("", "-sq") for stat in ("max", "mean")}
 
 
 @pytest.mark.java
-@pytest.mark.parametrize("filename,count", [("config.yaml", 285), ("fast_config.yaml", 217),
+@pytest.mark.parametrize("filename,count", [("config.yaml", 289), ("fast_config.yaml", 221),
                                            ("sonnet_config.yaml", 14), ("fabfour_config.yaml", 4)])
 def test_existing_presets_resolve_without_computation(filename, count):
     import pyspi

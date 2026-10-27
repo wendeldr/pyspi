@@ -55,6 +55,14 @@ def test_ready_report_order_and_inputs_unchanged(edf, workflow):
     assert not Path(data["output_directory"]).exists()
 
 
+def test_xcorr_preflight_binds_target_rate_after_resampling(edf, workflow, metric_config):
+    config = metric_config({"CrossCorrelation": {"configs": [{"statistic": "peak", "sigonly": False}]}})
+    report = preflight(workflow(edf(samples=(16, 16)), metrics={"config": str(config)}))
+    assert report.recordings[0]["status"] == "requires_resampling"
+    assert report.metrics[0].parameters["fs"] == 8
+    assert report.metrics[0].identifier == "xcorr_peak_sig-False_fs-8_lag-0-125"
+
+
 @pytest.mark.parametrize("native", [4, 16])
 def test_upsampling_and_downsampling_needed_no_target_ranges(native, edf, workflow):
     source = edf(samples=(native, native))

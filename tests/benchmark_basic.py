@@ -104,8 +104,9 @@ def main():
         "kendall": [("KendallTau", {})],
         "kendall_both": [("KendallTau", {"squared": squared}) for squared in (False, True)],
         "spearman_both": [("SpearmanR", {"squared": squared}) for squared in (False, True)],
-        "cross_correlation_eight": [("CrossCorrelation", {"statistic": statistic, "squared": squared, "sigonly": sigonly})
-                                   for squared in (False, True) for statistic in ("max", "mean") for sigonly in (False, True)],
+        # Cross-correlation's definitions have since changed. Its historical
+        # timings remain in basic_refactor_results.json; benchmark_xcorr.py
+        # measures the current implementation without asserting old values.
     }
     raw = np.random.default_rng(324).normal(size=(118, 1024))
     raw[1] += .6 * raw[0]

@@ -36,12 +36,16 @@
   "spearmanr",
   "kendalltau-sq",
   "kendalltau",
-  "xcorr_max_sig-True",
-  "xcorr-sq_max_sig-True",
-  "xcorr_mean_sig-True",
-  "xcorr-sq_mean_sig-True",
-  "xcorr_mean_sig-False",
-  "xcorr-sq_mean_sig-False",
+  "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+  "xcorr-sq_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+  "xcorr_mean_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+  "xcorr-sq_mean_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+  "xcorr_mean_sig-False_fs-1_lag-0-125",
+  "xcorr-sq_mean_sig-False_fs-1_lag-0-125",
+  "xcorr_min_sig-False_fs-1_lag-0-125",
+  "xcorr_min_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+  "xcorr_peak_sig-False_fs-1_lag-0-125",
+  "xcorr_peak_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
   "pdist_euclidean",
   "pdist_cityblock",
   "pdist_cosine",
@@ -418,6 +422,46 @@
     "pyspi/_spectral.py": "d5c07fe37b3ef48421414f8a63a3e33b01db9e36cfcf5db2d2162cb52151a640",
     "pyspi/statistics/spectral.py": "a25e74ab39896b2dab1a390086a7653bcba8dd296051e6252e05b7294620d982"
    }
+  },
+  {
+   "command": ".venv/bin/python -B tests/regression/generate_goldens.py --size all --preproc --spis 'xcorr*' --repeat 2",
+   "environment": {
+    "java": "26",
+    "omp_num_threads": "1",
+    "packages": {
+     "cdt": "0.6.0",
+     "hyppo": "0.5.2",
+     "jpype1": "1.7.1",
+     "mne": "1.13.2",
+     "nitime": "0.12.1",
+     "numpy": "2.5.4",
+     "pandas": "3.0.6",
+     "pyEDM": "1.15.2.0",
+     "pyyaml": "6.0.3",
+     "scikit-learn": "1.9.1",
+     "scipy": "1.17.1",
+     "sktime": "1.2.0",
+     "spectral-connectivity": "1.1.2",
+     "statsmodels": "0.15.0",
+     "torch": "2.14.1+cpu",
+     "tslearn": "0.9.0"
+    },
+    "platform": "linux",
+    "pyspi_commit": "3d993e074e26d583d3144bbc69257b68944eae20",
+    "pyspi_version": "2.0.2",
+    "python": "3.12.14"
+   },
+   "generated": "2026-10-27T18:00:27+00:00",
+   "reason": "Approved centered full-energy correlation, symmetric time-based lag limits, Bartlett/Holm significant-lag selection and new summaries; default fs=1 selects zero lag. Independent reference tests validate the formulas.",
+   "scope": "Cross-correlation only; new explicit lag/inference identifiers and min/peak variants",
+   "source_sha256": {
+    "pyspi/_xcorr.py": "afc038f0768076d10c854e179685ff2501f32601c97c3c9e3c0accfb917a19db",
+    "pyspi/config.yaml": "2e11d9c2c715293d2691914eb28e313739946993bf9f6c44d383a5653e52545c",
+    "pyspi/statistics/basic.py": "08d598376fd7b600103f2e480f5f820aeb174c5ed2741cc91ecf4b5ff36a429a",
+    "pyspi/workflow/_metrics.py": "73149c00fdc9fa609782ffa445e0f7dc6c316a47e1a79d23c2ee4f1e2981553f",
+    "pyspi/workflow/_preflight.py": "6d2da0d919a1beb0d530f02ab2eea795ec5892d1ab8126783c439655ab52756a"
+   },
+   "unaffected_arrays_verified_unchanged": 92
   }
  ],
  "schema": 1,
@@ -865,7 +909,7 @@
    "status": "ok",
    "time_s": 1.938035
   },
-  "xcorr_max_sig-True": {
+  "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05": {
    "cls": "CrossCorrelation",
    "deps": [],
    "error": null,
@@ -877,12 +921,12 @@
     "undirected"
    ],
    "module": ".statistics.basic",
-   "nan_offdiag": 0,
+   "nan_offdiag": 10,
    "params": {
     "statistic": "max"
    },
-   "status": "ok",
-   "time_s": 0.001712
+   "status": "partial_nan",
+   "time_s": 0.001164
   }
  },
  "variants": {
@@ -1714,41 +1758,41 @@
    "status": "ok",
    "time_s": 1.352273
   },
-  "xcorr_max_sig-True::n0d0": {
-   "detrend": false,
-   "error": "IndexError('index 0 is out of bounds for axis 0 with size 0')",
-   "identifier": "xcorr_max_sig-True",
-   "nan_offdiag": 20,
-   "normalise": false,
-   "status": "error",
-   "time_s": 0.000172
-  },
-  "xcorr_max_sig-True::n0d1": {
-   "detrend": true,
-   "error": null,
-   "identifier": "xcorr_max_sig-True",
-   "nan_offdiag": 0,
-   "normalise": false,
-   "status": "ok",
-   "time_s": 0.001658
-  },
-  "xcorr_max_sig-True::n1d0": {
+  "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05::n0d0": {
    "detrend": false,
    "error": null,
-   "identifier": "xcorr_max_sig-True",
-   "nan_offdiag": 0,
-   "normalise": true,
-   "status": "ok",
-   "time_s": 0.001687
+   "identifier": "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+   "nan_offdiag": 10,
+   "normalise": false,
+   "status": "partial_nan",
+   "time_s": 0.00079
   },
-  "xcorr_max_sig-True::n1d1": {
+  "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05::n0d1": {
    "detrend": true,
    "error": null,
-   "identifier": "xcorr_max_sig-True",
-   "nan_offdiag": 0,
+   "identifier": "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+   "nan_offdiag": 6,
+   "normalise": false,
+   "status": "partial_nan",
+   "time_s": 0.001164
+  },
+  "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05::n1d0": {
+   "detrend": false,
+   "error": null,
+   "identifier": "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+   "nan_offdiag": 10,
    "normalise": true,
-   "status": "ok",
-   "time_s": 0.001712
+   "status": "partial_nan",
+   "time_s": 0.000756
+  },
+  "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05::n1d1": {
+   "detrend": true,
+   "error": null,
+   "identifier": "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+   "nan_offdiag": 6,
+   "normalise": true,
+   "status": "partial_nan",
+   "time_s": 0.00076
   }
  }
 }

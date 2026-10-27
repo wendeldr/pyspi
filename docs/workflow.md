@@ -11,6 +11,13 @@ Parallelization and changes to the separate data lake remain later work.
 Calculator's [completion reporting and timing](calculation_reporting.md) are
 used by the runner to persist diagnostics and write completed values.
 
+Cross-correlation uses the workflow's target sampling rate to convert its
+configurable lag limit (default ±125 ms) to samples. A conflicting metric `fs`
+is rejected. See [calculation definitions](calculation_definitions.md) for
+minimum/peak variants, squaring order and significant-lag selection. The
+retained185 preset keeps its existing four cross-correlation requests;
+new variants can be selected in a custom metric configuration.
+
 ## Terminal usage
 
 Use the root locked environment. Edit the paths in

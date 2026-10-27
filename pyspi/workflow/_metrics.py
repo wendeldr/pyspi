@@ -93,8 +93,8 @@ def _validate_parameters(cls, params, where):
         estimator = params.get("estimator", "EmpiricalCovariance")
         if not isinstance(estimator, str) or estimator.startswith("_") or not inspect.isclass(getattr(basic.cov, estimator, None)):
             raise WorkflowError(f"{where}: unknown covariance estimator {estimator!r}")
-    if issubclass(cls, basic.CrossCorrelation) and params.get("statistic", "max") not in ("mean", "max"):
-        raise WorkflowError(f"{where}: cross-correlation statistic must be mean or max")
+    if issubclass(cls, basic.CrossCorrelation) and params.get("statistic", "max") not in ("mean", "max", "min", "peak"):
+        raise WorkflowError(f"{where}: cross-correlation statistic must be mean, max, min, or peak")
     if any(parent.__name__ == "PairwiseDistance" and parent.__module__ == "pyspi.statistics.distance"
            for parent in cls.__mro__):
         from sklearn.metrics import pairwise
@@ -119,7 +119,7 @@ def _validate_parameters(cls, params, where):
             raise WorkflowError(f"{where}: frequency band must satisfy 0 <= fmin <= fmax <= fs/2")
 
 
-def resolve_metrics(path) -> tuple[Metric, ...]:
+def resolve_metrics(path, *, sampling_rate_hz=None) -> tuple[Metric, ...]:
     """Instantiate and describe every request; never fall back, skip, or fit.
 
     Java-dependent constructors require starting the existing JIDT JVM, whose
@@ -154,6 +154,12 @@ def resolve_metrics(path) -> tuple[Metric, ...]:
                     from pyspi.base import Directed
                     if not inspect.isclass(cls) or not issubclass(cls, Directed):
                         raise WorkflowError(f"{where}: requested class is not an SPI")
+                    from pyspi.statistics.basic import CrossCorrelation
+                    if issubclass(cls, CrossCorrelation) and sampling_rate_hz is not None:
+                        rate = float(positive_number(sampling_rate_hz, "sampling_rate_hz"))
+                        if "fs" in params and float(positive_number(params["fs"], f"{where}.fs")) != rate:
+                            raise WorkflowError(f"{where}: fs differs from workflow sampling_rate_hz")
+                        params = {**params, "fs": rate}
                     required = list(dict.fromkeys(dependencies))
                     if any(parent.__name__ == "JIDTBase" and parent.__module__ == "pyspi.statistics.infotheory"
                            for parent in cls.__mro__):
