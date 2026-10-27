@@ -212,6 +212,10 @@ class SpectralConnectivity(sc.Connectivity):
         return self._phase_statistics(kind)[kind]
 
     def _phase_statistics(self, *kinds):
+        if "sign" in kinds and "nonzero" not in kinds:
+            # Preserve a compact count alongside PLI so its debiased variant
+            # never needs another cross-product pass to identify zero signs.
+            kinds = (*kinds, "nonzero")
         keys = [("phase_statistic", kind) for kind in kinds]
         def compute(missing):
             reduced = self._reduce_phase([key[1] for key in missing])
@@ -222,32 +226,79 @@ class SpectralConnectivity(sc.Connectivity):
         """Form each bounded taper cross-product once for the requested moments."""
         coefficients = self._positive_coefficients
         w, r, k, f, p = coefficients.shape
-        results = {kind: np.empty((w, f, p, p), dtype=complex if kind == "unit" else float)
+        results = {kind: np.empty((w, f, p, p), dtype=(
+                       complex if kind == "unit" else np.min_scalar_type(r*k)
+                       if kind == "nonzero" else float))
                    for kind in kinds}
-        row_step = min(p, max(1, self.block_bytes // (w * r * k * p * 16)))
+        # Every moment has known conjugate/signed/symmetric pair reversal.
+        # Tile the upper triangle and fill its reverse instead of evaluating
+        # both cross-products. Small square tiles retain bounded vectorized work.
+        row_step = min(p, 32, max(1, self.block_bytes // (w * r * k * p * 16)))
         frequency_step = max(1, self.block_bytes // (w * r * k * row_step * p * 16))
         for start in range(0, f, frequency_step):
             stop = min(start + frequency_step, f)
-            right = coefficients[..., start:stop, None, :].conj()
             for row in range(0, p, row_step):
                 end = min(row + row_step, p)
+                right = coefficients[..., start:stop, None, row:].conj()
                 left = coefficients[..., start:stop, row:end, None]
                 cross = np.matmul(left, right, dtype=np.complex128)
+                if "imag_pairs" in kinds or "abs_imag_pairs" in kinds:
+                    # Sum distinct observation products using prefix sums, not
+                    # sum(y)**2 - sum(y**2), which can lose the entire denominator
+                    # when one observation dominates. Normalize per pair/frequency
+                    # before multiplication to avoid squaring tiny/large amplitudes.
+                    y = cross.imag.reshape(w, r*k, stop-start, end-row, p-row)
+                    magnitude = np.abs(y)
+                    scale = magnitude.max(axis=1, keepdims=True)
+                    if "imag_pairs" in kinds:
+                        normalized = np.divide(y, scale, out=np.zeros_like(y), where=scale != 0)
+                        np.abs(normalized, out=magnitude)
+                        prefix = np.cumsum(normalized[:, :-1], axis=1)
+                        results["imag_pairs"][:, start:stop, row:end, row:] = np.einsum(
+                            "wkfij,wkfij->wfij", normalized[:, 1:], prefix, optimize=False)
+                        del normalized, prefix
+                    else:
+                        np.divide(magnitude, scale, out=magnitude, where=scale != 0)
+                    if "abs_imag_pairs" in kinds:
+                        prefix = np.cumsum(magnitude[:, :-1], axis=1)
+                        results["abs_imag_pairs"][:, start:stop, row:end, row:] = np.einsum(
+                            "wkfij,wkfij->wfij", magnitude[:, 1:], prefix, optimize=False)
+                        del prefix
+                    del y, magnitude, scale
                 for kind in kinds:
+                    if kind in ("imag_pairs", "abs_imag_pairs"):
+                        continue
+                    if kind == "nonzero":
+                        if "sign" not in kinds:
+                            results[kind][:, start:stop, row:end, row:] = np.count_nonzero(
+                                cross.imag, axis=(1, 2))
+                        continue
                     if kind == "unit":
                         values = cross / np.abs(cross)
                     elif kind == "sign":
                         values = np.sign(cross.imag)
+                        if "nonzero" in kinds:
+                            count = np.einsum("wrkfij,wrkfij->wfij", values, values, optimize=False)
+                            # A NaN sign will propagate through the sign average;
+                            # its count is immaterial but must fit the integer cache.
+                            np.copyto(count, 0, where=np.isnan(count))
+                            results["nonzero"][:, start:stop, row:end, row:] = count
+                            del count
                     elif kind == "imag":
                         values = cross.imag
                     elif kind == "abs_imag":
                         values = np.abs(cross.imag)
-                    elif kind == "imag_squared":
-                        values = cross.imag ** 2
                     else:
                         raise ValueError(f"Unknown phase statistic: {kind}")
-                    results[kind][:, start:stop, row:end, :] = values.mean(axis=(1, 2))
+                    results[kind][:, start:stop, row:end, row:] = values.mean(axis=(1, 2))
                     del values
+                for kind, result in results.items():
+                    reverse = result[:, start:stop, row:end, end:].swapaxes(-1, -2)
+                    if kind == "unit":
+                        reverse = reverse.conj()
+                    elif kind in ("sign", "imag"):
+                        reverse = -reverse
+                    result[:, start:stop, end:, row:end] = reverse
         return results
 
     def _phase_locking_value(self):
@@ -260,29 +311,31 @@ class SpectralConnectivity(sc.Connectivity):
         return self._phase_statistic("sign")
 
     def debiased_squared_phase_lag_index(self):
-        # Squaring the shared signed moment already removes its sign. Avoid
-        # constructing the ordinary PLI's full-frequency magnitude array.
+        # Sum over distinct observation pairs without forming those pairs:
+        # ((sum(sign(y)))**2 - sum(sign(y)**2)) / (n*(n-1)).
+        # sign(0)**2 is zero, so subtract the actual nonzero count, not n.
         n = self.n_observations
-        return (n * self.signed_phase_lag_index() ** 2 - 1) / (n - 1)
+        moments = self._phase_statistics("sign", "nonzero")
+        result = np.square(moments["sign"])
+        result *= n*n
+        result -= moments["nonzero"]
+        result /= n*(n-1)
+        return result
 
     def weighted_phase_lag_index(self):
         return np.abs(self.measure("signed_weighted_phase_lag_index"))
 
     def signed_weighted_phase_lag_index(self):
         moments = self._phase_statistics("imag", "abs_imag")
-        weights = moments["abs_imag"].copy()
-        weights[weights < np.finfo(float).eps] = 1
-        return moments["imag"] / weights
+        weights = moments["abs_imag"]
+        return np.divide(moments["imag"], weights, out=np.full_like(weights, np.nan),
+                         where=weights > 0)
 
     def debiased_squared_weighted_phase_lag_index(self):
-        n = self.n_observations
-        moments = self._phase_statistics("imag", "imag_squared", "abs_imag")
-        imag_sum = moments["imag"] * n
-        squared_sum = moments["imag_squared"] * n
-        magnitude_sum = moments["abs_imag"] * n
-        weights = magnitude_sum ** 2 - squared_sum
-        weights[weights == 0] = np.nan
-        return (imag_sum ** 2 - squared_sum) / weights
+        moments = self._phase_statistics("imag_pairs", "abs_imag_pairs")
+        weights = moments["abs_imag_pairs"]
+        return np.divide(moments["imag_pairs"], weights,
+                         out=np.full_like(weights, np.nan), where=weights > 0)
 
     def measure(self, name, **kwargs):
         if name == "signed_phase_lag_index":

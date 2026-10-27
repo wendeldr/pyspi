@@ -339,8 +339,8 @@ aggregation, explicit signed variants, weighted averages, debiasing via distinct
 observation-pair products, negative estimates, shared moment computation, bounded
 taper products and cache eviction. Ordinary `pli`/`wpli` use nonnegative
 per-frequency definitions; `pli-signed`/`wpli-signed` retain phase-lag signs.
-Debiased squared PLI/wPLI and PPC retain their numerical definitions and negative
-estimates; only their signed/undirected metadata is corrected.
+At that checkpoint, debiased squared PLI/wPLI and PPC retained their numerical
+definitions and negative estimates; their signed/undirected metadata was corrected.
 
 The weighted moments requested together now share each cross-product block;
 previously cached moments are reused. All Fourier band summaries use a slice of
@@ -371,8 +371,54 @@ separate alternating five-repeat comparison of current code with/without the
 12 signed band summaries measured about 0.094 s (3.8%) extra, using median
 within-repeat differences; absolute timings varied between benchmark sessions.
 
-Zero-lag/zero-denominator handling and taper independence remain
-separate scientific/numerical review items; see the
+The measurements above describe the signed/unsigned split at commit `8b66a4a`.
+
+### Zero-sign and weighted-denominator corrections
+
+Debiased PLI now counts actual nonzero signs in its distinct-observation
+pair-product formula. Five zero signs return zero instead of -0.25; legitimate
+negative estimates remain. The compact count is reduced from the existing
+sign array, avoiding explicit observation-pair enumeration and extra taper
+products. Known phase symmetries allow upper-triangle channel tiles to be
+reused in reverse order across the phase family.
+
+Signed/unsigned wPLI no longer replace small denominators with 1. Zero weight
+returns NaN. Debiased wPLI computes its equivalent distinct-pair numerator and
+denominator through scaled prefix sums, avoiding overflow/underflow from raw
+squaring and cancellation when one weight dominates. Zero usable pair weight
+also returns NaN. Band summaries skip undefined bins and leave all-undefined
+bands as NaN, with their existing warnings.
+
+Independent tests cover zero/mixed signs, valid negatives, amplitude factors
+from 1e-100 through 1e100, tiny second weights down to 1e-250, all-undefined
+bands, compact count overflow, bounded temporaries, and channel permutations
+across tiles with multiple windows/trials/tapers. The small/full golden refresh
+is scoped to 18 wPLI/signed-wPLI/dsPLI entries per set; the other 283 arrays per
+set and all preprocessing arrays remain unchanged. PLV, PPC and debiased wPLI
+retain their earlier numerical snapshots.
+
+Validation: **1,373 passed, 15 skipped, 7 existing expected failures** across
+unit, regression and workflow tests with Java required; **102** additional
+larger spectral regression checks passed. Of the 18 refreshed entries, 12
+arrays actually changed per small/full set; all 96 preprocessing arrays remain
+unchanged.
+
+`phase_zero_policy_results.json` records timings against `8b66a4a`, including
+standalone dsPLI and PLI+dsPLI together. Reproduce using
+`benchmark_phase_sync.py --baseline 8b66a4a --zero-policy --repeats 5 --cpu 2
+--output tests/phase_zero_policy_results.json` (choose an available CPU or omit
+the affinity option). This refactor's receipt is separate from earlier timings.
+
+On synthetic 118x1024 inputs (five alternating repeats), median dsPLI time
+changed from 0.297 to 0.262 s; PLI+dsPLI together from 0.329 to 0.295 s.
+wPLI changed from 0.357 to 0.288 s. The stable debiased-wPLI evaluation costs
+more alone (0.500 to 0.631 s), while its traced allocation peak drops from
+447 to 243 MiB. All six estimators over three bands with mean/max summaries
+changed from 2.522 to 2.087 s, with a traced peak of 504 to 450 MiB. These
+are per-workload comparisons from this receipt, not cumulative speedups across
+earlier benchmark sessions.
+
+Taper independence remains a scientific review item; see the
 [calculation definitions](../docs/calculation_definitions.md).
 
 ## Extra goldens

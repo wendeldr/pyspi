@@ -103,7 +103,7 @@ def test_weighted_moments_share_cross_products_and_reuse_cached_moments():
         conn.measure("weighted_phase_lag_index")
         conn.measure("debiased_squared_weighted_phase_lag_index")
         assert [call.args[0] for call in reduce.call_args_list] == [
-            ["imag", "abs_imag"], ["imag_squared"]]
+            ["imag", "abs_imag"], ["imag_pairs", "abs_imag_pairs"]]
 
 
 def test_multimoment_cross_products_are_bounded_and_formed_only_once(monkeypatch):
@@ -146,3 +146,107 @@ def test_signed_unsigned_and_debiased_variants_share_signs_and_are_order_indepen
     fresh = Data(raw)
     for cls, expected in reversed(list(zip(classes, actual))):
         np.testing.assert_allclose(cls().multivariate(fresh), expected)
+
+
+@pytest.mark.parametrize("imaginary", [
+    [0, 0, 0, 0, 0], [1, 0, 0, 0, 0], [1, 1, -1, 0, 0],
+    [1, -1, 1, -1, 0], [1, 1, 1, -1, -1],
+])
+def test_zero_signs_follow_distinct_observation_pair_definition(imaginary):
+    conn = connection(np.asarray(imaginary)[:, None])
+    signs = np.sign(imaginary)
+    expected = np.mean([a*b for i, a in enumerate(signs)
+                        for j, b in enumerate(signs) if i != j])
+    result = conn.measure("debiased_squared_phase_lag_index")
+    np.testing.assert_allclose(result[0, 1, 0, 1], expected, atol=1e-15)
+    np.testing.assert_allclose(result[0, 1, 1, 0], expected, atol=1e-15)
+
+
+@pytest.mark.parametrize("scale", [1e-100, 1e-40, 1e-10, 1, 1e10, 1e40, 1e100])
+@pytest.mark.parametrize("imaginary", [[1, 2, 3, 4, 5], [2, -3, 4, -1, 0],
+                                      [1, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
+def test_weighted_ratios_are_scale_invariant_and_require_usable_weights(scale, imaginary):
+    y = np.asarray(imaginary, float)
+    conn = connection(y[:, None])
+    conn.fourier_coefficients *= scale
+    weighted = y.sum() / abs(y).sum() if np.any(y) else np.nan
+    pairs = [(a, b) for i, a in enumerate(y) for j, b in enumerate(y) if i != j]
+    pair_weight = sum(abs(a*b) for a, b in pairs)
+    debiased = sum(a*b for a, b in pairs) / pair_weight if pair_weight else np.nan
+    for name, expected in [("signed_weighted_phase_lag_index", weighted),
+                           ("weighted_phase_lag_index", abs(weighted)),
+                           ("debiased_squared_weighted_phase_lag_index", debiased)]:
+        result = conn.measure(name)
+        np.testing.assert_allclose(result[0, 1, 0, 1], expected, rtol=1e-13, atol=1e-15)
+
+
+@pytest.mark.parametrize("cls", [spectral.WeightedPhaseLagIndex,
+                                 spectral.SignedWeightedPhaseLagIndex,
+                                 spectral.DebiasedSquaredWeightedPhaseLagIndex])
+@pytest.mark.parametrize("statistic", ["mean", "max"])
+def test_undefined_weighted_bins_are_skipped_and_all_undefined_band_stays_nan(cls, statistic):
+    conn = connection([[0, 1], [0, 1], [0, 1], [0, -1], [0, -1]])
+    data = Data(np.ones((2, 8)), normalise=False)
+    with patch("pyspi.statistics.spectral.spectral_workspace", return_value=conn):
+        # First bin has no nonzero imaginary observations; second is valid.
+        value = cls(fmin=.25, fmax=.5, statistic=statistic).multivariate(data)
+        expected = -.2 if cls is spectral.DebiasedSquaredWeightedPhaseLagIndex else .2
+        np.testing.assert_allclose(value[0, 1], expected)
+        with pytest.warns(RuntimeWarning, match="(Mean of empty slice|All-NaN slice)"):
+            missing = cls(fmin=.25, fmax=.25, statistic=statistic).multivariate(data)
+        assert np.isnan(missing).all()
+
+
+@pytest.mark.parametrize("tapers", [5, 256])
+def test_nonzero_count_is_compact_and_does_not_overflow(tapers):
+    conn = connection(np.ones((tapers, 1)))
+    moments = conn._phase_statistics("sign")
+    assert moments["nonzero"][0, 1, 0, 1] == tapers
+    assert moments["nonzero"].dtype.itemsize == (1 if tapers == 5 else 2)
+    assert conn.measure("debiased_squared_phase_lag_index")[0, 1, 0, 1] == 1
+
+
+@pytest.mark.parametrize("small", [1e-10, 1e-20, 1e-100, 1e-250])
+@pytest.mark.parametrize("sign", [-1, 1])
+def test_tiny_second_weight_does_not_disappear_from_debiased_denominator(small, sign):
+    # The squared-sum subtraction rounds to zero for small <= epsilon. There
+    # is still one usable observation pair, whose product has the given sign.
+    conn = connection(np.array([1, sign*small, 0, 0, 0])[:, None])
+    actual = conn.measure("debiased_squared_weighted_phase_lag_index")[0, 1, 0, 1]
+    np.testing.assert_allclose(actual, sign, rtol=1e-13)
+
+
+def test_phase_pair_tiles_match_ordered_scalar_formulas_and_channel_permutations():
+    rng = np.random.default_rng(84)
+    coefficients = rng.normal(size=(2, 2, 3, 8, 35)) + 1j*rng.normal(size=(2, 2, 3, 8, 35))
+    frequencies = np.fft.fftfreq(8)
+    conn = SpectralConnectivity(coefficients, frequencies, np.arange(2.))
+    order = rng.permutation(35)
+    shuffled = SpectralConnectivity(coefficients[..., order], frequencies, np.arange(2.))
+    names = ["phase_locking_value", "pairwise_phase_consistency", "signed_phase_lag_index",
+             "phase_lag_index", "weighted_phase_lag_index", "signed_weighted_phase_lag_index",
+             "debiased_squared_phase_lag_index", "debiased_squared_weighted_phase_lag_index"]
+    values = {name: conn.measure(name) for name in names}
+    for name in names:
+        np.testing.assert_allclose(shuffled.measure(name), values[name][..., order, :][..., order],
+                                   rtol=1e-12, atol=1e-14)
+    # Include both orientations and pairs spanning the 32-channel tile boundary.
+    for i, j in [(0, 34), (34, 0), (33, 2), (31, 32)]:
+        for w in range(2):
+            cross = (coefficients[w, :, :, 2, i]*coefficients[w, :, :, 2, j].conj()).ravel()
+            y = cross.imag
+            signs = np.sign(y)
+            unit = cross/abs(cross)
+            pairs = [(a, b) for a in range(len(y)) for b in range(len(y)) if a != b]
+            expected = {
+                "phase_locking_value": abs(unit.mean()),
+                "pairwise_phase_consistency": np.mean([(unit[a]*unit[b].conjugate()).real for a,b in pairs]),
+                "signed_phase_lag_index": signs.mean(), "phase_lag_index": abs(signs.mean()),
+                "weighted_phase_lag_index": abs(y.sum())/abs(y).sum(),
+                "signed_weighted_phase_lag_index": y.sum()/abs(y).sum(),
+                "debiased_squared_phase_lag_index": np.mean([signs[a]*signs[b] for a,b in pairs]),
+                "debiased_squared_weighted_phase_lag_index": (
+                    sum(y[a]*y[b] for a,b in pairs)/sum(abs(y[a]*y[b]) for a,b in pairs)),
+            }
+            for name in names:
+                np.testing.assert_allclose(values[name][w, 2, i, j], expected[name], atol=1e-14)

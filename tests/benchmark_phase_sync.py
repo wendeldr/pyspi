@@ -66,10 +66,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline", default="6e36cc6")
     parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--zero-policy", action="store_true",
+                        help="Measure zero-sign/denominator fixes, including standalone and shared dsPLI.")
+    parser.add_argument("--cpu", type=int, help="Keep this benchmark process on one allowed CPU.")
     parser.add_argument("--variants-only", action="store_true",
                         help="Add a paired current-code six/eight estimator comparison to the existing report.")
     parser.add_argument("--output", type=Path, default=ROOT / "tests/phase_sync_refactor_results.json")
     args = parser.parse_args()
+    if args.cpu is not None:
+        os.sched_setaffinity(0, {args.cpu})
     old, revision = baseline(args.baseline)
     raw = np.random.default_rng(8026).normal(size=(118, 1024))
     raw[1] = .8 * np.roll(raw[0], 3) + .2 * raw[1]
@@ -92,6 +97,15 @@ def main():
         "six_estimators_36_summaries": family,
         "eight_estimators_48_summaries": with_signed,
     }
+    if args.zero_policy:
+        workloads = {
+            "pli": [("PhaseLagIndex", {})],
+            "debiased_pli": [("DebiasedSquaredPhaseLagIndex", {})],
+            "pli_and_debiased_pli": [("PhaseLagIndex", {}), ("DebiasedSquaredPhaseLagIndex", {})],
+            "wpli": [("WeightedPhaseLagIndex", {})],
+            "debiased_wpli": [("DebiasedSquaredWeightedPhaseLagIndex", {})],
+            "six_estimators_36_summaries": family,
+        }
     if args.variants_only:
         report = json.loads(args.output.read_text())
         run(spectral, raw[:3, :128], with_signed)
@@ -119,6 +133,7 @@ def main():
         return
     report = dict(baseline_revision=revision, seed=8026, shape=list(raw.shape),
                   python=platform.python_version(), numpy=np.__version__, repeats=args.repeats,
+                  cpu_affinity=sorted(os.sched_getaffinity(0)),
                   numerical_library_threads=1,
                   protocol="Fresh Data per workload; warmup on a small input; alternating baseline/candidate "
                            "order; medians of repeated calls including Data construction. Peak memory is a "
@@ -128,6 +143,15 @@ def main():
                   source_sha256={name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest()
                                  for name in ("pyspi/_cache.py", "pyspi/_spectral.py",
                                               "pyspi/statistics/spectral.py")}, workloads={})
+    if args.zero_policy:
+        report["protocol"] = (
+            "Fresh Data per workload; small warmup; alternating baseline/candidate order; "
+            "medians including Data construction; separate traced-memory runs, not RSS. "
+            "Intentional definition corrections: zero signs contribute zero to dsPLI "
+            "pair products; weighted zero denominators return NaN; amplitude cutoff removed. "
+            "Scaled prefix sums stabilize debiased wPLI, and upper-triangle phase tiles "
+            "reuse reversed channel pairs. "
+            "Compare with --baseline 8b66a4a to isolate these changes.")
     for name, candidate_specs in workloads.items():
         old_specs = family if name == "eight_estimators_48_summaries" else candidate_specs
         cases = {"baseline": (old, old_specs), "candidate": (spectral, candidate_specs)}
@@ -148,10 +172,11 @@ def main():
                                        for key, (module, specs) in cases.items()})
         report["workloads"][name] = result
         print(name, json.dumps(result), flush=True)
-    a = report["workloads"]["six_estimators_36_summaries"]["median_s"]["candidate"]
-    b = report["workloads"]["eight_estimators_48_summaries"]["median_s"]["candidate"]
-    report["unpaired_signed_variants_observed_seconds"] = b-a
-    report["unpaired_signed_variants_observed_fraction"] = b/a-1
+    if not args.zero_policy:
+        a = report["workloads"]["six_estimators_36_summaries"]["median_s"]["candidate"]
+        b = report["workloads"]["eight_estimators_48_summaries"]["median_s"]["candidate"]
+        report["unpaired_signed_variants_observed_seconds"] = b-a
+        report["unpaired_signed_variants_observed_fraction"] = b/a-1
     args.output.write_text(json.dumps(report, indent=2)+"\n")
 
 

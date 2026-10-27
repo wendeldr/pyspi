@@ -199,6 +199,7 @@ path and wavelet sign conventions have not been reviewed here.
 For each frequency and channel pair, let `y[k] = Im(X_i[k] * conj(X_j[k]))`
 for the `N` taper/trial observations. These observations are averaged before
 the frequency-band summary; `N` is not the number of time samples or bins.
+Write `s[k] = sign(y[k])`, including `sign(0) = 0`.
 
 | Identifier | Per-frequency result | Interpretation |
 | --- | --- | --- |
@@ -206,7 +207,7 @@ the frequency-band summary; `N` is not the number of time samples or bins.
 | `pli-signed` | `mean(sign(y))` | Consistency retaining phase-lag sign |
 | `wpli` | `abs(sum(y)) / sum(abs(y))` | Nonnegative, magnitude-weighted lag consistency |
 | `wpli-signed` | `sum(y) / sum(abs(y))` | Weighted consistency retaining phase-lag sign |
-| `dspli` | `(N * mean(sign(y))**2 - 1) / (N - 1)` | Bias-corrected estimate of squared PLI |
+| `dspli` | `(sum(s)**2 - sum(s**2)) / (N * (N - 1))` | Bias-corrected estimate of squared PLI |
 | `dswpli` | `(sum(y)**2 - sum(y**2)) / (sum(abs(y))**2 - sum(y**2))` | Debiased estimate of squared wPLI |
 | `plv` | `abs(mean(z))`, where `z = cross / abs(cross)` | Phase locking at any consistent phase offset |
 | `ppc` | `(abs(sum(z))**2 - N) / (N * (N - 1))` | Bias-corrected estimate of squared PLV |
@@ -233,23 +234,56 @@ are retained without absolute value or clipping, and their metadata now says
 The [dependency's estimator range documentation](https://spectral-connectivity.readthedocs.io/en/latest/CONNECTIVITY_METRIC_RANGES.html)
 also distinguishes these negative estimates from directional signs.
 
-Shared work: PLI and its squared debiased estimate reuse the sign average;
+Shared work: PLI and its squared debiased estimate reuse the sign average and
+a compact count of nonzero signs. The count is reduced from the already formed
+sign array, without enumerating observation pairs or repeating taper products.
 PLV and PPC reuse the normalized phase vectors. Weighted estimators request
-their missing imaginary moments together, forming each bounded taper
-cross-product once per request. Already cached moments are reused. Signed and
+their missing reductions together, forming each bounded taper cross-product
+once per request. Already cached reductions are reused. Signed and
 unsigned outputs share the signed spectrum; the unsigned band summary creates
 only its requested magnitude slice. Band selection uses contiguous views of
 the shared sorted frequency grid, avoiding a redundant tensor copy. No separate
 full-frequency unsigned spectrum is cached by the SPI wrappers.
+Phase reductions use upper-triangle channel tiles and fill the reverse through
+the appropriate conjugate, sign reversal or symmetry, avoiding repeated work.
 
 The `all` and `fast` catalogues include both signed variants with mean/max and
 three bands; their sizes are 301 and 233. The selected 185-metric EEG workflow
 keeps its metric selection; its existing PLI/wPLI names now use the corrected
 unsigned definitions. Added signed variants can be selected explicitly.
 
-Remaining edge-case review: the existing wPLI denominator floor uses an absolute
-machine-epsilon threshold; the dsPLI formula above assumes nonzero imaginary
-observations, and dsWPLI returns NaN when its denominator is zero. This change
-preserves those policies. Their scale/zero-lag handling and the statistical
-assumptions behind taper-based debiasing need a separate review. The formulas
-and sign conventions of the wavelet implementations were not changed here.
+### Zero signs and undefined weighted ratios
+
+The wPLI denominator is no longer compared with an absolute machine-epsilon
+cutoff. Changing amplitude units must scale its numerator and denominator
+together, preserving their ratio. A genuinely zero denominator produces NaN
+for both signed and unsigned wPLI.
+
+Debiased PLI subtracts the actual number of nonzero signs, `sum(s**2)`, rather
+than assuming all `N` signs have magnitude one. This is the distinct-observation
+pair-product formula, evaluated in linear time through reductions. Five zero
+signs therefore produce **0**, rather than the old **-0.25**. For signs
+`[1, 1, -1, 0, 0]`, the result is **-0.1**, rather than **-0.2**. Negative
+estimates from mixed positive/negative signs remain valid and are not clipped.
+
+Debiased wPLI uses the algebraically equivalent ratio of distinct-observation
+products. Within each bounded block, imaginary values are scaled by their
+largest magnitude per frequency/pair; this common positive scale cancels from
+the ratio. Prefix sums then accumulate products of distinct observations in
+linear time. This avoids overflow/underflow from directly squaring raw
+amplitudes and cancellation in `sum(abs(y))**2 - sum(y**2)`. For example,
+`y = [1, 1e-20, 0, 0, 0]` has a positive pair-weight denominator even though
+the squared-sum subtraction rounds to zero. Its debiased wPLI is **1**.
+
+Zero pair weight produces NaN: debiased wPLI needs at least two observations
+with nonzero imaginary values. Ordinary wPLI can still be defined when only
+one observation has a nonzero weight. Undefined bins are skipped by existing
+`nanmean`/`nanmax` band summaries; an entirely undefined band remains NaN and
+emits the existing NumPy warning. Frequency selection stays inclusive, including
+DC/Nyquist; these bins are undefined for weighted lag ratios when their
+cross-spectra are purely real. PLI and corrected debiased PLI instead give zero
+for those zero imaginary observations.
+
+The statistical assumptions behind taper-based debiasing remain a separate
+review item. The formulas and sign conventions of the wavelet implementations
+were not changed here.

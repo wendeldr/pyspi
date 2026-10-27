@@ -1,0 +1,185 @@
+{
+  "baseline_revision": "8b66a4a5aa58afe6044301410cd8cbb265cd780f",
+  "seed": 8026,
+  "shape": [
+    118,
+    1024
+  ],
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "repeats": 5,
+  "cpu_affinity": [
+    2
+  ],
+  "numerical_library_threads": 1,
+  "protocol": "Fresh Data per workload; small warmup; alternating baseline/candidate order; medians including Data construction; separate traced-memory runs, not RSS. Intentional definition corrections: zero signs contribute zero to dsPLI pair products; weighted zero denominators return NaN; amplitude cutoff removed. Scaled prefix sums stabilize debiased wPLI, and upper-triangle phase tiles reuse reversed channel pairs. Compare with --baseline 8b66a4a to isolate these changes.",
+  "source_sha256": {
+    "pyspi/_cache.py": "6283322077126be736592543ff6cd347740d4d20465032d5cc1f2e0460b775d4",
+    "pyspi/_spectral.py": "b0f42b9bb2106d4f9a47d6d92723e92cfb899c17d015513604bea9ffee76a7c6",
+    "pyspi/statistics/spectral.py": "bbcde87ab1a65048e38be32bb73ba66b79662d3b8937aba644e6a84d3c58691b"
+  },
+  "workloads": {
+    "pli": {
+      "walls_s": {
+        "baseline": [
+          0.2969101920025423,
+          0.29409223899710923,
+          0.2787406379939057,
+          0.27473718201508746,
+          0.27217390897567384
+        ],
+        "candidate": [
+          0.2355653589766007,
+          0.23516404698602855,
+          0.23941227799514309,
+          0.24020959599874914,
+          0.23696059599751607
+        ]
+      },
+      "median_s": {
+        "baseline": 0.2787406379939057,
+        "candidate": 0.23696059599751607
+      },
+      "speedup": 1.1763164116823355,
+      "peak_traced_mib": {
+        "baseline": 188.36735439300537,
+        "candidate": 195.1795244216919
+      }
+    },
+    "debiased_pli": {
+      "walls_s": {
+        "baseline": [
+          0.2992592340160627,
+          0.2966465620265808,
+          0.29157582798507065,
+          0.2936233840009663,
+          0.3653863130020909
+        ],
+        "candidate": [
+          0.2619909750064835,
+          0.261226513015572,
+          0.25805629399837926,
+          0.26284334299270995,
+          0.2741330820135772
+        ]
+      },
+      "median_s": {
+        "baseline": 0.2966465620265808,
+        "candidate": 0.2619909750064835
+      },
+      "speedup": 1.1322777894133174,
+      "peak_traced_mib": {
+        "baseline": 188.3673496246338,
+        "candidate": 195.17957878112793
+      }
+    },
+    "pli_and_debiased_pli": {
+      "walls_s": {
+        "baseline": [
+          0.3301817770116031,
+          0.329438831016887,
+          0.32915586000308394,
+          0.32638562901411206,
+          0.33831221901346
+        ],
+        "candidate": [
+          0.2922096759721171,
+          0.297448061988689,
+          0.3019072790048085,
+          0.29152363300090656,
+          0.2949301640037447
+        ]
+      },
+      "median_s": {
+        "baseline": 0.329438831016887,
+        "candidate": 0.2949301640037447
+      },
+      "speedup": 1.1170062313894218,
+      "peak_traced_mib": {
+        "baseline": 188.4739112854004,
+        "candidate": 195.28614044189453
+      }
+    },
+    "wpli": {
+      "walls_s": {
+        "baseline": [
+          0.3543247180059552,
+          0.35899227898335084,
+          0.3511640589858871,
+          0.3566174220177345,
+          0.36163942198618315
+        ],
+        "candidate": [
+          0.2809754369955044,
+          0.2910310559964273,
+          0.2880838119890541,
+          0.2932760230032727,
+          0.2853831850225106
+        ]
+      },
+      "median_s": {
+        "baseline": 0.3566174220177345,
+        "candidate": 0.2880838119890541
+      },
+      "speedup": 1.2378946930599641,
+      "peak_traced_mib": {
+        "baseline": 297.3607053756714,
+        "candidate": 297.3607053756714
+      }
+    },
+    "debiased_wpli": {
+      "walls_s": {
+        "baseline": [
+          0.5215001269825734,
+          0.49006057300721295,
+          0.5135523990029469,
+          0.5003305060090497,
+          0.49819074501283467
+        ],
+        "candidate": [
+          0.6726541719981469,
+          0.6311540339956991,
+          0.6215342369978316,
+          0.6333306669839658,
+          0.628793977026362
+        ]
+      },
+      "median_s": {
+        "baseline": 0.5003305060090497,
+        "candidate": 0.6311540339956991
+      },
+      "speedup": 0.7927232958356709,
+      "peak_traced_mib": {
+        "baseline": 447.05798625946045,
+        "candidate": 242.8728733062744
+      }
+    },
+    "six_estimators_36_summaries": {
+      "walls_s": {
+        "baseline": [
+          2.556096312997397,
+          3.586685567017412,
+          2.522024114994565,
+          2.2757950779923704,
+          2.3158606810029596
+        ],
+        "candidate": [
+          2.2065719889942557,
+          3.286716301983688,
+          2.0874766260094475,
+          2.0819841269985773,
+          2.0819186520238873
+        ]
+      },
+      "median_s": {
+        "baseline": 2.522024114994565,
+        "candidate": 2.0874766260094475
+      },
+      "speedup": 1.2081687926804843,
+      "peak_traced_mib": {
+        "baseline": 504.1167516708374,
+        "candidate": 450.25853061676025
+      }
+    }
+  }
+}

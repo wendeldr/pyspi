@@ -26,22 +26,22 @@ icoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work
 phase_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist. Correct signed/directed labels.
 cohmag_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
 icoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
-plv_multitaper_mean_fs-1,all configured frequency bands,,,,Shared phase vectors; redundant band/magnitude copies removed.
-pli_multitaper_mean_fs-1,all configured frequency bands,,,,Magnitude before band summary; shared signed spectrum.
-wpli_multitaper_mean_fs-1,all configured frequency bands,,,,118x1024: 0.63 s -> 0.51 s (~1.2x). Shared taper reductions; standard magnitude.
-dspli_multitaper_mean_fs-1,all configured frequency bands,,,,Reuse sign averages; corrected labels for negative debiased estimates.
-dswpli_multitaper_mean_fs-1,all configured frequency bands,,,,118x1024: 1.02 s -> 0.76 s (~1.4x). Shared taper reductions; corrected sign labels.
-ppc_multitaper_mean_fs-1,all configured frequency bands,,,,Reuse phase vectors; corrected labels for negative debiased estimates.
-plv_multitaper_max_fs-1,all configured frequency bands,,,,Shared phase vectors; redundant band/magnitude copies removed.
-pli_multitaper_max_fs-1,all configured frequency bands,,,,Magnitude before band summary; shared signed spectrum.
-wpli_multitaper_max_fs-1,all configured frequency bands,,,,Shared weighted moments; magnitude before band summary.
-dspli_multitaper_max_fs-1,all configured frequency bands,,,,Reuse sign averages; corrected labels for negative debiased estimates.
-dswpli_multitaper_max_fs-1,all configured frequency bands,,,,Shared weighted moments; corrected labels for negative debiased estimates.
-ppc_multitaper_max_fs-1,all configured frequency bands,,,,Reuse phase vectors; corrected labels for negative debiased estimates.
-pli-signed_multitaper_mean_fs-1,all configured frequency bands,,,,Signed phase-lag values; shared PLI work.
-pli-signed_multitaper_max_fs-1,all configured frequency bands,,,,Signed phase-lag values; shared PLI work.
-wpli-signed_multitaper_mean_fs-1,all configured frequency bands,,,,Signed weighted phase-lag values; shared wPLI work.
-wpli-signed_multitaper_max_fs-1,all configured frequency bands,,,,Signed weighted phase-lag values; shared wPLI work.
+plv_multitaper_mean_fs-1,all configured frequency bands,,,,Shared phase vectors; reversed-pair reuse.
+pli_multitaper_mean_fs-1,all configured frequency bands,,,,Magnitude before band summary; reversed-pair reuse.
+wpli_multitaper_mean_fs-1,all configured frequency bands,,,,118x1024: 0.36 s -> 0.29 s. Remove amplitude cutoff; zero weights -> NaN; shared pairs.
+dspli_multitaper_mean_fs-1,all configured frequency bands,,,,118x1024: 0.30 s -> 0.26 s. Correct zero signs; shared pair reductions.
+dswpli_multitaper_mean_fs-1,all configured frequency bands,,,,118x1024: 0.50 s -> 0.63 s. Stable pair sums; zero weights -> NaN; lower memory.
+ppc_multitaper_mean_fs-1,all configured frequency bands,,,,Shared phase vectors; reversed-pair reuse; valid negatives preserved.
+plv_multitaper_max_fs-1,all configured frequency bands,,,,Shared phase vectors; reversed-pair reuse.
+pli_multitaper_max_fs-1,all configured frequency bands,,,,Magnitude before band summary; reversed-pair reuse.
+wpli_multitaper_max_fs-1,all configured frequency bands,,,,Remove amplitude cutoff; zero weights -> NaN; shared pairs.
+dspli_multitaper_max_fs-1,all configured frequency bands,,,,Correct zero signs; shared pair reductions.
+dswpli_multitaper_max_fs-1,all configured frequency bands,,,,Stable pair sums; zero weights -> NaN; lower memory.
+ppc_multitaper_max_fs-1,all configured frequency bands,,,,Shared phase vectors; reversed-pair reuse; valid negatives preserved.
+pli-signed_multitaper_mean_fs-1,all configured frequency bands,,,,Signed phase-lag values; shared PLI work and reversed pairs.
+pli-signed_multitaper_max_fs-1,all configured frequency bands,,,,Signed phase-lag values; shared PLI work and reversed pairs.
+wpli-signed_multitaper_mean_fs-1,all configured frequency bands,,,,Shared wPLI work; zero weights -> NaN.
+wpli-signed_multitaper_max_fs-1,all configured frequency bands,,,,Shared wPLI work; zero weights -> NaN.
 psi_multitaper_mean_fs-1,all configured frequency bands,1,1,,"3 bands, 118x1024: 11.62 s -> 0.37 s (~31.1x). Shared spectra; adjacent-bin PSI replaces all-frequency pairs. Correct signed/directed labels."
 gd_multitaper_delay_fs-1,all configured frequency bands,,,,"3 bands, 118x1024: 12.01 s -> 4.07 s (~2.9x). Transform-derived spacing replaces /50; inclusive bands. Correct signed/directed labels."
 gd_multitaper_slope_fs-1,all configured frequency bands,,,,Correct signed/directed labels.

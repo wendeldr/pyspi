@@ -210,14 +210,13 @@ def test_sampling_rates_are_isolated_and_frequency_units_scale():
     assert len(data_spectral_cache(data).workspaces) == 2
 
 
-@pytest.mark.parametrize("kind", ["unit", "sign", "imag", "abs_imag", "imag_squared"])
+@pytest.mark.parametrize("kind", ["unit", "sign", "imag", "abs_imag"])
 def test_phase_blocks_bound_temporaries_and_preserve_expectation(monkeypatch, kind):
     data = make_data(n=64, p=5)
     conn = spectral_workspace(data, 1)
     monkeypatch.setattr(conn, "block_bytes", 5 * 5 * 16 * 2)
     functions = {"unit": lambda x: x/abs(x), "sign": lambda x: np.sign(x.imag),
-                 "imag": lambda x: x.imag, "abs_imag": lambda x: abs(x.imag),
-                 "imag_squared": lambda x: x.imag**2}
+                 "imag": lambda x: x.imag, "abs_imag": lambda x: abs(x.imag)}
     expected = reference(data)._expectation_cross_spectral_matrix(fcn=functions[kind])[:, :33]
     sizes = []
     multiply = np.matmul

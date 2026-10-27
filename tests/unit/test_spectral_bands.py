@@ -57,14 +57,13 @@ def test_single_endpoint_band_matches_scalar_taper_formula(cls, kind, f):
     n = cross.size
     with np.errstate(invalid='ignore', divide='ignore'):
         weight = np.mean(abs(imag))
-        if weight < np.finfo(float).eps:
-            weight = 1
         denominator = abs(imag).sum()**2 - (imag**2).sum()
         expected = {
             'cohmag': abs(coherency)**2, 'phase': np.angle(coherency),
             'icoh': abs(coherency.imag), 'plv': abs(unit.mean()),
-            'pli': abs(np.sign(imag).mean()), 'wpli': abs(imag.mean()/weight),
-            'dspli': (n * np.sign(imag).mean()**2 - 1) / (n - 1),
+            'pli': abs(np.sign(imag).mean()),
+            'wpli': abs(imag.mean()/weight) if weight > 0 else np.nan,
+            'dspli': (np.sign(imag).sum()**2 - np.count_nonzero(imag)) / (n*(n-1)),
             'dswpli': ((imag.sum()**2 - (imag**2).sum()) / denominator
                       if denominator != 0 else np.nan),
             'ppc': (abs(unit.sum())**2 - n) / (n**2 - n),
