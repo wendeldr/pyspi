@@ -133,9 +133,9 @@ def test_softdtw_global_constraint_fixed(softdtw_outputs):
 
 
 # --------------------------------------------------------------------------- #
-# 4. SpearmanR / KendallTau mutate the class-level labels list
+# 4. KendallTau mutates the class-level labels list (SpearmanR is fixed)
 # --------------------------------------------------------------------------- #
-RANK_CLASSES = ["SpearmanR", "KendallTau"]
+RANK_CLASSES = ["KendallTau"]
 RANK_BASE_LABELS = ["basic", "unordered", "rank", "linear", "undirected"]
 
 

@@ -202,7 +202,7 @@ The confirmed implementation issues below are locked in `unit/test_known_bugs.py
 1. `TransferEntropy(estimator='symbolic')` falls through to the Gaussian calculator (`te_symbolic_* == gc_gaussian_*`).
 2. `ConvergentCrossMapping(embedding_dimension=None)` picks max E (10), not best-rho E (`ccm_E-None == ccm_E-10`). Both tests are `slow`.
 3. `SoftDynamicTimeWarping` ignores `global_constraint` (three identical configs).
-4. `SpearmanR`/`KendallTau` mutate the class-level `labels` list (instances carry both `signed` and `unsigned`).
+4. `KendallTau` mutates the class-level `labels` list (instances carry both `signed` and `unsigned`). `SpearmanR` now owns its instance labels; its label metadata in the small/full/preprocessing golden sets was corrected without regenerating numerical values.
 5. PLI currently produces signed, antisymmetric values despite its unsigned/undirected labels. The test checks finite, nonzero signed antisymmetry. The former expected-failure assertion demanding symmetry was removed because signed versus unsigned definitions and labeling remain undecided; a symmetry assertion was not a justified mathematical oracle. Related phase/PSI/wPLI findings remain in the [scientific review](../docs/storage_comparison/REVIEW.md).
 6. `Calculator` duplicate-identifier check is dead code (dict keys are unique; collisions overwrite silently).
 7. `Data(procnames=...)` is validated but never stored.

@@ -1,0 +1,167 @@
+{
+  "created_utc": "2026-10-26T19:56:44.021879+00:00",
+  "baseline_commit": "d088a58ead76c9df757ce972497c295a30a8266b",
+  "source_sha256": "ed381500957be3895e0cb35c54dc95df3773f7430f96d53cdd3b5e537e363495",
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "scipy": "1.17.1",
+  "machine": "x86_64",
+  "cpu": "Intel(R) Core(TM) i5-10500T CPU @ 2.30GHz",
+  "protocol": {
+    "scope": "Individual SPI matrix calculation on the same preprocessed Data; excludes preparation, I/O, and process startup.",
+    "normalise": true,
+    "detrend": true,
+    "seed": 104,
+    "repeats": 3,
+    "order": "Baseline then refactor in each repeat, one numerical-library thread; warm-up at 8x128.",
+    "statistic": "Median elapsed wall time.",
+    "limits": "Synthetic inputs on this temporary computer; not a patient or cohort throughput estimate.",
+    "input_generation": "numpy.random.default_rng(104).normal(size=(P, T)); raw[1] += 0.6 * raw[0]; Data(raw, detrend=True, normalise=True).",
+    "baseline_loading": "The SpearmanR class AST was loaded in memory from the stated Git commit using the current dependency environment. No baseline implementation is retained in production code."
+  },
+  "measurements": [
+    {
+      "shape": [
+        32,
+        1024
+      ],
+      "identifier": "spearmanr",
+      "baseline_seconds": [
+        0.5551649469998665,
+        0.5530435359978583,
+        0.5986360959941521
+      ],
+      "refactor_seconds": [
+        0.0026407959958305582,
+        0.004786096993484534,
+        0.0023125989973777905
+      ],
+      "baseline_median_seconds": 0.5551649469998665,
+      "refactor_median_seconds": 0.0026407959958305582,
+      "speedup": 210.22636654871982,
+      "maximum_absolute_difference": 0.0,
+      "nan_masks_equal": true
+    },
+    {
+      "shape": [
+        32,
+        1024
+      ],
+      "identifier": "spearmanr-sq",
+      "baseline_seconds": [
+        0.5534834629943362,
+        0.542878231004579,
+        0.5718255350075196
+      ],
+      "refactor_seconds": [
+        0.00231779100431595,
+        0.002440486990963109,
+        0.0023979030083864927
+      ],
+      "baseline_median_seconds": 0.5534834629943362,
+      "refactor_median_seconds": 0.0023979030083864927,
+      "speedup": 230.81978756378706,
+      "maximum_absolute_difference": 0.0,
+      "nan_masks_equal": true
+    },
+    {
+      "shape": [
+        118,
+        1024
+      ],
+      "identifier": "spearmanr",
+      "baseline_seconds": [
+        7.642454212997109,
+        7.656683124994743,
+        7.61471535700548
+      ],
+      "refactor_seconds": [
+        0.009119542999542318,
+        0.009453708000364713,
+        0.009750948011060245
+      ],
+      "baseline_median_seconds": 7.642454212997109,
+      "refactor_median_seconds": 0.009453708000364713,
+      "speedup": 808.4081095695225,
+      "maximum_absolute_difference": 0.0,
+      "nan_masks_equal": true
+    },
+    {
+      "shape": [
+        118,
+        1024
+      ],
+      "identifier": "spearmanr-sq",
+      "baseline_seconds": [
+        7.665233580992208,
+        7.646876775994315,
+        7.45162531499227
+      ],
+      "refactor_seconds": [
+        0.013065699007711373,
+        0.009244139000657015,
+        0.008995192998554558
+      ],
+      "baseline_median_seconds": 7.646876775994315,
+      "refactor_median_seconds": 0.009244139000657015,
+      "speedup": 827.2135215027406,
+      "maximum_absolute_difference": 8.673617379884035e-19,
+      "nan_masks_equal": true
+    }
+  ],
+  "threadpools": [
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 1,
+      "prefix": "libgomp",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/scikit_learn.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/numpy.libs/libscipy_openblas64_-f48b354e.so",
+      "version": "0.3.34.106.0",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/scipy.libs/libscipy_openblas-6cdc3b4a.so",
+      "version": "0.3.30",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    }
+  ],
+  "verification": [
+    {
+      "command": ".venv/bin/python -B -m pytest -p no:cacheprovider tests/unit/test_spearman.py",
+      "passed": 36,
+      "failed": 0,
+      "seconds": 3.69
+    },
+    {
+      "command": ".venv/bin/python -B -m pytest -p no:cacheprovider tests/unit tests/regression --require-java --tb=short -q",
+      "passed": 744,
+      "failed": 0,
+      "skipped": 15,
+      "xfailed": 8,
+      "seconds": 72.72,
+      "scope": "Default unit/regression tier; skips are slow tests; expected failures are existing unrelated bugs. Includes the 36 Spearman tests."
+    },
+    {
+      "command": ".venv/bin/python -B -m pytest -p no:cacheprovider tests/regression/test_spi_goldens.py --pyspi-size=full --require-java -k 'spearman or catalogue' --tb=short -q",
+      "passed": 12,
+      "failed": 0,
+      "deselected": 382,
+      "seconds": 12.57
+    }
+  ],
+  "golden_changes": "Only Spearman signed/unsigned label metadata was corrected in small/full/preproc meta.json. Numerical golden values were not regenerated."
+}

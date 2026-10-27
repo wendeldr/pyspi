@@ -134,6 +134,7 @@ class CrossCorrelation(Undirected, Signed):
 
 
 class SpearmanR(Undirected, Signed):
+    """Spearman rank correlation for one realisation of each process."""
 
     name = "Spearman's correlation coefficient"
     identifier = "spearmanr"
@@ -141,20 +142,41 @@ class SpearmanR(Undirected, Signed):
 
     def __init__(self, squared=False):
         self._squared = squared
+        self.labels = self.labels + ["unsigned" if squared else "signed"]
         if squared:
-            self.issigned = lambda: False
             self.identifier = self.identifier + "-sq"
-            self.labels += ["unsigned"]
-        else:
-            self.labels += ["signed"]
+
+    def issigned(self):
+        return not self._squared
+
+    def _correlation_matrix(self, data, indices=None):
+        if data.n_replications != 1:
+            raise ValueError("Spearman correlation requires a single realisation.")
+        values = data.to_numpy(realisation=0)
+        if indices is not None:
+            values = values[indices]
+        if values.shape[1] < 2:
+            return np.full((values.shape[0], values.shape[0]), np.nan)
+
+        ranks = stats.rankdata(values, axis=1, method="average")
+        # Constant channels have undefined correlation; other pairs remain valid.
+        with np.errstate(divide="ignore", invalid="ignore"):
+            result = np.atleast_2d(np.corrcoef(ranks))
+        # Floating-point normalization can introduce tiny reciprocal differences.
+        result = (result + result.T) * 0.5
+        if self._squared:
+            np.square(result, out=result)
+        return result
+
+    @parse_multivariate
+    def multivariate(self, data):
+        result = self._correlation_matrix(data)
+        np.fill_diagonal(result, np.nan)
+        return result
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
-        x, y = data.to_numpy()[[i, j]]
-        if self._squared:
-            return stats.spearmanr(x, y).correlation ** 2
-        else:
-            return stats.spearmanr(x, y).correlation
+        return self._correlation_matrix(data, indices=[i, j])[0, 1]
 
 
 class KendallTau(Undirected, Signed):
