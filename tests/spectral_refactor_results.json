@@ -1,0 +1,262 @@
+{
+  "baseline_revision": "d088a58ead76c9df757ce972497c295a30a8266b",
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "repeats": 3,
+  "seed": 8026,
+  "numerical_library_threads": 1,
+  "source_sha256": {
+    "pyspi/_spectral.py": "e8e72653d0bb83cbea6dbfaa400c528e5fae0b4dc595a55814fed049e4095e99",
+    "pyspi/statistics/spectral.py": "781f27ad63d8ba45281ff6d978e8fffe589e8a2259c88832b96eb936843d84f5"
+  },
+  "protocol": "Paired baseline/candidate calls on fresh Data; small warmup; median of repeats. Includes Data construction and all selected measures. Peak memory is a separate tracemalloc run (NumPy allocations, not process RSS). No numerical goldens changed.",
+  "workloads": {
+    "coherence_118x1024": {
+      "shape": [
+        118,
+        1024
+      ],
+      "measures": [
+        [
+          "CoherenceMagnitude",
+          {}
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          1.426784138995572,
+          1.3400086159963394,
+          1.287159523999435
+        ],
+        "candidate": [
+          0.31349271300132386,
+          0.316838953003753,
+          0.31381727899133693
+        ]
+      },
+      "baseline_median_s": 1.3400086159963394,
+      "candidate_median_s": 0.31381727899133693,
+      "speedup_median": 4.270028152380133,
+      "max_abs_difference": 0.0,
+      "nan_masks_equal": true,
+      "finite_values_per_measure": [
+        13806
+      ],
+      "peak_traced_mib_baseline": 1424.3523206710815,
+      "peak_traced_mib_candidate": 298.64868354797363
+    },
+    "shared_eight_118x1024": {
+      "shape": [
+        118,
+        1024
+      ],
+      "measures": [
+        [
+          "CoherenceMagnitude",
+          {}
+        ],
+        [
+          "CoherencePhase",
+          {}
+        ],
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0,
+            "fmax": 0.5
+          }
+        ],
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0,
+            "fmax": 0.25
+          }
+        ],
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0.25,
+            "fmax": 0.5
+          }
+        ],
+        [
+          "GroupDelay",
+          {
+            "fmin": 0,
+            "fmax": 0.5,
+            "statistic": "delay"
+          }
+        ],
+        [
+          "GroupDelay",
+          {
+            "fmin": 0,
+            "fmax": 0.25,
+            "statistic": "delay"
+          }
+        ],
+        [
+          "GroupDelay",
+          {
+            "fmin": 0.25,
+            "fmax": 0.5,
+            "statistic": "delay"
+          }
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          19.300808889995096,
+          16.317019989000983,
+          15.526754671998788
+        ],
+        "candidate": [
+          7.009796325000934,
+          7.025206257007085,
+          7.043901612007176
+        ]
+      },
+      "baseline_median_s": 16.317019989000983,
+      "candidate_median_s": 7.025206257007085,
+      "speedup_median": 2.3226392780604916,
+      "max_abs_difference": 0.0,
+      "nan_masks_equal": true,
+      "finite_values_per_measure": [
+        13806,
+        13806,
+        13806,
+        13806,
+        13806,
+        2,
+        2,
+        2
+      ],
+      "peak_traced_mib_baseline": 1642.6336164474487,
+      "peak_traced_mib_candidate": 930.0009460449219
+    },
+    "weighted_phase_lag_118x1024": {
+      "shape": [
+        118,
+        1024
+      ],
+      "measures": [
+        [
+          "WeightedPhaseLagIndex",
+          {}
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          1.151635129994247,
+          1.1437303599959705,
+          1.0994689150102204
+        ],
+        "candidate": [
+          0.4002841119945515,
+          0.4005404589988757,
+          0.3985877250088379
+        ]
+      },
+      "baseline_median_s": 1.1437303599959705,
+      "candidate_median_s": 0.4002841119945515,
+      "speedup_median": 2.8572964195279837,
+      "max_abs_difference": 0.0,
+      "nan_masks_equal": true,
+      "finite_values_per_measure": [
+        13806
+      ],
+      "peak_traced_mib_baseline": 1641.913821220398,
+      "peak_traced_mib_candidate": 296.80367374420166
+    },
+    "directed_six_4x1024": {
+      "shape": [
+        4,
+        1024
+      ],
+      "measures": [
+        [
+          "DirectedCoherence",
+          {}
+        ],
+        [
+          "PartialDirectedCoherence",
+          {}
+        ],
+        [
+          "GeneralizedPartialDirectedCoherence",
+          {}
+        ],
+        [
+          "DirectedTransferFunction",
+          {}
+        ],
+        [
+          "DirectDirectedTransferFunction",
+          {}
+        ],
+        [
+          "SpectralGrangerCausality",
+          {}
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          4.405774518003454,
+          4.406025819989736,
+          4.389281409996329
+        ],
+        "candidate": [
+          0.258090261995676,
+          0.2589233690086985,
+          0.2631132459937362
+        ]
+      },
+      "baseline_median_s": 4.405774518003454,
+      "candidate_median_s": 0.2589233690086985,
+      "speedup_median": 17.015746917210254,
+      "max_abs_difference": 8.881784197001252e-16,
+      "nan_masks_equal": true,
+      "finite_values_per_measure": [
+        12,
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "peak_traced_mib_baseline": 3.044160842895508,
+      "peak_traced_mib_candidate": 5.635138511657715
+    }
+  },
+  "validation": {
+    "source_sha256": {
+      "pyspi/_spectral.py": "e8e72653d0bb83cbea6dbfaa400c528e5fae0b4dc595a55814fed049e4095e99",
+      "pyspi/statistics/spectral.py": "5a7c2ee0238ed9c464238b650dcd4d9500bf3ec056795c7259eed9154b29cad0"
+    },
+    "benchmark_source_note": "After the benchmark process loaded the modules, explicit missing-index validation was added to standalone bivariate calls. This is the only source difference; the benchmarks exercise multivariate calls. Final regression runs include that guard.",
+    "checks": [
+      {
+        "command": ".venv/bin/python -B -m pytest tests/unit tests/regression tests/compatibility/test_numpy2.py --require-java --tb=short -q --disable-warnings",
+        "passed": 841,
+        "skipped": 15,
+        "xfailed": 8,
+        "seconds": 65.28
+      },
+      {
+        "command": ".venv/bin/python -B -m pytest tests/regression/test_spi_goldens.py --pyspi-size=full --runslow --require-java -k 'multitaper or sgc or catalogue' --tb=short -q --disable-warnings",
+        "passed": 131,
+        "deselected": 263,
+        "seconds": 21.69
+      }
+    ],
+    "numerical_goldens_changed": false,
+    "deferred_review": [
+      "PSI frequency pairing and spacing",
+      "Phase band summaries",
+      "Sign and direction classifications",
+      "Band endpoint conventions and estimator-specific insufficient-frequency behavior",
+      "Directed factorization dependence on channel order"
+    ]
+  }
+}

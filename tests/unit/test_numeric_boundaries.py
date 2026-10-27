@@ -56,7 +56,7 @@ def test_preprocessing_replications_preserves_axes(order, normalise, detrended):
 @pytest.mark.parametrize("cls_name", ["CoherenceMagnitude", "CoherencePhase", "ImaginaryCoherence",
     "PhaseLockingValue", "PhaseLagIndex", "WeightedPhaseLagIndex", "DebiasedSquaredPhaseLagIndex",
     "DebiasedSquaredWeightedPhaseLagIndex", "PairwisePhaseConsistency"])
-def test_multitaper_aggregation_uses_selected_frequencies_and_preserves_orientation(cls_name, statistic):
+def test_multitaper_aggregation_uses_selected_frequencies_and_preserves_orientation(monkeypatch, cls_name, statistic):
     cls = getattr(spectral, cls_name)
     spi = cls(fmin=0.1, fmax=0.3, statistic=statistic)
     frequencies = np.array([0.0, 0.1, 0.2, 0.3, 0.5])
@@ -68,7 +68,7 @@ def test_multitaper_aggregation_uses_selected_frequencies_and_preserves_orientat
                 value = 3 * row - 2 * col + offset
                 tensor[0, f, row, col] = value * (1 + 0.5j) if np.iscomplexobj(tensor) else value
     data = Data(np.arange(90.).reshape(3, 30), normalise=False)
-    data.spectral_mv = {spi.key: tensor, "freq": frequencies}
+    monkeypatch.setattr(spi, "_get_cache", lambda data: (tensor, frequencies))
     expected = np.full((3, 3), np.nan)
     for row in range(3):
         for col in range(3):
@@ -84,20 +84,25 @@ def test_multitaper_aggregation_uses_selected_frequencies_and_preserves_orientat
 @pytest.mark.parametrize("statistic", ["mean", "max"])
 @pytest.mark.parametrize("cls_name", ["DirectedCoherence", "PartialDirectedCoherence",
     "GeneralizedPartialDirectedCoherence", "DirectedTransferFunction", "DirectDirectedTransferFunction"])
-def test_bivariate_spectral_aggregation_uses_strict_band_and_source_target(cls_name, statistic):
+def test_bivariate_spectral_aggregation_uses_inclusive_band_and_source_target(monkeypatch, cls_name, statistic):
     spi = getattr(spectral, cls_name)(fmin=0.1, fmax=0.5, statistic=statistic)
     data = Data(np.arange(90.).reshape(3, 30), normalise=False)
-    data.spectral_bv = {"freq": np.array([0.0, 0.1, 0.2, 0.3, 0.5])}
+    frequencies = np.array([0.0, 0.1, 0.2, 0.3, 0.5])
+    pairs = {}
     expected = np.full((3, 3), np.nan)
     for row in range(3):
         for col in range(3):
             if row == col:
                 continue
             values = 10 * row + col + np.array([100., 200., -2., 8., 500.])
-            tensor = np.full((1, 5, 2, 2), 9999.0)
+            key = (row, col)
+            tensor = pairs.setdefault(key, np.full((1, 5, 2, 2), 9999.0))
             tensor[0, :, 0, 1] = values
-            data.spectral_bv[(spi.measure, row, col)] = tensor
-            expected[row, col] = (values[2] + values[3]) / 2 if statistic == "mean" else values[3]
+            expected[row, col] = values[1:].mean() if statistic == "mean" else values[1:].max()
+    values = np.full((1, 5, 3, 3), np.nan)
+    for (i, j), tensor in pairs.items():
+        values[..., i, j] = tensor[..., 0, 1]
+    monkeypatch.setattr(spi, "_get_cache", lambda data: (values, frequencies))
     np.testing.assert_allclose(spi.multivariate(data), expected, rtol=1e-12, atol=1e-12)
 
 

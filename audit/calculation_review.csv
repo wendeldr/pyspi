@@ -3,7 +3,7 @@ preproc.detrend,,1,1,,
 preproc.zscore,,1,1,,
 preproc.two_array_api,,1,1,,
 base.pair_handling,,,,,
-spectral.multitaper_csm,,,,,
+spectral.multitaper_csm,,,,,Shared FFT/cross-spectra; avoids large taper-product arrays.
 spectral.band_selection,,,,,
 spectral.wilson_factorisation,,,,,
 wavelet.morlet_cwt,,,,,
@@ -15,29 +15,29 @@ infotheory.theiler_window,,,,,
 spearmanr-sq,,1,1,,"118 channels × 1,024 observations measured ordinary Spearman at 7.642 seconds ? 0.00945 seconds, approximately 808× faster
 
 Many operations were being repeated such as the same reranking of a channel"
-spearmanr,,1,1,,
+spearmanr,,1,1,,'
 kendalltau-sq,,,,,
 kendalltau,,,,,
-phase_multitaper_mean_fs-1,all configured frequency bands,,,,
-cohmag_multitaper_mean_fs-1,all configured frequency bands,,,,
-icoh_multitaper_mean_fs-1,all configured frequency bands,,,,
-phase_multitaper_max_fs-1,all configured frequency bands,,,,
-cohmag_multitaper_max_fs-1,all configured frequency bands,,,,
-icoh_multitaper_max_fs-1,all configured frequency bands,,,,
-plv_multitaper_mean_fs-1,all configured frequency bands,,,,
-pli_multitaper_mean_fs-1,all configured frequency bands,,,,
-wpli_multitaper_mean_fs-1,all configured frequency bands,,,,
-dspli_multitaper_mean_fs-1,all configured frequency bands,,,,
-dswpli_multitaper_mean_fs-1,all configured frequency bands,,,,
-ppc_multitaper_mean_fs-1,all configured frequency bands,,,,
-plv_multitaper_max_fs-1,all configured frequency bands,,,,
-pli_multitaper_max_fs-1,all configured frequency bands,,,,
-wpli_multitaper_max_fs-1,all configured frequency bands,,,,
-dspli_multitaper_max_fs-1,all configured frequency bands,,,,
-dswpli_multitaper_max_fs-1,all configured frequency bands,,,,
-ppc_multitaper_max_fs-1,all configured frequency bands,,,,
-psi_multitaper_mean_fs-1,all configured frequency bands,,,,Band width sets frequency_resolution=(fmax-fmin)/50. Review narrow bands with too few usable bins and changes in bin spacing.
-gd_multitaper_delay_fs-1,all configured frequency bands,,,,Band width sets frequency_resolution=(fmax-fmin)/50. Review narrow bands with too few usable bins and changes in bin spacing.
+phase_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+cohmag_multitaper_mean_fs-1,all configured frequency bands,,,,118x1024: 1.87 s -> 0.31 s (~6.0x). Shared spectra; includes band edges/Nyquist.
+icoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+phase_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+cohmag_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+icoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+plv_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+pli_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+wpli_multitaper_mean_fs-1,all configured frequency bands,,,,118x1024: 3.19 s -> 0.49 s (~6.6x). Bounded taper products; includes band edges/Nyquist.
+dspli_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+dswpli_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+ppc_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+plv_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+pli_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+wpli_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+dspli_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+dswpli_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+ppc_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
+psi_multitaper_mean_fs-1,all configured frequency bands,1,1,,"3 bands, 118x1024: 11.62 s -> 0.37 s (~31.1x). Shared spectra; adjacent-bin PSI replaces all-frequency pairs."
+gd_multitaper_delay_fs-1,all configured frequency bands,,,,"3 bands, 118x1024: 12.01 s -> 4.07 s (~2.9x). Transform-derived spacing replaces /50; inclusive bands."
 je_gaussian,,,,,
 ce_gaussian,,,,,
 mi_gaussian,,,,,
@@ -187,26 +187,26 @@ phi_star_t-1_norm-0,,,,,
 phi_star_t-1_norm-1,,,,,
 phi_Geo_t-1_norm-0,,,,,
 phi_Geo_t-1_norm-1,,,,,
-dtf_multitaper_mean_fs-1,all configured frequency bands,,,,
-dtf_multitaper_max_fs-1,all configured frequency bands,,,,
-dcoh_multitaper_mean_fs-1,all configured frequency bands,,,,
-dcoh_multitaper_max_fs-1,all configured frequency bands,,,,
-pdcoh_multitaper_mean_fs-1,all configured frequency bands,,,,
-pdcoh_multitaper_max_fs-1,all configured frequency bands,,,,
-gpdcoh_multitaper_mean_fs-1,all configured frequency bands,,,,
-gpdcoh_multitaper_max_fs-1,all configured frequency bands,,,,
-ddtf_multitaper_mean_fs-1,all configured frequency bands,,,,
-ddtf_multitaper_max_fs-1,all configured frequency bands,,,,
-sgc_nonparametric_mean_fs-1,all configured frequency bands,,,,fmin<=0 is clamped to 1e-5; requested minima of 0 and 1e-5 use the same effective minimum.
-sgc_nonparametric_max_fs-1,all configured frequency bands,,,,fmin<=0 is clamped to 1e-5; requested minima of 0 and 1e-5 use the same effective minimum.
-sgc_parametric_mean_fs-1_order-None,all configured frequency bands,,,,fmin<=0 is clamped to 1e-5; requested minima of 0 and 1e-5 use the same effective minimum.
-sgc_parametric_max_fs-1_order-None,all configured frequency bands,,,,fmin<=0 is clamped to 1e-5; requested minima of 0 and 1e-5 use the same effective minimum.
-sgc_parametric_mean_fs-1_order-1,all configured frequency bands,,,,fmin<=0 is clamped to 1e-5; requested minima of 0 and 1e-5 use the same effective minimum.
-sgc_parametric_max_fs-1_order-1,all configured frequency bands,,,,fmin<=0 is clamped to 1e-5; requested minima of 0 and 1e-5 use the same effective minimum.
-sgc_parametric_mean_fs-1_order-20,all configured frequency bands,,,,fmin<=0 is clamped to 1e-5; requested minima of 0 and 1e-5 use the same effective minimum.
-sgc_parametric_max_fs-1_order-20,all configured frequency bands,,,,fmin<=0 is clamped to 1e-5; requested minima of 0 and 1e-5 use the same effective minimum.
-psi_wavelet_mean_fs-1_mean,all configured frequency bands,,,,Review band selection against the returned PSI array axes; the wrapper indexes using the computed frequency grid.
-psi_wavelet_max_fs-1_max,all configured frequency bands,,,,Review band selection against the returned PSI array axes; the wrapper indexes using the computed frequency grid.
+dtf_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
+dtf_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
+dcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
+dcoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
+pdcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
+pdcoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
+gpdcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
+gpdcoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
+ddtf_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; includes band edges and Nyquist in normalization.
+ddtf_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; includes band edges and Nyquist in normalization.
+sgc_nonparametric_mean_fs-1,all configured frequency bands,,,,Shared factorization; inclusive bands through Nyquist; requested DC retained.
+sgc_nonparametric_max_fs-1,all configured frequency bands,,,,Shared factorization; inclusive bands through Nyquist; requested DC retained.
+sgc_parametric_mean_fs-1_order-None,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
+sgc_parametric_max_fs-1_order-None,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
+sgc_parametric_mean_fs-1_order-1,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
+sgc_parametric_max_fs-1_order-1,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
+sgc_parametric_mean_fs-1_order-20,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
+sgc_parametric_max_fs-1_order-20,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
+psi_wavelet_mean_fs-1_mean,all configured frequency bands,,,,
+psi_wavelet_max_fs-1_max,all configured frequency bands,,,,
 gpfit_DotProduct,,,,,
 gpfit_RBF,,,,,
 coint_johansen_max_eig_stat_order-0_ardiff-10,,,,,

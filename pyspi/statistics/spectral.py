@@ -1,7 +1,12 @@
 import numpy as np
 from copy import deepcopy
 
-from pyspi._spectral_compat import spectral_connectivity as sc
+from pyspi._spectral import (
+    data_spectral_cache,
+    frequency_mask,
+    spectral_workspace,
+    validate_frequencies,
+)
 from pyspi.base import (
     Directed,
     Undirected,
@@ -20,10 +25,8 @@ class NonparametricSpectral(Unsigned):
     def __init__(self, fs=1, fmin=0, fmax=None, statistic="mean"):
         if fmax is None:
             fmax = fs / 2
-
+        validate_frequencies(fs, fmin, fmax)
         self._fs = fs
-        if fs != 1:
-            warnings.warn("Multiple sampling frequencies not yet handled.")
         self._fmin = fmin
         self._fmax = fmax
         if statistic == "mean":
@@ -43,95 +46,69 @@ class NonparametricSpectral(Unsigned):
         self.identifier += paramstr
 
     @property
-    def key(self):
-        if isinstance(self, GroupDelay) or isinstance(self, PhaseSlopeIndex):
-            return (self.measure, self._fmin, self._fmax)
-        else:
-            return (self.measure,)
-
-    @property
     def measure(self):
         try:
             return self._measure
         except AttributeError:
             raise AttributeError(f"Include measure for {self.identifier}")
 
-    def _get_statistic(self, C):
-        raise NotImplementedError
+    def _spectral_options(self):
+        return {}
+
+    def _summarise_band(self, values, frequencies):
+        selected = frequency_mask(frequencies, self._fmin, self._fmax)
+        if not selected.any():
+            # No estimate is available; zero would imply a measured absence of
+            # connectivity. PSI/GD retain their own estimator's requirements.
+            return np.full(values.shape[1:], np.nan)
+        return self._statfn(values[selected], axis=0)
 
 
 class NonparametricSpectralMultivariate(NonparametricSpectral):
     def _get_cache(self, data):
-        try:
-            res = data.spectral_mv[self.key]
-            freq = data.spectral_mv["freq"]
-        except (AttributeError, KeyError):
-            z = np.transpose(data.to_numpy(squeeze=True))
-            m = sc.Multitaper(z, sampling_frequency=self._fs)
-            conn = sc.Connectivity.from_multitaper(m)
-            try:
-                res = getattr(conn, self.measure)()
-            except TypeError:
-                res = self._get_statistic(conn)
-
-            freq = conn.frequencies
-            try:
-                data.spectral_mv[self.key] = res
-            except AttributeError:
-                data.spectral_mv = {"freq": freq, self.measure: res}
-
-        return res, freq
+        conn = spectral_workspace(data, self._fs)
+        return conn.measure(self.measure, **self._spectral_options()), conn.frequencies
 
     @parse_multivariate
     def multivariate(self, data):
         adj_freq, freq = self._get_cache(data)
-        freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
-
-        try:
-            adj = self._statfn(adj_freq[0, freq_id, :, :], axis=0)
-        except IndexError:  # For phase slope index
-            adj = adj_freq[0]
-        except TypeError:  # For group delay
-            stat_id = [
-                i
-                for i, s in enumerate(["delay", "slope", "rvalue"])
-                if self._statistic == s
-            ][0]
-            adj = adj_freq[stat_id][0]
+        if isinstance(self, PhaseSlopeIndex):
+            adj = adj_freq[0].copy()
+        elif isinstance(self, GroupDelay):
+            stat_id = ("delay", "slope", "rvalue").index(self._statistic)
+            adj = adj_freq[stat_id][0].copy()
+        else:
+            adj = self._summarise_band(adj_freq[0], freq)
         np.fill_diagonal(adj, np.nan)
         return adj
 
 
 class NonparametricSpectralBivariate(NonparametricSpectral):
-    def _get_cache(self, data, i, j):
-        key = (self.measure, i, j)
-        try:
-            res = data.spectral_bv[key]
-            freq = data.spectral_bv["freq"]
-        except (KeyError, AttributeError):
-            z = np.transpose(data.to_numpy(squeeze=True)[[i, j]])
-            m = sc.Multitaper(z, sampling_frequency=self._fs)
-            conn = sc.Connectivity.from_multitaper(m)
-            try:
-                res = getattr(conn, self.measure)()
-            except TypeError:
-                res = self._get_statistic(conn)
+    def _get_cache(self, data):
+        conn = spectral_workspace(data, self._fs)
+        return conn.ordered_pair_measure(self.measure), conn.frequencies
 
-            freq = conn.frequencies
-            try:
-                data.spectral_bv[key] = res
-            except AttributeError:
-                data.spectral_bv = {"freq": freq, key: res}
-
-        return res, freq
+    def _pair_summary(self, conn, i, j):
+        pair = conn.pair(i, j)
+        values = pair.measure(self.measure)
+        return self._summarise_band(values[0], pair.frequencies)
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
-        """TODO: cache this result"""
-        bv_freq, freq = self._get_cache(data, i, j)
-        freq_id = np.where((freq > self._fmin) * (freq < self._fmax))[0]
+        if i is None or j is None:
+            raise ValueError("Both channel indices are required for a bivariate spectral calculation.")
+        if i == j:
+            return np.nan
+        conn = spectral_workspace(data, self._fs)
+        values = self._pair_summary(conn, i, j)
+        return values[0, 1]
 
-        return self._statfn(bv_freq[0, freq_id, 0, 1])
+    @parse_multivariate
+    def multivariate(self, data):
+        values, frequencies = self._get_cache(data)
+        result = self._summarise_band(values[0], frequencies)
+        np.fill_diagonal(result, np.nan)
+        return result
 
 
 class CoherenceMagnitude(NonparametricSpectralMultivariate, Undirected):
@@ -294,10 +271,9 @@ class PhaseSlopeIndex(NonparametricSpectralMultivariate, Undirected):
         super().__init__(**kwargs)
         self._measure = "phase_slope_index"
 
-    def _get_statistic(self, C):
-        return C.phase_slope_index(
-            frequencies_of_interest=[self._fmin, self._fmax],
-            frequency_resolution=(self._fmax - self._fmin) / 50,
+    def _spectral_options(self):
+        return dict(
+            frequencies_of_interest=(self._fmin, self._fmax),
         )
 
 
@@ -310,10 +286,9 @@ class GroupDelay(NonparametricSpectralMultivariate, Directed):
         super().__init__(**kwargs)
         self._measure = "group_delay"
 
-    def _get_statistic(self, C):
-        return C.group_delay(
-            frequencies_of_interest=[self._fmin, self._fmax],
-            frequency_resolution=(self._fmax - self._fmin) / 50,
+    def _spectral_options(self):
+        return dict(
+            frequencies_of_interest=(self._fmin, self._fmax),
         )
 
 
@@ -325,8 +300,8 @@ class SpectralGrangerCausality(NonparametricSpectralMultivariate, Directed, Unsi
     def __init__(
         self,
         fs=1,
-        fmin=1e-5,
-        fmax=0.5,
+        fmin=0,
+        fmax=None,
         method="nonparametric",
         order=None,
         max_order=50,
@@ -334,15 +309,15 @@ class SpectralGrangerCausality(NonparametricSpectralMultivariate, Directed, Unsi
         ignore_nan=True,
         nan_threshold=0.5,
     ):
-        self._fs = fs  # Not yet implemented
+        if fmax is None:
+            fmax = fs / 2
+        self._fs = fs
         self._fmin = fmin
         self._fmax = fmax
         self.ignore_nan = ignore_nan
         self.nan_threshold = nan_threshold
 
-        if self._fmin <= 0.0:
-            warnings.warn(f"Frequency minimum set to {self._fmin}; overriding to 1e-5.")
-            self._fmin = 1e-5
+        validate_frequencies(fs, self._fmin, self._fmax)
 
         if statistic == "mean":
             if self.ignore_nan:
@@ -372,55 +347,33 @@ class SpectralGrangerCausality(NonparametricSpectralMultivariate, Directed, Unsi
 
         self.identifier = self.identifier + paramstr
 
-    def _getkey(self):
-        if self._method == "nonparametric":
-            return (self._method, -1, -1)
-        else:
-            return (self._method, self._order, self._max_order)
-
     def _get_cache(self, data):
-        key = self._getkey()
+        if self._method == "nonparametric":
+            return super()._get_cache(data)
+        if data.n_replications != 1:
+            raise ValueError("Spectral SPIs require a single realisation.")
+        cache = data_spectral_cache(data)
+        key = (self._fs, self._order, self._max_order)
+        return cache.parametric.get(key, lambda: self._parametric_spectrum(data))
 
-        try:
-            F = data.spectral_gc[key]["F"]
-            freq = data.spectral_gc[key]["freq"]
-        except (AttributeError, KeyError):
-
-            if self._method == "nonparametric":
-                F, freq = super()._get_cache(data)
-            else:
-                z = data.to_numpy(squeeze=True)
-                time_series = ts.TimeSeries(z, sampling_interval=1)
-                GA = nta.GrangerAnalyzer(
-                    time_series, order=self._order, max_order=self._max_order
-                )
-
-                triu_id = np.triu_indices(data.n_processes)
-
-                F = np.full(GA.causality_xy.shape, np.nan)
-                F[triu_id[0], triu_id[1], :] = GA.causality_xy[
-                    triu_id[0], triu_id[1], :
-                ]
-                F[triu_id[1], triu_id[0], :] = GA.causality_yx[
-                    triu_id[0], triu_id[1], :
-                ]
-
-                F = np.transpose(np.expand_dims(F, axis=3), axes=[3, 2, 1, 0])
-                freq = GA.frequencies
-            try:
-                data.spectral_gc[key] = {"freq": freq, "F": F}
-            except AttributeError:
-                data.spectral_gc = {key: {"freq": freq, "F": F}}
-
-        return F, freq
+    def _parametric_spectrum(self, data):
+        time_series = ts.TimeSeries(data.to_numpy(realisation=0), sampling_interval=1 / self._fs)
+        GA = nta.GrangerAnalyzer(time_series, order=self._order, max_order=self._max_order)
+        triu_id = np.triu_indices(data.n_processes)
+        F = np.full(GA.causality_xy.shape, np.nan)
+        F[triu_id[0], triu_id[1], :] = GA.causality_xy[triu_id[0], triu_id[1], :]
+        F[triu_id[1], triu_id[0], :] = GA.causality_yx[triu_id[0], triu_id[1], :]
+        F = np.transpose(np.expand_dims(F, axis=3), axes=[3, 2, 1, 0])
+        return F, GA.frequencies
 
     @parse_multivariate
     def multivariate(self, data):
         try:
             cache, freq = self._get_cache(data)
-            freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
-
-            result = self._statfn(cache[0, freq_id, :, :], axis=0)
+            freq_id = frequency_mask(freq, self._fmin, self._fmax)
+            if not freq_id.any():
+                return np.full((data.n_processes, data.n_processes), np.nan)
+            result = self._summarise_band(cache[0], freq)
 
             nan_pct = np.isnan(cache[0, freq_id, :, :]).mean(axis=0)
             np.fill_diagonal(nan_pct, 0.0)
@@ -436,5 +389,5 @@ class SpectralGrangerCausality(NonparametricSpectralMultivariate, Directed, Unsi
 
             return result
         except ValueError as err:
-            warnings.warn(err)
+            warnings.warn(str(err))
             return np.full((data.n_processes, data.n_processes), np.nan)

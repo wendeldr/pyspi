@@ -239,19 +239,19 @@
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None",
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None",
   "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None",
-  "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1",
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-1",
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1",
   "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1",
-  "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20",
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-20",
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20",
   "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20",
-  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None",
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-None",
   "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None",
   "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None",
-  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1",
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-1",
   "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1",
   "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1",
-  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20",
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-20",
   "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20",
   "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20",
   "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean",
@@ -353,6 +353,73 @@
  },
  "generated": "2026-10-14T15:24:41+00:00",
  "name": "preproc",
+ "partial_regenerations": [
+  {
+   "commands": [
+    [
+     ".venv/bin/python",
+     "-B",
+     "tests/regression/generate_goldens.py",
+     "--size",
+     "all",
+     "--preproc",
+     "--spis",
+     "*multitaper*",
+     "--repeat",
+     "2"
+    ],
+    [
+     ".venv/bin/python",
+     "-B",
+     "tests/regression/generate_goldens.py",
+     "--size",
+     "all",
+     "--preproc",
+     "--spis",
+     "sgc_*",
+     "--repeat",
+     "2"
+    ]
+   ],
+   "environment": {
+    "java": "26",
+    "omp_num_threads": "1",
+    "packages": {
+     "cdt": "0.6.0",
+     "hyppo": "0.5.2",
+     "jpype1": "1.7.1",
+     "mne": "1.13.2",
+     "nitime": "0.12.1",
+     "numpy": "2.5.4",
+     "pandas": "3.0.6",
+     "pyEDM": "1.15.2.0",
+     "pyyaml": "6.0.3",
+     "scikit-learn": "1.9.1",
+     "scipy": "1.17.1",
+     "sktime": "1.2.0",
+     "spectral-connectivity": "1.1.2",
+     "statsmodels": "0.15.0",
+     "torch": "2.14.1+cpu",
+     "tslearn": "0.9.0"
+    },
+    "platform": "linux",
+    "pyspi_commit": "3265b7c8663fc2a9bd5ab671334a4b36cbd81ff3",
+    "pyspi_version": "2.0.2",
+    "python": "3.12.14"
+   },
+   "generated": "2026-10-27T16:33:19+00:00",
+   "identifiers": [
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "reason": "Shared inclusive Fourier bands through Nyquist; group-delay spacing from transform bandwidth; Granger includes requested DC and defaults to [0, fs/2].",
+   "source_sha256": {
+    "pyspi/_spectral.py": "d5c07fe37b3ef48421414f8a63a3e33b01db9e36cfcf5db2d2162cb52151a640",
+    "pyspi/statistics/spectral.py": "a25e74ab39896b2dab1a390086a7653bcba8dd296051e6252e05b7294620d982"
+   }
+  }
+ ],
  "schema": 1,
  "seed": 42,
  "spis": {
@@ -408,7 +475,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.001604
+   "time_s": 0.002143
   },
   "coint_johansen_max_eig_stat_order-1_ardiff-1": {
    "cls": "Cointegration",
@@ -677,7 +744,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.001548
+   "time_s": 0.002074
   },
   "prec_EmpiricalCovariance": {
    "cls": "Precision",
@@ -752,7 +819,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.112059
+   "time_s": 0.065072
   },
   "spearmanr": {
    "cls": "SpearmanR",
@@ -899,7 +966,7 @@
    "nan_offdiag": 0,
    "normalise": false,
    "status": "ok",
-   "time_s": 0.001579
+   "time_s": 0.002143
   },
   "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5::n0d1": {
    "detrend": true,
@@ -908,7 +975,7 @@
    "nan_offdiag": 0,
    "normalise": false,
    "status": "ok",
-   "time_s": 0.001596
+   "time_s": 0.001863
   },
   "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5::n1d0": {
    "detrend": false,
@@ -917,7 +984,7 @@
    "nan_offdiag": 0,
    "normalise": true,
    "status": "ok",
-   "time_s": 0.001604
+   "time_s": 0.001697
   },
   "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5::n1d1": {
    "detrend": true,
@@ -926,7 +993,7 @@
    "nan_offdiag": 0,
    "normalise": true,
    "status": "ok",
-   "time_s": 0.001575
+   "time_s": 0.00177
   },
   "coint_johansen_max_eig_stat_order-1_ardiff-1::n0d0": {
    "detrend": false,
@@ -1403,7 +1470,7 @@
    "nan_offdiag": 0,
    "normalise": false,
    "status": "ok",
-   "time_s": 0.001542
+   "time_s": 0.002074
   },
   "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5::n0d1": {
    "detrend": true,
@@ -1412,7 +1479,7 @@
    "nan_offdiag": 0,
    "normalise": false,
    "status": "ok",
-   "time_s": 0.001548
+   "time_s": 0.001848
   },
   "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5::n1d0": {
    "detrend": false,
@@ -1421,7 +1488,7 @@
    "nan_offdiag": 0,
    "normalise": true,
    "status": "ok",
-   "time_s": 0.001543
+   "time_s": 0.001661
   },
   "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5::n1d1": {
    "detrend": true,
@@ -1430,7 +1497,7 @@
    "nan_offdiag": 0,
    "normalise": true,
    "status": "ok",
-   "time_s": 0.001533
+   "time_s": 0.001946
   },
   "prec_EmpiricalCovariance::n0d0": {
    "detrend": false,
@@ -1547,7 +1614,7 @@
    "nan_offdiag": 0,
    "normalise": false,
    "status": "ok",
-   "time_s": 0.112059
+   "time_s": 0.062804
   },
   "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5::n0d1": {
    "detrend": true,
@@ -1556,7 +1623,7 @@
    "nan_offdiag": 0,
    "normalise": false,
    "status": "ok",
-   "time_s": 0.072139
+   "time_s": 0.065072
   },
   "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5::n1d0": {
    "detrend": false,
@@ -1565,7 +1632,7 @@
    "nan_offdiag": 0,
    "normalise": true,
    "status": "ok",
-   "time_s": 0.100494
+   "time_s": 0.056532
   },
   "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5::n1d1": {
    "detrend": true,
@@ -1574,7 +1641,7 @@
    "nan_offdiag": 0,
    "normalise": true,
    "status": "ok",
-   "time_s": 0.101346
+   "time_s": 0.05687
   },
   "spearmanr::n0d0": {
    "detrend": false,

@@ -1,0 +1,132 @@
+{
+  "baseline_revision": "d088a58ead76c9df757ce972497c295a30a8266b",
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "repeats": 3,
+  "seed": 8026,
+  "numerical_library_threads": 1,
+  "source_sha256": {
+    "pyspi/_spectral.py": "a3fa5aa369e9c0707cbad1bcc40a3b61e08e2bb24937f8e09a976dc97094a1c3",
+    "pyspi/statistics/spectral.py": "4c8f8cb0da66d7cf0f3638de65725239da2bb23a955ef98900cd149c63ce88a4"
+  },
+  "protocol": "Paired baseline/candidate calls on fresh Data; small warmup; median of repeats. Includes Data construction and all selected measures. Peak memory is a separate tracemalloc run (NumPy allocations, not process RSS). PSI deliberately changes the baseline definition: adjacent native FFT bins and inclusive band edges. Its correctness is independently checked in tests/unit/test_psi.py; other measures are required to match the baseline.",
+  "workloads": {
+    "psi_three_bands_118x1024": {
+      "shape": [
+        118,
+        1024
+      ],
+      "measures": [
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0,
+            "fmax": 0.5
+          }
+        ],
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0,
+            "fmax": 0.25
+          }
+        ],
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0.25,
+            "fmax": 0.5
+          }
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          19.198290692991577,
+          18.594125463001546,
+          18.683844537008554
+        ],
+        "candidate": [
+          0.5841961719997926,
+          0.5166670610051369,
+          0.5691702150070341
+        ]
+      },
+      "baseline_median_s": 18.683844537008554,
+      "candidate_median_s": 0.5691702150070341,
+      "speedup_median": 32.82646218017162,
+      "max_abs_difference": 445.75884112100726,
+      "nan_masks_equal": true,
+      "numerical_checks": [
+        {
+          "measure": "PhaseSlopeIndex",
+          "parameters": {
+            "fmin": 0,
+            "fmax": 0.5
+          },
+          "comparison": "intentional PSI definition change; see tests/unit/test_psi.py"
+        },
+        {
+          "measure": "PhaseSlopeIndex",
+          "parameters": {
+            "fmin": 0,
+            "fmax": 0.25
+          },
+          "comparison": "intentional PSI definition change; see tests/unit/test_psi.py"
+        },
+        {
+          "measure": "PhaseSlopeIndex",
+          "parameters": {
+            "fmin": 0.25,
+            "fmax": 0.5
+          },
+          "comparison": "intentional PSI definition change; see tests/unit/test_psi.py"
+        }
+      ],
+      "finite_values_per_measure": [
+        13806,
+        13806,
+        13806
+      ],
+      "peak_traced_mib_baseline": 1533.6366691589355,
+      "peak_traced_mib_candidate": 230.91579341888428
+    }
+  },
+  "validation": {
+    "focused": {
+      "command": ".venv/bin/python -B -m pytest tests/unit/test_psi.py tests/unit/test_spectral.py --tb=short -q --disable-warnings",
+      "passed": 114,
+      "seconds": 10.15
+    },
+    "broad": {
+      "command": ".venv/bin/python -B -m pytest tests/unit tests/regression tests/compatibility/test_numpy2.py --require-java --tb=short -q --disable-warnings",
+      "passed": 867,
+      "skipped": 15,
+      "existing_xfailed": 8,
+      "seconds": 74.77
+    },
+    "full_spectral": {
+      "command": ".venv/bin/python -B -m pytest tests/regression/test_spi_goldens.py --pyspi-size=full --runslow --require-java -k 'multitaper or sgc or catalogue' --tb=short -q --disable-warnings",
+      "passed": 131,
+      "deselected": 263,
+      "seconds": 24.8
+    },
+    "golden_check": {
+      "command": ".venv/bin/python -B tests/regression/generate_goldens.py --size all --spis 'psi_multitaper_*' --check",
+      "passed": true,
+      "max_abs_difference": 0.0
+    },
+    "golden_scope": "Only three psi_multitaper matrices and their SPI records changed in each small/full set; all other 282 matrices and SPI records per set are unchanged. Partial regeneration provenance is recorded separately.",
+    "git_diff_check": "passed",
+    "test_source_sha256": {
+      "tests/unit/test_psi.py": "3b081616591770e2a5d7e851568499a390d28c70a526369b16b49b6ed6d27861",
+      "tests/unit/test_spectral.py": "37026890125c850854c4da22dfb5cf0c7ac629010a5a2380e71ffe9c41d868e4"
+    }
+  },
+  "definition": {
+    "reference": "Nolte et al. (2008), PRL 100, 234101, equation 3 (raw PSI)",
+    "frequency_pairing": "adjacent existing FFT bins; no bandwidth/50 thinning",
+    "band_edges": "both inclusive; DC and Nyquist included when requested",
+    "insufficient_bins": "ValueError for fewer than two selected bins; Calculator stores NaN with failed MetricReport and reason",
+    "remaining_review": "Window duration/multitaper smoothing, sign/direction classifications, wavelet PSI, and other spectral definitions are unchanged."
+  }
+}

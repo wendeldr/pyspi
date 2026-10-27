@@ -239,19 +239,19 @@
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None",
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None",
   "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None",
-  "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1",
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-1",
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1",
   "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1",
-  "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20",
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-20",
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20",
   "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20",
-  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None",
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-None",
   "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None",
   "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None",
-  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1",
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-1",
   "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1",
   "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1",
-  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20",
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-20",
   "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20",
   "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20",
   "psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean",
@@ -325,6 +325,224 @@
  },
  "generated": "2026-10-14T14:53:55+00:00",
  "name": "full",
+ "partial_regenerations": [
+  {
+   "command": ".venv/bin/python -B tests/regression/generate_goldens.py --size all --spis 'psi_multitaper_*' --repeat 2",
+   "environment": {
+    "java": "26",
+    "omp_num_threads": "1",
+    "packages": {
+     "cdt": "0.6.0",
+     "hyppo": "0.5.2",
+     "jpype1": "1.7.1",
+     "mne": "1.13.2",
+     "nitime": "0.12.1",
+     "numpy": "2.5.4",
+     "pandas": "3.0.6",
+     "pyEDM": "1.15.2.0",
+     "pyyaml": "6.0.3",
+     "scikit-learn": "1.9.1",
+     "scipy": "1.17.1",
+     "sktime": "1.2.0",
+     "spectral-connectivity": "1.1.2",
+     "statsmodels": "0.15.0",
+     "torch": "2.14.1+cpu",
+     "tslearn": "0.9.0"
+    },
+    "platform": "linux",
+    "pyspi_commit": "3265b7c8663fc2a9bd5ab671334a4b36cbd81ff3",
+    "pyspi_version": "2.0.2",
+    "python": "3.12.14"
+   },
+   "generated": "2026-10-27T15:54:27+00:00",
+   "identifiers": [
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "reason": "Approved PSI definition correction: adjacent native FFT bins, inclusive band edges including DC/Nyquist, no bandwidth/50 thinning.",
+   "source_sha256": {
+    "pyspi/_spectral.py": "a3fa5aa369e9c0707cbad1bcc40a3b61e08e2bb24937f8e09a976dc97094a1c3",
+    "pyspi/statistics/spectral.py": "4c8f8cb0da66d7cf0f3638de65725239da2bb23a955ef98900cd149c63ce88a4"
+   }
+  },
+  {
+   "commands": [
+    [
+     ".venv/bin/python",
+     "-B",
+     "tests/regression/generate_goldens.py",
+     "--size",
+     "all",
+     "--preproc",
+     "--spis",
+     "*multitaper*",
+     "--repeat",
+     "2"
+    ],
+    [
+     ".venv/bin/python",
+     "-B",
+     "tests/regression/generate_goldens.py",
+     "--size",
+     "all",
+     "--preproc",
+     "--spis",
+     "sgc_*",
+     "--repeat",
+     "2"
+    ]
+   ],
+   "environment": {
+    "java": "26",
+    "omp_num_threads": "1",
+    "packages": {
+     "cdt": "0.6.0",
+     "hyppo": "0.5.2",
+     "jpype1": "1.7.1",
+     "mne": "1.13.2",
+     "nitime": "0.12.1",
+     "numpy": "2.5.4",
+     "pandas": "3.0.6",
+     "pyEDM": "1.15.2.0",
+     "pyyaml": "6.0.3",
+     "scikit-learn": "1.9.1",
+     "scipy": "1.17.1",
+     "sktime": "1.2.0",
+     "spectral-connectivity": "1.1.2",
+     "statsmodels": "0.15.0",
+     "torch": "2.14.1+cpu",
+     "tslearn": "0.9.0"
+    },
+    "platform": "linux",
+    "pyspi_commit": "3265b7c8663fc2a9bd5ab671334a4b36cbd81ff3",
+    "pyspi_version": "2.0.2",
+    "python": "3.12.14"
+   },
+   "generated": "2026-10-27T16:33:18+00:00",
+   "identifiers": [
+    "cohmag_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "dcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "ddtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "ddtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "dspli_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "dspli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "dspli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "dspli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "dswpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "dswpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "dtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "dtf_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "dtf_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "dtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5",
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25",
+    "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5",
+    "gpdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "gpdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "icoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "icoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "icoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "icoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "pdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "pdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "pli_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "pli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "pli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "pli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "pli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "plv_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "plv_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "plv_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "plv_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "plv_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "ppc_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "ppc_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "ppc_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "sgc_nonparametric_max_fs-1_fmin-0-25_fmax-0-5",
+    "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-25",
+    "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-5",
+    "sgc_nonparametric_mean_fs-1_fmin-0-25_fmax-0-5",
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-25",
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5",
+    "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1",
+    "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20",
+    "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None",
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1",
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20",
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None",
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-1",
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-20",
+    "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-None",
+    "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1",
+    "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20",
+    "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None",
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1",
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20",
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None",
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-1",
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-20",
+    "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None",
+    "wpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "wpli_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "wpli_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "wpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5"
+   ],
+   "reason": "Shared inclusive Fourier bands through Nyquist; group-delay spacing from transform bandwidth; Granger includes requested DC and defaults to [0, fs/2].",
+   "source_sha256": {
+    "pyspi/_spectral.py": "d5c07fe37b3ef48421414f8a63a3e33b01db9e36cfcf5db2d2162cb52151a640",
+    "pyspi/statistics/spectral.py": "a25e74ab39896b2dab1a390086a7653bcba8dd296051e6252e05b7294620d982"
+   }
+  }
+ ],
  "schema": 1,
  "seed": 42,
  "spis": {
@@ -1010,7 +1228,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002203
+   "time_s": 0.002298
   },
   "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "CoherenceMagnitude",
@@ -1029,7 +1247,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002202
+   "time_s": 0.002412
   },
   "cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "CoherenceMagnitude",
@@ -1047,7 +1265,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002208
+   "time_s": 0.002273
   },
   "cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "CoherenceMagnitude",
@@ -1065,7 +1283,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.002207
+   "time_s": 0.002301
   },
   "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "CoherenceMagnitude",
@@ -1083,7 +1301,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.002217
+   "time_s": 0.002702
   },
   "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "CoherenceMagnitude",
@@ -1100,7 +1318,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.002211
+   "time_s": 0.002519
   },
   "coint_aeg_tstat_trend-c_autolag-aic_maxlag-10": {
    "cls": "Cointegration",
@@ -1676,7 +1894,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.911501
+   "time_s": 0.266991
   },
   "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "DirectedCoherence",
@@ -1695,7 +1913,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.892683
+   "time_s": 0.271552
   },
   "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "DirectedCoherence",
@@ -1713,7 +1931,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.890282
+   "time_s": 0.266806
   },
   "dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "DirectedCoherence",
@@ -1731,7 +1949,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 1.878884
+   "time_s": 0.268386
   },
   "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "DirectedCoherence",
@@ -1749,7 +1967,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 1.887707
+   "time_s": 0.258208
   },
   "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "DirectedCoherence",
@@ -1766,7 +1984,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 1.886337
+   "time_s": 0.309033
   },
   "dcorr": {
    "cls": "DistanceCorrelation",
@@ -1862,7 +2080,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 2.490611
+   "time_s": 0.274683
   },
   "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "DirectDirectedTransferFunction",
@@ -1882,7 +2100,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 2.491088
+   "time_s": 0.274212
   },
   "ddtf_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "DirectDirectedTransferFunction",
@@ -1901,7 +2119,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 2.48971
+   "time_s": 0.272102
   },
   "ddtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "DirectDirectedTransferFunction",
@@ -1920,7 +2138,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 2.489646
+   "time_s": 0.268308
   },
   "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "DirectDirectedTransferFunction",
@@ -1939,7 +2157,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 2.501631
+   "time_s": 0.264754
   },
   "ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "DirectDirectedTransferFunction",
@@ -1957,7 +2175,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 2.56313
+   "time_s": 0.282585
   },
   "di_gaussian": {
    "cls": "DirectedInfo",
@@ -2039,7 +2257,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002191
+   "time_s": 0.002436
   },
   "dspli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "DebiasedSquaredPhaseLagIndex",
@@ -2058,7 +2276,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002152
+   "time_s": 0.002365
   },
   "dspli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "DebiasedSquaredPhaseLagIndex",
@@ -2076,7 +2294,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002162
+   "time_s": 0.002355
   },
   "dspli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "DebiasedSquaredPhaseLagIndex",
@@ -2094,7 +2312,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.002193
+   "time_s": 0.002359
   },
   "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "DebiasedSquaredPhaseLagIndex",
@@ -2112,7 +2330,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.002212
+   "time_s": 0.002414
   },
   "dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "DebiasedSquaredPhaseLagIndex",
@@ -2129,7 +2347,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.00221
+   "time_s": 0.002487
   },
   "dswpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "DebiasedSquaredWeightedPhaseLagIndex",
@@ -2148,7 +2366,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002386
+   "time_s": 0.002657
   },
   "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "DebiasedSquaredWeightedPhaseLagIndex",
@@ -2167,7 +2385,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.00234
+   "time_s": 0.002716
   },
   "dswpli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "DebiasedSquaredWeightedPhaseLagIndex",
@@ -2185,7 +2403,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002382
+   "time_s": 0.002646
   },
   "dswpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "DebiasedSquaredWeightedPhaseLagIndex",
@@ -2203,7 +2421,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.002397
+   "time_s": 0.002604
   },
   "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "DebiasedSquaredWeightedPhaseLagIndex",
@@ -2221,7 +2439,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.002388
+   "time_s": 0.002519
   },
   "dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "DebiasedSquaredWeightedPhaseLagIndex",
@@ -2238,7 +2456,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.002397
+   "time_s": 0.002544
   },
   "dtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "DirectedTransferFunction",
@@ -2258,7 +2476,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.284898
+   "time_s": 0.265371
   },
   "dtf_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "DirectedTransferFunction",
@@ -2278,7 +2496,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.286933
+   "time_s": 0.254709
   },
   "dtf_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "DirectedTransferFunction",
@@ -2297,7 +2515,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.283014
+   "time_s": 0.256234
   },
   "dtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "DirectedTransferFunction",
@@ -2316,7 +2534,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 1.269469
+   "time_s": 0.257951
   },
   "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "DirectedTransferFunction",
@@ -2335,7 +2553,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 1.271094
+   "time_s": 0.264073
   },
   "dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "DirectedTransferFunction",
@@ -2353,7 +2571,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 1.260284
+   "time_s": 0.260828
   },
   "dtw": {
    "cls": "DynamicTimeWarping",
@@ -2472,14 +2690,14 @@
     "unsigned"
    ],
    "module": ".statistics.spectral",
-   "nan_offdiag": 8,
+   "nan_offdiag": 28,
    "params": {
     "fmax": 0.5,
     "fmin": 0.25,
     "statistic": "delay"
    },
    "status": "partial_nan",
-   "time_s": 0.010884
+   "time_s": 0.007683
   },
   "gd_multitaper_delay_fs-1_fmin-0_fmax-0-25": {
    "cls": "GroupDelay",
@@ -2492,14 +2710,14 @@
     "unsigned"
    ],
    "module": ".statistics.spectral",
-   "nan_offdiag": 18,
+   "nan_offdiag": 34,
    "params": {
     "fmax": 0.25,
     "fmin": 0,
     "statistic": "delay"
    },
    "status": "partial_nan",
-   "time_s": 0.009741
+   "time_s": 0.006762
   },
   "gd_multitaper_delay_fs-1_fmin-0_fmax-0-5": {
    "cls": "GroupDelay",
@@ -2512,14 +2730,14 @@
     "unsigned"
    ],
    "module": ".statistics.spectral",
-   "nan_offdiag": 2,
+   "nan_offdiag": 28,
    "params": {
     "fmax": 0.5,
     "fmin": 0,
     "statistic": "delay"
    },
    "status": "partial_nan",
-   "time_s": 0.011712
+   "time_s": 0.008427
   },
   "gpdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "GeneralizedPartialDirectedCoherence",
@@ -2538,7 +2756,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.948716
+   "time_s": 0.27501
   },
   "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "GeneralizedPartialDirectedCoherence",
@@ -2557,7 +2775,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.95752
+   "time_s": 0.269435
   },
   "gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "GeneralizedPartialDirectedCoherence",
@@ -2575,7 +2793,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.948065
+   "time_s": 0.268076
   },
   "gpdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "GeneralizedPartialDirectedCoherence",
@@ -2593,7 +2811,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 1.950496
+   "time_s": 0.264618
   },
   "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "GeneralizedPartialDirectedCoherence",
@@ -2611,7 +2829,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 1.955768
+   "time_s": 0.269053
   },
   "gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "GeneralizedPartialDirectedCoherence",
@@ -2628,7 +2846,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 1.957707
+   "time_s": 0.26725
   },
   "gpfit_DotProduct": {
    "cls": "GPModel",
@@ -2759,7 +2977,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002169
+   "time_s": 0.002442
   },
   "icoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "ImaginaryCoherence",
@@ -2778,7 +2996,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002182
+   "time_s": 0.002275
   },
   "icoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "ImaginaryCoherence",
@@ -2796,7 +3014,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002168
+   "time_s": 0.002435
   },
   "icoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "ImaginaryCoherence",
@@ -2814,7 +3032,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.002192
+   "time_s": 0.002466
   },
   "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "ImaginaryCoherence",
@@ -2832,7 +3050,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.002192
+   "time_s": 0.002498
   },
   "icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "ImaginaryCoherence",
@@ -2849,7 +3067,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.0022
+   "time_s": 0.002383
   },
   "ids": {
    "cls": "InterDependenceScore",
@@ -3310,7 +3528,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.346599
+   "time_s": 0.267289
   },
   "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "PartialDirectedCoherence",
@@ -3329,7 +3547,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.299563
+   "time_s": 0.265336
   },
   "pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "PartialDirectedCoherence",
@@ -3347,7 +3565,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 1.281458
+   "time_s": 0.261835
   },
   "pdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "PartialDirectedCoherence",
@@ -3365,7 +3583,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 1.292952
+   "time_s": 0.258303
   },
   "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "PartialDirectedCoherence",
@@ -3383,7 +3601,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 1.298965
+   "time_s": 0.261926
   },
   "pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "PartialDirectedCoherence",
@@ -3400,7 +3618,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 1.313552
+   "time_s": 0.262605
   },
   "pdist_braycurtis": {
    "cls": "PairwiseDistance",
@@ -3647,7 +3865,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002236
+   "time_s": 0.002738
   },
   "phase_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "CoherencePhase",
@@ -3666,7 +3884,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.00222
+   "time_s": 0.002656
   },
   "phase_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "CoherencePhase",
@@ -3684,7 +3902,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002223
+   "time_s": 0.002532
   },
   "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "CoherencePhase",
@@ -3702,7 +3920,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.002249
+   "time_s": 0.002459
   },
   "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "CoherencePhase",
@@ -3720,7 +3938,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.002257
+   "time_s": 0.002361
   },
   "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "CoherencePhase",
@@ -3737,7 +3955,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.002278
+   "time_s": 0.002364
   },
   "phi_Geo_t-1_norm-0": {
    "cls": "IntegratedInformation",
@@ -3834,7 +4052,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002105
+   "time_s": 0.002275
   },
   "pli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "PhaseLagIndex",
@@ -3853,7 +4071,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002115
+   "time_s": 0.002225
   },
   "pli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "PhaseLagIndex",
@@ -3871,7 +4089,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002393
+   "time_s": 0.002189
   },
   "pli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "PhaseLagIndex",
@@ -3889,7 +4107,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.002135
+   "time_s": 0.002349
   },
   "pli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "PhaseLagIndex",
@@ -3907,7 +4125,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.002142
+   "time_s": 0.002321
   },
   "pli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "PhaseLagIndex",
@@ -3924,7 +4142,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.002153
+   "time_s": 0.002385
   },
   "plv_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "PhaseLockingValue",
@@ -3943,7 +4161,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.00219
+   "time_s": 0.0023
   },
   "plv_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "PhaseLockingValue",
@@ -3962,7 +4180,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002206
+   "time_s": 0.002313
   },
   "plv_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "PhaseLockingValue",
@@ -3980,7 +4198,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002214
+   "time_s": 0.002374
   },
   "plv_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "PhaseLockingValue",
@@ -3998,7 +4216,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.00229
+   "time_s": 0.002425
   },
   "plv_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "PhaseLockingValue",
@@ -4016,7 +4234,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.003941
+   "time_s": 0.002576
   },
   "plv_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "PhaseLockingValue",
@@ -4033,7 +4251,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.004379
+   "time_s": 0.002513
   },
   "ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "PairwisePhaseConsistency",
@@ -4052,7 +4270,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002287
+   "time_s": 0.002397
   },
   "ppc_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "PairwisePhaseConsistency",
@@ -4071,7 +4289,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002292
+   "time_s": 0.002393
   },
   "ppc_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "PairwisePhaseConsistency",
@@ -4089,7 +4307,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002298
+   "time_s": 0.00239
   },
   "ppc_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "PairwisePhaseConsistency",
@@ -4107,7 +4325,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.002305
+   "time_s": 0.002637
   },
   "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "PairwisePhaseConsistency",
@@ -4125,7 +4343,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.002329
+   "time_s": 0.002549
   },
   "ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "PairwisePhaseConsistency",
@@ -4142,7 +4360,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.002316
+   "time_s": 0.002478
   },
   "prec-sq_EllipticEnvelope": {
    "cls": "Precision",
@@ -4472,7 +4690,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.005015
+   "time_s": 0.002696
   },
   "psi_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "PhaseSlopeIndex",
@@ -4490,7 +4708,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.005018
+   "time_s": 0.002451
   },
   "psi_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "PhaseSlopeIndex",
@@ -4508,7 +4726,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.00703
+   "time_s": 0.002382
   },
   "psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max": {
    "cls": "PhaseSlopeIndex",
@@ -4657,7 +4875,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.343528
+   "time_s": 0.133009
   },
   "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "SpectralGrangerCausality",
@@ -4679,7 +4897,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.337476
+   "time_s": 0.131867
   },
   "sgc_nonparametric_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "SpectralGrangerCausality",
@@ -4701,7 +4919,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.3466
+   "time_s": 0.134223
   },
   "sgc_nonparametric_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "SpectralGrangerCausality",
@@ -4723,7 +4941,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.342056
+   "time_s": 0.138216
   },
   "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "SpectralGrangerCausality",
@@ -4745,7 +4963,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.349703
+   "time_s": 0.143462
   },
   "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "SpectralGrangerCausality",
@@ -4767,7 +4985,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.32638
+   "time_s": 0.151891
   },
   "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1": {
    "cls": "SpectralGrangerCausality",
@@ -4790,7 +5008,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.009287
+   "time_s": 0.012049
   },
   "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20": {
    "cls": "SpectralGrangerCausality",
@@ -4813,7 +5031,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.045882
+   "time_s": 0.05251
   },
   "sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None": {
    "cls": "SpectralGrangerCausality",
@@ -4835,7 +5053,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.013376
+   "time_s": 0.017314
   },
   "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1": {
    "cls": "SpectralGrangerCausality",
@@ -4858,7 +5076,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.009192
+   "time_s": 0.011926
   },
   "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20": {
    "cls": "SpectralGrangerCausality",
@@ -4881,7 +5099,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.04575
+   "time_s": 0.052845
   },
   "sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None": {
    "cls": "SpectralGrangerCausality",
@@ -4903,9 +5121,9 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.013356
+   "time_s": 0.017459
   },
-  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1": {
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-1": {
    "cls": "SpectralGrangerCausality",
    "deps": [],
    "error": null,
@@ -4925,9 +5143,9 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.00889
+   "time_s": 0.012178
   },
-  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20": {
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-20": {
    "cls": "SpectralGrangerCausality",
    "deps": [],
    "error": null,
@@ -4947,9 +5165,9 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.045821
+   "time_s": 0.055063
   },
-  "sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None": {
+  "sgc_parametric_max_fs-1_fmin-0_fmax-0-5_order-None": {
    "cls": "SpectralGrangerCausality",
    "deps": [],
    "error": null,
@@ -4968,7 +5186,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.013373
+   "time_s": 0.017825
   },
   "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1": {
    "cls": "SpectralGrangerCausality",
@@ -4991,7 +5209,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.0089
+   "time_s": 0.011721
   },
   "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20": {
    "cls": "SpectralGrangerCausality",
@@ -5014,7 +5232,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.045871
+   "time_s": 0.053262
   },
   "sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None": {
    "cls": "SpectralGrangerCausality",
@@ -5036,7 +5254,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.013418
+   "time_s": 0.018091
   },
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1": {
    "cls": "SpectralGrangerCausality",
@@ -5059,7 +5277,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.00888
+   "time_s": 0.011818
   },
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20": {
    "cls": "SpectralGrangerCausality",
@@ -5082,7 +5300,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.045659
+   "time_s": 0.052611
   },
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None": {
    "cls": "SpectralGrangerCausality",
@@ -5104,7 +5322,51 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.013464
+   "time_s": 0.017116
+  },
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-1": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "method": "parametric",
+    "order": 1,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.01194
+  },
+  "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-20": {
+   "cls": "SpectralGrangerCausality",
+   "deps": [],
+   "error": null,
+   "labels": [
+    "directed",
+    "embedding",
+    "lagged",
+    "spectral",
+    "unsigned"
+   ],
+   "module": ".statistics.spectral",
+   "nan_offdiag": 0,
+   "params": {
+    "fs": 1,
+    "method": "parametric",
+    "order": 20,
+    "statistic": "mean"
+   },
+   "status": "ok",
+   "time_s": 0.052737
   },
   "sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None": {
    "cls": "SpectralGrangerCausality",
@@ -5126,51 +5388,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.013513
-  },
-  "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1": {
-   "cls": "SpectralGrangerCausality",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "directed",
-    "embedding",
-    "lagged",
-    "spectral",
-    "unsigned"
-   ],
-   "module": ".statistics.spectral",
-   "nan_offdiag": 0,
-   "params": {
-    "fs": 1,
-    "method": "parametric",
-    "order": 1,
-    "statistic": "mean"
-   },
-   "status": "ok",
-   "time_s": 0.008925
-  },
-  "sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20": {
-   "cls": "SpectralGrangerCausality",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "directed",
-    "embedding",
-    "lagged",
-    "spectral",
-    "unsigned"
-   ],
-   "module": ".statistics.spectral",
-   "nan_offdiag": 0,
-   "params": {
-    "fs": 1,
-    "method": "parametric",
-    "order": 20,
-    "statistic": "mean"
-   },
-   "status": "ok",
-   "time_s": 0.04584
+   "time_s": 0.01817
   },
   "si_gaussian_k-1": {
    "cls": "StochasticInteraction",
@@ -5640,7 +5858,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002188
+   "time_s": 0.002364
   },
   "wpli_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "WeightedPhaseLagIndex",
@@ -5659,7 +5877,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002183
+   "time_s": 0.002431
   },
   "wpli_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "WeightedPhaseLagIndex",
@@ -5677,7 +5895,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.002206
+   "time_s": 0.002444
   },
   "wpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "WeightedPhaseLagIndex",
@@ -5695,7 +5913,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.002215
+   "time_s": 0.00257
   },
   "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "WeightedPhaseLagIndex",
@@ -5713,7 +5931,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.00222
+   "time_s": 0.00245
   },
   "wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "WeightedPhaseLagIndex",
@@ -5730,7 +5948,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.002221
+   "time_s": 0.002356
   },
   "xcorr-sq_max_sig-True": {
    "cls": "CrossCorrelation",

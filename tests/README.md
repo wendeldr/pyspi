@@ -18,6 +18,10 @@ independent references, mutation checks, coverage, and remaining limitations.
 | `unit/test_calculation_reporting.py` | completion/failure versus NaN values, callback ordering/ownership/error propagation, timing boundaries, warning filters/visibility, interruption, and report lifecycle |
 | `unit/test_regression_guards.py`, `regression/test_golden_contract.py` | tests of comparison/error handling, baseline completeness, generator checks, and required-JVM verification |
 | `unit/test_numeric_boundaries.py`, `unit/test_ids_reference.py` | nondegenerate spectral/wavelet aggregation, independent covariance/precision and IDS references, preprocessing axes, dataset reload, and seeded shared-cache calculations |
+| `unit/test_spectral.py` | spectral estimator agreement, shared transforms/factorizations, bounded temporary arrays/caches, sampling-rate isolation, mutable inputs, empty bands, and phase branch boundaries |
+| `unit/test_psi.py` | independent raw PSI definition checks, inclusive adjacent-bin selection, direction, frequency units, and unavailable-band reporting |
+| `unit/test_spectral_bands.py` | shared DC/Nyquist grid, scalar endpoint formulas, transform-derived group-delay fits, unit scaling, Granger DC, and unavailable-band reporting |
+| `benchmark_spectral.py`, `spectral*_refactor_results.json` | paired spectral timings and historical/current receipts, including traced allocation peaks and explicit definition/frequency-selection differences |
 | `test_calc.py`, `test_utils.py`, `test_phi_native.py` | original tests, unchanged |
 | `test_SPIs.py` | original CML7 z-score benchmark (`legacy`, `slow`) |
 | `storage/` | storage-format suite, run separately (below) |
@@ -149,6 +153,100 @@ First matching `fnmatch` pattern wins.
 The stochastic patterns match 12 identifiers (the `-sq` variants included); their rows keep the default values and are listed to document that they match only because `seed_all()` runs right before them.
 
 The iterative optimisers (`*GraphicalLassoCV*`, `phi_*`, `gpfit_*`, `anm`) have no row: seeded run to run and against the stored goldens they were measured bit-for-bit reproducible on the generating machine (the 11 matching identifiers, each recomputed twice at both sizes: maximum absolute difference from the stored goldens 0), so the default applies. If another machine shows drift for one of them, re-add a row for that pattern with the measured drift written in its reason, not a guessed tolerance. Overrides are documented exceptions; do not loosen a tolerance to make a failure go away.
+
+## Spectral backend refactor
+
+`pyspi/_spectral.py` shares one multitaper transform per input and spectral
+settings. It accumulates cross-spectra directly and bounds taper-level phase
+products in blocks. Derived-array caches have byte limits; at most two sampling
+rate workspaces and sixteen ordered pair models are retained per workspace.
+The core Fourier coefficients, powers, and coherency are shared separately.
+Input snapshots invalidate spectral work after `Data` mutations or writes
+through `to_numpy()`. Parametric Granger also keys its cache by sampling rate
+and uses that rate for its frequency axis.
+
+Frequencies use the units of `fs`: Hz for a sampling rate in samples/second,
+or cycles/sample with the default `fs=1`. Invalid bands are rejected. Ordinary
+mean/max summaries of empty bands return NaN. Multitaper requires a single
+realisation and more than six observations with the current bandwidth setting.
+All Fourier estimators use closed `[fmin, fmax]` bands on a one-sided grid
+including DC and Nyquist (the last positive bin for odd FFT lengths). Directed
+factorization still uses the full two-sided spectrum. dDTF's full-frequency
+normalization includes Nyquist too. Granger no longer silently moves a zero
+lower bound to `1e-5`; its default band is `[0, fs/2]`. Configurations that
+previously inherited `fmin=1e-5` consequently have `fmin-0` identifiers.
+
+Group delay selects regression points at
+`ceil(multitaper.frequency_resolution / FFT_grid_spacing)` bins, where the
+transform's nominal resolution is `2*NW/window_duration`. The spacing is
+independent of the requested band and does not change the transform settings.
+The dependency's coherence significance test, largest significant cluster,
+minimum of three retained points, phase unwrapping, and fit definition are
+preserved. A band too narrow to hold three spaced points raises an identified
+`ValueError`; Calculator records an unavailable NaN matrix and the reason.
+Bandwidth-based spacing approximates independence; it does not establish exact
+statistical independence. The coherence significance procedure itself and the
+rvalue/sign conventions have not been scientifically revised.
+
+The initial performance stage preserved metric definitions. The subsequent
+approved multitaper PSI correction is described below. Arithmetic phase
+summaries and sign/direction classifications await separate scientific review.
+Tests compare unchanged formulas against the dependency on the same bins;
+`unit/test_spectral_bands.py` adds scalar endpoint formulas, even/odd frequency
+and transfer-function checks, analytical group-delay fits, unit scaling,
+zero-bound Granger checks, and narrow-band failure reporting. Directed pair
+models retain channel order because the current factorization produces
+measurably different results when that order is reversed. Direct accumulation
+avoids BLAS-induced imaginary roundoff that can move exact antiphase channels
+across the angle branch boundary. The performance-stage measurements in
+`spectral_refactor_results.json` describe the implementation before the PSI
+definition change; their source hashes and numerical comparisons are historical.
+
+Multitaper PSI now implements the raw (unnormalized) formula in
+[Nolte et al. (2008), equation 3](https://doc.ml.tu-berlin.de/causality/psi.pdf):
+`sum(imag(conj(C(f)) * C(f + df)))`. It uses every existing FFT bin in the
+inclusive `[fmin, fmax]` band, including DC/Nyquist when requested. Both members
+of each adjacent pair must be in the band. There is no band-width-dependent
+`/ 50` thinning, interpolation, or pair-count normalization. The authors'
+[reference implementation](https://doc.ml.tu-berlin.de/causality/data2psi.m)
+likewise includes the final frequency in the supplied list. Positive `[i, j]`
+means channel `i` leads `j`; the raw matrix is antisymmetric.
+
+Fewer than two selected bins raises an identified `ValueError`; `Calculator`
+records a failed metric with the reason and an unavailable NaN matrix. Undefined
+coherency invalidates affected pairs rather than bridging missing bins. Tests
+in `unit/test_psi.py` check independent scalar calculations, MNE's adjacent
+formula on identical coherency, known delays, endpoint inclusion, odd/even FFTs,
+channel permutations, normalized/Hz units, cache ownership, bounded temporaries,
+and failure reporting. The PSI correction initially regenerated only its three
+multitaper snapshots. The subsequent shared frequency-selection change refreshes
+Fourier spectral snapshots in the small/full and preprocessing sets; unrelated
+values and records are checked unchanged. Each set records scoped regeneration
+provenance instead of relabeling its older snapshots as newly generated.
+
+This correction does not establish the suitability of short windows for narrow
+bands. At 2048 Hz with 0.5 s windows, the FFT grid spacing is 2 Hz while the
+current `NW=3` multitaper full smoothing bandwidth is 12 Hz. Window length and
+smoothing remain a separate scientific decision. Wavelet PSI and the remaining
+metric classifications have not been changed by this correction.
+
+```bash
+.venv/bin/python -B -m pytest tests/unit/test_spectral.py
+.venv/bin/python -B -m pytest tests/unit/test_psi.py tests/unit/test_spectral_bands.py
+.venv/bin/python -B tests/benchmark_spectral.py
+.venv/bin/python -B tests/benchmark_spectral.py --workload psi_three_bands_118x1024
+```
+
+The benchmark loads the specified baseline revision into an isolated module;
+there is no old calculation path in production. It records medians of three
+paired runs, numerical agreement, source hashes, and peak traced allocations
+(not total process RSS), with numerical libraries restricted to one thread.
+Its current output defaults to `spectral_band_refactor_results.json`. The old
+performance and PSI-only reports retain their original hashes and measurements.
+The current report identifies the intentional formula/frequency-selection changes
+per measure and records the observed differences; it is a timing comparison,
+not a claim of numerical equivalence. Independent correctness checks live in
+the spectral unit tests.
 
 ## Extra goldens
 

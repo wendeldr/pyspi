@@ -1,0 +1,654 @@
+{
+  "baseline_revision": "d088a58ead76c9df757ce972497c295a30a8266b",
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "repeats": 3,
+  "seed": 8026,
+  "numerical_library_threads": 1,
+  "source_sha256": {
+    "pyspi/_spectral.py": "d5c07fe37b3ef48421414f8a63a3e33b01db9e36cfcf5db2d2162cb52151a640",
+    "pyspi/statistics/spectral.py": "a25e74ab39896b2dab1a390086a7653bcba8dd296051e6252e05b7294620d982"
+  },
+  "protocol": "Paired baseline/candidate calls on fresh Data; small warmup; median of repeats. Includes Data construction and all selected measures. Peak memory is a separate tracemalloc run (NumPy allocations, not process RSS). Intentional differences: adjacent-bin PSI, transform-derived group-delay spacing, inclusive bands and Nyquist throughout, and Granger includes requested DC. Mathematical correctness is checked by the spectral unit tests; these timings compare different frequency-selection policies and are not numerical equivalence claims.",
+  "workloads": {
+    "coherence_118x1024": {
+      "shape": [
+        118,
+        1024
+      ],
+      "measures": [
+        [
+          "CoherenceMagnitude",
+          {}
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          2.52351174200885,
+          1.8745238060073461,
+          1.5734228630026337
+        ],
+        "candidate": [
+          0.3159026129869744,
+          0.3021676859934814,
+          0.3119960269832518
+        ]
+      },
+      "baseline_median_s": 1.8745238060073461,
+      "candidate_median_s": 0.3119960269832518,
+      "speedup_median": 6.008165629968013,
+      "max_abs_difference": 0.0015507885368147567,
+      "nan_masks_equal": true,
+      "numerical_checks": [
+        {
+          "measure": "CoherenceMagnitude",
+          "parameters": {},
+          "comparison": "intentional change: inclusive bands and complete one-sided frequency grid",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        }
+      ],
+      "finite_values_per_measure": [
+        13806
+      ],
+      "peak_traced_mib_baseline": 1424.3522319793701,
+      "peak_traced_mib_candidate": 299.20595932006836
+    },
+    "shared_eight_118x1024": {
+      "shape": [
+        118,
+        1024
+      ],
+      "measures": [
+        [
+          "CoherenceMagnitude",
+          {}
+        ],
+        [
+          "CoherencePhase",
+          {}
+        ],
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0,
+            "fmax": 0.5
+          }
+        ],
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0,
+            "fmax": 0.25
+          }
+        ],
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0.25,
+            "fmax": 0.5
+          }
+        ],
+        [
+          "GroupDelay",
+          {
+            "fmin": 0,
+            "fmax": 0.5,
+            "statistic": "delay"
+          }
+        ],
+        [
+          "GroupDelay",
+          {
+            "fmin": 0,
+            "fmax": 0.25,
+            "statistic": "delay"
+          }
+        ],
+        [
+          "GroupDelay",
+          {
+            "fmin": 0.25,
+            "fmax": 0.5,
+            "statistic": "delay"
+          }
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          25.123514076985884,
+          24.875510065001436,
+          24.907714072993258
+        ],
+        "candidate": [
+          4.434030842006905,
+          4.288671101006912,
+          4.3173151099763345
+        ]
+      },
+      "baseline_median_s": 24.907714072993258,
+      "candidate_median_s": 4.3173151099763345,
+      "speedup_median": 5.7692601625109985,
+      "max_abs_difference": 445.75884112100726,
+      "nan_masks_equal": true,
+      "numerical_checks": [
+        {
+          "measure": "CoherenceMagnitude",
+          "parameters": {},
+          "comparison": "intentional change: inclusive bands and complete one-sided frequency grid",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "CoherencePhase",
+          "parameters": {},
+          "comparison": "intentional change: inclusive bands and complete one-sided frequency grid",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "PhaseSlopeIndex",
+          "parameters": {
+            "fmin": 0,
+            "fmax": 0.5
+          },
+          "comparison": "intentional change: adjacent-bin PSI instead of thinned all-frequency pairs; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "PhaseSlopeIndex",
+          "parameters": {
+            "fmin": 0,
+            "fmax": 0.25
+          },
+          "comparison": "intentional change: adjacent-bin PSI instead of thinned all-frequency pairs; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "PhaseSlopeIndex",
+          "parameters": {
+            "fmin": 0.25,
+            "fmax": 0.5
+          },
+          "comparison": "intentional change: adjacent-bin PSI instead of thinned all-frequency pairs; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "GroupDelay",
+          "parameters": {
+            "fmin": 0,
+            "fmax": 0.5,
+            "statistic": "delay"
+          },
+          "comparison": "intentional change: transform-derived regression spacing; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "GroupDelay",
+          "parameters": {
+            "fmin": 0,
+            "fmax": 0.25,
+            "statistic": "delay"
+          },
+          "comparison": "intentional change: transform-derived regression spacing; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "GroupDelay",
+          "parameters": {
+            "fmin": 0.25,
+            "fmax": 0.5,
+            "statistic": "delay"
+          },
+          "comparison": "intentional change: transform-derived regression spacing; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        }
+      ],
+      "finite_values_per_measure": [
+        13806,
+        13806,
+        13806,
+        13806,
+        13806,
+        2,
+        2,
+        2
+      ],
+      "peak_traced_mib_baseline": 1642.6338815689087,
+      "peak_traced_mib_candidate": 590.9995374679565
+    },
+    "weighted_phase_lag_118x1024": {
+      "shape": [
+        118,
+        1024
+      ],
+      "measures": [
+        [
+          "WeightedPhaseLagIndex",
+          {}
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          3.322505760996137,
+          3.1924666700069793,
+          3.164334193977993
+        ],
+        "candidate": [
+          0.47896196600049734,
+          0.49334986999747343,
+          0.4863000189943705
+        ]
+      },
+      "baseline_median_s": 3.1924666700069793,
+      "candidate_median_s": 0.4863000189943705,
+      "speedup_median": 6.564808853202895,
+      "max_abs_difference": 0.000626559956207251,
+      "nan_masks_equal": true,
+      "numerical_checks": [
+        {
+          "measure": "WeightedPhaseLagIndex",
+          "parameters": {},
+          "comparison": "intentional change: inclusive bands and complete one-sided frequency grid",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        }
+      ],
+      "finite_values_per_measure": [
+        13806
+      ],
+      "peak_traced_mib_baseline": 1641.9138660430908,
+      "peak_traced_mib_candidate": 297.36103916168213
+    },
+    "directed_six_4x1024": {
+      "shape": [
+        4,
+        1024
+      ],
+      "measures": [
+        [
+          "DirectedCoherence",
+          {}
+        ],
+        [
+          "PartialDirectedCoherence",
+          {}
+        ],
+        [
+          "GeneralizedPartialDirectedCoherence",
+          {}
+        ],
+        [
+          "DirectedTransferFunction",
+          {}
+        ],
+        [
+          "DirectDirectedTransferFunction",
+          {}
+        ],
+        [
+          "SpectralGrangerCausality",
+          {}
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          4.627584077999927,
+          4.764452846982749,
+          4.762909087003209
+        ],
+        "candidate": [
+          0.2746300289873034,
+          0.2930636979872361,
+          0.2689188290096354
+        ]
+      },
+      "baseline_median_s": 4.762909087003209,
+      "candidate_median_s": 0.2746300289873034,
+      "speedup_median": 17.343001799790095,
+      "max_abs_difference": 0.004506007161103831,
+      "nan_masks_equal": true,
+      "numerical_checks": [
+        {
+          "measure": "DirectedCoherence",
+          "parameters": {},
+          "comparison": "intentional change: inclusive bands and complete one-sided frequency grid",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "PartialDirectedCoherence",
+          "parameters": {},
+          "comparison": "intentional change: inclusive bands and complete one-sided frequency grid",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "GeneralizedPartialDirectedCoherence",
+          "parameters": {},
+          "comparison": "intentional change: inclusive bands and complete one-sided frequency grid",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "DirectedTransferFunction",
+          "parameters": {},
+          "comparison": "intentional change: inclusive bands and complete one-sided frequency grid",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "DirectDirectedTransferFunction",
+          "parameters": {},
+          "comparison": "intentional change: inclusive bands and complete one-sided frequency grid; Nyquist included in full-frequency normalization",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "SpectralGrangerCausality",
+          "parameters": {},
+          "comparison": "intentional change: inclusive bands and complete one-sided frequency grid; requested DC is no longer clamped away",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        }
+      ],
+      "finite_values_per_measure": [
+        12,
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "peak_traced_mib_baseline": 3.0431575775146484,
+      "peak_traced_mib_candidate": 6.06324577331543
+    },
+    "group_delay_three_bands_118x1024": {
+      "shape": [
+        118,
+        1024
+      ],
+      "measures": [
+        [
+          "GroupDelay",
+          {
+            "fmin": 0,
+            "fmax": 0.5,
+            "statistic": "delay"
+          }
+        ],
+        [
+          "GroupDelay",
+          {
+            "fmin": 0,
+            "fmax": 0.25,
+            "statistic": "delay"
+          }
+        ],
+        [
+          "GroupDelay",
+          {
+            "fmin": 0.25,
+            "fmax": 0.5,
+            "statistic": "delay"
+          }
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          12.112455194001086,
+          11.664925602992298,
+          12.005295353999827
+        ],
+        "candidate": [
+          4.070735948014772,
+          3.9273890080221463,
+          4.173268612998072
+        ]
+      },
+      "baseline_median_s": 12.005295353999827,
+      "candidate_median_s": 4.070735948014772,
+      "speedup_median": 2.9491707414367183,
+      "max_abs_difference": 0.017535507147277585,
+      "nan_masks_equal": true,
+      "numerical_checks": [
+        {
+          "measure": "GroupDelay",
+          "parameters": {
+            "fmin": 0,
+            "fmax": 0.5,
+            "statistic": "delay"
+          },
+          "comparison": "intentional change: transform-derived regression spacing; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "GroupDelay",
+          "parameters": {
+            "fmin": 0,
+            "fmax": 0.25,
+            "statistic": "delay"
+          },
+          "comparison": "intentional change: transform-derived regression spacing; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "GroupDelay",
+          "parameters": {
+            "fmin": 0.25,
+            "fmax": 0.5,
+            "statistic": "delay"
+          },
+          "comparison": "intentional change: transform-derived regression spacing; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        }
+      ],
+      "finite_values_per_measure": [
+        2,
+        2,
+        2
+      ],
+      "peak_traced_mib_baseline": 1425.123607635498,
+      "peak_traced_mib_candidate": 481.15083599090576
+    },
+    "psi_three_bands_118x1024": {
+      "shape": [
+        118,
+        1024
+      ],
+      "measures": [
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0,
+            "fmax": 0.5
+          }
+        ],
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0,
+            "fmax": 0.25
+          }
+        ],
+        [
+          "PhaseSlopeIndex",
+          {
+            "fmin": 0.25,
+            "fmax": 0.5
+          }
+        ]
+      ],
+      "walls_s": {
+        "baseline": [
+          11.623094973998377,
+          11.01485980398138,
+          12.590850829001283
+        ],
+        "candidate": [
+          0.373204158997396,
+          0.38730129902251065,
+          0.34670331099187024
+        ]
+      },
+      "baseline_median_s": 11.623094973998377,
+      "candidate_median_s": 0.373204158997396,
+      "speedup_median": 31.144066039412696,
+      "max_abs_difference": 445.75884112100726,
+      "nan_masks_equal": true,
+      "numerical_checks": [
+        {
+          "measure": "PhaseSlopeIndex",
+          "parameters": {
+            "fmin": 0,
+            "fmax": 0.5
+          },
+          "comparison": "intentional change: adjacent-bin PSI instead of thinned all-frequency pairs; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "PhaseSlopeIndex",
+          "parameters": {
+            "fmin": 0,
+            "fmax": 0.25
+          },
+          "comparison": "intentional change: adjacent-bin PSI instead of thinned all-frequency pairs; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        },
+        {
+          "measure": "PhaseSlopeIndex",
+          "parameters": {
+            "fmin": 0.25,
+            "fmax": 0.5
+          },
+          "comparison": "intentional change: adjacent-bin PSI instead of thinned all-frequency pairs; inclusive band",
+          "correctness_tests": [
+            "tests/unit/test_spectral.py",
+            "tests/unit/test_spectral_bands.py",
+            "tests/unit/test_psi.py"
+          ]
+        }
+      ],
+      "finite_values_per_measure": [
+        13806,
+        13806,
+        13806
+      ],
+      "peak_traced_mib_baseline": 1533.6362075805664,
+      "peak_traced_mib_candidate": 230.9148406982422
+    }
+  },
+  "validation": {
+    "unit_regression_numpy2": {
+      "command": ".venv/bin/python -B -m pytest tests/unit tests/regression tests/compatibility/test_numpy2.py --require-java --tb=short -q --disable-warnings",
+      "passed": 902,
+      "skipped": 15,
+      "existing_xfailed": 8
+    },
+    "full_spectral": {
+      "command": ".venv/bin/python -B -m pytest tests/regression/test_spi_goldens.py --pyspi-size=full --runslow --require-java -k 'multitaper or sgc or catalogue' --tb=short -q --disable-warnings",
+      "passed": 131,
+      "deselected": 263
+    },
+    "golden_regeneration": {
+      "repeat": 2,
+      "small_spectral_spis": 114,
+      "full_spectral_spis": 114,
+      "preprocessing_spectral_spis": 3,
+      "untouched_matrices_verified": {
+        "small": 171,
+        "full": 171,
+        "preproc": 84
+      }
+    },
+    "diff_check": "passed"
+  },
+  "scope": {
+    "completed": [
+      "Group-delay regression spacing uses the existing transform bandwidth, independent of selected band width.",
+      "All Fourier spectra include DC/Nyquist (last positive bin for odd FFTs), with inclusive band endpoints.",
+      "Granger honors zero lower bounds and defaults to [0, fs/2].",
+      "dDTF includes Nyquist in its full-frequency normalization."
+    ],
+    "unchanged": [
+      "Window length and multitaper smoothing settings.",
+      "Group-delay coherence significance test, cluster selection, phase unwrapping and rvalue convention.",
+      "Arithmetic phase summaries, sign/direction classifications and ordered pair factorization.",
+      "Wavelet PSI: skipped because band-axis repair needs coordinated grid/direction corrections."
+    ]
+  }
+}
