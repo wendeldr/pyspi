@@ -183,8 +183,27 @@ the [SciPy regression result definition](https://docs.scipy.org/doc/scipy/refere
 The coherence significance rule and frequency-point selection have not been
 changed in this sign review.
 
-Coherence phase still uses its existing arithmetic mean/max band summaries
-pending a choice of circular summary and weighting.
+Coherence phase (`phase_multitaper_mean`) uses an **equal-weight circular
+mean** of the coherency phases across the inclusive band:
+`angle(sum(C(f) / abs(C(f))))`. This follows the
+[circular-mean definition](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.circmean.html).
+Each defined frequency has equal weight, including very small nonzero
+coherency. There is no coherence-strength weighting or significance cutoff.
+For example, +179° and -179° average to 180°, and phases 0° and 90° average
+to 45° even if their coherency magnitudes are 0.9 and 0.1.
+
+Zero or nonfinite coherency has no usable phase and is omitted. An empty band,
+all-undefined band, or cancelling unit vectors returns NaN. Cancellation is
+checked against a float64 summation/normalization roundoff bound, not a
+statistical threshold. Results remain radians in [-pi, pi]; +pi and -pi are
+the same direction, so reversal is antisymmetric modulo 2*pi.
+
+Ordinary phase `max` is removed and rejected at construction: it depends on
+where the angle wraps rather than a meaningful largest phase. All three mean
+bands remain in the default and fast configurations; the retained selection
+already contained only phase means. Shared coherency and bounded temporary
+arrays avoid a full extra tensor of angles. Wavelet phase has a separate
+orientation/estimation path and is not changed by this Fourier-phase review.
 
 The factorization-based directed metrics currently use **row = target,
 column = source**, the transfer-matrix convention. This differs from the
@@ -193,6 +212,38 @@ review. Synthetic one-way-coupling checks confirm that convention. Reversing
 the input order also changes fitted values beyond rounding error; that
 numerical factorization issue remains under review. The parametric Granger
 path and wavelet sign conventions have not been reviewed here.
+
+## Directed coherence
+
+`dcoh` returns **squared directed coherence at each frequency**, followed by
+the requested band mean or maximum. For target `i` and source `j`:
+
+`DC[i,j](f) = variance[j] * abs(H[i,j](f))**2 / sum_k(variance[k] * abs(H[i,k](f))**2)`.
+
+`H` maps the model's innovations into the observed channels; `variance[j]`
+is source j's innovation variance. The denominator includes the target's own
+innovation. Defined values lie in [0, 1] and sum to 1 across sources within
+each fitted model, before pyspi masks the self-entry. The wrapper fits each
+ordered pair separately, so the assembled off-diagonal multichannel matrix
+does **not** have a row-sum-one guarantee.
+
+This matches the [current upstream squared DC formula](https://spectral-connectivity.readthedocs.io/en/latest/_modules/spectral_connectivity/connectivity.html#Connectivity.directed_coherence).
+It replaces the installed dependency's mixed powers and incorrectly oriented
+variance weights. A common scale is removed from weighted transfer amplitudes
+before squaring to avoid overflow/underflow from channel-unit changes. Zero
+total inflow gives NaN, without an absolute epsilon floor or clipping. Existing
+band mean/max omit undefined bins; an all-undefined band remains NaN.
+
+Squaring happens before the frequency summary. For per-frequency magnitudes
+`[0.2, 0.8]`, the squared band's mean is `mean([0.04, 0.64]) = 0.34`, whereas
+the square of the magnitude band's mean would be `0.25`.
+
+This diagonal-variance normalization assumes uncorrelated innovations when
+interpreted as shares of the target's observed power. With correlated
+innovations it omits cross terms; interpret it as normalized weighted transfer
+strength. Matrix orientation, pairwise fitting and factorization policy are
+unchanged by this formula correction. Both band summaries and every frequency
+band use the corrected definition, independently of preset membership.
 
 ## Phase-lag, phase-locking and debiased variants
 

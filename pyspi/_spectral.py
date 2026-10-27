@@ -76,6 +76,26 @@ class SpectralConnectivity(sc.Connectivity):
     def power(self):
         return self._power[..., :self.frequencies.size, :]
 
+    def directed_coherence(self):
+        """Squared DC: source-variance-weighted inflow, normalized per target.
+
+        DC[i,j] = var[j] * abs(H[i,j])**2 / sum_k(var[k] * abs(H[i,k])**2).
+        The matrix convention remains row=target, column=source. This uses
+        diagonal innovation variances; correlated innovations prevent reading
+        the normalized strengths as exact shares of observed target power.
+        """
+        variance = np.diagonal(self._noise_covariance, axis1=-2, axis2=-1)
+        amplitude = np.abs(self._transfer_function)
+        amplitude *= np.sqrt(variance)[..., None, None, :]
+        # A common row scale cancels from the ratio. Scale amplitudes before
+        # squaring to avoid overflow/underflow after changes of channel units.
+        scale = amplitude.max(axis=-1, keepdims=True)
+        np.divide(amplitude, scale, out=amplitude, where=scale > 0)
+        np.square(amplitude, out=amplitude)
+        total = amplitude.sum(axis=-1, keepdims=True)
+        return np.divide(amplitude, total, out=np.full_like(amplitude, np.nan),
+                         where=total > 0)
+
     @staticmethod
     def _mean_cross_spectrum(coefficients):
         # Contract the observation axes directly: no (W,R,K,F,P,P) tensor.
@@ -107,6 +127,51 @@ class SpectralConnectivity(sc.Connectivity):
 
     def coherency(self):
         return self._coherency
+
+    def coherence_phase_mean(self, frequencies_of_interest=None):
+        """Equal-weight circular mean of defined in-band coherency phases.
+
+        Normalize complex coherency before summing: every nonzero, finite bin
+        has equal weight, regardless of its magnitude. Zero coherency has no
+        phase. Missing bins are omitted; an empty or numerically zero resultant
+        gives NaN. Results are radians in [-pi, pi] (the endpoints coincide).
+        """
+        first, last = 0, self.frequencies.size
+        if frequencies_of_interest is not None:
+            low, high = frequencies_of_interest
+            first = np.searchsorted(self.frequencies, low, side="left")
+            last = np.searchsorted(self.frequencies, high, side="right")
+        coherency = self._coherency
+        windows, _, channels, _ = coherency.shape
+        result = np.full((windows, channels, channels), np.nan)
+        row_step = min(channels, max(1, self.block_bytes // (windows * channels * 16)))
+        frequency_step = max(1, self.block_bytes // (windows * row_step * channels * 16))
+        eps = np.finfo(float).eps
+        for row in range(0, channels, row_step):
+            end = min(row + row_step, channels)
+            total = np.zeros((windows, end-row, channels), complex)
+            count = np.zeros(total.shape, dtype=np.int64)
+            for start in range(first, last, frequency_step):
+                stop = min(start + frequency_step, last)
+                values = coherency[:, start:stop, row:end, :]
+                magnitude = np.abs(values)
+                valid = np.isfinite(magnitude) & (magnitude > 0)
+                unit = np.zeros_like(values)
+                # Componentwise real division avoids complex division's
+                # overflowing reciprocal for finite subnormal magnitudes.
+                np.divide(values.real, magnitude, out=unit.real, where=valid)
+                np.divide(values.imag, magnitude, out=unit.imag, where=valid)
+                total += unit.sum(axis=1)
+                count += valid.sum(axis=1)
+            # Forward rounding bound for normalizing and summing unit vectors.
+            # This detects numerical cancellation, not statistical significance
+            # or weak coherence; tiny nonzero coherency still has unit weight.
+            error = (count + 2) * eps
+            bound = count * error / (1 - error)
+            angle = np.angle(total)
+            angle[(count == 0) | (np.abs(total) <= bound)] = np.nan
+            result[:, row:end] = angle
+        return result
 
     def phase_slope_index(self, frequencies_of_interest=None):
         """Raw PSI: sum Im(conj(C(f)) C(f+df)) over adjacent in-band bins.

@@ -1,0 +1,234 @@
+{
+  "scope": "Initial investigation before the DC correction, preserved as a historical checkpoint. The directed_coherence_correction field records the targeted post-correction check; factorization experiments and timings were not repeated.",
+  "seed": 821,
+  "formula_checks": {
+    "ar_matrix": [
+      [
+        0.6,
+        0.0
+      ],
+      [
+        0.9,
+        0.3
+      ]
+    ],
+    "innovation_covariance": [
+      [
+        4.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.25
+      ]
+    ],
+    "max_abs_formula_errors": {
+      "directed_coherence": 1.9494465282306175,
+      "directed_transfer_function": 6.661338147750939e-16,
+      "partial_directed_coherence": 6.661338147750939e-16,
+      "generalized_partial_directed_coherence": 6.661338147750939e-16
+    },
+    "current_dc_max_offdiagonal": 2.937251406279398,
+    "squared_dc_max_offdiagonal": 0.9878048780487806,
+    "squared_dc_max_row_sum_error": 2.220446049250313e-16,
+    "exact_spectrum_transfer_recovery_error": 9.425341602397701e-14
+  },
+  "ordering": {
+    "ordered_pair_per_bin_gaps": {
+      "directed_coherence": 0.021136749553327505,
+      "directed_transfer_function": 0.01982461414803116,
+      "partial_directed_coherence": 0.019824614148031272,
+      "generalized_partial_directed_coherence": 0.019538821264718287,
+      "direct_directed_transfer_function": 0.0005947195742808421
+    },
+    "full_wrapper_permutation": {
+      "DirectedCoherence": {
+        "max_abs_difference": 0.0,
+        "nan_mask_equal": true
+      },
+      "DirectedTransferFunction": {
+        "max_abs_difference": 0.0,
+        "nan_mask_equal": true
+      },
+      "PartialDirectedCoherence": {
+        "max_abs_difference": 0.0,
+        "nan_mask_equal": true
+      },
+      "GeneralizedPartialDirectedCoherence": {
+        "max_abs_difference": 0.0,
+        "nan_mask_equal": true
+      },
+      "DirectDirectedTransferFunction": {
+        "max_abs_difference": 0.0,
+        "nan_mask_equal": true
+      },
+      "SpectralGrangerCausality": {
+        "max_abs_difference": 0.017921295397381853,
+        "nan_mask_equal": true
+      }
+    }
+  },
+  "padding_experiments": [
+    {
+      "nfft": 1024,
+      "tolerance": 1e-08,
+      "max_iterations": 60,
+      "reconstruction_relative_errors": [
+        0.021588418261111433,
+        0.023896591418144295
+      ],
+      "max_dtf_order_gap": 0.02397805500237793,
+      "dtf_order_gap_on_original_grid": 0.02397805500237793
+    },
+    {
+      "nfft": 1024,
+      "tolerance": 1e-08,
+      "max_iterations": 600,
+      "reconstruction_relative_errors": [
+        0.021588418261111433,
+        0.023896591418144295
+      ],
+      "max_dtf_order_gap": 0.02397805500237793,
+      "dtf_order_gap_on_original_grid": 0.02397805500237793
+    },
+    {
+      "nfft": 1024,
+      "tolerance": 1e-12,
+      "max_iterations": 600,
+      "reconstruction_relative_errors": [
+        0.021588383611763746,
+        0.023896500917265653
+      ],
+      "max_dtf_order_gap": 0.023978055002378484,
+      "dtf_order_gap_on_original_grid": 0.023978055002378484
+    },
+    {
+      "nfft": 2048,
+      "tolerance": 1e-08,
+      "max_iterations": 60,
+      "reconstruction_relative_errors": [
+        0.0008302027261854913,
+        0.00036334078058703693
+      ],
+      "max_dtf_order_gap": 0.015108591153700224,
+      "dtf_order_gap_on_original_grid": 0.015108591153700224
+    },
+    {
+      "nfft": 4096,
+      "tolerance": 1e-08,
+      "max_iterations": 60,
+      "reconstruction_relative_errors": [
+        0.00019561639316194174,
+        0.0001519058889784511
+      ],
+      "max_dtf_order_gap": 0.004526505688565385,
+      "dtf_order_gap_on_original_grid": 0.004526505688565385
+    }
+  ],
+  "conditioning": {
+    "full_three_channel_pdc_a_to_c_max": 6.929976975298157e-32,
+    "marginal_two_channel_pdc_a_to_c_mean": 0.18720262813440622,
+    "observations_per_frequency": 5,
+    "full_118_channel_spectrum_rank_bound": 5
+  },
+  "padding_timings": {
+    "shape": [
+      2,
+      1024
+    ],
+    "repeats": 7,
+    "raw_seconds": {
+      "1": [
+        0.04484584499732591,
+        0.04201315299724229,
+        0.04429347498808056,
+        0.04296388602233492,
+        0.04326295101782307,
+        0.0427591810002923,
+        0.042966428998624906
+      ],
+      "2": [
+        0.06366002699360251,
+        0.06508714001392946,
+        0.06216671201400459,
+        0.06601658297586255,
+        0.06596394599182531,
+        0.06543827999848872,
+        0.06368306500371546
+      ],
+      "4": [
+        0.10853521298849955,
+        0.1080959039973095,
+        0.10871755599509925,
+        0.10934934698161669,
+        0.11043315500137396,
+        0.11007894200156443,
+        0.10248395599774085
+      ]
+    },
+    "median_seconds": {
+      "1": 0.042966428998624906,
+      "2": 0.06508714001392946,
+      "4": 0.10871755599509925
+    },
+    "ratio_to_unpadded": {
+      "1": 1.0,
+      "2": 1.5148370839944019,
+      "4": 2.5302907066951885
+    },
+    "protocol": "Fresh two-channel transform, one factorization, five metrics; small warmup; alternating padding order; one numerical-library thread. These are experiment costs, not whole-window 118-channel timings or a proposed padding default."
+  },
+  "cpu_affinity": [
+    2
+  ],
+  "environment": {
+    "numpy": "2.5.4",
+    "scipy": "1.17.1",
+    "spectral-connectivity": "1.1.2"
+  },
+  "source_sha256": {
+    "pyspi/_spectral.py": "adf724b237902ca4653d37420b5b6eb8d0d8a20296949011547ae6b7c3cd8545",
+    "pyspi/statistics/spectral.py": "bed4fdf874fd2a16e8b3c4104e5371799336f85644c709da6b80ec3b9320d51c",
+    "audit/checks/probes/spectral_directed_followup.py": "560939bae84afbb15230f7fb98a2b54eebddecf43db73625e451e6e54966b016"
+  },
+  "directed_coherence_correction": {
+    "formula_checks": {
+      "ar_matrix": [
+        [
+          0.6,
+          0.0
+        ],
+        [
+          0.9,
+          0.3
+        ]
+      ],
+      "innovation_covariance": [
+        [
+          4.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.25
+        ]
+      ],
+      "max_abs_formula_errors": {
+        "directed_coherence": 2.220446049250313e-16,
+        "directed_transfer_function": 6.661338147750939e-16,
+        "partial_directed_coherence": 6.661338147750939e-16,
+        "generalized_partial_directed_coherence": 6.661338147750939e-16
+      },
+      "dependency_dc_max_offdiagonal": 2.937251406279398,
+      "current_dc_max_offdiagonal": 0.9878048780487805,
+      "squared_dc_max_offdiagonal": 0.9878048780487806,
+      "squared_dc_max_row_sum_error": 2.220446049250313e-16,
+      "exact_spectrum_transfer_recovery_error": 9.425341602397701e-14
+    },
+    "source_sha256": {
+      "pyspi/_spectral.py": "7b187b82d7db2fe2bc949383c6d4605a58cd0b7a4a90721468fa7fa9ad32e115",
+      "pyspi/statistics/spectral.py": "2487b6077df3344b62f2a335e1faefa43a7e40e5911a326be8fa7f436952c859",
+      "audit/checks/probes/spectral_directed_followup.py": "599d9eba8304bb8c2a3b9f623511adbb4f0a7813456e7a736653ee7f8f202d18"
+    }
+  }
+}

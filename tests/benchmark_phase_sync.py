@@ -68,6 +68,8 @@ def main():
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--zero-policy", action="store_true",
                         help="Measure zero-sign/denominator fixes, including standalone and shared dsPLI.")
+    parser.add_argument("--coherence-phase", action="store_true",
+                        help="Compare arithmetic and circular coherence-phase summaries.")
     parser.add_argument("--cpu", type=int, help="Keep this benchmark process on one allowed CPU.")
     parser.add_argument("--variants-only", action="store_true",
                         help="Add a paired current-code six/eight estimator comparison to the existing report.")
@@ -105,6 +107,12 @@ def main():
             "wpli": [("WeightedPhaseLagIndex", {})],
             "debiased_wpli": [("DebiasedSquaredWeightedPhaseLagIndex", {})],
             "six_estimators_36_summaries": family,
+        }
+    if args.coherence_phase:
+        workloads = {
+            "coherence_phase_full_band": [("CoherencePhase", {})],
+            "coherence_phase_three_bands": [("CoherencePhase", dict(fmin=low, fmax=high))
+                                             for low, high in ((0, .5), (0, .25), (.25, .5))],
         }
     if args.variants_only:
         report = json.loads(args.output.read_text())
@@ -152,6 +160,13 @@ def main():
             "Scaled prefix sums stabilize debiased wPLI, and upper-triangle phase tiles "
             "reuse reversed channel pairs. "
             "Compare with --baseline 8b66a4a to isolate these changes.")
+    if args.coherence_phase:
+        report["protocol"] = (
+            "Fresh Data per workload; small warmup; alternating baseline/candidate order; "
+            "medians including Data construction; separate traced-memory runs, not RSS. "
+            "Intentional definition change: equal-weight circular mean replaces arithmetic "
+            "angle mean. Zero coherency is omitted; undefined resultant returns NaN. "
+            "Compare with --baseline 923b9f6 to isolate this change.")
     for name, candidate_specs in workloads.items():
         old_specs = family if name == "eight_estimators_48_summaries" else candidate_specs
         cases = {"baseline": (old, old_specs), "candidate": (spectral, candidate_specs)}
@@ -172,7 +187,7 @@ def main():
                                        for key, (module, specs) in cases.items()})
         report["workloads"][name] = result
         print(name, json.dumps(result), flush=True)
-    if not args.zero_policy:
+    if not (args.zero_policy or args.coherence_phase):
         a = report["workloads"]["six_estimators_36_summaries"]["median_s"]["candidate"]
         b = report["workloads"]["eight_estimators_48_summaries"]["median_s"]["candidate"]
         report["unpaired_signed_variants_observed_seconds"] = b-a

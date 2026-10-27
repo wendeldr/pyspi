@@ -53,7 +53,7 @@ def test_preprocessing_replications_preserves_axes(order, normalise, detrended):
 
 
 @pytest.mark.parametrize("statistic", ["mean", "max"])
-@pytest.mark.parametrize("cls_name", ["CoherenceMagnitude", "CoherencePhase", "ImaginaryCoherence",
+@pytest.mark.parametrize("cls_name", ["CoherenceMagnitude", "ImaginaryCoherence",
     "PhaseLockingValue", "PhaseLagIndex", "WeightedPhaseLagIndex", "DebiasedSquaredPhaseLagIndex",
     "DebiasedSquaredWeightedPhaseLagIndex", "PairwisePhaseConsistency",
     "SignedPhaseLagIndex", "SignedWeightedPhaseLagIndex"])

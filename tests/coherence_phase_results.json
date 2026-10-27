@@ -1,0 +1,85 @@
+{
+  "baseline_revision": "923b9f654fbd594e6b221cd3e95e21dbb40a7fb1",
+  "seed": 8026,
+  "shape": [
+    118,
+    1024
+  ],
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "repeats": 7,
+  "cpu_affinity": [
+    2
+  ],
+  "numerical_library_threads": 1,
+  "protocol": "Fresh Data per workload; small warmup; alternating baseline/candidate order; medians including Data construction; separate traced-memory runs, not RSS. Intentional definition change: equal-weight circular mean replaces arithmetic angle mean. Zero coherency is omitted; undefined resultant returns NaN. Compare with --baseline 923b9f6 to isolate this change.",
+  "source_sha256": {
+    "pyspi/_cache.py": "6283322077126be736592543ff6cd347740d4d20465032d5cc1f2e0460b775d4",
+    "pyspi/_spectral.py": "adf724b237902ca4653d37420b5b6eb8d0d8a20296949011547ae6b7c3cd8545",
+    "pyspi/statistics/spectral.py": "bed4fdf874fd2a16e8b3c4104e5371799336f85644c709da6b80ec3b9320d51c"
+  },
+  "workloads": {
+    "coherence_phase_full_band": {
+      "walls_s": {
+        "baseline": [
+          1.3973501380241942,
+          1.115077766997274,
+          0.9126947210170329,
+          0.9403344390157145,
+          0.9378791299823206,
+          0.8029905500006862,
+          0.8077032669971231
+        ],
+        "candidate": [
+          0.9326689910085406,
+          0.8734645519871265,
+          0.6946381389861926,
+          0.738978321023751,
+          0.6857829579967074,
+          0.7505520690174308,
+          0.6980993899924215
+        ]
+      },
+      "median_s": {
+        "baseline": 0.9378791299823206,
+        "candidate": 0.738978321023751
+      },
+      "speedup": 1.2691564871389194,
+      "peak_traced_mib": {
+        "baseline": 244.7047300338745,
+        "candidate": 230.9154691696167
+      }
+    },
+    "coherence_phase_three_bands": {
+      "walls_s": {
+        "baseline": [
+          0.9548066760180518,
+          0.8771384069987107,
+          0.778435873973649,
+          0.8310566080035642,
+          0.8635512909968384,
+          0.8937614769965876,
+          0.7838027319812682
+        ],
+        "candidate": [
+          0.7529021690133959,
+          0.8115839179954492,
+          0.7408761080005206,
+          0.7173187219887041,
+          0.7467975689796731,
+          0.7998815169848967,
+          0.7256695460237097
+        ]
+      },
+      "median_s": {
+        "baseline": 0.8635512909968384,
+        "candidate": 0.7467975689796731
+      },
+      "speedup": 1.1563391832899006,
+      "peak_traced_mib": {
+        "baseline": 244.70425701141357,
+        "candidate": 230.91501903533936
+      }
+    }
+  }
+}

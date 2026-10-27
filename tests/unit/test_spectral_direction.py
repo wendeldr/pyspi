@@ -1,4 +1,4 @@
-"""Independent direction/metadata checks; phase-summary choices remain pending."""
+"""Independent direction and metadata checks for Fourier spectral measures."""
 
 from unittest.mock import patch
 

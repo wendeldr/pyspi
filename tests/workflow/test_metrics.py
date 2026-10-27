@@ -152,7 +152,7 @@ def test_retained_preset_preserves_inventory_with_explicit_xcorr_definitions():
 
 
 @pytest.mark.java
-@pytest.mark.parametrize("filename,count", [("config.yaml", 301), ("fast_config.yaml", 233),
+@pytest.mark.parametrize("filename,count", [("config.yaml", 298), ("fast_config.yaml", 230),
                                            ("sonnet_config.yaml", 14), ("fabfour_config.yaml", 4)])
 def test_existing_presets_resolve_without_computation(filename, count):
     import pyspi

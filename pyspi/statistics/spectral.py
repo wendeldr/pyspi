@@ -80,7 +80,7 @@ class NonparametricSpectralMultivariate(NonparametricSpectral):
     @parse_multivariate
     def multivariate(self, data):
         adj_freq, freq = self._get_cache(data)
-        if isinstance(self, PhaseSlopeIndex):
+        if isinstance(self, (PhaseSlopeIndex, CoherencePhase)):
             adj = adj_freq[0].copy()
         elif isinstance(self, GroupDelay):
             stat_id = ("delay", "slope", "rvalue").index(self._statistic)
@@ -130,13 +130,23 @@ class CoherenceMagnitude(NonparametricSpectralMultivariate, Undirected, Unsigned
 
 
 class CoherencePhase(NonparametricSpectralMultivariate, Directed, Signed):
+    """Equal-weight circular mean across the inclusive frequency band."""
+
     name = "Coherence phase"
     labels = ["signed", "spectral", "directed"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, statistic="mean", **kwargs):
+        if statistic != "mean":
+            raise ValueError(
+                "Coherence phase supports only statistic='mean' (circular mean); "
+                "angles have no ordinary maximum."
+            )
         self.identifier = "phase"
-        super().__init__(**kwargs)
-        self._measure = "coherence_phase"
+        super().__init__(statistic=statistic, **kwargs)
+        self._measure = "coherence_phase_mean"
+
+    def _spectral_options(self):
+        return {"frequencies_of_interest": (self._fmin, self._fmax)}
 
 
 class ImaginaryCoherence(NonparametricSpectralMultivariate, Undirected, Unsigned):
@@ -244,6 +254,8 @@ class PairwisePhaseConsistency(NonparametricSpectralMultivariate, Undirected, Si
 
 
 class DirectedCoherence(NonparametricSpectralBivariate, Directed, Unsigned):
+    """Squared directed coherence at each frequency, then band mean/max."""
+
     name = "Directed coherence"
     labels = ["unsigned", "spectral", "directed"]
 

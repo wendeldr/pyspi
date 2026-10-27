@@ -1,0 +1,114 @@
+{
+  "baseline_revision": "923b9f654fbd594e6b221cd3e95e21dbb40a7fb1",
+  "seed": 8026,
+  "shape": [
+    4,
+    1024
+  ],
+  "repeats": 7,
+  "numerical_library_threads": 1,
+  "cpu_affinity": [
+    2
+  ],
+  "protocol": "Fresh Data; warmup; alternating baseline/candidate order; seven-run medians by default. Includes transform, ordered-pair fits, estimator and band summaries. Allocation peaks are separate tracemalloc runs, not RSS. Intentional formula change: standard squared source-variance-weighted DC; stable amplitude scaling before squaring. Other directed formulas and factorization are unchanged. Timings are not a 118-channel projection.",
+  "source_sha256": {
+    "pyspi/_spectral.py": "7b187b82d7db2fe2bc949383c6d4605a58cd0b7a4a90721468fa7fa9ad32e115",
+    "pyspi/statistics/spectral.py": "2487b6077df3344b62f2a335e1faefa43a7e40e5911a326be8fa7f436952c859",
+    "tests/benchmark_directed_coherence.py": "a9e55ffcc1e3cefab4033aea040d3267df3df3943576f35d19ceb18587f3a005"
+  },
+  "workloads": {
+    "dc_full_band": {
+      "median_s": {
+        "baseline": 0.26993489600135945,
+        "candidate": 0.26993885898264125
+      },
+      "walls_s": {
+        "baseline": [
+          0.2744181589805521,
+          0.27149650000501424,
+          0.2610993290145416,
+          0.27050718502141535,
+          0.26905076002003625,
+          0.26795140199828893,
+          0.26993489600135945
+        ],
+        "candidate": [
+          0.27642272200318985,
+          0.2710296879813541,
+          0.26319741099723615,
+          0.261244622990489,
+          0.26305413601221517,
+          0.26993885898264125,
+          0.27435643499484286
+        ]
+      },
+      "candidate_to_baseline_ratio": 1.0000146812484807,
+      "peak_traced_mib": {
+        "baseline": 4.411927223205566,
+        "candidate": 4.411798477172852
+      }
+    },
+    "dc_six_summaries": {
+      "median_s": {
+        "baseline": 0.2599975869816262,
+        "candidate": 0.26097149899578653
+      },
+      "walls_s": {
+        "baseline": [
+          0.2595654400065541,
+          0.2654487729887478,
+          0.2599975869816262,
+          0.2625190350227058,
+          0.26104814000427723,
+          0.2572282110049855,
+          0.25796827700105496
+        ],
+        "candidate": [
+          0.25836046499898657,
+          0.26547268001013435,
+          0.25921253001433797,
+          0.26097149899578653,
+          0.26242087202263065,
+          0.2621303390187677,
+          0.2578099700040184
+        ]
+      },
+      "candidate_to_baseline_ratio": 1.0037458502037142,
+      "peak_traced_mib": {
+        "baseline": 4.411478042602539,
+        "candidate": 4.411417007446289
+      }
+    },
+    "five_directed_estimators": {
+      "median_s": {
+        "baseline": 0.2690935770224314,
+        "candidate": 0.2687552700226661
+      },
+      "walls_s": {
+        "baseline": [
+          0.27003844498540275,
+          0.2659092139801942,
+          0.2690935770224314,
+          0.26997739300713874,
+          0.2682177970127668,
+          0.269662637001602,
+          0.26823805598542094
+        ],
+        "candidate": [
+          0.267494967993116,
+          0.26582001498900354,
+          0.2680791250022594,
+          0.2687552700226661,
+          0.2713125599839259,
+          0.2690713819756638,
+          0.3056653279927559
+        ]
+      },
+      "candidate_to_baseline_ratio": 0.9987427905061549,
+      "peak_traced_mib": {
+        "baseline": 5.6528167724609375,
+        "candidate": 5.652772903442383
+      }
+    }
+  }
+}

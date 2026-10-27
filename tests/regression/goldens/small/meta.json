@@ -147,9 +147,6 @@
   "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
   "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25",
   "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
-  "phase_multitaper_max_fs-1_fmin-0_fmax-0-5",
-  "phase_multitaper_max_fs-1_fmin-0_fmax-0-25",
-  "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
   "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
   "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25",
   "cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
@@ -702,6 +699,41 @@
    "source_sha256": {
     "pyspi/_spectral.py": "b0f42b9bb2106d4f9a47d6d92723e92cfb899c17d015513604bea9ffee76a7c6",
     "pyspi/statistics/spectral.py": "bbcde87ab1a65048e38be32bb73ba66b79662d3b8937aba644e6a84d3c58691b"
+   }
+  },
+  {
+   "generated": "2026-10-27T19:38:17+00:00",
+   "regenerated_keys": [
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "removed_keys": [
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "scope": "Equal-weight circular coherence phase; undefined directions return NaN. Remove ordinary phase maximum.",
+   "source_sha256": {
+    "pyspi/_spectral.py": "229739f3d67f9b372fde8436790454d91e253375486aeaf465eba53ff4a19779",
+    "pyspi/statistics/spectral.py": "7936b190aa9a0dce0f60ca9e9f3c8dffc1e7b6529700490613f4177aa93f805b"
+   }
+  },
+  {
+   "generated": "2026-10-27T19:58:55+00:00",
+   "regenerated_keys": [
+    "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5",
+    "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25",
+    "dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
+    "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5",
+    "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "dcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5"
+   ],
+   "removed_keys": [],
+   "scope": "Correct directed coherence to per-frequency squared source-variance-weighted inflow, normalized across sources before band mean/max. Factorization and orientation unchanged.",
+   "source_sha256": {
+    "pyspi/_spectral.py": "7b187b82d7db2fe2bc949383c6d4605a58cd0b7a4a90721468fa7fa9ad32e115",
+    "pyspi/statistics/spectral.py": "2487b6077df3344b62f2a335e1faefa43a7e40e5911a326be8fa7f436952c859"
    }
   }
  ],
@@ -2056,7 +2088,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.121166
+   "time_s": 0.115454
   },
   "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25": {
    "cls": "DirectedCoherence",
@@ -2075,7 +2107,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.114199
+   "time_s": 0.118929
   },
   "dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5": {
    "cls": "DirectedCoherence",
@@ -2093,7 +2125,7 @@
     "statistic": "max"
    },
    "status": "ok",
-   "time_s": 0.116852
+   "time_s": 0.114408
   },
   "dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "DirectedCoherence",
@@ -2111,7 +2143,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.112088
+   "time_s": 0.117321
   },
   "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "DirectedCoherence",
@@ -2129,7 +2161,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.113419
+   "time_s": 0.11565
   },
   "dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "DirectedCoherence",
@@ -2146,7 +2178,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.114172
+   "time_s": 0.117206
   },
   "dcorr": {
    "cls": "DistanceCorrelation",
@@ -4008,62 +4040,6 @@
    "status": "ok",
    "time_s": 0.00029
   },
-  "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5": {
-   "cls": "CoherencePhase",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "directed",
-    "signed",
-    "spectral"
-   ],
-   "module": ".statistics.spectral",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.5,
-    "fmin": 0.25,
-    "statistic": "max"
-   },
-   "status": "ok",
-   "time_s": 0.00169
-  },
-  "phase_multitaper_max_fs-1_fmin-0_fmax-0-25": {
-   "cls": "CoherencePhase",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "directed",
-    "signed",
-    "spectral"
-   ],
-   "module": ".statistics.spectral",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.25,
-    "fmin": 0,
-    "statistic": "max"
-   },
-   "status": "ok",
-   "time_s": 0.001801
-  },
-  "phase_multitaper_max_fs-1_fmin-0_fmax-0-5": {
-   "cls": "CoherencePhase",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "directed",
-    "signed",
-    "spectral"
-   ],
-   "module": ".statistics.spectral",
-   "nan_offdiag": 0,
-   "params": {
-    "fs": 1,
-    "statistic": "max"
-   },
-   "status": "ok",
-   "time_s": 0.00181
-  },
   "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5": {
    "cls": "CoherencePhase",
    "deps": [],
@@ -4080,7 +4056,7 @@
     "fmin": 0.25
    },
    "status": "ok",
-   "time_s": 0.001709
+   "time_s": 0.002746
   },
   "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25": {
    "cls": "CoherencePhase",
@@ -4098,7 +4074,7 @@
     "fmin": 0
    },
    "status": "ok",
-   "time_s": 0.001819
+   "time_s": 0.002723
   },
   "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5": {
    "cls": "CoherencePhase",
@@ -4115,7 +4091,7 @@
     "fs": 1
    },
    "status": "ok",
-   "time_s": 0.00187
+   "time_s": 0.003107
   },
   "phi_Geo_t-1_norm-0": {
    "cls": "IntegratedInformation",

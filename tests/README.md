@@ -5,6 +5,11 @@ The suite is a **change detector**. The golden values under `tests/regression/go
 The [adversarial test review](TEST_REVIEW.md) records weaknesses found and fixed,
 independent references, mutation checks, coverage, and remaining limitations.
 
+For an isolated calculation change, run its focused mathematical tests and
+affected regression cases. Do not routinely rerun already-passing unrelated
+suites as more metric tests are added. Broader runs need a reason, such as a
+shared cache/base-class/configuration change or evidence of wider impact.
+
 ## Layout
 
 | path | what it covers |
@@ -270,11 +275,11 @@ convention of factorization-based directed metrics. Only labels were updated
 in the small/full golden metadata; numerical golden arrays were not changed.
 The sign-review checkpoint passed 1,283 unit, regression and workflow tests
 with 15 skips and 7 existing expected failures. The subsequent PLI/wPLI changes
-and their validation are described below; coherence-phase summaries remain pending.
+and their validation are described below, followed by the circular coherence-phase review.
 
 The initial performance stage preserved metric definitions. The subsequent
-approved multitaper PSI correction is described below. Arithmetic phase
-summaries await separate scientific review. PLI/wPLI now use the definitions below.
+approved multitaper PSI correction is described below. Coherence phase now uses
+the circular summary described below. PLI/wPLI now use the definitions below.
 Tests compare unchanged formulas against the dependency on the same bins;
 `unit/test_spectral_bands.py` adds scalar endpoint formulas, even/odd frequency
 and transfer-function checks, analytical group-delay fits, unit scaling,
@@ -331,6 +336,74 @@ The current report identifies the intentional formula/frequency-selection change
 per measure and records the observed differences; it is a timing comparison,
 not a claim of numerical equivalence. Independent correctness checks live in
 the spectral unit tests.
+
+## Circular coherence phase
+
+`unit/test_coherence_phase.py` checks equal-weight circular means using angle
+geometry and scalar FFT references: wrap boundaries, cancellation, zero/missing
+coherency, tiny defined coherency, channel permutations, blocked reductions and
+cache ownership. The implementation normalizes the shared complex coherency
+before summing, avoiding a full extra angle tensor. Undefined directions are
+NaN. Ordinary phase maxima are removed from the default/fast configurations
+and rejected at construction. Counts are now 298 and 230; retained185 remains
+185 because it already contains only phase means. Wavelet phase is unchanged.
+
+Three phase-mean arrays were regenerated and three phase-max arrays removed
+from each small/full golden set. The other 295 arrays in each set, all
+preprocessing arrays and all extra-wavelet arrays are unchanged. Metadata
+records the scoped regeneration and source hashes.
+
+Phase-checkpoint validation: 1,390 unit/regression/workflow checks passed, with 15 skips
+and 7 existing expected failures. The separate larger multitaper numerical
+regression run (`--pyspi-size=full`) passed all 99 checks. A catalogue-count
+assertion was also verified in that targeted run, for 100 passed checks total.
+
+`coherence_phase_results.json` compares against `923b9f6` on synthetic
+118 x 1,024 input, seven alternating runs on one CPU and one numerical-library
+thread. Run `benchmark_phase_sync.py --baseline 923b9f6 --coherence-phase
+--repeats 7 --cpu 2 --output tests/coherence_phase_results.json` (choose an
+available CPU). These are different approved mathematical definitions, not
+equivalent-output benchmarks.
+
+| Workload | Arithmetic baseline | Circular mean | Change |
+| --- | ---: | ---: | ---: |
+| Full band | 0.938 s | 0.739 s | 21.2% faster |
+| Three bands | 0.864 s | 0.747 s | 13.5% faster |
+
+Peak traced allocation fell from 244.7 to 230.9 MiB (not process RSS).
+Timing varies with machine load; raw runs are retained in the receipt.
+Directed-model diagnosis and its unresolved choices are recorded separately
+in [spectral_directed_review.md](../docs/spectral_directed_review.md).
+
+## Squared directed coherence
+
+`unit/test_directed_coherence.py` checks the approved source-variance-weighted
+squared definition against independent scalar formulas and exact VAR transfer
+functions. It covers unequal innovation variances, normalization over sources
+including self, zero inflow, channel-unit scaling through 1e-120 to 1e120,
+formula permutation equivariance, model-array ownership and squaring before
+band mean/max. The known example changes from 2.9373 to 0.9878, matching the
+standard formula within 2.3e-16. Existing pairwise model/orientation tests also
+pass. Factorization order sensitivity remains an independent unresolved issue.
+
+Only six `dcoh` numerical arrays per small/full golden set changed in this
+stage. All 292 other arrays per set, including the prior phase correction,
+and the complete preprocessing/extra-wavelet arrays were preserved.
+The focused spectral run passed 162 checks. The already-started broader run
+finished with 1,402 passed, 15 skipped and 7 existing expected failures.
+Subsequent validation was restricted to the six changed larger DC regressions:
+all six passed (`--pyspi-size=full -k 'test_spi_matches_golden and
+dcoh_multitaper and not pdcoh'`).
+
+`benchmark_directed_coherence.py --baseline 923b9f6 --repeats 7 --cpu 2`
+records the corrected implementation in `directed_coherence_results.json`.
+On synthetic 4 x 1,024 data, fresh Data per run and alternating implementations,
+the full-band median was 0.270 -> 0.270 seconds, six summaries 0.260 -> 0.261
+seconds, and five shared directed estimators 0.269 -> 0.269 seconds. These
+differences are smaller than observed run-to-run variation: no material runtime
+change was measured. Existing fits are reused. Traced allocation peaks were
+unchanged at about 4.4 MiB for DC alone and 5.7 MiB for the five-estimator run.
+These are measured small-channel workloads, not a full-dataset projection.
 
 ## PLI/wPLI definitions and shared phase work
 

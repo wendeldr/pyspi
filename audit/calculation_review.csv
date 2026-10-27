@@ -20,10 +20,10 @@ spearmanr,,1,1,,"'
 Ordinary + squared, 118x1024: 19.5 ms -> 10.5 ms (~1.9x); shared ranks/result; refreshes after data edits."
 kendalltau-sq,,,,,"Ordinary + squared, 118x1024: 13.02 s -> 0.33 s (~39.3x). Shares tau-b matrix."
 kendalltau,,,,,118x1024: 6.60 s -> 0.34 s (~19.4x). Unique pairs; shared sorting; coefficient only.
-phase_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist. Correct signed/directed labels.
+phase_multitaper_mean_fs-1,all configured frequency bands,,,,"118x1024, 3 bands: 0.86 s -> 0.75 s. Circular mean; shared coherency; undefined direction -> NaN."
 cohmag_multitaper_mean_fs-1,all configured frequency bands,,,,118x1024: 1.87 s -> 0.31 s (~6.0x). Shared spectra; includes band edges/Nyquist.
 icoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
-phase_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist. Correct signed/directed labels.
+phase_multitaper_max_fs-1,all configured frequency bands,,,,Removed: ordinary maximum has no circular meaning.
 cohmag_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
 icoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
 plv_multitaper_mean_fs-1,all configured frequency bands,,,,Shared phase vectors; reversed-pair reuse.
@@ -201,8 +201,8 @@ phi_Geo_t-1_norm-0,,,,,
 phi_Geo_t-1_norm-1,,,,,
 dtf_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
 dtf_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
-dcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
-dcoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
+dcoh_multitaper_mean_fs-1,all configured frequency bands,,,,"4x1024, 6 variants: 0.260 s -> 0.261 s. Correct squared DC/source weighting; shared fits."
+dcoh_multitaper_max_fs-1,all configured frequency bands,,,,Correct squared DC/source weighting before band max; shared fits.
 pdcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
 pdcoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
 gpdcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
