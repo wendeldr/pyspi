@@ -1,0 +1,174 @@
+{
+  "baseline_revision": "6e36cc6149b472ceb8e2ff08e3fb4c228962666e",
+  "seed": 8026,
+  "shape": [
+    118,
+    1024
+  ],
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "repeats": 3,
+  "numerical_library_threads": 1,
+  "protocol": "Fresh Data per workload; warmup on a small input; alternating baseline/candidate order; medians of repeated calls including Data construction. Peak memory is a separate tracemalloc run, not RSS. PLI/wPLI magnitude definitions intentionally differ. The eight-estimator workload compares new with/without signed variants, using the original six-estimator baseline for context.",
+  "source_sha256": {
+    "pyspi/_cache.py": "6283322077126be736592543ff6cd347740d4d20465032d5cc1f2e0460b775d4",
+    "pyspi/_spectral.py": "939b3fcb7a13c07483b39c612036bbccf10ba709ff8a4e1d5c320b7f88cecd60",
+    "pyspi/statistics/spectral.py": "63a499ee1366fff4f7ae05f0e849ee95b6a919a0b31fd3bbd75f042f8487b1d1"
+  },
+  "workloads": {
+    "pli": {
+      "walls_s": {
+        "baseline": [
+          0.38421307000680827,
+          0.32890324998879805,
+          0.32788616299512796
+        ],
+        "candidate": [
+          0.36627128199324943,
+          0.33123494300525635,
+          0.3303432819957379
+        ]
+      },
+      "median_s": {
+        "baseline": 0.32890324998879805,
+        "candidate": 0.33123494300525635
+      },
+      "speedup": 0.9929606067665956,
+      "peak_traced_mib": {
+        "baseline": 188.36798095703125,
+        "candidate": 188.3675308227539
+      }
+    },
+    "wpli": {
+      "walls_s": {
+        "baseline": [
+          0.6292509410122875,
+          0.6937810959934723,
+          0.6178864829998929
+        ],
+        "candidate": [
+          0.4964415130089037,
+          0.5314364320074674,
+          0.5142083709943108
+        ]
+      },
+      "median_s": {
+        "baseline": 0.6292509410122875,
+        "candidate": 0.5142083709943108
+      },
+      "speedup": 1.2237275324700023,
+      "peak_traced_mib": {
+        "baseline": 297.3614206314087,
+        "candidate": 297.3611526489258
+      }
+    },
+    "debiased_wpli": {
+      "walls_s": {
+        "baseline": [
+          1.0305391199945007,
+          1.0245706470159348,
+          1.0111385319905821
+        ],
+        "candidate": [
+          0.7558278059877921,
+          0.7172599550103769,
+          0.7578868989949115
+        ]
+      },
+      "median_s": {
+        "baseline": 1.0245706470159348,
+        "candidate": 0.7558278059877921
+      },
+      "speedup": 1.3555609345132817,
+      "peak_traced_mib": {
+        "baseline": 447.0580005645752,
+        "candidate": 447.05818367004395
+      }
+    },
+    "six_estimators_36_summaries": {
+      "walls_s": {
+        "baseline": [
+          5.490781457017874,
+          4.466571450000629,
+          4.329161308007315
+        ],
+        "candidate": [
+          3.5791821049933787,
+          3.824132217996521,
+          3.180006945010973
+        ]
+      },
+      "median_s": {
+        "baseline": 4.466571450000629,
+        "candidate": 3.5791821049933787
+      },
+      "speedup": 1.2479307615472366,
+      "peak_traced_mib": {
+        "baseline": 504.1144542694092,
+        "candidate": 504.1169376373291
+      }
+    },
+    "eight_estimators_48_summaries": {
+      "walls_s": {
+        "baseline": [
+          4.257002404978266,
+          4.381118490011431,
+          4.354970902000787
+        ],
+        "candidate": [
+          3.512125918001402,
+          3.567247225990286,
+          3.2675462879997212
+        ]
+      },
+      "median_s": {
+        "baseline": 4.354970902000787,
+        "candidate": 3.512125918001402
+      },
+      "speedup": 1.239981425403737,
+      "peak_traced_mib": {
+        "baseline": 504.11446475982666,
+        "candidate": 505.39358043670654
+      }
+    }
+  },
+  "paired_signed_variants": {
+    "walls_s": {
+      "six_estimators": [
+        2.7957158049975988,
+        2.566135506989667,
+        2.6264332699938677,
+        2.504677126999013,
+        2.5039541470177937
+      ],
+      "with_signed_variants": [
+        2.7627508050063625,
+        2.6689317430136725,
+        2.626361090980936,
+        2.603677515988238,
+        2.598370466992492
+      ]
+    },
+    "paired_extra_seconds": [
+      -0.032964999991236255,
+      0.10279623602400534,
+      -7.217901293188334e-05,
+      0.09900038898922503,
+      0.09441631997469813
+    ],
+    "median_extra_seconds": 0.09441631997469813,
+    "median_s": {
+      "six_estimators": 2.566135506989667,
+      "with_signed_variants": 2.626361090980936
+    },
+    "protocol": "Current code only; fresh Data; alternate six/eight workload order; report per-repeat differences so thermal/timing drift is visible.",
+    "source_sha256": {
+      "pyspi/_cache.py": "6283322077126be736592543ff6cd347740d4d20465032d5cc1f2e0460b775d4",
+      "pyspi/_spectral.py": "939b3fcb7a13c07483b39c612036bbccf10ba709ff8a4e1d5c320b7f88cecd60",
+      "pyspi/statistics/spectral.py": "bbcde87ab1a65048e38be32bb73ba66b79662d3b8937aba644e6a84d3c58691b"
+    },
+    "median_extra_fraction": 0.03770688855750328
+  },
+  "unpaired_signed_variants_observed_seconds": -0.06705618699197657,
+  "unpaired_signed_variants_observed_fraction": -0.018735058743846955
+}

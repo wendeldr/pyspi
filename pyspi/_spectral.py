@@ -198,9 +198,10 @@ class SpectralConnectivity(sc.Connectivity):
                 fit = linregress(frequencies[keep], phase[window, keep, pair])
                 slope[window, row, col] = fit.slope
                 slope[window, col, row] = -fit.slope
-                # Preserve the existing rvalue convention pending the labels/
-                # direction review; this change concerns frequency selection.
-                rvalue[window, row, col] = rvalue[window, col, row] = fit.rvalue
+                # r is the signed correlation of frequency with unwrapped
+                # phase. Reversing the pair negates phase, hence negates r.
+                rvalue[window, row, col] = fit.rvalue
+                rvalue[window, col, row] = -fit.rvalue
         return slope / (2 * np.pi), slope, rvalue
 
     def imaginary_coherence(self):
@@ -208,12 +209,21 @@ class SpectralConnectivity(sc.Connectivity):
         return np.abs(self.coherency().imag)
 
     def _phase_statistic(self, kind):
-        return self._arrays.get(("phase_statistic", kind), lambda: self._reduce_phase(kind))
+        return self._phase_statistics(kind)[kind]
 
-    def _reduce_phase(self, kind):
+    def _phase_statistics(self, *kinds):
+        keys = [("phase_statistic", kind) for kind in kinds]
+        def compute(missing):
+            reduced = self._reduce_phase([key[1] for key in missing])
+            return {key: reduced[key[1]] for key in missing}
+        return {key[1]: value for key, value in self._arrays.get_many(keys, compute).items()}
+
+    def _reduce_phase(self, kinds):
+        """Form each bounded taper cross-product once for the requested moments."""
         coefficients = self._positive_coefficients
         w, r, k, f, p = coefficients.shape
-        result = np.empty((w, f, p, p), dtype=complex if kind == "unit" else float)
+        results = {kind: np.empty((w, f, p, p), dtype=complex if kind == "unit" else float)
+                   for kind in kinds}
         row_step = min(p, max(1, self.block_bytes // (w * r * k * p * 16)))
         frequency_step = max(1, self.block_bytes // (w * r * k * row_step * p * 16))
         for start in range(0, f, frequency_step):
@@ -223,42 +233,62 @@ class SpectralConnectivity(sc.Connectivity):
                 end = min(row + row_step, p)
                 left = coefficients[..., start:stop, row:end, None]
                 cross = np.matmul(left, right, dtype=np.complex128)
-                if kind == "unit":
-                    values = cross / np.abs(cross)
-                elif kind == "sign":
-                    values = np.sign(cross.imag)
-                elif kind == "imag":
-                    values = cross.imag
-                elif kind == "abs_imag":
-                    values = np.abs(cross.imag)
-                elif kind == "imag_squared":
-                    values = cross.imag ** 2
-                else:
-                    raise ValueError(f"Unknown phase statistic: {kind}")
-                result[:, start:stop, row:end, :] = values.mean(axis=(1, 2))
-        return result
+                for kind in kinds:
+                    if kind == "unit":
+                        values = cross / np.abs(cross)
+                    elif kind == "sign":
+                        values = np.sign(cross.imag)
+                    elif kind == "imag":
+                        values = cross.imag
+                    elif kind == "abs_imag":
+                        values = np.abs(cross.imag)
+                    elif kind == "imag_squared":
+                        values = cross.imag ** 2
+                    else:
+                        raise ValueError(f"Unknown phase statistic: {kind}")
+                    results[kind][:, start:stop, row:end, :] = values.mean(axis=(1, 2))
+                    del values
+        return results
 
     def _phase_locking_value(self):
         return self._phase_statistic("unit")
 
     def phase_lag_index(self):
+        return np.abs(self.signed_phase_lag_index())
+
+    def signed_phase_lag_index(self):
         return self._phase_statistic("sign")
 
+    def debiased_squared_phase_lag_index(self):
+        # Squaring the shared signed moment already removes its sign. Avoid
+        # constructing the ordinary PLI's full-frequency magnitude array.
+        n = self.n_observations
+        return (n * self.signed_phase_lag_index() ** 2 - 1) / (n - 1)
+
     def weighted_phase_lag_index(self):
-        weights = self._phase_statistic("abs_imag").copy()
+        return np.abs(self.measure("signed_weighted_phase_lag_index"))
+
+    def signed_weighted_phase_lag_index(self):
+        moments = self._phase_statistics("imag", "abs_imag")
+        weights = moments["abs_imag"].copy()
         weights[weights < np.finfo(float).eps] = 1
-        return self._phase_statistic("imag") / weights
+        return moments["imag"] / weights
 
     def debiased_squared_weighted_phase_lag_index(self):
         n = self.n_observations
-        imag_sum = self._phase_statistic("imag") * n
-        squared_sum = self._phase_statistic("imag_squared") * n
-        magnitude_sum = self._phase_statistic("abs_imag") * n
+        moments = self._phase_statistics("imag", "imag_squared", "abs_imag")
+        imag_sum = moments["imag"] * n
+        squared_sum = moments["imag_squared"] * n
+        magnitude_sum = moments["abs_imag"] * n
         weights = magnitude_sum ** 2 - squared_sum
         weights[weights == 0] = np.nan
         return (imag_sum ** 2 - squared_sum) / weights
 
     def measure(self, name, **kwargs):
+        if name == "signed_phase_lag_index":
+            # Already cached as the sign moment; do not count the same array
+            # twice against the cache's byte budget.
+            return self.signed_phase_lag_index()
         key = ("measure", name, tuple(sorted(kwargs.items())))
         return self._arrays.get(key, lambda: getattr(self, name)(**kwargs))
 

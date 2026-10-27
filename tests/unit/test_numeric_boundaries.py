@@ -55,18 +55,21 @@ def test_preprocessing_replications_preserves_axes(order, normalise, detrended):
 @pytest.mark.parametrize("statistic", ["mean", "max"])
 @pytest.mark.parametrize("cls_name", ["CoherenceMagnitude", "CoherencePhase", "ImaginaryCoherence",
     "PhaseLockingValue", "PhaseLagIndex", "WeightedPhaseLagIndex", "DebiasedSquaredPhaseLagIndex",
-    "DebiasedSquaredWeightedPhaseLagIndex", "PairwisePhaseConsistency"])
+    "DebiasedSquaredWeightedPhaseLagIndex", "PairwisePhaseConsistency",
+    "SignedPhaseLagIndex", "SignedWeightedPhaseLagIndex"])
 def test_multitaper_aggregation_uses_selected_frequencies_and_preserves_orientation(monkeypatch, cls_name, statistic):
     cls = getattr(spectral, cls_name)
     spi = cls(fmin=0.1, fmax=0.3, statistic=statistic)
     frequencies = np.array([0.0, 0.1, 0.2, 0.3, 0.5])
-    tensor = np.empty((1, 5, 3, 3), dtype=complex if cls_name == "PhaseLockingValue" else float)
+    tensor = np.empty((1, 5, 3, 3), dtype=float)
     offsets = [-20, -2, 1, 8, 40]
     for f, offset in enumerate(offsets):
         for row in range(3):
             for col in range(3):
                 value = 3 * row - 2 * col + offset
-                tensor[0, f, row, col] = value * (1 + 0.5j) if np.iscomplexobj(tensor) else value
+                # The actual PLV backend returns magnitudes, not complex phase
+                # vectors. Its magnitude reduction is checked independently.
+                tensor[0, f, row, col] = abs(value)/64 if cls_name == "PhaseLockingValue" else value
     data = Data(np.arange(90.).reshape(3, 30), normalise=False)
     monkeypatch.setattr(spi, "_get_cache", lambda data: (tensor, frequencies))
     expected = np.full((3, 3), np.nan)
@@ -75,10 +78,12 @@ def test_multitaper_aggregation_uses_selected_frequencies_and_preserves_orientat
             if row == col:
                 continue
             values = [tensor[0, f, row, col] for f in (1, 2, 3)]
-            if cls_name == "PhaseLockingValue":
+            if cls_name in ("PhaseLagIndex", "WeightedPhaseLagIndex"):
                 values = [abs(value) for value in values]
             expected[row, col] = sum(values) / 3 if statistic == "mean" else max(values)
+    before = tensor.copy()
     np.testing.assert_allclose(spi.multivariate(data), expected, rtol=1e-12, atol=1e-12)
+    np.testing.assert_array_equal(tensor, before)
 
 
 @pytest.mark.parametrize("statistic", ["mean", "max"])

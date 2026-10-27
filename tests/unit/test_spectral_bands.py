@@ -63,7 +63,7 @@ def test_single_endpoint_band_matches_scalar_taper_formula(cls, kind, f):
         expected = {
             'cohmag': abs(coherency)**2, 'phase': np.angle(coherency),
             'icoh': abs(coherency.imag), 'plv': abs(unit.mean()),
-            'pli': np.sign(imag).mean(), 'wpli': imag.mean()/weight,
+            'pli': abs(np.sign(imag).mean()), 'wpli': abs(imag.mean()/weight),
             'dspli': (n * np.sign(imag).mean()**2 - 1) / (n - 1),
             'dswpli': ((imag.sum()**2 - (imag**2).sum()) / denominator
                       if denominator != 0 else np.nan),
@@ -100,6 +100,7 @@ def test_group_delay_regresses_closed_band_at_transform_spacing(band):
     np.testing.assert_allclose(delay[0, 0, 1], slope/(2*np.pi), atol=1e-13)
     np.testing.assert_allclose(fitted[0, 1, 0], -slope, atol=1e-13)
     np.testing.assert_allclose(rvalue[0, 0, 1], expected_r, atol=1e-13)
+    np.testing.assert_allclose(rvalue[0, 1, 0], -expected_r, atol=1e-13)
     assert np.isnan(delay[0].diagonal()).all()
 
 

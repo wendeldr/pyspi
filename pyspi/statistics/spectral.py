@@ -1,5 +1,4 @@
 import numpy as np
-from copy import deepcopy
 
 from pyspi._spectral import (
     data_spectral_cache,
@@ -10,6 +9,7 @@ from pyspi._spectral import (
 from pyspi.base import (
     Directed,
     Undirected,
+    Signed,
     Unsigned,
     parse_bivariate,
     parse_multivariate,
@@ -19,8 +19,10 @@ import nitime.timeseries as ts
 import warnings
 
 
-class NonparametricSpectral(Unsigned):
+class NonparametricSpectral:
     """Base class for the nonparametric spectral methods from the Eden-Kramer repo"""
+
+    _absolute_band_values = False
 
     def __init__(self, fs=1, fmin=0, fmax=None, statistic="mean"):
         if fmax is None:
@@ -56,12 +58,18 @@ class NonparametricSpectral(Unsigned):
         return {}
 
     def _summarise_band(self, values, frequencies):
-        selected = frequency_mask(frequencies, self._fmin, self._fmax)
-        if not selected.any():
+        # The shared one-sided grid is sorted. An inclusive slice avoids
+        # copying the full frequency/channel tensor just to select a band.
+        first = np.searchsorted(frequencies, self._fmin, side="left")
+        last = np.searchsorted(frequencies, self._fmax, side="right")
+        if first == last:
             # No estimate is available; zero would imply a measured absence of
             # connectivity. PSI/GD retain their own estimator's requirements.
             return np.full(values.shape[1:], np.nan)
-        return self._statfn(values[selected], axis=0)
+        band = values[first:last]
+        if self._absolute_band_values:
+            band = np.abs(band)
+        return self._statfn(band, axis=0)
 
 
 class NonparametricSpectralMultivariate(NonparametricSpectral):
@@ -111,7 +119,7 @@ class NonparametricSpectralBivariate(NonparametricSpectral):
         return result
 
 
-class CoherenceMagnitude(NonparametricSpectralMultivariate, Undirected):
+class CoherenceMagnitude(NonparametricSpectralMultivariate, Undirected, Unsigned):
     name = "Coherence magnitude"
     labels = ["unsigned", "spectral", "undirected"]
 
@@ -121,9 +129,9 @@ class CoherenceMagnitude(NonparametricSpectralMultivariate, Undirected):
         self._measure = "coherence_magnitude"
 
 
-class CoherencePhase(NonparametricSpectralMultivariate, Undirected):
+class CoherencePhase(NonparametricSpectralMultivariate, Directed, Signed):
     name = "Coherence phase"
-    labels = ["unsigned", "spectral", "undirected"]
+    labels = ["signed", "spectral", "directed"]
 
     def __init__(self, **kwargs):
         self.identifier = "phase"
@@ -131,7 +139,7 @@ class CoherencePhase(NonparametricSpectralMultivariate, Undirected):
         self._measure = "coherence_phase"
 
 
-class ImaginaryCoherence(NonparametricSpectralMultivariate, Undirected):
+class ImaginaryCoherence(NonparametricSpectralMultivariate, Undirected, Unsigned):
     name = "Imaginary coherence"
     labels = ["unsigned", "spectral", "undirected"]
 
@@ -141,7 +149,7 @@ class ImaginaryCoherence(NonparametricSpectralMultivariate, Undirected):
         self._measure = "imaginary_coherence"
 
 
-class PhaseLockingValue(NonparametricSpectralMultivariate, Undirected):
+class PhaseLockingValue(NonparametricSpectralMultivariate, Undirected, Unsigned):
     name = "Phase locking value"
     labels = ["unsigned", "spectral", "undirected"]
 
@@ -150,33 +158,56 @@ class PhaseLockingValue(NonparametricSpectralMultivariate, Undirected):
         super().__init__(**kwargs)
         self._measure = "phase_locking_value"
 
-        myfn = deepcopy(self._statfn)
-        self._statfn = lambda x, **kwargs: myfn(np.absolute(x), **kwargs)
 
-
-class PhaseLagIndex(NonparametricSpectralMultivariate, Undirected):
+class PhaseLagIndex(NonparametricSpectralMultivariate, Undirected, Unsigned):
     name = "Phase lag index"
     labels = ["unsigned", "spectral", "undirected"]
+    _absolute_band_values = True
 
     def __init__(self, **kwargs):
         self.identifier = "pli"
         super().__init__(**kwargs)
-        self._measure = "phase_lag_index"
+        self._measure = "signed_phase_lag_index"
 
 
-class WeightedPhaseLagIndex(NonparametricSpectralMultivariate, Undirected):
+class SignedPhaseLagIndex(NonparametricSpectralMultivariate, Directed, Signed):
+    """Phase-lag sign consistency; the sign alone is not causal direction."""
+
+    name = "Signed phase lag index"
+    labels = ["signed", "spectral", "directed"]
+
+    def __init__(self, **kwargs):
+        self.identifier = "pli-signed"
+        super().__init__(**kwargs)
+        self._measure = "signed_phase_lag_index"
+
+
+class WeightedPhaseLagIndex(NonparametricSpectralMultivariate, Undirected, Unsigned):
     name = "Weighted phase lag index"
     labels = ["unsigned", "spectral", "undirected"]
+    _absolute_band_values = True
 
     def __init__(self, **kwargs):
         self.identifier = "wpli"
         super().__init__(**kwargs)
-        self._measure = "weighted_phase_lag_index"
+        self._measure = "signed_weighted_phase_lag_index"
 
 
-class DebiasedSquaredPhaseLagIndex(NonparametricSpectralMultivariate, Undirected):
+class SignedWeightedPhaseLagIndex(NonparametricSpectralMultivariate, Directed, Signed):
+    """Weighted phase-lag sign consistency, sharing the unsigned estimator's work."""
+
+    name = "Signed weighted phase lag index"
+    labels = ["signed", "spectral", "directed"]
+
+    def __init__(self, **kwargs):
+        self.identifier = "wpli-signed"
+        super().__init__(**kwargs)
+        self._measure = "signed_weighted_phase_lag_index"
+
+
+class DebiasedSquaredPhaseLagIndex(NonparametricSpectralMultivariate, Undirected, Signed):
     name = "Debiased squared phase lag index"
-    labels = ["unsigned", "spectral", "undirected"]
+    labels = ["signed", "spectral", "undirected"]
 
     def __init__(self, **kwargs):
         self.identifier = "dspli"
@@ -185,10 +216,10 @@ class DebiasedSquaredPhaseLagIndex(NonparametricSpectralMultivariate, Undirected
 
 
 class DebiasedSquaredWeightedPhaseLagIndex(
-    NonparametricSpectralMultivariate, Undirected
+    NonparametricSpectralMultivariate, Undirected, Signed
 ):
     name = "Debiased squared weighted phase-lag index"
-    labels = ["unsigned", "spectral", "undirected"]
+    labels = ["signed", "spectral", "undirected"]
 
     def __init__(self, **kwargs):
         self.identifier = "dswpli"
@@ -196,9 +227,9 @@ class DebiasedSquaredWeightedPhaseLagIndex(
         self._measure = "debiased_squared_weighted_phase_lag_index"
 
 
-class PairwisePhaseConsistency(NonparametricSpectralMultivariate, Undirected):
+class PairwisePhaseConsistency(NonparametricSpectralMultivariate, Undirected, Signed):
     name = "Pairwise phase consistency"
-    labels = ["unsigned", "spectral", "undirected"]
+    labels = ["signed", "spectral", "undirected"]
 
     def __init__(self, **kwargs):
         self.identifier = "ppc"
@@ -212,7 +243,7 @@ class PairwisePhaseConsistency(NonparametricSpectralMultivariate, Undirected):
 """
 
 
-class DirectedCoherence(NonparametricSpectralBivariate, Directed):
+class DirectedCoherence(NonparametricSpectralBivariate, Directed, Unsigned):
     name = "Directed coherence"
     labels = ["unsigned", "spectral", "directed"]
 
@@ -222,7 +253,7 @@ class DirectedCoherence(NonparametricSpectralBivariate, Directed):
         self._measure = "directed_coherence"
 
 
-class PartialDirectedCoherence(NonparametricSpectralBivariate, Directed):
+class PartialDirectedCoherence(NonparametricSpectralBivariate, Directed, Unsigned):
     name = "Partial directed coherence"
     labels = ["unsigned", "spectral", "directed"]
 
@@ -232,7 +263,7 @@ class PartialDirectedCoherence(NonparametricSpectralBivariate, Directed):
         self._measure = "partial_directed_coherence"
 
 
-class GeneralizedPartialDirectedCoherence(NonparametricSpectralBivariate, Directed):
+class GeneralizedPartialDirectedCoherence(NonparametricSpectralBivariate, Directed, Unsigned):
     name = "Generalized partial directed coherence"
     labels = ["unsigned", "spectral", "directed"]
 
@@ -242,7 +273,7 @@ class GeneralizedPartialDirectedCoherence(NonparametricSpectralBivariate, Direct
         self._measure = "generalized_partial_directed_coherence"
 
 
-class DirectedTransferFunction(NonparametricSpectralBivariate, Directed):
+class DirectedTransferFunction(NonparametricSpectralBivariate, Directed, Unsigned):
     name = "Directed transfer function"
     labels = ["unsigned", "spectral", "directed", "lagged"]
 
@@ -252,7 +283,7 @@ class DirectedTransferFunction(NonparametricSpectralBivariate, Directed):
         self._measure = "directed_transfer_function"
 
 
-class DirectDirectedTransferFunction(NonparametricSpectralBivariate, Directed):
+class DirectDirectedTransferFunction(NonparametricSpectralBivariate, Directed, Unsigned):
     name = "Direct directed transfer function"
     labels = ["unsigned", "spectral", "directed", "lagged"]
 
@@ -262,9 +293,9 @@ class DirectDirectedTransferFunction(NonparametricSpectralBivariate, Directed):
         self._measure = "direct_directed_transfer_function"
 
 
-class PhaseSlopeIndex(NonparametricSpectralMultivariate, Undirected):
+class PhaseSlopeIndex(NonparametricSpectralMultivariate, Directed, Signed):
     name = "Phase slope index"
-    labels = ["unsigned", "spectral", "undirected"]
+    labels = ["signed", "spectral", "directed"]
 
     def __init__(self, **kwargs):
         self.identifier = "psi"
@@ -277,13 +308,15 @@ class PhaseSlopeIndex(NonparametricSpectralMultivariate, Undirected):
         )
 
 
-class GroupDelay(NonparametricSpectralMultivariate, Directed):
+class GroupDelay(NonparametricSpectralMultivariate, Directed, Signed):
     name = "Group delay"
-    labels = ["unsigned", "spectral", "directed", "lagged"]
+    labels = ["signed", "spectral", "directed", "lagged"]
 
-    def __init__(self, **kwargs):
+    def __init__(self, statistic="delay", **kwargs):
+        if statistic not in ("delay", "slope", "rvalue"):
+            raise ValueError("Group delay statistic must be delay, slope, or rvalue.")
         self.identifier = "gd"
-        super().__init__(**kwargs)
+        super().__init__(statistic=statistic, **kwargs)
         self._measure = "group_delay"
 
     def _spectral_options(self):

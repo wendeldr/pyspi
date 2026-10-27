@@ -649,9 +649,9 @@
 .statistics.spectral:
   CoherencePhase:
     labels:
-      - undirected
+      - directed
       - linear
-      - unsigned
+      - signed
       - bivariate
       - frequency-dependent
     dependencies:
@@ -736,7 +736,7 @@
     labels:
       - directed
       - linear/nonlinear
-      - unsigned
+      - signed
       - bivariate
       - frequency-dependent
     dependencies:
@@ -806,6 +806,34 @@
         fmax: 0.5
         statistic: max
 
+  SignedPhaseLagIndex:
+    labels:
+      - directed
+      - linear
+      - signed
+      - bivariate
+      - frequency-dependent
+    dependencies:
+    configs:
+      - fs: 1
+
+      - fmin: 0
+        fmax: 0.25
+
+      - fmin: 0.25
+        fmax: 0.5
+
+      - fs: 1
+        statistic: max
+
+      - fmin: 0
+        fmax: 0.25
+        statistic: max
+
+      - fmin: 0.25
+        fmax: 0.5
+        statistic: max
+
   WeightedPhaseLagIndex:
     labels:
       - undirected
@@ -834,11 +862,39 @@
         fmax: 0.5
         statistic: max
 
+  SignedWeightedPhaseLagIndex:
+    labels:
+      - directed
+      - linear
+      - signed
+      - bivariate
+      - frequency-dependent
+    dependencies:
+    configs:
+      - fs: 1
+
+      - fmin: 0
+        fmax: 0.25
+
+      - fmin: 0.25
+        fmax: 0.5
+
+      - fs: 1
+        statistic: max
+
+      - fmin: 0
+        fmax: 0.25
+        statistic: max
+
+      - fmin: 0.25
+        fmax: 0.5
+        statistic: max
+
   DebiasedSquaredPhaseLagIndex:
     labels:
       - undirected
       - linear
-      - unsigned
+      - signed
       - bivariate
       - frequency-dependent
     dependencies:
@@ -866,7 +922,7 @@
     labels:
       - undirected
       - linear
-      - unsigned
+      - signed
       - bivariate
       - frequency-dependent
     dependencies:
@@ -894,7 +950,7 @@
     labels:
       - undirected
       - linear
-      - unsigned
+      - signed
       - bivariate
       - frequency-dependent
     dependencies:
@@ -1082,7 +1138,7 @@
     labels:
       - directed
       - linear
-      - unsigned
+      - signed
       - bivariate
       - frequency-dependent
     dependencies:

@@ -152,3 +152,104 @@ Covariance and precision squared variants square each entry of the fitted
 matrix. They do not square the input, perform a matrix product, or invert a
 squared covariance matrix. Fitted estimators are shared, with returned arrays
 copied so callers cannot alter subsequent results.
+
+## Spectral signs and ordered pairs
+
+Multitaper PSI, group delay, and coherence phase have **signed, directed**
+metadata and return `issigned() == True`. Here directed means the ordering of
+the channel pair matters; it does not by itself establish a causal effect.
+The common transform uses `C[i,j] = S[i,j]/sqrt(S[i,i]*S[j,j])`, with
+`S[i,j] = mean(X[i]*conj(X[j]))`.
+
+For a pure delayed copy, positive PSI and positive group delay at `[A1,B1]`
+mean **A1 leads B1**. Reversing the pair reverses the sign. Group delay is in
+seconds if `fs` is in Hz, or samples if `fs=1`. Coherence phase is the phase
+of `C[i,j]` in radians. Its sign describes a wrapped phase difference, not
+an unambiguous broadband time delay.
+
+Group delay offers three explicitly named results:
+
+| Statistic | Definition | Reverse pair |
+| --- | --- | --- |
+| `delay` (default) | Fitted phase slope divided by 2π | Negated |
+| `slope` | OLS slope of unwrapped phase against frequency | Negated |
+| `rvalue` | Pearson correlation between frequency and unwrapped phase | Negated |
+
+The sign of `rvalue` was previously copied unchanged into both matrix
+triangles, causing a channel-order dependence. It now follows the signed
+regression definition. `rvalue` is **r**, not r² or absolute r; r² describes
+the fraction of phase variance explained by this fitted line. This matches
+the [SciPy regression result definition](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html).
+The coherence significance rule and frequency-point selection have not been
+changed in this sign review.
+
+Coherence phase still uses its existing arithmetic mean/max band summaries
+pending a choice of circular summary and weighting.
+
+The factorization-based directed metrics currently use **row = target,
+column = source**, the transfer-matrix convention. This differs from the
+positive-lead interpretation above; no matrix transposition was made in this
+review. Synthetic one-way-coupling checks confirm that convention. Reversing
+the input order also changes fitted values beyond rounding error; that
+numerical factorization issue remains under review. The parametric Granger
+path and wavelet sign conventions have not been reviewed here.
+
+## Phase-lag, phase-locking and debiased variants
+
+For each frequency and channel pair, let `y[k] = Im(X_i[k] * conj(X_j[k]))`
+for the `N` taper/trial observations. These observations are averaged before
+the frequency-band summary; `N` is not the number of time samples or bins.
+
+| Identifier | Per-frequency result | Interpretation |
+| --- | --- | --- |
+| `pli` | `abs(mean(sign(y)))` | Nonnegative phase-lag consistency |
+| `pli-signed` | `mean(sign(y))` | Consistency retaining phase-lag sign |
+| `wpli` | `abs(sum(y)) / sum(abs(y))` | Nonnegative, magnitude-weighted lag consistency |
+| `wpli-signed` | `sum(y) / sum(abs(y))` | Weighted consistency retaining phase-lag sign |
+| `dspli` | `(N * mean(sign(y))**2 - 1) / (N - 1)` | Bias-corrected estimate of squared PLI |
+| `dswpli` | `(sum(y)**2 - sum(y**2)) / (sum(abs(y))**2 - sum(y**2))` | Debiased estimate of squared wPLI |
+| `plv` | `abs(mean(z))`, where `z = cross / abs(cross)` | Phase locking at any consistent phase offset |
+| `ppc` | `(abs(sum(z))**2 - N) / (N * (N - 1))` | Bias-corrected estimate of squared PLV |
+
+The existing `pli`/`wpli` identifiers now use the standard nonnegative definitions.
+Their magnitudes are taken **at each frequency before** `mean` or `max` across
+the inclusive band. Signed frequency values `[0.6, -0.6]` therefore give unsigned
+mean `0.6` and signed mean `0`, rather than applying absolute value after averaging.
+See [the original PLI/wPLI debiasing paper](https://www.psychologie.hhu.de/fileadmin/redaktion/Fakultaeten/Mathematisch-Naturwissenschaftliche_Fakultaet/Psychologie/CompPsy/Papers/pennartz_2011.pdf)
+and [the PPC/PLV relationship](https://pmc.ncbi.nlm.nih.gov/articles/PMC3674231/).
+
+Signed variants are separate classes (`SignedPhaseLagIndex`,
+`SignedWeightedPhaseLagIndex`). Reversing the channel pair negates each frequency
+value and its band mean. Their `max` is the ordinary numerical maximum: for
+`[-0.9, 0.2]` it returns `0.2`, whereas unsigned `max` returns `0.9`. A signed
+maximum need not be antisymmetric. These signs describe phase-lag orientation;
+they do not establish causality or an unambiguous broadband time delay.
+
+The debiased estimators and PPC can legitimately be negative. For example,
+`N=5` and `PLI=0.2` give debiased squared PLI `-0.2`. That is a finite-sample
+bias correction, not negative coupling or phase-lead direction. Their values
+are retained without absolute value or clipping, and their metadata now says
+`signed` and `undirected`. They do not need separate phase-direction variants.
+The [dependency's estimator range documentation](https://spectral-connectivity.readthedocs.io/en/latest/CONNECTIVITY_METRIC_RANGES.html)
+also distinguishes these negative estimates from directional signs.
+
+Shared work: PLI and its squared debiased estimate reuse the sign average;
+PLV and PPC reuse the normalized phase vectors. Weighted estimators request
+their missing imaginary moments together, forming each bounded taper
+cross-product once per request. Already cached moments are reused. Signed and
+unsigned outputs share the signed spectrum; the unsigned band summary creates
+only its requested magnitude slice. Band selection uses contiguous views of
+the shared sorted frequency grid, avoiding a redundant tensor copy. No separate
+full-frequency unsigned spectrum is cached by the SPI wrappers.
+
+The `all` and `fast` catalogues include both signed variants with mean/max and
+three bands; their sizes are 301 and 233. The selected 185-metric EEG workflow
+keeps its metric selection; its existing PLI/wPLI names now use the corrected
+unsigned definitions. Added signed variants can be selected explicitly.
+
+Remaining edge-case review: the existing wPLI denominator floor uses an absolute
+machine-epsilon threshold; the dsPLI formula above assumes nonzero imaginary
+observations, and dsWPLI returns NaN when its denominator is zero. This change
+preserves those policies. Their scale/zero-lag handling and the statistical
+assumptions behind taper-based debiasing need a separate review. The formulas
+and sign conventions of the wavelet implementations were not changed here.

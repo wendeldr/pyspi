@@ -101,7 +101,7 @@ Options:
 - `--pyspi-size small|full` picks the golden set (default `small`; environment fallback `PYSPI_TEST_SIZE`). Missing committed goldens fail; restore them rather than regenerating references to make a run pass.
 - `--runslow` runs tests marked `slow`; otherwise they are reported as skipped (`slow: needs --runslow`).
 - `--require-java` fails if the JIDT JVM cannot start. Use it for complete local verification, together with `--runslow` for the slow calculations.
-- Any `--runslow` invocation makes `tests/test_SPIs.py` recompute all 289 SPIs on the CML7 benchmark while it is being collected (about 2.5 min on the generating machine, measured with `--collect-only`), whatever `-m` or `-k` selects; with `-n N` every worker repeats it. Add `--ignore=tests/test_SPIs.py` (or give explicit test paths) unless you want the legacy benchmark.
+- Any `--runslow` invocation makes `tests/test_SPIs.py` recompute all 301 SPIs on the CML7 benchmark while it is being collected (about 2.5 min on the generating machine, measured with `--collect-only`), whatever `-m` or `-k` selects; with `-n N` every worker repeats it. Add `--ignore=tests/test_SPIs.py` (or give explicit test paths) unless you want the legacy benchmark.
 - `-n 4` runs in parallel with pytest-xdist. Every test is independent; each worker starts its own JVM.
 - `--timeout=N` (pytest-timeout) overrides the default 300 s per test. It uses `signal` and cannot interrupt code inside Java or numba frames, so it is a safety net only.
 
@@ -138,7 +138,7 @@ Options:
 - Both end-to-end tests skip `spi_policy.CALC_E2E_SKIP` (`cov*MinCovDet`, `prec*MinCovDet`, `bary*_sgddtw_*`; 8 identifiers): a single seeded pass draws from the global RNG in a different order than per-SPI seeding, and these then differ from their goldens. The four `*EllipticEnvelope` SPIs are `stochastic` too but reproduce their per-SPI goldens in that pass, so they are compared. All mismatches are reported together.
 - A separate shared-cache test includes all 12 stochastic identifiers, reseeding immediately before each SPI while retaining the shared `Data` caches. This provides numerical comparisons for the eight exclusions under controlled RNG conditions; the normal Calculator tests retain their existing seeding behavior.
 - `test_catalogue_matches_golden_meta` (`java`): loads the imported package's `config.yaml` through both `harness.catalogue` and `Calculator`, and asserts that the identifier sets equal the recorded ones, that the harness order and classes match what the `Calculator` loaded, and that for every identifier `module`, `cls`, `params` and `deps` equal `meta.json` (after a JSON round trip) and `labels` match as sorted sets. The per-SPI tests rebuild each SPI from the recorded params, so this is what reports a `config.yaml` parameter edit that keeps the identifier (for example `terms` of `ids`).
-- `test_spi_catalogue[all|fast|sonnet|fabfour]`: subset sizes 289/221/14/4; for `all`, identifier order equals `calculator_order` and each SPI's labels equal the recorded ones.
+- `test_spi_catalogue[all|fast|sonnet|fabfour]`: subset sizes 301/233/14/4; for `all`, identifier order equals `calculator_order` and each SPI's labels equal the recorded ones.
 
 ### Tolerance policy (`regression/spi_policy.py`)
 
@@ -256,12 +256,25 @@ minimum of three retained points, phase unwrapping, and fit definition are
 preserved. A band too narrow to hold three spaced points raises an identified
 `ValueError`; Calculator records an unavailable NaN matrix and the reason.
 Bandwidth-based spacing approximates independence; it does not establish exact
-statistical independence. The coherence significance procedure itself and the
-rvalue/sign conventions have not been scientifically revised.
+statistical independence. The coherence significance procedure itself remains
+unchanged. The subsequent sign review corrects `rvalue` so reversing the pair
+negates it, as required by its signed Pearson-correlation definition. The
+previous symmetric fill could change approximately +1 to -1 merely by
+reordering channels. `GroupDelay()` now defaults to `statistic="delay"` and
+rejects unsupported summaries during construction.
+
+`unit/test_spectral_direction.py` checks explicit signed/directed traits for
+PSI, group delay and coherence phase, independent OLS/correlation formulas,
+known-delay signs, channel permutations and the existing row-target/column-source
+convention of factorization-based directed metrics. Only labels were updated
+in the small/full golden metadata; numerical golden arrays were not changed.
+The sign-review checkpoint passed 1,283 unit, regression and workflow tests
+with 15 skips and 7 existing expected failures. The subsequent PLI/wPLI changes
+and their validation are described below; coherence-phase summaries remain pending.
 
 The initial performance stage preserved metric definitions. The subsequent
 approved multitaper PSI correction is described below. Arithmetic phase
-summaries and sign/direction classifications await separate scientific review.
+summaries await separate scientific review. PLI/wPLI now use the definitions below.
 Tests compare unchanged formulas against the dependency on the same bins;
 `unit/test_spectral_bands.py` adds scalar endpoint formulas, even/odd frequency
 and transfer-function checks, analytical group-delay fits, unit scaling,
@@ -319,6 +332,49 @@ per measure and records the observed differences; it is a timing comparison,
 not a claim of numerical equivalence. Independent correctness checks live in
 the spectral unit tests.
 
+## PLI/wPLI definitions and shared phase work
+
+`unit/test_phase_lag.py` independently checks magnitude before frequency-band
+aggregation, explicit signed variants, weighted averages, debiasing via distinct
+observation-pair products, negative estimates, shared moment computation, bounded
+taper products and cache eviction. Ordinary `pli`/`wpli` use nonnegative
+per-frequency definitions; `pli-signed`/`wpli-signed` retain phase-lag signs.
+Debiased squared PLI/wPLI and PPC retain their numerical definitions and negative
+estimates; only their signed/undirected metadata is corrected.
+
+The weighted moments requested together now share each cross-product block;
+previously cached moments are reused. All Fourier band summaries use a slice of
+the sorted frequency grid, avoiding a redundant tensor copy. PLV no longer takes
+a second absolute value of an already nonnegative result. The new signed
+variants are present in the all/fast catalogues (301/233 total SPIs), while the
+retained185 selection stays at 185.
+
+Only the 12 existing ordinary PLI/wPLI numerical snapshots per small/full set
+are replaced; 12 signed snapshots are added. The other 277 numerical snapshots
+per set and all 96 preprocessing values are preserved exactly. Debiased/PPC
+metadata changes cover 18 entries per small/full set. Scoped provenance records
+identify the updates. These goldens are change detectors; the independent
+formula tests establish the intentional definition changes.
+
+Validation: **1,324 passed, 15 skipped, 7 existing expected failures** across
+unit, regression and workflow tests with Java required. The larger spectral
+regression fixtures add **102 passing checks**.
+
+`benchmark_phase_sync.py` compares a committed baseline with the current code
+on 118 channels x 1024 observations, including single estimators, all six original
+estimators (three bands, mean/max), and the two additional signed variants.
+`phase_sync_refactor_results.json` records raw timings, allocation peaks, source
+hashes and the workload definitions. These are synthetic measurements, not an
+EEG validation. The paired baseline/current medians were 0.63/0.51 s for wPLI, 1.02/0.76 s
+for debiased squared wPLI, and 4.47/3.58 s for the six-estimator workload. A
+separate alternating five-repeat comparison of current code with/without the
+12 signed band summaries measured about 0.094 s (3.8%) extra, using median
+within-repeat differences; absolute timings varied between benchmark sessions.
+
+Zero-lag/zero-denominator handling and taper independence remain
+separate scientific/numerical review items; see the
+[calculation definitions](../docs/calculation_definitions.md).
+
 ## Extra goldens
 
 `regression/extra_config.yaml` lists nine wavelet classes from `pyspi/statistics/wavelet.py` that run today but are absent from `pyspi/config.yaml`: `cohmag` (`CoherenceMagnitude`), `phase` (`CoherencePhase`), `icoh` (`ImaginaryCoherence`), `plv` (`PhaseLockingValue`), `ppc` (`PairwisePhaseConsistency`), `pli` (`PhaseLagIndex`), `dspli` (`DebiasedSquaredWeightedPhaseLagIndex`), `wspli` (`weighted_PhaseLagIndex`) and `dwspli` (`debiased_weighted_squared_PhaseLagIndex`). Each has the six band/statistic configs that `PhaseSlopeIndex` uses in `config.yaml`, giving 54 identifiers named `<id>_wavelet_{mean|max}_fs-1_fmin-{0|0-25}_fmax-{0-25|0-5}` (the band pairs are `0`-`0-5`, `0`-`0-25` and `0-25`-`0-5`), for example `cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5`. They all go through the per-`Data` `data.mne[measure]` cache, which no SPI in the default config exercises.
@@ -366,13 +422,13 @@ Compare the checkout, lock, selected test tier, installed packages (`uv pip chec
 
 ## Known bugs (locked, not fixed)
 
-The confirmed implementation issues below are locked in `unit/test_known_bugs.py`, generally with a current-behavior test and a strict xfail describing a proposed change. These are change alarms; they do not independently establish the mathematical correctness of the proposed behavior. Item 5 is a pending scientific decision, with a current-behavior check and no assumed fix.
+The confirmed implementation issues below are locked in `unit/test_known_bugs.py`, generally with a current-behavior test and a strict xfail describing a proposed change. These are change alarms; they do not independently establish the mathematical correctness of the proposed behavior. Item 5 records the agreed standard PLI definition, backed by independent scalar tests.
 
 1. `TransferEntropy(estimator='symbolic')` falls through to the Gaussian calculator (`te_symbolic_* == gc_gaussian_*`).
 2. `ConvergentCrossMapping(embedding_dimension=None)` picks max E (10), not best-rho E (`ccm_E-None == ccm_E-10`). Both tests are `slow`.
 3. `SoftDynamicTimeWarping` ignores `global_constraint` (three identical configs).
 4. **Fixed:** `KendallTau` and `SpearmanR` own their instance labels. Their signed/unsigned label metadata in the small/full/preprocessing golden sets was corrected without regenerating numerical values.
-5. PLI currently produces signed, antisymmetric values despite its unsigned/undirected labels. The test checks finite, nonzero signed antisymmetry. The former expected-failure assertion demanding symmetry was removed because signed versus unsigned definitions and labeling remain undecided; a symmetry assertion was not a justified mathematical oracle. Related phase/PSI/wPLI findings remain in the [scientific review](../docs/storage_comparison/REVIEW.md).
+5. Standard PLI now takes absolute value at each frequency before the band summary and returns a symmetric nonnegative matrix. Explicit `pli-signed`/`wpli-signed` variants retain phase-lag signs. Independent scalar and pair-product tests in `unit/test_phase_lag.py` establish the definitions, including valid negative debiased estimates; this test only guards standard PLI symmetry.
 6. `Calculator` duplicate-identifier check is dead code (dict keys are unique; collisions overwrite silently).
 7. `Data(procnames=...)` is validated but never stored.
 8. `Data.convert_to_numpy` for `.csv` passes `','` as dtype.
@@ -408,7 +464,7 @@ remain historical evidence.
 
 ## SPI coverage
 
-All 289 identifiers in `config.yaml`, in `Calculator` order, from `goldens/small/meta.json` (5 x 64) and `goldens/full/meta.json` (7 x 100). `time_s` is the generator's fastest measured time for one `multivariate` call on the generating machine (a 64-core machine with `OMP_NUM_THREADS=1`; versions and the thread setting are in `meta.json`); `slow` is the marker at that size.
+Historical 289-identifier inventory before the signed phase-lag additions, in `Calculator` order, from `goldens/small/meta.json` (5 x 64) and `goldens/full/meta.json` (7 x 100). `time_s` is the generator's fastest measured time for one `multivariate` call on the generating machine (a 64-core machine with `OMP_NUM_THREADS=1`; versions and the thread setting are in `meta.json`); `slow` is the marker at that size.
 
 | size | ok | partial_nan | all_nan / error | slow (skipped by default) | per-SPI tests run by the default tier |
 |---|---:|---:|---:|---:|---:|

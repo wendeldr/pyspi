@@ -33,6 +33,26 @@ class ArrayCache:
             self.nbytes += size
         return value
 
+    def get_many(self, keys, compute):
+        """Compute missing related arrays together, respecting the same LRU bound.
+
+        Keep requested hits alive locally while new results enter the cache:
+        insertion may evict one of those hits before this call returns.
+        """
+        keys = tuple(dict.fromkeys(keys))
+        values = {}
+        missing = []
+        for key in keys:
+            if key in self.entries:
+                values[key] = self.get(key, None)
+            else:
+                missing.append(key)
+        if missing:
+            computed = compute(missing)
+            for key in missing:
+                values[key] = self.get(key, lambda key=key: computed[key])
+        return values
+
 
 class _DataCache:
     def __init__(self, source):

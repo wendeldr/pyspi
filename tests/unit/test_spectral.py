@@ -21,6 +21,7 @@ SPECTRAL_CLASSES = [
     spectral.PhaseLockingValue, spectral.PhaseLagIndex, spectral.WeightedPhaseLagIndex,
     spectral.DebiasedSquaredPhaseLagIndex, spectral.DebiasedSquaredWeightedPhaseLagIndex,
     spectral.PairwisePhaseConsistency,
+    spectral.SignedPhaseLagIndex, spectral.SignedWeightedPhaseLagIndex,
 ]
 DIRECTED_CLASSES = [
     spectral.DirectedCoherence, spectral.PartialDirectedCoherence,
@@ -51,7 +52,9 @@ def test_spectral_estimator_and_band_agreement(cls, n, statistic):
     spi = cls(fmin=.02, fmax=.4, statistic=statistic)
     conn = reference(data)
     mask = (conn.frequencies >= .02) & (conn.frequencies <= .4)
-    values = getattr(conn, spi.measure)()[0, mask]
+    values = getattr(conn, spi.measure.removeprefix("signed_"))()[0, mask]
+    if cls in (spectral.PhaseLagIndex, spectral.WeightedPhaseLagIndex):
+        values = np.abs(values)
     expected = getattr(np, "nan" + statistic)(values, axis=0)
     np.fill_diagonal(expected, np.nan)
     np.testing.assert_allclose(spi.multivariate(data), expected, rtol=1e-11, atol=1e-13)
@@ -96,6 +99,11 @@ def test_group_delay_preserves_fit_and_significance_with_transform_spacing(cls, 
     if cls is spectral.GroupDelay:
         expected = expected[("delay", "slope", "rvalue").index(statistic)]
     expected = expected[0].copy()
+    if statistic == "rvalue":
+        # The dependency mirrors signed r without reversing it. Only its
+        # forward regression is a reference; reversing phase negates r.
+        i, j = np.triu_indices(len(expected), 1)
+        expected[j, i] = -expected[i, j]
     np.fill_diagonal(expected, np.nan)
     assert np.isfinite(expected).any(), "Reference must exercise actual estimates, not only NaNs"
     actual = spi.multivariate(data)

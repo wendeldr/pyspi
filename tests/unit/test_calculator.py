@@ -73,9 +73,9 @@ def test_missing_java_dependency_skips_jidt_spis(jvm, monkeypatch):
     calc = Calculator()
     ids = list(calc.spis)
     assert not [i for i in ids if i.startswith(JAVA_PREFIXES)]
-    # One _excluded_spis entry per skipped config: 39 java SPIs out of 289.
+    # One _excluded_spis entry per skipped config: 39 java SPIs out of 301.
     assert len(calc._excluded_spis) == 39
-    assert calc.n_spis == 250
+    assert calc.n_spis == 262
     assert all(deps == ["java"] for _, deps in calc._excluded_spis)
     # Integrated information lives in the infotheory module but has no java dependency.
     assert any(i.startswith("phi_") for i in ids)
@@ -103,7 +103,7 @@ def test_type_error_in_config_falls_back_to_single_default_spi(tmp_path):
 @pytest.mark.java  # the counts include the JIDT SPIs, so they only hold with a JVM
 def test_subset_counts(jvm):
     counts = {subset: Calculator(subset=subset).n_spis for subset in ("all", "fast", "sonnet", "fabfour")}
-    assert counts == {"all": 289, "fast": 221, "sonnet": 14, "fabfour": 4}
+    assert counts == {"all": 301, "fast": 233, "sonnet": 14, "fabfour": 4}
 
 
 def test_invalid_subset_raises():

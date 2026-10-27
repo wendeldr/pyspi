@@ -133,15 +133,12 @@ def test_softdtw_global_constraint_fixed(softdtw_outputs):
 
 
 # --------------------------------------------------------------------------- #
-# 5. PLI currently returns a signed antisymmetric variant despite its labels.
-# Whether to change its definition or labels is a pending scientific decision;
-# symmetry is not an independently justified "fixed" mathematical oracle.
+# 5. Standard PLI now takes magnitude per frequency before band averaging.
+# Independent definition tests also distinguish this from abs(band mean).
 # --------------------------------------------------------------------------- #
 @pytest.fixture(scope="module")
 def pli_output():
     spectral = importlib.import_module("pyspi.statistics.spectral")
-    # The MRO puts NonparametricSpectralMultivariate.multivariate before
-    # Undirected.multivariate, so the lower triangle is never mirrored.
     assert issubclass(spectral.PhaseLagIndex, importlib.import_module("pyspi.base").Undirected)
     return spectral.PhaseLagIndex().multivariate(_data(_seeded(4, 80, seed=14)))
 
@@ -150,9 +147,8 @@ def test_undirected_spectral_symmetry_current(pli_output):
     A = pli_output
     off = ~np.eye(A.shape[0], dtype=bool)
     assert np.isfinite(A[off]).all()
-    assert np.any(A[off] < 0) and np.any(A[off] > 0)
-    np.testing.assert_allclose(A, -A.T, rtol=1e-12, atol=1e-12, equal_nan=True)
-    assert not np.allclose(A, A.T, equal_nan=True)
+    assert np.all(A[off] >= 0) and np.any(A[off] > 0)
+    np.testing.assert_allclose(A, A.T, rtol=1e-12, atol=1e-12, equal_nan=True)
 
 
 # --------------------------------------------------------------------------- #
