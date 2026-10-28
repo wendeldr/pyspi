@@ -1,0 +1,47 @@
+{
+  "created_utc": "2026-10-28",
+  "baseline_commit": "a95e475578d6df1a593f97c9999a8db4e737ee12",
+  "branch": "run-hotspots",
+  "python": "3.12.3",
+  "numpy": "2.5.4",
+  "scikit-learn": "1.9.1",
+  "protocol": {
+    "scope": "One synthetic 118x1024 window of the reviewed preset through Calculator.compute, per-metric elapsed_seconds from the metric reports; excludes loading, preprocessing and output writing.",
+    "threads": "OPENBLAS/OMP/MKL_NUM_THREADS=1",
+    "input_generation": "tests/benchmark_run_hotspots.py synthetic(): AR(1) with 0.6 self and 0.2 neighbour coupling, numpy.random.default_rng(0).",
+    "statistic": "Median over repeats (baseline 2, after 3) of total and per-metric wall time.",
+    "receipts": ["tests/run_hotspots/baseline.json", "tests/run_hotspots/after_tasks_2_3.json", "tests/run_hotspots/after.json"],
+    "limits": "Synthetic inputs on a shared machine with other jobs; not a patient or cohort throughput estimate. The baseline receipt is the same branch before any change in this series."
+  },
+  "total_median_seconds": {"baseline": 20.40, "after_shared_fit_and_phase_pass": 17.30, "after": 11.75},
+  "preset": {"baseline_metrics": 200, "after_metrics": 198,
+             "removed": ["prec_EllipticEnvelope", "prec-sq_EllipticEnvelope"],
+             "reason": "Identical to prec_MinCovDet / prec-sq_MinCovDet once both estimators serve from one seeded FAST-MCD fit (user decision 2026-10-28)."},
+  "hotspots": {
+    "prec_EllipticEnvelope": {
+      "baseline_seconds": 4.115, "after_seconds": 0.0, "change": "EllipticEnvelope serves from the cached MinCovDet fit (basic._fit_name); sklearn EllipticEnvelope.fit is MinCovDet.fit plus offset_, never read.",
+      "output": "bit-identical goldens (8 robust identifiers, small and full, max_abs 0)"},
+    "cov_MinCovDet": {
+      "baseline_seconds": 4.348, "after_seconds": 1.388, "speedup": 3.1,
+      "change": "pyspi._robust.FastMinCovDet: FAST-MCD C-steps take Mahalanobis distances and log-determinant from one Cholesky factor (pseudo-inverse fallback when not positive definite); fixed random_state = basic.ROBUST_RANDOM_STATE = 42 (harness seed).",
+      "equivalence": "Same seed: raw_support_ and support_ identical to sklearn 1.9.1 MinCovDet on five synthetic sets (tests/unit/test_robust.py) and on the 118x1024 benchmark window (max relative covariance/precision difference 0.0; standalone fit 3.92 s -> 1.24 s).",
+      "output": "bit-identical goldens; a rounding-induced support change remains possible in principle and would show as a tolerance-level difference"},
+    "spectral_phase_family": {
+      "members": ["plv", "pli", "pli-signed", "wpli", "wpli-signed", "dspli", "dswpli", "ppc"],
+      "baseline_family_seconds": 4.46, "after_family_seconds": 2.67,
+      "change": "Phase classes register their taper moments (PHASE_MOMENTS) before compute, like directed requests; the first request forms every registered moment in one _reduce_phase pass and the workspace's retained-array budget grows to fit the registered moments and one measure result per family (SpectralConnectivity.reserve_phase_moments).",
+      "memory_118x1024": {"peak_rss_mb_unregistered": 1142, "peak_rss_mb_registered": 1662, "cache_budget_mb": 862, "retained_mb": 772},
+      "separate_vs_single_pass_seconds": {"four_separate_passes": 2.824, "all_seven_together": 2.009},
+      "output": "bit-identical: Calculator pass versus per-class fresh Data (tests/unit/test_phase_lag.py) and all multitaper goldens (small and full)"},
+    "cov_GraphicalLassoCV": {
+      "baseline_seconds": 4.358, "after_seconds": 4.203, "change": "none (user decision 2026-10-28)",
+      "profile": "4.46 s = 80 sklearn _graphical_lasso fits (4 refinements x 5 folds x 4 alphas) + final fit, ~54 ms each; pinvh 0.25 s. n_jobs over folds would cut wall time only; a compiled solver is unverified."}
+  },
+  "verification": {
+    "unit": "tests/unit/test_basic_refactor.py, test_robust.py, test_phase_lag.py, test_spectral.py: all pass",
+    "goldens": "generate_goldens.py --check for *MinCovDet*, *EllipticEnvelope*, *multitaper* in small and full: PASS, max_abs 0",
+    "calculator": "fast Calculator end-to-end pass now compares the MinCovDet identifiers (CALC_E2E_SKIP reduced to bary*_sgddtw_*); test_golden_contract, calculation reporting and shared-cache tests pass",
+    "default_tier": "pytest tests (default tier): 1730 passed, 16 skipped, 6 xfailed, 11 failed. The 11 failures predate this branch and are untouched by it: tests/unit/test_frames.py::test_get_correlation_df_without_labels asserts only cov is signed in fabfour, but pec became Signed in the PEC refactor (092f6e7); the 10 test_numeric_boundaries bivariate directed aggregation cases monkeypatch _get_cache, which the directed multivariate path stopped using in the directed refactor (31993ac).",
+    "slow_calculator_e2e": "pytest tests/regression/test_spi_goldens.py --runslow --pyspi-size small -k calculator_table_matches_goldens: 2 passed (full config, all SPIs, shared caches)"
+  }
+}

@@ -24,6 +24,21 @@ DIRECTED_MEASURES = ("directed_coherence", "directed_transfer_function",
                      "direct_directed_transfer_function", "pairwise_spectral_granger_prediction")
 
 
+#: The bounded taper moments each phase-synchrony measure derives from, by the
+#: pyspi measure name. Keys absent here (coherency-based measures) need none.
+PHASE_MOMENTS = {
+    "phase_locking_value": ("unit",),
+    "pairwise_phase_consistency": ("unit",),
+    "signed_phase_lag_index": ("sign", "nonzero"),
+    "debiased_squared_phase_lag_index": ("sign", "nonzero"),
+    "signed_weighted_phase_lag_index": ("imag", "abs_imag"),
+    "debiased_squared_weighted_phase_lag_index": ("imag_pairs", "abs_imag_pairs"),
+}
+PHASE_MOMENT_ORDER = ("unit", "sign", "nonzero", "imag", "abs_imag", "imag_pairs", "abs_imag_pairs")
+# A representative full-resolution measure result retained per moment family.
+PHASE_MOMENTS_MEASURE = {kind: measure for measure, kinds in PHASE_MOMENTS.items() for kind in kinds}
+
+
 def canonical_directed_measure(name):
     # Off-diagonal equalities for pairwise, not conditional multichannel, fits.
     return {"partial_directed_coherence": "directed_transfer_function",
@@ -46,10 +61,31 @@ class SpectralConnectivity(sc.Connectivity):
         super().__init__(fourier_coefficients, frequencies=frequencies, time=time)
         self.frequency_resolution = frequency_resolution
         self._arrays = ArrayCache()
+        self._base_budget = self._arrays.max_bytes
         self._pairs = OrderedDict()
         self.directed_requests = set()
+        self.phase_requests = set()
         self._fit_diagnostics = None
         self._native_directed = None
+
+    def reserve_phase_moments(self):
+        """Let every registered phase moment and its measure stay cached.
+
+        The taper cross-products dominate each phase-synchrony measure, so
+        registered moments are formed together in one pass. They only pay off
+        if later measures still find them, so the retained-array budget grows
+        with what was requested at this shape; nothing registered means the
+        default bound.
+        """
+        if not self.phase_requests:
+            return
+        w, r, k, f, p = self._positive_coefficients.shape
+        element = w * f * p * p
+        moments = sum(element * (16 if kind == "unit" else 8 if kind != "nonzero"
+                                 else np.dtype(np.min_scalar_type(r*k)).itemsize)
+                      for kind in set(self.phase_requests))
+        measures = len({PHASE_MOMENTS_MEASURE[kind] for kind in self.phase_requests}) * element * 8
+        self._arrays.max_bytes = max(self._arrays.max_bytes, self._base_budget + moments + measures)
 
     @cached_property
     def frequencies(self):
@@ -293,11 +329,17 @@ class SpectralConnectivity(sc.Connectivity):
             # Preserve a compact count alongside PLI so its debiased variant
             # never needs another cross-product pass to identify zero signs.
             kinds = (*kinds, "nonzero")
-        keys = [("phase_statistic", kind) for kind in kinds]
+        # Registered moments not yet cached join the same pass: their
+        # cross-products are the cost, and the extra reductions are cheap.
+        wanted = list(kinds) + [kind for kind in PHASE_MOMENT_ORDER
+                                if kind in self.phase_requests and kind not in kinds
+                                and ("phase_statistic", kind) not in self._arrays.entries]
+        keys = [("phase_statistic", kind) for kind in wanted]
         def compute(missing):
             reduced = self._reduce_phase([key[1] for key in missing])
             return {key: reduced[key[1]] for key in missing}
-        return {key[1]: value for key, value in self._arrays.get_many(keys, compute).items()}
+        values = self._arrays.get_many(keys, compute)
+        return {kind: values[("phase_statistic", kind)] for kind in kinds}
 
     def _reduce_phase(self, kinds):
         """Form each bounded taper cross-product once for the requested moments."""
@@ -565,6 +607,7 @@ class _DataSpectralCache:
         self.workspaces = OrderedDict()
         self.parametric = ArrayCache()
         self.directed_requests = {}
+        self.phase_requests = {}
 
 
 def data_spectral_cache(data):
@@ -594,8 +637,11 @@ def spectral_workspace(data, sampling_frequency):
         if len(cache.workspaces) > 2:
             cache.workspaces.popitem(last=False)
     cache.workspaces.move_to_end(settings)
-    cache.workspaces[settings].directed_requests = cache.directed_requests.get(sampling_frequency, set())
-    return cache.workspaces[settings]
+    workspace = cache.workspaces[settings]
+    workspace.directed_requests = cache.directed_requests.get(sampling_frequency, set())
+    workspace.phase_requests = cache.phase_requests.get(sampling_frequency, set())
+    workspace.reserve_phase_moments()
+    return workspace
 
 
 def directed_workspace(data, sampling_frequency):

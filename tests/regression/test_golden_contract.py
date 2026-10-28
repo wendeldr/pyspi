@@ -23,10 +23,8 @@ def test_golden_corpus_is_complete_and_self_consistent(golden_set):
         # An accidentally broadened skip pattern must not disable numerical
         # checks of unrelated Calculator blocks while leaving tests green.
         approved_skips = {ident for ident, entry in meta["spis"].items()
-                          if (entry["cls"] in ("Covariance", "Precision")
-                              and (entry["params"] or {}).get("estimator") == "MinCovDet")
-                          or (entry["cls"] == "Barycenter"
-                              and (entry["params"] or {}).get("mode") == "sgddtw")}
+                          if entry["cls"] == "Barycenter"
+                          and (entry["params"] or {}).get("mode") == "sgddtw"}
         actual_skips = {ident for ident in meta["spis"]
                         if spi_policy.matches_any(ident, spi_policy.CALC_E2E_SKIP)}
         assert actual_skips == approved_skips

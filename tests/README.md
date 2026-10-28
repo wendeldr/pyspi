@@ -29,6 +29,8 @@ shared cache/base-class/configuration change or evidence of wider impact.
 | `unit/test_group_delay.py` | independent beta-null/BH/OLS reference, real/complex null calibration, pair/window isolation, contiguous-run handling, diagnostics and shared fits |
 | `unit/test_wilson.py`, `unit/test_directed_formulas.py`, `unit/test_directed_integration.py` | exact VAR/reference formulas, channel-order independent fits, native-grid dDTF, source-first direction, failure isolation and shared enabled requests |
 | `unit/test_envelope.py` | six PEC definitions, projection/absolute order, numerical degeneracy, scale invariance and shared cache ownership |
+| `unit/test_robust.py` | the Cholesky FAST-MCD (`pyspi._robust`) against seeded scikit-learn `MinCovDet`: identical supports, dense-formula distances/log-determinant, singular fallback |
+| `benchmark_run_hotspots.py`, `run_hotspots_results.json`, `run_hotspots/` | per-metric timing of the whole reviewed preset for one 118x1024 window, with the before/after receipts of the run-hotspot series |
 | `benchmark_review_selection.py`, `review_selection_results.json`, `benchmark_envelope.py`, `envelope_refactor_results.json` | measured complete/incremental candidate costs and PEC before/after family timing |
 | `benchmark_spectral.py`, `spectral*_refactor_results.json` | paired spectral timings and historical/current receipts, including traced allocation peaks and explicit definition/frequency-selection differences |
 | `test_calc.py`, `test_utils.py`, `test_phi_native.py` | original tests, unchanged |
@@ -144,8 +146,8 @@ Options:
 - Two fixture checks: `spearmanr`, `kendalltau` and `dcorr` give the same golden for `n1d0` and `n0d0` (rank-based or per-variable scale-invariant; measured max difference 0, 0 and 1.9e-15), and `cov_EmpiricalCovariance` differs between them.
 - `test_calculator_table_matches_goldens_fast` (default tier, `java`): writes a temporary config holding every identifier of the package's `config.yaml` that has a golden and is not `slow` at the selected size (module and class order kept, so the shared caches fill in the same order as a full pass), checks that the `Calculator` loads exactly those identifiers, runs one seeded `Calculator` pass with shared caches and compares each table block with its per-SPI golden. At small size that is 278 SPIs (289 minus the 11 slow ones) measured here at 32 s when run alone (plus 4 s setup for the JVM and imports) and 17 s inside a full default run, where earlier tests have already paid the first-call costs. It is the default-tier test that notices a cache-keying change (two SPIs reading each other's cached spectra), which the per-SPI tests cannot see because each runs on a fresh `Data`.
 - `test_calculator_table_matches_goldens` (`slow`, `java`): the same over the full `config.yaml`.
-- Both end-to-end tests skip `spi_policy.CALC_E2E_SKIP` (`cov*MinCovDet`, `prec*MinCovDet`, `bary*_sgddtw_*`; 8 identifiers): a single seeded pass draws from the global RNG in a different order than per-SPI seeding, and these then differ from their goldens. The four `*EllipticEnvelope` SPIs are `stochastic` too but reproduce their per-SPI goldens in that pass, so they are compared. All mismatches are reported together.
-- A separate shared-cache test includes all 12 stochastic identifiers, reseeding immediately before each SPI while retaining the shared `Data` caches. This provides numerical comparisons for the eight exclusions under controlled RNG conditions; the normal Calculator tests retain their existing seeding behavior.
+- Both end-to-end tests skip `spi_policy.CALC_E2E_SKIP` (`bary*_sgddtw_*`; 4 identifiers): a single seeded pass draws from the global RNG in a different order than per-SPI seeding, and these then differ from their goldens. The eight robust covariance SPIs (`*MinCovDet`, `*EllipticEnvelope`) were skipped or stochastic until pyspi fixed their FAST-MCD seed (`basic.ROBUST_RANDOM_STATE`, equal to the harness seed) and served `EllipticEnvelope` from the `MinCovDet` fit; they now reproduce their per-SPI goldens in every pass and are compared. All mismatches are reported together.
+- A separate shared-cache test includes all stochastic identifiers, reseeding immediately before each SPI while retaining the shared `Data` caches. This provides numerical comparisons for the exclusions under controlled RNG conditions; the normal Calculator tests retain their existing seeding behavior.
 - `test_catalogue_matches_golden_meta` (`java`): loads the imported package's `config.yaml` through both `harness.catalogue` and `Calculator`, and asserts that the identifier sets equal the recorded ones, that the harness order and classes match what the `Calculator` loaded, and that for every identifier `module`, `cls`, `params` and `deps` equal `meta.json` (after a JSON round trip) and `labels` match as sorted sets. The per-SPI tests rebuild each SPI from the recorded params, so this is what reports a `config.yaml` parameter edit that keeps the identifier (for example `terms` of `ids`).
 - `test_spi_catalogue[all|fast|sonnet|fabfour]`: subset sizes 301/233/14/4; for `all`, identifier order equals `calculator_order` and each SPI's labels equal the recorded ones.
 
@@ -155,11 +157,10 @@ First matching `fnmatch` pattern wins.
 
 | pattern | rtol | atol | reason |
 |---|---|---|---|
-| `cov*EllipticEnvelope`, `prec*EllipticEnvelope`, `cov*MinCovDet`, `prec*MinCovDet` | 1e-6 | 1e-8 | sklearn robust covariance draws from the global numpy RNG; reproducible only via `seed_all()` (marker `stochastic`; regenerate on an sklearn upgrade) |
 | `bary*_sgddtw_*` | 1e-6 | 1e-8 | tslearn subgradient DBA shuffles with the global numpy RNG (marker `stochastic`; regenerate on a tslearn upgrade) |
 | everything else | 1e-6 | 1e-8 | default; absorbs BLAS drift between machines; `atol` covers pure rounding noise (e.g. `bary_euclidean_mean` ~1e-16) |
 
-The stochastic patterns match 12 identifiers (the `-sq` variants included); their rows keep the default values and are listed to document that they match only because `seed_all()` runs right before them.
+The stochastic pattern matches 4 identifiers (the `-sq` variants included); its row keeps the default values and is listed to document that they match only because `seed_all()` runs right before them. The robust covariance SPIs (`cov*`/`prec*` `MinCovDet` and `EllipticEnvelope`) left this list when pyspi fixed their FAST-MCD seed; they are deterministic and keep the default tolerances.
 
 The iterative optimisers (`*GraphicalLassoCV*`, `phi_*`, `gpfit_*`, `anm`) have no row: seeded run to run and against the stored goldens they were measured bit-for-bit reproducible on the generating machine (the 11 matching identifiers, each recomputed twice at both sizes: maximum absolute difference from the stored goldens 0), so the default applies. If another machine shows drift for one of them, re-add a row for that pattern with the measured drift written in its reason, not a guessed tolerance. Overrides are documented exceptions; do not loosen a tolerance to make a failure go away.
 
@@ -586,6 +587,36 @@ Phi checking compares its defining parameter metadata as well as its values.
 `--size` takes `small`, `full` or `all` (both). `--spis GLOB` is an fnmatch filter on identifiers; when writing, the result is merged into the existing set and stored SPIs that are no longer in the catalogue are dropped (and printed). `--out DIR` writes elsewhere (default `tests/regression/goldens`). `--configfile PATH` uses another SPI config (default `pyspi/config.yaml`). `--check` compares values with the `spi_policy` tolerances and also compares each identifier's catalogue fields (`module`, `cls`, `params`, `deps`, and `labels` as sets) with the stored meta, printing a `CATALOGUE CHANGE` line for each mismatch. After regenerating, run `--check` once more on the same environment; it must pass. After upgrading sklearn or tslearn, investigate stochastic-output changes before approving any regeneration; an upgrade alone is not a reason to accept changed values. Refresh the exported `tests/requirements-test-lock.txt` from the root lock when the environment intentionally changes.
 
 A parameter change in `config.yaml` that keeps the identifier fails `test_catalogue_matches_golden_meta` (and `--check`) until the goldens are regenerated. That is expected for an intentional change; regenerate and say why in the commit message.
+
+## Run hotspots: robust covariance and phase-moment sharing
+
+`benchmark_run_hotspots.py` times every metric of the reviewed preset on one
+synthetic 118x1024 window through `Calculator.compute` (one numerical-library
+thread; loading, preprocessing and writing excluded) and writes a receipt with
+the per-metric medians. `run_hotspots_results.json` summarises the series:
+the window went from 20.40 s to 11.75 s. Run
+`.venv/bin/python tests/benchmark_run_hotspots.py --label after --repeats 3 --out tests/run_hotspots/after.json`.
+
+- `EllipticEnvelope` serves from the cached `MinCovDet` fit (its `fit` is
+  `MinCovDet.fit` plus an outlier offset the covariance never uses), and both
+  use the fixed seed `basic.ROBUST_RANDOM_STATE = 42`, which equals the
+  harness seed. The eight robust goldens are unchanged (max_abs 0), the
+  identifiers left `STOCHASTIC`/`CALC_E2E_SKIP`, and the two
+  `prec*_EllipticEnvelope` requests left the reviewed preset as exact
+  duplicates (198 requests).
+- `pyspi._robust.FastMinCovDet` copies scikit-learn 1.9.1's FAST-MCD with
+  Cholesky Mahalanobis C-steps (3.9 s -> 1.2 s at 118x1024). The same seed
+  selects the same supports (`unit/test_robust.py`, five synthetic sets, and
+  the benchmark window); a rounding-induced support change remains possible in
+  principle and would appear as a tolerance-level golden difference.
+- Phase-synchrony classes register their taper moments before compute
+  (`PHASE_MOMENTS`); the first request forms every registered moment in one
+  pass and the spectral workspace's retained-array budget grows to fit them
+  (`reserve_phase_moments`). At 118x1024 the family went from 4.46 s to
+  2.67 s and peak RSS from 1142 MB to 1662 MB; outputs are bit-identical to
+  per-class computation (`unit/test_phase_lag.py`) and to the multitaper goldens.
+- `GraphicalLassoCV` (4.2 s) is unchanged by decision: its cost is 80
+  scikit-learn glasso fits, `n_jobs` would only move the time onto more cores.
 
 ## Reproducing failures across environments
 

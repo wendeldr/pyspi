@@ -183,6 +183,10 @@ removes five further normalized redundancies, selecting representatives by
 standalone runtime. See [the regression/Gaussian review](regression_gaussian_review.md)
 and [the amplitude selection review](amplitude_selection_review.md) for the
 complete decisions and benchmark receipts.
+MinCovDet and EllipticEnvelope now also share one seeded FAST-MCD fit in the
+library: the latter only adds an outlier threshold that covariance and precision
+outputs do not use. The two redundant EllipticEnvelope precision requests remain
+excluded from the 195-output selection.
 The example workflow selects `reviewed`; the former `retained185` preset name
 has been replaced, so update custom workflow YAMLs that use that name.
 
