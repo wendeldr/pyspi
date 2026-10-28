@@ -68,6 +68,46 @@ class MomentWorkspace:
             @ self.centered(target, start, stop)[0].T,
         )
 
+    def standardized(self, start=0, stop=None):
+        """Unit-energy centered rows and log sample variance, without a unit floor.
+
+        Reuse ordinary centered observations where representable. Extreme units
+        are rescaled before centering; logarithms retain the variance even when
+        its square would overflow/underflow. Constants have log variance -inf;
+        nonfinite input rows stay NaN. A flag marks rows needing rescaled Gram
+        products rather than the ordinary shared cross-products.
+        """
+        stop = self.source.shape[1] if stop is None else stop
+
+        def compute():
+            raw = self.source[:, start:stop]
+            n = raw.shape[1]
+            with np.errstate(over="ignore", invalid="ignore", divide="ignore", under="ignore"):
+                centered, ss = self.centered(start=start, stop=stop)
+                finite = np.isfinite(raw).all(axis=1)
+                varying = np.any(raw != raw[:, :1], axis=1)
+                ordinary = finite & varying & np.isfinite(ss) & (ss >= np.finfo(float).tiny)
+                unit = np.full_like(centered, np.nan)
+                logvar = np.full(len(raw), np.nan)
+                unit[ordinary] = centered[ordinary]/np.sqrt(ss[ordinary, None])
+                logvar[ordinary] = np.log(ss[ordinary])-np.log(n-1)
+                rescaled = finite & varying & ~ordinary
+                if rescaled.any():
+                    scale = np.max(abs(raw[rescaled]), axis=1, keepdims=True)
+                    scaled = raw[rescaled]/scale
+                    scaled -= np.mean(scaled, axis=1, keepdims=True)
+                    energy = np.einsum("ij,ij->i", scaled, scaled)
+                    unit[rescaled] = scaled/np.sqrt(energy[:, None])
+                    logvar[rescaled] = 2*np.log(scale[:, 0])+np.log(energy)-np.log(n-1)
+                constant = finite & ~varying
+                unit[constant] = 0.
+                logvar[constant] = -np.inf
+                if n < 2:
+                    unit[:] = logvar[:] = np.nan
+            return unit, logvar, rescaled
+
+        return self.arrays.get(("standardized", start, stop), compute)
+
     def mse(self, coefficient, predictor="identity", target="identity"):
         """In-sample error, with direct residuals for cancellation-prone pairs.
 

@@ -654,6 +654,16 @@ These completed checks do not claim that the pending Gaussian refactor is done.
 
 ## SPI coverage
 
+The first native Gaussian group has independent coverage in
+`tests/unit/test_gaussian_native.py`: 21 cases across covariance formulas,
+raw/extreme units, source/target orientation, permutation, near-perfect fits,
+local singular/nonfinite handling, cache ownership/invalidation, normalization
+redundancy, serialization and JVM-free construction/execution. Numerical
+goldens for JE/CE/MI/TLMI are retained; metadata updates only remove their Java
+requirements and correct JE/CE signed labels. History-based Gaussian and
+symbolic TE work remains pending. Nine affected small/preprocessing/catalogue
+checks and four full Gaussian checks passed without changing numerical arrays.
+
 Historical 289-identifier inventory before the signed phase-lag additions, in `Calculator` order, from `goldens/small/meta.json` (5 x 64) and `goldens/full/meta.json` (7 x 100). `time_s` is the generator's fastest measured time for one `multivariate` call on the generating machine (a 64-core machine with `OMP_NUM_THREADS=1`; versions and the thread setting are in `meta.json`); `slow` is the marker at that size.
 
 | size | ok | partial_nan | all_nan / error | slow (skipped by default) | per-SPI tests run by the default tier |

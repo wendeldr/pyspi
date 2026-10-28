@@ -72,10 +72,11 @@ def test_missing_java_dependency_skips_jidt_spis(jvm, monkeypatch):
     monkeypatch.setattr(Calculator, "_optional_dependencies", {"java": False})
     calc = Calculator()
     ids = list(calc.spis)
-    assert not [i for i in ids if i.startswith(JAVA_PREFIXES)]
-    # One _excluded_spis entry per skipped config: 39 java SPIs out of 298.
-    assert len(calc._excluded_spis) == 39
-    assert calc.n_spis == 259
+    native = {"mi_gaussian", "je_gaussian", "ce_gaussian", "tlmi_gaussian"}
+    assert {i for i in ids if i.startswith(JAVA_PREFIXES)} == native
+    # Native Gaussian entries remain usable within mixed-estimator classes.
+    assert len(calc._excluded_spis) == 35
+    assert calc.n_spis == 263
     assert all(deps == ["java"] for _, deps in calc._excluded_spis)
     # Integrated information lives in the infotheory module but has no java dependency.
     assert any(i.startswith("phi_") for i in ids)

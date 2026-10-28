@@ -10,6 +10,7 @@ import sys
 import warnings
 
 from ._config import WorkflowError, fields, positive_number, read_yaml
+from pyspi._dependencies import spi_dependencies
 
 
 @dataclass(frozen=True)
@@ -146,8 +147,6 @@ def resolve_metrics(path, *, sampling_rate_hz=None) -> tuple[Metric, ...]:
         with redirect_stdout(sys.stderr):
             for module_name, name, params, dependencies in entries:
                 where = f"{module_name}.{name}({params!r})"
-                if "java" in dependencies:
-                    java_required()
                 try:
                     module = importlib.import_module(module_name, "pyspi")
                     cls = getattr(module, name)
@@ -160,12 +159,9 @@ def resolve_metrics(path, *, sampling_rate_hz=None) -> tuple[Metric, ...]:
                         if "fs" in params and float(positive_number(params["fs"], f"{where}.fs")) != rate:
                             raise WorkflowError(f"{where}: fs differs from workflow sampling_rate_hz")
                         params = {**params, "fs": rate}
-                    required = list(dict.fromkeys(dependencies))
-                    if any(parent.__name__ == "JIDTBase" and parent.__module__ == "pyspi.statistics.infotheory"
-                           for parent in cls.__mro__):
+                    required = spi_dependencies(cls, params, dependencies)
+                    if "java" in required:
                         java_required()
-                        if "java" not in required:
-                            required.append("java")
                     for parent in cls.__mro__:
                         labels = vars(parent).get("labels")
                         if isinstance(labels, list):

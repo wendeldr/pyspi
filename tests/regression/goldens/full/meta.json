@@ -337,6 +337,61 @@
   "python": "3.11.16"
  },
  "generated": "2026-10-14T14:53:55+00:00",
+ "metadata_updates": [
+  {
+   "generated": "2026-10-28T01:17:37.031031+00:00",
+   "reason": "Native Gaussian JE/CE/MI/TLMI no longer require Java; differential JE/CE labels permit negative values. Numerical arrays unchanged.",
+   "source_sha256": {
+    "pyspi/_dependencies.py": "43c2b39884592b0696fa1d952b7bd98a0cead9d5722e8199f3b1dee9fed4565d",
+    "pyspi/_gaussian.py": "36f1b1ebdb93d903ec5df3b3fa636419d70646600b9e015bf9eb95229a957eb4",
+    "pyspi/_moments.py": "2d701cfc8356c4892e769c3f13da21d0ae1105ded3f720adb45bc2ab07575c8f",
+    "pyspi/statistics/infotheory.py": "092d69d53f7700952aed0ab20a28d591764c3cac3ab0b67b5db6604391b99965"
+   },
+   "updated_fields": [
+    [
+     "ce_gaussian",
+     "deps"
+    ],
+    [
+     "ce_gaussian",
+     "labels"
+    ],
+    [
+     "ce_kernel_W-0.5",
+     "labels"
+    ],
+    [
+     "ce_kozachenko",
+     "labels"
+    ],
+    [
+     "je_gaussian",
+     "deps"
+    ],
+    [
+     "je_gaussian",
+     "labels"
+    ],
+    [
+     "je_kernel_W-0.5",
+     "labels"
+    ],
+    [
+     "je_kozachenko",
+     "labels"
+    ],
+    [
+     "mi_gaussian",
+     "deps"
+    ],
+    [
+     "tlmi_gaussian",
+     "deps"
+    ]
+   ],
+   "validation": "20 initial Gaussian checks passed; invalid-input fixture adjusted to mutate Data after construction, then the remaining case and 12 dependency/configuration checks passed."
+  }
+ ],
  "name": "full",
  "partial_regenerations": [
   {
@@ -1560,16 +1615,14 @@
   },
   "ce_gaussian": {
    "cls": "ConditionalEntropy",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "directed",
     "infotheory",
     "linear",
-    "unordered",
-    "unsigned"
+    "signed",
+    "unordered"
    ],
    "module": ".statistics.infotheory",
    "nan_offdiag": 0,
@@ -1589,8 +1642,8 @@
     "directed",
     "infotheory",
     "nonlinear",
-    "unordered",
-    "unsigned"
+    "signed",
+    "unordered"
    ],
    "module": ".statistics.infotheory",
    "nan_offdiag": 0,
@@ -1610,8 +1663,8 @@
     "directed",
     "infotheory",
     "linear",
-    "unordered",
-    "unsigned"
+    "signed",
+    "unordered"
    ],
    "module": ".statistics.infotheory",
    "nan_offdiag": 0,
@@ -3518,16 +3571,14 @@
   },
   "je_gaussian": {
    "cls": "JointEntropy",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "infotheory",
     "linear",
+    "signed",
     "undirected",
-    "unordered",
-    "unsigned"
+    "unordered"
    ],
    "module": ".statistics.infotheory",
    "nan_offdiag": 0,
@@ -3546,9 +3597,9 @@
    "labels": [
     "infotheory",
     "nonlinear",
+    "signed",
     "undirected",
-    "unordered",
-    "unsigned"
+    "unordered"
    ],
    "module": ".statistics.infotheory",
    "nan_offdiag": 0,
@@ -3567,9 +3618,9 @@
    "labels": [
     "infotheory",
     "linear",
+    "signed",
     "undirected",
-    "unordered",
-    "unsigned"
+    "unordered"
    ],
    "module": ".statistics.infotheory",
    "nan_offdiag": 0,
@@ -3835,9 +3886,7 @@
   },
   "mi_gaussian": {
    "cls": "MutualInfo",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "infotheory",
@@ -6218,9 +6267,7 @@
   },
   "tlmi_gaussian": {
    "cls": "TimeLaggedMutualInfo",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "directed",

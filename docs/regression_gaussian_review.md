@@ -67,7 +67,7 @@ spectral/PEC review, 0.5-second nonoverlapping windows, and existing preprocessi
 | Ridge and RECI | Complete initial chunk: 19 focused cases (18 initial passes plus corrected near-cubic fixture), 10 small/preprocessing and 2 full goldens pass; no golden changes. Three-repeat timings below. |
 | BayesianRidge, Lasso, ElasticNet, SGD | Implemented and independently checked: 53 regression tests; exact penalties and separately stopped Bayesian updates. Full-family and retained-selection timings below. |
 | Euclidean barycenters | Shared moment means and bounded unique-pair extrema; 8 independent cases pass. Other barycenter modes are unchanged. |
-| Gaussian MI, joint/conditional entropy and lagged MI | Pending native formulas and JVM-independent construction. |
+| Gaussian MI, joint/conditional entropy and lagged MI | Native shared moments implemented; 21 independent checks pass, including voltage/extreme units, singular-pair isolation, JVM-free construction/execution and redundancy under averaging. Family timing pending with remaining Gaussian work. |
 | Fixed/automatic Gaussian TE, stochastic interaction, crossmap/causal entropy, DI | Pending shared aligned histories, formula checks and independent references. |
 | Cross-metric corrections | Current Data.add_process already preprocesses consistently; do not repeat the old audit's now-fixed input bug. Generic undirected loop still duplicates pairs; change only proven symmetric affected metrics. |
 | Config / redundancy | Alpha=0.1 Lasso varies on all 36 EEG pilot windows and meets runtime gate. Six approved redundant outputs removed: current selection 199, before pending Granger/symbolic candidates. Starting selection: 205. Separate nine-output amplitude/reference template uses detrend=true, zscore=false. |
@@ -174,3 +174,38 @@ Reproduce the new retained-selection timing without repeating old fits:
 ```
 .venv/bin/python tests/benchmark_regression.py --models Lasso ElasticNet BayesianRidge RECI --family-only --reviewed --native-only --repeats 9 --out tests/regression_selection_results.json
 ```
+
+## Native Gaussian foundation
+
+JE, CE, MI and lag-one MI now reuse the mutation-checked moment workspace.
+Ordinary MI/JE/CE share the same pair statistics and the regression Gram matrix;
+lagged MI uses separately centered, correctly aligned source/target intervals.
+The native constructors and these calculations do not require a JVM. Both the
+workflow resolver and Calculator now resolve Java requirements per estimator
+within mixed-estimator classes, so their non-Gaussian variants still require it.
+
+The covariance convention remains N−1, entropies/information remain in nats,
+and CE[i,j] means H(channel j | channel i). No physical-unit variance floor or
+artificial regularization is introduced. Extreme units are scaled internally,
+with log variances restoring differential-entropy units. Near-perfect fits use
+explicit residual energy instead of subtracting rounded squared correlations.
+Exact/numerically unresolved linear dependence has infinite MI and undefined
+JE/CE; constant-variable MI is zero, while conditioning on a constant leaves
+the other variable's entropy unchanged. Nonfinite input and insufficient samples
+are distinguished in `diagnostics`; bad pairs do not blank the whole matrix.
+JE/CE now correctly have signed labels, including their existing non-Gaussian
+differential estimators. No non-Gaussian estimator formula changed in this chunk.
+
+The 21 independent cases passed (20 initially; one fixture needed to insert NaN
+through Data's writable view because Data construction correctly rejects it).
+The corrected case and 12 affected dependency/configuration checks then passed.
+Gaussian numerical goldens are retained; only the affected dependency/signed
+metadata was updated with provenance. Benchmarking is deferred until the
+remaining Gaussian family can be measured with actual shared costs.
+The affected checks passed: 9 small/preprocessing/catalogue cases and 4 full
+Gaussian cases. Their numerical arrays were not regenerated.
+
+Still pending: fixed/automatic Granger, stochastic interaction, corrected XME
+and DI, shared causal entropy, genuine symbolic TE, higher-history runtime gates,
+final config inclusion/count and the full Gaussian benchmark. This foundation
+does not finish the active goal.

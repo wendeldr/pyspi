@@ -228,6 +228,8 @@ class Calculator:
         raise Exception("Do not set this property externally. Use the group() method.")
 
     def _load_yaml(self, document):
+        from pyspi._dependencies import spi_dependencies
+
         print("Loading configuration file: {}".format(document))
 
         with open(document) as f:
@@ -238,33 +240,29 @@ class Calculator:
                 print("*** Importing module {}".format(module_name))
                 module = importlib.import_module(module_name, __package__)
                 for fcn in yf[module_name]:
-                    deps = yf[module_name][fcn].get('dependencies')
-                    if deps is not None:
-                        all_deps_met = all(Calculator._optional_dependencies.get(dep, False) for dep in deps)
-                        if not all_deps_met:
-                            current_base_spi = yf[module_name][fcn]
-                            print(f"Optional dependencies: {deps} not met. Skipping {len(current_base_spi.get('configs'))} SPI(s):")
-                            for params in current_base_spi.get('configs'):
-                                print(f"*SKIPPING SPI: {module_name}.{fcn}(x,y,{params})...")
-                                self._excluded_spis.append([f"{fcn}(x,y,{params})", deps])
+                    spec = yf[module_name][fcn]
+                    cls = getattr(module, fcn)
+                    configurations = spec.get('configs')
+                    configurations = [None] if configurations is None else configurations
+                    for params in configurations:
+                        deps = spi_dependencies(cls, params, spec.get('dependencies'))
+                        if not all(Calculator._optional_dependencies.get(dep, False) for dep in deps):
+                            print(f"*SKIPPING SPI: {module_name}.{fcn}(x,y,{params}); missing dependencies {deps}")
+                            self._excluded_spis.append([f"{fcn}(x,y,{params})", deps])
                             continue
-                    try:
-                        for params in yf[module_name][fcn].get('configs'):
-                            print(
-                                f"[{self.n_spis}] Adding SPI {module_name}.{fcn}(x,y,{params})"
-                            )
-                            spi = getattr(module, fcn)(**params)
-                            self._spis[spi.identifier] = spi
-                            print(
-                                f'Succesfully initialised SPI with identifier "{spi.identifier}" and labels {spi.labels}'
-                            )
-                    except TypeError:
-                        print(f"[{self.n_spis}] Adding SPI {module_name}.{fcn}(x,y)...")
-                        spi = getattr(module, fcn)()
+                        print(f"[{self.n_spis}] Adding SPI {module_name}.{fcn}(x,y,{params})")
+                        fallback = False
+                        try:
+                            spi = cls(**(params or {}))
+                        except TypeError:
+                            # Preserve the existing default-constructor behavior;
+                            # estimator-specific dependency selection is separate.
+                            spi = cls()
+                            fallback = True
                         self._spis[spi.identifier] = spi
-                        print(
-                            f'Succesfully initialised SPI with identifier "{spi.identifier}" and labels {spi.labels}'
-                        )
+                        print(f'Succesfully initialised SPI with identifier "{spi.identifier}" and labels {spi.labels}')
+                        if fallback:
+                            break
 
     def load_dataset(self, dataset):
         """Load new dataset into existing instance.

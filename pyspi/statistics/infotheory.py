@@ -4,9 +4,31 @@ from pyspi import utils
 import copy
 import logging
 
-from pyspi.base import Undirected, Directed, Unsigned, parse_univariate, parse_bivariate
+from pyspi.base import Undirected, Directed, Unsigned, parse_univariate, parse_bivariate, parse_multivariate
+from pyspi._gaussian import gaussian_result, gaussian_diagnostics, gaussian_marginal_entropy
 
 class JIDTBase(Unsigned):
+
+    _native_gaussian_measure = None
+
+    @classmethod
+    def requires_java(cls, estimator="gaussian", **kwargs):
+        return not (estimator == "gaussian" and cls._native_gaussian_measure)
+
+    def issigned(self):
+        return "signed" in self.labels
+
+    @parse_multivariate
+    def multivariate(self, data):
+        if self._estimator == "gaussian" and self._native_gaussian_measure:
+            return gaussian_result(data, self._native_gaussian_measure)
+        return super().multivariate(data)
+
+    @parse_multivariate
+    def diagnostics(self, data):
+        if self._estimator == "gaussian" and self._native_gaussian_measure:
+            return gaussian_diagnostics(data, self._native_gaussian_measure)
+        return {}
 
     # List of (currently) modifiable parameters
     _NNK_PROP_NAME = "k"
@@ -101,6 +123,8 @@ class JIDTBase(Unsigned):
             return (self._estimator,)
 
     def _getcalc(self, measure):
+        if not self.requires_java(estimator=self._estimator):
+            return None
         if measure == "entropy":
             if self._estimator == "kernel":
                 calc = self._base_class.kernel.EntropyCalculatorMultiVariateKernel()
@@ -136,6 +160,8 @@ class JIDTBase(Unsigned):
     # No Theiler window yet (can it be done?)
     @parse_univariate
     def _compute_entropy(self, data, i=None):
+        if self._estimator == "gaussian" and self._native_gaussian_measure:
+            return gaussian_marginal_entropy(data)[i]
         if not hasattr(data, "entropy"):
             data.entropy = {}
 
@@ -158,6 +184,8 @@ class JIDTBase(Unsigned):
     # No Theiler window is available in the JIDT estimator
     @parse_bivariate
     def _compute_joint_entropy(self, data, i, j):
+        if self._estimator == "gaussian" and self._native_gaussian_measure:
+            return gaussian_result(data, "je")[i, j]
         if not hasattr(data, "joint_entropy"):
             data.joint_entropy = {}
 
@@ -224,7 +252,8 @@ class JointEntropy(JIDTBase, Undirected):
 
     name = "Joint entropy"
     identifier = "je"
-    labels = ["unsigned", "infotheory", "unordered", "undirected"]
+    labels = ["signed", "infotheory", "unordered", "undirected"]
+    _native_gaussian_measure = "je"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -238,13 +267,16 @@ class ConditionalEntropy(JIDTBase, Directed):
 
     name = "Conditional entropy"
     identifier = "ce"
-    labels = ["unsigned", "infotheory", "unordered", "directed"]
+    labels = ["signed", "infotheory", "unordered", "directed"]
+    _native_gaussian_measure = "ce"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
+        if self._estimator == "gaussian":
+            return gaussian_result(data, "ce")[i, j]
         return self._compute_joint_entropy(data, i=i, j=j) - self._compute_entropy(
             data, i=i
         )
@@ -254,6 +286,7 @@ class MutualInfo(JIDTBase, Undirected):
     name = "Mutual information"
     identifier = "mi"
     labels = ["unsigned", "infotheory", "unordered", "undirected"]
+    _native_gaussian_measure = "mi"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -267,6 +300,8 @@ class MutualInfo(JIDTBase, Undirected):
     @parse_bivariate
     def bivariate(self, data, i=None, j=None, verbose=False):
         """Compute mutual information between Y and X"""
+        if self._estimator == "gaussian":
+            return gaussian_result(data, "mi")[i, j]
         self._set_theiler_window(data, i, j)
         self._calc.initialise(1, 1)
 
@@ -287,6 +322,7 @@ class TimeLaggedMutualInfo(JIDTBase, Directed):
     name = "Time-lagged mutual information"
     identifier = "tlmi"
     labels = ["unsigned", "infotheory", "temporal", "directed"]
+    _native_gaussian_measure = "tlmi"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -300,6 +336,8 @@ class TimeLaggedMutualInfo(JIDTBase, Directed):
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None, verbose=False):
+        if self._estimator == "gaussian":
+            return gaussian_result(data, "tlmi")[i, j]
         self._set_theiler_window(data, i, j)
         self._calc.initialise(1, 1)
         try:

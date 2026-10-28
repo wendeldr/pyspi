@@ -127,11 +127,12 @@ def iter_config_entries(configfile=None, optional_deps=None):
     them. Identifier collisions are *not* resolved here (the Calculator keeps
     the last one); callers that build a dict get the same last-wins result.
 
-    The mirrored quirks: a class whose ``dependencies`` are unmet is skipped
-    entirely; a ``TypeError`` raised while iterating ``configs`` (including
-    ``configs`` being ``None``) aborts that class's loop and adds one
-    default-constructed instance.
+    Requirements are resolved per estimator; a ``TypeError`` raised while
+    constructing a configured SPI aborts that class's loop and adds one default
+    instance. ``configs=None`` requests a default instance directly.
     """
+    from pyspi._dependencies import spi_dependencies
+
     configfile = Path(configfile) if configfile is not None else DEFAULT_CONFIG
     if optional_deps is None:
         optional_deps = optional_dependencies()
@@ -142,18 +143,20 @@ def iter_config_entries(configfile=None, optional_deps=None):
         module = importlib.import_module(module_name, "pyspi")
         for fcn in yf[module_name]:
             spec = yf[module_name][fcn]
-            deps = spec.get("dependencies")
-            if deps is not None:
+            cls = getattr(module, fcn)
+            configurations = spec.get("configs")
+            configurations = [None] if configurations is None else configurations
+            for params in configurations:
+                deps = spi_dependencies(cls, params, spec.get("dependencies"))
                 if not all(optional_deps.get(dep, False) for dep in deps):
                     continue
-            cls = getattr(module, fcn)
-            try:
-                for params in spec.get("configs"):
-                    spi = cls(**params)
-                    yield _entry(module_name, fcn, params, deps, spi), spi
-            except TypeError:
-                spi = cls()
-                yield _entry(module_name, fcn, None, deps, spi), spi
+                try:
+                    spi = cls(**(params or {}))
+                except TypeError:
+                    spi = cls()
+                    yield _entry(module_name, fcn, None, deps, spi), spi
+                    break
+                yield _entry(module_name, fcn, params, deps, spi), spi
 
 
 def _entry(module_name, cls_name, params, deps, spi):

@@ -99,7 +99,17 @@ def test_jidt_java_dependency_inferred_if_omitted(metric_config, monkeypatch):
     from pyspi import utils
     monkeypatch.setattr(utils, "is_jpype_jvm_available", lambda: False)
     with pytest.raises(WorkflowError, match="require an available Java"):
-        resolve_metrics(metric_config({"MutualInfo": {"configs": [{}]}}, module=".statistics.infotheory"))
+        resolve_metrics(metric_config({"MutualInfo": {"configs": [{"estimator": "kraskov"}]}}, module=".statistics.infotheory"))
+
+
+def test_native_gaussian_resolves_without_java(metric_config, monkeypatch):
+    from pyspi import utils
+    def forbidden():
+        raise AssertionError("Native Gaussian resolution must not check/start Java")
+    monkeypatch.setattr(utils, "is_jpype_jvm_available", forbidden)
+    metrics = resolve_metrics(metric_config({"MutualInfo": {"dependencies": ["java"], "configs": [{}]}},
+                                            module=".statistics.infotheory"))
+    assert metrics[0].identifier == "mi_gaussian" and metrics[0].dependencies == ()
 
 
 @pytest.mark.parametrize("params", [{"fs": 0}, {"fmin": -1}, {"fmin": .4, "fmax": .3},
@@ -139,14 +149,17 @@ def test_reviewed_preset_preserves_unrelated_inventory_and_applies_approved_chan
     import pyspi
     path = Path(pyspi.__file__).parent / "workflow/reviewed.yaml"
     metrics = resolve_metrics(path)
-    assert len(metrics) == len({m.identifier for m in metrics}) == 205
+    assert len(metrics) == len({m.identifier for m in metrics}) == 199
     root = Path(__file__).resolve().parents[2]
     for patient in ("004", "105", "111"):
         survey = json.loads((root / f"docs/storage_comparison/explore/properties_{patient}_64.json").read_text())
         historical = {row["metric"] for row in survey["rows"]}
         changed_classes = {"CrossCorrelation", "SignedPhaseLagIndex", "SignedWeightedPhaseLagIndex"}
+        removed = {"bary_euclidean_mean", "bary-sq_euclidean_mean", "lmfit_Ridge", "lmfit_SGDRegressor",
+                   "je_gaussian", "ce_gaussian", "lmfit_Lasso"}
         assert {m.identifier for m in metrics if m.class_name not in changed_classes} == {
-            identifier for identifier in historical if not identifier.startswith(("xcorr", "gd_"))}
+            identifier for identifier in historical if not identifier.startswith(("xcorr", "gd_"))
+            and identifier not in removed} | {"lmfit_Lasso_alpha-0-1"}
         assert {m.identifier for m in metrics if m.class_name == "CrossCorrelation"} == {
             f"xcorr{sq}_{stat}_sig-False_fs-1_lag-0-125"
             for sq in ("", "-sq") for stat in ("max", "mean")} | {

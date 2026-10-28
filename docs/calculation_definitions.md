@@ -89,6 +89,36 @@ normalization is disabled) scales to zero. Near exact fits use explicit
 residuals to avoid cancellation in the moment formula. Both regressions use
 NaN diagonals, reject multiple realizations, and return copies of cached output.
 
+## Gaussian entropy and mutual information
+
+Gaussian joint entropy, conditional entropy, MI and lag-one MI use sample
+covariance (N−1) and report **nats**. Entropies are differential entropies:
+they depend on amplitude units and can be negative. JE[i,j] = H(i,j),
+CE[i,j] = H(j | i), and MI[i,j] = I(i;j). Lag-one MI[i,j] = I(i[t];j[t+1]);
+it does not condition on the target's own past. These four Gaussian calculations
+use shared native numerical work and require no Java runtime.
+
+For normalized channels, marginal Gaussian entropy is the same constant,
+so JE and CE are affine transformations of MI. The equivalence survives
+averaging windows; the reviewed normalized selection omits JE/CE. With
+normalization disabled, differing channel variances break that equivalence.
+Keep amplitude units consistent in the alternative run.
+
+Gaussian MI is zero if either variable is constant. A constant conditioning
+source leaves the target's conditional entropy unchanged. Singular differential
+entropies are undefined (NaN); exact or numerically unresolved nonconstant
+linear dependence gives infinite MI. Near-perfect but resolvable relationships
+use direct residuals to avoid artificial infinity from rounded correlations.
+There is no variance cutoff in volts, added jitter or ridge penalty. Diagnostics
+distinguish constants, singular covariance, nonfinite inputs and insufficient
+observations; failure in one pair does not invalidate unrelated pairs.
+
+Formula/covariance provenance is recorded in
+[`audit/checks/refs/_kernels_infotheory.py`](../audit/checks/refs/_kernels_infotheory.py)
+against the bundled JIDT source; see also the upstream
+[Gaussian MI implementation](https://github.com/jlizier/jidt/blob/master/java/source/infodynamics/measures/continuous/gaussian/MutualInfoCalculatorMultiVariateGaussian.java).
+History-based Gaussian calculations are still being refactored separately.
+
 ## Cross-correlation
 
 For two length-T channels, subtract each channel's full-window mean. For lag h,
