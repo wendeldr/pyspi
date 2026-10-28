@@ -373,6 +373,14 @@ matrix. They do not square the input, perform a matrix product, or invert a
 squared covariance matrix. Fitted estimators are shared, with returned arrays
 copied so callers cannot alter subsequent results.
 
+Precision outputs are the fitted estimator's `precision_` entries. They are
+not partial correlations: the latter require `-Theta[i,j] / sqrt(Theta[i,i] *
+Theta[j,j])`, which this class does not apply. Empirical and robust fits use a
+Moore-Penrose pseudoinverse on singular covariance matrices, including CAR data.
+Shrunk covariance is invertible when its shrinkage supplies a positive diagonal.
+The [amplitude selection review](amplitude_selection_review.md) explains why
+removing z-scoring has different effects on these cases.
+
 ## Spectral signs and ordered pairs
 
 Multitaper PSI, group delay, and coherence phase have **signed, directed**

@@ -1,7 +1,8 @@
 # One alternative preprocessing choice: keep detrending, disable z-scoring.
 # This retains amplitude/variance information while removing DC offsets and
-# linear drift. Disabling detrending would chiefly restore channel offsets to
-# the ordinary barycenter mean; that output is not included here.
+# linear drift; no additional mean centering is needed. Selects 12 outputs from
+# the full 200-output review: distances, barycenter maxima and shrunk precision.
+# Definitions and per-output decisions: docs/amplitude_selection_review.md.
 # Replace paths and use the SAME retained-channel selection as the main run.
 # Preflight reads headers only; it does not calculate or create the output path.
 version: 1
@@ -24,9 +25,11 @@ reference: car
 # reference.method: mapping. Confirm physical adjacency, missing/bad contacts,
 # and the treatment of shaft endpoints first. A partial mapping leaves other
 # contacts in their original reference: do not mix those outputs unknowingly.
-# Keep this same nine-metric subset and preprocessing for that comparison;
+# Keep this same 12-output subset and preprocessing for that comparison;
 # use a distinct output directory. Reference changes mix channel signals and
-# can change even scale-invariant metrics. They are not just normalization.
+# can change even scale-invariant metrics. To compare normalized connectivity
+# across references, use a matched subset of reviewed.yaml with zscore: true;
+# the amplitude-only selection here does not cover that separate comparison.
 window:
   length_seconds: 0.5
   step_seconds: 0.5

@@ -170,13 +170,19 @@ imports may initialize their normal third-party caches. NumPy/Python RNG state
 and mutable SPI class label lists are restored after inspection; labels remain
 unvalidated scientific metadata.
 
-The packaged [reviewed.yaml](../pyspi/workflow/reviewed.yaml) contains 205
+The packaged [reviewed.yaml](../pyspi/workflow/reviewed.yaml) contains 195
 requests derived from the 185 identifiers in the archived patient surveys.
 It removes ten group-delay band requests, adds 22 signed PLI/wPLI requests
 matching the existing bands, and adds eight cross-correlation requests (signed
 minimum/peak without selection and six significant-only summaries). Factorized
 directed additions are excluded because of their runtime; corrected methods
-remain available in explicit configurations. Other selections are preserved.
+remain available in explicit configurations. The subsequent regression/Gaussian
+review removes six redundant outputs, replaces the Lasso and symbolic TE
+settings, and adds Gaussian Granger order 4. The systematic amplitude review
+removes five further normalized redundancies, selecting representatives by
+standalone runtime. See [the regression/Gaussian review](regression_gaussian_review.md)
+and [the amplitude selection review](amplitude_selection_review.md) for the
+complete decisions and benchmark receipts.
 The example workflow selects `reviewed`; the former `retained185` preset name
 has been replaced, so update custom workflow YAMLs that use that name.
 
@@ -293,21 +299,45 @@ and is recorded as window-preprocessing failure rather than changing reference.
 
 [`examples/workflow/amplitude_sensitivity.yaml`](../examples/workflow/amplitude_sensitivity.yaml)
 sets **detrend=true, zscore=false**, retains the main run's 0.5-second
-nonoverlapping windows and filter settings, and selects nine metrics from
+nonoverlapping windows and filter settings, and selects 12 outputs from
 [`pyspi/workflow/amplitude_sensitivity.yaml`](../pyspi/workflow/amplitude_sensitivity.yaml).
 Replace the input, channel-selection metadata and output paths before preflight.
 This template does not change the main run or launch any calculations.
 
-The four amplitude-sensitive outputs are empirical covariance, squared
-Euclidean barycenter mean, Gaussian joint entropy and Gaussian conditional
-entropy. Their previously discussed redundancies rely on equal normalized
-variances. The five comparison outputs are Spearman, Gaussian MI, order-one
-Gaussian Granger/TE, ordinary amplitude-envelope correlation and mean wPLI in
-1–250 Hz. They allow reference sensitivity to be examined alongside amplitude.
-The ordinary barycenter mean remains zero after detrending and is omitted.
-Fixed regression penalties calibrated for normalized inputs are not carried
-into voltage-unit data. Gaussian differential entropies depend on amplitude
-units; keep the same EDF-to-volts convention across comparisons.
+The [systematic review](amplitude_selection_review.md) covers **all 200 starting
+main-run outputs**, with one decision per identifier in
+[`audit/amplitude_review.csv`](../audit/amplitude_review.csv). The alternative
+retains four distances (Euclidean, cityblock, Chebyshev, Canberra), two Euclidean
+barycenter maxima (ordinary and square-before-maximum), and six precision outputs
+(LedoitWolf, OAS, ShrunkCovariance, each ordinary and squared).
+
+The review omits 161 scale-invariant outputs and 22 amplitude-sensitive outputs
+whose extra behavior is unwanted amplitude weighting, unit-dependent penalties
+or singular/numerical effects. Five more are deferred: four GraphicalLassoCV
+outputs with numerical/runtime problems, and signed-data Bray-Curtis with a
+potentially vanishing denominator. Previously removed normalized redundancies
+were also reconsidered. Five additional normalized redundancies were removed
+using standalone timings to choose representatives: the main selection is now
+**195 outputs**, retaining cosine distance, squared empirical covariance and
+MinCovDet precision over their equivalent alternatives.
+
+The six included precision outputs change beyond pairwise amplitude rescaling
+because shrinkage acts on unequal raw variances. They are fitted inverse
+covariance entries, not bounded partial correlations. The distances and extrema
+also retain relative amplitude information lost by z-scoring. These are
+exploratory features, not established EZ biomarkers. Keep the same
+EDF-to-volts convention across comparisons.
+
+Detrending already removes the mean as well as a linear trend. Ordinary
+barycenter mean remains zero. Fixed regression penalties calibrated for
+normalized inputs are not carried into voltage-unit data.
+
+Full inventory checks used eight-channel full-rank and CAR inputs with unequal
+amplitudes and volts/microvolts unit controls. The 12-output benchmark at
+118 channels × 1,024 samples measured **88.6 ms/window, 53.1 seconds ×600,
+61.1 minutes ×41,400**. These are serial projections with one numerical thread,
+excluding preprocessing, imports and I/O. Receipts and per-family increments
+are linked from the complete review; no clinical discrimination was tested.
 
 CAR is the runnable reference in the template. A local neighbor-average
 (Laplacian) montage is a candidate comparison, using the existing explicit
@@ -321,6 +351,9 @@ relationships, so a change in connectivity is not by itself evidence that one
 reference reveals the true network. See the
 [SEEG reference comparison](https://pmc.ncbi.nlm.nih.gov/articles/PMC6495648/) and
 [MNE's mapping interface](https://mne.tools/stable/generated/mne.set_eeg_reference.html).
+Reference changes can also change scale-invariant connectivity outputs. To
+test that question, compare a matched subset of the normalized main selection
+under each reference; the amplitude selection does not replace that comparison.
 
 ## Standalone selection metadata
 

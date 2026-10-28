@@ -675,9 +675,20 @@ serialization. `unit/test_symbolic_transfer.py` has nine independent ordinal
 count/direction/edge checks. Family benchmarks and the EEG/runtime gates are now complete. Only the eight
 intentionally changed numerical outputs were refreshed at each size, with
 provenance. The final affected checks passed: 52 small/preprocessing/catalogue,
-39 full-size and 10 integration/configuration checks. The working config has
+39 full-size and 10 integration/configuration checks. That goal ended with
 200 outputs; its selection and all runtime/memory projections are recorded in
 `docs/regression_gaussian_review.md`.
+
+The later systematic amplitude review covered all 200 outputs and selected 12
+for the unnormalized alternative. Five normalized redundancies were removed
+using independent timings, leaving 195 in `workflow/reviewed.yaml`. The affected
+inventory test passed; completed numerical regressions were not repeated.
+`review_amplitude_selection.py` records scale/unit checks, and
+`benchmark_amplitude_selection.py` records both whole-family and standalone
+costs (`--standalone-only` appends the latter without repeating the former).
+`benchmark_redundant_representatives.py` compares equivalent outputs with fresh
+Data/cache per calculation. Decisions and receipt links are in
+`docs/amplitude_selection_review.md` and `audit/amplitude_review.csv`.
 
 Historical 289-identifier inventory before the signed phase-lag additions, in `Calculator` order, from `goldens/small/meta.json` (5 x 64) and `goldens/full/meta.json` (7 x 100). `time_s` is the generator's fastest measured time for one `multivariate` call on the generating machine (a 64-core machine with `OMP_NUM_THREADS=1`; versions and the thread setting are in `meta.json`); `slow` is the marker at that size.
 

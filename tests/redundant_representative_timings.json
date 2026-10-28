@@ -1,0 +1,777 @@
+{
+  "created_utc": "2026-10-28T16:41:24.138094+00:00",
+  "design": "118x1024 synthetic seed 9028; CAR followed by detrend and ddof=1 z-score; one numerical thread. Every timed output uses a fresh Data/cache and no other metric. Preprocessing, imports, constructors and I/O excluded. Timing order alternates. Robust fits use the same seed for like-for-like algorithm comparison.",
+  "passes": {
+    "pdist_cosine": [
+      {
+        "seconds": 0.0014265940117184073,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0022148810094222426,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.002148960018530488,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.001912846986670047,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0018011780048254877,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0017842259840108454,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0013925079838372767,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0014581230061594397,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0015781550027895719,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.001355315005639568,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0012850890052504838,
+        "warnings": {}
+      }
+    ],
+    "cov_EmpiricalCovariance": [
+      {
+        "seconds": 0.004921646002912894,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0044236550165805966,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005797806021291763,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005529834015760571,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004613177006831393,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005701932008378208,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004420200973981991,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005576541007030755,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004876818013144657,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.006873915990581736,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004878656007349491,
+        "warnings": {}
+      }
+    ],
+    "cov_ShrunkCovariance": [
+      {
+        "seconds": 0.004756334994453937,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004887246002908796,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004494605993386358,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004852256999583915,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005766896007116884,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.00494077501934953,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.006747233011992648,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004548977012746036,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0054075839871075004,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005625538004096597,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0075219119898974895,
+        "warnings": {}
+      }
+    ],
+    "cov-sq_EmpiricalCovariance": [
+      {
+        "seconds": 0.004381551989354193,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005149231001269072,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004439893004018813,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005003155994927511,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005309294996550307,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005018786003347486,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004667781991884112,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004757861024700105,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.00459565399796702,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005189463990973309,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004668276000302285,
+        "warnings": {}
+      }
+    ],
+    "cov-sq_ShrunkCovariance": [
+      {
+        "seconds": 0.005364379991078749,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004809803998796269,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005276598007185385,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.00597654000739567,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004590426979120821,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0064848729816731066,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.0048519330157432705,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005348291015252471,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.005575112998485565,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.004843018017709255,
+        "warnings": {}
+      },
+      {
+        "seconds": 0.006306499999482185,
+        "warnings": {}
+      }
+    ],
+    "prec_MinCovDet": [
+      {
+        "seconds": 2.9179680079978425,
+        "warnings": {
+          "UserWarning: The covariance matrix associated to your dataset is not full rank": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.443475749864149 > -118.647448554190106). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.552191631625618 > -117.245338812185594). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.568725013762901 > -118.433722451249508). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.242499156201603 > -120.643696537863818). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.725555464586776 > -117.224546630705746). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.125663842229528 > -116.840462270321467). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.511005526482577 > -115.916470634590780). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.259066121081815 > -119.769891744847783). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.427449867854165 > -115.478743162241642). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.585990964088182 > -118.597591875766668). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.989717943033355 > -116.463502295119042). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.645718775051847 > -118.087551527330845). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-121.199312119428953 > -122.010242335645287). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.481934574940297 > -117.868228936060177). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.735945422062699 > -118.652236153936812). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.440091687906119 > -119.845556796014336). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.950415680514823 > -119.872228277991084). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.224035905771771 > -120.015795374999868). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.560319795935783 > -119.746633242597682). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.604242042695432 > -116.820637367019884). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.769977835518389 > -119.463125016078266). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.262716472286513 > -117.660611745084893). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.266924907697486 > -117.995163408068720). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.500745598672125 > -116.512346510350596). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.728612770152111 > -118.421759950712030). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.752684842346497 > -116.138979203466391). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.617000475570364 > -117.066777150841631). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.641410244632439 > -117.477658268833068). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.438279951879963 > -115.066888611302318). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.168618499317446 > -114.603936570575286). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.404504696315286 > -119.109252788553718). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.183245379131193 > -116.281857667799315). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.978205846641231 > -115.323046332932975). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.310891074585840 > -115.757178177214229). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.282163983616613 > -119.395679292827026). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.015156079326857 > -118.394131066148930). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.608160704061561 > -117.214296507631872). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.650994270863649 > -117.317473204341439). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.991481820889987 > -118.214625372204225). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.704369583133342 > -119.151288566069709). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.745177063967446 > -116.215180693213171). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.830673584618467 > -117.607165581715776). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.494513902384980 > -116.123122561807349). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.776185176317227 > -119.009777397824294). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.560487421844584 > -117.504949030685424). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.977336166453426 > -118.265018238905171). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.842541083228326 > -118.782430337128162). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.249268098722553 > -118.395480055876646). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.076229516710399 > -120.564306572140225). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.627210295048314 > -117.722520474852644). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.867470824210017 > -118.064695401546260). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.563750214966092 > -119.182789423372299). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.566531530156482 > -119.596150947337691). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.637630775854234 > -119.123138591635922). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.981600733268309 > -121.996503753810643). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.336690819957710 > -116.680425566658798). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.056758235982386 > -118.560835632758653). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.835902817523859 > -119.683200677911074). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.720067770073314 > -118.859829712448487). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.004232121964009 > -120.043452835117336). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.922886074155940 > -119.461882574888620). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.443883122189874 > -118.435215191244325). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.037405787734571 > -119.568034038796725). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.196363407300055 > -119.802499210870366). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.169765646342086 > -116.477250346090045). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.289460160182330 > -118.314254479563743). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-92.371782230310018 > -92.625723042341519). You may want to try with a higher value of support_frac": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-91.246446977404105 > -91.363441361454591). You may want to try with a higher value of support_frac": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-92.104966262844954 > -92.595644455806138). You may want to try with a higher value of support_frac": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-90.769865375205626 > -91.620261899050178). You may want to try with a higher value of support_frac": 1
+        }
+      },
+      {
+        "seconds": 2.91320701802033,
+        "warnings": {
+          "UserWarning: The covariance matrix associated to your dataset is not full rank": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.833962087376051 > -115.344787711142104). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.335183568631351 > -116.079624043578860). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.021038755245598 > -120.035941775787862). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-113.983189187309762 > -114.270871259761606). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.524934891701008 > -115.604977599374521). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.686413027733067 > -116.004866758851591). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.147866077192134 > -117.422302922893863). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.946761483157559 > -116.695961337966878). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.955192179868703 > -117.407177303611746). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.470915826745284 > -116.704530677926726). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.197511607156144 > -115.459875871623666). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.329461707690569 > -117.734926815798715). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.799014512243872 > -115.914261376117054). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.761753383443633 > -116.309315892159788). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.194873001848265 > -116.819398368668629). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.448294151900456 > -115.381734567610152). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.960309688877004 > -121.599367018492273). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.590828605079935 > -117.627710532340927). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.894370623031008 > -117.424998874093163). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.943604309246012 > -115.204564111273072). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.993936542352003 > -118.792444238569800). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.549017055093799 > -117.001002178836842). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.526260334137447 > -118.565332005084713). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.467030897636420 > -116.502748980238493). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.453396693631930 > -116.891651624563110). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.400542980123149 > -115.059788609007384). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.314945110917776 > -118.429477972408932). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.095290849780639 > -119.599368246556921). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.716282297134882 > -118.383989117693034). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.643117030350766 > -120.029411391470617). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.637559757266331 > -118.682011519837175). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.716887547898054 > -117.250817907824086). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.179504800012808 > -116.383477604338765). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.790044317552344 > -119.650245582775426). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.137417880422845 > -119.290097390361296). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.289679318489931 > -117.675973679609825). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.599126312737965 > -117.935598549359213). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.586362339172041 > -115.297858658400173). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.705791392700220 > -121.111256500808352). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.401426701295094 > -116.444911813234924). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.205390287347598 > -119.402614864683798). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.835322601468150 > -118.710791338822034). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.173865409825638 > -118.090156141699822). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.623122343395153 > -118.154598714359565). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.540995744217582 > -119.580216457370824). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.436815815110236 > -118.542176330768086). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.992700530482750 > -119.938610679538058). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.923171087726985 > -118.077321767554253). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.071483727054769 > -118.083084638733254). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.702517415531844 > -117.220213888142865). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.000206036847629 > -118.938475675440543). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.168680777110808 > -117.787719985516929). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.985543201872801 > -119.371837562992681). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.290135384065422 > -115.820763635127634). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.844589685442060 > -118.633047045806350). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.037976051549776 > -116.098600673366178). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.057667826582104 > -120.003577975637455). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.724190701840428 > -122.386778528865946). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.299125557759936 > -118.741472593129160). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.498140301360706 > -118.243473235091244). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.222449843326075 > -115.566184590027191). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.416866545431503 > -120.224426249254293). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.937166953823933 > -119.385191676350900). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.630271459332022 > -118.911683918770251). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.663387218344383 > -119.291995877766766). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.163826896503565 > -116.836771369746003). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.008365032742574 > -118.413830140850749). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.173093751394248 > -118.507494472227918). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-91.271989779313657 > -91.471161306017990). You may want to try with a higher value of support_frac": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-91.551053154401643 > -92.761665269028583). You may want to try with a higher value of support_frac": 1
+        }
+      },
+      {
+        "seconds": 3.788349572016159,
+        "warnings": {
+          "UserWarning: The covariance matrix associated to your dataset is not full rank": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.056434173852267 > -118.309197142347671). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.911127457606213 > -117.327287854831113). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.093349939009045 > -119.652965726944458). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.338145735427503 > -116.085360137257737). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.961149107444299 > -119.229413094038946). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.474501221407195 > -118.826727186609247). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.808778054401216 > -116.031921605715382). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.230954364916101 > -115.966661159894869). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.447874544271968 > -117.428703797283674). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.075329633681662 > -118.533944656381180). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.400097771393007 > -118.660084921322309). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.979583603853598 > -116.306796515062075). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.476994016727730 > -115.946997645973440). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.790977052332323 > -117.027365830396576). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.593328627643842 > -116.634150622164086). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.801593992322921 > -117.294070477420803). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.217271717131609 > -120.622736825239869). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.800926575821791 > -118.880969283495361). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.746702925144774 > -120.132997286264640). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.206276215552563 > -119.613189863875164). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.834431919051724 > -117.476285805224222). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.342943220263038 > -119.288853369318318). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.376844903013222 > -117.856417983275094). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.093958779081049 > -118.613784532825491). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.217845788147002 > -119.475942326168479). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.451960375798464 > -118.483392698291937). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.473141317827441 > -118.417602926668252). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.463417163826904 > -118.591250535336854). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.770774068218486 > -120.250347148480330). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.759672186328061 > -118.922822996133704). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.257441392097917 > -118.950588572657864). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.653545505285507 > -115.677643056864525). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.696103944907264 > -119.043177592873917). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.405448427827849 > -118.024487636234056). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.457986287642470 > -118.716100062964330). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.556158133690104 > -118.654770422358254). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.056761084027187 > -117.749908264587162). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.899918832571075 > -115.838188471163988). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.871187387781731 > -118.697865960966197). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.882968008895801 > -117.894568920574272). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.613542565292306 > -116.330220243262488). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.572946705019433 > -122.057853354807506). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.180962599379598 > -117.426085057412621). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.225913917975333 > -118.662631569587688). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.976673320804963 > -118.418506073084018). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.382260079452834 > -118.480872368120941). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.677084965150897 > -117.579952676692869). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.794738844906533 > -121.468715278478228). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.973461488006251 > -116.484287111772218). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.183809493298767 > -119.436572461794213). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.317608423415592 > -118.431123732626006). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.916868038887173 > -117.303162400007025). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.542388658429928 > -118.012392287675709). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.896679994719989 > -120.970787966873758). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.540677523457191 > -118.313266245696994). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.171605680281942 > -117.418465758213443). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.174189509344046 > -120.530864453282788). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.870348465865675 > -120.862778630555894). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.390479913466436 > -121.223389036401542). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.114372778251706 > -116.065349068113747). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.819977795757893 > -118.906929421416152). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-93.009531628258515 > -93.050215694815563). You may want to try with a higher value of support_frac": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-92.871082778064078 > -94.217976946131870). You may want to try with a higher value of support_frac": 1
+        }
+      }
+    ],
+    "prec_EllipticEnvelope": [
+      {
+        "seconds": 2.9921713240037207,
+        "warnings": {
+          "UserWarning: The covariance matrix associated to your dataset is not full rank": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.443475749864149 > -118.647448554190106). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.552191631625618 > -117.245338812185594). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.568725013762901 > -118.433722451249508). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.242499156201603 > -120.643696537863818). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.725555464586776 > -117.224546630705746). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.125663842229528 > -116.840462270321467). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.511005526482577 > -115.916470634590780). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.259066121081815 > -119.769891744847783). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.427449867854165 > -115.478743162241642). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.585990964088182 > -118.597591875766668). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.989717943033355 > -116.463502295119042). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.645718775051847 > -118.087551527330845). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-121.199312119428953 > -122.010242335645287). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.481934574940297 > -117.868228936060177). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.735945422062699 > -118.652236153936812). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.440091687906119 > -119.845556796014336). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.950415680514823 > -119.872228277991084). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.224035905771771 > -120.015795374999868). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.560319795935783 > -119.746633242597682). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.604242042695432 > -116.820637367019884). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.769977835518389 > -119.463125016078266). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.262716472286513 > -117.660611745084893). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.266924907697486 > -117.995163408068720). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.500745598672125 > -116.512346510350596). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.728612770152111 > -118.421759950712030). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.752684842346497 > -116.138979203466391). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.617000475570364 > -117.066777150841631). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.641410244632439 > -117.477658268833068). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.438279951879963 > -115.066888611302318). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.168618499317446 > -114.603936570575286). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.404504696315286 > -119.109252788553718). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.183245379131193 > -116.281857667799315). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.978205846641231 > -115.323046332932975). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.310891074585840 > -115.757178177214229). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.282163983616613 > -119.395679292827026). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.015156079326857 > -118.394131066148930). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.608160704061561 > -117.214296507631872). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.650994270863649 > -117.317473204341439). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.991481820889987 > -118.214625372204225). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.704369583133342 > -119.151288566069709). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.745177063967446 > -116.215180693213171). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.830673584618467 > -117.607165581715776). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.494513902384980 > -116.123122561807349). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.776185176317227 > -119.009777397824294). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.560487421844584 > -117.504949030685424). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.977336166453426 > -118.265018238905171). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.842541083228326 > -118.782430337128162). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.249268098722553 > -118.395480055876646). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.076229516710399 > -120.564306572140225). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.627210295048314 > -117.722520474852644). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.867470824210017 > -118.064695401546260). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.563750214966092 > -119.182789423372299). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.566531530156482 > -119.596150947337691). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.637630775854234 > -119.123138591635922). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.981600733268309 > -121.996503753810643). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.336690819957710 > -116.680425566658798). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.056758235982386 > -118.560835632758653). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.835902817523859 > -119.683200677911074). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.720067770073314 > -118.859829712448487). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.004232121964009 > -120.043452835117336). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.922886074155940 > -119.461882574888620). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.443883122189874 > -118.435215191244325). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.037405787734571 > -119.568034038796725). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.196363407300055 > -119.802499210870366). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.169765646342086 > -116.477250346090045). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.289460160182330 > -118.314254479563743). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-92.371782230310018 > -92.625723042341519). You may want to try with a higher value of support_frac": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-91.246446977404105 > -91.363441361454591). You may want to try with a higher value of support_frac": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-92.104966262844954 > -92.595644455806138). You may want to try with a higher value of support_frac": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-90.769865375205626 > -91.620261899050178). You may want to try with a higher value of support_frac": 1
+        }
+      },
+      {
+        "seconds": 3.0760535990120843,
+        "warnings": {
+          "UserWarning: The covariance matrix associated to your dataset is not full rank": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.833962087376051 > -115.344787711142104). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.335183568631351 > -116.079624043578860). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.021038755245598 > -120.035941775787862). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-113.983189187309762 > -114.270871259761606). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.524934891701008 > -115.604977599374521). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.686413027733067 > -116.004866758851591). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.147866077192134 > -117.422302922893863). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.946761483157559 > -116.695961337966878). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.955192179868703 > -117.407177303611746). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.470915826745284 > -116.704530677926726). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.197511607156144 > -115.459875871623666). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.329461707690569 > -117.734926815798715). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.799014512243872 > -115.914261376117054). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.761753383443633 > -116.309315892159788). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.194873001848265 > -116.819398368668629). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.448294151900456 > -115.381734567610152). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.960309688877004 > -121.599367018492273). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.590828605079935 > -117.627710532340927). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.894370623031008 > -117.424998874093163). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.943604309246012 > -115.204564111273072). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.993936542352003 > -118.792444238569800). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.549017055093799 > -117.001002178836842). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.526260334137447 > -118.565332005084713). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.467030897636420 > -116.502748980238493). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.453396693631930 > -116.891651624563110). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.400542980123149 > -115.059788609007384). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.314945110917776 > -118.429477972408932). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.095290849780639 > -119.599368246556921). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.716282297134882 > -118.383989117693034). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.643117030350766 > -120.029411391470617). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.637559757266331 > -118.682011519837175). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.716887547898054 > -117.250817907824086). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.179504800012808 > -116.383477604338765). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.790044317552344 > -119.650245582775426). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.137417880422845 > -119.290097390361296). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.289679318489931 > -117.675973679609825). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.599126312737965 > -117.935598549359213). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.586362339172041 > -115.297858658400173). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.705791392700220 > -121.111256500808352). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.401426701295094 > -116.444911813234924). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.205390287347598 > -119.402614864683798). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.835322601468150 > -118.710791338822034). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.173865409825638 > -118.090156141699822). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.623122343395153 > -118.154598714359565). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.540995744217582 > -119.580216457370824). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.436815815110236 > -118.542176330768086). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.992700530482750 > -119.938610679538058). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.923171087726985 > -118.077321767554253). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.071483727054769 > -118.083084638733254). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.702517415531844 > -117.220213888142865). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.000206036847629 > -118.938475675440543). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.168680777110808 > -117.787719985516929). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.985543201872801 > -119.371837562992681). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.290135384065422 > -115.820763635127634). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.844589685442060 > -118.633047045806350). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.037976051549776 > -116.098600673366178). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.057667826582104 > -120.003577975637455). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.724190701840428 > -122.386778528865946). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.299125557759936 > -118.741472593129160). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.498140301360706 > -118.243473235091244). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.222449843326075 > -115.566184590027191). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.416866545431503 > -120.224426249254293). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.937166953823933 > -119.385191676350900). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.630271459332022 > -118.911683918770251). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.663387218344383 > -119.291995877766766). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.163826896503565 > -116.836771369746003). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.008365032742574 > -118.413830140850749). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.173093751394248 > -118.507494472227918). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-91.271989779313657 > -91.471161306017990). You may want to try with a higher value of support_frac": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-91.551053154401643 > -92.761665269028583). You may want to try with a higher value of support_frac": 1
+        }
+      },
+      {
+        "seconds": 3.6699729510000907,
+        "warnings": {
+          "UserWarning: The covariance matrix associated to your dataset is not full rank": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.056434173852267 > -118.309197142347671). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.911127457606213 > -117.327287854831113). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.093349939009045 > -119.652965726944458). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.338145735427503 > -116.085360137257737). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.961149107444299 > -119.229413094038946). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.474501221407195 > -118.826727186609247). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.808778054401216 > -116.031921605715382). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.230954364916101 > -115.966661159894869). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.447874544271968 > -117.428703797283674). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.075329633681662 > -118.533944656381180). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.400097771393007 > -118.660084921322309). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.979583603853598 > -116.306796515062075). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.476994016727730 > -115.946997645973440). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.790977052332323 > -117.027365830396576). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.593328627643842 > -116.634150622164086). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.801593992322921 > -117.294070477420803). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.217271717131609 > -120.622736825239869). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.800926575821791 > -118.880969283495361). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.746702925144774 > -120.132997286264640). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.206276215552563 > -119.613189863875164). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.834431919051724 > -117.476285805224222). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.342943220263038 > -119.288853369318318). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.376844903013222 > -117.856417983275094). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.093958779081049 > -118.613784532825491). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.217845788147002 > -119.475942326168479). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.451960375798464 > -118.483392698291937). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.473141317827441 > -118.417602926668252). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.463417163826904 > -118.591250535336854). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.770774068218486 > -120.250347148480330). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.759672186328061 > -118.922822996133704). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.257441392097917 > -118.950588572657864). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.653545505285507 > -115.677643056864525). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.696103944907264 > -119.043177592873917). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.405448427827849 > -118.024487636234056). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.457986287642470 > -118.716100062964330). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.556158133690104 > -118.654770422358254). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.056761084027187 > -117.749908264587162). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-114.899918832571075 > -115.838188471163988). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.871187387781731 > -118.697865960966197). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.882968008895801 > -117.894568920574272). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.613542565292306 > -116.330220243262488). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.572946705019433 > -122.057853354807506). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.180962599379598 > -117.426085057412621). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.225913917975333 > -118.662631569587688). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.976673320804963 > -118.418506073084018). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.382260079452834 > -118.480872368120941). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-116.677084965150897 > -117.579952676692869). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-119.794738844906533 > -121.468715278478228). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.973461488006251 > -116.484287111772218). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.183809493298767 > -119.436572461794213). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.317608423415592 > -118.431123732626006). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.916868038887173 > -117.303162400007025). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.542388658429928 > -118.012392287675709). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.896679994719989 > -120.970787966873758). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.540677523457191 > -118.313266245696994). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-117.171605680281942 > -117.418465758213443). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.174189509344046 > -120.530864453282788). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.870348465865675 > -120.862778630555894). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-120.390479913466436 > -121.223389036401542). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-115.114372778251706 > -116.065349068113747). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-118.819977795757893 > -118.906929421416152). You may want to try with a higher value of support_fr": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-93.009531628258515 > -93.050215694815563). You may want to try with a higher value of support_frac": 1,
+          "RuntimeWarning: Determinant has increased; this should not happen: log(det) > log(previous_det) (-92.871082778064078 > -94.217976946131870). You may want to try with a higher value of support_frac": 1
+        }
+      }
+    ]
+  },
+  "checks": {
+    "cosine_equals_one_minus_scaled_empirical": {
+      "finite_pairs": 13806,
+      "nan_mask_equal": true,
+      "infinity_mask_equal": true,
+      "max_abs_error": 1.4432899320127035e-15,
+      "relative_frobenius_error": 1.6477955825120356e-16
+    },
+    "shrunk_equals_point9_empirical": {
+      "finite_pairs": 13806,
+      "nan_mask_equal": true,
+      "infinity_mask_equal": true,
+      "max_abs_error": 0.0,
+      "relative_frobenius_error": 0.0
+    },
+    "shrunk_squared_equals_point81_empirical_squared": {
+      "finite_pairs": 13806,
+      "nan_mask_equal": true,
+      "infinity_mask_equal": true,
+      "max_abs_error": 1.1102230246251565e-16,
+      "relative_frobenius_error": 1.3448998195739038e-16
+    },
+    "matched_seed_robust_pass_1": {
+      "finite_pairs": 13806,
+      "nan_mask_equal": true,
+      "infinity_mask_equal": true,
+      "max_abs_error": 0.0,
+      "relative_frobenius_error": 0.0
+    },
+    "matched_seed_robust_pass_2": {
+      "finite_pairs": 13806,
+      "nan_mask_equal": true,
+      "infinity_mask_equal": true,
+      "max_abs_error": 0.0,
+      "relative_frobenius_error": 0.0
+    },
+    "matched_seed_robust_pass_3": {
+      "finite_pairs": 13806,
+      "nan_mask_equal": true,
+      "infinity_mask_equal": true,
+      "max_abs_error": 0.0,
+      "relative_frobenius_error": 0.0
+    }
+  },
+  "standalone_summary": {
+    "pdist_cosine": {
+      "median_seconds": 0.0015781550027895719,
+      "min_seconds": 0.0012850890052504838,
+      "max_seconds": 0.0022148810094222426,
+      "seconds_600": 0.9468930016737431,
+      "seconds_41400": 65.33561711548828
+    },
+    "cov_EmpiricalCovariance": {
+      "median_seconds": 0.004921646002912894,
+      "min_seconds": 0.004420200973981991,
+      "max_seconds": 0.006873915990581736,
+      "seconds_600": 2.9529876017477363,
+      "seconds_41400": 203.7561445205938
+    },
+    "cov_ShrunkCovariance": {
+      "median_seconds": 0.00494077501934953,
+      "min_seconds": 0.004494605993386358,
+      "max_seconds": 0.0075219119898974895,
+      "seconds_600": 2.964465011609718,
+      "seconds_41400": 204.54808580107056
+    },
+    "cov-sq_EmpiricalCovariance": {
+      "median_seconds": 0.004757861024700105,
+      "min_seconds": 0.004381551989354193,
+      "max_seconds": 0.005309294996550307,
+      "seconds_600": 2.854716614820063,
+      "seconds_41400": 196.97544642258435
+    },
+    "cov-sq_ShrunkCovariance": {
+      "median_seconds": 0.005348291015252471,
+      "min_seconds": 0.004590426979120821,
+      "max_seconds": 0.0064848729816731066,
+      "seconds_600": 3.2089746091514826,
+      "seconds_41400": 221.4192480314523
+    },
+    "prec_MinCovDet": {
+      "median_seconds": 2.9179680079978425,
+      "min_seconds": 2.91320701802033,
+      "max_seconds": 3.788349572016159,
+      "seconds_600": 1750.7808047987055,
+      "seconds_41400": 120803.87553111068
+    },
+    "prec_EllipticEnvelope": {
+      "median_seconds": 3.0760535990120843,
+      "min_seconds": 2.9921713240037207,
+      "max_seconds": 3.6699729510000907,
+      "seconds_600": 1845.6321594072506,
+      "seconds_41400": 127348.61899910029
+    }
+  }
+}

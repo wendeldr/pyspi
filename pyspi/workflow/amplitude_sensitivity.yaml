@@ -1,53 +1,42 @@
-# Small alternative selection for amplitude/reference sensitivity.
+# Amplitude-sensitive selection from a systematic review of all 200 outputs
+# in reviewed.yaml. 12 outputs; per-output decisions: audit/amplitude_review.csv.
+# Definitions, exclusions and measured cost: docs/amplitude_selection_review.md.
 # Use with examples/workflow/amplitude_sensitivity.yaml:
 # detrend: true, zscore: false; 0.5 s nonoverlapping windows at 2048 Hz.
 # The accompanying workflow carries the preprocessing settings; this file only
-# selects metrics. These nine outputs are also suitable for a matched montage
-# comparison using the same retained contacts, windows and preprocessing.
-# Gaussian JE/CE and squared barycenter mean cease to be redundant with MI or
-# covariance alone when channel variances differ. Ordinary barycenter mean is
-# still zero after detrending and is deliberately absent.
-# Fixed Ridge/Lasso/ElasticNet penalties are omitted: EDF signals are in volts,
-# so reusing penalties chosen for z-scored inputs can suppress every slope.
+# selects metrics. Detrending already removes the mean and linear drift.
+# These are exploratory features; selection does not establish EZ discrimination.
+# Precision is the fitted inverse covariance, NOT partial correlation. Shrinkage
+# pulls raw variances toward a common level; unequal amplitudes therefore alter
+# the fitted structure beyond pairwise rescaling. Ordinary empirical covariance
+# and simple amplitude-weighted variants remain excluded by the stated criterion.
+# Fixed-penalty regressions/glasso, unstable GraphicalLassoCV, robust fits failing
+# in volts, and signed-data Bray-Curtis are excluded; see the complete review.
 .statistics.basic:
-  Covariance:
+  Precision:
     configs:
-    - estimator: EmpiricalCovariance
-  SpearmanR:
-    configs:
-    - squared: false
+    - estimator: LedoitWolf
+    - estimator: OAS
+    - estimator: ShrunkCovariance
+    - estimator: LedoitWolf
+      squared: true
+    - estimator: OAS
+      squared: true
+    - estimator: ShrunkCovariance
+      squared: true
 .statistics.distance:
+  PairwiseDistance:
+    configs:
+    - metric: euclidean
+    - metric: cityblock
+    - metric: chebyshev
+    - metric: canberra
   Barycenter:
     configs:
     - mode: euclidean
-      statistic: mean
+      statistic: max
+    # Square the pointwise barycenter BEFORE taking the maximum: negative
+    # excursions contribute. This is not square(max(barycenter)).
+    - mode: euclidean
+      statistic: max
       squared: true
-.statistics.infotheory:
-  JointEntropy:
-    configs:
-    - estimator: gaussian
-  ConditionalEntropy:
-    configs:
-    - estimator: gaussian
-  MutualInfo:
-    configs:
-    - estimator: gaussian
-  TransferEntropy:
-    configs:
-    - estimator: gaussian
-      k_history: 1
-      l_history: 1
-.statistics.misc:
-  PowerEnvelopeCorrelation:
-    configs:
-    - orth: false
-      log: false
-      absolute: false
-.statistics.spectral:
-  WeightedPhaseLagIndex:
-    configs:
-    # Same 1-250 Hz band as reviewed.yaml at 2048 Hz. fs=1 expresses cycles/sample.
-    - fs: 1
-      fmin: 0.00048828125
-      fmax: 0.1220703125
-      statistic: mean

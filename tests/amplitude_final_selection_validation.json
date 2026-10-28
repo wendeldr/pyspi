@@ -1,0 +1,44 @@
+{
+  "created_utc": "2026-10-28T16:49:26.428595+00:00",
+  "reviewed_inventory": 200,
+  "normalized_selection": 195,
+  "amplitude_selection": 12,
+  "main_removed": [
+    "cov-sq_ShrunkCovariance",
+    "cov_EmpiricalCovariance",
+    "cov_ShrunkCovariance",
+    "prec-sq_EllipticEnvelope",
+    "prec_EllipticEnvelope"
+  ],
+  "amplitude_identifiers": [
+    "prec_LedoitWolf",
+    "prec_OAS",
+    "prec_ShrunkCovariance",
+    "prec-sq_LedoitWolf",
+    "prec-sq_OAS",
+    "prec-sq_ShrunkCovariance",
+    "pdist_euclidean",
+    "pdist_cityblock",
+    "pdist_chebyshev",
+    "pdist_canberra",
+    "bary_euclidean_max",
+    "bary-sq_euclidean_max"
+  ],
+  "checks": [
+    "Every initial identifier accounted for exactly once",
+    "Final main and amplitude selections match the per-output decisions",
+    "Numerical review receipt matches the starting 200-output config",
+    "All invariant controls passed",
+    "Actual amplitude config exactly matches benchmarked order and parameters",
+    "Workflow schema passed with temporary placeholders and no EDF samples or output writes",
+    "User calculation-review CSV byte-identical to HEAD",
+    "Affected main-selection inventory test: 1 passed"
+  ],
+  "representative_policy": "Independent uncached cost, not conditional on retaining other calculations.",
+  "artifact_sha256": {
+    "pyspi/workflow/reviewed.yaml": "ab52dcb23cfd5ebc8d63a9753fff0eb0ad8f0e06d9bc49f599df425b007e330f",
+    "pyspi/workflow/amplitude_sensitivity.yaml": "620abb93f1a5adf8603e8447d6276905c4b6cae86127be80395984d07c745aaa",
+    "examples/workflow/amplitude_sensitivity.yaml": "aa15791580e476e80c1f5691e80e237eefa0202a9dcb7422ab7f0a330e582404",
+    "audit/amplitude_review.csv": "2dba7cfd66da0b62e49c8a82dbe017ab3a64c0bc6a4a1a45520b163fa8ba0d29"
+  }
+}

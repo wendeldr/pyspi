@@ -1,6 +1,6 @@
 # Regression and Gaussian calculation review
 
-Active goal: optimize runtime across compatible regression and Gaussian
+Completed goal: optimize runtime across compatible regression and Gaussian
 information calculations, correct implementation errors, and agree on estimator
 changes before applying them. Starting commit: `31993ac`. Preserve the completed
 spectral/PEC review, 0.5-second nonoverlapping windows, and existing preprocessing.
@@ -71,7 +71,7 @@ spectral/PEC review, 0.5-second nonoverlapping windows, and existing preprocessi
 | Fixed/automatic Gaussian TE, stochastic interaction, crossmap/causal entropy, DI | Complete: 39 independent Gaussian-history checks, including a filtered ill-conditioned design; 20 retained-estimator checks; affected small/full goldens and benchmarks. |
 | Genuine symbolic TE | Implemented with independent categorical counts, direction, permutation, ties, sparse/dense and mutation checks (9 passed). Three-patient EEG occupancy and autocorrelated-null checks completed. Both approved m=3 replacements enabled. |
 | Cross-metric corrections | Shared bounded raw histories, target conditional entropies and CCE/DI sums; mutation-aware automatic Theiler windows with one ACF per channel; Java TE serialization retains configured histories. Gaussian SI evaluates unique pairs. Retained non-Gaussian reverse evaluations remain until numerical permutation behavior is established. |
-| Config / redundancy | Alpha=0.1 Lasso varies on all 36 EEG pilot windows and meets runtime gate. Six approved redundant outputs removed; both symbolic variants replaced; Gaussian order 4 added: selection 200, starting from 205. Orders 16/32 disabled by EEG runtime gate. Separate nine-output amplitude/reference template uses detrend=true, zscore=false. |
+| Config / redundancy | Alpha=0.1 Lasso varies on all 36 EEG pilot windows and meets runtime gate. Six approved redundant outputs removed; both symbolic variants replaced; Gaussian order 4 added: selection 200, starting from 205. Orders 16/32 disabled by EEG runtime gate. Separate amplitude template uses detrend=true, zscore=false; the subsequent systematic review of all 200 outputs selected 12 amplitude-sensitive outputs (see amplitude selection review). |
 | Validation / goldens | 52 affected small/preprocessing/catalogue and 39 full checks passed; 10 integration/configuration checks passed. Eight intentionally changed numerical outputs refreshed at each size; unrelated arrays preserved, with provenance. |
 | Timings / memory | Complete: comparable 118 × 1,024 full families, actual shared increments, native memory and per-window/×600/×41,400 projections; real EEG conditioning gate. |
 | Documentation / CSV | Definitions, benchmark limitations and final selection recorded; brief verified CSV notes preserve unrelated records and user flags. |
@@ -166,7 +166,7 @@ selectors also included the unchanged Euclidean pairwise-distance golden.
 Only ElasticNet and the renamed exact SGD replacement were regenerated at
 small/full sizes. All unrelated arrays and records were preserved; preprocessing
 arrays were not regenerated. Provenance is in each affected `meta.json`.
-The alternative workflow schema and all nine constructors were resolved after
+The original alternative workflow schema and all nine constructors were resolved after
 substituting only the user-specific input/metadata placeholders; no EDF samples
 were read and no cohort run was launched.
 
@@ -249,7 +249,7 @@ history/symbolic execution and the exact 200-output working inventory.
 Only DI, XME k=10 and the two genuine symbolic replacements were numerically
 regenerated at small/full sizes (eight outputs per size), after independent
 formula tests. Other affected dependency/label fields changed with provenance;
-all unrelated arrays and records were preserved. The alternative nine-metric
+all unrelated arrays and records were preserved. The original alternative nine-metric
 template also executed on unequal-amplitude synthetic signals without a JVM:
 all outputs were finite and JE/CE ceased to be affine functions of MI alone.
 Only template paths were substituted for schema validation; no cohort run or
@@ -363,14 +363,19 @@ pilot window's cost throughout; they do not estimate cohort heterogeneity or
 parallel throughput. Runtime alone rules out 16/32 under the approved gate;
 their library implementations remain available and correctly defined.
 
-Final working selection: **205 → 200 outputs**. Remove six redundant outputs
+Working selection at this goal's completion: **205 → 200 outputs**. Remove six redundant outputs
 (ordinary/squared Euclidean barycenter means, original Ridge, exact SGD/Ridge
 replacement, Gaussian JE and CE). Replace default Lasso with alpha=0.1 and
 both mislabeled symbolic entries with genuine m=3 variants (no count change).
 Add one Gaussian order-4 output. Earlier basic/phase changes remain selected;
 group delay and the expensive directed spectral additions remain absent.
-The separate amplitude/reference template still has nine metrics and explicitly
-sets `detrend: true`, `zscore: false`, CAR and 0.5-second nonoverlapping windows.
+At goal completion, the separate amplitude/reference template had nine metrics.
+The subsequent systematic review of all 200 main-run outputs selected 12 for
+the amplitude run; see [the complete review](amplitude_selection_review.md).
+That later review also removed five normalized redundancies, choosing
+representatives by independent runtime, leaving **195** in the main selection.
+It retains `detrend: true`, `zscore: false`, CAR and 0.5-second nonoverlapping
+windows. The earlier nine-output validation receipt remains a historical record.
 
 ## Subsequent workflow goal
 

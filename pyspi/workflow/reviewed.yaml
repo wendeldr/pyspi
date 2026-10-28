@@ -3,6 +3,10 @@
 # Group delay and costly factorized directed families are excluded from this run.
 # Metric fs/bands remain explicit; EDF sampling_rate_hz does not rewrite them.
 # Review scope and measured runtime limits: docs/spectral_directed_review.md.
+# 195 outputs after the systematic amplitude/redundancy review. Equivalent
+# normalized outputs were selected by standalone cost, without assuming shared
+# fits: retain cosine, squared empirical covariance, and MinCovDet precision.
+# Full accounting: docs/amplitude_selection_review.md; audit/amplitude_review.csv.
 .statistics.basic:
   Covariance:
     labels:
@@ -13,12 +17,10 @@
     - contemporaneous
     dependencies: null
     configs:
-    - estimator: EmpiricalCovariance
     - estimator: GraphicalLassoCV
     - estimator: LedoitWolf
     - estimator: MinCovDet
     - estimator: OAS
-    - estimator: ShrunkCovariance
     - estimator: EmpiricalCovariance
       squared: true
     - estimator: GraphicalLasso
@@ -30,8 +32,6 @@
     - estimator: MinCovDet
       squared: true
     - estimator: OAS
-      squared: true
-    - estimator: ShrunkCovariance
       squared: true
   Precision:
     labels:
@@ -43,7 +43,6 @@
     dependencies: null
     configs:
     - estimator: EmpiricalCovariance
-    - estimator: EllipticEnvelope
     - estimator: GraphicalLasso
     - estimator: GraphicalLassoCV
     - estimator: LedoitWolf
@@ -51,8 +50,6 @@
     - estimator: OAS
     - estimator: ShrunkCovariance
     - estimator: EmpiricalCovariance
-      squared: true
-    - estimator: EllipticEnvelope
       squared: true
     - estimator: GraphicalLasso
       squared: true
