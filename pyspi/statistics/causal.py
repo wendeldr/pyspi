@@ -57,11 +57,11 @@ class RegressionErrorCausalInference(Directed, Unsigned):
         return regression_result(data, "RECI")[i, j]
 
 
-class InformationGeometricConditionalIndependence(Directed, Unsigned):
+class InformationGeometricConditionalIndependence(Directed, Signed):
 
     name = "Information-geometric conditional independence"
     identifier = "igci"
-    labels = ["causal", "directed", "nonlinear", "unsigned", "unordered"]
+    labels = ["causal", "directed", "nonlinear", "signed", "unordered"]
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -144,8 +144,11 @@ class ConvergentCrossMapping(Directed, Signed):
                         sample=100,
                         seed=42,
                     )
-                    ccmf[_i, _j] = ccm_df.iloc[:, 1].values[: (nlibs + 1)]
-                    ccmf[_j, _i] = ccm_df.iloc[:, 2].values[: (nlibs + 1)]
+                    # pyEDM's "i:j" column is i's manifold estimating j, which
+                    # is evidence of j -> i; store it at [j, i] so [i, j] reads
+                    # source i -> target j.
+                    ccmf[_j, _i] = ccm_df.iloc[:, 1].values[: (nlibs + 1)]
+                    ccmf[_i, _j] = ccm_df.iloc[:, 2].values[: (nlibs + 1)]
 
             try:
                 data.ccm[self.key] = ccmf

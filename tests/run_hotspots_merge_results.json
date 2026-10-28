@@ -1,0 +1,62 @@
+{
+  "schema": "pyspi-worktree-integration/1",
+  "date": "2026-10-28",
+  "main_parent": "15b50b4c66dd0b6f64809cfca2d0011967bf3572",
+  "worktree_parent": "4051229bce32c584463993dbae3baa9d51493d14",
+  "already_integrated_hotspot_commit": {
+    "original": "e7fef66",
+    "main": "d0ff9ab"
+  },
+  "merge_resolution": "Preserved the newer main-branch CAR guard, bounded phase cache, worker workflow, brief calculation CSV notes and 195/12 selections. Imported the later orientation/label changes and audit tables.",
+  "preserved_conflict_files": [
+    "audit/calculation_review.csv",
+    "docs/workflow.md",
+    "pyspi/_robust.py",
+    "pyspi/_spectral.py",
+    "tests/README.md",
+    "tests/unit/test_phase_lag.py",
+    "tests/unit/test_robust.py",
+    "tests/workflow/test_metrics.py"
+  ],
+  "selection_counts": {
+    "reviewed": 195,
+    "amplitude_sensitivity": 12
+  },
+  "selection_parameters_unchanged": true,
+  "golden_values_verified": {
+    "small": {
+      "intended_transposes": 13,
+      "all_other_arrays_unchanged": true
+    },
+    "full": {
+      "intended_transposes": 13,
+      "all_other_arrays_unchanged": true
+    },
+    "families": [
+      "dcorrx",
+      "mgcx",
+      "ccm"
+    ]
+  },
+  "audit_import": "Original fields preserved; CSV line endings normalized from CRLF to LF.",
+  "test_command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLCONFIGDIR=/tmp/pyspi-mpl _MNE_FAKE_HOME_DIR=/tmp/pyspi-mne .venv/bin/python -m pytest -q tests/regression/test_spi_goldens.py tests/regression/test_extra_goldens.py tests/regression/test_golden_contract.py tests/unit/test_frames.py tests/unit/test_euclidean_barycenter.py tests/workflow/test_metrics.py --runslow --pyspi-size=full --require-java -k 'dcorrx or mgcx or ccm or igci or bary or wavelet or catalogue or extra_set or golden_corpus or frames or preset'",
+  "results": {
+    "passed": 131,
+    "deselected": 396,
+    "failures": 0,
+    "errors": 0,
+    "elapsed_seconds": 161.537,
+    "junit_sha256": "d53778a235c645b4f4597a811a00f2d13b53365b822f7cd1d4e33783df391ed3"
+  },
+  "imported_pyspi_source_sha256": {
+    "pyspi/config.yaml": "569184433996cc9857e6ac1b3ba9d8bb8f7c92e1ea3455202a89bbdb2c568443",
+    "pyspi/fabfour_config.yaml": "53fda81fd4c9d6d2fc7ce143579528044d1fb444a6cbfebad5161e93f2a8014e",
+    "pyspi/fast_config.yaml": "e09e7be22cbe7035ff3154639648964b9eff24e80fb81120fcda89433e96da52",
+    "pyspi/sonnet_config.yaml": "c9b8fddbde917719166f11db79f69f1a027057c78ed610446a1add176d109a19",
+    "pyspi/statistics/causal.py": "f0363dfbf870809ce5e7e45dce52fcb0f7bdd725e195aca2f7c1ee31896558a6",
+    "pyspi/statistics/distance.py": "ff9ef4cc0fa0f3caefc59a4490b7c3e7c492b73e57cd208f5a978481f83c5723",
+    "pyspi/statistics/wavelet.py": "82d5bae62fe8c180cdf8ebafb1fba49ce147f945d782529c1ff1d55a26e89600",
+    "pyspi/workflow/reviewed.yaml": "e90bf0fe7864f9cdc84e480bce9613ac03f7aa73cf169bc3a1ada1234aa5b290"
+  },
+  "limits": "Focused integration checks, not another complete suite or timing study. Prior full-suite/resource receipts remain historical snapshots. Orientation fixes do not resolve the documented CCM embedding bug, lagged-distance estimator issue or wavelet scientific issues."
+}

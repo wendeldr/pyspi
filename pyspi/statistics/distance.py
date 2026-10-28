@@ -68,7 +68,7 @@ class HellerHellerGorfine(Directed, Unsigned):
 
     name = "Heller-Heller-Gorfine Independence Criterion"
     identifier = "hhg"
-    labels = ["unsigned", "distance", "unordered", "nonlinear", "directed"]
+    labels = ["unsigned", "distance", "unordered", "nonlinear", "undirected"]
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -124,9 +124,11 @@ class CrossDistanceCorrelation(Directed, Unsigned):
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
+        # DcorrX(x, y) relates x[t+lag] to y[t], i.e. y -> x; pass the target
+        # first so [i, j] reads source i -> target j.
         z = data.to_numpy()
-        x = z[i]
-        y = z[j]
+        x = z[j]
+        y = z[i]
         stat, _ = DcorrX(max_lag=self._max_lag).statistic(x, y)
         return stat
 
@@ -144,9 +146,10 @@ class CrossMultiscaleGraphCorrelation(Directed, Unsigned):
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
+        # As DcorrX: MGCX(x, y) measures y -> x, so the target goes first.
         z = data.to_numpy()
-        x = z[i]
-        y = z[j]
+        x = z[j]
+        y = z[i]
         stat, _, _ = MGCX(max_lag=self._max_lag).statistic(x, y)
         return stat
 
@@ -233,6 +236,8 @@ class Barycenter(Directed, Signed):
         if squared:
             self._preproc = lambda x: x**2
             self.identifier += f"-sq"
+            self.issigned = lambda: False
+            self.labels = [label for label in Barycenter.labels if label != "signed"] + ["unsigned"]
 
         if statistic == "mean":
             self._statfn = lambda x: np.nanmean(self._preproc(x))

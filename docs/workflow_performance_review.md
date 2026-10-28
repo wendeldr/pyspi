@@ -176,7 +176,26 @@ for the reviewed estimator set, including on resume. A larger cache is an
 explicit speed/memory option. The normalized and amplitude selections remain
 195 and 12 outputs, respectively; no calculations were added or removed here.
 
-The integrated hotspot commit is `d0ff9ab`. Subsequent changes in the separate
-`run-hotspots` worktree are outside this validation snapshot. Remaining follow-up
-topics are graphical-lasso convergence and larger-machine throughput scaling;
-neither blocks using the conservative settings validated here.
+The resource validation above describes hotspot integration `d0ff9ab` and the
+workflow changes committed as `15b50b4`. Remaining follow-up topics are
+graphical-lasso convergence and larger-machine throughput scaling; neither
+blocks using the conservative settings validated here.
+
+## Subsequent worktree integration
+
+The later `run-hotspots` commit `4051229` was integrated after the resource
+profile. It corrects the public source-row/target-column convention for
+`dcorrx`, `mgcx` and CCM, corrects sign/direction labels, and adds the other
+agent's orientation and old/new comparison audit tables. Those tables retain
+their original observations and open issues; they are not blanket scientific
+validation of every listed estimator.
+
+The earlier CAR safeguards, bounded cache policy, workflow implementation and
+brief calculation-review notes were preserved. The 195/12 selections and their
+parameters are unchanged. The numerical golden changes are exactly 13 matrix
+transposes at each of the small/full sizes; every other stored value is
+unchanged. The three orientation-adjusted families are absent from the reviewed
+run. Focused integration checks and provenance are recorded in
+[`run_hotspots_merge_results.json`](../tests/run_hotspots_merge_results.json).
+The earlier profile receipts remain records of their exact measured code/config
+hashes. The temporary worktree is removed after the merged changes are committed.

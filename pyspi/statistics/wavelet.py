@@ -3,6 +3,7 @@ from pyspi.base import (
     Directed,
     Undirected,
     Unsigned,
+    Signed,
     parse_bivariate,
     parse_multivariate,
 )
@@ -107,9 +108,9 @@ class CoherenceMagnitude(mne, Undirected):
         super().__init__(**kwargs)
 
 
-class CoherencePhase(mne, Undirected):
+class CoherencePhase(Signed, mne, Undirected):
     name = "Coherence phase (wavelet)"
-    labels = ["unsigned", "wavelet", "undirected"]
+    labels = ["signed", "wavelet", "undirected"]
 
     def __init__(self, **kwargs):
         self.identifier = "phase"
@@ -120,9 +121,9 @@ class CoherencePhase(mne, Undirected):
         self._statfn = modify_stats(self._statfn, np.angle)
 
 
-class ImaginaryCoherence(mne, Undirected):
+class ImaginaryCoherence(Signed, mne, Undirected):
     name = "Imaginary coherency (wavelet)"
-    labels = ["unsigned", "wavelet", "undirected"]
+    labels = ["signed", "wavelet", "undirected"]
 
     def __init__(self, **kwargs):
         self.identifier = "icoh"
@@ -190,9 +191,9 @@ class debiased_weighted_squared_PhaseLagIndex(mne, Undirected):
         super().__init__(**kwargs)
 
 
-class PhaseSlopeIndex(mne, Undirected):
+class PhaseSlopeIndex(Signed, mne, Undirected):
     name = "Phase slope index (wavelet)"
-    labels = ["unsigned", "wavelet", "undirected"]
+    labels = ["signed", "wavelet", "undirected"]
 
     def __init__(self, **kwargs):
         self.identifier = "psi"
