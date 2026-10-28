@@ -121,3 +121,21 @@ def test_file_backed_blocks_match_full_filter_and_honor_scratch(band_config, tmp
     np.testing.assert_array_equal(views[(30, 70)], expected)
     assert details[0]["filter_block_channels"] == 1
     assert details[0]["storage"] == "file"
+
+
+@pytest.mark.parametrize("method", ["car", "laplacian"])
+def test_fixed_reference_commutes_with_shared_continuous_band_filtering(method, band_config):
+    from dataclasses import replace
+    from pyspi.workflow._reference import apply_shaft_reference, reference_plan
+
+    names = [f"EEG A{i}" for i in range(1, 6)]
+    reference = {"method": "car"} if method == "car" else {"method": method, "shafts": {"A": names}}
+    cfg = load_config(band_config(reference=reference))
+    direct = prepare_recording(cfg.recordings[0], cfg)
+    base = prepare_recording(cfg.recordings[0], replace(cfg, reference={"method": "none"}))
+    plan = reference_plan(names, reference)
+    for band in direct.bands:
+        source = base.bands[band]
+        after_filter = (source-source.mean(axis=0) if method == "car" else
+                        apply_shaft_reference(source, names, reference, plan))
+        np.testing.assert_allclose(after_filter, direct.bands[band], rtol=1e-10, atol=1e-20)

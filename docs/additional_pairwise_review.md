@@ -6,20 +6,24 @@ The target is roughly one day per measure for 72 people with 600 half-second
 windows each, not one day for the complete panel. Projection assumptions and
 reference costs must be reported explicitly.
 
+The completed bounded EEG assessment, timings and current nine-output candidate
+selection are in [the pilot report](additional_pairwise_pilot.md). Kernel MI
+inclusion is the remaining user decision; the eleven-output pilot stays available.
+
 ## Completion ledger
 
 | Requirement | State / evidence |
 | --- | --- |
 | Histogram relative entropy | Implemented; explicit KL, invariance, invalid-input and cache checks pass. |
 | Continuous 30–70 Hz PEC views | Implemented with shared bounded filtering, file-backed views, exact PEC preprocessing, and serial/parallel checks. |
-| Kernel MI, IDS, Gaussian DI/SI assessment | IDS input/cache/RNG cleanup passes focused checks; matched EEG assessment pending. |
-| Cross-channel 16–30 / 70–150 Hz coupling | Prototype formula integrated with source-row orientation, independent scalar/model checks and diagnostics; matched EEG surrogate assessment pending. |
-| Exact bounded distance correlation | Implemented; both conventions share products; independent centering and golden checks pass. Multi-patient gate pending. |
-| Exact radius-one DTW | Implemented; full-grid oracle and tslearn comparisons pass. Run inclusion remains separate. |
-| Matched CAR / contact-centered Laplacian | Explicit topology, masks, geometry metadata and serial/parallel execution implemented; real-data matched comparison and sensitivity checks pending. |
-| Representative EEG runtime / memory / workflow costs | First production formula and three-window band receipts recorded; multi-patient/reference, output and worker-tree gates pending. |
-| Novelty, coverage and surrogate assessment | Pending; reuse historical top_features evidence with its limitations. |
-| Candidate configs, docs, CSV, regressions and commits | Separate 11-output pilot resolves without JVM; docs/brief CSV and focused checks updated. Final inclusion/configuration gates pending. |
+| Kernel MI, IDS, Gaussian DI/SI assessment | IDS cleanup validated; all three assessed on three patients/two references with controls and timing receipts. |
+| Cross-channel 16–30 / 70–150 Hz coupling | Prototype integrated and validated; matched surrogates show a substantial positive null baseline; retained as exploratory. |
+| Exact bounded distance correlation | Implemented and independently validated; three-patient standalone/shared costs and fast-library comparison recorded. |
+| Exact radius-one DTW | Implemented and validated; pilot rankings closely track cosine distance, so absent from the nine-output selection. |
+| Matched CAR / contact-centered Laplacian | Implemented; three-patient matched comparison and shared-reference controls complete. Patient 090 local metadata needs review. |
+| Representative EEG runtime / memory / workflow costs | Three sizes, both references, 12-window stored-output/worker profiles, PSS and cohort-count projections recorded. |
+| Novelty, coverage and surrogate assessment | Descriptive baseline and surrogate checks complete; no new predictive-value claim or cohort model search. |
+| Candidate configs, docs, CSV, regressions and commits | Separate nine-output selection and matched examples prepared; kernel MI choice pending. Main 188/12 selections unchanged. |
 
 ## Definitions being implemented
 
@@ -84,8 +88,9 @@ At eight EEG channels, distance correlation changed from 3.923 to 0.0620 seconds
 (63.2x); maximum absolute difference was 5.54e-14. Constrained DTW changed from
 0.0917 to 0.000595 seconds (154x), with exact agreement on that comparison.
 These gains are measured at eight channels and must not be presented as
-measured 118-channel speedups. Cohort costs are serial projections from one
-window; patient/channel variation and workflow costs remain to be measured.
+measured 118-channel speedups. Cohort costs in this first receipt are serial
+projections from one window; the subsequent pilot report measures patient/channel
+variation and workflow costs.
 
 ## Focused validation so far
 
@@ -111,7 +116,7 @@ retain their original contact names. CAR and shaft references record linear
 coefficients, shared sources, proportional rows, and the equal-variance independent
 source null correlation. These geometry diagnostics are not empirical evidence
 of connectivity. Shaft-average support is available for exploratory comparison;
-candidate run inclusion is still pending.
+no third production reference is selected after the exploratory PAC comparison.
 
 Ten geometry/config checks passed. Nine preparation/execution checks passed,
 covering the direct continuous Laplacian formula, serial and spawned masks with
@@ -152,7 +157,7 @@ Butterworth filters. Historical predictive evidence is therefore motivation,
 not validation of these current outputs. Half-second beta windows contain only
 8–15 cycles; magnitude estimates can have autocorrelation-sensitive null bias.
 Shared references, nonsinusoidal waveforms and transients can also produce
-cross-frequency association. The planned surrogate checks are still required.
+cross-frequency association. Completed surrogate checks and their limits are in the pilot report.
 
 Band inputs are owned window copies, with explicit missing-band errors and
 invalidation when the main Data changes. Continuous views are stored in temporary
@@ -184,8 +189,8 @@ Continuous preparation took 26.22 seconds for the complete recording; the three
 extra band filters and their file writes accounted for 14.80 seconds. Band files
 occupied 1.65 GiB; process peak RSS, including preparation/imports/all candidates,
 was 1.32 GiB. It is a single-process high-water mark, not a worker-tree memory
-measurement. Multi-patient, reference-specific, output and parallel throughput
-gates remain pending.
+measurement. The subsequent multi-patient, reference-specific, output and parallel throughput
+measurements are recorded in the pilot report.
 
 The separate [11-output pilot selection](../pyspi/workflow/additional_candidate_pilot.yaml)
 contains all candidates for bounded evaluation, including secondary radius-one
@@ -208,4 +213,4 @@ comparisons, and a partly different preprocessing pipeline. Results motivate
 candidates; they do not establish added predictive value over the corrected
 current selection. The initial 118-channel EEG feasibility screen is recorded
 in `/tmp/pyspi_additional_pairwise_screen.json`; production benchmarks and
-validation will supersede those prototype-only receipts.
+validation in the pilot report supersede those prototype-only runtime receipts.

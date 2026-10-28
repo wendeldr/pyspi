@@ -57,8 +57,8 @@ te_symbolic_m-3_tau-16_h-16,,,,,Genuine ordinal TE replaces Gaussian dispatch; 8
 cce_gaussian,,,,,363.80 s -> 396.18 ms (family-warm); shared native histories/fits.
 xme_gaussian_k1,,,,,25.79 s -> 8.11 ms (family-warm); shared native history fits.
 xme_gaussian_k10,,,,,33.27 s -> 174.38 ms (family-warm); native fits; corrected ten-lag count.
-di_gaussian,,,,,10.57 s -> 0.27 ms (family-warm); corrected conditional sum; reuse CCE fits.
-si_gaussian_k-1,,,,,76.17 s -> 12.02 ms (family-warm); shared target fits; unique pairs.
+di_gaussian,,,,,~0.34 s/118ch CAR standalone; corrected conditional sum; shares compatible history fits.
+si_gaussian_k-1,,,,,~0.020 s/118ch CAR standalone; shared target fits; unique pairs.
 gc_gaussian_k-max-10_tau-max-2,,,,,167.81 s -> 1.32 s (family-warm); embedding search once/channel.
 lmfit_Ridge,,,,,~6956x faster (23.2 s -> 3.34 ms/window); shared centered cross-products replace pairwise fits.
 lmfit_Lasso,,,,,~1.2 ms added/window; exact shared fit; run alpha=0.1 varies on EEG.
@@ -141,8 +141,8 @@ reci,,,,,~5732x faster (51.2 s -> 8.93 ms/window); scale/cube once per channel a
 anm,,,,,
 cds,,,,,
 igci,,,,,
-dcorr,,,,,~63x at 8ch EEG; shared bounded distance products; negative estimates labeled signed.
-dcorr_biased,,,,,~1.00 s/118ch EEG window standalone; shares distance products with bias-corrected variant.
+dcorr,,,,,~6.1x vs fast Hyppo at 16ch; ~0.93 s/118ch CAR window; bounded shared distance products.
+dcorr_biased,,,,,~0.90 s/118ch CAR standalone; ~0.00045 s family increment; shared distance products.
 hsic,,,,,
 hsic_biased,,,,,
 mgc,,,,,
@@ -153,7 +153,7 @@ dcorrx_maxlag-1,,,,,
 dcorrx_maxlag-10,,,,,
 dtw,,,,,
 dtw_constraint-itakura,,,,,
-dtw_constraint-sakoe-chiba,,,,,~154x at 8ch EEG; exact band-only recursion and one calculation per symmetric pair.
+dtw_constraint-sakoe-chiba,,,,,~154x at 8ch; ~0.12 s/118ch CAR; exact band-only symmetric pairs; pilot-only near cosine.
 softdtw,,,,,
 softdtw_constraint-itakura,,,,,
 softdtw_constraint-sakoe-chiba,,,,,
@@ -184,7 +184,7 @@ xme_kernel_W-0.5_k1,,,,,Native shared source-history counts; 118x1024 EEG family
 xme_kernel_W-0.5_k10,,,,,Corrected ten-lag count; native shared histories. 118x1024 EEG family increment: 6.11 s.
 di_kernel_W-0.5,,,,,Corrected conditional-information sum; reuses native CCE/target terms. 118x1024 EEG increment after CCE: 1.47 s.
 si_kernel_W-0.5_k-1,,,,,Native shared target/history counts; unique pairs. 118x1024 EEG family increment: 2.69 s.
-mi_kernel_W-0.25,,,,,Native shared counts; unique pairs; no eligible comparisons -> diagnosed NaN. 118x1024 EEG family increment: 1.81 s.
+mi_kernel_W-0.25,,,,,~1.50 s/118ch CAR standalone; native shared counts; ~1.57x with two workers in bounded pilot.
 tlmi_kernel_W-0.25,,,,,Native shared aligned counts; no eligible comparisons -> diagnosed NaN. 118x1024 EEG family increment: 3.35 s.
 te_kernel_W-0.25_k-1,,,,,Native shared history counts; no eligible comparisons -> diagnosed NaN. 118x1024 EEG family increment: 3.96 s.
 mi_kraskov_NN-4,,,,,
@@ -233,7 +233,7 @@ coint_johansen_trace_stat_order-1_ardiff-1,,,,,
 coint_aeg_tstat_trend-c_autolag-aic_maxlag-10,,,,,
 coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10,,,,,
 coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10,,,,,
-ids,,,,,~0.033 s/118ch EEG window; removed import RNG reset; isolates invalid channels.
+ids,,,,,~0.040 s/118ch CAR window; removed import RNG reset; isolates invalid channels.
 cohmag_wavelet_mean_fs-1,all configured frequency bands,,,,
 cohmag_wavelet_max_fs-1,all configured frequency bands,,,,
 phase_wavelet_mean_fs-1,all configured frequency bands,,,,
@@ -252,7 +252,7 @@ wspli_wavelet_mean_fs-1,all configured frequency bands,,,,
 wspli_wavelet_max_fs-1,all configured frequency bands,,,,
 dwspli_wavelet_mean_fs-1,all configured frequency bands,,,,
 dwspli_wavelet_max_fs-1,all configured frequency bands,,,,
-histre_bins-10,bins=10; pseudocount=1e-10,,,,~0.012 s/118ch EEG window; shared channel histograms; distribution-shape comparison.
-pec_band-30-70Hz,,,,,~0.013 s/window (118ch EEG pilot); continuous band filtering and shared PEC transforms.
-pec_orth_abs_band-30-70Hz,,,,,~0.715 s/window (118ch EEG pilot); shared band envelopes and orthogonal projections.
-pac_phase-16-30Hz_amp-70-150Hz,,,,,~0.016 s/window (118ch EEG pilot); shared band inputs; source phase to target amplitude.
+histre_bins-10,bins=10; pseudocount=1e-10,,,,~0.020 s/118ch CAR window; shared channel histograms; distribution-shape comparison.
+pec_band-30-70Hz,,,,,~0.013 s/118ch CAR window; continuous band filtering and shared PEC transforms.
+pec_orth_abs_band-30-70Hz,,,,,~0.75 s/118ch CAR window; shared band inputs and PEC transforms; exploratory.
+pac_phase-16-30Hz_amp-70-150Hz,,,,,~0.016 s/118ch CAR window; shared band inputs; phase-to-amplitude association; exploratory.

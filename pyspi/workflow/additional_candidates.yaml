@@ -1,0 +1,49 @@
+# Nine additional outputs for reviewed candidate runs; established selections stay separate.
+# Use the matched CAR / strict Laplacian workflow examples. Evidence and limits:
+# docs/additional_pairwise_pilot.md. PAC and orthogonalized PEC remain exploratory.
+# Radius-one DTW remains pilot-only: pair rankings were very close to cosine distance.
+# Kernel MI remains pilot-only pending its separate runtime/inclusion decision.
+# No extra shaft-average, original-reference or bipolar production run is selected.
+# Continuous bands must be prepared by the workflow before half-second windowing.
+.statistics.distance:
+  HistogramRelativeEntropy:
+    configs:
+    - bins: 10
+      pseudocount: 1.0e-10
+  DistanceCorrelation:
+    configs:
+    - biased: false
+    - biased: true
+.statistics.misc:
+  PowerEnvelopeCorrelation:
+    configs:
+    - band:
+      - 30
+      - 70
+    - band:
+      - 30
+      - 70
+      orth: true
+      absolute: true
+  PhaseAmplitudeCoupling:
+    configs:
+    - phase_band:
+      - 16
+      - 30
+      amplitude_band:
+      - 70
+      - 150
+  InterDependenceScore:
+    configs:
+    - terms: 6
+      pnorm: max
+      bandwidth: 0.5
+.statistics.infotheory:
+  DirectedInfo:
+    configs:
+    - estimator: gaussian
+      n: 5
+  StochasticInteraction:
+    configs:
+    - estimator: gaussian
+      delay: 1

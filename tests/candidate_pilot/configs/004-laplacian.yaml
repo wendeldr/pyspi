@@ -1,0 +1,168 @@
+# Bounded pilot only; use an explicit --max-windows limit.
+version: 1
+recordings:
+- path: /home/dan/data/IEEG/baseline_edfs/004_Baseline.EDF
+  patient_id: '004'
+  recording_id: baseline
+  channels:
+  - index: 36
+    name: B1
+  - index: 37
+    name: B2
+  - index: 38
+    name: B3
+  - index: 39
+    name: B4
+  - index: 40
+    name: B5
+  - index: 41
+    name: B6
+  - index: 42
+    name: B7
+  - index: 43
+    name: B8
+  - index: 44
+    name: B9
+  - index: 45
+    name: B10
+  - index: 28
+    name: C1
+  - index: 29
+    name: C2
+  - index: 30
+    name: C3
+  - index: 31
+    name: C4
+  - index: 32
+    name: C5
+  - index: 33
+    name: C6
+  - index: 34
+    name: C7
+  - index: 35
+    name: C8
+  - index: 18
+    name: P1
+  - index: 19
+    name: P2
+  - index: 20
+    name: P5
+  - index: 21
+    name: P6
+  - index: 6
+    name: Q1
+  - index: 7
+    name: Q2
+  - index: 8
+    name: Q3
+  - index: 9
+    name: Q4
+  - index: 10
+    name: Q5
+  - index: 11
+    name: Q6
+  - index: 12
+    name: Q7
+  - index: 13
+    name: Q8
+  - index: 14
+    name: Q9
+  - index: 15
+    name: Q10
+  - index: 16
+    name: Q11
+  - index: 17
+    name: Q12
+  - index: 22
+    name: W1
+  - index: 23
+    name: W2
+  - index: 24
+    name: W3
+  - index: 25
+    name: W4
+  - index: 26
+    name: W5
+  - index: 27
+    name: W6
+metrics:
+  config: ../../../pyspi/workflow/additional_candidate_pilot.yaml
+sampling_rate_hz: 2048
+bandpass:
+  low_hz: 0.5
+  high_hz: 500
+notch:
+  enabled: true
+  line_frequency_hz: 60
+  width_hz: 1
+  transition_hz: 1
+window:
+  length_seconds: 0.5
+  step_seconds: 0.5
+preprocessing:
+  detrend: true
+  zscore: true
+output_directory: ../../../.candidate-pilot-runs
+output_batch_mib: 32
+execution:
+  workers: 1
+  threads_per_worker: 1
+  spectral_cache_mib: 256
+  scratch_directory: ../../../.candidate-scratch
+reference:
+  method: laplacian
+  shafts:
+    B:
+    - B1
+    - B2
+    - B3
+    - B4
+    - B5
+    - B6
+    - B7
+    - B8
+    - B9
+    - B10
+    C:
+    - C1
+    - C2
+    - C3
+    - C4
+    - C5
+    - C6
+    - C7
+    - C8
+    - C9
+    - C10
+    P:
+    - P1
+    - P2
+    - P3
+    - P4
+    - P5
+    - P6
+    - P7
+    - P8
+    - P9
+    - P10
+    Q:
+    - Q1
+    - Q2
+    - Q3
+    - Q4
+    - Q5
+    - Q6
+    - Q7
+    - Q8
+    - Q9
+    - Q10
+    - Q11
+    - Q12
+    W:
+    - W1
+    - W2
+    - W3
+    - W4
+    - W5
+    - W6
+run_name: candidate-004-laplacian
