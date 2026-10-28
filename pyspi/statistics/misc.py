@@ -7,6 +7,7 @@ from sklearn.gaussian_process import kernels, GaussianProcessRegressor
 from sklearn.metrics import mean_squared_error
 from pyspi._envelope import envelope_workspace
 from pyspi._regression import regression_result, regression_diagnostics
+from pyspi._moments import moment_workspace
 from pyspi.lib.ids.dependence import compute_IDS
 
 from pyspi.base import (
@@ -217,15 +218,34 @@ class InterDependenceScore(Undirected, Unsigned):
             pnorm='max',
             bandwidth=0.5
     ):
+        if isinstance(terms, (bool, np.bool_)) or not isinstance(terms, (int, np.integer)) or terms < 1:
+            raise ValueError("terms must be a positive integer")
+        if isinstance(pnorm, (bool, np.bool_)) or pnorm not in ("max", 1, 2):
+            raise ValueError("pnorm must be max, 1 or 2")
+        if not np.isfinite(bandwidth) or bandwidth <= 0:
+            raise ValueError("bandwidth must be finite and positive")
         self._num_terms = terms
         self._p_norm = pnorm
         self._bandwidth_term = bandwidth
+        if (terms, pnorm, bandwidth) != (6, "max", .5):
+            self.identifier += f"_terms-{terms}_pnorm-{pnorm}_bandwidth-{bandwidth:g}".replace(".", "-")
 
 
     @parse_multivariate
     def multivariate(self, data):
-        # reshape for the compute_IDS function which expects shape (obs, proc)
-        z = np.squeeze(data.to_numpy(), axis=2).T
-        ids = compute_IDS(z, num_terms=self._num_terms, p_norm=self._p_norm, 
-                           bandwidth_term=self._bandwidth_term)
-        return ids
+        work = moment_workspace(data)
+        def compute():
+            z = work.source
+            valid = np.isfinite(z).all(axis=1) & np.any(z != z[:, :1], axis=1)
+            result = np.full((len(z), len(z)), np.nan)
+            if valid.any():
+                result[np.ix_(valid, valid)] = compute_IDS(
+                    z[valid].T, num_terms=self._num_terms, p_norm=self._p_norm,
+                    bandwidth_term=self._bandwidth_term)
+            np.fill_diagonal(result, np.nan)
+            return result
+        return work.arrays.get(("ids", self._num_terms, self._p_norm, self._bandwidth_term), compute).copy()
+
+    @parse_bivariate
+    def bivariate(self, data, i=None, j=None):
+        return self.multivariate(data)[i, j]

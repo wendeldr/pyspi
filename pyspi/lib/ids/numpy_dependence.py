@@ -8,9 +8,6 @@ import math
 import sys
 from tqdm import tqdm
 
-SEED = 1717
-np.random.seed(SEED)
-
 EPSILON = sys.float_info.epsilon
 
 def transform(y, num_terms=6, bandwidth_term=1/2):

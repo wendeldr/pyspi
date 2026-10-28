@@ -8,12 +8,14 @@ from tslearn.barycenters import (
 )
 from hyppo.independence import (
     MGC,
-    Dcorr,
     HHG,
     Hsic,
 )
 from hyppo.time_series import MGCX, DcorrX
 from pyspi._barycenter import euclidean_summary
+from pyspi._distance_correlation import distance_correlation
+from pyspi._histogram import histogram_relative_entropy
+from pyspi._dtw import banded_dtw
 
 from pyspi.base import (
     Directed,
@@ -86,15 +88,52 @@ class DistanceCorrelation(Undirected, Unsigned):
 
     def __init__(self, biased=False):
         self._biased = biased
+        self.labels = [label for label in self.labels if label != "unsigned"] + [
+            "unsigned" if biased else "signed"]
         if biased:
             self.identifier += "_biased"
 
+    def issigned(self):
+        return not self._biased
+
+    @parse_multivariate
+    def multivariate(self, data):
+        return distance_correlation(data, self._biased)
+
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
-        """ """
-        x, y = data.to_numpy()[[i, j]]
-        stat = Dcorr(bias=self._biased).statistic(x, y)
-        return stat
+        return distance_correlation(data, self._biased)[i, j]
+
+
+class HistogramRelativeEntropy(Undirected, Unsigned):
+    """Maximum bidirectional histogram KL, in nats; compares marginal shapes."""
+
+    name = "Histogram relative entropy"
+    identifier = "histre"
+    labels = ["unsigned", "distance", "unordered", "nonlinear", "undirected", "bivariate"]
+
+    def __init__(self, bins=10, pseudocount=1e-10):
+        if isinstance(bins, (bool, np.bool_)) or not isinstance(bins, (int, np.integer)) or bins < 2:
+            raise ValueError("bins must be an integer of at least two")
+        if not np.isfinite(pseudocount) or pseudocount <= 0:
+            raise ValueError("pseudocount must be finite and positive")
+        self._bins = int(bins)
+        self._pseudocount = float(pseudocount)
+        self.identifier += f"_bins-{bins}"
+        if pseudocount != 1e-10:
+            self.identifier += f"_pseudocount-{pseudocount:g}".replace(".", "-")
+
+    @parse_multivariate
+    def multivariate(self, data):
+        return histogram_relative_entropy(data, self._bins, self._pseudocount)[0]
+
+    @parse_multivariate
+    def diagnostics(self, data):
+        return {"reason": histogram_relative_entropy(data, self._bins, self._pseudocount)[1]}
+
+    @parse_bivariate
+    def bivariate(self, data, i=None, j=None):
+        return self.multivariate(data)[i, j]
 
 
 class MultiscaleGraphCorrelation(Undirected, Unsigned):
@@ -185,9 +224,29 @@ class DynamicTimeWarping(TimeWarping):
     name = "Dynamic time warping"
     identifier = "dtw"
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, global_constraint=None, sakoe_chiba_radius=1):
+        super().__init__(global_constraint=global_constraint)
+        if (isinstance(sakoe_chiba_radius, (bool, np.bool_))
+                or not isinstance(sakoe_chiba_radius, (int, np.integer)) or sakoe_chiba_radius < 0):
+            raise ValueError("sakoe_chiba_radius must be a nonnegative integer")
+        if global_constraint != "sakoe_chiba" and sakoe_chiba_radius != 1:
+            raise ValueError("sakoe_chiba_radius applies only to the sakoe_chiba constraint")
+        self._radius = int(sakoe_chiba_radius)
+        if self._radius != 1:
+            self.identifier += f"_radius-{self._radius}"
         self._simfn = tslearn.metrics.dtw
+
+    @parse_multivariate
+    def multivariate(self, data):
+        if self._global_constraint == "sakoe_chiba":
+            return banded_dtw(data, self._radius)
+        return super().multivariate(data)
+
+    @parse_bivariate
+    def bivariate(self, data, i=None, j=None):
+        if self._global_constraint == "sakoe_chiba":
+            return banded_dtw(data, self._radius)[i, j]
+        return super().bivariate(data, i=i, j=j)
 
 
 class LongestCommonSubsequence(TimeWarping):

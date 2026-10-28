@@ -94,8 +94,8 @@ def ensure_jvm():
 def import_statistics_modules(modules=STATISTICS_MODULES):
     """Import the statistics modules (after :func:`ensure_jvm`).
 
-    Importing ``pyspi.statistics.misc`` calls ``np.random.seed(1717)`` as a
-    side effect, which is why :func:`seed_all` must run after this.
+    Seed stochastic estimators immediately before computation. IDS no longer
+    reseeds NumPy while importing the statistics modules.
     """
     return {m: importlib.import_module(f"pyspi.statistics.{m}") for m in modules}
 

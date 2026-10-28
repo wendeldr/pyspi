@@ -1,0 +1,132 @@
+{
+  "input_path": "/tmp/pyspi-kernel-eeg-window.npy",
+  "shape": [
+    118,
+    1024
+  ],
+  "input_sha256": "06deb7b375ddaffee4d2643321d3c4cee034c404abb8f17063c71199174bedf5",
+  "source_sha256": {
+    "pyspi/_distance_correlation.py": "7c267a4d703553a3ea6143f1135b4106cd1484cf1c549742b59808dcc31a18da",
+    "pyspi/_histogram.py": "bf8b8b68cf1f5a6e13f2e34047b747ea2b3b676f0157f4b905d3a15bc4ab21e2",
+    "pyspi/_dtw.py": "81675965441d3b1ae0ac62d88c7fca7684b71e353dc89fd4ce8c1c3021b3b4dc",
+    "pyspi/statistics/misc.py": "99138398f4ed67246094d6f6643492a766dfb807a4bf08f044416376268c3177"
+  },
+  "load_average_start": [
+    2.67626953125,
+    2.33203125,
+    2.091796875
+  ],
+  "standalone": {
+    "histre_bins-10": {
+      "samples_seconds": [
+        0.012201209989143535,
+        0.011373054003342986,
+        0.012091504002455622
+      ],
+      "median_seconds": 0.012091504002455622,
+      "seconds_600": 7.254902401473373,
+      "seconds_43200": 522.3529729060829
+    },
+    "dcorr": {
+      "samples_seconds": [
+        1.022516197990626,
+        1.2853173949988559,
+        0.9608866090129595
+      ],
+      "median_seconds": 1.022516197990626,
+      "seconds_600": 613.5097187943757,
+      "seconds_43200": 44172.69975319505
+    },
+    "dcorr_biased": {
+      "samples_seconds": [
+        1.0610939489852171,
+        1.0028608849970624,
+        0.9861657609872054
+      ],
+      "median_seconds": 1.0028608849970624,
+      "seconds_600": 601.7165309982374,
+      "seconds_43200": 43323.590231873095
+    },
+    "dtw_constraint-sakoe-chiba": {
+      "samples_seconds": [
+        0.12719901301898062,
+        0.12856755399843678,
+        0.12224829898332246
+      ],
+      "median_seconds": 0.12719901301898062,
+      "seconds_600": 76.31940781138837,
+      "seconds_43200": 5494.997362419963
+    },
+    "ids": {
+      "samples_seconds": [
+        0.039816888980567455,
+        0.0319432309770491,
+        0.03314333502203226
+      ],
+      "median_seconds": 0.03314333502203226,
+      "seconds_600": 19.886001013219357,
+      "seconds_43200": 1431.7920729517937
+    }
+  },
+  "small_comparisons": {
+    "dcorr": {
+      "baseline": {
+        "samples_seconds": [
+          3.9227038669923786
+        ],
+        "median_seconds": 3.9227038669923786,
+        "seconds_600": 2353.622320195427,
+        "seconds_43200": 169460.80705407076
+      },
+      "native": {
+        "samples_seconds": [
+          0.06806555998628028,
+          0.06203681998886168,
+          0.05500046000815928
+        ],
+        "median_seconds": 0.06203681998886168,
+        "seconds_600": 37.22209199331701,
+        "seconds_43200": 2679.9906235188246
+      },
+      "max_absolute_difference": 5.540012892879531e-14,
+      "matching_masks": true
+    },
+    "dtw": {
+      "baseline": {
+        "samples_seconds": [
+          0.09169662499334663
+        ],
+        "median_seconds": 0.09169662499334663,
+        "seconds_600": 55.01797499600798,
+        "seconds_43200": 3961.2941997125745
+      },
+      "native": {
+        "samples_seconds": [
+          0.000643465988105163,
+          0.0005948769976384938,
+          0.0005551640060730278
+        ],
+        "median_seconds": 0.0005948769976384938,
+        "seconds_600": 0.35692619858309627,
+        "seconds_43200": 25.69868629798293
+      },
+      "max_absolute_difference": 0.0,
+      "matching_masks": true
+    }
+  },
+  "limits": "Single prepared EEG window. Standalone includes fresh Data and own caches. Imports, compilation, continuous preprocessing and output excluded. Baseline one pass at eight channels; native medians of three passes. Serial projections, not measured cohort throughput.",
+  "jit_and_reference_warmup_seconds": 5.99801369998022,
+  "distance_family": {
+    "cold_first_seconds": 0.9835918949975166,
+    "actual_increment_biased_seconds": 0.00025330300559289753,
+    "complete_family_seconds": 0.9838451980031095,
+    "derived_cache_bytes": 1189440,
+    "distance_block_bytes": 16777216
+  },
+  "process_peak_rss_mib": 541.8515625,
+  "load_average_end": [
+    2.822265625,
+    2.3818359375,
+    2.11181640625
+  ]
+}

@@ -441,6 +441,20 @@
     ]
    ],
    "validation": "Independent box-count formulas, alignments and exclusions; synthetic and EEG Java comparisons. See tests/kernel_refactor_results.json for focused validation and benchmark provenance."
+  },
+  {
+   "generated": "2026-10-28T20:05:25.247928+00:00",
+   "reason": "Bias-corrected distance correlation admits negative coefficients; correct signed label only. Numerical golden arrays unchanged.",
+   "source_sha256": {
+    "pyspi/statistics/distance.py": "744de9545cd377f2c7a35496cabc3294d17a629fb19a782981bb5c4d8199df79"
+   },
+   "updated_fields": [
+    [
+     "dcorr",
+     "labels"
+    ]
+   ],
+   "validation": "Independent U-centering reference and negative coefficient fixture in tests/unit/test_pairwise_candidates.py."
   }
  ],
  "name": "full",
@@ -2544,9 +2558,9 @@
    "labels": [
     "distance",
     "nonlinear",
+    "signed",
     "undirected",
-    "unordered",
-    "unsigned"
+    "unordered"
    ],
    "module": ".statistics.distance",
    "nan_offdiag": 0,

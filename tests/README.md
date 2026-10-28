@@ -1060,3 +1060,20 @@ come from their individual snapshots and are not production benchmarks; use the
 | `pec_orth_abs` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `pec_orth_log_abs` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `ids` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
+# Additional pairwise candidates
+
+`tests/unit/test_pairwise_candidates.py` independently checks histogram KL and
+both distance-centering conventions, invalid inputs, extreme scales, mutation,
+channel order and owned outputs. It also checks IDS parameter identities and
+that importing the implementation does not reseed NumPy. Existing
+`test_ids_reference.py` checks the transformation/correlation definition.
+
+`tests/unit/test_banded_dtw.py` compares exact banded DTW against a separate
+full-grid dynamic program and tslearn, including boundaries, ties/constants,
+radius zero and wider bands, permutations and extreme units. It does not expand
+the optimization scope to unconstrained or soft DTW.
+
+`tests/benchmark_pairwise_candidates.py` measures formula costs from an explicit
+prepared EEG window. `tests/pairwise_candidate_math_results.json` records the
+first patient-001 comparison; it is not a multi-patient or workflow benchmark.
+Progress and remaining gates are in `docs/additional_pairwise_review.md`.

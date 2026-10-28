@@ -141,8 +141,8 @@ reci,,,,,~5732x faster (51.2 s -> 8.93 ms/window); scale/cube once per channel a
 anm,,,,,
 cds,,,,,
 igci,,,,,
-dcorr,,,,,
-dcorr_biased,,,,,
+dcorr,,,,,~63x at 8ch EEG; shared bounded distance products; negative estimates labeled signed.
+dcorr_biased,,,,,~1.00 s/118ch EEG window standalone; shares distance products with bias-corrected variant.
 hsic,,,,,
 hsic_biased,,,,,
 mgc,,,,,
@@ -153,7 +153,7 @@ dcorrx_maxlag-1,,,,,
 dcorrx_maxlag-10,,,,,
 dtw,,,,,
 dtw_constraint-itakura,,,,,
-dtw_constraint-sakoe-chiba,,,,,
+dtw_constraint-sakoe-chiba,,,,,~154x at 8ch EEG; exact band-only recursion and one calculation per symmetric pair.
 softdtw,,,,,
 softdtw_constraint-itakura,,,,,
 softdtw_constraint-sakoe-chiba,,,,,
@@ -233,7 +233,7 @@ coint_johansen_trace_stat_order-1_ardiff-1,,,,,
 coint_aeg_tstat_trend-c_autolag-aic_maxlag-10,,,,,
 coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10,,,,,
 coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10,,,,,
-ids,,,,,
+ids,,,,,~0.033 s/118ch EEG window; removed import RNG reset; isolates invalid channels.
 cohmag_wavelet_mean_fs-1,all configured frequency bands,,,,
 cohmag_wavelet_max_fs-1,all configured frequency bands,,,,
 phase_wavelet_mean_fs-1,all configured frequency bands,,,,
@@ -252,3 +252,4 @@ wspli_wavelet_mean_fs-1,all configured frequency bands,,,,
 wspli_wavelet_max_fs-1,all configured frequency bands,,,,
 dwspli_wavelet_mean_fs-1,all configured frequency bands,,,,
 dwspli_wavelet_max_fs-1,all configured frequency bands,,,,
+histre_bins-10,bins=10; pseudocount=1e-10,,,,~0.012 s/118ch EEG window; shared channel histograms; distribution-shape comparison.
