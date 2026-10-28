@@ -199,12 +199,33 @@ assert not jpype.isJVMStarted()
 path=Path(__import__('sys').argv[1])
 path.write_text('.statistics.infotheory:\\n  MutualInfo:\\n    dependencies: [java]\\n    configs:\\n    - estimator: gaussian\\n')
 assert resolve_metrics(path)[0].dependencies == ()
-Calculator._optional_dependencies={'java':False}
 calc=Calculator(configfile=path, dataset=d)
 assert list(calc.spis)==['mi_gaussian']
 calc.compute()
 assert not jpype.isJVMStarted()
+assert Calculator._optional_dependencies == {}
 '''
     env = {**os.environ, "OPENBLAS_NUM_THREADS": "1"}
     subprocess.run([sys.executable, "-c", script, str(tmp_path/"metrics.yaml")],
                    env=env, check=True, capture_output=True, text=True)
+
+
+@pytest.mark.java
+def test_java_dependency_is_checked_after_native_construction(tmp_path):
+    script = '''
+import sys, jpype, numpy as np
+from pathlib import Path
+from pyspi.calculator import Calculator
+path=Path(sys.argv[1])
+for estimator in ('gaussian', 'kernel'):
+    path.write_text('.statistics.infotheory:\\n  MutualInfo:\\n    configs:\\n    - estimator: '+estimator+'\\n')
+    calc=Calculator(configfile=path, dataset=np.random.default_rng(91).normal(size=(2,40)))
+    assert jpype.isJVMStarted() == (estimator == 'kernel')
+    calc.compute()
+    identifier = 'mi_gaussian' if estimator == 'gaussian' else 'mi_kernel_W-0.5'
+    assert list(calc.spis) == [identifier]
+    assert np.isfinite(calc.table[identifier].to_numpy()[0,1])
+'''
+    subprocess.run([sys.executable, "-c", script, str(tmp_path/"mixed.yaml")],
+                   env={**os.environ, "OPENBLAS_NUM_THREADS": "1"}, check=True,
+                   capture_output=True, text=True)

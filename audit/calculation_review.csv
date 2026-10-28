@@ -26,21 +26,21 @@ icoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared spectral work
 phase_multitaper_max_fs-1,all configured frequency bands,,,,Removed: ordinary maximum has no circular meaning.
 cohmag_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
 icoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
-plv_multitaper_mean_fs-1,all configured frequency bands,1,1,,Shared phase vectors; reversed-pair reuse. First band carries the shared pass (1.5 s). Registered moments formed in one pass with a budget sized to fit: phase family 4.46 s -> 2.67 s per window at 118x1024 (+520 MB peak RSS); bit-identical.
-pli_multitaper_mean_fs-1,all configured frequency bands,1,1,,Magnitude before band summary; reversed-pair reuse. Registered moments formed in one pass with a budget sized to fit: phase family 4.46 s -> 2.67 s per window at 118x1024 (+520 MB peak RSS); bit-identical.
-wpli_multitaper_mean_fs-1,all configured frequency bands,1,1,,118x1024: 0.36 s -> 0.29 s. Remove amplitude cutoff; zero weights -> NaN; shared pairs. Registered moments formed in one pass with a budget sized to fit: phase family 4.46 s -> 2.67 s per window at 118x1024 (+520 MB peak RSS); bit-identical.
-dspli_multitaper_mean_fs-1,all configured frequency bands,1,1,,118x1024: 0.30 s -> 0.26 s. Correct zero signs; shared pair reductions. Registered moments formed in one pass with a budget sized to fit: phase family 4.46 s -> 2.67 s per window at 118x1024 (+520 MB peak RSS); bit-identical.
-dswpli_multitaper_mean_fs-1,all configured frequency bands,1,1,,118x1024: 0.50 s -> 0.63 s. Stable pair sums; zero weights -> NaN; lower memory. Registered moments formed in one pass with a budget sized to fit: phase family 4.46 s -> 2.67 s per window at 118x1024 (+520 MB peak RSS); bit-identical.
-ppc_multitaper_mean_fs-1,all configured frequency bands,1,1,,Shared phase vectors; reversed-pair reuse; valid negatives preserved. Registered moments formed in one pass with a budget sized to fit: phase family 4.46 s -> 2.67 s per window at 118x1024 (+520 MB peak RSS); bit-identical.
+plv_multitaper_mean_fs-1,all configured frequency bands,1,1,,Shared phase vectors. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
+pli_multitaper_mean_fs-1,all configured frequency bands,1,1,,Magnitude before band summary. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
+wpli_multitaper_mean_fs-1,all configured frequency bands,1,1,,Zero weights -> NaN; removed amplitude cutoff. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
+dspli_multitaper_mean_fs-1,all configured frequency bands,1,1,,Corrected zero signs. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
+dswpli_multitaper_mean_fs-1,all configured frequency bands,1,1,,Stable pair sums; zero weights -> NaN. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
+ppc_multitaper_mean_fs-1,all configured frequency bands,1,1,,Shared phase vectors; valid negatives preserved. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
 plv_multitaper_max_fs-1,all configured frequency bands,,,,Shared phase vectors; reversed-pair reuse.
 pli_multitaper_max_fs-1,all configured frequency bands,,,,Magnitude before band summary; reversed-pair reuse.
 wpli_multitaper_max_fs-1,all configured frequency bands,,,,Remove amplitude cutoff; zero weights -> NaN; shared pairs.
 dspli_multitaper_max_fs-1,all configured frequency bands,,,,Correct zero signs; shared pair reductions.
 dswpli_multitaper_max_fs-1,all configured frequency bands,,,,Stable pair sums; zero weights -> NaN; lower memory.
 ppc_multitaper_max_fs-1,all configured frequency bands,,,,Shared phase vectors; reversed-pair reuse; valid negatives preserved.
-pli-signed_multitaper_mean_fs-1,all configured frequency bands,1,1,,Signed phase-lag values; shared PLI work and reversed pairs. Registered moments formed in one pass with a budget sized to fit: phase family 4.46 s -> 2.67 s per window at 118x1024 (+520 MB peak RSS); bit-identical.
+pli-signed_multitaper_mean_fs-1,all configured frequency bands,1,1,,Signed phase-lag values; shared PLI work. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
 pli-signed_multitaper_max_fs-1,all configured frequency bands,,,,Signed phase-lag values; shared PLI work and reversed pairs.
-wpli-signed_multitaper_mean_fs-1,all configured frequency bands,1,1,,Shared wPLI work; zero weights -> NaN. Registered moments formed in one pass with a budget sized to fit: phase family 4.46 s -> 2.67 s per window at 118x1024 (+520 MB peak RSS); bit-identical.
+wpli-signed_multitaper_mean_fs-1,all configured frequency bands,1,1,,Shared wPLI work; zero weights -> NaN. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
 wpli-signed_multitaper_max_fs-1,all configured frequency bands,,,,Shared wPLI work; zero weights -> NaN.
 psi_multitaper_mean_fs-1,all configured frequency bands,1,1,,"3 bands, 118x1024: 11.62 s -> 0.37 s (~31.1x). Shared spectra; adjacent-bin PSI replaces all-frequency pairs. Correct signed/directed labels."
 gd_multitaper_delay_fs-1,all configured frequency bands,,,,"3 bands, 118x1024: 5.94 s -> 1.06 s (~5.6x). Batched fits and per-pair significance; calibrated coherence test; NaN diagnostics."
@@ -101,14 +101,14 @@ prec-sq_GraphicalLasso,,,,,Prevents stale results and accidental changes to cach
 prec_GraphicalLassoCV,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. 118x1024: 4.2 s = 80 sklearn glasso fits (4 refinements x 5 folds x 4 alphas) + final. Left as is: n_jobs cuts wall time only; compiled solver unverified.
 prec-sq_GraphicalLassoCV,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. 118x1024: 4.2 s = 80 sklearn glasso fits (4 refinements x 5 folds x 4 alphas) + final. Left as is: n_jobs cuts wall time only; compiled solver unverified.
 cov_GraphicalLasso,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
-cov_MinCovDet,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. 118x1024: 4.35 s -> 1.39 s (~3.1x). Cholesky Mahalanobis C-steps (pyspi._robust); fixed seed 42; identical supports; goldens bit-identical.
-cov-sq_MinCovDet,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. 118x1024: 4.35 s -> 1.39 s (~3.1x). Cholesky Mahalanobis C-steps (pyspi._robust); fixed seed 42; identical supports; goldens bit-identical.
-prec_EllipticEnvelope,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. Served from the shared seeded MinCovDet fit (identical values; 4.12 s -> ~0 s). prec/prec-sq omitted from the reviewed preset as duplicates of prec_MinCovDet.
-prec-sq_EllipticEnvelope,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. Served from the shared seeded MinCovDet fit (identical values; 4.12 s -> ~0 s). prec/prec-sq omitted from the reviewed preset as duplicates of prec_MinCovDet.
-prec_MinCovDet,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. 118x1024: 4.35 s -> 1.39 s (~3.1x). Cholesky Mahalanobis C-steps (pyspi._robust); fixed seed 42; identical supports; goldens bit-identical.
-prec-sq_MinCovDet,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. 118x1024: 4.35 s -> 1.39 s (~3.1x). Cholesky Mahalanobis C-steps (pyspi._robust); fixed seed 42; identical supports; goldens bit-identical.
-cov_EllipticEnvelope,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. Served from the shared seeded MinCovDet fit (identical values; 4.12 s -> ~0 s). prec/prec-sq omitted from the reviewed preset as duplicates of prec_MinCovDet.
-cov-sq_EllipticEnvelope,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. Served from the shared seeded MinCovDet fit (identical values; 4.12 s -> ~0 s). prec/prec-sq omitted from the reviewed preset as duplicates of prec_MinCovDet.
+cov_MinCovDet,,1,1,,Full-rank 118x1024: 4.35 -> 1.39 s; Cholesky steps/shared seeded fit. CAR/ill-conditioned inputs use reference fit.
+cov-sq_MinCovDet,,1,1,,Full-rank 118x1024: 4.35 -> 1.39 s; Cholesky steps/shared seeded fit. CAR/ill-conditioned inputs use reference fit.
+prec_EllipticEnvelope,,1,1,,Shared seeded MinCovDet fit avoids duplicate fitting; duplicate precision outputs omitted from run.
+prec-sq_EllipticEnvelope,,1,1,,Shared seeded MinCovDet fit avoids duplicate fitting; duplicate precision outputs omitted from run.
+prec_MinCovDet,,1,1,,Full-rank 118x1024: 4.35 -> 1.39 s; Cholesky steps/shared seeded fit. CAR/ill-conditioned inputs use reference fit.
+prec-sq_MinCovDet,,1,1,,Full-rank 118x1024: 4.35 -> 1.39 s; Cholesky steps/shared seeded fit. CAR/ill-conditioned inputs use reference fit.
+cov_EllipticEnvelope,,1,1,,Shared seeded MinCovDet fit avoids duplicate fitting; duplicate precision outputs omitted from run.
+cov-sq_EllipticEnvelope,,1,1,,Shared seeded MinCovDet fit avoids duplicate fitting; duplicate precision outputs omitted from run.
 pec,,,,,"6 variants, 118x1024: 0.83 s -> 0.77 s (~1.08x). Shared envelopes/projections; centered correlations."
 pec_orth,,,,,Shared projections; constant or roundoff-only envelopes return NaN with reasons.
 pec_orth_abs,,,,,Reuses directional correlations; abs before averaging; undefined envelopes return NaN.

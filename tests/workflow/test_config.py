@@ -20,6 +20,7 @@ def test_relative_paths_ids_and_defaults(edf, workflow, monkeypatch, tmp_path):
     assert not cfg.output_directory.exists()
     assert cfg.detrend is cfg.zscore is True
     assert cfg.window_seconds == cfg.step_seconds == 1 / 2
+    assert cfg.execution == {"workers": 1, "threads_per_worker": 1, "spectral_cache_mib": 256.}
 
 
 @pytest.mark.parametrize("change,match", [
@@ -42,6 +43,12 @@ def test_relative_paths_ids_and_defaults(edf, workflow, monkeypatch, tmp_path):
     ({"preprocessing": {"zscore": "false"}}, "booleans"),
     ({"preprocessing": {"detrend": 1}}, "booleans"),
     ({"preprocessing": {"rereference": "average"}}, "unknown fields"),
+    ({"execution": {"workers": 0}}, "positive integer"),
+    ({"execution": {"workers": True}}, "positive integer"),
+    ({"execution": {"threads_per_worker": 1.5}}, "positive integer"),
+    ({"execution": {"spectral_cache_mib": -1}}, "positive finite"),
+    ({"execution": {"spectral_cache_mib": float("inf")}}, "positive finite"),
+    ({"execution": {"unknown": 1}}, "unknown fields"),
 ])
 def test_invalid_config_rejected(change, match, edf, workflow):
     with pytest.raises(WorkflowError, match=match):

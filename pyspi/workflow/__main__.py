@@ -1,4 +1,4 @@
-"""Serial EEG calculation, read-only preflight, and electrode-order export."""
+"""EEG calculation, resource planning, read-only preflight and electrode export."""
 
 import argparse
 import json
@@ -13,7 +13,7 @@ def main(argv=None):
     check = commands.add_parser("preflight", help="validate configuration and EDF headers without computing connectivity")
     check.add_argument("config", help="workflow YAML path")
     check.add_argument("--json", action="store_true", help="print machine-readable report, including every [start, stop) sample range")
-    execute = commands.add_parser("run", help="prepare EDFs and calculate serially into bounded result batches")
+    execute = commands.add_parser("run", help="prepare EDFs and calculate with configured window workers")
     execute.add_argument("config", help="workflow YAML path")
     execute.add_argument("--resume", action="store_true", help="retain committed batches and recompute unfinished batches")
     execute.add_argument("--retry-failures", action="store_true", help="with --resume, explicitly retry recorded failures")
@@ -24,8 +24,34 @@ def main(argv=None):
     export.add_argument("destination", help="new standalone metadata JSON file")
     export.add_argument("--patient-id")
     export.add_argument("--recording-id")
+    estimate = commands.add_parser("estimate-resources", help="estimate worker limits from measured process peaks; no calculations")
+    estimate.add_argument("--memory-mib", type=float, required=True, help="memory available to this run, including parent and workers")
+    estimate.add_argument("--worker-peak-mib", type=float, required=True, help="measured worker peak RSS with the intended config/input shape")
+    estimate.add_argument("--parent-peak-mib", type=float, required=True, help="measured parent peak RSS, including preparation and output")
+    estimate.add_argument("--cpus", type=int, help="CPU allocation; defaults to current affinity")
+    estimate.add_argument("--threads-per-worker", type=int, default=1)
+    estimate.add_argument("--reserve-fraction", type=float, default=.2)
+    measure = commands.add_parser("profile", help="run a bounded workflow and record process-tree memory and end-to-end timing")
+    measure.add_argument("config")
+    measure.add_argument("--max-windows", type=int, required=True)
+    measure.add_argument("--report", required=True, help="JSON measurement receipt")
     args = parser.parse_args(argv)
     try:
+        if args.command == "profile":
+            from ._profile import profile
+            result = profile(args.config, max_windows=args.max_windows, report_path=args.report)
+            print(json.dumps({key: result[key] for key in ("windows", "elapsed_seconds", "process_tree_memory")}, indent=2))
+            return 0
+        if args.command == "estimate-resources":
+            from ._resources import estimate_workers
+            try:
+                result = estimate_workers(memory_mib=args.memory_mib, worker_peak_mib=args.worker_peak_mib,
+                    parent_peak_mib=args.parent_peak_mib, cpus=args.cpus,
+                    threads_per_worker=args.threads_per_worker, reserve_fraction=args.reserve_fraction)
+            except ValueError as exc:
+                raise WorkflowError(str(exc)) from exc
+            print(json.dumps(result, indent=2, allow_nan=False))
+            return 0
         if args.command == "run":
             paths = run(args.config, resume=args.resume, retry_failures=args.retry_failures,
                         max_windows=args.max_windows)

@@ -88,11 +88,14 @@ def test_get_correlation_df_without_labels(frame):
         assert list(block.index) == FABFOUR
         np.testing.assert_allclose(np.diag(block.to_numpy()), 1.0)
         np.testing.assert_allclose(block.to_numpy(), block.to_numpy().T)
-        # Only cov is signed in fabfour, so every pair goes through the
-        # abs-then-Spearman branch of Calculator._get_correlation_df.
+        # Ordinary PEC is a signed envelope correlation. Compare its signed
+        # edges with covariance; comparisons involving unsigned metrics use
+        # magnitudes. Keep the scientific label assertion explicit.
         calc = calcs[name]
-        assert [s for s in FABFOUR if calc.spis[s].issigned()] == ["cov_EmpiricalCovariance"]
+        signed = ["cov_EmpiricalCovariance", "pec"]
+        assert [s for s in FABFOUR if calc.spis[s].issigned()] == signed
         expected = calc.table.stack().abs().corr(method="spearman")
+        expected.loc[signed, signed] = calc.table.stack()[signed].corr(method="spearman")
         np.testing.assert_allclose(
             block.to_numpy(), expected.loc[FABFOUR, FABFOUR].to_numpy(), rtol=1e-12
         )

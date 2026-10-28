@@ -170,7 +170,7 @@ def test_registered_phase_moments_form_in_one_pass_and_match_separate_computatio
         np.testing.assert_array_equal(calc.table[identifier].to_numpy(), value, err_msg=identifier)
     assert conn.phase_requests == set(PHASE_MOMENT_ORDER)
     retained = sum(ArrayCache.size(v) for k, v in conn._arrays.entries.items() if k[0] in ("phase_statistic", "measure"))
-    assert conn._arrays.max_bytes > default_budget >= retained
+    assert conn._arrays.max_bytes == default_budget >= retained
 
 
 def test_phase_registration_is_scoped_to_its_sampling_frequency_and_keeps_the_default_budget_otherwise():
@@ -180,11 +180,33 @@ def test_phase_registration_is_scoped_to_its_sampling_frequency_and_keeps_the_de
     assert spectral_workspace(data, 1).phase_requests == set()
     assert spectral_workspace(data, 1)._arrays.max_bytes == ArrayCache().max_bytes
     assert spectral_workspace(data, 2).phase_requests == {"unit"}
-    assert spectral_workspace(data, 2)._arrays.max_bytes > ArrayCache().max_bytes
+    assert spectral_workspace(data, 2)._arrays.max_bytes == ArrayCache().max_bytes
     conn = spectral_workspace(data, 1)
     with patch.object(conn, "_reduce_phase", wraps=conn._reduce_phase) as reduce:
         conn.measure("signed_phase_lag_index")
     assert reduce.call_args.args[0] == ["sign", "nonzero"]
+
+
+def test_configured_cache_limit_changes_work_sharing_without_changing_outputs(tmp_path):
+    import yaml
+    from pyspi.calculator import Calculator
+    raw = np.random.default_rng(15).normal(size=(6, 96))
+    path = tmp_path / "phase.yaml"
+    path.write_text(yaml.safe_dump({".statistics.spectral": {
+        cls.__name__: {"configs": [{}]} for cls in PHASE_CLASSES}}))
+    results, passes = [], []
+    for mib in (.03, 1):
+        calc = Calculator(dataset=Data(raw), configfile=str(path), spectral_cache_mib=mib)
+        calc.dataset._spectral_cache_bytes = calc._spectral_cache_bytes
+        conn = spectral_workspace(calc.dataset, 1)
+        with patch.object(conn, "_reduce_phase", wraps=conn._reduce_phase) as reduced:
+            calc.compute()
+        passes.append(reduced.call_count)
+        results.append(calc.table.to_numpy().copy())
+        assert conn._arrays.max_bytes == int(mib * 2**20)
+        assert conn._arrays.nbytes <= conn._arrays.max_bytes
+    assert passes[0] > passes[1] == 1
+    np.testing.assert_array_equal(*results)
 
 
 def test_signed_unsigned_and_debiased_variants_share_signs_and_are_order_independent():

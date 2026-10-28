@@ -90,6 +90,8 @@ def test_multitaper_aggregation_uses_selected_frequencies_and_preserves_orientat
 @pytest.mark.parametrize("cls_name", ["DirectedCoherence", "PartialDirectedCoherence",
     "GeneralizedPartialDirectedCoherence", "DirectedTransferFunction", "DirectDirectedTransferFunction"])
 def test_bivariate_spectral_aggregation_uses_inclusive_band_and_source_target(monkeypatch, cls_name, statistic):
+    from pyspi._spectral import SpectralConnectivity, canonical_directed_measure
+
     spi = getattr(spectral, cls_name)(fmin=0.1, fmax=0.5, statistic=statistic)
     data = Data(np.arange(90.).reshape(3, 30), normalise=False)
     frequencies = np.array([0.0, 0.1, 0.2, 0.3, 0.5])
@@ -104,11 +106,21 @@ def test_bivariate_spectral_aggregation_uses_inclusive_band_and_source_target(mo
             tensor = pairs.setdefault(key, np.full((1, 5, 2, 2), 9999.0))
             tensor[0, :, 0, 1] = values
             expected[row, col] = values[1:].mean() if statistic == "mean" else values[1:].max()
-    values = np.full((1, 5, 3, 3), np.nan)
-    for (i, j), tensor in pairs.items():
-        values[..., i, j] = tensor[..., 0, 1]
-    monkeypatch.setattr(spi, "_get_cache", lambda data: (values, frequencies))
+    # The wrapper streams unique pair fits into real band summaries. Stub
+    # only those expensive fits/values, not the aggregation being tested.
+    conn = SpectralConnectivity(np.zeros((1, 1, 1, 8, 3), complex),
+        np.r_[frequencies, [-.3, -.2, -.1]], np.array([0.]))
+    unique_pairs = np.array([(0, 1), (0, 2), (1, 2)])
+    directed_values = np.stack([np.stack((pairs[i, j][0, :, 0, 1],
+                                         pairs[j, i][0, :, 0, 1]), axis=-1)
+                                for i, j in unique_pairs])
+    conn.directed_requests = {(canonical_directed_measure(spi.measure), (.1, .5))}
+    monkeypatch.setattr(conn, "_directed_blocks", lambda: iter([(unique_pairs, None)]))
+    monkeypatch.setattr(conn, "_directed_values", lambda model, name: directed_values)
+    monkeypatch.setattr(spectral, "directed_workspace", lambda data, fs: conn)
     np.testing.assert_allclose(spi.multivariate(data), expected, rtol=1e-12, atol=1e-12)
+    for i, j in ((0, 1), (1, 0), (2, 1)):
+        assert spi.bivariate(data, i=i, j=j) == pytest.approx(expected[i, j])
 
 
 @pytest.mark.parametrize("statistic", ["mean", "max"])

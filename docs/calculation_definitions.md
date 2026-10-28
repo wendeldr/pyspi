@@ -381,6 +381,15 @@ Shrunk covariance is invertible when its shrinkage supplies a positive diagonal.
 The [amplitude selection review](amplitude_selection_review.md) explains why
 removing z-scoring has different effects on these cases.
 
+MinCovDet and EllipticEnvelope share a fixed-seed robust fit; EllipticEnvelope's
+unused outlier threshold does not change covariance or precision. Cholesky
+C-steps accelerate sufficiently well-conditioned full-rank inputs. Singular or
+ill-conditioned centered inputs, including CAR, use the reference MinCovDet
+fit throughout: tiny rounded positive pivots in a singular covariance must not
+change the selected support. This preserves the estimator instead of adding a
+ridge or changing the reference. It does not fix the existing voltage-scale
+limitations documented in the amplitude review.
+
 ## Spectral signs and ordered pairs
 
 Multitaper PSI, group delay, and coherence phase have **signed, directed**

@@ -42,18 +42,27 @@ class Calculator:
             If True, detrend each time series in the MTS dataset individually along the time axis, default=False.
         normalise (bool, optional):
             If True, z-score normalise each time series in the MTS dataset individually along the time axis, default=True.
+        spectral_cache_mib (float, optional):
+            Maximum retained array MiB per spectral workspace, default=256.
+            Larger limits can share more phase calculations. This excludes
+            temporary arrays, transforms and other families' caches; it is not
+            a total process-memory limit.
     """
     _optional_dependencies = None
 
     def __init__(
         self, dataset=None, name=None, labels=None, subset="all", configfile=None,
-        detrend=False, normalise=True
+        detrend=False, normalise=True, spectral_cache_mib=256
     ):
         self._spis = {}
         self._metric_reports = {}
         self._excluded_spis = list()
         self._normalise = normalise
         self._detrend = detrend
+        if (isinstance(spectral_cache_mib, bool) or not np.isfinite(spectral_cache_mib)
+                or spectral_cache_mib <= 0):
+            raise ValueError("spectral_cache_mib must be finite and positive")
+        self._spectral_cache_bytes = max(1, int(spectral_cache_mib * 2**20))
 
         # Define configfile by subset if it was not specified
         if configfile is None:
@@ -77,11 +86,10 @@ class Calculator:
             else:
                 configfile = os.path.dirname(os.path.abspath(__file__)) + "/config.yaml"
 
-        # add dependency checks here if the calculator is being instantiated for the first time
-        if not Calculator._optional_dependencies:
-            # check if optional dependencies exist
-            print("Checking if optional dependencies exist...")
-            Calculator._optional_dependencies = check_optional_deps()
+        # Resolve optional runtimes only when a configured estimator needs
+        # them. Checking Java eagerly starts a JVM even for native-only runs.
+        if Calculator._optional_dependencies is None:
+            Calculator._optional_dependencies = {}
 
         self._load_yaml(configfile)
 
@@ -246,6 +254,11 @@ class Calculator:
                     configurations = [None] if configurations is None else configurations
                     for params in configurations:
                         deps = spi_dependencies(cls, params, spec.get('dependencies'))
+                        missing_checks = set(deps) - Calculator._optional_dependencies.keys()
+                        if missing_checks:
+                            available = check_optional_deps()
+                            for dep in missing_checks:
+                                Calculator._optional_dependencies[dep] = available.get(dep, False)
                         if not all(Calculator._optional_dependencies.get(dep, False) for dep in deps):
                             print(f"*SKIPPING SPI: {module_name}.{fcn}(x,y,{params}); missing dependencies {deps}")
                             self._excluded_spis.append([f"{fcn}(x,y,{params})", deps])
@@ -289,6 +302,7 @@ class Calculator:
         )
         self._table.columns.name = "process"
         self._metric_reports.clear()
+        self.dataset._spectral_cache_bytes = self._spectral_cache_bytes
 
     def compute(self, *, on_metric_complete=None):
         """Compute the SPIs on the MVTS dataset, returning None as before.

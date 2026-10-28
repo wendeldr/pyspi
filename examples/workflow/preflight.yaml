@@ -21,4 +21,10 @@ window:
 preprocessing:
   detrend: true
   zscore: true
+execution:
+  workers: 1
+  threads_per_worker: 1
+  # Retained arrays per spectral workspace, not total process memory. A larger
+  # limit (e.g. 1024) can fuse phase calculations, at higher per-worker memory.
+  spectral_cache_mib: 256
 output_directory: /path/to/new_results

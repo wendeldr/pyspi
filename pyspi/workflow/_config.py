@@ -148,6 +148,7 @@ class Configuration:
     run_name: str | None
     output_batch_mib: float
     metadata: Path | None
+    execution: dict
 
 
 def load_config(path) -> Configuration:
@@ -156,7 +157,8 @@ def load_config(path) -> Configuration:
     base = path.parent
     cfg = fields(read_yaml(path), {"version", "recordings", "edf_glob", "metrics",
                  "edf_directory", "metadata", "sampling_rate_hz", "window", "preprocessing",
-                 "bandpass", "notch", "reference", "run_name", "output_batch_mib", "output_directory"}, "workflow")
+                 "bandpass", "notch", "reference", "run_name", "output_batch_mib", "output_directory",
+                 "execution"}, "workflow")
     if type(cfg.get("version")) is not int or cfg["version"] != 1:
         raise WorkflowError("workflow version must be 1")
     if sum(key in cfg for key in ("recordings", "edf_glob", "edf_directory")) != 1:
@@ -258,7 +260,17 @@ def load_config(path) -> Configuration:
     reference = reference_config(cfg.get("reference"), base)
     output = cfg.get("output_directory")
     output = _path(output, base, "output_directory") if output is not None else None
+    execution = fields(cfg.get("execution", {}),
+                       {"workers", "threads_per_worker", "spectral_cache_mib"}, "execution")
+    execution = {"workers": execution.get("workers", 1),
+                 "threads_per_worker": execution.get("threads_per_worker", 1),
+                 "spectral_cache_mib": float(positive_number(
+                     execution.get("spectral_cache_mib", 256), "execution.spectral_cache_mib"))}
+    for key in ("workers", "threads_per_worker"):
+        if type(execution[key]) is not int or execution[key] < 1:
+            raise WorkflowError(f"execution.{key} must be a positive integer")
     return Configuration(path, tuple(recordings), metric_config, rate, length, step,
                          detrend, zscore, output, (float(low), float(high)), notch, reference,
                          safe_id(cfg["run_name"], "run_name") if "run_name" in cfg else None,
-                         float(positive_number(cfg.get("output_batch_mib", 64), "output_batch_mib")), metadata)
+                         float(positive_number(cfg.get("output_batch_mib", 64), "output_batch_mib")), metadata,
+                         execution)

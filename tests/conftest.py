@@ -2,8 +2,8 @@
 
 Tiers
 -----
-* default: ``pytest`` — small golden size, no ``slow`` tests, legacy benchmark skipped.
-* ``pytest --runslow`` — also runs the slow SPI tests and the legacy benchmark.
+* default: ``pytest`` — small golden size, no ``slow`` tests.
+* ``pytest --runslow`` — also runs the slow SPI tests.
 * ``pytest --pyspi-size=full --runslow`` — the complete run (7 x 100 inputs, every test).
 
 Fixture ordering matters: the JVM must be running before any
@@ -37,7 +37,7 @@ def pytest_addoption(parser):
         "--runslow",
         action="store_true",
         default=False,
-        help="Run tests marked slow (and the legacy CML7 benchmark).",
+        help="Run tests marked slow.",
     )
     parser.addoption(
         "--require-java", action="store_true", default=False,
@@ -206,47 +206,3 @@ def _restore_optional_deps():
     clean = dict(Calculator._optional_dependencies)
     yield
     Calculator._optional_dependencies = dict(clean)
-
-
-# --------------------------------------------------------------------------- #
-# Legacy benchmark summary (tests/test_SPIs.py)
-# --------------------------------------------------------------------------- #
-@pytest.fixture(scope="session")
-def spi_warning_logger(request):
-    warnings_log = list()
-
-    def add_warning(spi, module_name, max_z, num_exceed, num_iteractions):
-        warnings_log.append((spi, module_name, max_z, num_exceed, num_iteractions))
-
-    request.session.spi_warnings = warnings_log
-    return add_warning
-
-
-def pytest_sessionfinish(session, exitstatus):
-    # Only the legacy benchmark registers spi_warnings; stay silent otherwise.
-    spi_warnings = getattr(session, "spi_warnings", None)
-    if not spi_warnings:
-        return
-
-    header_line = "=" * 80
-    content_line = "-" * 80
-    footer_line = "=" * 80
-    header = " SPI BENCHMARKING SUMMARY"
-    footer = f" Session completed with exit status: {exitstatus} "
-    padded_header = f"{header:^80}"
-    padded_footer = f"{footer:^80}"
-
-    print("\n")
-    print(header_line)
-    print(padded_header)
-    print(header_line)
-    print(f"\nDetected {len(spi_warnings)} SPI(s) with outputs exceeding the specified 1 sigma threshold.\n")
-    print(f"{'SPI':<25}{'Cat':<10}{'Max ZSc.':>10}{'# Exceed. Pairs':>20}{'Unq. Pairs':>15}")
-    print(content_line)
-    for est, module_name, max_z, num_exceed, num_iteractions in spi_warnings:
-        error = ""
-        if max_z > 10:
-            error = " **"
-        print(f"{est+error:<25}{module_name:<10}{max_z:>10.4g}{num_exceed:>15}{num_iteractions:>20}")
-    print(footer_line)
-    print(padded_footer)

@@ -33,6 +33,7 @@ class PreflightReport:
         return {"schema": "pyspi-preflight/1", "ready": self.ready,
                 "pyspi_version": version("pyspi"), "configuration": str(cfg.source),
                 "metric_config": str(cfg.metric_config),
+                "execution": cfg.execution.copy(),
                 "sampling_rate_hz": float(self.sampling_rate_hz),
                 "window": {"length_seconds": float(cfg.window_seconds), "step_seconds": float(cfg.step_seconds)},
                 "preprocessing": [operation for enabled, operation in

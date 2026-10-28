@@ -1,12 +1,12 @@
-# Serial EEG workflow and EDF preflight
+# EEG workflow and EDF preflight
 
 Preflight validates inputs and describes the proposed calculation. It reads EDF
 headers and file sizes, resolves metric constructors/dependencies, and reports
 channel order and full-window sample ranges. It does not load EEG samples,
 preprocess, calculate connectivity, resample, create output directories, or
 write into existing patient stores. The separate `run` command loads/prepares
-continuous EEG, calculates windows serially, and writes bounded result batches.
-Parallelization and changes to the separate data lake remain later work.
+continuous EEG, calculates windows with a configured worker count, and writes
+bounded result batches.
 
 Calculator's [completion reporting and timing](calculation_reporting.md) are
 used by the runner to persist diagnostics and write completed values.
@@ -190,6 +190,34 @@ excluded from the 195-output selection.
 The example workflow selects `reviewed`; the former `retained185` preset name
 has been replaced, so update custom workflow YAMLs that use that name.
 
+Execution defaults to one window worker and one numerical thread. Set
+`execution.workers`, `execution.threads_per_worker`, and
+`execution.spectral_cache_mib` explicitly to compare resource settings. The
+spectral cache defaults to 256 MiB per workspace; 1024 MiB is a larger-cache
+candidate that can fuse more phase reductions. These limits exclude temporary
+arrays, transforms, other calculation caches and process/library overhead.
+Values and preprocessing are unchanged by the cache policy.
+
+Workers use spawned processes, initialize their own calculators/JVM when
+needed, and map prepared signals read-only. At most one outstanding job/result
+per worker is admitted; only the parent publishes journals and output batches.
+Completed batches remain resumable after an interruption. In parallel execution,
+a window's diagnostics reach the parent when that window finishes; interrupted
+in-flight windows are recomputed on resume. Resource settings are recorded per
+session and may change on resume. Random estimators without fixed seeds can
+still vary with scheduling; the reviewed robust fits use a fixed seed.
+Keep one numerical thread per worker for this reviewed selection: the CAR
+pilot found convergence-sensitive GraphicalLasso results at two threads, with
+no speed benefit. Do not mix those thread settings across resumed sessions.
+
+Use `python -m pyspi.workflow profile CONFIG --max-windows 4 --report trial.json`
+with a new output location for an end-to-end measurement including continuous
+preparation, calculation, process-tree RSS/PSS and output writing. The
+`estimate-resources` command derives a conservative CPU/memory worker limit from
+measured parent/worker peaks. See [the resource review](workflow_performance_review.md)
+for the measurement protocol and limitations. It does not launch a cohort or
+guarantee a hard process-memory ceiling.
+
 The historical timing
 `used.yaml` contains 186 different requests: four significant-only
 cross-correlation variants instead of the two stored unrestricted max variants,
@@ -232,8 +260,11 @@ original preflight-only checkpoint is recorded in
 [verification.json](../tests/workflow/verification.json). It predates the required
 preparation fields; current preflight/execution verification is recorded in
 [execution_results.json](../tests/workflow/execution_results.json).
+The later parallel/resource review, complete calculation/storage suite and
+CAR pilot are recorded in
+[resource_results.json](../tests/workflow/resource_results.json).
 
-## EEG preparation and serial execution
+## EEG preparation and execution
 
 ```bash
 uv run --no-sync python -m pyspi.workflow run examples/workflow/preflight.yaml
@@ -257,9 +288,10 @@ The continuous preparation order is fixed:
 3. Resample mismatches using MNE polyphase, before windowing.
 4. Apply continuous MNE zero-phase FIR bandpass at the target rate.
 5. Apply the configured MNE reference to actual data.
-6. Window chronologically, then use Calculator's existing detrend-then-z-score
+6. Define windows chronologically, then use Calculator's existing detrend-then-z-score
    preprocessing per window (`ddof=1`). All requested metrics share that window's
    Data and intermediate caches. Every new window gets a fresh Data/cache.
+   Parallel completion order can differ; stored window axes retain chronological order.
 
 `notch` accepts `enabled` (default true), `line_frequency_hz` (60), `width_hz`
 (1), and `transition_hz` (1). Width is the full stopband width; MNE splits the
@@ -444,8 +476,11 @@ Calculator table/caches, and continuous selected EEG are additional memory.
 The target is not an overall RAM cap. Output arrays never accumulate across
 the whole patient. Loading all windows of one metric explicitly allocates that
 metric's dense array. Preparing the continuous recording remains proportional
-to retained contacts times recording duration; no streaming EDF filtering,
-automatic concurrency, or algorithm-memory limiter is supplied.
+to retained contacts times recording duration. Spawned workers map that prepared
+input read-only, while each keeps its own window data/calculation caches. Result
+transfers and worker imports add memory beyond output buffers. Streaming EDF
+filtering and a hard process-memory cap are not supplied. Choose concurrency
+from measured peaks and throughput using the resource tools described above.
 
 ## Checkpoints, failures, compatibility, and timings
 

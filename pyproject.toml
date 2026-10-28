@@ -79,7 +79,7 @@ include = ["pyspi*"]
 [tool.setuptools.package-data]
 pyspi = [
     "config.yaml", "sonnet_config.yaml", "fast_config.yaml", "fabfour_config.yaml",
-    "workflow/retained185.yaml",
+    "workflow/*.yaml",
     "lib/jidt/infodynamics.jar", "data/cml.npy", "data/forex.npy",
     "data/standard_normal.npy", "data/cml7.npy",
 ]
@@ -111,5 +111,4 @@ markers = [
     "regression: golden-value comparison against tests/regression/goldens",
     "stochastic: draws from the global numpy RNG; reproducible only via seed_all() before compute",
     "nan_golden: golden is all-NaN (status all_nan or error) for this test; a per-SPI test gets value coverage only at --pyspi-size=full, a preprocessing variant none",
-    "legacy: original CML7 z-score benchmark (tests/test_SPIs.py)",
 ]

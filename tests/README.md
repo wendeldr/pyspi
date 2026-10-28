@@ -34,9 +34,8 @@ shared cache/base-class/configuration change or evidence of wider impact.
 | `benchmark_review_selection.py`, `review_selection_results.json`, `benchmark_envelope.py`, `envelope_refactor_results.json` | measured complete/incremental candidate costs and PEC before/after family timing |
 | `benchmark_spectral.py`, `spectral*_refactor_results.json` | paired spectral timings and historical/current receipts, including traced allocation peaks and explicit definition/frequency-selection differences |
 | `test_calc.py`, `test_utils.py`, `test_phi_native.py` | original tests, unchanged |
-| `test_SPIs.py` | original CML7 z-score benchmark (`legacy`, `slow`) |
 | `storage/` | storage-format suite, run separately (below) |
-| `workflow/` | strict configuration/header-only preflight plus serial EEG preparation, bounded output, ordering, partial reads, interruption/retry/resume and terminal execution in `execution/` |
+| `workflow/` | strict configuration/header-only preflight, EEG preparation, serial/spawned execution, resource limits/planning, bounded output, ordering, interruption/retry/resume and terminal execution |
 
 ## Environment
 
@@ -101,9 +100,9 @@ Always run from the repository root.
 | command | what runs |
 |---|---|
 | `.venv/bin/python -m pytest` | default tier: small goldens (5 processes x 64 observations), no `slow` tests, no legacy benchmark; test-review checkpoint: 694 passed, 15 skipped, 9 xfailed (see [test review](TEST_REVIEW.md)); the newer workflow cases are verified separately below |
-| `.venv/bin/python -m pytest --runslow` | adds the slow SPI tests, the full-config `Calculator` end-to-end test, the slow known-bug tests (ccm) and the legacy benchmark |
+| `.venv/bin/python -m pytest --runslow` | adds slow SPI tests, the full-config `Calculator` end-to-end test and slow known-bug tests (ccm) |
 | `.venv/bin/python -m pytest --pyspi-size=full --runslow --timeout=1800` | full tier: 7 x 100 goldens, everything |
-| `.venv/bin/python -m pytest --runslow -m slow --ignore=tests/test_SPIs.py` | only the slow tests (14 at small size), without the legacy benchmark's recompute (see below) |
+| `.venv/bin/python -m pytest --runslow -m slow` | only slow tests |
 | `.venv/bin/python -m pytest tests/regression -k "cov_ or dcorr"` | select SPIs by identifier |
 | `.venv/bin/python -m pytest -m "not java"` | deselects tests explicitly marked `java`; use `--collect-only` to inspect the selected tests |
 
@@ -112,7 +111,7 @@ Options:
 - `--pyspi-size small|full` picks the golden set (default `small`; environment fallback `PYSPI_TEST_SIZE`). Missing committed goldens fail; restore them rather than regenerating references to make a run pass.
 - `--runslow` runs tests marked `slow`; otherwise they are reported as skipped (`slow: needs --runslow`).
 - `--require-java` fails if the JIDT JVM cannot start. Use it for complete local verification, together with `--runslow` for the slow calculations.
-- Any `--runslow` invocation makes `tests/test_SPIs.py` recompute all 301 SPIs on the CML7 benchmark while it is being collected (about 2.5 min on the generating machine, measured with `--collect-only`), whatever `-m` or `-k` selects; with `-n N` every worker repeats it. Add `--ignore=tests/test_SPIs.py` (or give explicit test paths) unless you want the legacy benchmark.
+- The archived CML7 warning-only test was removed after its old identifiers blocked collection. Current full-size golden and Calculator tests use that same CML7 dataset with strict numerical assertions; no calculations now run during collection for the removed test. The old pickle/generator remain historical artifacts, not current references.
 - `-n 4` runs in parallel with pytest-xdist. Every test is independent; each worker starts its own JVM.
 - `--timeout=N` (pytest-timeout) overrides the default 300 s per test. It uses `signal` and cannot interrupt code inside Java or numba frames, so it is a safety net only.
 
@@ -127,7 +126,6 @@ Options:
 | `regression` | golden-value comparison |
 | `stochastic` | draws from the global numpy RNG; reproducible only with `seed_all()` immediately before compute |
 | `nan_golden` | golden is all-NaN (status `all_nan` or `error`); this locks missing-value or failure behavior, without finite-value coverage for that case |
-| `legacy` | original CML7 benchmark in `test_SPIs.py` |
 
 `slow`, `java`, `stochastic` and `nan_golden` are attached by `tests/conftest.py`:
 
@@ -596,6 +594,9 @@ thread; loading, preprocessing and writing excluded) and writes a receipt with
 the per-metric medians. `run_hotspots_results.json` summarises the series:
 the window went from 20.40 s to 11.75 s. Run
 `.venv/bin/python tests/benchmark_run_hotspots.py --label after --repeats 3 --out tests/run_hotspots/after.json`.
+Those receipts are historical full-rank synthetic measurements with their
+recorded 200-to-198 selection, not a performance claim for the current 195-output
+CAR run. Current combined measurements are linked below.
 
 - `EllipticEnvelope` serves from the cached `MinCovDet` fit (its `fit` is
   `MinCovDet.fit` plus an outlier offset the covariance never uses), and both
@@ -607,16 +608,38 @@ the window went from 20.40 s to 11.75 s. Run
 - `pyspi._robust.FastMinCovDet` copies scikit-learn 1.9.1's FAST-MCD with
   Cholesky Mahalanobis C-steps (3.9 s -> 1.2 s at 118x1024). The same seed
   selects the same supports (`unit/test_robust.py`, five synthetic sets, and
-  the benchmark window); a rounding-induced support change remains possible in
-  principle and would appear as a tolerance-level golden difference.
+  the benchmark window). Integration found a material support/covariance change
+  on singular CAR input. Such inputs now use the complete reference MinCovDet
+  fit, verified against scikit-learn supports/covariance/precision for three
+  CAR controls. The full-rank shortcut remains.
 - Phase-synchrony classes register their taper moments before compute
-  (`PHASE_MOMENTS`); the first request forms every registered moment in one
-  pass and the spectral workspace's retained-array budget grows to fit them
-  (`reserve_phase_moments`). At 118x1024 the family went from 4.46 s to
-  2.67 s and peak RSS from 1142 MB to 1662 MB; outputs are bit-identical to
-  per-class computation (`unit/test_phase_lag.py`) and to the multitaper goldens.
+  (`PHASE_MOMENTS`). The original prototype formed every moment in one pass
+  and expanded its cache, reducing 4.46 s to 2.67 s at 118x1024 while adding
+  about 520 MB peak RSS. The integrated implementation instead fuses moments
+  only when they fit the configured cache. Small/large-cache equality and
+  bounded retention are covered in `unit/test_phase_lag.py`.
 - `GraphicalLassoCV` (4.2 s) is unchanged by decision: its cost is 80
   scikit-learn glasso fits, `n_jobs` would only move the time onto more cores.
+
+### Integrated workflow/resource validation
+
+The full `--runslow --pyspi-size=full --require-java` run passed **1,777 tests**
+with **seven known expected failures**; the separate storage suite passed
+**439 tests**. No numerical goldens changed. The superseded collection-time
+`test_SPIs.py` was removed after its old cross-correlation identifiers failed;
+strict current-catalogue tests use the same full `cml7.npy` data and assert
+numerical differences. Subsequent queue/dependency changes received focused
+checks rather than another full run.
+
+[`workflow/resource_results.json`](workflow/resource_results.json) records
+verification and packaging evidence. The
+[CAR resource profiles](workflow/resource_profiles/README.md) compare cache
+sizes, worker counts and numerical threads on four 118x1024 windows, including
+preparation/output and process-tree memory. All 195 outputs matched for the
+cache/worker comparisons and final JVM-free workflow. Two numerical threads
+changed seven convergence-sensitive graphical-lasso outputs; retain one.
+[`workflow/benchmark_resources.py`](workflow/benchmark_resources.py) reproduces
+the comparison with fresh processes and checkpoints completed cases.
 
 ## Reproducing failures across environments
 

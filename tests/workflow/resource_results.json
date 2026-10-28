@@ -1,0 +1,101 @@
+{
+  "schema": "pyspi-workflow-resource-verification/1",
+  "date": "2026-10-28",
+  "integrated_source_commit": "e7fef66",
+  "integration_commit": "d0ff9ab",
+  "other_worktree": "Preserved in place; later work is separate from this snapshot.",
+  "selection_counts": {
+    "normalized": 195,
+    "amplitude": 12
+  },
+  "full_suite_command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLCONFIGDIR=/tmp/pyspi-mpl _MNE_FAKE_HOME_DIR=/tmp/pyspi-mne .venv/bin/python -m pytest -q tests --runslow --pyspi-size=full --require-java",
+  "storage_suite_command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 .venv/bin/python -m pytest -q -c tests/storage/pytest.ini tests/storage",
+  "verification": {
+    "full": {
+      "xml_sha256": "07a29c27ec92d386105034386f442822b82536446492d712ed3966e9b697b061",
+      "tests": 1784,
+      "passed": 1777,
+      "expected_failures": 7,
+      "failures": 0,
+      "errors": 0,
+      "elapsed_seconds": 461.2,
+      "known_failures": [
+        {
+          "test": "tests.unit.test_known_bugs.test_ccm_auto_embedding_fixed",
+          "reason": "known bug: ccm E=None takes EmbedDimension().max()['E'] (max E), not the best-rho E"
+        },
+        {
+          "test": "tests.unit.test_known_bugs.test_softdtw_global_constraint_fixed",
+          "reason": "known bug: SoftDynamicTimeWarping.bivariate never passes global_constraint"
+        },
+        {
+          "test": "tests.unit.test_known_bugs.test_duplicate_identifiers_fixed",
+          "reason": "known bug: duplicates are counted on dict keys, which are already unique"
+        },
+        {
+          "test": "tests.unit.test_known_bugs.test_data_procnames_fixed",
+          "reason": "known bug: Data.__init__ asserts len(procnames) but never stores them"
+        },
+        {
+          "test": "tests.unit.test_known_bugs.test_convert_to_numpy_csv_fixed",
+          "reason": "known bug: np.genfromtxt(data, ',') passes the delimiter as dtype"
+        },
+        {
+          "test": "tests.unit.test_known_bugs.test_correlation_frame_fixed",
+          "reason": "known bug: Calculator._get_correlation_df(with_labels=True) calls self.getstatlabels()"
+        },
+        {
+          "test": "tests.unit.test_utils_more.test_convert_mdf_to_ddf_pivots_to_spi_pair_by_dataset",
+          "reason": "known bug: convert_mdf_to_ddf passes stack(dropna=False), rejected by pandas>=3 (current behaviour locked in test_known_bugs.py)"
+        }
+      ]
+    },
+    "storage": {
+      "xml_sha256": "43bcff412199af9b6c9a70f09fef8b825e543dd172bc02e88f7adc61f4291804",
+      "tests": 439,
+      "passed": 439,
+      "expected_failures": 0,
+      "failures": 0,
+      "errors": 0,
+      "elapsed_seconds": 13.534,
+      "known_failures": []
+    }
+  },
+  "goldens_changed": false,
+  "initial_collection_issue": "Superseded tests/test_SPIs.py indexed an archived pickle with renamed identifiers; it logged numeric differences rather than asserting them. Removed in favor of strict full-size current-catalogue goldens on the same cml7.npy data and independent formula/model tests.",
+  "after_full_suite": [
+    "Queue-reference cleanup: two affected serial/parallel/interruption checks passed.",
+    "Lazy optional dependency startup: 57 constructor/dependency checks passed; the new transition fixture needed its actual W-0.5 identifier.",
+    "Corrected Java transition plus affected worker/profiler checks: three passed.",
+    "Final native workflow profile: all 195 outputs, masks and statuses match serial; parent and both workers started no JVM."
+  ],
+  "wheel": {
+    "sha256": "a0109cf5539449137a0e98bf2be905882cc9684561733edf5ffd21aaf8231d60",
+    "verified_packaged_files": [
+      "pyspi/workflow/reviewed.yaml",
+      "pyspi/workflow/amplitude_sensitivity.yaml",
+      "pyspi/workflow/_parallel.py",
+      "pyspi/workflow/_profile.py",
+      "pyspi/workflow/_resources.py",
+      "pyspi/calculator.py"
+    ]
+  },
+  "profiles": [
+    "bounded_parallel.json",
+    "bounded_serial.json",
+    "comparison.json",
+    "expanded_serial.json",
+    "final_native_comparison.json",
+    "final_native_parallel.json",
+    "phase_timings.json",
+    "threaded_serial.json"
+  ],
+  "final_profile_source_hashes_match_working_code": true,
+  "resource_defaults": {
+    "workers": 1,
+    "threads_per_worker": 1,
+    "spectral_cache_mib": 256
+  },
+  "next_review": "GraphicalLasso/GraphicalLassoCV convergence: two numerical threads changed seven outputs and gave no speedup. Estimator settings unchanged; retain one thread per worker.",
+  "limits": "Single four-window CAR trials from one recording on a shared host. No cohort throughput or 32-core scaling claim. Process memory sampling can miss short peaks; RSS double-counts shared pages. Original profiles contain their historical local source/output paths and exact code hashes."
+}

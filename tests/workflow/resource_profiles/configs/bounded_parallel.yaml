@@ -1,0 +1,268 @@
+version: 1
+recordings:
+- path: /home/dan/data/IEEG/baseline_edfs/001_Baseline.EDF
+  patient_id: '001'
+  recording_id: baseline
+  channels:
+  - index: 100
+    name: B1
+  - index: 101
+    name: B2
+  - index: 102
+    name: B3
+  - index: 103
+    name: B4
+  - index: 104
+    name: B5
+  - index: 105
+    name: B6
+  - index: 106
+    name: B7
+  - index: 107
+    name: B8
+  - index: 108
+    name: B9
+  - index: 109
+    name: B10
+  - index: 90
+    name: C1
+  - index: 91
+    name: C2
+  - index: 92
+    name: C3
+  - index: 93
+    name: C4
+  - index: 94
+    name: C5
+  - index: 95
+    name: C6
+  - index: 96
+    name: C7
+  - index: 97
+    name: C8
+  - index: 98
+    name: C9
+  - index: 99
+    name: C10
+  - index: 10
+    name: E1
+  - index: 11
+    name: E2
+  - index: 12
+    name: E3
+  - index: 13
+    name: E4
+  - index: 14
+    name: E5
+  - index: 15
+    name: E6
+  - index: 16
+    name: E7
+  - index: 17
+    name: E8
+  - index: 0
+    name: G1
+  - index: 1
+    name: G2
+  - index: 2
+    name: G3
+  - index: 3
+    name: G4
+  - index: 4
+    name: G5
+  - index: 5
+    name: G6
+  - index: 6
+    name: G7
+  - index: 7
+    name: G8
+  - index: 8
+    name: G9
+  - index: 9
+    name: G10
+  - index: 110
+    name: I1
+  - index: 111
+    name: I2
+  - index: 112
+    name: I3
+  - index: 113
+    name: I4
+  - index: 114
+    name: I5
+  - index: 115
+    name: I6
+  - index: 116
+    name: I7
+  - index: 117
+    name: I8
+  - index: 118
+    name: I9
+  - index: 119
+    name: I10
+  - index: 24
+    name: M1
+  - index: 25
+    name: M2
+  - index: 26
+    name: M3
+  - index: 27
+    name: M4
+  - index: 28
+    name: M5
+  - index: 29
+    name: M6
+  - index: 58
+    name: O1
+  - index: 59
+    name: O2
+  - index: 60
+    name: O3
+  - index: 61
+    name: O4
+  - index: 62
+    name: O5
+  - index: 63
+    name: O6
+  - index: 64
+    name: O7
+  - index: 65
+    name: O8
+  - index: 66
+    name: O9
+  - index: 67
+    name: O10
+  - index: 68
+    name: O11
+  - index: 69
+    name: O12
+  - index: 70
+    name: P1
+  - index: 71
+    name: P2
+  - index: 72
+    name: P3
+  - index: 73
+    name: P4
+  - index: 74
+    name: P5
+  - index: 75
+    name: P6
+  - index: 76
+    name: P7
+  - index: 77
+    name: P8
+  - index: 78
+    name: P9
+  - index: 79
+    name: P10
+  - index: 80
+    name: P11
+  - index: 81
+    name: P12
+  - index: 46
+    name: Q1
+  - index: 47
+    name: Q2
+  - index: 48
+    name: Q3
+  - index: 49
+    name: Q4
+  - index: 50
+    name: Q5
+  - index: 51
+    name: Q6
+  - index: 52
+    name: Q7
+  - index: 53
+    name: Q8
+  - index: 54
+    name: Q9
+  - index: 55
+    name: Q10
+  - index: 56
+    name: Q11
+  - index: 57
+    name: Q12
+  - index: 18
+    name: R1
+  - index: 19
+    name: R2
+  - index: 20
+    name: R3
+  - index: 21
+    name: R4
+  - index: 22
+    name: R5
+  - index: 23
+    name: R6
+  - index: 38
+    name: RPI1
+  - index: 39
+    name: RPI2
+  - index: 40
+    name: RPI3
+  - index: 41
+    name: RPI4
+  - index: 42
+    name: RPI5
+  - index: 43
+    name: RPI6
+  - index: 30
+    name: S1
+  - index: 31
+    name: S2
+  - index: 32
+    name: S3
+  - index: 33
+    name: S4
+  - index: 34
+    name: S5
+  - index: 35
+    name: S6
+  - index: 36
+    name: S7
+  - index: 37
+    name: S8
+  - index: 82
+    name: W1
+  - index: 83
+    name: W2
+  - index: 84
+    name: W3
+  - index: 85
+    name: W4
+  - index: 86
+    name: W5
+  - index: 87
+    name: W6
+  - index: 88
+    name: W7
+  - index: 89
+    name: W8
+metrics:
+  config: /home/dan/git/pyspi/pyspi/workflow/reviewed.yaml
+sampling_rate_hz: 2048.0
+bandpass:
+  low_hz: 0.5
+  high_hz: 500.0
+notch:
+  line_frequency_hz: 60.0
+  width_hz: 1.0
+  transition_hz: 1.0
+  enabled: true
+reference:
+  method: car
+window:
+  length_seconds: 0.5
+  step_seconds: 0.5
+preprocessing:
+  detrend: true
+  zscore: true
+output_batch_mib: 128.0
+output_directory: /tmp/pyspi-workflow-profiles-pqmnp77t/comparison/results
+run_name: w2-t1-c256
+execution:
+  workers: 2
+  threads_per_worker: 1
+  spectral_cache_mib: 256

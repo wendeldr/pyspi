@@ -1,4 +1,4 @@
-"""Serial EDF-to-production-storage execution with coarse batch checkpoints."""
+"""EDF execution with bounded window workers and parent-owned checkpoints."""
 
 from contextlib import contextmanager, redirect_stdout
 from dataclasses import asdict, replace
@@ -104,7 +104,8 @@ def _calculator(metrics, cfg, directory):
     filename = directory / "metrics.yaml"
     filename.write_text(yaml.safe_dump(document, sort_keys=False))
     with redirect_stdout(sys.stderr):
-        calc = Calculator(configfile=str(filename), detrend=cfg.detrend, normalise=cfg.zscore)
+        calc = Calculator(configfile=str(filename), detrend=cfg.detrend, normalise=cfg.zscore,
+                          spectral_cache_mib=cfg.execution["spectral_cache_mib"])
     identifiers = [m.identifier for m in metrics]
     if set(calc.spis) != set(identifiers):
         raise WorkflowError("Calculator initialized a different metric inventory from preflight")
@@ -246,7 +247,21 @@ def _commit_batch(path, manifest, batch, buffers, journal, metrics, session):
             shutil.rmtree(old)
 
 
-def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failures, session):
+def _store_values(buffers, report, values, valid, n, count, slot):
+    if values is None:
+        return
+    if values.dtype not in (np.dtype("float32"), np.dtype("float64")) or values.shape != (len(valid), len(valid)):
+        raise WorkflowError("Calculator produced unsupported output dtype/axes")
+    if report.identifier not in buffers:
+        buffers[report.identifier] = np.full((n, n, count), np.nan, dtype=values.dtype)
+    if buffers[report.identifier].dtype != values.dtype:
+        raise WorkflowError("Calculator dtype changed within a batch")
+    target = buffers[report.identifier][:, :, slot]
+    target[:] = np.nan
+    target[np.ix_(valid, valid)] = values
+
+
+def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failures, session, pool=None):
     from pyspi.calculation import MetricReport, _capture_metric_warnings, _describe_error
     from pyspi.data import InvalidChannelsError
     from pyspi.storage import open_results
@@ -281,6 +296,34 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
                 buffers[identifier] = values
         else:
             failures = set()
+        if pool is not None:
+            jobs = []
+            for window in range(batch["start"], batch["stop"]):
+                active = ([m for m in identifiers if (window, m) in failures] if committed else
+                          [m for m in identifiers if retry_failures or
+                           journal.latest.get((window, m), {}).get("report", {}).get("status") != "failed"])
+                if active:
+                    jobs.append((window, active))
+            before = perf_counter()
+            try:
+                for result in pool.map(jobs):
+                    session["window_preprocessing_seconds"] += result.preprocessing_seconds
+                    session.setdefault("worker_peak_rss_mib", {})[str(result.pid)] = result.peak_rss_mib
+                    session.setdefault("worker_jvm_started", {})[str(result.pid)] = result.jvm_started
+                    output_started = perf_counter()
+                    for report, values in result.records:
+                        journal.record(result.window, report, stage=result.stage, window_warnings=result.warnings)
+                        session["metric_elapsed_seconds"] += report.elapsed_seconds
+                        _store_values(buffers, report, values, result.valid, n, count,
+                                      result.window-batch["start"])
+                    journal.sync()
+                    session["output_seconds"] += perf_counter()-output_started
+            finally:
+                # Includes worker setup, preprocessing and IPC. Summed metric
+                # times describe work and can exceed this parallel wall time.
+                session["calculation_wall_seconds"] += perf_counter()-before
+            _commit_batch(path, manifest, batch, buffers, journal, metrics, session)
+            return
         for window in range(batch["start"], batch["stop"]):
             if committed:
                 active = [m for m in identifiers if (window, m) in failures]
@@ -324,16 +367,7 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
                 before = perf_counter()
                 journal.record(window, report, window_warnings=window_warnings)
                 session["metric_elapsed_seconds"] += report.elapsed_seconds
-                if values is not None:
-                    if values.dtype not in (np.dtype("float32"), np.dtype("float64")) or values.shape != (valid.size, valid.size):
-                        raise WorkflowError("Calculator produced unsupported output dtype/axes")
-                    if report.identifier not in buffers:
-                        buffers[report.identifier] = np.full((n, n, count), np.nan, dtype=values.dtype)
-                    if buffers[report.identifier].dtype != values.dtype:
-                        raise WorkflowError("Calculator dtype changed within a batch")
-                    target = buffers[report.identifier][:, :, window - batch["start"]]
-                    target[:] = np.nan
-                    target[np.ix_(valid, valid)] = values
+                _store_values(buffers, report, values, valid, n, count, window-batch["start"])
                 session["output_seconds"] += perf_counter() - before
 
             before = perf_counter()
@@ -351,7 +385,16 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
 
 
 def run(config, *, resume=False, retry_failures=False, max_windows=None):
-    """Execute serially, returning one run-folder path per recording.
+    """Execute with configured process/thread/cache limits, preserving caller limits."""
+    from ._config import Configuration, load_config
+    from ._parallel import numerical_threads
+    cfg = config if isinstance(config, Configuration) else load_config(config)
+    with numerical_threads(cfg.execution["threads_per_worker"]):
+        return _run(cfg, resume=resume, retry_failures=retry_failures, max_windows=max_windows)
+
+
+def _run(config, *, resume=False, retry_failures=False, max_windows=None):
+    """Return one run-folder path per recording.
 
     Resume reuses committed batches and recomputes unfinished batches. Durable
     failures are skipped unless retry_failures=True, which requires resume=True.
@@ -425,6 +468,7 @@ def run(config, *, resume=False, retry_failures=False, max_windows=None):
                            "output_seconds": 0., "elapsed_seconds": 0.,
                            "resume": resume, "retry_failures": retry_failures, "status": "running"}
                 session["invocation_setup_seconds"] = setup_seconds
+                session["execution"] = cfg.execution.copy()
                 manifest["sessions"].append(session)
                 manifest["state"] = "running"
                 atomic_json(path / "run.json", manifest)
@@ -451,8 +495,20 @@ def run(config, *, resume=False, retry_failures=False, max_windows=None):
                         if actual.as_dict(include_ranges=False) != manifest["windows"] or prepared.channel_names != manifest["channels"]:
                             raise WorkflowError("prepared channel/window axes disagree with the declared run")
                         atomic_json(path / "run.json", manifest)
-                        for batch in needed:
-                            _execute_batch(path, manifest, batch, prepared, calc, report.metrics, retry_failures, session)
+                        from ._parallel import WindowPool
+                        pool = None
+                        interrupted = True
+                        try:
+                            if cfg.execution["workers"] > 1:
+                                pool = WindowPool(prepared, report.metrics, cfg, manifest["windows"], temp)
+                                session["parallel_input_setup_seconds"] = pool.setup_seconds
+                            for batch in needed:
+                                _execute_batch(path, manifest, batch, prepared, calc, report.metrics,
+                                               retry_failures, session, pool=pool)
+                            interrupted = False
+                        finally:
+                            if pool is not None:
+                                pool.close(interrupted=interrupted)
                         del prepared
                     manifest["state"] = "complete"
                     session["status"] = "complete"
@@ -462,6 +518,8 @@ def run(config, *, resume=False, retry_failures=False, max_windows=None):
                     manifest["state"] = session["status"]
                     raise
                 finally:
+                    from ._parallel import peak_rss_mib
+                    session["parent_peak_rss_mib"] = peak_rss_mib()
                     session["elapsed_seconds"] = perf_counter() - recording_started
                     atomic_json(path / "run.json", manifest)
             output.append(path)

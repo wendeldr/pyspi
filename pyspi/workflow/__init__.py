@@ -1,4 +1,4 @@
-"""Serial terminal EEG workflow and read-only EDF preflight."""
+"""Terminal EEG workflow with bounded window workers and read-only EDF preflight."""
 
 from ._config import Configuration, WorkflowError, load_config
 from ._preflight import PreflightReport, preflight

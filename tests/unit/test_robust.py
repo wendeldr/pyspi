@@ -56,3 +56,22 @@ def test_singular_candidate_falls_back_to_the_pseudo_inverse_step():
         location, covariance, det, support, dist = _c_step(X, 4, np.random.RandomState(0))
     assert det == -np.inf and support.sum() == 4
     assert np.isfinite(dist).all()
+
+
+@pytest.mark.parametrize("seed", [1, 3, 7])
+def test_car_fit_preserves_reference_support_and_values(seed):
+    # CAR followed by per-channel z-scoring remains rank deficient even though
+    # its null vector is no longer the all-ones vector. Seed 1 exposed a 3%
+    # covariance change from accidentally positive Cholesky pivots.
+    X = np.random.default_rng(seed).normal(size=(256, 8))
+    X -= X.mean(axis=1, keepdims=True)
+    X = (X - X.mean(axis=0)) / X.std(axis=0, ddof=1)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        warnings.simplefilter("ignore", UserWarning)
+        reference = MinCovDet(random_state=42).fit(X)
+        actual = FastMinCovDet(random_state=42).fit(X)
+    np.testing.assert_array_equal(actual.raw_support_, reference.raw_support_)
+    np.testing.assert_array_equal(actual.support_, reference.support_)
+    np.testing.assert_array_equal(actual.covariance_, reference.covariance_)
+    np.testing.assert_array_equal(actual.precision_, reference.precision_)

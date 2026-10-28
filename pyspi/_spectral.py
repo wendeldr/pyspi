@@ -57,35 +57,32 @@ class SpectralConnectivity(sc.Connectivity):
     block_bytes = 16 * 2**20
     max_pairs = 16
 
-    def __init__(self, fourier_coefficients, frequencies, time, *, frequency_resolution=None):
+    def __init__(self, fourier_coefficients, frequencies, time, *, frequency_resolution=None,
+                 cache_bytes=256 * 2**20):
         super().__init__(fourier_coefficients, frequencies=frequencies, time=time)
         self.frequency_resolution = frequency_resolution
-        self._arrays = ArrayCache()
-        self._base_budget = self._arrays.max_bytes
+        self._arrays = ArrayCache(max_bytes=cache_bytes)
         self._pairs = OrderedDict()
         self.directed_requests = set()
         self.phase_requests = set()
         self._fit_diagnostics = None
         self._native_directed = None
 
-    def reserve_phase_moments(self):
-        """Let every registered phase moment and its measure stay cached.
+    def phase_cache_required_bytes(self):
+        """Bytes for registered moments and derived phase results.
 
-        The taper cross-products dominate each phase-synchrony measure, so
-        registered moments are formed together in one pass. They only pay off
-        if later measures still find them, so the retained-array budget grows
-        with what was requested at this shape; nothing registered means the
-        default bound.
+        Excludes FFT arrays, other cached measures and temporary arrays; this
+        decides whether phase fusion fits, not total process memory.
         """
         if not self.phase_requests:
-            return
+            return 0
         w, r, k, f, p = self._positive_coefficients.shape
         element = w * f * p * p
         moments = sum(element * (16 if kind == "unit" else 8 if kind != "nonzero"
                                  else np.dtype(np.min_scalar_type(r*k)).itemsize)
                       for kind in set(self.phase_requests))
         measures = len({PHASE_MOMENTS_MEASURE[kind] for kind in self.phase_requests}) * element * 8
-        self._arrays.max_bytes = max(self._arrays.max_bytes, self._base_budget + moments + measures)
+        return moments + measures
 
     @cached_property
     def frequencies(self):
@@ -331,8 +328,9 @@ class SpectralConnectivity(sc.Connectivity):
             kinds = (*kinds, "nonzero")
         # Registered moments not yet cached join the same pass: their
         # cross-products are the cost, and the extra reductions are cheap.
+        fuse = self.phase_cache_required_bytes() <= self._arrays.max_bytes
         wanted = list(kinds) + [kind for kind in PHASE_MOMENT_ORDER
-                                if kind in self.phase_requests and kind not in kinds
+                                if fuse and kind in self.phase_requests and kind not in kinds
                                 and ("phase_statistic", kind) not in self._arrays.entries]
         keys = [("phase_statistic", kind) for kind in wanted]
         def compute(missing):
@@ -602,16 +600,24 @@ class SpectralConnectivity(sc.Connectivity):
 
 
 class _DataSpectralCache:
-    def __init__(self, source):
+    def __init__(self, source, max_bytes=256 * 2**20):
         self.source = source
         self.workspaces = OrderedDict()
-        self.parametric = ArrayCache()
+        self.max_bytes = max_bytes
+        self.parametric = ArrayCache(max_bytes=max_bytes)
         self.directed_requests = {}
         self.phase_requests = {}
 
 
 def data_spectral_cache(data):
-    return cached_workspace(data, "spectral", _DataSpectralCache)
+    budget = getattr(data, "_spectral_cache_bytes", 256 * 2**20)
+    cache = cached_workspace(data, "spectral", lambda source: _DataSpectralCache(source, budget))
+    if cache.max_bytes != budget:
+        # Release old large workspaces when the caller lowers the budget.
+        cache.workspaces.clear()
+        cache.parametric = ArrayCache(max_bytes=budget)
+        cache.max_bytes = budget
+    return cache
 
 
 def spectral_workspace(data, sampling_frequency):
@@ -633,6 +639,7 @@ def spectral_workspace(data, sampling_frequency):
         )
         cache.workspaces[settings] = SpectralConnectivity(
             m.fft(), m.frequencies, m.time, frequency_resolution=m.frequency_resolution,
+            cache_bytes=cache.max_bytes,
         )
         if len(cache.workspaces) > 2:
             cache.workspaces.popitem(last=False)
@@ -640,7 +647,6 @@ def spectral_workspace(data, sampling_frequency):
     workspace = cache.workspaces[settings]
     workspace.directed_requests = cache.directed_requests.get(sampling_frequency, set())
     workspace.phase_requests = cache.phase_requests.get(sampling_frequency, set())
-    workspace.reserve_phase_moments()
     return workspace
 
 
@@ -661,7 +667,7 @@ def directed_workspace(data, sampling_frequency):
         coefficients = fft(samples, axis=-2)
         parent._native_directed = SpectralConnectivity(
             coefficients, np.fft.fftfreq(n, 1/sampling_frequency), parent.time,
-            frequency_resolution=parent.frequency_resolution)
+            frequency_resolution=parent.frequency_resolution, cache_bytes=parent._arrays.max_bytes)
     parent._native_directed.directed_requests = parent.directed_requests
     return parent._native_directed
 
