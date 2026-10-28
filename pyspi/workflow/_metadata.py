@@ -61,3 +61,44 @@ def export_selection(store, edf, destination, *, patient_id=None, recording_id=N
         json.dump(document, stream, indent=2, allow_nan=False)
         stream.write("\n")
     return document
+
+
+def dataset_selection(patient, header, patient_id):
+    """Consume built metadata without recreating QC, exclusion, or sorting rules."""
+    from seeg_dataset import open_patient, patient_contacts
+
+    contacts = patient_contacts(patient, patient_id=patient_id)
+    info = open_patient(patient)["patient_info"]
+    label_map = None
+    if "edf_history" in info:
+        history = info["edf_history"]
+        names = history["contact"][:].tolist()
+        labels = history["edf_label"][:].tolist()
+        used = history["used"][:].tolist()
+        if len({len(names), len(labels), len(used)}) != 1 or any(type(v) is not bool for v in used):
+            raise WorkflowError("invalid EDF history columns in patient metadata")
+        label_map = {}
+        for name, label, selected in zip(names, labels, used):
+            if not selected:
+                continue
+            if name in label_map:
+                raise WorkflowError(f"duplicate included contact in EDF history: {name!r}")
+            label_map[name] = label
+        if set(label_map) != set(contacts):
+            raise WorkflowError("included EDF history contacts differ from patient_info/electrode")
+    channels, used_indices = [], set()
+    for contact in contacts:
+        if label_map is not None:
+            matches = [s for s in header.signals if not s.annotation and s.label == label_map[contact]]
+        else:
+            # Older built metadata lacks an EDF history table. Match labels with
+            # the existing explicit export convention, but never guess ambiguity.
+            matches = [s for s in header.signals if not s.annotation and _contact_key(s.label) == _contact_key(contact)]
+        if len(matches) != 1:
+            raise WorkflowError(f"metadata contact {contact!r}: {len(matches)} EDF matches")
+        signal = matches[0]
+        if signal.index in used_indices:
+            raise WorkflowError(f"metadata contacts map to the same EDF signal: {contact!r}")
+        channels.append({"index": signal.index, "name": contact})
+        used_indices.add(signal.index)
+    return tuple(channels)

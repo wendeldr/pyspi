@@ -1,6 +1,6 @@
 """Read-only EDF preflight; no signal loading, preprocessing, or calculation."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from fractions import Fraction
 from importlib.metadata import version
 
@@ -46,6 +46,7 @@ class PreflightReport:
                                 "notch": cfg.notch, "reference": cfg.reference,
                                 "continuous_bands_hz": required_bands(self.metrics, cfg),
                                 "resampling_method": "polyphase"},
+                "dataset_directory": str(cfg.dataset_directory) if cfg.dataset_directory is not None else None,
                 "output_directory": str(cfg.output_directory) if cfg.output_directory is not None else None,
                 "metrics": [metric.as_dict() for metric in self.metrics], "recordings": recordings}
 
@@ -58,13 +59,28 @@ def preflight(config) -> PreflightReport:
     """
     cfg = config if isinstance(config, Configuration) else load_config(config)
     selected = []
+    resolved_recordings = []
     for recording in cfg.recordings:
         header = read_header(recording.path)
+        if cfg.dataset_directory is not None:
+            from ._metadata import dataset_selection
+            patient = cfg.dataset_directory / f"{recording.patient_id}.zarr"
+            if not patient.resolve().is_relative_to(cfg.dataset_directory.resolve()):
+                raise WorkflowError("patient path escapes dataset directory through a symlink")
+            channels_from_metadata = dataset_selection(patient, header, recording.patient_id)
+            if recording.channels is not None:
+                explicit = select_channels(header, recording.channels)
+                canonical = select_channels(header, channels_from_metadata)
+                if [(s.index, n) for s, n in explicit] != [(s.index, n) for s, n in canonical]:
+                    raise WorkflowError("inline channels conflict with authoritative patient metadata order")
+            recording = replace(recording, channels=channels_from_metadata)
+        resolved_recordings.append(recording)
         try:
             channels = select_channels(header, recording.channels)
         except WorkflowError as exc:
             raise WorkflowError(f"{recording.patient_id}/{recording.recording_id} ({header.path}): {exc}") from exc
         selected.append((recording, header, channels))
+    cfg = replace(cfg, recordings=tuple(resolved_recordings))
     target = cfg.sampling_rate_hz
     # Validate the intended sample grid even when every source needs resampling.
     for seconds in (cfg.window_seconds, cfg.step_seconds):

@@ -53,14 +53,21 @@ def _environment():
     from packaging.requirements import Requirement
 
     packages = {"pyspi"} | {Requirement(r).name for r in requires("pyspi") or [] if not Requirement(r).marker}
-    packages |= {"zarr", "numcodecs", "pcodec", "google-crc32c"}
+    packages |= {"zarr", "numcodecs", "pcodec", "google-crc32c", "seeg-dataset"}
     versions = {name: version(name) for name in sorted(packages)}
     digest = hashlib.sha256()
     root = Path(__file__).resolve().parents[1]
     for source in sorted(root.rglob("*.py")):
         digest.update(str(source.relative_to(root)).encode())
         digest.update(source.read_bytes())
+    import seeg_dataset
+    storage_digest = hashlib.sha256()
+    storage_root = Path(seeg_dataset.__file__).resolve().parent
+    for source in sorted(storage_root.rglob("*.py")):
+        storage_digest.update(str(source.relative_to(storage_root)).encode())
+        storage_digest.update(source.read_bytes())
     return {"versions": versions, "pyspi_code_sha256": digest.hexdigest(),
+            "dataset_code_sha256": storage_digest.hexdigest(),
             "python": sys.version.split()[0]}
 
 
@@ -78,6 +85,10 @@ def _contract(cfg, recording, entry, metrics, environment, max_windows):
         forward = Path(cfg.reference["forward"])
         stat = forward.stat()
         contract["reference_forward"] = {"path": str(forward), "size": stat.st_size, "mtime_ns": stat.st_mtime_ns}
+    if cfg.dataset_directory is not None:
+        from ._dataset import output_channel_mapping
+        contract["dataset"] = {"channel_mapping": output_channel_mapping(cfg, entry),
+                               "reference_available": entry["reference_available"]}
     # JSON normalizes tuple-valued descriptions before comparison on resume.
     import json
     return json.loads(json.dumps(contract, allow_nan=False))
@@ -170,6 +181,7 @@ def _new_manifest(contract, entry, cfg, metadata_link):
     size = _batch_size(cfg, len(entry["output_channels"]), [m["identifier"] for m in contract["metrics"]])
     return {"schema": RUN_SCHEMA, "contract": contract, "state": "pending",
             "channels": entry["output_channels"], "recording_metadata": metadata_link,
+            "reference_available": entry["reference_available"],
             "windows": plan.as_dict(include_ranges=False), "dtypes": contract["output_dtypes"].copy(), "sessions": [],
             "batches": [{"start": start, "stop": min(start + size, plan.count), "state": "pending"}
                         for start in range(0, plan.count, size)]}
@@ -203,8 +215,9 @@ def _validate_committed(path, manifest):
             for metric in identifiers:
                 meta = store.info(metric)
                 if (meta["state"] != "complete" or meta["n"] != len(manifest["channels"]) or
-                    meta["windows"] != batch["stop"] - batch["start"] or meta["single_matrix"]):
-                    raise WorkflowError("committed batch declaration is incomplete or has different axes")
+                    meta["windows"] != batch["stop"] - batch["start"] or meta["single_matrix"] or
+                    meta["dtype"] != manifest["dtypes"][metric]):
+                    raise WorkflowError("committed batch declaration is incomplete or has different axes/dtype")
             events = read_json(root / "reports.json")
             expected = [(w, m) for w in range(batch["start"], batch["stop"]) for m in identifiers]
             if [(e["window"], e["report"]["identifier"]) for e in events] != expected or any(
@@ -226,17 +239,14 @@ def _commit_batch(path, manifest, batch, buffers, journal, metrics, session):
     generation.mkdir()
     identifiers = [m.identifier for m in metrics]
     events = _events_for_batch(journal, batch, identifiers)
-    successful = {e["report"]["identifier"] for e in events if e["report"]["status"] == "success"}
     n, count = len(manifest["channels"]), batch["stop"] - batch["start"]
     for identifier in identifiers:
         if identifier not in buffers:
             buffers[identifier] = np.full((n, n, count), np.nan,
-                                         dtype=manifest["dtypes"].get(identifier, "float64"))
+                                         dtype=manifest["dtypes"][identifier])
         dtype = buffers[identifier].dtype.str
-        if identifier in successful and identifier in manifest["dtypes"] and manifest["dtypes"][identifier] != dtype:
+        if manifest["dtypes"][identifier] != dtype:
             raise WorkflowError(f"{identifier}: output dtype changed between batches")
-        if identifier in successful:
-            manifest["dtypes"][identifier] = dtype
     write_results(generation / "results.zarr", {m: buffers[m] for m in identifiers},
                   labels={m["identifier"]: m["labels"] for m in manifest["contract"]["metrics"]},
                   attrs={m.identifier: {"module": m.module, "class_name": m.class_name,
@@ -305,11 +315,8 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
                 values, good = store.load(identifier, return_availability=True)
                 if not good.all():
                     raise WorkflowError("cannot retry failures in a batch with unreadable stored results")
-                known = manifest["dtypes"].get(identifier)
-                if known and values.dtype != np.dtype(known):
-                    if any(e["report"]["status"] == "success" and e["report"]["identifier"] == identifier for e in events):
-                        raise WorkflowError("committed successful values disagree with run dtype")
-                    values = np.full(values.shape, np.nan, dtype=known)
+                if values.dtype != np.dtype(manifest["dtypes"][identifier]):
+                    raise WorkflowError("committed values disagree with run dtype")
                 buffers[identifier] = values
         else:
             failures = set()
@@ -442,22 +449,30 @@ def _run(config, *, resume=False, retry_failures=False, max_windows=None):
     with tempfile.TemporaryDirectory(prefix="pyspi-workflow-") as temp, _class_label_state(report.metrics):
         calc = _calculator(report.metrics, cfg, Path(temp))
         setup_seconds = perf_counter() - invocation_started
-        destinations = [(r.patient_id, cfg.run_name or r.recording_id) for r in cfg.recordings]
-        if len(set(destinations)) != len(destinations):
-            raise WorkflowError("run_name maps multiple recordings to the same patient output; run them separately")
-        if resume and not any((cfg.output_directory / patient / "calculations" / name / "run.json").is_file()
-                              for patient, name in destinations):
-            raise WorkflowError("no run to resume among the configured recordings")
+        from ._dataset import dataset_address, initialize_dataset_run
+        addresses = []
         for recording, entry in zip(cfg.recordings, report.recordings):
-            recording_started = perf_counter()
-            patient = cfg.output_directory / recording.patient_id
-            path = patient / "calculations" / (cfg.run_name or recording.recording_id)
+            if cfg.dataset_directory is not None:
+                patient, path, _ = dataset_address(cfg, recording, entry)
+            else:
+                patient = cfg.output_directory / recording.patient_id
+                path = patient / "calculations" / (cfg.run_name or recording.recording_id)
+                if any((parent / "zarr.json").exists() or (parent / ".zgroup").exists()
+                       for parent in (path, *path.parents)):
+                    raise WorkflowError("workflow output must be outside existing Zarr stores unless dataset mode is selected")
             if not path.resolve().is_relative_to(cfg.output_directory.resolve()):
                 raise WorkflowError("output path escapes output_directory through a symlink")
-            if any((parent / "zarr.json").exists() or (parent / ".zgroup").exists() for parent in (path, *path.parents)):
-                raise WorkflowError("workflow output must be outside existing Zarr stores")
+            addresses.append((patient, path))
+        if len({p for _, p in addresses}) != len(addresses):
+            raise WorkflowError("run_name maps multiple recordings to the same patient output; run them separately")
+        if resume and not any((path / "run.json").is_file() for _, path in addresses):
+            raise WorkflowError("no run to resume among the configured recordings")
+        for recording, entry, (patient, path) in zip(cfg.recordings, report.recordings, addresses):
+            recording_started = perf_counter()
             contract = _contract(cfg, recording, entry, report.metrics, environment, max_windows)
             with _run_lock(path):
+                if cfg.dataset_directory is not None:
+                    initialize_dataset_run(cfg, recording, entry)
                 if (path / "run.json").exists():
                     manifest = read_json(path / "run.json")
                     if not resume:
@@ -476,7 +491,8 @@ def _run(config, *, resume=False, retry_failures=False, max_windows=None):
                 else:
                     # A cohort interruption may occur before later recordings
                     # even have a run manifest. Resume starts those normally.
-                    metadata = patient / "metadata" / f"{cfg.run_name or recording.recording_id}.json"
+                    metadata = (path / "recording.json" if cfg.dataset_directory is not None else
+                                patient / "metadata" / f"{cfg.run_name or recording.recording_id}.json")
                     identity = {"schema": "pyspi-recording/1", "patient_id": recording.patient_id,
                                 "recording_id": recording.recording_id, "source": contract["source"],
                                 "channels": entry["channels"],
@@ -484,7 +500,8 @@ def _run(config, *, resume=False, retry_failures=False, max_windows=None):
                     if metadata.exists() and read_json(metadata) != identity:
                         raise WorkflowError(f"recording metadata already differs: {metadata}")
                     atomic_json(metadata, identity)
-                    manifest = _new_manifest(contract, entry, cfg, str(Path("../../metadata") / metadata.name))
+                    manifest = _new_manifest(contract, entry, cfg,
+                        "recording.json" if cfg.dataset_directory is not None else str(Path("../../metadata") / metadata.name))
                     atomic_json(path / "run.json", manifest)
                 session = {"preparation_seconds": 0., "window_preprocessing_seconds": 0.,
                            "calculation_wall_seconds": 0., "metric_elapsed_seconds": 0.,

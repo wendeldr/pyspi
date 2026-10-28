@@ -114,10 +114,6 @@ def calibration_issues(calibration, cfg, report):
     return stale, notes
 
 
-def _itemsize(calibration, identifier):
-    return np.dtype(calibration.get("dtypes", {}).get(identifier, "<f8")).itemsize
-
-
 def estimate_recording(entry, cfg, calibration, *, max_windows=None):
     from ._run import _batch_size, planned_windows
 
@@ -144,10 +140,11 @@ def estimate_recording(entry, cfg, calibration, *, max_windows=None):
         prepare = preparation["seconds"] / preparation["native_samples"] * native_samples * HEADROOM["prepare"]
     output = calibration["output"]
     from ._precision import resolve_dtypes
-    raw_per_window = sum(n * n * np.dtype(dt).itemsize for dt in resolve_dtypes(cfg, identifiers).values())
+    dtypes = resolve_dtypes(cfg, identifiers)
+    raw_per_window = sum(n * n * np.dtype(dt).itemsize for dt in dtypes.values())
     raw_bytes = count * raw_per_window
     output_seconds = (batches * output["seconds_per_batch"] + raw_bytes * output["seconds_per_raw_byte"]) * HEADROOM["output"]
-    stored_bytes = count * sum(output["stored_ratio"][m] * n * n * _itemsize(calibration, m) for m in identifiers)
+    stored_bytes = count * sum(output["stored_ratio"][m] * n * n * np.dtype(dtypes[m]).itemsize for m in identifiers)
     stored_bytes += count * len(identifiers) * output["report_bytes_per_event"]
     stored_bytes *= HEADROOM["stored"]
     prepared_samples = max(1, round(entry["duration_seconds"] * float(cfg.sampling_rate_hz)))

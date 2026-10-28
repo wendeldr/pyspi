@@ -7,8 +7,7 @@ from pathlib import Path
 import yaml
 
 
-class WorkflowError(ValueError):
-    """Invalid configuration or input; no calculation should start."""
+from seeg_dataset import DatasetError as WorkflowError
 
 
 class UniqueLoader(yaml.SafeLoader):
@@ -165,6 +164,7 @@ class Configuration:
     execution: dict
     output_dtype: str
     output_dtype_overrides: dict
+    dataset_directory: Path | None = None
 
 
 def load_config(path) -> Configuration:
@@ -174,7 +174,7 @@ def load_config(path) -> Configuration:
     cfg = fields(read_yaml(path), {"version", "recordings", "edf_glob", "metrics",
                  "edf_directory", "metadata", "sampling_rate_hz", "window", "preprocessing",
                  "bandpass", "notch", "reference", "run_name", "output_batch_mib", "output_directory",
-                 "execution", "output_dtype", "output_dtype_overrides"}, "workflow")
+                 "execution", "output_dtype", "output_dtype_overrides", "dataset"}, "workflow")
     if type(cfg.get("version")) is not int or cfg["version"] != 1:
         raise WorkflowError("workflow version must be 1")
     if sum(key in cfg for key in ("recordings", "edf_glob", "edf_directory")) != 1:
@@ -276,6 +276,29 @@ def load_config(path) -> Configuration:
     reference = reference_config(cfg.get("reference"), base)
     output = cfg.get("output_directory")
     output = _path(output, base, "output_directory") if output is not None else None
+    dataset = cfg.get("dataset")
+    dataset_directory = None
+    if dataset is not None:
+        fields(dataset, {"directory", "data_lake_config"}, "dataset")
+        if ("directory" in dataset) == ("data_lake_config" in dataset):
+            raise WorkflowError("dataset needs exactly one of directory or data_lake_config")
+        if "directory" in dataset:
+            dataset_directory = _path(dataset["directory"], base, "dataset.directory")
+        else:
+            import tomllib
+            lake_config = _path(dataset["data_lake_config"], base, "dataset.data_lake_config")
+            try:
+                with lake_config.open("rb") as stream:
+                    lake = tomllib.load(stream)
+                dataset_directory = _path(lake.get("dataset_dir"), lake_config.parent,
+                                          "data-lake dataset_dir (required)")
+            except (OSError, tomllib.TOMLDecodeError) as exc:
+                raise WorkflowError(f"cannot read data-lake config: {exc}") from exc
+        if metadata is not None:
+            raise WorkflowError("dataset mode reads patient metadata directly; omit selection metadata")
+        if output is not None and output != dataset_directory:
+            raise WorkflowError("output_directory conflicts with the dataset destination; omit it")
+        output = dataset_directory
     execution = fields(cfg.get("execution", {}),
                        {"workers", "threads_per_worker", "spectral_cache_mib", "scratch_directory"}, "execution")
     scratch = (_path(execution["scratch_directory"], base, "execution.scratch_directory")
@@ -300,4 +323,4 @@ def load_config(path) -> Configuration:
                          detrend, zscore, output, (float(low), float(high)), notch, reference,
                          safe_id(cfg["run_name"], "run_name") if "run_name" in cfg else None,
                          float(positive_number(cfg.get("output_batch_mib", 64), "output_batch_mib")), metadata,
-                         execution, output_dtype, overrides)
+                         execution, output_dtype, overrides, dataset_directory)

@@ -15,6 +15,9 @@ def dtype_name(value, where):
 
 
 def resolve_dtypes(cfg, identifiers):
+    dtype_name(cfg.output_dtype, "output_dtype")
+    for name, dtype in cfg.output_dtype_overrides.items():
+        dtype_name(dtype, f"output_dtype_overrides.{name}")
     unknown = cfg.output_dtype_overrides.keys() - set(identifiers)
     if unknown:
         raise WorkflowError(f"output_dtype_overrides contains unselected metrics: {sorted(unknown)}")

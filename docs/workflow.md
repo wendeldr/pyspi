@@ -1,5 +1,9 @@
 # EEG workflow and EDF preflight
 
+For the current data-lake integration, reference-separated output and explicit
+float16/32/64 configuration, see [dataset output](dataset_output.md). Workflow
+commands now require the storage extra, including the sibling seeg-dataset package.
+
 Preflight validates inputs and describes the proposed calculation. It reads EDF
 headers and file sizes, resolves metric constructors/dependencies, and reports
 channel order and full-window sample ranges. It does not load EEG samples,
@@ -60,6 +64,7 @@ and resolved without creating directories.
 
 ```yaml
 version: 1
+output_dtype: float32
 edf_glob: /path/to/baseline_edfs/*.[Ee][Dd][Ff]
 metrics:
   preset: reviewed
@@ -104,6 +109,7 @@ A data-lake metadata pass can provide the selected channels before calculation:
 
 ```yaml
 version: 1
+output_dtype: float32
 recordings:
   - patient_id: example_patient
     recording_id: baseline
@@ -521,7 +527,10 @@ flag. Export requires a new destination outside the source store. The runner
 does not depend on legacy Zarrs once this standalone file exists. Clinical and
 anatomical metadata remain with the data lake.
 
-## Patient output, reads, and memory
+## Standalone output, reads, and memory
+
+The layout below applies when `dataset` is omitted. The working EEG examples
+use the shared [dataset layout](dataset_output.md) instead.
 
 ```text
 output/patient/
@@ -540,7 +549,7 @@ name so additional configurations can coexist. A run name must be unique within
 each patient in an invocation. Metadata/result links are relative; copy the
 whole patient folder to preserve them. Inputs' absolute paths are retained as
 provenance. Existing outputs are never overwritten by a fresh run. Existing EDFs
-and legacy patient stores are untouched; output inside an existing Zarr fails.
+and legacy patient stores are untouched; output inside an existing Zarr requires explicit dataset mode.
 Metric identifiers remain unchanged, with module/class/parameters saved in the
 run index. Channel axes preserve native pyspi matrix orientation; scientific
 source/destination interpretation remains per-metric review work.
@@ -571,7 +580,7 @@ The packed `pyspi.analysis.time_mean` helper still targets an individual
 production `Results` store; use NumPy reduction for the composite run reader.
 
 `output_batch_mib` defaults to 64 and targets uncompressed matrix buffers across
-all metrics (`N² * metric_count * 8` bytes per window). A single window is the
+all metrics (`N² * sum(metric dtype item sizes)` bytes per window). A single window is the
 minimum and exceeding the target warns. Packing/compression scratch, current
 Calculator table/caches, and continuous selected EEG are additional memory.
 The target is not an overall RAM cap. Output arrays never accumulate across

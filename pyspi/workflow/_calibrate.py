@@ -165,6 +165,7 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
     out = sidecar_path(cfg) if out is None else Path(out)
     started = perf_counter()
     report = preflight(cfg)
+    cfg = report.configuration
     band_specs = required_bands(report.metrics, cfg)
     index = choose_recording(report)
     entry, recording = report.recordings[index], cfg.recordings[index]

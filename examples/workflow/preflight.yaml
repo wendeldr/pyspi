@@ -1,9 +1,14 @@
-# Replace the paths for your input recordings and intended output location.
+# Replace recording paths; the data-lake config selects the existing dataset destination.
 # Preflight reads headers only and does not create or write output_directory.
 # Use the same configuration with `python -m pyspi.workflow run` to calculate.
 version: 1
 output_dtype: float32
-edf_glob: /path/to/baseline_edfs/*.[Ee][Dd][Ff]
+recordings:
+  - path: /path/to/baseline_edfs/001_Baseline.EDF
+    patient_id: "001"
+    recording_id: baseline
+dataset:
+  data_lake_config: ../../../seeg-data-lake/config.toml
 metrics:
   preset: reviewed
 sampling_rate_hz: 2048
@@ -28,4 +33,3 @@ execution:
   # Retained arrays per spectral workspace, not total process memory. A larger
   # limit (e.g. 1024) can fuse phase calculations, at higher per-worker memory.
   spectral_cache_mib: 256
-output_directory: /path/to/new_results

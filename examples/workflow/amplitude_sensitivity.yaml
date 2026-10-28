@@ -3,12 +3,16 @@
 # linear drift; no additional mean centering is needed. Selects 12 outputs from
 # the full 200-output review: distances, barycenter maxima and shrunk precision.
 # Definitions and per-output decisions: docs/amplitude_selection_review.md.
-# Replace paths and use the SAME retained-channel selection as the main run.
+# Replace paths; the built dataset supplies the same included contact order as the main run.
 # Preflight reads headers only; it does not calculate or create the output path.
 version: 1
 output_dtype: float32
-edf_glob: /path/to/baseline_edfs/*.[Ee][Dd][Ff]
-metadata: /path/to/the_same_channel_selection.json
+recordings:
+  - path: /path/to/baseline_edfs/001_Baseline.EDF
+    patient_id: "001"
+    recording_id: baseline
+dataset:
+  data_lake_config: ../../../seeg-data-lake/config.toml
 metrics:
   config: ../../pyspi/workflow/amplitude_sensitivity.yaml
 sampling_rate_hz: 2048
@@ -41,4 +45,3 @@ execution:
   threads_per_worker: 1
   spectral_cache_mib: 256
 run_name: amplitude-sensitivity-car
-output_directory: /path/to/new_amplitude_sensitivity_car_results
