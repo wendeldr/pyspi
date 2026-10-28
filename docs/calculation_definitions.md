@@ -5,6 +5,40 @@ reviewed. It is not a claim that every pySPI calculation has been reviewed.
 Performance notes belong in `audit/calculation_review.csv`; implementation
 history belongs in Git.
 
+## Ridge regression error
+
+`lmfit_Ridge` reports the in-sample mean squared error of predicting channel j
+from channel i, including an unpenalized intercept. It minimizes the **sum** of
+squared residuals plus the squared slope (Ridge penalty alpha=1):
+
+```
+b = sum(x_centered*y_centered) / (sum(x_centered**2) + 1)
+MSE[i,j] = mean((y_centered - b*x_centered)**2)
+```
+
+Lower values mean greater linear predictability. This is neither an
+independence test nor evidence of causal direction. With the same sample count
+and ddof=1 normalization for each channel, the result is a symmetric, affine
+decreasing function of squared Pearson correlation. With unnormalized inputs,
+the target's units and variance matter and the two directions can differ.
+All channel means and cross-products are shared, replacing separate model fits.
+
+## Regression error causal inference (RECI)
+
+`reci` independently scales each supplied channel to [0,1], then fits
+`y = a + b*x**3`. It reports **in-sample** MSE at row i, column j for predicting
+j from i. This preserves pyspi's documented fixed-cubic variant. It does not
+select a polynomial degree, use held-out samples, or return the difference
+between the two directions. Comparing directions requires comparing their
+separate errors; a smaller error alone is not proof of causality.
+
+Min–max scaling, cubing and centering happen once per channel; cross-products
+provide all pair fits. Positive affine rescaling of a channel leaves the
+mathematical result unchanged. A constant channel (allowed only when Data
+normalization is disabled) scales to zero. Near exact fits use explicit
+residuals to avoid cancellation in the moment formula. Both regressions use
+NaN diagonals, reject multiple realizations, and return copies of cached output.
+
 ## Cross-correlation
 
 For two length-T channels, subtract each channel's full-window mean. For lag h,

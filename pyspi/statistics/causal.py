@@ -1,11 +1,12 @@
 import numpy as np
 import pandas as pd
-from cdt.causality.pairwise import ANM, CDS, IGCI, RECI
+from cdt.causality.pairwise import ANM, CDS, IGCI
 import pyEDM
 from sklearn.gaussian_process import GaussianProcessRegressor
 from cdt.causality.pairwise.ANM import normalized_hsic
 
 from pyspi.base import Directed, Unsigned, Signed, parse_bivariate, parse_multivariate
+from pyspi._regression import regression_result
 
 
 class AdditiveNoiseModel(Directed, Unsigned):
@@ -47,10 +48,13 @@ class RegressionErrorCausalInference(Directed, Unsigned):
     identifier = "reci"
     labels = ["unsigned", "causal", "unordered", "nonlinear", "directed"]
 
+    @parse_multivariate
+    def multivariate(self, data):
+        return regression_result(data, "RECI")
+
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
-        z = data.to_numpy()
-        return RECI().b_fit_score(z[i], z[j])
+        return regression_result(data, "RECI")[i, j]
 
 
 class InformationGeometricConditionalIndependence(Directed, Unsigned):

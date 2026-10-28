@@ -1,0 +1,266 @@
+{
+  "created_utc": "2026-10-28T00:39:17.216440+00:00",
+  "baseline_commit": "31993ac165f04298de7d20e72a02b7874cd29f7b",
+  "shape": [
+    118,
+    1024
+  ],
+  "seed": 1001,
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "scipy": "1.17.1",
+  "sklearn": "1.9.1",
+  "threadpools": [
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 1,
+      "prefix": "libgomp",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/scikit_learn.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/numpy.libs/libscipy_openblas64_-f48b354e.so",
+      "version": "0.3.34.106.0",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 1,
+      "prefix": "libgomp",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/torch/lib/libgomp.so.1",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/scipy.libs/libscipy_openblas-6cdc3b4a.so",
+      "version": "0.3.30",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    }
+  ],
+  "import_seconds": 11.503350338025484,
+  "load_start": [
+    10.2490234375,
+    9.86083984375,
+    9.28857421875
+  ],
+  "load_end": [
+    10.509765625,
+    10.5947265625,
+    9.88623046875
+  ],
+  "source_sha256": {
+    "pyspi/_moments.py": "51ddabfa7d9484556b7c0672672bfce93a8dc98e961dcfce6f6c0834c99b55b4",
+    "pyspi/_regression.py": "29f98e8c500f32c55ee3efd12d637afc432d395a0f520409b434afb9998f175a",
+    "pyspi/statistics/misc.py": "82ba6cc905e160230744a14d77003a47df47e139fe20292423aad887b3c4458e",
+    "pyspi/statistics/causal.py": "56fac843e25841ecebdcb8b4c3e9e2d42786168736b5a1ef1460f8e8396fab08"
+  },
+  "protocol": {
+    "repeats": 3,
+    "timed": "Fresh matrix calls including cache population; preprocessing and startup excluded.",
+    "sharing": "Each workload shares one fresh Data across its metrics; per-stage timings give incremental cost.",
+    "memory": "Separate untimed tracemalloc pass; not whole-process RSS or peak native-library allocations.",
+    "limits": "Synthetic window on this computer. Serial extrapolations exclude I/O and do not promise cohort throughput."
+  },
+  "measurements": {
+    "Ridge": {
+      "seconds": {
+        "baseline": [
+          {
+            "Ridge": 23.23324184899684
+          },
+          {
+            "Ridge": 23.19799321400933
+          },
+          {
+            "Ridge": 23.317610572004924
+          }
+        ],
+        "refactor": [
+          {
+            "Ridge": 0.0047335600247606635
+          },
+          {
+            "Ridge": 0.0033400440006516874
+          },
+          {
+            "Ridge": 0.0032083489932119846
+          }
+        ]
+      },
+      "total_median_seconds": {
+        "baseline": 23.23324184899684,
+        "refactor": 0.0033400440006516874
+      },
+      "speedup": 6955.968796957083,
+      "incremental_median_seconds": {
+        "baseline": {
+          "Ridge": 23.23324184899684
+        },
+        "refactor": {
+          "Ridge": 0.0033400440006516874
+        }
+      },
+      "max_absolute_difference": {
+        "Ridge": 1.2212453270876722e-15
+      },
+      "refactor_memory": {
+        "tracemalloc_retained_bytes": 2159656,
+        "tracemalloc_peak_bytes": 2561316,
+        "snapshot_bytes": 966656,
+        "derived_cache_bytes": 1190384
+      },
+      "projected_seconds": {
+        "baseline": {
+          "1": 23.23324184899684,
+          "600": 13939.945109398104,
+          "41400": 961856.2125484692
+        },
+        "refactor": {
+          "1": 0.0033400440006516874,
+          "600": 2.0040264003910124,
+          "41400": 138.27782162697986
+        }
+      }
+    },
+    "RECI": {
+      "seconds": {
+        "baseline": [
+          {
+            "RECI": 54.37429237700417
+          },
+          {
+            "RECI": 47.94006303200149
+          },
+          {
+            "RECI": 51.17064362499514
+          }
+        ],
+        "refactor": [
+          {
+            "RECI": 0.00892714801011607
+          },
+          {
+            "RECI": 0.005660786991938949
+          },
+          {
+            "RECI": 0.019090708025032654
+          }
+        ]
+      },
+      "total_median_seconds": {
+        "baseline": 51.17064362499514,
+        "refactor": 0.00892714801011607
+      },
+      "speedup": 5732.025902002471,
+      "incremental_median_seconds": {
+        "baseline": {
+          "RECI": 51.17064362499514
+        },
+        "refactor": {
+          "RECI": 0.00892714801011607
+        }
+      },
+      "max_absolute_difference": {
+        "RECI": 3.122502256758253e-17
+      },
+      "refactor_memory": {
+        "tracemalloc_retained_bytes": 5061336,
+        "tracemalloc_peak_bytes": 5462752,
+        "snapshot_bytes": 966656,
+        "derived_cache_bytes": 4091296
+      },
+      "projected_seconds": {
+        "baseline": {
+          "1": 51.17064362499514,
+          "600": 30702.386174997082,
+          "41400": 2118464.646074799
+        },
+        "refactor": {
+          "1": 0.00892714801011607,
+          "600": 5.356288806069642,
+          "41400": 369.5839276188053
+        }
+      }
+    },
+    "Ridge+RECI": {
+      "seconds": {
+        "baseline": [
+          {
+            "Ridge": 25.952101912989747,
+            "RECI": 45.156589119986165
+          },
+          {
+            "Ridge": 22.423164236010052,
+            "RECI": 51.22877651598537
+          },
+          {
+            "Ridge": 25.757765376998577,
+            "RECI": 52.85397262198967
+          }
+        ],
+        "refactor": [
+          {
+            "Ridge": 0.001812999980757013,
+            "RECI": 0.007523948006564751
+          },
+          {
+            "Ridge": 0.0019394380215089768,
+            "RECI": 0.006417083990527317
+          },
+          {
+            "Ridge": 0.0014762089995201677,
+            "RECI": 0.005575729999691248
+          }
+        ]
+      },
+      "total_median_seconds": {
+        "baseline": 73.65194075199543,
+        "refactor": 0.008356522012036294
+      },
+      "speedup": 8813.707502464667,
+      "incremental_median_seconds": {
+        "baseline": {
+          "Ridge": 25.757765376998577,
+          "RECI": 51.22877651598537
+        },
+        "refactor": {
+          "Ridge": 0.001812999980757013,
+          "RECI": 0.006417083990527317
+        }
+      },
+      "max_absolute_difference": {
+        "Ridge": 1.2212453270876722e-15,
+        "RECI": 3.122502256758253e-17
+      },
+      "refactor_memory": {
+        "tracemalloc_retained_bytes": 6252440,
+        "tracemalloc_peak_bytes": 6765496,
+        "snapshot_bytes": 966656,
+        "derived_cache_bytes": 5281680
+      },
+      "projected_seconds": {
+        "baseline": {
+          "1": 73.65194075199543,
+          "600": 44191.164451197255,
+          "41400": 3049190.3471326106
+        },
+        "refactor": {
+          "1": 0.008356522012036294,
+          "600": 5.013913207221776,
+          "41400": 345.96001129830256
+        }
+      }
+    }
+  }
+}

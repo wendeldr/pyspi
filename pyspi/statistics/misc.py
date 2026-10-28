@@ -8,6 +8,7 @@ from sklearn.gaussian_process import kernels, GaussianProcessRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn import linear_model
 from pyspi._envelope import envelope_workspace
+from pyspi._regression import regression_result
 from pyspi.lib.ids.dependence import compute_IDS
 
 from pyspi.base import (
@@ -111,10 +112,19 @@ class LinearModel(Directed, Unsigned):
 
     def __init__(self, model):
         self.identifier += f"_{model}"
+        self._model_name = model
         self._model = getattr(linear_model, model)
+
+    @parse_multivariate
+    def multivariate(self, data):
+        if self._model_name == "Ridge":
+            return regression_result(data, self._model_name)
+        return super().multivariate(data)
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
+        if self._model_name == "Ridge":
+            return regression_result(data, self._model_name)[i, j]
         z = data.to_numpy()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
