@@ -23,6 +23,56 @@ decreasing function of squared Pearson correlation. With unnormalized inputs,
 the target's units and variance matter and the two directions can differ.
 All channel means and cross-products are shared, replacing separate model fits.
 
+`alpha` is configurable. `penalty_scale="sum"` minimizes `SSE + alpha*b**2`;
+`penalty_scale="mean"` minimizes `MSE + alpha*b**2`. Thus mean scaling uses
+`alpha*T` in the coefficient's sum-of-squares denominator. The former
+`lmfit_SGDRegressor` is replaced by
+`lmfit_Ridge_alpha-0-0001_scale-mean`, the exact solution to its squared-loss
+plus L2 objective. The stochastic optimizer, its seed effects and its early
+stopping error are removed. No SGD compatibility alias is provided.
+
+Both Ridge variants remain available in the library but are excluded from the
+working normalized fixed-length run because selected squared empirical
+covariance already determines them, including after window averaging.
+
+## Lasso, ElasticNet and BayesianRidge errors
+
+All report the in-sample MSE of predicting the column channel from the row
+channel, with an unpenalized intercept; they share centered observations and
+cross-products with Ridge. Penalties are applied to the coefficient before
+computing the unpenalized prediction error reported by the metric.
+
+Lasso minimizes `MSE/2 + alpha*abs(b)`. ElasticNet minimizes
+`MSE/2 + alpha*l1_ratio*abs(b) + alpha*(1-l1_ratio)*b**2/2`.
+They now use exact one-predictor minimizers. The library defaults remain
+alpha=1, with ElasticNet L1 ratio=0.5; explicit nondefault parameters appear
+in identifiers. In normalized windows, default Lasso is constant. The reviewed
+run uses alpha=0.1 after the approved EEG variability/runtime checks. ElasticNet
+keeps its existing penalties but no longer reproduces the iterative solver's
+premature-zero threshold. Neither penalty cutoff is a significance threshold.
+
+BayesianRidge retains its MacKay updates, four 1e-6 hyperpriors, noise precision
+initialization `1/(variance(y)+eps)`, coefficient tolerance 1e-3, maximum 300
+iterations, and final posterior-mean update. Iterations stop independently for
+each pair. Its default convergence approximation is preserved; an independently
+optimized evidence maximum is a different choice. `diagnostics(data)` reports
+iterations and reasons, including iteration-limit and numerical failures.
+
+## Euclidean barycenter summaries
+
+The Euclidean barycenter of two channels is `(x+y)/2` at each time sample.
+`squared=True` squares this series **before** mean/max/argmax. For a series
+`[-0.9, 0.2]`, ordinary maximum is 0.2 and squared maximum is 0.81; it is not
+the square of the ordinary maximum (0.04). `max_time` returns a sample index.
+
+Means use shared moments, and extrema use bounded blocks of unique pairs.
+The full time series is not retained for every pair. On normalized fixed-length
+windows, ordinary mean is zero and mean of the square is an affine function of
+empirical covariance. Both are removed only from the working run selection;
+the library retains them for other preprocessing. With normalization disabled,
+variances and offsets can make these summaries distinct. Ordinary mean is still
+zero if detrending/centering removes each channel's mean.
+
 ## Regression error causal inference (RECI)
 
 `reci` independently scales each supplied channel to [0,1], then fits

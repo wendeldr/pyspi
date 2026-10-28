@@ -60,10 +60,10 @@ di_gaussian,,,,,
 si_gaussian_k-1,,,,,
 gc_gaussian_k-max-10_tau-max-2,,,,,
 lmfit_Ridge,,,,,~6956x faster (23.2 s -> 3.34 ms/window); shared centered cross-products replace pairwise fits.
-lmfit_Lasso,,,,,
-lmfit_SGDRegressor,,,,,
-lmfit_ElasticNet,,,,,
-lmfit_BayesianRidge,,,,,
+lmfit_Lasso,,,,,~1.2 ms added/window; exact shared fit; run alpha=0.1 varies on EEG.
+lmfit_SGDRegressor,,,,,Replaced iterative SGD with exact Ridge; omitted from normalized run as redundant.
+lmfit_ElasticNet,,,,,~0.8 ms added/window; exact shared fit removes solver cutoff artifact.
+lmfit_BayesianRidge,,,,,~5.8 ms added/window; shared statistics and batched independent convergence.
 xcorr_mean_sig-False,fs / lag limit,,,,"4 variants, 118x1024: 1.58 s -> 0.18 s (~8.8x). Shared FFTs; corrected symmetric lags/normalization."
 xcorr-sq_mean_sig-False,fs / lag limit,,,,"4 variants, 118x1024: 1.58 s -> 0.18 s (~8.8x). Shared FFTs; corrected symmetric lags/normalization."
 xcorr_max_sig-False,fs / lag limit,,,,"4 variants, 118x1024: 1.58 s -> 0.18 s (~8.8x). Shared FFTs; corrected symmetric lags/normalization."
@@ -120,10 +120,10 @@ pdist_cosine,,,,,
 pdist_chebyshev,,,,,
 pdist_canberra,,,,,
 pdist_braycurtis,,,,,
-bary_euclidean_mean,,,,,
-bary_euclidean_max,,,,,
-bary-sq_euclidean_mean,,,,,
-bary-sq_euclidean_max,,,,,
+bary_euclidean_mean,,,,,Shared moments; omitted from normalized run (constant zero).
+bary_euclidean_max,,,,,Unique pair blocks; no retained pair time series.
+bary-sq_euclidean_mean,,,,,Shared moments; omitted from normalized run (affine covariance).
+bary-sq_euclidean_max,,,,,Shared unique pair blocks; squares before maximum.
 bary_dtw_mean,,,,,
 bary_dtw_max,,,,,
 bary-sq_dtw_mean,,,,,

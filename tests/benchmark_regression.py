@@ -54,11 +54,17 @@ def new_data(raw):
         return Data(raw.copy(), normalise=False, detrend=False)
 
 
-def run(modules, names, data):
+def run(modules, names, data, *, reviewed=False):
     result, seconds = {}, {}
     for name in names:
-        spi = (modules["causal"].RegressionErrorCausalInference() if name == "RECI"
-               else modules["misc"].LinearModel(name))
+        if name == "RECI":
+            spi = modules["causal"].RegressionErrorCausalInference()
+        elif reviewed and name == "SGDRegressor":
+            spi = modules["misc"].LinearModel("Ridge", alpha=.0001, penalty_scale="mean")
+        elif reviewed and name == "Lasso":
+            spi = modules["misc"].LinearModel("Lasso", alpha=.1)
+        else:
+            spi = modules["misc"].LinearModel(name)
         start = time.perf_counter()
         result[name] = spi.multivariate(data)
         seconds[name] = time.perf_counter()-start
@@ -70,10 +76,15 @@ def main():
     parser.add_argument("--baseline", default="31993ac")
     parser.add_argument("--models", nargs="+", default=["Ridge", "RECI"])
     parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--family-only", action="store_true", help="Time the complete family without repeating standalone workloads.")
+    parser.add_argument("--reviewed", action="store_true", help="Compare approved Lasso/SGD replacements, explicitly allowing changed values.")
+    parser.add_argument("--native-only", action="store_true", help="Measure a new selection without repeating a completed historical baseline.")
     parser.add_argument("--out", type=Path, default=ROOT / "tests/regression_refactor_results.json")
     args = parser.parse_args()
     revision = subprocess.check_output(["git", "rev-parse", args.baseline], cwd=ROOT, text=True).strip()
-    methods = {"baseline": baseline(revision), "refactor": {"causal": causal, "misc": misc}}
+    methods = {"refactor": {"causal": causal, "misc": misc}}
+    if not args.native_only:
+        methods = {"baseline": baseline(revision), **methods}
     rng = np.random.default_rng(1001)
     raw = rng.normal(size=(118, 1024))
     raw[1] += .7*raw[0]
@@ -81,9 +92,10 @@ def main():
     results = {}
     load_start = os.getloadavg()
     with threadpool_limits(limits=1):
-        for modules in methods.values():
-            run(modules, args.models, new_data(raw[:3, :100]))
-        for names in [[name] for name in args.models] + [args.models]:
+        for method, modules in methods.items():
+            run(modules, args.models, new_data(raw[:3, :100]), reviewed=args.reviewed and method == "refactor")
+        workloads = [args.models] if args.family_only else [[name] for name in args.models] + [args.models]
+        for names in workloads:
             label = "+".join(names)
             times = {name: [] for name in methods}
             outputs = {}
@@ -92,17 +104,18 @@ def main():
                 for method in order:
                     data = new_data(raw)
                     gc.collect()
-                    outputs[method], elapsed = run(methods[method], names, data)
+                    outputs[method], elapsed = run(methods[method], names, data, reviewed=args.reviewed and method == "refactor")
                     times[method].append(elapsed)
                     print(label, repeat, method, elapsed, flush=True)
             differences = {}
-            for name in names:
+            for name in names if "baseline" in outputs else ():
                 a, b = outputs["baseline"][name], outputs["refactor"][name]
-                np.testing.assert_allclose(a, b, rtol=1e-11, atol=1e-13)
+                if not args.reviewed or name not in ("Lasso", "ElasticNet", "SGDRegressor"):
+                    np.testing.assert_allclose(a, b, rtol=1e-11, atol=1e-13)
                 differences[name] = float(np.nanmax(abs(a-b)))
             data = new_data(raw)
             tracemalloc.start()
-            run(methods["refactor"], names, data)
+            run(methods["refactor"], names, data, reviewed=args.reviewed)
             retained, peak = tracemalloc.get_traced_memory()
             tracemalloc.stop()
             cache = data._calculation_cache
@@ -110,7 +123,7 @@ def main():
                       for method, rows in times.items()}
             results[label] = {
                 "seconds": times, "total_median_seconds": median,
-                "speedup": median["baseline"]/median["refactor"],
+                "speedup": median["baseline"]/median["refactor"] if "baseline" in median else None,
                 "incremental_median_seconds": {
                     method: {name: float(np.median([row[name] for row in rows])) for name in names}
                     for method, rows in times.items()},
@@ -134,6 +147,8 @@ def main():
                      "sharing": "Each workload shares one fresh Data across its metrics; per-stage timings give incremental cost.",
                      "memory": "Separate untimed tracemalloc pass; not whole-process RSS or peak native-library allocations.",
                      "limits": "Synthetic window on this computer. Serial extrapolations exclude I/O and do not promise cohort throughput."},
+        "reviewed_definition_changes": ({"Lasso": "alpha=0.1 instead of 1", "ElasticNet": "exact minimizer; original penalties",
+                                         "SGDRegressor": "exact Ridge alpha=.0001 penalty_scale=mean instead of approximate optimizer"} if args.reviewed else {}),
         "measurements": results,
     }
     args.out.write_text(json.dumps(report, indent=2) + "\n")

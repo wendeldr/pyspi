@@ -289,6 +289,39 @@ solution. No custom referencing or electrode-selection rule is implemented.
 With one retained channel, CAR makes a zero signal; normalisation then fails
 and is recorded as window-preprocessing failure rather than changing reference.
 
+### One alternative to the normalized run
+
+[`examples/workflow/amplitude_sensitivity.yaml`](../examples/workflow/amplitude_sensitivity.yaml)
+sets **detrend=true, zscore=false**, retains the main run's 0.5-second
+nonoverlapping windows and filter settings, and selects nine metrics from
+[`pyspi/workflow/amplitude_sensitivity.yaml`](../pyspi/workflow/amplitude_sensitivity.yaml).
+Replace the input, channel-selection metadata and output paths before preflight.
+This template does not change the main run or launch any calculations.
+
+The four amplitude-sensitive outputs are empirical covariance, squared
+Euclidean barycenter mean, Gaussian joint entropy and Gaussian conditional
+entropy. Their previously discussed redundancies rely on equal normalized
+variances. The five comparison outputs are Spearman, Gaussian MI, order-one
+Gaussian Granger/TE, ordinary amplitude-envelope correlation and mean wPLI in
+1–250 Hz. They allow reference sensitivity to be examined alongside amplitude.
+The ordinary barycenter mean remains zero after detrending and is omitted.
+Fixed regression penalties calibrated for normalized inputs are not carried
+into voltage-unit data. Gaussian differential entropies depend on amplitude
+units; keep the same EDF-to-volts convention across comparisons.
+
+CAR is the runnable reference in the template. A local neighbor-average
+(Laplacian) montage is a candidate comparison, using the existing explicit
+`reference.method: mapping` support. It requires confirmed same-shaft adjacency
+and a decision for endpoints or missing neighbors. It is not automatically
+generated from channel-name sorting. A partial mapping leaves unlisted channels
+unchanged; do not interpret them as locally referenced. Any chosen local
+montage needs matching output/contact-label interpretation and its own output
+directory. Shared contacts in local references can themselves induce pairwise
+relationships, so a change in connectivity is not by itself evidence that one
+reference reveals the true network. See the
+[SEEG reference comparison](https://pmc.ncbi.nlm.nih.gov/articles/PMC6495648/) and
+[MNE's mapping interface](https://mne.tools/stable/generated/mne.set_eeg_reference.html).
+
 ## Standalone selection metadata
 
 ```bash

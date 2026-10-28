@@ -28,6 +28,10 @@ spectral/PEC review, 0.5-second nonoverlapping windows, and existing preprocessi
   present source observations; retain five terms and expose/document the length.
   Remove the erroneous target-only autocorrelation contribution across existing
   Gaussian, kernel and Kozachenko implementations. Approved 2026-10-27.
+- Crossmap entropy: explicitly define it as source-history conditional entropy
+  H(B now | A's previous k samples), with no B-history conditioning and no
+  connection to CCM. Fix k=10 using nine lags across the existing Gaussian,
+  kernel and Kozachenko variants. Approved 2026-10-27.
 - Additional Gaussian Granger candidates: orders 4, 16 and 32, alongside order 1;
   both histories contain consecutive preceding samples and prediction remains
   one sample ahead. Benchmark each order before enabling. Approved 2026-10-27.
@@ -37,8 +41,21 @@ spectral/PEC review, 0.5-second nonoverlapping windows, and existing preprocessi
   known coupling, independent autocorrelated signals, EEG pattern occupancy,
   and incremental runtime before run inclusion. They replace the mislabeled
   Gaussian variants, not reproduce their values. Approved 2026-10-27.
-- Still to discuss: redundant barycenter
-  outputs. BayesianRidge
+- Run redundancy: remove both Euclidean mean summaries (ordinary and squared),
+  original Ridge, and the exact SGD replacement from this run. At fixed window
+  length and normalization, these are constant or affine transformations of
+  selected empirical covariance / squared covariance, even after averaging
+  windows. Retain their optimized library implementations for other inputs.
+  Approved 2026-10-27.
+- Gaussian run redundancy: retain Gaussian MI and remove Gaussian joint and
+  conditional entropy. Under per-window normalization, their marginal Gaussian
+  entropies are constant, so JE/CE are affine functions of MI even after
+  averaging. Approved 2026-10-27. Non-Gaussian variants are unchanged.
+- All redundancy removals are specific to the working normalized, fixed-length
+  selection. Unnormalized channel variances/offsets generally break them.
+  Ordinary Euclidean barycenter mean is still zero if detrending/centering
+  removes means. Library implementations remain available for other runs.
+- BayesianRidge
   will retain its documented iterative updates and convergence rule unless a
   change is agreed.
 
@@ -48,11 +65,12 @@ spectral/PEC review, 0.5-second nonoverlapping windows, and existing preprocessi
 | --- | --- |
 | Shared computation | In progress: mutation-checked bounded moment cache, transformation and observation-interval keys. Gaussian consumers pending. |
 | Ridge and RECI | Complete initial chunk: 19 focused cases (18 initial passes plus corrected near-cubic fixture), 10 small/preprocessing and 2 full goldens pass; no golden changes. Three-repeat timings below. |
-| BayesianRidge, Lasso, ElasticNet, SGD | Pending implementation and definition decisions above. |
+| BayesianRidge, Lasso, ElasticNet, SGD | Implemented and independently checked: 53 regression tests; exact penalties and separately stopped Bayesian updates. Full-family and retained-selection timings below. |
+| Euclidean barycenters | Shared moment means and bounded unique-pair extrema; 8 independent cases pass. Other barycenter modes are unchanged. |
 | Gaussian MI, joint/conditional entropy and lagged MI | Pending native formulas and JVM-independent construction. |
 | Fixed/automatic Gaussian TE, stochastic interaction, crossmap/causal entropy, DI | Pending shared aligned histories, formula checks and independent references. |
 | Cross-metric corrections | Current Data.add_process already preprocesses consistently; do not repeat the old audit's now-fixed input bug. Generic undirected loop still duplicates pairs; change only proven symmetric affected metrics. |
-| Config / redundancy | Lower-penalty Lasso conditional on cheap varying output; replace SGD with exactly solved Ridge. Starting run selection: 205 outputs. Other additions/removals require decisions. |
+| Config / redundancy | Alpha=0.1 Lasso varies on all 36 EEG pilot windows and meets runtime gate. Six approved redundant outputs removed: current selection 199, before pending Granger/symbolic candidates. Starting selection: 205. Separate nine-output amplitude/reference template uses detrend=true, zscore=false. |
 | Validation / goldens | Focused tests and affected regression checks; update only changed outputs with provenance. |
 | Timings / memory | Comparable 118 × 1,024 workload; full families and shared incremental stages; per-window, ×600 and ×41,400 projections. |
 | Documentation / CSV | Keep this ledger current; CSV only brief verified corrections and measured speedups. |
@@ -100,3 +118,59 @@ above resolved that environment error. The initial near-cubic unit fixture
 incorrectly assumed cubing before min–max scaling preserved an exact cubic;
 fixing its endpoints made the intended test pass. Only that failed case was
 repeated, not the 18 passing cases.
+
+## Remaining regression family and Euclidean summaries
+
+`tests/regression_family_results.json` compares all six models in their original
+order at 118 × 1,024, using the same three-repeat baseline protocol. Median
+complete-family time is **193.21 s → 19.38 ms** (about 9,971×). New serial
+projections: **11.63 s for 600 windows**, **13.37 min for 41,400**. These are
+synthetic measurements, excluding imports, preprocessing, I/O and parallelism.
+The Lasso penalty and SGD solver changed by approval, so this compares the old
+family with its approved replacement, not six numerically identical outputs.
+
+| Stage after preceding family calculations | Added time/window |
+| --- | ---: |
+| Ridge, including shared moments | 2.87 ms |
+| Lasso, alpha=0.1 | 1.22 ms |
+| ElasticNet, original penalties | 0.77 ms |
+| BayesianRidge | 5.84 ms |
+| Exact per-sample Ridge replacing SGD | 0.97 ms |
+| RECI, including its distinct transforms | 8.65 ms |
+
+The derived cache was 5.70 MiB, plus a 0.92 MiB input snapshot; separately
+measured tracemalloc peak was 7.55 MiB. Maximum differences for unchanged
+Ridge/BayesianRidge/RECI definitions were at most 1.23e-15. This random benchmark
+does not expose ElasticNet's threshold artifact; a focused r=0.505 test does.
+
+The retained subset (Lasso, ElasticNet, BayesianRidge, RECI) was also measured
+from a cold cache without the removed Ridge outputs warming it:
+`tests/regression_selection_results.json`, nine native-only repetitions.
+Median **28.31 ms/window**, **16.99 s ×600**, **19.54 min ×41,400**. The higher
+time despite fewer outputs reflects differing machine load, including concurrent
+focused regression checks, not a claim that removing Ridge makes it slower.
+No historical baseline fits were repeated for this subset. Derived cache was
+5.41 MiB; tracemalloc peak 7.04 MiB, excluding whole-process/native RSS.
+
+The alpha=0.1 Lasso increment projects to **0.73 s ×600 / 50.33 s ×41,400**.
+The separate EEG probe (`audit/briefing/lasso_penalty_review.json`) tested 12
+selected contacts and 12 windows in each of patients 001, 041 and 096. All 36
+windows had varying pair errors; 61–92% of pair slopes survived alpha=0.1.
+This establishes nondegeneracy and acceptable runtime, not an optimal clinical
+penalty. No smaller penalties were needed for run inclusion.
+
+Focused verification: 53 regression cases, 8 barycenter cases, 18 small/
+preprocessing/catalogue checks and 9 full affected checks passed. The latter
+selectors also included the unchanged Euclidean pairwise-distance golden.
+Only ElasticNet and the renamed exact SGD replacement were regenerated at
+small/full sizes. All unrelated arrays and records were preserved; preprocessing
+arrays were not regenerated. Provenance is in each affected `meta.json`.
+The alternative workflow schema and all nine constructors were resolved after
+substituting only the user-specific input/metadata placeholders; no EDF samples
+were read and no cohort run was launched.
+
+Reproduce the new retained-selection timing without repeating old fits:
+
+```
+.venv/bin/python tests/benchmark_regression.py --models Lasso ElasticNet BayesianRidge RECI --family-only --reviewed --native-only --repeats 9 --out tests/regression_selection_results.json
+```

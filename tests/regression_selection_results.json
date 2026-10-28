@@ -1,0 +1,168 @@
+{
+  "created_utc": "2026-10-28T01:06:39.091099+00:00",
+  "baseline_commit": "31993ac165f04298de7d20e72a02b7874cd29f7b",
+  "shape": [
+    118,
+    1024
+  ],
+  "seed": 1001,
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "scipy": "1.17.1",
+  "sklearn": "1.9.1",
+  "threadpools": [
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 1,
+      "prefix": "libgomp",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/scikit_learn.libs/libgomp-e985bcbb.so.1.0.0",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/numpy.libs/libscipy_openblas64_-f48b354e.so",
+      "version": "0.3.34.106.0",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "openmp",
+      "internal_api": "openmp",
+      "num_threads": 1,
+      "prefix": "libgomp",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/torch/lib/libgomp.so.1",
+      "version": null
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/scipy.libs/libscipy_openblas-6cdc3b4a.so",
+      "version": "0.3.30",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    }
+  ],
+  "import_seconds": 7.312916688999394,
+  "load_start": [
+    9.72021484375,
+    10.18310546875,
+    10.20849609375
+  ],
+  "load_end": [
+    10.54345703125,
+    10.34619140625,
+    10.26123046875
+  ],
+  "source_sha256": {
+    "pyspi/_moments.py": "51ddabfa7d9484556b7c0672672bfce93a8dc98e961dcfce6f6c0834c99b55b4",
+    "pyspi/_regression.py": "42a65549f48e320de357e46b26a4bcf4228f76da1c50af2992825220e34d0a45",
+    "pyspi/statistics/misc.py": "376e7b5aab4590e619a2c7d4a8dfa2b5814cb3591fd5701bada3dd0591b77868",
+    "pyspi/statistics/causal.py": "56fac843e25841ecebdcb8b4c3e9e2d42786168736b5a1ef1460f8e8396fab08"
+  },
+  "protocol": {
+    "repeats": 9,
+    "timed": "Fresh matrix calls including cache population; preprocessing and startup excluded.",
+    "sharing": "Each workload shares one fresh Data across its metrics; per-stage timings give incremental cost.",
+    "memory": "Separate untimed tracemalloc pass; not whole-process RSS or peak native-library allocations.",
+    "limits": "Synthetic window on this computer. Serial extrapolations exclude I/O and do not promise cohort throughput."
+  },
+  "reviewed_definition_changes": {
+    "Lasso": "alpha=0.1 instead of 1",
+    "ElasticNet": "exact minimizer; original penalties",
+    "SGDRegressor": "exact Ridge alpha=.0001 penalty_scale=mean instead of approximate optimizer"
+  },
+  "measurements": {
+    "Lasso+ElasticNet+BayesianRidge+RECI": {
+      "seconds": {
+        "refactor": [
+          {
+            "Lasso": 0.004596100014168769,
+            "ElasticNet": 0.001887173013528809,
+            "BayesianRidge": 0.0076153580157551914,
+            "RECI": 0.019073324016062543
+          },
+          {
+            "Lasso": 0.003869959997246042,
+            "ElasticNet": 0.0019530800054781139,
+            "BayesianRidge": 0.007567371998447925,
+            "RECI": 0.014923045004252344
+          },
+          {
+            "Lasso": 0.003972909995354712,
+            "ElasticNet": 0.0030895819945726544,
+            "BayesianRidge": 0.010093677003169432,
+            "RECI": 0.011524128000019118
+          },
+          {
+            "Lasso": 0.005622474011033773,
+            "ElasticNet": 0.004078651021700352,
+            "BayesianRidge": 0.012374453974189237,
+            "RECI": 0.02073054399807006
+          },
+          {
+            "Lasso": 0.0030600619793403894,
+            "ElasticNet": 0.0026202690205536783,
+            "BayesianRidge": 0.006916012003784999,
+            "RECI": 0.009298440010752529
+          },
+          {
+            "Lasso": 0.0026540280086919665,
+            "ElasticNet": 0.001111246005166322,
+            "BayesianRidge": 0.006937223981367424,
+            "RECI": 0.014812276000156999
+          },
+          {
+            "Lasso": 0.0031893039995338768,
+            "ElasticNet": 0.0019728560000658035,
+            "BayesianRidge": 0.009059882984729484,
+            "RECI": 0.01493483199737966
+          },
+          {
+            "Lasso": 0.0029851220024283975,
+            "ElasticNet": 0.0010508480190765113,
+            "BayesianRidge": 0.006018376006977633,
+            "RECI": 0.015408956998726353
+          },
+          {
+            "Lasso": 0.002661304984940216,
+            "ElasticNet": 0.0013338630087673664,
+            "BayesianRidge": 0.007851807022234425,
+            "RECI": 0.013577509991591796
+          }
+        ]
+      },
+      "total_median_seconds": {
+        "refactor": 0.028313457005424425
+      },
+      "speedup": null,
+      "incremental_median_seconds": {
+        "refactor": {
+          "Lasso": 0.0031893039995338768,
+          "ElasticNet": 0.0019530800054781139,
+          "BayesianRidge": 0.0076153580157551914,
+          "RECI": 0.014923045004252344
+        }
+      },
+      "max_absolute_difference": {},
+      "refactor_memory": {
+        "tracemalloc_retained_bytes": 6644952,
+        "tracemalloc_peak_bytes": 7380712,
+        "snapshot_bytes": 966656,
+        "derived_cache_bytes": 5671552
+      },
+      "projected_seconds": {
+        "refactor": {
+          "1": 0.028313457005424425,
+          "600": 16.988074203254655,
+          "41400": 1172.1771200245712
+        }
+      }
+    }
+  }
+}

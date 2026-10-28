@@ -275,7 +275,7 @@
   "psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max",
   "lmfit_Ridge",
   "lmfit_Lasso",
-  "lmfit_SGDRegressor",
+  "lmfit_Ridge_alpha-0-0001_scale-mean",
   "lmfit_ElasticNet",
   "lmfit_BayesianRidge",
   "gpfit_DotProduct",
@@ -931,6 +931,26 @@
     "pyspi/statistics/spectral.py": "1fd5be7f0ed1df262f77a4d4596a878f4ce357f14f96fd93c91eeaee37d7829b"
    },
    "unrelated_arrays_verified_byte_identical": 238
+  },
+  {
+   "generated": "2026-10-28T01:02:30.174842+00:00",
+   "reason": "Approved exact ElasticNet minimizer; exact per-sample L2 fit replaces SGD optimizer.",
+   "removed": [
+    "lmfit_SGDRegressor"
+   ],
+   "source_sha256": {
+    "audit/checks/probes/refresh_regression_goldens.py": "4b17484a62673dda6e3b0b2db4a2d4383888984814bb05d35f6095851c059ae4",
+    "pyspi/_moments.py": "51ddabfa7d9484556b7c0672672bfce93a8dc98e961dcfce6f6c0834c99b55b4",
+    "pyspi/_regression.py": "42a65549f48e320de357e46b26a4bcf4228f76da1c50af2992825220e34d0a45",
+    "pyspi/config.yaml": "199955a85d62dff7a1d65b34343402310b9e8809bbf089c0e9801ff178d07c72",
+    "pyspi/statistics/misc.py": "376e7b5aab4590e619a2c7d4a8dfa2b5814cb3591fd5701bada3dd0591b77868"
+   },
+   "unrelated_arrays_preserved": 296,
+   "updated": [
+    "lmfit_ElasticNet",
+    "lmfit_Ridge_alpha-0-0001_scale-mean"
+   ],
+   "validation": "tests/unit/test_regression_refactor.py: 53 passed before regeneration"
   }
  ],
  "schema": 1,
@@ -3694,7 +3714,7 @@
     "model": "ElasticNet"
    },
    "status": "ok",
-   "time_s": 0.037856
+   "time_s": 0.000404
   },
   "lmfit_Lasso": {
    "cls": "LinearModel",
@@ -3736,7 +3756,7 @@
    "status": "ok",
    "time_s": 0.034933
   },
-  "lmfit_SGDRegressor": {
+  "lmfit_Ridge_alpha-0-0001_scale-mean": {
    "cls": "LinearModel",
    "deps": [],
    "error": null,
@@ -3751,10 +3771,12 @@
    "module": ".statistics.misc",
    "nan_offdiag": 0,
    "params": {
-    "model": "SGDRegressor"
+    "alpha": 0.0001,
+    "model": "Ridge",
+    "penalty_scale": "mean"
    },
    "status": "ok",
-   "time_s": 0.037677
+   "time_s": 0.000262
   },
   "mgc": {
    "cls": "MultiscaleGraphCorrelation",

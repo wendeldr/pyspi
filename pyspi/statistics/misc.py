@@ -1,14 +1,12 @@
 import warnings
 import numpy as np
-import inspect
 
 from statsmodels.tsa import stattools
 from statsmodels.tsa.vector_ar.vecm import coint_johansen
 from sklearn.gaussian_process import kernels, GaussianProcessRegressor
 from sklearn.metrics import mean_squared_error
-from sklearn import linear_model
 from pyspi._envelope import envelope_workspace
-from pyspi._regression import regression_result
+from pyspi._regression import regression_result, regression_diagnostics
 from pyspi.lib.ids.dependence import compute_IDS
 
 from pyspi.base import (
@@ -110,31 +108,45 @@ class LinearModel(Directed, Unsigned):
     identifier = "lmfit"
     labels = ["misc", "unsigned", "unordered", "normal", "linear", "directed"]
 
-    def __init__(self, model):
+    def __init__(self, model, *, alpha=None, l1_ratio=None, penalty_scale=None):
+        if model not in ("Ridge", "Lasso", "ElasticNet", "BayesianRidge"):
+            raise ValueError("model must be Ridge, Lasso, ElasticNet or BayesianRidge. "
+                             "SGDRegressor was replaced by Ridge(alpha=0.0001, penalty_scale='mean').")
+        if model == "BayesianRidge" and any(value is not None for value in (alpha, l1_ratio, penalty_scale)):
+            raise ValueError("BayesianRidge estimates its own penalty using the default hyperpriors.")
+        if l1_ratio is not None and model != "ElasticNet":
+            raise ValueError("l1_ratio applies only to ElasticNet.")
+        alpha = 1. if alpha is None else float(alpha)
+        l1_ratio = .5 if l1_ratio is None else float(l1_ratio)
+        if not np.isfinite(alpha) or alpha < 0:
+            raise ValueError("alpha must be finite and nonnegative.")
+        if not np.isfinite(l1_ratio) or not 0 <= l1_ratio <= 1:
+            raise ValueError("l1_ratio must be between 0 and 1.")
+        default_scale = "sum" if model in ("Ridge", "BayesianRidge") else "mean"
+        penalty_scale = default_scale if penalty_scale is None else penalty_scale
+        if penalty_scale not in ("sum", "mean") or (model != "Ridge" and penalty_scale != default_scale):
+            raise ValueError("penalty_scale must be sum or mean for Ridge; Lasso/ElasticNet use mean.")
         self.identifier += f"_{model}"
         self._model_name = model
-        self._model = getattr(linear_model, model)
+        self._parameters = dict(alpha=alpha, l1_ratio=l1_ratio, penalty_scale=penalty_scale)
+        if alpha != 1.:
+            self.identifier += f"_alpha-{alpha}".replace(".", "-")
+        if model == "ElasticNet" and l1_ratio != .5:
+            self.identifier += f"_l1-{l1_ratio}".replace(".", "-")
+        if penalty_scale != default_scale:
+            self.identifier += f"_scale-{penalty_scale}"
 
     @parse_multivariate
     def multivariate(self, data):
-        if self._model_name == "Ridge":
-            return regression_result(data, self._model_name)
-        return super().multivariate(data)
+        return regression_result(data, self._model_name, **self._parameters)
+
+    @parse_multivariate
+    def diagnostics(self, data):
+        return regression_diagnostics(data, self._model_name, **self._parameters)
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
-        if self._model_name == "Ridge":
-            return regression_result(data, self._model_name)[i, j]
-        z = data.to_numpy()
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            model_params = inspect.signature(self._model).parameters
-            if "random_state" in model_params:
-                mdl = self._model(random_state=42).fit(z[i], np.ravel(z[j]))
-            else:
-                mdl = self._model().fit(z[i], np.ravel(z[j]))
-        y_predict = mdl.predict(z[i])
-        return mean_squared_error(y_predict, np.ravel(z[j]))
+        return regression_result(data, self._model_name, **self._parameters)[i, j]
 
 
 class GPModel(Directed, Unsigned):

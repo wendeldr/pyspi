@@ -635,6 +635,23 @@ The suite is also collected by the normal root invocation. See the
 for its independently recorded results; earlier full calculation-suite receipts
 remain historical evidence.
 
+## Regression and Euclidean-barycenter refactor
+
+`tests/unit/test_regression_refactor.py` independently checks the exact
+single-predictor Ridge/Lasso/ElasticNet objectives, the retained BayesianRidge
+updates and cubic in-sample RECI, including raw units, constants, invalid rows,
+near-exact fits, cache ownership, mutation and shared cross-products. Its 53
+cases passed. `tests/unit/test_euclidean_barycenter.py` adds eight direct-series
+and normalized-window redundancy checks, including square-before-summary.
+
+The approved ElasticNet solver correction and exact per-sample Ridge replacing
+SGD have a scoped golden refresh recorded in small/full metadata; unrelated
+arrays are preserved. Preprocessing metadata changes only catalogue order.
+Affected golden checks passed (18 small/preprocessing/catalogue, 9 full).
+Timings and definition decisions are in
+[`docs/regression_gaussian_review.md`](../docs/regression_gaussian_review.md).
+These completed checks do not claim that the pending Gaussian refactor is done.
+
 ## SPI coverage
 
 Historical 289-identifier inventory before the signed phase-lag additions, in `Calculator` order, from `goldens/small/meta.json` (5 x 64) and `goldens/full/meta.json` (7 x 100). `time_s` is the generator's fastest measured time for one `multivariate` call on the generating machine (a 64-core machine with `OMP_NUM_THREADS=1`; versions and the thread setting are in `meta.json`); `slow` is the marker at that size.

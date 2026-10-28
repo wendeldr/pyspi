@@ -2,7 +2,6 @@ import numpy as np
 from sklearn.metrics import pairwise_distances
 import tslearn.metrics
 from tslearn.barycenters import (
-    euclidean_barycenter,
     dtw_barycenter_averaging,
     dtw_barycenter_averaging_subgradient,
     softdtw_barycenter,
@@ -14,6 +13,7 @@ from hyppo.independence import (
     Hsic,
 )
 from hyppo.time_series import MGCX, DcorrX
+from pyspi._barycenter import euclidean_summary
 
 from pyspi.base import (
     Directed,
@@ -216,7 +216,7 @@ class Barycenter(Directed, Signed):
 
     def __init__(self, mode="euclidean", squared=False, statistic="mean"):
         if mode == "euclidean":
-            self._fn = euclidean_barycenter
+            pass
         elif mode == "dtw":
             self._fn = dtw_barycenter_averaging
         elif mode == "sgddtw":
@@ -228,6 +228,7 @@ class Barycenter(Directed, Signed):
         self._mode = mode
 
         self._squared = squared
+        self._statistic = statistic
         self._preproc = lambda x: x
         if squared:
             self._preproc = lambda x: x**2
@@ -244,8 +245,17 @@ class Barycenter(Directed, Signed):
 
         self.identifier += f"_{mode}_{statistic}"
 
+    @parse_multivariate
+    def multivariate(self, data):
+        if self._mode == "euclidean":
+            return euclidean_summary(data, self._statistic, self._squared)
+        return super().multivariate(data)
+
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
+
+        if self._mode == "euclidean":
+            return euclidean_summary(data, self._statistic, self._squared)[i, j]
 
         try:
             bc = data.barycenter[self._mode][(i, j)]

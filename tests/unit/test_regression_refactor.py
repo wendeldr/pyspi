@@ -2,7 +2,7 @@
 
 import numpy as np
 import pytest
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge, Lasso, ElasticNet, BayesianRidge
 from cdt.causality.pairwise import RECI
 
 from pyspi._moments import moment_workspace
@@ -152,3 +152,93 @@ def test_moment_intervals_and_cache_bound():
     for start in range(1, 30):
         work.cross(start=start)
     assert work.arrays.nbytes <= work.arrays.max_bytes
+
+
+@pytest.mark.parametrize("model,params", [
+    ("Lasso", {"alpha": .1}), ("Lasso", {"alpha": 1.}),
+    ("ElasticNet", {}), ("ElasticNet", {"alpha": .13, "l1_ratio": .8}),
+    ("BayesianRidge", {}), ("Ridge", {"alpha": .0001, "penalty_scale": "mean"}),
+])
+@pytest.mark.parametrize("kind", ["normalized", "raw", "constant", "near_exact"])
+def test_penalized_models_match_independent_fits(model, params, kind):
+    x = np.random.default_rng(1002).normal(size=(5, 256))
+    x[1] += .8*x[0]
+    if kind == "normalized":
+        x /= x.std(axis=1, ddof=1, keepdims=True)
+    elif kind == "raw":
+        x = x*[[.05], [3], [1], [10], [2]] + [[3], [-8], [0], [2], [10]]
+    elif kind == "constant":
+        x[1], x[3] = 0., 7.
+    elif kind == "near_exact":
+        x[1] = 2*x[0]+1e-8*x[1]
+    spi, data = LinearModel(model, **params), make_data(x)
+    actual = spi.multivariate(data)
+    expected = np.full(actual.shape, np.nan)
+    fit_iterations = np.zeros(actual.shape)
+    delegate_params = params.copy()
+    if delegate_params.pop("penalty_scale", None) == "mean":
+        delegate_params["alpha"] *= x.shape[1]
+    if model in ("Lasso", "ElasticNet"):
+        delegate_params.update(tol=1e-12, max_iter=10000)
+    for i in range(len(x)):
+        for j in range(len(x)):
+            if i == j:
+                continue
+            fit = {"Ridge": Ridge, "Lasso": Lasso, "ElasticNet": ElasticNet,
+                   "BayesianRidge": BayesianRidge}[model](**delegate_params).fit(x[i, :, None], x[j])
+            expected[i, j] = np.mean((x[j]-fit.predict(x[i, :, None]))**2)
+            if model == "BayesianRidge":
+                fit_iterations[i, j] = fit.n_iter_
+    np.testing.assert_allclose(actual, expected, rtol=2e-10, atol=2e-13)
+    if model == "BayesianRidge":
+        np.testing.assert_array_equal(spi.diagnostics(data)["iterations"], fit_iterations)
+    assert np.nanmin(actual) >= 0
+    # Correlated predictors with very different target scale distinguish
+    # direction; order permutation must preserve those directions.
+    order = [2, 0, 4, 1, 3]
+    np.testing.assert_allclose(spi.multivariate(make_data(x[order])), actual[np.ix_(order, order)], atol=2e-12)
+
+
+def test_elasticnet_removes_premature_solver_zero():
+    rng = np.random.default_rng(1003)
+    x = rng.normal(size=(2, 1024))
+    x -= x.mean(axis=1, keepdims=True)
+    x[0] /= x[0].std(ddof=1)
+    x[1] -= (x[1] @ x[0])/(x[0] @ x[0])*x[0]
+    x[1] /= x[1].std(ddof=1)
+    x[1] = .505*x[0] + np.sqrt(1-.505**2)*x[1]
+    exact = ElasticNet(tol=1e-13).fit(x[0, :, None], x[1])
+    legacy = ElasticNet().fit(x[0, :, None], x[1])
+    assert exact.coef_[0] > 0 and legacy.coef_[0] == 0
+    actual = LinearModel("ElasticNet").bivariate(make_data(x))
+    np.testing.assert_allclose(actual, np.mean((x[1]-exact.predict(x[0, :, None]))**2), atol=1e-14)
+    assert actual < np.var(x[1])-.001
+
+
+def test_regression_model_sharing_and_explicit_penalties():
+    data = make_data(np.random.default_rng(1004).normal(size=(4, 100)))
+    specs = [LinearModel("Ridge"), LinearModel("Lasso", alpha=.1),
+             LinearModel("ElasticNet"), LinearModel("BayesianRidge")]
+    results = [spi.multivariate(data) for spi in specs]
+    work = moment_workspace(data)
+    assert sum(key[0] == "cross" for key in work.arrays.entries) == 1
+    assert sum(key[0] == "centered" for key in work.arrays.entries) == 1
+    diagnostics = specs[-1].diagnostics(data)
+    diagnostics["iterations"][:] = 1000
+    assert specs[-1].diagnostics(data)["iterations"].max() < 1000
+    data.to_numpy()[1, :, 0] = .8*data.to_numpy()[0, :, 0]
+    changed = [spi.multivariate(data) for spi in specs]
+    assert all(not np.allclose(a, b, equal_nan=True) for a, b in zip(results, changed))
+    assert LinearModel("Lasso", alpha=.10000001).identifier != LinearModel("Lasso", alpha=.10000002).identifier
+    assert LinearModel("Ridge", alpha=.0001, penalty_scale="mean").identifier == "lmfit_Ridge_alpha-0-0001_scale-mean"
+
+
+@pytest.mark.parametrize("kwargs", [
+    {"model": "SGDRegressor"}, {"model": "Ridge", "alpha": -1},
+    {"model": "Ridge", "alpha": np.nan}, {"model": "ElasticNet", "l1_ratio": 2},
+    {"model": "Lasso", "l1_ratio": .2}, {"model": "BayesianRidge", "alpha": 1},
+    {"model": "Lasso", "penalty_scale": "sum"}, {"model": "Ridge", "penalty_scale": "other"},
+])
+def test_regression_rejects_ambiguous_settings(kwargs):
+    with pytest.raises(ValueError):
+        LinearModel(**kwargs)

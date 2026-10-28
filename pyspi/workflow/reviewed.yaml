@@ -149,12 +149,7 @@
     dependencies: null
     configs:
     - mode: euclidean
-      statistic: mean
-    - mode: euclidean
       statistic: max
-    - mode: euclidean
-      statistic: mean
-      squared: true
     - mode: euclidean
       statistic: max
       squared: true
@@ -169,28 +164,6 @@
     dependencies: null
     configs: null
 .statistics.infotheory:
-  JointEntropy:
-    labels:
-    - undirected
-    - nonlinear
-    - unsigned
-    - bivariate
-    - contemporaneous
-    dependencies:
-    - java
-    configs:
-    - estimator: gaussian
-  ConditionalEntropy:
-    labels:
-    - undirected
-    - nonlinear
-    - unsigned
-    - bivariate
-    - contemporaneous
-    dependencies:
-    - java
-    configs:
-    - estimator: gaussian
   MutualInfo:
     labels:
     - undirected
@@ -603,9 +576,8 @@
     - contemporaneous
     dependencies: null
     configs:
-    - model: Ridge
     - model: Lasso
-    - model: SGDRegressor
+      alpha: 0.1
     - model: ElasticNet
     - model: BayesianRidge
   PowerEnvelopeCorrelation:

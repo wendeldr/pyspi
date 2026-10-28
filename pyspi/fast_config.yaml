@@ -1244,7 +1244,9 @@
     configs:
       - model: Ridge
       - model: Lasso
-      - model: SGDRegressor
+      - model: Ridge
+        alpha: 0.0001
+        penalty_scale: mean
       - model: ElasticNet
       - model: BayesianRidge
 

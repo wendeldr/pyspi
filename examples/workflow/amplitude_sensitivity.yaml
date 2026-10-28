@@ -1,0 +1,37 @@
+# One alternative preprocessing choice: keep detrending, disable z-scoring.
+# This retains amplitude/variance information while removing DC offsets and
+# linear drift. Disabling detrending would chiefly restore channel offsets to
+# the ordinary barycenter mean; that output is not included here.
+# Replace paths and use the SAME retained-channel selection as the main run.
+# Preflight reads headers only; it does not calculate or create the output path.
+version: 1
+edf_glob: /path/to/baseline_edfs/*.[Ee][Dd][Ff]
+metadata: /path/to/the_same_channel_selection.json
+metrics:
+  config: ../../pyspi/workflow/amplitude_sensitivity.yaml
+sampling_rate_hz: 2048
+bandpass:
+  low_hz: 0.5
+  high_hz: 500
+notch:
+  enabled: true
+  line_frequency_hz: 60
+  width_hz: 1
+  transition_hz: 1
+reference: car
+# For ONE local-reference comparison, consider a same-shaft nearest-neighbor
+# average (local Laplacian), e.g. A2 - mean(A1,A3), using an explicit validated
+# reference.method: mapping. Confirm physical adjacency, missing/bad contacts,
+# and the treatment of shaft endpoints first. A partial mapping leaves other
+# contacts in their original reference: do not mix those outputs unknowingly.
+# Keep this same nine-metric subset and preprocessing for that comparison;
+# use a distinct output directory. Reference changes mix channel signals and
+# can change even scale-invariant metrics. They are not just normalization.
+window:
+  length_seconds: 0.5
+  step_seconds: 0.5
+preprocessing:
+  detrend: true
+  zscore: false
+run_name: amplitude-sensitivity-car
+output_directory: /path/to/new_amplitude_sensitivity_car_results
