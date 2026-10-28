@@ -87,6 +87,34 @@ def test_option_values_with_digits_or_none_are_named():
     _check_family(InterDependenceScore(pnorm=p) for p in ("max", 1, 2))
 
 
+def test_options_outside_the_shipped_configs_are_named():
+    from pyspi.statistics.basic import Covariance
+    from pyspi.statistics.causal import ConvergentCrossMapping
+    from pyspi.statistics.distance import Barycenter
+    from pyspi.statistics.infotheory import TransferEntropy
+    from pyspi.statistics.misc import LinearModel
+    from pyspi.statistics.spectral import GroupDelay
+
+    _check_family(GroupDelay(statistic=s) for s in ("delay", "slope", "rvalue"))
+    _check_family(Barycenter(mode=m, statistic=s, squared=q) for m in ("euclidean", "dtw", "sgddtw", "softdtw")
+                  for s in ("mean", "max", "max_time") for q in (False, True))
+    _check_family(Covariance(estimator=e, squared=q) for e in (
+        "EmpiricalCovariance", "EllipticEnvelope", "GraphicalLasso", "GraphicalLassoCV", "LedoitWolf",
+        "MinCovDet", "OAS", "ShrunkCovariance") for q in (False, True))
+    _check_family([LinearModel("Ridge"), LinearModel("Ridge", penalty_scale="mean"), LinearModel("Lasso"),
+                   LinearModel("ElasticNet", l1_ratio=0.2), LinearModel("BayesianRidge")])
+    _check_family(ConvergentCrossMapping(statistic=s, embedding_dimension=e)
+                  for s in ("mean", "max", "diff") for e in (None, 3))
+    _check_family([SpectralGrangerCausality(), SpectralGrangerCausality(ignore_nan=False),
+                   SpectralGrangerCausality(method="parametric", order=3),
+                   SpectralGrangerCausality(method="parametric", max_order=20)])
+    _check_family(CrossCorrelation(statistic=s, squared=q, sigonly=g, fs=f)
+                  for s in ("mean", "max", "min", "peak") for q in (False, True) for g in (False, True)
+                  for f in (1, 2048) if not (s == "peak" and q))
+    assert TransferEntropy(estimator="kraskov", dyn_corr_excl=5).identifier == (
+        "te_kraskov_neighbours04_theiler05_targethistory01_targetdelay01_sourcehistory01_sourcedelay01")
+
+
 def test_wavelet_cache_separates_sampling_rates():
     import numpy as np
     from pyspi.data import Data
