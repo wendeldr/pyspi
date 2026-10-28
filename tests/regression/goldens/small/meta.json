@@ -390,6 +390,57 @@
     ]
    ],
    "validation": "20 initial Gaussian checks passed; invalid-input fixture adjusted to mutate Data after construction, then the remaining case and 12 dependency/configuration checks passed."
+  },
+  {
+   "generated": "2026-10-28T19:18:41.283436+00:00",
+   "reason": "Shared native kernel counts replace Java; kernel dependencies only. Numerical golden arrays unchanged. Empty eligible comparison sets return NaN with a diagnostic by user decision.",
+   "source_sha256": {
+    "pyspi/_kernel_information.py": "ea7eb8b8aa7afd31950309e75fbeadedb4a4d3c4b9e753baeaf2017c5380a1cc",
+    "pyspi/statistics/infotheory.py": "23b9b84efbb500c8128d611e3fb5207b93e2df08e0880873daf4a5220270f339"
+   },
+   "updated_fields": [
+    [
+     "cce_kernel_W-0.5",
+     "deps"
+    ],
+    [
+     "ce_kernel_W-0.5",
+     "deps"
+    ],
+    [
+     "di_kernel_W-0.5",
+     "deps"
+    ],
+    [
+     "je_kernel_W-0.5",
+     "deps"
+    ],
+    [
+     "mi_kernel_W-0.25",
+     "deps"
+    ],
+    [
+     "si_kernel_W-0.5_k-1",
+     "deps"
+    ],
+    [
+     "te_kernel_W-0.25_k-1",
+     "deps"
+    ],
+    [
+     "tlmi_kernel_W-0.25",
+     "deps"
+    ],
+    [
+     "xme_kernel_W-0.5_k1",
+     "deps"
+    ],
+    [
+     "xme_kernel_W-0.5_k10",
+     "deps"
+    ]
+   ],
+   "validation": "Independent box-count formulas, alignments and exclusions; synthetic and EEG Java comparisons. See tests/kernel_refactor_results.json for focused validation and benchmark provenance."
   }
  ],
  "name": "small",
@@ -1420,9 +1471,7 @@
   },
   "cce_kernel_W-0.5": {
    "cls": "CausalEntropy",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "directed",
@@ -1675,9 +1724,7 @@
   },
   "ce_kernel_W-0.5": {
    "cls": "ConditionalEntropy",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "directed",
@@ -2702,9 +2749,7 @@
   },
   "di_kernel_W-0.5": {
    "cls": "DirectedInfo",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "directed",
@@ -3625,9 +3670,7 @@
   },
   "je_kernel_W-0.5": {
    "cls": "JointEntropy",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "infotheory",
@@ -3940,9 +3983,7 @@
   },
   "mi_kernel_W-0.25": {
    "cls": "MutualInfo",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "infotheory",
@@ -5958,9 +5999,7 @@
   },
   "si_kernel_W-0.5_k-1": {
    "cls": "StochasticInteraction",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "infotheory",
@@ -6097,9 +6136,7 @@
   },
   "te_kernel_W-0.25_k-1": {
    "cls": "TransferEntropy",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "directed",
@@ -6319,9 +6356,7 @@
   },
   "tlmi_kernel_W-0.25": {
    "cls": "TimeLaggedMutualInfo",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "directed",
@@ -6843,9 +6878,7 @@
   },
   "xme_kernel_W-0.5_k1": {
    "cls": "CrossmapEntropy",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "directed",
@@ -6865,9 +6898,7 @@
   },
   "xme_kernel_W-0.5_k10": {
    "cls": "CrossmapEntropy",
-   "deps": [
-    "java"
-   ],
+   "deps": [],
    "error": null,
    "labels": [
     "directed",

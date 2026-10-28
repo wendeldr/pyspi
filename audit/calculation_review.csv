@@ -9,7 +9,7 @@ spectral.wilson_factorisation,,,,,Corrected causal projection; channel-order inv
 wavelet.morlet_cwt,,,,,
 infotheory.est.gaussian,,,,,
 infotheory.est.kozachenko,,,,,
-infotheory.est.kernel,,,,,
+infotheory.est.kernel,,,,,10-output family: 11.96 -> 0.87 s (8x1024 EEG; ~13.8x). Native shared counts; 118x1024: 41.07 s.
 infotheory.est.ksg1,,,,,
 infotheory.theiler_window,,,,,
 spearmanr-sq,,1,1,,"118 channels × 1,024 observations measured ordinary Spearman at 7.642 seconds ? 0.00945 seconds, approximately 808× faster
@@ -177,16 +177,16 @@ xme_kozachenko_k1,,,,,Shared source histories/entropies; bulk Java transfer.
 xme_kozachenko_k10,,,,,Corrected ten-lag count; shared source histories/entropies.
 di_kozachenko,,,,,Corrected conditional-information sum; shared target and causal terms.
 si_kozachenko_k-1,,,,,Reuse target conditional-entropy terms across pairs and with DI.
-je_kernel_W-0.5,,,,,
-ce_kernel_W-0.5,,,,,
-cce_kernel_W-0.5,,,,,Shared histories/causal sums; bulk Java transfer.
-xme_kernel_W-0.5_k1,,,,,Shared source histories/entropies; bulk Java transfer.
-xme_kernel_W-0.5_k10,,,,,Corrected ten-lag count; shared source histories/entropies.
-di_kernel_W-0.5,,,,,Corrected conditional-information sum; shared target and causal terms.
-si_kernel_W-0.5_k-1,,,,,Reuse target conditional-entropy terms across pairs and with DI.
-mi_kernel_W-0.25,,,,,
-tlmi_kernel_W-0.25,,,,,
-te_kernel_W-0.25_k-1,,,,,
+je_kernel_W-0.5,,,,,Native packed counts; unique pairs. 118x1024 EEG family increment: 1.95 s.
+ce_kernel_W-0.5,,,,,Reuses native JE and marginal counts; 118x1024 EEG increment after JE: 0.016 s.
+cce_kernel_W-0.5,,,,,Native shared histories; history-first traversal avoids cache thrashing. 118x1024 EEG family increment: 17.63 s.
+xme_kernel_W-0.5_k1,,,,,Native shared source-history counts; 118x1024 EEG family increment: 2.09 s.
+xme_kernel_W-0.5_k10,,,,,Corrected ten-lag count; native shared histories. 118x1024 EEG family increment: 6.11 s.
+di_kernel_W-0.5,,,,,Corrected conditional-information sum; reuses native CCE/target terms. 118x1024 EEG increment after CCE: 1.47 s.
+si_kernel_W-0.5_k-1,,,,,Native shared target/history counts; unique pairs. 118x1024 EEG family increment: 2.69 s.
+mi_kernel_W-0.25,,,,,Native shared counts; unique pairs; no eligible comparisons -> diagnosed NaN. 118x1024 EEG family increment: 1.81 s.
+tlmi_kernel_W-0.25,,,,,Native shared aligned counts; no eligible comparisons -> diagnosed NaN. 118x1024 EEG family increment: 3.35 s.
+te_kernel_W-0.25_k-1,,,,,Native shared history counts; no eligible comparisons -> diagnosed NaN. 118x1024 EEG family increment: 3.96 s.
 mi_kraskov_NN-4,,,,,
 mi_kraskov_NN-4_DCE,,,,,
 tlmi_kraskov_NN-4,,,,,

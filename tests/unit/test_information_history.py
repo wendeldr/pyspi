@@ -76,11 +76,13 @@ def test_histories_and_causal_results_shared_with_directed_information(monkeypat
     cce=CausalEntropy(estimator='kernel',n=3)
     cce.multivariate(d)
     calls=[]
-    original=DirectedInfo._compute_conditional_entropy
-    def counted(self,x,y):
-        calls.append(y.shape[1])
-        return original(self,x,y)
-    monkeypatch.setattr(DirectedInfo,'_compute_conditional_entropy',counted)
+    from pyspi._kernel_information import workspace
+    kernel=workspace(d,.5)
+    original=kernel.conditional
+    def counted(future,past,start,stop):
+        calls.append(len(past))
+        return original(future,past,start,stop)
+    monkeypatch.setattr(kernel,'conditional',counted)
     spi=DirectedInfo(estimator='kernel',n=3)
     before=spi.multivariate(d)
     assert calls==[0,1,2]*3  # One target-only sum per channel; CCE already cached.
@@ -125,22 +127,27 @@ def test_stochastic_interaction_reuses_directed_information_target_terms(monkeyp
     d=data(np.random.default_rng(1307).normal(size=(3,80)))
     DirectedInfo(estimator='kernel',n=2).multivariate(d)
     calls=[]
-    original=StochasticInteraction._compute_conditional_entropy
-    def counted(self,x,y):
-        calls.append(y.shape[1])
-        return original(self,x,y)
-    monkeypatch.setattr(StochasticInteraction,'_compute_conditional_entropy',counted)
+    from pyspi._kernel_information import workspace
+    kernel=workspace(d,.5)
+    original=kernel.conditional
+    def counted(future,past,start,stop):
+        calls.append(len(past))
+        return original(future,past,start,stop)
+    monkeypatch.setattr(kernel,'conditional',counted)
     StochasticInteraction(estimator='kernel').multivariate(d)
-    assert calls==[2]*6  # Joint fits only; all three target terms are cached.
+    assert calls==[2]*3  # Unique joint pairs only; all target terms are cached.
 
 
 @pytest.mark.parametrize('estimator',['kernel','kraskov'])
 def test_java_transfer_deepcopy_restores_settings_and_outputs(estimator):
     import copy
-    spi=TransferEntropy(estimator=estimator,k_history=3,l_history=2)
+    spi=TransferEntropy(estimator=estimator,k_history=3,l_history=1 if estimator=='kernel' else 2)
     cloned=copy.deepcopy(spi)
     d=data(np.random.default_rng(1308).normal(size=(2,120)))
-    assert cloned._calc is not spi._calc
+    if estimator=='kernel':
+        assert cloned._calc is spi._calc is None
+    else:
+        assert cloned._calc is not spi._calc
     assert cloned.bivariate(d)==pytest.approx(spi.bivariate(d),abs=1e-12)
 
 

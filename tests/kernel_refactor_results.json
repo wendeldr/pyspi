@@ -1,0 +1,970 @@
+{
+  "generated_utc": "2026-10-28T19:24:21.644924+00:00",
+  "baseline_commit": "7578137",
+  "scope": "Existing nine kernel information classes / ten catalogue outputs; Kraskov and Kozachenko production changes deferred.",
+  "source_sha256": {
+    "pyspi/_kernel_information.py": "ea7eb8b8aa7afd31950309e75fbeadedb4a4d3c4b9e753baeaf2017c5380a1cc",
+    "pyspi/statistics/infotheory.py": "23b9b84efbb500c8128d611e3fb5207b93e2df08e0880873daf4a5220270f339",
+    "pyspi/_cache.py": "6283322077126be736592543ff6cd347740d4d20465032d5cc1f2e0460b775d4",
+    "pyspi/_moments.py": "2d701cfc8356c4892e769c3f13da21d0ae1105ded3f720adb45bc2ab07575c8f",
+    "tests/unit/test_kernel_native.py": "669e3011564bbebe0a7948d0e2c036184d4886539f3b3365d1614c070ae86948",
+    "tests/benchmark_kernel.py": "3096e297b47b5d5793f3868891cba749ffaa98555eee2ed67056a8d11f2d4eee",
+    "pyspi/lib/jidt/infodynamics.jar": "bdb51d2674f8676d7a56d72668fd4cbeeb70dd12696ffe1cc277bfc250d6e64d",
+    "audit/checks/refs/_kernels_infotheory.py": "ab8c91f8304a2210a1ed5bdbb815289bad7c97c093d9f908e333c9f7724720af"
+  },
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "packages": {
+      "numpy": "2.5.4",
+      "scipy": "1.17.1",
+      "JPype1": "1.7.1"
+    },
+    "numerical_threads": 1,
+    "test_environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "MPLCONFIGDIR": "/tmp/pyspi-mpl",
+      "_MNE_FAKE_HOME_DIR": "/tmp/pyspi-mne"
+    }
+  },
+  "approved_change": "If temporal exclusion leaves any observation with no eligible comparison, return NaN with no_eligible_neighbors diagnostic and a workflow-recorded warning. Normal zero joint matches with eligible comparisons preserve the existing local-zero convention.",
+  "run_configs": {
+    "pyspi/workflow/reviewed.yaml": {
+      "outputs": 188,
+      "sha256": "9d4dae3870895849bfde20bb38e071701d5f3b8df8d155b6840efd605fa72489",
+      "unchanged_from_HEAD": true
+    },
+    "pyspi/workflow/amplitude_sensitivity.yaml": {
+      "outputs": 12,
+      "sha256": "620abb93f1a5adf8603e8447d6276905c4b6cae86127be80395984d07c745aaa",
+      "unchanged_from_HEAD": true
+    }
+  },
+  "golden_arrays": {
+    "tests/regression/goldens/small/values.npz": {
+      "sha256": "7e51591fc7dafdc37946d6fae357a7fda8f79e0874aa1c080cbaf2f1e1febf09",
+      "numerical_payload_unchanged": true
+    },
+    "tests/regression/goldens/full/values.npz": {
+      "sha256": "9a9de02f7cf36db9b95dab09c57f71e6c06404f2f80a24f8f90e8bfc8b260833",
+      "numerical_payload_unchanged": true
+    }
+  },
+  "validation": [
+    {
+      "scope": "Independent kernel suite, affected history sharing/serialization and Gaussian/dependency integration",
+      "result": "66 passed, 64 deselected",
+      "seconds": 5.99,
+      "command": "pytest -q tests/unit/test_kernel_native.py tests/unit/test_information_history.py tests/unit/test_gaussian_native.py tests/workflow/test_metrics.py --require-java -k \"kernel or history or native_constructor_serialization or java_dependency_is_checked or native_gaussian_resolves\"",
+      "stage": "Before history-first CCE traversal and aggregate warnings"
+    },
+    {
+      "scope": "Affected CCE/DI formulas and sharing after history-first traversal",
+      "result": "20 passed, 43 deselected",
+      "seconds": 2.39,
+      "command": "pytest -q tests/unit/test_kernel_native.py tests/unit/test_information_history.py --require-java -k \"cce or di or histories_and_causal or corrected_causal or ce_di\""
+    },
+    {
+      "scope": "New fresh-process all-kernel/JVM-free integration, workflow warning capture and extreme entropy units",
+      "result": "3 passed",
+      "command": "pytest tests/unit/test_kernel_native.py::{test_all_kernel_calculations_and_dependency_resolution_without_jvm,test_unavailable_warning_can_be_recorded_by_workflow,test_entropy_preserves_extreme_amplitude_units}",
+      "note": "These three passed in the combined invocation; subsequent catalogue tests hit MNE home-directory write restrictions. Those pending tests were rerun with _MNE_FAKE_HOME_DIR=/tmp/pyspi-mne; these three were not repeated."
+    },
+    {
+      "scope": "Small kernel numerical goldens, current dependency catalogue and no-Java Calculator inventory",
+      "result": "12 passed, 396 deselected",
+      "seconds": 5.15,
+      "command": "pytest -q tests/unit/test_calculator.py::test_missing_java_dependency_skips_jidt_spis tests/regression/test_spi_goldens.py --runslow --pyspi-size=small --require-java -k \"kernel or catalogue_matches_golden_meta or missing_java_dependency\""
+    },
+    {
+      "scope": "Full kernel numerical goldens and current dependency catalogue",
+      "result": "11 passed, 396 deselected",
+      "seconds": 5.04,
+      "command": "pytest -q tests/regression/test_spi_goldens.py --runslow --pyspi-size=full --require-java -k \"kernel or catalogue_matches_golden_meta\""
+    },
+    {
+      "scope": "Affected golden metadata/payload consistency",
+      "result": "2 passed",
+      "seconds": 1.32,
+      "command": "pytest -q tests/regression/test_golden_contract.py::test_golden_corpus_is_complete_and_self_consistent[small] tests/regression/test_golden_contract.py::test_golden_corpus_is_complete_and_self_consistent[full]"
+    }
+  ],
+  "benchmarks": {
+    "synthetic-small": {
+      "case": "synthetic_small",
+      "baseline_commit": "7578137",
+      "versions": {
+        "numpy": "2.5.4"
+      },
+      "load_average_start": [
+        2.666015625,
+        2.05078125,
+        1.8759765625
+      ],
+      "source_sha256": {
+        "pyspi/statistics/infotheory.py": "23b9b84efbb500c8128d611e3fb5207b93e2df08e0880873daf4a5220270f339",
+        "pyspi/_kernel_information.py": "4d6af7d1ff1a089088da008cf35e3476e50fd332e4abd05f30eee25c7681b599",
+        "tests/benchmark_kernel.py": "3096e297b47b5d5793f3868891cba749ffaa98555eee2ed67056a8d11f2d4eee"
+      },
+      "limits": "Single pass per path; calculation stages include actual shared increments. Imports, data preprocessing and I/O excluded. Large native runs have no newly measured matching Java baseline.",
+      "shape": [
+        8,
+        1024
+      ],
+      "input_sha256": "ef816ae01915c938f6db533d0a5d5644558f50dca6eb44ab5d7b11452bc6b8ef",
+      "jvm_startup_seconds": 0.2913792830077,
+      "java": {
+        "stages": {
+          "je": {
+            "seconds": 0.2233822609996423,
+            "finite_off_diagonal": 56
+          },
+          "ce": {
+            "seconds": 0.09016274500754662,
+            "finite_off_diagonal": 56
+          },
+          "mi": {
+            "seconds": 0.7862873999984004,
+            "finite_off_diagonal": 56
+          },
+          "tlmi": {
+            "seconds": 0.7531467350199819,
+            "finite_off_diagonal": 56
+          },
+          "te": {
+            "seconds": 0.5698317929927725,
+            "finite_off_diagonal": 56
+          },
+          "si": {
+            "seconds": 0.9351262820127886,
+            "finite_off_diagonal": 56
+          },
+          "xme1": {
+            "seconds": 0.4695280830201227,
+            "finite_off_diagonal": 56
+          },
+          "xme10": {
+            "seconds": 0.49733593899873085,
+            "finite_off_diagonal": 56
+          },
+          "cce": {
+            "seconds": 7.639045747986529,
+            "finite_off_diagonal": 56
+          },
+          "di": {
+            "seconds": 0.5989522079762537,
+            "finite_off_diagonal": 56
+          }
+        },
+        "total_seconds": 12.562799194012769,
+        "retained_array_mib": 2.178314208984375
+      },
+      "native": {
+        "stages": {
+          "je": {
+            "seconds": 0.0228142180130817,
+            "finite_off_diagonal": 56
+          },
+          "ce": {
+            "seconds": 0.0014134969969745725,
+            "finite_off_diagonal": 56
+          },
+          "mi": {
+            "seconds": 0.022428454976761714,
+            "finite_off_diagonal": 56
+          },
+          "tlmi": {
+            "seconds": 0.05437784400419332,
+            "finite_off_diagonal": 56
+          },
+          "te": {
+            "seconds": 0.03729598497739062,
+            "finite_off_diagonal": 56
+          },
+          "si": {
+            "seconds": 0.09433683601673692,
+            "finite_off_diagonal": 56
+          },
+          "xme1": {
+            "seconds": 0.007190182019257918,
+            "finite_off_diagonal": 56
+          },
+          "xme10": {
+            "seconds": 0.4482326539873611,
+            "finite_off_diagonal": 56
+          },
+          "cce": {
+            "seconds": 0.3792424109997228,
+            "finite_off_diagonal": 56
+          },
+          "di": {
+            "seconds": 0.003950244979932904,
+            "finite_off_diagonal": 56
+          }
+        },
+        "total_seconds": 1.0712823269714136,
+        "retained_array_mib": 41.60320281982422,
+        "diagnostics": {
+          "je": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.004568917410714286
+          },
+          "ce": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.004568917410714286
+          },
+          "mi": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.023053850446428572
+          },
+          "tlmi": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.024821952241307083
+          },
+          "te": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.16893590280687057
+          },
+          "si": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.08054042731462085
+          },
+          "xme1": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.004922496857980728
+          },
+          "xme10": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.9881832910679064
+          },
+          "cce": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.9688725490196078
+          },
+          "di": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.9688725490196078
+          }
+        },
+        "seconds_600": 642.7693961828481,
+        "seconds_41400": 44351.08833661652
+      },
+      "comparison": {
+        "je": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 7.105427357601002e-15
+        },
+        "ce": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 8.43769498715119e-15
+        },
+        "mi": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 2.914335439641036e-16
+        },
+        "tlmi": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 2.498001805406602e-16
+        },
+        "te": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 8.881784197001252e-16
+        },
+        "si": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 3.6415315207705135e-14
+        },
+        "xme1": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 8.43769498715119e-15
+        },
+        "xme10": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 4.937335262855669e-13
+        },
+        "cce": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 6.563638521583925e-13
+        },
+        "di": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 6.936673457857978e-13
+        }
+      },
+      "process_peak_rss_mib": 3034.54296875,
+      "jvm_started": true,
+      "load_average_end": [
+        3.1650390625,
+        2.18115234375,
+        1.92138671875
+      ]
+    },
+    "eeg-small": {
+      "case": "eeg_small",
+      "baseline_commit": "7578137",
+      "versions": {
+        "numpy": "2.5.4"
+      },
+      "load_average_start": [
+        1.38427734375,
+        1.689453125,
+        1.76806640625
+      ],
+      "source_sha256": {
+        "pyspi/statistics/infotheory.py": "23b9b84efbb500c8128d611e3fb5207b93e2df08e0880873daf4a5220270f339",
+        "pyspi/_kernel_information.py": "ea7eb8b8aa7afd31950309e75fbeadedb4a4d3c4b9e753baeaf2017c5380a1cc",
+        "tests/benchmark_kernel.py": "3096e297b47b5d5793f3868891cba749ffaa98555eee2ed67056a8d11f2d4eee"
+      },
+      "limits": "Single pass per path; calculation stages include actual shared increments. Imports, data preprocessing and I/O excluded. Large native runs have no newly measured matching Java baseline.",
+      "input_metadata": {
+        "source": "/home/dan/data/IEEG/baseline_edfs/001_Baseline.EDF",
+        "channels": [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "B6",
+          "B7",
+          "B8",
+          "B9",
+          "B10",
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5",
+          "C6",
+          "C7",
+          "C8",
+          "C9",
+          "C10",
+          "E1",
+          "E2",
+          "E3",
+          "E4",
+          "E5",
+          "E6",
+          "E7",
+          "E8",
+          "G1",
+          "G2",
+          "G3",
+          "G4",
+          "G5",
+          "G6",
+          "G7",
+          "G8",
+          "G9",
+          "G10",
+          "I1",
+          "I2",
+          "I3",
+          "I4",
+          "I5",
+          "I6",
+          "I7",
+          "I8",
+          "I9",
+          "I10",
+          "M1",
+          "M2",
+          "M3",
+          "M4",
+          "M5",
+          "M6",
+          "O1",
+          "O2",
+          "O3",
+          "O4",
+          "O5",
+          "O6",
+          "O7",
+          "O8",
+          "O9",
+          "O10",
+          "O11",
+          "O12",
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "P7",
+          "P8",
+          "P9",
+          "P10",
+          "P11",
+          "P12",
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4",
+          "Q5",
+          "Q6",
+          "Q7",
+          "Q8",
+          "Q9",
+          "Q10",
+          "Q11",
+          "Q12",
+          "R1",
+          "R2",
+          "R3",
+          "R4",
+          "R5",
+          "R6",
+          "RPI1",
+          "RPI2",
+          "RPI3",
+          "RPI4",
+          "RPI5",
+          "RPI6",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "W1",
+          "W2",
+          "W3",
+          "W4",
+          "W5",
+          "W6",
+          "W7",
+          "W8"
+        ],
+        "window": 0,
+        "configuration_sha256": "faa7ebc297cd04b21386f80443226fa0d430d240a078dd4ace4eae9983b617a2",
+        "preparation_seconds": 12.655990967992693,
+        "settings": "CAR, 2048 Hz, 0.5 seconds, detrend, ddof=1 z-score"
+      },
+      "shape": [
+        8,
+        1024
+      ],
+      "input_sha256": "bf6906d3c1e7fc8cf8ed11396287f7a454c6f51c2afc56c0126b99ff729976c4",
+      "jvm_startup_seconds": 0.21435759498854168,
+      "java": {
+        "stages": {
+          "je": {
+            "seconds": 0.20191666201571934,
+            "finite_off_diagonal": 56
+          },
+          "ce": {
+            "seconds": 0.08551361699937843,
+            "finite_off_diagonal": 56
+          },
+          "mi": {
+            "seconds": 0.8201350090093911,
+            "finite_off_diagonal": 56
+          },
+          "tlmi": {
+            "seconds": 0.8029733650037088,
+            "finite_off_diagonal": 56
+          },
+          "te": {
+            "seconds": 0.5222949000017252,
+            "finite_off_diagonal": 56
+          },
+          "si": {
+            "seconds": 1.0769720970129129,
+            "finite_off_diagonal": 56
+          },
+          "xme1": {
+            "seconds": 0.4910555359965656,
+            "finite_off_diagonal": 56
+          },
+          "xme10": {
+            "seconds": 0.5327784240071196,
+            "finite_off_diagonal": 56
+          },
+          "cce": {
+            "seconds": 6.686225686018588,
+            "finite_off_diagonal": 56
+          },
+          "di": {
+            "seconds": 0.7417106659850106,
+            "finite_off_diagonal": 56
+          }
+        },
+        "total_seconds": 11.96157596205012,
+        "retained_array_mib": 2.178314208984375
+      },
+      "native": {
+        "stages": {
+          "je": {
+            "seconds": 0.02998151400242932,
+            "finite_off_diagonal": 56
+          },
+          "ce": {
+            "seconds": 0.0009986209915950894,
+            "finite_off_diagonal": 56
+          },
+          "mi": {
+            "seconds": 0.022654330998193473,
+            "finite_off_diagonal": 56
+          },
+          "tlmi": {
+            "seconds": 0.043350263993488625,
+            "finite_off_diagonal": 56
+          },
+          "te": {
+            "seconds": 0.030687509017297998,
+            "finite_off_diagonal": 56
+          },
+          "si": {
+            "seconds": 0.07764497399330139,
+            "finite_off_diagonal": 56
+          },
+          "xme1": {
+            "seconds": 0.007169785996666178,
+            "finite_off_diagonal": 56
+          },
+          "xme10": {
+            "seconds": 0.2672214459744282,
+            "finite_off_diagonal": 56
+          },
+          "cce": {
+            "seconds": 0.3829113309911918,
+            "finite_off_diagonal": 56
+          },
+          "di": {
+            "seconds": 0.004441794997546822,
+            "finite_off_diagonal": 56
+          }
+        },
+        "total_seconds": 0.8670615709561389,
+        "retained_array_mib": 41.60320281982422,
+        "diagnostics": {
+          "je": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.0
+          },
+          "ce": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.0
+          },
+          "mi": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 6.975446428571428e-05
+          },
+          "tlmi": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.00015710096355257643
+          },
+          "te": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.0005062142158916352
+          },
+          "si": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.0
+          },
+          "xme1": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.0
+          },
+          "xme10": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.0
+          },
+          "cce": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.0
+          },
+          "di": {
+            "reasons": {
+              "estimated": 56
+            },
+            "mean_joint_self_only_fraction": 0.0
+          }
+        },
+        "seconds_600": 520.2369425736833,
+        "seconds_41400": 35896.34903758415
+      },
+      "comparison": {
+        "je": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 1.021405182655144e-14
+        },
+        "ce": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 1.1102230246251565e-14
+        },
+        "mi": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 1.1102230246251565e-15
+        },
+        "tlmi": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 1.7763568394002505e-15
+        },
+        "te": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 9.020562075079397e-17
+        },
+        "si": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 1.4627188349436437e-14
+        },
+        "xme1": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 1.3766765505351941e-14
+        },
+        "xme10": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 1.9984014443252818e-14
+        },
+        "cce": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 4.39648317751562e-14
+        },
+        "di": {
+          "allclose": true,
+          "finite_masks_equal": true,
+          "max_absolute_difference": 4.707345624410664e-14
+        }
+      },
+      "process_peak_rss_mib": 1593.3046875,
+      "jvm_started": true,
+      "load_average_end": [
+        1.48681640625,
+        1.68310546875,
+        1.76318359375
+      ]
+    },
+    "eeg-large": {
+      "case": "eeg_large",
+      "baseline_commit": "7578137",
+      "versions": {
+        "numpy": "2.5.4"
+      },
+      "load_average_start": [
+        3.58251953125,
+        2.22314453125,
+        1.92626953125
+      ],
+      "source_sha256": {
+        "pyspi/statistics/infotheory.py": "23b9b84efbb500c8128d611e3fb5207b93e2df08e0880873daf4a5220270f339",
+        "pyspi/_kernel_information.py": "ea7eb8b8aa7afd31950309e75fbeadedb4a4d3c4b9e753baeaf2017c5380a1cc",
+        "tests/benchmark_kernel.py": "3096e297b47b5d5793f3868891cba749ffaa98555eee2ed67056a8d11f2d4eee"
+      },
+      "limits": "Single pass per path; calculation stages include actual shared increments. Imports, data preprocessing and I/O excluded. Large native runs have no newly measured matching Java baseline.",
+      "input_metadata": {
+        "source": "/home/dan/data/IEEG/baseline_edfs/001_Baseline.EDF",
+        "channels": [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "B6",
+          "B7",
+          "B8",
+          "B9",
+          "B10",
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5",
+          "C6",
+          "C7",
+          "C8",
+          "C9",
+          "C10",
+          "E1",
+          "E2",
+          "E3",
+          "E4",
+          "E5",
+          "E6",
+          "E7",
+          "E8",
+          "G1",
+          "G2",
+          "G3",
+          "G4",
+          "G5",
+          "G6",
+          "G7",
+          "G8",
+          "G9",
+          "G10",
+          "I1",
+          "I2",
+          "I3",
+          "I4",
+          "I5",
+          "I6",
+          "I7",
+          "I8",
+          "I9",
+          "I10",
+          "M1",
+          "M2",
+          "M3",
+          "M4",
+          "M5",
+          "M6",
+          "O1",
+          "O2",
+          "O3",
+          "O4",
+          "O5",
+          "O6",
+          "O7",
+          "O8",
+          "O9",
+          "O10",
+          "O11",
+          "O12",
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "P7",
+          "P8",
+          "P9",
+          "P10",
+          "P11",
+          "P12",
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4",
+          "Q5",
+          "Q6",
+          "Q7",
+          "Q8",
+          "Q9",
+          "Q10",
+          "Q11",
+          "Q12",
+          "R1",
+          "R2",
+          "R3",
+          "R4",
+          "R5",
+          "R6",
+          "RPI1",
+          "RPI2",
+          "RPI3",
+          "RPI4",
+          "RPI5",
+          "RPI6",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "W1",
+          "W2",
+          "W3",
+          "W4",
+          "W5",
+          "W6",
+          "W7",
+          "W8"
+        ],
+        "window": 0,
+        "configuration_sha256": "faa7ebc297cd04b21386f80443226fa0d430d240a078dd4ace4eae9983b617a2",
+        "preparation_seconds": 12.655990967992693,
+        "settings": "CAR, 2048 Hz, 0.5 seconds, detrend, ddof=1 z-score"
+      },
+      "shape": [
+        118,
+        1024
+      ],
+      "input_sha256": "06deb7b375ddaffee4d2643321d3c4cee034c404abb8f17063c71199174bedf5",
+      "native": {
+        "stages": {
+          "je": {
+            "seconds": 1.949813612998696,
+            "finite_off_diagonal": 13806
+          },
+          "ce": {
+            "seconds": 0.016124808986205608,
+            "finite_off_diagonal": 13806
+          },
+          "mi": {
+            "seconds": 1.8072839000087697,
+            "finite_off_diagonal": 13806
+          },
+          "tlmi": {
+            "seconds": 3.3491603340080474,
+            "finite_off_diagonal": 13806
+          },
+          "te": {
+            "seconds": 3.956881851016078,
+            "finite_off_diagonal": 13806
+          },
+          "si": {
+            "seconds": 2.6891978659841698,
+            "finite_off_diagonal": 13806
+          },
+          "xme1": {
+            "seconds": 2.0871294119860977,
+            "finite_off_diagonal": 13806
+          },
+          "xme10": {
+            "seconds": 6.111596219998319,
+            "finite_off_diagonal": 13806
+          },
+          "cce": {
+            "seconds": 17.62646960199345,
+            "finite_off_diagonal": 13806
+          },
+          "di": {
+            "seconds": 1.4713892890140414,
+            "finite_off_diagonal": 13806
+          }
+        },
+        "total_seconds": 41.06504689599387,
+        "retained_array_mib": 255.98860931396484,
+        "diagnostics": {
+          "je": {
+            "reasons": {
+              "estimated": 13806
+            },
+            "mean_joint_self_only_fraction": 8.488157322903086e-07
+          },
+          "ce": {
+            "reasons": {
+              "estimated": 13806
+            },
+            "mean_joint_self_only_fraction": 8.488157322903086e-07
+          },
+          "mi": {
+            "reasons": {
+              "estimated": 13806
+            },
+            "mean_joint_self_only_fraction": 0.00019975463566565261
+          },
+          "tlmi": {
+            "reasons": {
+              "estimated": 13806
+            },
+            "mean_joint_self_only_fraction": 0.0002083047463036528
+          },
+          "te": {
+            "reasons": {
+              "estimated": 13806
+            },
+            "mean_joint_self_only_fraction": 0.001067367114387344
+          },
+          "si": {
+            "reasons": {
+              "estimated": 13806
+            },
+            "mean_joint_self_only_fraction": 5.692624610065834e-05
+          },
+          "xme1": {
+            "reasons": {
+              "estimated": 13806
+            },
+            "mean_joint_self_only_fraction": 1.0620568302361632e-06
+          },
+          "xme10": {
+            "reasons": {
+              "estimated": 13806
+            },
+            "mean_joint_self_only_fraction": 0.0014140008874739594
+          },
+          "cce": {
+            "reasons": {
+              "estimated": 13806
+            },
+            "mean_joint_self_only_fraction": 0.0010073767302082356
+          },
+          "di": {
+            "reasons": {
+              "estimated": 13806
+            },
+            "mean_joint_self_only_fraction": 0.0010073767302082356
+          }
+        },
+        "seconds_600": 24639.028137596324,
+        "seconds_41400": 1700092.9414941464
+      },
+      "process_peak_rss_mib": 402.48828125,
+      "jvm_started": false,
+      "load_average_end": [
+        2.8037109375,
+        2.38330078125,
+        2.01171875
+      ]
+    }
+  },
+  "interrupted_investigation": "A full synthetic pass was stopped during pair-first CCE due to cache thrashing. The loop was changed to history-first traversal and validated with independent affected checks and EEG comparisons. Partial synthetic stages are not represented as a complete timing or speedup.",
+  "limits": "Single timing pass per production path. Eight-channel Java comparisons are matched; no new full-size Java baseline. Full-family cost and per-stage increments include shared cache work in recorded order. Serial projections exclude imports, preprocessing, output writing and between-window/patient variation. No added run metrics."
+}

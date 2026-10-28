@@ -175,10 +175,9 @@ Gaussian, kernel and Kozachenko variants. CCE and XME are differential
 entropies and can be negative. Finite-sample non-Gaussian DI estimates can also
 be negative; they are not silently clipped.
 
-Gaussian and Kozachenko outputs use nats. Retained JIDT kernel entropy outputs
-keep their existing **bits** convention. Aligned raw histories, target-only
-conditional entropies and causal sums are shared by the retained Java
-estimators where their parameters and sample intervals match. Their
+Gaussian and Kozachenko outputs use nats. Native kernel outputs keep their
+existing **bits** convention. Aligned histories, target-only conditional
+entropies and causal sums are shared where parameters and sample intervals match. Their
 data-dependent caches, including automatic Theiler windows, invalidate on
 data mutation. The existing Theiler formula and integer truncation are
 unchanged; each channel's autocorrelation is now calculated once.
@@ -187,14 +186,70 @@ Stochastic interaction at delay d is
 `H(i[t]|i[t-d]) + H(j[t]|j[t-d]) - H(i[t],j[t]|i[t-d],j[t-d])`.
 The Gaussian calculation evaluates each unordered pair once, shares target
 prediction errors with compatible Granger calculations, and diagnoses singular
-joint residuals rather than inventing a finite value. Retained Java stochastic
-interaction shares its target-only terms with DI. Reverse-pair evaluations
-remain for the non-Gaussian joint estimators: a seeded, finite-sample estimator
+joint residuals rather than inventing a finite value. Kernel stochastic
+interaction also evaluates unique pairs and shares target-only terms with DI.
+Retained Java stochastic interaction shares those terms, but reverse-pair
+evaluations remain for Kozachenko: a seeded, finite-sample estimator
 must not be presumed numerically permutation-invariant solely from its formula.
 
 Independent OLS, determinant and conditional-information references are in
 [`audit/checks/refs/_kernels_infotheory.py`](../audit/checks/refs/_kernels_infotheory.py);
 the retained estimator checks also construct JIDT embeddings independently.
+
+## Native box-kernel information measures
+
+JE, CE, MI, one-sample-lag MI, TE, SI, XME, CCE and DI use shared native
+neighborhood counts, with no JVM or Java fallback. For each aligned coordinate,
+the half-width is `kernel_width * sample_std(ddof=1)`. Two observations match
+when every coordinate differs by **at most** its half-width. The standard
+deviation is recomputed for each distinct trimmed interval. All results use
+base-2 logarithms, in bits; no jitter or bias correction is introduced.
+
+For N aligned observations, let `c_A[t]` count matches in coordinate group A.
+Without temporal exclusion, the density is `c_A[t] / (N * V_A)`, where `V_A`
+is the product of the full widths. Entropy is the mean negative log-density;
+conditional entropy is the difference of joint and conditioning entropies.
+The native implementation cancels common volume/count terms analytically.
+MI is the mean of `log2(c_XY * N / (c_X * c_Y))`. These definitions preserve
+the existing estimator, including self-comparisons.
+
+Kernel TE conditions the target's present on its previous k consecutive
+samples and the source's previous single sample. Its log-ratio is
+`log2(c_Ynext,Ypast,Xpast * c_Ypast / (c_Ypast,Xpast * c_Ynext,Ypast))`.
+The target-present coordinate uses the nearest target-past coordinate's
+bandwidth, preserving JIDT's existing convention. The source uses its own
+aligned sample standard deviation. Nondefault source history or sample
+spacing, and automatic embedding, are rejected explicitly: the old Java
+kernel estimator silently ignored those settings. This port does not introduce
+a different TE embedding. See the [JIDT kernel TE source](https://github.com/jlizier/jidt/blob/master/java/source/infodynamics/measures/continuous/kernel/TransferEntropyCalculatorKernel.java).
+
+Temporal exclusion applies only to MI, lagged MI and TE. With width W,
+comparisons with `abs(t-s) < W` are excluded; W=0 includes self. `AUTO` retains
+the existing autocorrelation-based integer window. MI substitutes the number
+of eligible observations for N separately at each time. If eligible comparisons
+exist but the joint box contains none, that observation contributes zero,
+preserving the existing estimator. **If any observation has no eligible
+comparisons at all, the pair returns NaN**, rather than reporting missing
+evidence as zero information. This is the approved behavior change.
+
+`diagnostics(data)` returns per-pair `reason`, `joint_self_only_fraction` and
+`zero_joint_count_fraction`. For CCE/DI the fractions are the largest across
+terms; self-only fractions are undefined with exclusion. High self-only
+fractions indicate sparse neighborhoods, not proof of reliable coupling.
+Nonfinite inputs, too few observations, zero bandwidth, exhausted eligible
+comparisons and numerical failures have distinct reasons. Unavailable pairs
+also emit an aggregated warning, captured by workflow metric reports.
+Zero-bandwidth differential densities are undefined and return NaN.
+
+Packed comparisons and marginal/history counts share the mutation-aware
+256 MiB derived-array cache. Compatible CE reuses JE; DI reuses CCE and target
+terms. CCE processes each history length across all pairs before the next,
+avoiding cache thrashing. Large windows stream comparisons in row blocks.
+Only proven symmetric measures (JE, MI and SI) skip reverse-pair evaluation.
+Returned arrays and diagnostics cannot mutate cached results. Independent
+counts, edge cases and dependency checks are in
+[`tests/unit/test_kernel_native.py`](../tests/unit/test_kernel_native.py), with
+[measured family costs](non_gaussian_information_review.md#completed-native-kernel-refactor).
 
 ## Symbolic transfer entropy
 

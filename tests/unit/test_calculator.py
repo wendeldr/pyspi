@@ -74,11 +74,15 @@ def test_missing_java_dependency_skips_jidt_spis(jvm, monkeypatch):
               "cce_gaussian", "di_gaussian", "si_gaussian_k-1",
               "xme_gaussian_k1", "xme_gaussian_k10",
               "gc_gaussian_k-1_kt-1_l-1_lt-1", "gc_gaussian_k-max-10_tau-max-2",
-              "te_symbolic_m-3_tau-4_h-4", "te_symbolic_m-3_tau-16_h-16"}
+              "te_symbolic_m-3_tau-4_h-4", "te_symbolic_m-3_tau-16_h-16",
+              "je_kernel_W-0.5", "ce_kernel_W-0.5", "cce_kernel_W-0.5",
+              "xme_kernel_W-0.5_k1", "xme_kernel_W-0.5_k10", "di_kernel_W-0.5",
+              "si_kernel_W-0.5_k-1", "mi_kernel_W-0.25", "tlmi_kernel_W-0.25",
+              "te_kernel_W-0.25_k-1"}
     assert {i for i in ids if i.startswith(JAVA_PREFIXES)} == native
-    # Native Gaussian entries remain usable within mixed-estimator classes.
-    assert len(calc._excluded_spis) == 26
-    assert calc.n_spis == 272
+    # Native Gaussian/kernel entries remain usable within mixed classes.
+    assert len(calc._excluded_spis) == 16
+    assert calc.n_spis == 282
     assert all(deps == ["java"] for _, deps in calc._excluded_spis)
     # Integrated information lives in the infotheory module but has no java dependency.
     assert any(i.startswith("phi_") for i in ids)

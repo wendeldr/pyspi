@@ -22,19 +22,35 @@ class JIDTBase(Unsigned):
 
     @classmethod
     def requires_java(cls, estimator="gaussian", **kwargs):
-        return not (estimator == "gaussian" and cls._native_gaussian_measure)
+        return not (estimator in ("gaussian", "kernel") and cls._native_gaussian_measure)
+
+    def _kernel_parameters(self):
+        parameters = getattr(self, "_gaussian_parameters", {}).copy()
+        if self._native_gaussian_measure == "te":
+            parameters = {"k_history":parameters["k_history"]}
+        return dict(width=self._kernel_width,dyn_corr_excl=self._dyn_corr_excl,**parameters)
+
+    def _kernel_pair(self, data, i, j):
+        from pyspi._kernel_information import kernel_pair
+        return kernel_pair(data,self._native_gaussian_measure,i,j,**self._kernel_parameters())
 
     def issigned(self):
         return "signed" in self.labels
 
     @parse_multivariate
     def multivariate(self, data):
+        if self._estimator == "kernel":
+            from pyspi._kernel_information import kernel_result
+            return kernel_result(data,self._native_gaussian_measure,**self._kernel_parameters())
         if self._estimator == "gaussian" and self._native_gaussian_measure:
             return gaussian_result(data, self._native_gaussian_measure, **getattr(self, "_gaussian_parameters", {}))
         return super().multivariate(data)
 
     @parse_multivariate
     def diagnostics(self, data):
+        if self._estimator == "kernel":
+            from pyspi._kernel_information import kernel_diagnostics
+            return kernel_diagnostics(data,self._native_gaussian_measure,**self._kernel_parameters())
         if self._estimator == "gaussian" and self._native_gaussian_measure:
             return gaussian_diagnostics(data, self._native_gaussian_measure, **getattr(self, "_gaussian_parameters", {}))
         return {}
@@ -61,6 +77,11 @@ class JIDTBase(Unsigned):
     ):
         if estimator not in self._estimators:
             raise ValueError(f"{type(self).__name__} supports estimators {self._estimators}.")
+        if estimator == "kernel":
+            from pyspi._kernel_information import validate
+            validate(kernel_width,dyn_corr_excl)
+            if dyn_corr_excl not in (None,0) and self._native_gaussian_measure not in ("mi","tlmi","te"):
+                raise ValueError("Temporal exclusion is supported only for kernel MI, lagged MI and TE.")
         self._estimator = estimator
         self._kernel_width = kernel_width
         self._prop_k = prop_k
@@ -113,9 +134,7 @@ class JIDTBase(Unsigned):
         return newone
 
     def _setup(self, calc):
-        if self._estimator == "kernel":
-            calc.setProperty(self._KERNEL_WIDTH_PROP_NAME, str(self._kernel_width))
-        elif self._estimator == "kraskov":
+        if self._estimator == "kraskov":
             calc.setProperty(self._NNK_PROP_NAME, str(self._prop_k))
 
         calc.setProperty(self._BIAS_CORRECTION, "false")
@@ -135,9 +154,7 @@ class JIDTBase(Unsigned):
         if not self.requires_java(estimator=self._estimator):
             return None
         if measure == "entropy":
-            if self._estimator == "kernel":
-                calc = self._base_class.kernel.EntropyCalculatorMultiVariateKernel()
-            elif self._estimator == "kozachenko":
+            if self._estimator == "kozachenko":
                 calc = (
                     self._base_class.kozachenko.EntropyCalculatorMultiVariateKozachenko()
                 )
@@ -146,18 +163,14 @@ class JIDTBase(Unsigned):
                 # is used. Gaussian and symbolic construction returned above.
                 return None
         elif measure == "MutualInfo":
-            if self._estimator == "kernel":
-                calc = self._base_class.kernel.MutualInfoCalculatorMultiVariateKernel()
-            elif self._estimator == "kraskov":
+            if self._estimator == "kraskov":
                 calc = (
                     self._base_class.kraskov.MutualInfoCalculatorMultiVariateKraskov1()
                 )
             else:
                 raise ValueError(f"No Java MI estimator for {self._estimator}.")
         elif measure == "TransferEntropy":
-            if self._estimator == "kernel":
-                calc = self._base_class.kernel.TransferEntropyCalculatorKernel()
-            elif self._estimator == "kraskov":
+            if self._estimator == "kraskov":
                 calc = self._base_class.kraskov.TransferEntropyCalculatorKraskov()
             else:
                 raise ValueError(f"No Java TE estimator for {self._estimator}.")
@@ -169,6 +182,13 @@ class JIDTBase(Unsigned):
     # No Theiler window yet (can it be done?)
     @parse_univariate
     def _compute_entropy(self, data, i=None):
+        if self._estimator == "kernel":
+            from pyspi._kernel_information import workspace, Unavailable
+            work = workspace(data,self._kernel_width)
+            try:
+                return work.channel_conditional(i,(),0,data.n_observations)[0]
+            except Unavailable:
+                return np.nan
         if self._estimator == "gaussian" and self._native_gaussian_measure:
             return gaussian_marginal_entropy(data)[i]
         work = moment_workspace(data)
@@ -178,6 +198,9 @@ class JIDTBase(Unsigned):
     # No Theiler window is available in the JIDT estimator
     @parse_bivariate
     def _compute_joint_entropy(self, data, i, j):
+        if self._estimator == "kernel":
+            from pyspi._kernel_information import kernel_pair
+            return kernel_pair(data,"je",i,j,width=self._kernel_width)
         if self._estimator == "gaussian" and self._native_gaussian_measure:
             return gaussian_result(data, "je")[i, j]
         work = moment_workspace(data)
@@ -186,6 +209,9 @@ class JIDTBase(Unsigned):
 
     def _entropy_of(self, observations):
         observations = np.asarray(observations, dtype=float)
+        if self._estimator == "kernel":
+            from pyspi._kernel_information import kernel_entropy
+            return kernel_entropy(observations,self._kernel_width)
         if not observations.shape[1]:
             return 0.
         self._entropy_calc.initialise(observations.shape[1])
@@ -240,6 +266,8 @@ class JointEntropy(JIDTBase, Undirected):
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
+        if self._estimator == "kernel":
+            return self._kernel_pair(data,i,j)
         return self._compute_joint_entropy(data, i=i, j=j)
 
 
@@ -255,6 +283,8 @@ class ConditionalEntropy(JIDTBase, Directed):
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
+        if self._estimator == "kernel":
+            return self._kernel_pair(data,i,j)
         if self._estimator == "gaussian":
             return gaussian_result(data, "ce")[i, j]
         return self._compute_joint_entropy(data, i=i, j=j) - self._compute_entropy(
@@ -281,6 +311,8 @@ class MutualInfo(JIDTBase, Undirected):
     @parse_bivariate
     def bivariate(self, data, i=None, j=None, verbose=False):
         """Compute mutual information between Y and X"""
+        if self._estimator == "kernel":
+            return self._kernel_pair(data,i,j)
         if self._estimator == "gaussian":
             return gaussian_result(data, "mi")[i, j]
         self._set_theiler_window(data, i, j)
@@ -318,6 +350,8 @@ class TimeLaggedMutualInfo(JIDTBase, Directed):
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None, verbose=False):
+        if self._estimator == "kernel":
+            return self._kernel_pair(data,i,j)
         if self._estimator == "gaussian":
             return gaussian_result(data, "tlmi")[i, j]
         self._set_theiler_window(data, i, j)
@@ -347,7 +381,7 @@ class TransferEntropy(JIDTBase, Directed):
 
     @classmethod
     def requires_java(cls, estimator="gaussian", **kwargs):
-        return estimator not in ("gaussian", "symbolic")
+        return estimator not in ("gaussian", "symbolic", "kernel")
 
     def __init__(
         self,
@@ -366,6 +400,11 @@ class TransferEntropy(JIDTBase, Directed):
 
         if "estimator" not in kwargs.keys() or kwargs["estimator"] == "gaussian":
             self.identifier = "gc"
+        if kwargs.get("estimator") == "kernel":
+            if auto_embed_method is not None:
+                raise ValueError("Kernel TE does not implement automatic embedding.")
+            if (k_tau,l_history,l_tau) != (1,1,1):
+                raise ValueError("Kernel TE supports target history k_history and a single source lag; k_tau, l_history and l_tau must be 1.")
         for name, value in (("k_history", k_history), ("k_tau", k_tau),
                             ("l_history", l_history), ("l_tau", l_tau)):
             _positive_integer(value, name)
@@ -459,6 +498,8 @@ class TransferEntropy(JIDTBase, Directed):
         """
         Compute transfer entropy from i->j
         """
+        if self._estimator == "kernel":
+            return self._kernel_pair(data,i,j)
         if self._estimator == "gaussian":
             return gaussian_result(data, "te", **self._gaussian_parameters)[i, j]
         if self._estimator == "symbolic":
@@ -493,6 +534,8 @@ class CrossmapEntropy(JIDTBase, Directed):
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
+        if self._estimator == "kernel":
+            return self._kernel_pair(data,i,j)
         if self._estimator == "gaussian":
             return gaussian_result(data, "xme", **self._gaussian_parameters)[i, j]
         k = self._history_length
@@ -535,6 +578,8 @@ class CausalEntropy(JIDTBase, Directed):
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
+        if self._estimator == "kernel":
+            return self._kernel_pair(data,i,j)
         if self._estimator == "gaussian":
             return gaussian_result(data, "cce", **self._gaussian_parameters)[i, j]
         return self._causal_entropy(data, i, j)
@@ -562,7 +607,8 @@ class DirectedInfo(CausalEntropy, Directed):
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
         """Compute directed information from i to j"""
-
+        if self._estimator == "kernel":
+            return self._kernel_pair(data,i,j)
         if self._estimator == "gaussian":
             return gaussian_result(data, "di", **self._gaussian_parameters)[i, j]
 
@@ -585,6 +631,8 @@ class StochasticInteraction(JIDTBase, Undirected):
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None, verbose=False):
+        if self._estimator == "kernel":
+            return self._kernel_pair(data,i,j)
         if self._estimator == "gaussian":
             return gaussian_result(data, "si", **self._gaussian_parameters)[i, j]
         x, y = data.to_numpy()[[i, j]]

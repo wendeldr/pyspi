@@ -173,7 +173,7 @@ def test_native_constructor_serialization_and_jvm_independence(tmp_path):
     for cls in CLASSES:
         spi = cls()
         assert not cls.requires_java()
-        assert cls.requires_java(estimator="kernel")
+        assert not cls.requires_java(estimator="kernel")
         assert spi._entropy_calc is None
         assert pickle.loads(pickle.dumps(spi)).identifier == spi.identifier
         assert copy.deepcopy(spi).identifier == spi.identifier
@@ -217,12 +217,12 @@ import sys, jpype, numpy as np
 from pathlib import Path
 from pyspi.calculator import Calculator
 path=Path(sys.argv[1])
-for estimator in ('gaussian', 'kernel'):
+for estimator in ('gaussian', 'kernel', 'kraskov'):
     path.write_text('.statistics.infotheory:\\n  MutualInfo:\\n    configs:\\n    - estimator: '+estimator+'\\n')
     calc=Calculator(configfile=path, dataset=np.random.default_rng(91).normal(size=(2,40)))
-    assert jpype.isJVMStarted() == (estimator == 'kernel')
+    assert jpype.isJVMStarted() == (estimator == 'kraskov')
     calc.compute()
-    identifier = 'mi_gaussian' if estimator == 'gaussian' else 'mi_kernel_W-0.5'
+    identifier = {'gaussian':'mi_gaussian','kernel':'mi_kernel_W-0.5','kraskov':'mi_kraskov_NN-4'}[estimator]
     assert list(calc.spis) == [identifier]
     assert np.isfinite(calc.table[identifier].to_numpy()[0,1])
 '''

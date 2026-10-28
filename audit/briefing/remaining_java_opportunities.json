@@ -1,0 +1,817 @@
+{
+  "date": "2026-10-28",
+  "scope": "Investigation only; no non-Gaussian production estimators or run selections changed.",
+  "script": "audit/profiles/micro/explore_remaining_java.py",
+  "reproduction": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLCONFIGDIR=/tmp/pyspi-mpl .venv/bin/python audit/profiles/micro/explore_remaining_java.py --case CASE --out NEW_PATH.json",
+  "cases": [
+    {
+      "receipt_sha256": "032a8e70432c55512c55f85e6e5dd64a900a7a088cc43f60377f6e2a02048e1f",
+      "case": "kernel",
+      "python": "3.12.14",
+      "numpy": "2.5.4",
+      "scipy": "1.17.1",
+      "java": "26",
+      "java_available_processors": 12,
+      "jvm_startup_seconds": 0.25451175498892553,
+      "load_average_start": [
+        1.5693359375,
+        1.31201171875,
+        1.07861328125
+      ],
+      "source_sha256": {
+        "audit/profiles/micro/explore_remaining_java.py": "e1e73bdd50f308df1eb792fc324c710a6811e992488e660edc36d9a69fc66026",
+        "pyspi/statistics/infotheory.py": "3f3cd6ffcd7b1f5dac6a0bc1cb9fde7fd7f1e3346a53670739636558c9e7f3a4",
+        "pyspi/lib/jidt/infodynamics.jar": "bdb51d2674f8676d7a56d72668fd4cbeeb70dd12696ffe1cc277bfc250d6e64d",
+        "audit/checks/refs/_kernels_infotheory.py": "ab8c91f8304a2210a1ed5bdbb815289bad7c97c093d9f908e333c9f7724720af",
+        "audit/checks/refs/it_kozachenko.py": "61ce8c6537aeeae1f8112ffdc63fe2b8818ee4c6ccdd26417f1c640ab6ae3eb8"
+      },
+      "limits": "Investigation prototypes, not production validation. Synthetic AR(1) with one lagged cross-channel link; fresh family cache, 1024 samples. Imports/JVM/preprocessing/output excluded. Large candidate runs do not have a new matched Java baseline.",
+      "small": {
+        "shape": [
+          8,
+          1024
+        ],
+        "baseline": {
+          "median_seconds": 1.1037521249963902,
+          "seconds": [
+            1.2319816639937926,
+            1.0881761310156435,
+            1.1037521249963902
+          ]
+        },
+        "candidate": {
+          "median_seconds": 0.05499305701232515,
+          "seconds": [
+            0.05766001300071366,
+            0.05499305701232515,
+            0.049459367990493774
+          ]
+        },
+        "comparison": {
+          "max_absolute_difference": 8.881784197001252e-15,
+          "allclose": true,
+          "finite_masks_equal": true
+        },
+        "speedup": 20.07075410899625
+      },
+      "large_candidate": {
+        "shape": [
+          118,
+          1024
+        ],
+        "median_seconds": 1.4881709960172884,
+        "seconds": [
+          1.4881709960172884,
+          1.5240881159843411,
+          1.4432974839874078
+        ],
+        "seconds_600": 892.902597610373,
+        "seconds_41400": 61610.27923511574,
+        "one_width_retained_array_mib": 15.671875
+      },
+      "load_average_end": [
+        1.70947265625,
+        1.3515625,
+        1.0947265625
+      ]
+    },
+    {
+      "receipt_sha256": "86d939c450604c5aadda092d3c0e11066106f7fff6fcc2a5bfe3fb79668399c9",
+      "case": "kozachenko",
+      "python": "3.12.14",
+      "numpy": "2.5.4",
+      "scipy": "1.17.1",
+      "java": "26",
+      "java_available_processors": 12,
+      "jvm_startup_seconds": 0.2845866459829267,
+      "load_average_start": [
+        3.625,
+        1.93994140625,
+        1.310546875
+      ],
+      "source_sha256": {
+        "audit/profiles/micro/explore_remaining_java.py": "7f0f59588d5844a9177a906bdf93147c313930506a9bc375ca07acd3360d0393",
+        "pyspi/statistics/infotheory.py": "3f3cd6ffcd7b1f5dac6a0bc1cb9fde7fd7f1e3346a53670739636558c9e7f3a4",
+        "pyspi/lib/jidt/infodynamics.jar": "bdb51d2674f8676d7a56d72668fd4cbeeb70dd12696ffe1cc277bfc250d6e64d",
+        "audit/checks/refs/_kernels_infotheory.py": "ab8c91f8304a2210a1ed5bdbb815289bad7c97c093d9f908e333c9f7724720af",
+        "audit/checks/refs/it_kozachenko.py": "61ce8c6537aeeae1f8112ffdc63fe2b8818ee4c6ccdd26417f1c640ab6ae3eb8"
+      },
+      "limits": "Investigation prototypes, not production validation. Synthetic AR(1) with one lagged cross-channel link; fresh family cache, 1024 samples. Imports/JVM/preprocessing/output excluded. Large candidate runs do not have a new matched Java baseline.",
+      "small": {
+        "shape": [
+          8,
+          1024
+        ],
+        "baseline": {
+          "median_seconds": 0.5796121440071147,
+          "seconds": [
+            0.8244660340133123,
+            0.5417561039794236,
+            0.5796121440071147
+          ]
+        },
+        "candidate": {
+          "median_seconds": 0.031063202972291037,
+          "seconds": [
+            0.030395187000976875,
+            0.031119063001824543,
+            0.031063202972291037
+          ]
+        },
+        "comparison": {
+          "max_absolute_difference": 1.3322676295501878e-14,
+          "allclose": true,
+          "finite_masks_equal": true
+        },
+        "speedup": 18.659123610792474
+      },
+      "large_candidate": {
+        "shape": [
+          118,
+          1024
+        ],
+        "median_seconds": 6.585557160986355,
+        "seconds": [
+          6.646744449011749,
+          6.585557160986355,
+          6.16893410301418
+        ],
+        "seconds_600": 3951.3342965918127,
+        "seconds_41400": 272642.0664648351
+      },
+      "load_average_end": [
+        3.54296875,
+        2.0576171875,
+        1.3671875
+      ]
+    },
+    {
+      "receipt_sha256": "25c39bec8618b366fa6837fb227a526d7c8dafc6f7d7bae6a72ec8cca242219f",
+      "case": "ksg",
+      "python": "3.12.14",
+      "numpy": "2.5.4",
+      "scipy": "1.17.1",
+      "java": "26",
+      "java_available_processors": 12,
+      "jvm_startup_seconds": 0.23305038100806996,
+      "load_average_start": [
+        3.54541015625,
+        2.16845703125,
+        1.421875
+      ],
+      "source_sha256": {
+        "audit/profiles/micro/explore_remaining_java.py": "7f0f59588d5844a9177a906bdf93147c313930506a9bc375ca07acd3360d0393",
+        "pyspi/statistics/infotheory.py": "3f3cd6ffcd7b1f5dac6a0bc1cb9fde7fd7f1e3346a53670739636558c9e7f3a4",
+        "pyspi/lib/jidt/infodynamics.jar": "bdb51d2674f8676d7a56d72668fd4cbeeb70dd12696ffe1cc277bfc250d6e64d",
+        "audit/checks/refs/_kernels_infotheory.py": "ab8c91f8304a2210a1ed5bdbb815289bad7c97c093d9f908e333c9f7724720af",
+        "audit/checks/refs/it_kozachenko.py": "61ce8c6537aeeae1f8112ffdc63fe2b8818ee4c6ccdd26417f1c640ab6ae3eb8"
+      },
+      "limits": "Investigation prototypes, not production validation. Synthetic AR(1) with one lagged cross-channel link; fresh family cache, 1024 samples. Imports/JVM/preprocessing/output excluded. Large candidate runs do not have a new matched Java baseline.",
+      "small": {
+        "shape": [
+          4,
+          1024
+        ],
+        "baseline": {
+          "median_seconds": 24.533863082993776,
+          "seconds": [
+            24.533863082993776
+          ]
+        },
+        "candidate": {
+          "median_seconds": 4.251849708991358,
+          "seconds": [
+            4.251849708991358
+          ]
+        },
+        "comparison": {
+          "max_absolute_difference": 0.0,
+          "allclose": true,
+          "finite_masks_equal": true
+        },
+        "embeddings_equal": true,
+        "baseline_searches": 24,
+        "candidate_searches": 4,
+        "candidate_embeddings": [
+          [
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            [
+              3,
+              4,
+              1,
+              1
+            ],
+            [
+              2,
+              4,
+              1,
+              1
+            ],
+            [
+              2,
+              1,
+              1,
+              1
+            ]
+          ],
+          [
+            [
+              1,
+              1,
+              3,
+              4
+            ],
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            [
+              2,
+              4,
+              3,
+              4
+            ],
+            [
+              2,
+              1,
+              3,
+              4
+            ]
+          ],
+          [
+            [
+              1,
+              1,
+              2,
+              4
+            ],
+            [
+              3,
+              4,
+              2,
+              4
+            ],
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            [
+              2,
+              1,
+              2,
+              4
+            ]
+          ],
+          [
+            [
+              1,
+              1,
+              2,
+              1
+            ],
+            [
+              3,
+              4,
+              2,
+              1
+            ],
+            [
+              2,
+              4,
+              2,
+              1
+            ],
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ]
+          ]
+        ],
+        "speedup": 5.77016234395872
+      },
+      "load_average_end": [
+        3.7890625,
+        2.373046875,
+        1.515625
+      ]
+    },
+    {
+      "receipt_sha256": "1b7d16a9bebf93c30ef44e9f7e8e0f431fbe6e2b192780b12ed68eb81e50c0d9",
+      "case": "ksg_dce",
+      "python": "3.12.14",
+      "numpy": "2.5.4",
+      "scipy": "1.17.1",
+      "java": "26",
+      "java_available_processors": 12,
+      "jvm_startup_seconds": 0.30267749301856384,
+      "load_average_start": [
+        3.4130859375,
+        2.49755859375,
+        1.60595703125
+      ],
+      "source_sha256": {
+        "audit/profiles/micro/explore_remaining_java.py": "7f0f59588d5844a9177a906bdf93147c313930506a9bc375ca07acd3360d0393",
+        "pyspi/statistics/infotheory.py": "3f3cd6ffcd7b1f5dac6a0bc1cb9fde7fd7f1e3346a53670739636558c9e7f3a4",
+        "pyspi/lib/jidt/infodynamics.jar": "bdb51d2674f8676d7a56d72668fd4cbeeb70dd12696ffe1cc277bfc250d6e64d",
+        "audit/checks/refs/_kernels_infotheory.py": "ab8c91f8304a2210a1ed5bdbb815289bad7c97c093d9f908e333c9f7724720af",
+        "audit/checks/refs/it_kozachenko.py": "61ce8c6537aeeae1f8112ffdc63fe2b8818ee4c6ccdd26417f1c640ab6ae3eb8"
+      },
+      "limits": "Investigation prototypes, not production validation. Synthetic AR(1) with one lagged cross-channel link; fresh family cache, 1024 samples. Imports/JVM/preprocessing/output excluded. Large candidate runs do not have a new matched Java baseline.",
+      "small": {
+        "shape": [
+          4,
+          1024
+        ],
+        "baseline": {
+          "median_seconds": 23.658162490988616,
+          "seconds": [
+            23.658162490988616
+          ]
+        },
+        "candidate": {
+          "median_seconds": 4.120871921011712,
+          "seconds": [
+            4.120871921011712
+          ]
+        },
+        "comparison": {
+          "max_absolute_difference": 0.0,
+          "allclose": true,
+          "finite_masks_equal": true
+        },
+        "embeddings_equal": true,
+        "baseline_searches": 24,
+        "candidate_searches": 4,
+        "candidate_embeddings": [
+          [
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            [
+              2,
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              1,
+              1,
+              1
+            ]
+          ],
+          [
+            [
+              1,
+              1,
+              2,
+              1
+            ],
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            [
+              2,
+              1,
+              2,
+              1
+            ],
+            [
+              2,
+              1,
+              2,
+              1
+            ]
+          ],
+          [
+            [
+              1,
+              1,
+              2,
+              1
+            ],
+            [
+              2,
+              1,
+              2,
+              1
+            ],
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            [
+              2,
+              1,
+              2,
+              1
+            ]
+          ],
+          [
+            [
+              1,
+              1,
+              2,
+              1
+            ],
+            [
+              2,
+              1,
+              2,
+              1
+            ],
+            [
+              2,
+              1,
+              2,
+              1
+            ],
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ]
+          ]
+        ],
+        "speedup": 5.741057461737446
+      },
+      "load_average_end": [
+        3.23974609375,
+        2.54541015625,
+        1.6513671875
+      ]
+    },
+    {
+      "receipt_sha256": "2790d98edd5645277f4dde8bd7dc4eacc7422885fce16e448bee49ae797d0c68",
+      "case": "kozachenko_dimensions",
+      "python": "3.12.14",
+      "numpy": "2.5.4",
+      "scipy": "1.17.1",
+      "java": "26",
+      "java_available_processors": 12,
+      "jvm_startup_seconds": 0.23020374099723995,
+      "load_average_start": [
+        5.115234375,
+        3.3046875,
+        1.98046875
+      ],
+      "source_sha256": {
+        "audit/profiles/micro/explore_remaining_java.py": "3c1b3dc0bcaf9fff945274280e7ea54d09557d99f79a94945148952d231bcac4",
+        "pyspi/statistics/infotheory.py": "3f3cd6ffcd7b1f5dac6a0bc1cb9fde7fd7f1e3346a53670739636558c9e7f3a4",
+        "pyspi/lib/jidt/infodynamics.jar": "bdb51d2674f8676d7a56d72668fd4cbeeb70dd12696ffe1cc277bfc250d6e64d",
+        "audit/checks/refs/_kernels_infotheory.py": "ab8c91f8304a2210a1ed5bdbb815289bad7c97c093d9f908e333c9f7724720af",
+        "audit/checks/refs/it_kozachenko.py": "61ce8c6537aeeae1f8112ffdc63fe2b8818ee4c6ccdd26417f1c640ab6ae3eb8"
+      },
+      "limits": "Investigation prototypes, not production validation. Synthetic AR(1) with one lagged cross-channel link; fresh family cache, 1024 samples. Imports/JVM/preprocessing/output excluded. Large candidate runs do not have a new matched Java baseline.",
+      "dimensions": [
+        {
+          "dimensions": 1,
+          "samples": 1024,
+          "baseline": {
+            "median_seconds": 0.030465338000794873,
+            "seconds": [
+              0.05346925201592967,
+              0.030465338000794873,
+              0.013508648989954963
+            ]
+          },
+          "candidate": {
+            "median_seconds": 0.0006150930130388588,
+            "seconds": [
+              0.0007108080026227981,
+              0.0006150930130388588,
+              0.0006148060201667249
+            ]
+          },
+          "comparison": {
+            "max_absolute_difference": 0.0,
+            "allclose": true,
+            "finite_masks_equal": true
+          },
+          "speedup": 49.52964406193021
+        },
+        {
+          "dimensions": 2,
+          "samples": 1024,
+          "baseline": {
+            "median_seconds": 0.011664796009426937,
+            "seconds": [
+              0.02912939400994219,
+              0.011394556000595912,
+              0.011664796009426937
+            ]
+          },
+          "candidate": {
+            "median_seconds": 0.0008292809943668544,
+            "seconds": [
+              0.0008570890058763325,
+              0.0008292809943668544,
+              0.0008001059759408236
+            ]
+          },
+          "comparison": {
+            "max_absolute_difference": 1.7763568394002505e-15,
+            "allclose": true,
+            "finite_masks_equal": true
+          },
+          "speedup": 14.066156210818338
+        },
+        {
+          "dimensions": 4,
+          "samples": 1024,
+          "baseline": {
+            "median_seconds": 0.019016453996300697,
+            "seconds": [
+              0.019016453996300697,
+              0.02959413401549682,
+              0.014508280990412459
+            ]
+          },
+          "candidate": {
+            "median_seconds": 0.0012850479979533702,
+            "seconds": [
+              0.0013345259940251708,
+              0.0012850479979533702,
+              0.001259838987607509
+            ]
+          },
+          "comparison": {
+            "max_absolute_difference": 8.881784197001252e-16,
+            "allclose": true,
+            "finite_masks_equal": true
+          },
+          "speedup": 14.798244132971861
+        },
+        {
+          "dimensions": 10,
+          "samples": 1024,
+          "baseline": {
+            "median_seconds": 0.025013228005263954,
+            "seconds": [
+              0.025013228005263954,
+              0.023782098985975608,
+              0.028190165001433343
+            ]
+          },
+          "candidate": {
+            "median_seconds": 0.007021891011390835,
+            "seconds": [
+              0.00684336299309507,
+              0.007078110007569194,
+              0.007021891011390835
+            ]
+          },
+          "comparison": {
+            "max_absolute_difference": 0.0,
+            "allclose": true,
+            "finite_masks_equal": true
+          },
+          "speedup": 3.5621783312625857
+        }
+      ],
+      "load_average_end": [
+        5.115234375,
+        3.3046875,
+        1.98046875
+      ]
+    },
+    {
+      "receipt_sha256": "221ba5b0806393adb089de5149766ab7724f7e674350e99a23dfa14a7dd23f48",
+      "case": "ksg_dce_heterogeneous",
+      "python": "3.12.14",
+      "numpy": "2.5.4",
+      "scipy": "1.17.1",
+      "java": "26",
+      "java_available_processors": 12,
+      "jvm_startup_seconds": 0.2080530569946859,
+      "load_average_start": [
+        4.283203125,
+        3.20751953125,
+        1.97021484375
+      ],
+      "source_sha256": {
+        "audit/profiles/micro/explore_remaining_java.py": "3c1b3dc0bcaf9fff945274280e7ea54d09557d99f79a94945148952d231bcac4",
+        "pyspi/statistics/infotheory.py": "3f3cd6ffcd7b1f5dac6a0bc1cb9fde7fd7f1e3346a53670739636558c9e7f3a4",
+        "pyspi/lib/jidt/infodynamics.jar": "bdb51d2674f8676d7a56d72668fd4cbeeb70dd12696ffe1cc277bfc250d6e64d",
+        "audit/checks/refs/_kernels_infotheory.py": "ab8c91f8304a2210a1ed5bdbb815289bad7c97c093d9f908e333c9f7724720af",
+        "audit/checks/refs/it_kozachenko.py": "61ce8c6537aeeae1f8112ffdc63fe2b8818ee4c6ccdd26417f1c640ab6ae3eb8"
+      },
+      "limits": "Investigation prototypes, not production validation. Synthetic AR(1) with one lagged cross-channel link; fresh family cache, 1024 samples. Imports/JVM/preprocessing/output excluded. Large candidate runs do not have a new matched Java baseline.",
+      "small": {
+        "shape": [
+          4,
+          256
+        ],
+        "baseline": {
+          "median_seconds": 2.9732995409867726,
+          "seconds": [
+            2.9732995409867726
+          ]
+        },
+        "candidate": {
+          "median_seconds": 1.2335482689959463,
+          "seconds": [
+            1.2335482689959463
+          ]
+        },
+        "comparison": {
+          "max_absolute_difference": 0.0,
+          "allclose": true,
+          "finite_masks_equal": true
+        },
+        "embeddings_equal": true,
+        "baseline_searches": 24,
+        "candidate_searches": 10,
+        "candidate_cache_keys": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            1,
+            4
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            1,
+            5
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            2,
+            10
+          ],
+          [
+            3,
+            10
+          ]
+        ],
+        "candidate_embeddings": [
+          [
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            [
+              2,
+              1,
+              4,
+              2
+            ],
+            [
+              2,
+              4,
+              4,
+              2
+            ],
+            [
+              1,
+              1,
+              4,
+              2
+            ]
+          ],
+          [
+            [
+              4,
+              2,
+              2,
+              1
+            ],
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            [
+              2,
+              1,
+              2,
+              1
+            ],
+            [
+              1,
+              1,
+              2,
+              1
+            ]
+          ],
+          [
+            [
+              4,
+              2,
+              2,
+              4
+            ],
+            [
+              2,
+              1,
+              2,
+              1
+            ],
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ],
+            [
+              1,
+              1,
+              2,
+              4
+            ]
+          ],
+          [
+            [
+              4,
+              2,
+              1,
+              1
+            ],
+            [
+              2,
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              4,
+              1,
+              1
+            ],
+            [
+              -1,
+              -1,
+              -1,
+              -1
+            ]
+          ]
+        ],
+        "speedup": 2.4103633523858026
+      },
+      "load_average_end": [
+        4.10009765625,
+        3.18701171875,
+        1.970703125
+      ]
+    }
+  ],
+  "notes": [
+    "The first Kozachenko probe stopped at its comparison: candidate column order differed from the existing unordered cache first-fill order and therefore assigned seeded jitter differently. The recorded corrected probe preserves that layout; no estimator was changed.",
+    "The script evolved only to correct that Kozachenko comparison and add the dimensionality/heterogeneous-exclusion cases. Receipts record each executed source hash; completed cases were not rerun after these additions.",
+    "Kernel and Kozachenko small/large cases use three timed passes; Kraskov cache cases use one timed pass per path. These are synthetic probes, not EEG or cohort runtime measurements.",
+    "Kernel prototype currently requires sample counts divisible by 64, continuous nonconstant finite signals, and no temporal exclusion. It has no production cache invalidation or failure diagnostics.",
+    "The retained packed-array size is not process RSS. Larger-window and many-alignment memory use need a bounded production cache.",
+    "KSG baseline and candidate both use NUM_THREADS=1; this isolates embedding reuse and must not be multiplied by historical threading speedups.",
+    "The existing Java bridge checks in these probes may include Data construction, while signal generation and z-scoring precede timers. JVM startup is reported separately."
+  ]
+}

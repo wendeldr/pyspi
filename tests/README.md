@@ -733,6 +733,17 @@ provenance. The final affected checks passed: 52 small/preprocessing/catalogue,
 200 outputs; its selection and all runtime/memory projections are recorded in
 `docs/regression_gaussian_review.md`.
 
+The subsequent kernel port has independent box-count references in
+`unit/test_kernel_native.py` for all nine classes, including temporal exclusion,
+TE bandwidth alignment, units, known models, permutations, cache invalidation,
+bounded streaming and diagnostics. Empty eligible comparison sets return NaN
+with a workflow-recorded warning. A fresh-process test confirms construction,
+dependency resolution and execution without starting Java. Small and full
+kernel numerical goldens are unchanged; only Java dependency metadata changes.
+Focused validation, Java comparisons, and the 118-channel EEG family timing
+are recorded in [`kernel_refactor_results.json`](kernel_refactor_results.json).
+The main/amplitude run selections remain 188/12.
+
 The later systematic amplitude review covered all 200 outputs and selected 12
 for the unnormalized alternative. Five normalized redundancies were removed
 using independent timings, leaving 195 in `workflow/reviewed.yaml`. The affected
@@ -863,39 +874,39 @@ come from their individual snapshots and are not production benchmarks; use the
 | `ccm_E-10_diff` | .statistics.causal | ok | 3.323 | yes | ok | 14.558 | yes |  |  |
 | `je_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.005 |  |  |  |
 | `je_kozachenko` | .statistics.infotheory | ok | 0.002 |  | ok | 0.014 |  |  | yes |
-| `je_kernel_W-0.5` | .statistics.infotheory | ok | 0.002 |  | ok | 0.009 |  |  | yes |
+| `je_kernel_W-0.5` | .statistics.infotheory | ok | 0.002 |  | ok | 0.009 |  |  |  |
 | `ce_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.004 |  |  |  |
 | `ce_kozachenko` | .statistics.infotheory | ok | 0.002 |  | ok | 0.008 |  |  | yes |
-| `ce_kernel_W-0.5` | .statistics.infotheory | ok | 0.002 |  | ok | 0.005 |  |  | yes |
+| `ce_kernel_W-0.5` | .statistics.infotheory | ok | 0.002 |  | ok | 0.005 |  |  |  |
 | `cce_gaussian` | .statistics.infotheory | ok | 0.037 |  | ok | 0.113 |  |  |  |
 | `cce_kozachenko` | .statistics.infotheory | ok | 0.052 |  | ok | 0.186 |  |  | yes |
-| `cce_kernel_W-0.5` | .statistics.infotheory | ok | 1.406 |  | ok | 0.955 |  |  | yes |
+| `cce_kernel_W-0.5` | .statistics.infotheory | ok | 1.406 |  | ok | 0.955 |  |  |  |
 | `xme_gaussian_k1` | .statistics.infotheory | ok | 0.003 |  | ok | 0.010 |  |  |  |
 | `xme_kozachenko_k1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.020 |  |  | yes |
-| `xme_kernel_W-0.5_k1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.015 |  |  | yes |
+| `xme_kernel_W-0.5_k1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.015 |  |  |  |
 | `xme_gaussian_k10` | .statistics.infotheory | ok | 0.002 |  | ok | 0.002 |  |  |  |
 | `xme_kozachenko_k10` | .statistics.infotheory | ok | 0.006 |  | ok | 0.013 |  |  | yes |
-| `xme_kernel_W-0.5_k10` | .statistics.infotheory | ok | 0.002 |  | ok | 0.006 |  |  | yes |
+| `xme_kernel_W-0.5_k10` | .statistics.infotheory | ok | 0.002 |  | ok | 0.006 |  |  |  |
 | `di_gaussian` | .statistics.infotheory | ok | 0.006 |  | ok | 0.006 |  |  |  |
 | `di_kozachenko` | .statistics.infotheory | ok | 0.043 |  | ok | 0.113 |  |  | yes |
-| `di_kernel_W-0.5` | .statistics.infotheory | ok | 1.780 |  | ok | 0.770 |  |  | yes |
+| `di_kernel_W-0.5` | .statistics.infotheory | ok | 1.780 |  | ok | 0.770 |  |  |  |
 | `si_gaussian_k-1` | .statistics.infotheory | ok | 0.009 |  | ok | 0.027 |  |  |  |
 | `si_kozachenko_k-1` | .statistics.infotheory | ok | 0.013 |  | ok | 0.046 |  |  | yes |
-| `si_kernel_W-0.5_k-1` | .statistics.infotheory | ok | 0.014 |  | ok | 0.047 |  |  | yes |
+| `si_kernel_W-0.5_k-1` | .statistics.infotheory | ok | 0.014 |  | ok | 0.047 |  |  |  |
 | `mi_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  |  |
 | `mi_kraskov_NN-4` | .statistics.infotheory | ok | 0.426 |  | ok | 0.228 |  |  | yes |
 | `mi_kraskov_NN-4_DCE` | .statistics.infotheory | ok | 0.283 |  | ok | 0.226 |  |  | yes |
-| `mi_kernel_W-0.25` | .statistics.infotheory | ok | 0.002 |  | ok | 0.007 |  |  | yes |
+| `mi_kernel_W-0.25` | .statistics.infotheory | ok | 0.002 |  | ok | 0.007 |  |  |  |
 | `tlmi_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  |  |
 | `tlmi_kraskov_NN-4` | .statistics.infotheory | ok | 0.115 |  | ok | 0.220 |  |  | yes |
 | `tlmi_kraskov_NN-4_DCE` | .statistics.infotheory | ok | 0.105 |  | ok | 0.224 |  |  | yes |
-| `tlmi_kernel_W-0.25` | .statistics.infotheory | ok | 0.002 |  | ok | 0.006 |  |  | yes |
+| `tlmi_kernel_W-0.25` | .statistics.infotheory | ok | 0.002 |  | ok | 0.006 |  |  |  |
 | `te_kraskov_NN-4_k-max-10_tau-max-4` | .statistics.infotheory | ok | 12.967 | yes | ok | 16.209 | yes |  | yes |
 | `te_kraskov_NN-4_DCE_k-max-10_tau-max-4` | .statistics.infotheory | ok | 13.883 | yes | ok | 16.197 | yes |  | yes |
 | `te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.515 |  | ok | 0.234 |  |  | yes |
 | `te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.323 |  | ok | 0.232 |  |  | yes |
 | `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.527 |  | ok | 0.226 |  |  | yes |
-| `te_kernel_W-0.25_k-1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.005 |  |  | yes |
+| `te_kernel_W-0.25_k-1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.005 |  |  |  |
 | `gc_gaussian_k-max-10_tau-max-2` | .statistics.infotheory | ok | 0.045 |  | ok | 0.075 |  |  |  |
 | `gc_gaussian_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  |  |
 | `te_symbolic_m-3_tau-4_h-4` | .statistics.infotheory | ok | 0.001 |  | ok | 0.001 |  |  |  |
