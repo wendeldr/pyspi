@@ -138,9 +138,29 @@ The complete all-eleven family, including common window setup, took:
 | 111 | 13.028 | 130.28 | 156.34 | 9.247 | 92.47 | 110.96 |
 
 Distribution-adjusted all-eleven family projections are 59.64 hours CAR and
-41.06 hours for verified local layouts, serial calculation only. This is not
-the final nine-output selection's measured runtime. Removing kernel/DTW avoids
-their increments, but the reduced panel has not been separately profiled.
+41.06 hours for verified local layouts, serial calculation only.
+
+A separate measurement of the **selected nine-output family** reused the cached
+pilot windows, with fresh Data/cache for each window. It avoided refiltering or
+repeating standalone benchmarks. These are actual complete-family timings;
+its receipt also records every metric's measured increment in the reduced panel.
+All 162 metric/window/reference arrays matched the original eleven-output
+results exactly. Continuous preparation, reference application, disk loading,
+output and worker startup are excluded from this calculation-stage measurement.
+
+| Patient | CAR s/window | CAR ×600 min | CAR ×43200 h | Local s/window | Local ×600 min | Local ×43200 h |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 004 | 0.406 | 4.06 | 4.87 | 0.254 | 2.54 | 3.05 |
+| 001 | 1.912 | 19.12 | 22.94 | 1.313 | 13.13 | 15.76 |
+| 111 | 6.850 | 68.50 | 82.20 | 4.904 | 49.04 | 58.84 |
+
+Interpolating these final-panel measurements over historical contact counts gives
+**31.81 hours CAR plus 22.52 hours verified local**, or 54.33 hours combined,
+serial calculation only. The one-day budget is per measure, not per panel.
+Two-worker throughput was measured for the eleven-output panel and kernel alone;
+it has not been newly measured for this reduced panel, so no exact parallel
+speedup is assigned to the final selection. [Receipt](../tests/candidate_pilot/selected_family.json).
+
 The second distance-correlation definition costs about 0.00045 seconds/window
 in the representative CAR family (roughly 26 seconds over the modeled cohort),
 versus about 0.90 seconds standalone. The two definitions remain distinct after
@@ -154,6 +174,21 @@ absolute differences 2.1e-14/8.7e-14. Initial reference compilation took about
 20 seconds and is excluded. Earlier eight-contact comparisons against the old
 wrapper measured 63× distance-correlation and 154× constrained-DTW gains.
 These are measured small-panel gains, not measured full-cohort speedups.
+
+A separate eight-contact, 1,024-sample allocation comparison found peak tracked
+allocations of **48.0 MiB for the old wrapper, 0.167 MiB for Hyppo's fast path,
+and 68.5 MiB for the shared native path**. All three agreed within 1.8e-14.
+The native path also computes/caches both definitions. Its bounded channel-wide
+blocks improve throughput and sharing, but **do not reduce memory below the
+fast library path**; that path is preferable if minimum working memory matters
+more than the measured runtime gain. The old path materializes sample-distance
+matrices that grow quadratically with window length. Native distance blocks are
+capped, although channel-scale caches and several simultaneous block temporaries
+remain. These numbers use `tracemalloc` after warmup, covering registered
+allocations, not all native allocation domains or process RSS. Instrumented
+times are deliberately not reported as performance results. The complete-process
+measurements below include imports and workflow storage.
+[Allocation receipt](../tests/candidate_pilot/distance_memory.json).
 
 ## Workflow, storage and memory
 

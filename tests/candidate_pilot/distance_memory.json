@@ -1,0 +1,27 @@
+{
+  "patient": "001",
+  "reference": "laplacian",
+  "shape": [
+    8,
+    1024
+  ],
+  "definition": "bias-corrected normalized squared distance correlation",
+  "limits": "Compare tracked allocations for the three distance-correlation paths.\n\nWarm imports/compilation first, then trace fresh eight-contact calculations.\nTracemalloc covers Python and registered NumPy/Numba allocations, not every\nnative allocator or process RSS. Instrumented times are not runtime benchmarks.\n",
+  "paths": {
+    "old_wrapper": {
+      "peak_tracked_bytes": 50340666,
+      "remaining_tracked_bytes": 7802,
+      "max_absolute_difference": 0.0
+    },
+    "hyppo_fast": {
+      "peak_tracked_bytes": 174640,
+      "remaining_tracked_bytes": 664,
+      "max_absolute_difference": 1.1754486273218845e-14
+    },
+    "native": {
+      "peak_tracked_bytes": 71803031,
+      "remaining_tracked_bytes": 1280,
+      "max_absolute_difference": 1.7513768213461844e-14
+    }
+  }
+}

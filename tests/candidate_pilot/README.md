@@ -99,3 +99,28 @@ Two focused filter/reference commutation cases and three surrogate invariant
 checks passed; they live in `tests/workflow/execution/test_band_candidates.py`
 and `tests/unit/test_candidate_surrogates.py`. Earlier independent estimator
 tests and affected regressions are recorded in the implementation ledger.
+
+## Final-panel and allocation checks
+
+After selecting nine outputs, the final-family measurement reuses the same
+cached windows and checks every result against the eleven-output receipt.
+The allocation comparison fills the separate memory-comparison requirement;
+it does not repeat the runtime benchmark or claim memory savings from the
+native path. Imports/compilation are warmed before tracing. These commands
+need no continuous filtering or Zarr output:
+
+```bash
+.venv/bin/python tests/candidate_pilot/selected_family.py \
+  --cache /tmp/pyspi-candidate-pilot \
+  --out tests/candidate_pilot/selected_family.json
+.venv/bin/python tests/candidate_pilot/distance_memory.py \
+  --cache /tmp/pyspi-candidate-pilot \
+  --out tests/candidate_pilot/distance_memory.json
+```
+
+`selected_family.json` records actual increments and complete family costs for
+all three patients/both references, plus 162 exact array comparisons. Its
+selection hash identifies the final metric config. `distance_memory.json`
+compares tracked allocations of the old two-direction wrapper, unique-pair
+Hyppo fast path, and the shared native implementation. The memory instrument
+has explicit native-allocation/RSS limits; instrumented runtimes are not used.

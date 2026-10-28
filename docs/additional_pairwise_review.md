@@ -18,10 +18,10 @@ inclusion is the remaining user decision; the eleven-output pilot stays availabl
 | Continuous 30–70 Hz PEC views | Implemented with shared bounded filtering, file-backed views, exact PEC preprocessing, and serial/parallel checks. |
 | Kernel MI, IDS, Gaussian DI/SI assessment | IDS cleanup validated; all three assessed on three patients/two references with controls and timing receipts. |
 | Cross-channel 16–30 / 70–150 Hz coupling | Prototype integrated and validated; matched surrogates show a substantial positive null baseline; retained as exploratory. |
-| Exact bounded distance correlation | Implemented and independently validated; three-patient standalone/shared costs and fast-library comparison recorded. |
+| Exact bounded distance correlation | Implemented and independently validated; three-patient standalone/shared costs, fast-library comparison and comparative tracked allocations recorded. |
 | Exact radius-one DTW | Implemented and validated; pilot rankings closely track cosine distance, so absent from the nine-output selection. |
 | Matched CAR / contact-centered Laplacian | Implemented; three-patient matched comparison and shared-reference controls complete. Patient 090 local metadata needs review. |
-| Representative EEG runtime / memory / workflow costs | Three sizes, both references, 12-window stored-output/worker profiles, PSS and cohort-count projections recorded. |
+| Representative EEG runtime / memory / workflow costs | Three sizes, both references, actual nine/eleven-output family costs, 12-window worker profiles, PSS and cohort projections recorded. |
 | Novelty, coverage and surrogate assessment | Descriptive baseline and surrogate checks complete; no new predictive-value claim or cohort model search. |
 | Candidate configs, docs, CSV, regressions and commits | Separate nine-output selection and matched examples prepared; kernel MI choice pending. Main 188/12 selections unchanged. |
 
