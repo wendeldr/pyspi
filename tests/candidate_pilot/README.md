@@ -7,7 +7,7 @@ used for assessment are local, uncommitted NPZ files; receipts contain aggregate
 statistics, timings, provenance and contact/reference metadata.
 
 `configs/` contains the **eleven-output benchmark** inputs, not the final
-nine-output selection. Full recording preparation is necessary even for a
+ten-CAR / nine-Laplacian selections. Full recording preparation is necessary even for a
 bounded window trial. Always pass a window limit to the workflow profiles.
 The final review examples are `examples/workflow/additional_candidates_*.yaml`.
 The EDF and coordinate paths are machine-specific; preserve the matching
@@ -102,7 +102,7 @@ tests and affected regressions are recorded in the implementation ledger.
 
 ## Final-panel and allocation checks
 
-After selecting nine outputs, the final-family measurement reuses the same
+The common nine-output family measurement reuses the same
 cached windows and checks every result against the eleven-output receipt.
 The allocation comparison fills the separate memory-comparison requirement;
 it does not repeat the runtime benchmark or claim memory savings from the
@@ -120,7 +120,8 @@ need no continuous filtering or Zarr output:
 
 `selected_family.json` records actual increments and complete family costs for
 all three patients/both references, plus 162 exact array comparisons. Its
-selection hash identifies the final metric config. `distance_memory.json`
+selection hash identifies the nine-output config at measurement time (later
+comment changes do not change its metric definitions). `distance_memory.json`
 compares tracked allocations of the old two-direction wrapper, unique-pair
 Hyppo fast path, and the shared native implementation. The memory instrument
 has explicit native-allocation/RSS limits; instrumented runtimes are not used.

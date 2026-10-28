@@ -412,6 +412,24 @@ correlation assumes independent equal-variance source signals; it describes
 reference geometry, not measured connectivity. Calibration and runtime estimates
 count usable contacts for computation and all output contacts for storage.
 
+Reference is a **workflow-level** setting, not a metric parameter. It is applied
+once per prepared recording before window calculations; every selected metric
+uses that referenced recording. A metric configuration selects calculations,
+while a workflow configuration selects recordings, reference, preprocessing,
+execution and output. To compare references, run separate workflow configs with
+distinct run names. To compare only a few metrics, point those workflows at a
+smaller metric selection. `reference: none` preserves the acquisition reference;
+it does not reconstruct an unreferenced voltage signal.
+
+The additional-candidate examples are ready for patient 001:
+[CAR, ten outputs](../examples/workflow/additional_candidates_car.yaml) and
+[strict Laplacian, nine outputs](../examples/workflow/additional_candidates_laplacian.yaml).
+CAR includes kernel MI; Laplacian omits it following the runtime decision.
+Both use two workers with one numerical thread. To disable CAR kernel MI,
+change its `metrics.config` to `../../pyspi/workflow/additional_candidates.yaml`.
+The Laplacian shaft lists belong to patient 001: supply each other patient's
+own verified physical layout, usually through a separate workflow config.
+
 ### One alternative to the normalized run
 
 [`examples/workflow/amplitude_sensitivity.yaml`](../examples/workflow/amplitude_sensitivity.yaml)

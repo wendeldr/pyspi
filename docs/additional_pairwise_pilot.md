@@ -1,15 +1,18 @@
 # Additional pairwise EEG pilot: evidence and run selection
 
 The implementation and bounded evaluation cover all eleven candidates. The
-separate review selection currently enables **nine outputs per reference**:
+review selections enable **ten CAR outputs and nine Laplacian outputs**.
+Both references include the same nine candidates:
 histogram relative entropy, both distance-correlation definitions, two 30–70 Hz
 PEC definitions, beta/high-gamma PAC, IDS, Gaussian DI (five terms), and Gaussian
 SI (one lag). These are candidates for evaluation, not demonstrated improvements
-in EZ prediction. Kernel MI inclusion awaits the runtime choice; radius-one DTW
+in EZ prediction. Kernel MI is additionally enabled for CAR by user choice,
+with two workers; it can be disabled later. Radius-one DTW
 remains secondary in the eleven-output pilot. No estimator was changed to meet
 the runtime budget.
 
-Use [the candidate metric selection](../pyspi/workflow/additional_candidates.yaml)
+Use [the common nine-output selection](../pyspi/workflow/additional_candidates.yaml)
+or [the CAR ten-output selection](../pyspi/workflow/additional_candidates_car.yaml)
 and matched patient-001 workflow examples for
 [CAR](../examples/workflow/additional_candidates_car.yaml) and
 [strict Laplacian](../examples/workflow/additional_candidates_laplacian.yaml).
@@ -17,8 +20,9 @@ Each uses two workers, one numerical thread, 2048 Hz output, 0.5-second
 nonoverlapping windows, detrending and z-scoring. Band PEC follows these window
 flags; PAC retains its documented prototype preprocessing. The established
 188-output normalized and 12-output amplitude selections are unchanged. This
-adds nine metric definitions, or eighteen outputs if both references are run;
-it does not add eighteen different estimators to the established selection.
+adds ten metric definitions, or nineteen outputs if both references are run.
+To disable kernel MI, change the CAR workflow metrics.config to the common
+nine-output selection, or remove MutualInfo from its ten-output metric file.
 
 ## Measured scope and provenance
 
@@ -68,7 +72,7 @@ has that same size; the next table models the actual contact-count distribution.
 | 30–70 Hz orthogonalized absolute PEC | 0.7461 | 7.461 | 8.953 |
 | Beta/high-gamma PAC | 0.0161 | 0.161 | 0.194 |
 | IDS | 0.0399 | 0.399 | 0.479 |
-| Kernel MI (decision pending) | 1.4968 | 14.968 | 17.961 |
+| Kernel MI (CAR enabled) | 1.4968 | 14.968 | 17.961 |
 | Gaussian DI, five terms | 0.3421 | 3.421 | 4.105 |
 | Gaussian SI, one lag | 0.0202 | 0.202 | 0.242 |
 
@@ -90,7 +94,7 @@ than one day.
 | 30–70 Hz orthogonalized absolute PEC | 13.02 | 8.10 | 21.13 |
 | Beta/high-gamma PAC | 0.24 | 0.17 | 0.40 |
 | IDS | 0.62 | 0.37 | 1.00 |
-| Kernel MI (decision pending) | 24.92 | 16.55 | 41.47 |
+| Kernel MI (CAR enabled) | 24.92 | 16.55 | 41.47 |
 | Gaussian DI, five terms | 6.04 | 4.02 | 10.06 |
 | Gaussian SI, one lag | 0.33 | 0.23 | 0.56 |
 
@@ -101,7 +105,7 @@ not a measured standalone distance-correlation speedup. When both definitions
 are requested together, their shared calculation avoids almost all second-output
 cost. Running either definition alone still costs the standalone amount above.
 
-Kernel MI is the remaining inclusion decision: CAR alone is approximately
+Kernel MI is enabled for CAR only following the runtime discussion. CAR alone is approximately
 24.9 hours serial or 15.9 hours using the measured kernel-only two-worker
 speedup. Both known references would be about 26.4 hours with that speedup,
 before preparation/output and the unresolved local patient. These parallel
@@ -125,7 +129,7 @@ medians, excluding the small common window setup.
 | 30–70 Hz orthogonalized absolute PEC | 0.721438 | 0.412499 |
 | Beta/high-gamma PAC | 0.012680 | 0.009544 |
 | IDS | 0.029933 | 0.018574 |
-| Kernel MI (decision pending) | 1.417975 | 0.923861 |
+| Kernel MI (CAR enabled) | 1.417975 | 0.923861 |
 | Gaussian DI, five terms | 0.337557 | 0.209523 |
 | Gaussian SI, one lag | 0.011746 | 0.007261 |
 
@@ -140,7 +144,7 @@ The complete all-eleven family, including common window setup, took:
 Distribution-adjusted all-eleven family projections are 59.64 hours CAR and
 41.06 hours for verified local layouts, serial calculation only.
 
-A separate measurement of the **selected nine-output family** reused the cached
+A separate measurement of the **common nine-output family** reused the cached
 pilot windows, with fresh Data/cache for each window. It avoided refiltering or
 repeating standalone benchmarks. These are actual complete-family timings;
 its receipt also records every metric's measured increment in the reduced panel.
@@ -154,12 +158,13 @@ output and worker startup are excluded from this calculation-stage measurement.
 | 001 | 1.912 | 19.12 | 22.94 | 1.313 | 13.13 | 15.76 |
 | 111 | 6.850 | 68.50 | 82.20 | 4.904 | 49.04 | 58.84 |
 
-Interpolating these final-panel measurements over historical contact counts gives
+Interpolating these common-panel measurements over historical contact counts gives
 **31.81 hours CAR plus 22.52 hours verified local**, or 54.33 hours combined,
 serial calculation only. The one-day budget is per measure, not per panel.
 Two-worker throughput was measured for the eleven-output panel and kernel alone;
-it has not been newly measured for this reduced panel, so no exact parallel
-speedup is assigned to the final selection. [Receipt](../tests/candidate_pilot/selected_family.json).
+it has not been newly measured for the common nine-output or final ten-output
+CAR selection, so no exact parallel speedup is assigned to either complete
+selection. Kernel MI standalone and actual family increments are measured above. [Receipt](../tests/candidate_pilot/selected_family.json).
 
 The second distance-correlation definition costs about 0.00045 seconds/window
 in the representative CAR family (roughly 26 seconds over the modeled cohort),
@@ -315,17 +320,17 @@ PAC increments were small with intervals including zero. Those analyses used
 different filters and local-reference endpoint handling; they cannot validate
 this corrected selection. No new predictive model or cohort run was launched.
 
-## Validation and remaining decision
+## Validation and final selection
 
 The implementation/formula tests and earlier affected regressions are recorded
 in [the implementation ledger](additional_pairwise_review.md). This stage added
 two filter/reference-commutation checks, three surrogate-invariant/model checks
 and thirteen real stored-output comparisons. All passed. Existing unrelated
 passing tests and goldens were not rerun or refreshed.
-Both nine-output workflow examples pass preflight without starting Java;
+Both final workflow examples (ten CAR / nine Laplacian) pass preflight without starting Java;
 the established 188/12 counts and CSV identity/flag columns are preserved.
 
-Kernel MI is deliberately absent from the nine-output selection pending the
-runtime decision. Patient 090 local geometry remains an explicit input-data
+Kernel MI is enabled only in the CAR selection, as agreed; no inclusion
+decision remains pending. Patient 090 local geometry remains an explicit input-data
 limitation, not an inferred layout. Full-cohort production, predictive
 validation, wider DTW and additional reference runs remain outside this goal.

@@ -6,9 +6,10 @@ The target is roughly one day per measure for 72 people with 600 half-second
 windows each, not one day for the complete panel. Projection assumptions and
 reference costs must be reported explicitly.
 
-The completed bounded EEG assessment, timings and current nine-output candidate
-selection are in [the pilot report](additional_pairwise_pilot.md). Kernel MI
-inclusion is the remaining user decision; the eleven-output pilot stays available.
+The completed bounded EEG assessment, timings and candidate selections are in
+[the pilot report](additional_pairwise_pilot.md). Kernel MI is enabled for CAR
+by user choice: ten CAR outputs and nine Laplacian outputs. The eleven-output
+pilot stays available; no definition or runtime decisions remain pending.
 
 ## Completion ledger
 
@@ -19,11 +20,11 @@ inclusion is the remaining user decision; the eleven-output pilot stays availabl
 | Kernel MI, IDS, Gaussian DI/SI assessment | IDS cleanup validated; all three assessed on three patients/two references with controls and timing receipts. |
 | Cross-channel 16–30 / 70–150 Hz coupling | Prototype integrated and validated; matched surrogates show a substantial positive null baseline; retained as exploratory. |
 | Exact bounded distance correlation | Implemented and independently validated; three-patient standalone/shared costs, fast-library comparison and comparative tracked allocations recorded. |
-| Exact radius-one DTW | Implemented and validated; pilot rankings closely track cosine distance, so absent from the nine-output selection. |
+| Exact radius-one DTW | Implemented and validated; pilot rankings closely track cosine distance, so absent from the selected CAR/Laplacian configs. |
 | Matched CAR / contact-centered Laplacian | Implemented; three-patient matched comparison and shared-reference controls complete. Patient 090 local metadata needs review. |
 | Representative EEG runtime / memory / workflow costs | Three sizes, both references, actual nine/eleven-output family costs, 12-window worker profiles, PSS and cohort projections recorded. |
 | Novelty, coverage and surrogate assessment | Descriptive baseline and surrogate checks complete; no new predictive-value claim or cohort model search. |
-| Candidate configs, docs, CSV, regressions and commits | Separate nine-output selection and matched examples prepared; kernel MI choice pending. Main 188/12 selections unchanged. |
+| Candidate configs, docs, CSV, regressions and commits | Ten CAR / nine Laplacian outputs prepared and checked; kernel MI enabled for CAR by user choice. Main 188/12 selections unchanged. |
 
 ## Definitions being implemented
 

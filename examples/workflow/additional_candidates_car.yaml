@@ -1,4 +1,4 @@
-# Matched nine-output candidate run for patient 001; car reference.
+# Ten-output candidate run for patient 001; CAR reference (includes kernel MI).
 # Ready for bounded review: profile with --max-windows 12 before a production run.
 # Keep channels, filters and windows matched between references. Adapt recordings
 # and physical shaft lists together for other patients; do not reuse 001's layout.
@@ -250,7 +250,7 @@ recordings:
   - index: 89
     name: W8
 metrics:
-  config: ../../pyspi/workflow/additional_candidates.yaml
+  config: ../../pyspi/workflow/additional_candidates_car.yaml
 sampling_rate_hz: 2048
 bandpass:
   low_hz: 0.5
