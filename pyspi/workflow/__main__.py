@@ -1,4 +1,4 @@
-"""EEG calculation, resource planning, read-only preflight and electrode export."""
+"""EEG calculation, runtime estimates, resource planning, read-only preflight and electrode export."""
 
 import argparse
 import json
@@ -35,8 +35,41 @@ def main(argv=None):
     measure.add_argument("config")
     measure.add_argument("--max-windows", type=int, required=True)
     measure.add_argument("--report", required=True, help="JSON measurement receipt")
+    guess = commands.add_parser("estimate", help="estimate run time and output size from the configuration; "
+                                "measures a calibration beside it when none is current")
+    guess.add_argument("config", help="workflow YAML path")
+    guess.add_argument("--json", action="store_true", help="print the machine-readable estimate")
+    build = commands.add_parser("calibrate", help="measure per-window cost across channel counts and save "
+                                "<config>.calibration.json for estimate")
+    build.add_argument("config", help="workflow YAML path")
+    build.add_argument("--channels", help="comma-separated channel counts to time, e.g. 8,32,all "
+                       "(default: 2,4,8,...,128 below the recording's count, then its full count)")
+    build.add_argument("--windows-per-point", type=int, default=2, help="windows timed per channel count")
+    build.add_argument("--synthetic", action="store_true", help="time AR(1) noise instead of the recording "
+                       "(no preparation estimate; data-dependent estimators are misrepresented)")
+    build.add_argument("--budget-seconds", type=float, default=600.,
+                       help="stop climbing the channel ladder when the next count would exceed this; "
+                       "larger recordings are then extrapolated")
     args = parser.parse_args(argv)
     try:
+        if args.command == "estimate":
+            from ._estimate import estimate, format_estimate
+            result = estimate(args.config)
+            print(json.dumps(result, indent=2, allow_nan=False) if args.json else format_estimate(result))
+            return 0
+        if args.command == "calibrate":
+            from ._calibrate import calibrate
+            channels = None
+            if args.channels:
+                total = max(len(r["output_channels"]) for r in preflight(args.config).recordings)
+                channels = [total if item.strip() == "all" else int(item) for item in args.channels.split(",")]
+            result = calibrate(args.config, channels=channels, windows_per_point=args.windows_per_point,
+                               synthetic=args.synthetic, budget_seconds=args.budget_seconds)
+            print(json.dumps({"calibration": str(result["configuration"]) + ".calibration.json",
+                              "channels": [p["channels"] for p in result["points"]],
+                              "window_seconds": [p["window_seconds"] for p in result["points"]],
+                              "elapsed_seconds": result["elapsed_seconds"]}, indent=2))
+            return 0
         if args.command == "profile":
             from ._profile import profile
             result = profile(args.config, max_windows=args.max_windows, report_path=args.report)
@@ -63,7 +96,7 @@ def main(argv=None):
             print(args.destination)
             return 0
         report = preflight(args.config)
-    except (WorkflowError, OSError) as exc:
+    except (WorkflowError, OSError, ValueError) as exc:
         label = "Preflight error" if args.command == "preflight" else "Workflow error"
         print(f"{label}: {exc}", file=sys.stderr)
         return 2

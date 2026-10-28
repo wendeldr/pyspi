@@ -148,12 +148,16 @@ def _batch_size(cfg, n, metrics):
     return max(1, target // one)
 
 
-def _new_manifest(contract, entry, cfg, metadata_link):
+def planned_windows(entry, cfg):
+    """The runner's window plan for a preflight recording entry, before any preparation."""
     # MNE's polyphase output uses round(native_samples * target/native_rate).
-    duration = entry["duration_seconds"]
-    samples = max(1, round(duration * float(cfg.sampling_rate_hz)))
-    plan = plan_windows(samples, cfg.sampling_rate_hz, cfg.window_seconds, cfg.step_seconds,
+    samples = max(1, round(entry["duration_seconds"] * float(cfg.sampling_rate_hz)))
+    return plan_windows(samples, cfg.sampling_rate_hz, cfg.window_seconds, cfg.step_seconds,
                         recording=f"{entry['patient_id']}/{entry['recording_id']}")
+
+
+def _new_manifest(contract, entry, cfg, metadata_link):
+    plan = planned_windows(entry, cfg)
     if contract["max_windows"] is not None:
         plan = replace(plan, count=min(plan.count, contract["max_windows"]))
     size = _batch_size(cfg, len(entry["output_channels"]), len(contract["metrics"]))
