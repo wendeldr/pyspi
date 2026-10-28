@@ -67,6 +67,14 @@ def parse_multivariate(function):
 
     return parsed_function
 
+def input_problems(spis, n_observations, n_processes):
+    """ Reasons, one per SPI, that these SPIs have no estimate for windows of this shape.
+
+    Objects without ``input_problem`` (SPIs not derived from Directed) are not checked.
+    """
+    return [problem for spi in spis if hasattr(spi, "input_problem")
+            and (problem := spi.input_problem(n_observations, n_processes)) is not None]
+
 class Directed:
     """ Base class for directed statistics
     """
@@ -74,6 +82,20 @@ class Directed:
     name = 'Bivariate base class'
     identifier = 'bivariate_base'
     labels = ['signed']
+
+    def input_problem(self, n_observations, n_processes):
+        """ Why this SPI has no estimate for windows of this shape, or None.
+
+        Checked before any data are processed. Override when the parameters
+        require a minimum number of observations, processes or frequency bins.
+        """
+        return None
+
+    def _minimum_observations_problem(self, n_observations, minimum, reason):
+        if n_observations >= minimum:
+            return None
+        return (f"{self.identifier}: needs at least {minimum} observations per window ({reason}); "
+                f"got {n_observations}. Use longer windows or change these parameters.")
 
     @parse_bivariate
     def bivariate(self,data,i=None,j=None):

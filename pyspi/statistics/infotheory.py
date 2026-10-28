@@ -100,6 +100,31 @@ class JIDTBase(Unsigned):
         self._name_parameters.extend(parameters)
         self.identifier = compose(self._measure_name, *self._name_variants, *self._name_parameters)
 
+    #: Fewest observations per estimator; subclasses with histories override.
+    _minimum = {"gaussian": 3}
+
+    def _observations_needed(self):
+        """(minimum observations, reason) for this estimator and its parameters."""
+        if self._estimator == "kraskov":
+            return self._neighbours_needed(0)
+        return self._minimum.get(self._estimator, 2), f"the {self._estimator} estimator"
+
+    def _neighbours_needed(self, start):
+        # KSG needs prop_k neighbours among the aligned observations, outside
+        # any fixed Theiler window on both sides. An "AUTO" window depends on
+        # the data and cannot be checked in advance.
+        window = 0 if self._dyn_corr_excl in (None, "AUTO") else int(self._dyn_corr_excl)
+        reason = f"{self._prop_k} Kraskov neighbours"
+        if window:
+            reason += f" outside a {window}-sample Theiler window"
+        if start:
+            reason += f" after a {start}-sample history"
+        return start + self._prop_k + 1 + 2 * window, reason
+
+    def input_problem(self, n_observations, n_processes):
+        minimum, reason = self._observations_needed()
+        return self._minimum_observations_problem(n_observations, minimum, reason)
+
     def __getstate__(self):
         state = dict(self.__dict__)
 
@@ -316,6 +341,12 @@ class TimeLaggedMutualInfo(JIDTBase, Directed):
     labels = ["unsigned", "infotheory", "temporal", "directed"]
     _native_gaussian_measure = "tlmi"
     _estimators = ("gaussian", "kernel", "kraskov")
+    _minimum = {"gaussian": 4}
+
+    def _observations_needed(self):
+        if self._estimator == "kraskov":
+            return self._neighbours_needed(1)
+        return super()._observations_needed()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -421,6 +452,32 @@ class TransferEntropy(JIDTBase, Directed):
             self._rename(parameters=(parameter("targethistory", k_history),))
         self._configure_calc()
 
+    def _observations_needed(self):
+        if self._estimator == "symbolic":
+            p = self._symbolic_parameters
+            span = (p["pattern_length"]-1)*p["pattern_spacing"] + p["prediction_shift"]
+            return span + 1, (f"ordinal patterns of length {p['pattern_length']} spaced {p['pattern_spacing']} "
+                              f"and predicted {p['prediction_shift']} ahead")
+        p = self._gaussian_parameters
+        if p["auto_embed_method"] is not None:
+            # The search can choose any history up to its limits; require the
+            # longest so no selectable embedding leaves too few observations.
+            k = l = p["k_search_max"]
+            tau = 1 if self._estimator == "kernel" else p["tau_search_max"]
+            kt = lt = tau
+            reason = f"automatic embedding that may choose histories up to {k} with delay {tau}"
+        else:
+            k, kt, l, lt = p["k_history"], p["k_tau"], p["l_history"], p["l_tau"]
+            reason = f"target history {k} (delay {kt}) and source history {l} (delay {lt})"
+        start = max(1+kt*(k-1), 1+lt*(l-1))
+        if self._estimator == "gaussian":
+            # The source-and-target regression needs residual degrees of freedom.
+            return start + k + l + 2, reason
+        if self._estimator == "kraskov":
+            minimum, neighbours = self._neighbours_needed(start)
+            return minimum, f"{reason} and {neighbours}"
+        return 1 + kt*(k-1) + 1, reason  # kernel: target history only
+
     @parse_multivariate
     def multivariate(self, data):
         if self._estimator == "symbolic":
@@ -498,6 +555,12 @@ class CrossmapEntropy(JIDTBase, Directed):
         self._history_length = history_length
         self._gaussian_parameters = dict(history_length=history_length)
 
+    def _observations_needed(self):
+        k = self._history_length
+        if self._estimator == "gaussian":
+            return 2*k + 2, f"a regression on a {k}-sample source history"
+        return k + 2, f"a {k}-sample source history"
+
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
         if self._estimator == "gaussian":
@@ -527,6 +590,13 @@ class CausalEntropy(JIDTBase, Directed):
         self._gaussian_parameters = dict(n=n)
         # n is the number of causally conditioned time steps.
         self._rename(parameters=(parameter("horizon", n),))
+
+    def _observations_needed(self):
+        n = self._n
+        if self._estimator == "gaussian":
+            # The last step regresses on n-1 target and n source samples.
+            return 3*n, f"causal conditioning over {n} time steps"
+        return n + 1, f"causal conditioning over {n} time steps"
 
     def _causal_entropy(self, data, i, j):
         work = moment_workspace(data)
@@ -590,6 +660,12 @@ class StochasticInteraction(JIDTBase, Undirected):
         self._rename(parameters=(parameter("delay", delay),))
         self._gaussian_parameters = dict(delay=delay)
 
+    def _observations_needed(self):
+        d = self._delay
+        if self._estimator == "gaussian":
+            return d + 5, f"a joint two-channel regression at delay {d}"
+        return d + 2, f"entropies at delay {d}"
+
     @parse_bivariate
     def bivariate(self, data, i=None, j=None, verbose=False):
         if self._estimator == "gaussian":
@@ -612,12 +688,21 @@ class IntegratedInformation(Undirected, Unsigned):
     labels = ["linear", "unsigned", "infotheory", "temporal", "undirected"]
 
     def __init__(self, phitype="star", delay=1, normalization=0):
+        # phi_native implements only these; any other type is NaN for all data.
+        if phitype not in ("star", "Geo"):
+            raise ValueError(f"phitype must be 'star' or 'Geo', not {phitype!r}.")
         self._phitype = phitype
         self._delay = delay
         self._normalization = normalization
         # phi_native normalizes only when normalization == 1.
         self.identifier = compose(self.identifier, word(phitype), *(["normalized"] if normalization == 1 else []),
                                   parameter("delay", delay))
+
+    def input_problem(self, n_observations, n_processes):
+        # Lagged covariances of both channels from n - delay samples; fewer
+        # than four leave every phi optimisation undefined.
+        return self._minimum_observations_problem(
+            n_observations, self._delay + 4, f"Gaussian covariances at delay {self._delay}")
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):

@@ -10,6 +10,7 @@ from colorama import init, Fore
 init(autoreset=True)
 
 # From this package
+from .base import input_problems
 from .data import Data
 from .calculation import MetricReport, _capture_metric_warnings, _describe_error
 from .utils import convert_mdf_to_ddf, check_optional_deps, inspect_calc_results
@@ -285,9 +286,16 @@ class Calculator:
                 New dataset to attach to calculator.
         """
         if not isinstance(dataset, Data):
-            self._dataset = Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend)
-        else:
-            self._dataset = dataset
+            dataset = Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend)
+        # Refuse SPIs whose parameters cannot produce an estimate for this
+        # window shape, instead of computing tables of NaN.
+        problems = input_problems(self.spis.values(), dataset.n_observations, dataset.n_processes)
+        if problems:
+            raise ValueError(
+                f"{len(problems)} SPI(s) cannot be estimated from {dataset.n_observations}-observation, "
+                f"{dataset.n_processes}-process data. Remove them or change their parameters:\n  "
+                + "\n  ".join(problems))
+        self._dataset = dataset
 
         columns = pd.MultiIndex.from_product(
             [self.spis.keys(), self._dataset.procnames], names=["spi", "process"]

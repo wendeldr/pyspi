@@ -63,6 +63,13 @@ def test_xcorr_preflight_binds_target_rate_after_resampling(edf, workflow, metri
     assert report.metrics[0].identifier == "xcorr_peak_maxlag0125ms"
 
 
+def test_preflight_refuses_metrics_without_an_estimate_for_the_windows(edf, workflow, metric_config):
+    # 0.5 s at 8 Hz is 4 samples; the NW=3 multitaper transform needs 7.
+    config = metric_config({"CoherenceMagnitude": {"configs": [{}]}}, module=".statistics.spectral")
+    with pytest.raises(WorkflowError, match=r"(?s)1 metric\(s\) cannot be estimated from 4-sample windows.*cohmag"):
+        preflight(workflow(edf(samples=(8, 8)), metrics={"config": str(config)}))
+
+
 @pytest.mark.parametrize("native", [4, 16])
 def test_upsampling_and_downsampling_needed_no_target_ranges(native, edf, workflow):
     source = edf(samples=(native, native))

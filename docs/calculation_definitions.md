@@ -42,6 +42,42 @@ its bands in Hz at `fs: 2048` (the workflow rejects any other
 `sampling_rate_hz` for them), so its old fractional names map to Hz names,
 while the same old names in the library configs map to cycles per sample.
 
+## Refusing SPIs that cannot be estimated
+
+Before any data are processed, every SPI reports whether its parameters can
+give an estimate for windows of a given shape (`Directed.input_problem`).
+`Calculator.load_dataset` raises one `ValueError` listing every refused SPI, and
+workflow preflight raises `WorkflowError` for the window length at
+`sampling_rate_hz`, so a configuration cannot silently produce tables of NaN.
+Each limit comes from the calculation itself and was checked by running every
+SPI across window lengths:
+
+| SPI | needs window length T of at least |
+|---|---|
+| multitaper, directed and nonparametric Granger spectra | 7, and enough bins in the band on the calculation's own grid (1; PSI 2 adjacent; group delay 3 points one spectral resolution apart) |
+| wavelet SPIs | a band that holds at least one wavelet frequency (0.2-0.5 fs, at least 5 cycles per window); `ppc` and debiased squared PLI are always refused, as they divide by epochs - 1 and the window is one epoch |
+| parametric spectral Granger | 5 x (order + 1) with a fixed order (NaN pairs are common below this); `max_order` with automatic order |
+| GraphicalLassoCV / GraphicalLasso | 5 (5-fold CV) / processes + 2 |
+| dcorr, HSIC / MGC | 3 (biased 2) / 5 |
+| DcorrX / MGCX | max_lag + 3 / max_lag + 5 |
+| CCM | ceil(2E/10)*10 + 31 + E (E = 10 when chosen automatically) |
+| Johansen / Engle-Granger cointegration | 3 x lag differences + 5 (+6 with a deterministic term) / max(2 x maxlag + 2, trend terms + 2) |
+| Gaussian TE (GC) | longest lag + k + l + 2, using the search limits for automatic embedding |
+| Gaussian XME / CCE, DI / SI | 2k + 2 / 3n / delay + 5 |
+| Kozachenko XME / CCE, DI / SI | k + 2 / n + 1 / delay + 2 |
+| Kraskov MI / TLMI / TE | neighbours + 1 (+1 for TLMI, + longest lag for TE) + 2 x a fixed Theiler window |
+| Gaussian JE, CE, MI / TLMI; kernel estimators | 3 / 4; 2 (kernel TE: history + 1) |
+| symbolic TE | (pattern length - 1) x spacing + shift + 1 |
+| phi | delay + 4 |
+| envelope correlation (PEC) | 4 |
+| pairwise distance | Bray-Curtis 3; haversine exactly 2; Mahalanobis more processes than observations |
+
+Values that are never valid are rejected when the SPI is built: phi types other
+than `star` and `Geo`, and the `wminkowski` and `precomputed` distances. NaN
+that depends on the data (no significant lag for Holm cross-correlation, an
+automatic Theiler window, a singular fit on collinear channels) cannot be
+predicted and is still reported per metric.
+
 ## Ridge regression error
 
 `lmfit_ridge_penaltysum_alpha1` reports the in-sample mean squared error of predicting channel j

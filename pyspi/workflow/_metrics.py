@@ -124,6 +124,15 @@ def _frequency_metric(cls):
                for parent in cls.__mro__)
 
 
+def metric_input_problems(metrics, n_observations, n_processes):
+    """Reasons resolved metrics have no estimate for windows of this shape (see Directed.input_problem)."""
+    from pyspi.base import input_problems
+    with redirect_stdout(sys.stderr), warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        spis = [getattr(importlib.import_module(m.module), m.class_name)(**m.parameters) for m in metrics]
+    return input_problems(spis, n_observations, n_processes)
+
+
 def resolve_metrics(path, *, sampling_rate_hz=None) -> tuple[Metric, ...]:
     """Instantiate and describe every request; never fall back, skip, or fit.
 

@@ -131,18 +131,16 @@ def test_short_eeg_band_has_no_group_delay_estimate(band):
         spectral.GroupDelay(fs=2048, fmin=band[0], fmax=band[1], statistic='delay').multivariate(data)
 
 
-def test_calculator_reports_unavailable_group_delay(tmp_path):
+def test_calculator_refuses_unavailable_group_delay(tmp_path):
     path = tmp_path / 'gd.yaml'
     path.write_text(yaml.safe_dump({'.statistics.spectral': {'GroupDelay': {'configs': [
         dict(fs=2048, fmin=4, fmax=8, statistic='delay')]}}}))
     raw = np.random.default_rng(544).normal(size=(2, 1024))
-    calc = Calculator(dataset=Data(raw, normalise=False), configfile=str(path))
-    with pytest.warns(UserWarning, match='at least three frequency bins'):
-        calc.compute()
-    report, = calc.metric_reports.values()
-    assert report.status == 'failed'
-    assert 'at least three frequency bins' in report.error.message
-    assert np.isnan(calc.table.to_numpy()).all()
+    with pytest.raises(ValueError, match='gd_delay_band0004-0008hz: band 4-8 Hz has 1 usable frequencies'):
+        Calculator(dataset=Data(raw, normalise=False), configfile=str(path))
+    spi = spectral.GroupDelay(fs=2048, fmin=4, fmax=8)
+    with pytest.raises(ValueError, match='at least three frequency bins'):
+        spi.multivariate(Data(raw, normalise=False))
 
 
 @pytest.mark.parametrize('method', ['parametric', 'nonparametric'])

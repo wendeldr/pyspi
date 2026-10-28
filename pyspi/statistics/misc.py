@@ -71,6 +71,24 @@ class Cointegration(Undirected, Unsigned):
                                       *lag_limit, statistic_name,
                                       *([] if maxlag is None else [parameter("maxlag", maxlag)]))
 
+    def input_problem(self, n_observations, n_processes):
+        if self._method == "johansen":
+            # The pairwise VECM regresses on 2*k lagged differences of n-k-1
+            # rows, plus a deterministic term unless det_order is -1. Two
+            # samples fewer than this give singular fits for about half of
+            # inputs (measured on noise), so require the margin.
+            k = self._k_ar_diff
+            minimum = 3*k + (5 if self._det_order == -1 else 6)
+            reason = f"the Johansen test with {k} lagged differences"
+        else:
+            # The cointegrating regression needs a residual degree of freedom;
+            # statsmodels' ADF on its residuals needs maxlag <= nobs//2 - 1.
+            terms = 0 if self._trend in ("n", "nc") else len(self._trend)
+            minimum, reason = terms + 2, f"the cointegrating regression with trend '{self._trend}'"
+            if self._maxlag is not None and 2*self._maxlag + 2 > minimum:
+                minimum, reason = 2*self._maxlag + 2, f"the residual ADF test with maxlag {self._maxlag}"
+        return self._minimum_observations_problem(n_observations, minimum, reason)
+
     @property
     def key(self):
         key = (self._method,)
@@ -209,6 +227,10 @@ class PowerEnvelopeCorrelation(Undirected, Signed):
         self._absolute = absolute
         self.identifier = compose(self.identifier, *[flag for flag, on in
                                                      (("orth", self._orth), ("log", log), ("abs", absolute)) if on])
+
+    def input_problem(self, n_observations, n_processes):
+        # Measured: with three or fewer samples no envelope correlation is finite.
+        return self._minimum_observations_problem(n_observations, 4, "envelope correlation")
 
     def issigned(self):
         return not self._absolute

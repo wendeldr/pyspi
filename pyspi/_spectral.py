@@ -17,6 +17,7 @@ from pyspi import _directed
 from pyspi._cache import ArrayCache, cached_workspace
 from pyspi._group_delay import estimate as estimate_group_delay
 from pyspi._spectral_compat import spectral_connectivity as sc
+import spectral_connectivity.transforms as sc_transforms
 from pyspi._wilson import REASONS as FIT_REASONS, adjoint, factorize, inverse
 
 
@@ -293,12 +294,7 @@ class SpectralConnectivity(sc.Connectivity):
         resolution = self.frequency_resolution
         if resolution is None or not np.isfinite(resolution) or resolution <= 0:
             raise ValueError("Group delay requires the transform's positive spectral resolution.")
-        ratio = resolution / (frequencies[1] - frequencies[0])
-        # Unit conversion can put an integer ratio a few ulps above itself.
-        nearest = np.rint(ratio)
-        if np.isclose(ratio, nearest, rtol=8 * np.finfo(float).eps, atol=0):
-            ratio = nearest
-        step = max(1, int(np.ceil(ratio)))
+        step = group_delay_step(frequencies, resolution)
         first = 0 if band is None else np.searchsorted(frequencies, band[0], side="left")
         last = frequencies.size if band is None else np.searchsorted(frequencies, band[1], side="right")
         selected = slice(first, last)
@@ -675,6 +671,57 @@ def directed_workspace(data, sampling_frequency):
 def frequency_mask(frequencies, fmin, fmax):
     """Select both endpoints without interpolating or widening the band."""
     return (frequencies >= fmin) & (frequencies <= fmax)
+
+
+def one_sided_frequencies(n_fft, fs):
+    """DC through Nyquist (or the last positive bin) of an n_fft-point transform."""
+    return np.abs(np.fft.fftfreq(n_fft, 1 / fs)[:n_fft // 2 + 1])
+
+
+def multitaper_grid(n_observations, fs):
+    """Frequencies and resolution that spectral_workspace uses for one window, without data."""
+    n_fft = sc_transforms.next_fast_len(n_observations)
+    # Multitaper resolution 2*NW/duration with NW=3 and duration n_observations/fs.
+    return one_sided_frequencies(n_fft, fs), 2 * 3 * fs / n_observations
+
+
+def group_delay_step(frequencies, resolution):
+    """Bins between group-delay regression points: the resolution in grid spacings."""
+    ratio = resolution / (frequencies[1] - frequencies[0])
+    # Unit conversion can put an integer ratio a few ulps above itself.
+    nearest = np.rint(ratio)
+    if np.isclose(ratio, nearest, rtol=8 * np.finfo(float).eps, atol=0):
+        ratio = nearest
+    return max(1, int(np.ceil(ratio)))
+
+
+def band_bins(frequencies, fmin, fmax):
+    """Grid frequencies in the inclusive band, selected as the band summaries select them."""
+    return int(np.searchsorted(frequencies, fmax, side="right")
+               - np.searchsorted(frequencies, fmin, side="left"))
+
+
+def band_problem(spi, n_observations, frequencies, found, needed, needed_bins=None):
+    """Explain why an SPI's band has no estimate, or return None when it has one.
+
+    ``found`` counts what the calculation would use and ``needed`` the minimum it
+    requires; ``needed_bins`` is the number of consecutive grid bins that always
+    satisfies the requirement, used to suggest a band width.
+    """
+    if found >= needed:
+        return None
+    unit = "cycles/sample" if float(spi._fs) == 1 else "Hz"
+    if frequencies.size:
+        spacing = frequencies[1] - frequencies[0] if frequencies.size > 1 else 0
+        grid = f"{frequencies[0]:g}-{frequencies[-1]:g} {unit}"
+        grid += f" every {spacing:g} {unit}" if spacing else ""
+    else:
+        spacing, grid = 0, "no frequencies"
+    advice = "Use longer windows or a wider band."
+    if spacing and needed_bins:
+        advice = f"Use a band at least {needed_bins * spacing:g} {unit} wide within that range, or longer windows."
+    return (f"{spi.identifier}: band {spi._fmin:g}-{spi._fmax:g} {unit} has {found} usable frequencies "
+            f"at {n_observations}-observation windows; it needs {needed}. Available: {grid}. {advice}")
 
 
 def validate_frequencies(fs, fmin, fmax):

@@ -65,6 +65,16 @@ class Estimators(Undirected, Signed):
         self._estimator = estimator
         self._kind = kind
 
+    def input_problem(self, n_observations, n_processes):
+        if self._estimator == "GraphicalLassoCV":
+            return self._minimum_observations_problem(n_observations, 5, "GraphicalLassoCV uses 5-fold cross-validation")
+        if self._estimator == "GraphicalLasso":
+            # The solver is ill-conditioned with fewer observations than
+            # processes; two more were needed for every input (measured).
+            return self._minimum_observations_problem(
+                n_observations, n_processes + 2, f"GraphicalLasso on {n_processes} processes")
+        return None
+
     def _from_cache(self, data):
         work = _basic_workspace(data)
         name = _fit_name(self._estimator)

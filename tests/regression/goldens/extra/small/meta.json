@@ -24,24 +24,12 @@
   "plv_wavelet_max_band0-0p5cyc",
   "plv_wavelet_max_band0-0p25cyc",
   "plv_wavelet_max_band0p25-0p5cyc",
-  "ppc_wavelet_mean_band0-0p5cyc",
-  "ppc_wavelet_mean_band0-0p25cyc",
-  "ppc_wavelet_mean_band0p25-0p5cyc",
-  "ppc_wavelet_max_band0-0p5cyc",
-  "ppc_wavelet_max_band0-0p25cyc",
-  "ppc_wavelet_max_band0p25-0p5cyc",
   "pli_wavelet_mean_band0-0p5cyc",
   "pli_wavelet_mean_band0-0p25cyc",
   "pli_wavelet_mean_band0p25-0p5cyc",
   "pli_wavelet_max_band0-0p5cyc",
   "pli_wavelet_max_band0-0p25cyc",
   "pli_wavelet_max_band0p25-0p5cyc",
-  "dspli_wavelet_mean_band0-0p5cyc",
-  "dspli_wavelet_mean_band0-0p25cyc",
-  "dspli_wavelet_mean_band0p25-0p5cyc",
-  "dspli_wavelet_max_band0-0p5cyc",
-  "dspli_wavelet_max_band0-0p25cyc",
-  "dspli_wavelet_max_band0p25-0p5cyc",
   "wspli_wavelet_mean_band0-0p5cyc",
   "wspli_wavelet_mean_band0-0p25cyc",
   "wspli_wavelet_mean_band0p25-0p5cyc",
@@ -98,6 +86,24 @@
    "generated": "2026-10-28T18:34:04.102253+00:00",
    "reason": "SPI identifiers renamed to the readable naming grammar (pyspi/_naming.py). Keys only; numerical arrays unchanged. Earlier records keep the identifiers of their time; docs/metric_names.csv maps old to new.",
    "renamed_keys": 54
+  },
+  {
+   "generated": "2026-10-28T19:30:49.699155+00:00",
+   "reason": "Removed the always-NaN wavelet PPC and debiased squared PLI SPIs (single epoch); Calculator now refuses them. Remaining arrays unchanged.",
+   "removed_keys": [
+    "dspli_wavelet_max_band0-0p25cyc",
+    "dspli_wavelet_max_band0-0p5cyc",
+    "dspli_wavelet_max_band0p25-0p5cyc",
+    "dspli_wavelet_mean_band0-0p25cyc",
+    "dspli_wavelet_mean_band0-0p5cyc",
+    "dspli_wavelet_mean_band0p25-0p5cyc",
+    "ppc_wavelet_max_band0-0p25cyc",
+    "ppc_wavelet_max_band0-0p5cyc",
+    "ppc_wavelet_max_band0p25-0p5cyc",
+    "ppc_wavelet_mean_band0-0p25cyc",
+    "ppc_wavelet_mean_band0-0p5cyc",
+    "ppc_wavelet_mean_band0p25-0p5cyc"
+   ]
   }
  ],
  "name": "small",
@@ -213,116 +219,6 @@
    },
    "status": "ok",
    "time_s": 0.017802
-  },
-  "dspli_wavelet_max_band0-0p25cyc": {
-   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.25,
-    "fmin": 0,
-    "statistic": "max"
-   },
-   "status": "ok",
-   "time_s": 0.013801
-  },
-  "dspli_wavelet_max_band0-0p5cyc": {
-   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.5,
-    "fmin": 0,
-    "statistic": "max"
-   },
-   "status": "ok",
-   "time_s": 0.015944
-  },
-  "dspli_wavelet_max_band0p25-0p5cyc": {
-   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.5,
-    "fmin": 0.25,
-    "statistic": "max"
-   },
-   "status": "ok",
-   "time_s": 0.014511
-  },
-  "dspli_wavelet_mean_band0-0p25cyc": {
-   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.25,
-    "fmin": 0
-   },
-   "status": "ok",
-   "time_s": 0.01401
-  },
-  "dspli_wavelet_mean_band0-0p5cyc": {
-   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fs": 1
-   },
-   "status": "ok",
-   "time_s": 0.016725
-  },
-  "dspli_wavelet_mean_band0p25-0p5cyc": {
-   "cls": "DebiasedSquaredWeightedPhaseLagIndex",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.5,
-    "fmin": 0.25
-   },
-   "status": "ok",
-   "time_s": 0.015293
   },
   "dwspli_wavelet_max_band0-0p25cyc": {
    "cls": "debiased_weighted_squared_PhaseLagIndex",
@@ -873,116 +769,6 @@
    },
    "status": "ok",
    "time_s": 0.014985
-  },
-  "ppc_wavelet_max_band0-0p25cyc": {
-   "cls": "PairwisePhaseConsistency",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.25,
-    "fmin": 0,
-    "statistic": "max"
-   },
-   "status": "ok",
-   "time_s": 0.014601
-  },
-  "ppc_wavelet_max_band0-0p5cyc": {
-   "cls": "PairwisePhaseConsistency",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.5,
-    "fmin": 0,
-    "statistic": "max"
-   },
-   "status": "ok",
-   "time_s": 0.014735
-  },
-  "ppc_wavelet_max_band0p25-0p5cyc": {
-   "cls": "PairwisePhaseConsistency",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.5,
-    "fmin": 0.25,
-    "statistic": "max"
-   },
-   "status": "ok",
-   "time_s": 0.014662
-  },
-  "ppc_wavelet_mean_band0-0p25cyc": {
-   "cls": "PairwisePhaseConsistency",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.25,
-    "fmin": 0
-   },
-   "status": "ok",
-   "time_s": 0.014585
-  },
-  "ppc_wavelet_mean_band0-0p5cyc": {
-   "cls": "PairwisePhaseConsistency",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fs": 1
-   },
-   "status": "ok",
-   "time_s": 0.016087
-  },
-  "ppc_wavelet_mean_band0p25-0p5cyc": {
-   "cls": "PairwisePhaseConsistency",
-   "deps": [],
-   "error": null,
-   "labels": [
-    "undirected",
-    "unsigned",
-    "wavelet"
-   ],
-   "module": ".statistics.wavelet",
-   "nan_offdiag": 0,
-   "params": {
-    "fmax": 0.5,
-    "fmin": 0.25
-   },
-   "status": "ok",
-   "time_s": 0.01539
   },
   "wspli_wavelet_max_band0-0p25cyc": {
    "cls": "weighted_PhaseLagIndex",

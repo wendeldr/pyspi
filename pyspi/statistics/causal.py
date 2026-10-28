@@ -85,6 +85,15 @@ class ConvergentCrossMapping(Directed, Signed):
                                   word(statistic),
                                   *([] if embedding_dimension is None else [parameter("dim", embedding_dimension)]))
 
+    def input_problem(self, n_observations, n_processes):
+        # Library sizes run from ceil(2E/10)*10 to floor((N-E-1)/10)*10 in 21
+        # steps; pyEDM rejects a zero step. Without a fixed E the largest
+        # tested dimension (10) is used.
+        E = 10 if self._E is None else int(self._E)
+        lower = int(np.ceil(2 * E / 10) * 10)
+        return self._minimum_observations_problem(
+            n_observations, lower + 31 + E, f"convergent cross-mapping library sizes at embedding dimension {E}")
+
     @property
     def key(self):
         return self._E

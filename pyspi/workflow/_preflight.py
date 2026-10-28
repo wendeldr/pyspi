@@ -6,7 +6,7 @@ from importlib.metadata import version
 
 from ._config import Configuration, WorkflowError, load_config
 from ._edf import read_header, select_channels
-from ._metrics import resolve_metrics
+from ._metrics import metric_input_problems, resolve_metrics
 from ._windows import plan_windows
 from ._prepare import reference_names
 
@@ -83,4 +83,16 @@ def preflight(config) -> PreflightReport:
                                          "name": name, "native_sampling_rate_hz": float(signal.rate),
                                          "native_samples": header.records * signal.samples_per_record}
                                         for signal, name in channels], "windows": windows})
+    # Refuse metrics whose parameters cannot produce an estimate for these
+    # windows (for example a frequency band with no bins) before any EDF is read.
+    window_samples = int(cfg.window_seconds * target)
+    problems = {}
+    for count in sorted({len(r["output_channels"]) for r in recordings}):
+        for problem in metric_input_problems(metrics, window_samples, count):
+            problems.setdefault(problem, count)
+    if problems:
+        raise WorkflowError(
+            f"{len(problems)} metric(s) cannot be estimated from {window_samples}-sample windows at "
+            f"{float(target):g} Hz. Remove them from the metric configuration or change their parameters:\n  "
+            + "\n  ".join(problems))
     return PreflightReport(cfg, target, metrics, tuple(recordings))

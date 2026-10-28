@@ -33,8 +33,27 @@ class PairwiseDistance(Undirected, Unsigned):
     labels = ["unsigned", "distance", "unordered", "nonlinear", "undirected"]
 
     def __init__(self, metric="euclidean", **kwargs):
+        # Processes are points with one coordinate per observation. These two
+        # cannot apply: wminkowski needs weights that are never passed, and
+        # precomputed expects a distance matrix instead of time series.
+        if metric in ("wminkowski", "precomputed"):
+            raise ValueError(f"PairwiseDistance cannot use metric {metric!r} on time series.")
         self._metric = metric
         self.identifier = compose(self.identifier, word(metric))
+
+    def input_problem(self, n_observations, n_processes):
+        if self._metric == "braycurtis":
+            # z-scored 2-sample windows are exact opposites, and Bray-Curtis
+            # then divides zero by zero.
+            return self._minimum_observations_problem(n_observations, 3, "Bray-Curtis distance")
+        if self._metric == "haversine" and n_observations != 2:
+            return (f"{self.identifier}: haversine distance takes 2-D (latitude, longitude) points, so it needs "
+                    f"exactly 2 observations per window; got {n_observations}. Use another metric.")
+        if self._metric == "mahalanobis" and n_processes <= n_observations:
+            return (f"{self.identifier}: Mahalanobis distance inverts the covariance of the {n_observations} "
+                    f"observations across processes, which needs more processes than observations; "
+                    f"got {n_processes}. Use another metric.")
+        return None
 
     @parse_multivariate
     def multivariate(self, data):
@@ -51,6 +70,9 @@ class HilbertSchmidtIndependenceCriterion(Undirected, Unsigned):
     name = "Hilbert-Schmidt Independence Criterion"
     identifier = "hsic"
     labels = ["unsigned", "distance", "unordered", "nonlinear", "undirected"]
+
+    def input_problem(self, n_observations, n_processes):
+        return self._minimum_observations_problem(n_observations, 2 if self._biased else 3, "hyppo's HSIC")
 
     def __init__(self, biased=False):
         self._biased = biased
@@ -90,6 +112,11 @@ class DistanceCorrelation(Undirected, Unsigned):
         if biased:
             self.identifier = compose(self.identifier, "biased")
 
+    def input_problem(self, n_observations, n_processes):
+        # The unbiased statistic divides by n - 3 (hyppo's U-centring).
+        return self._minimum_observations_problem(
+            n_observations, 2 if self._biased else 3, "hyppo's distance correlation")
+
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
         """ """
@@ -104,6 +131,9 @@ class MultiscaleGraphCorrelation(Undirected, Unsigned):
     name = "Multiscale graph correlation"
     identifier = "mgc"
     labels = ["distance", "unsigned", "unordered", "nonlinear", "undirected"]
+
+    def input_problem(self, n_observations, n_processes):
+        return self._minimum_observations_problem(n_observations, 5, "hyppo's MGC needs at least 5 samples")
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -122,6 +152,11 @@ class CrossDistanceCorrelation(Directed, Unsigned):
     def __init__(self, max_lag=1):
         self._max_lag = max_lag
         self.identifier = compose(self.identifier, parameter("maxlag", max_lag))
+
+    def input_problem(self, n_observations, n_processes):
+        # The largest lag correlates only the last n - max_lag samples.
+        return self._minimum_observations_problem(
+            n_observations, self._max_lag + 3, f"distance correlation of the {self._max_lag}-sample lag")
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -144,6 +179,11 @@ class CrossMultiscaleGraphCorrelation(Directed, Unsigned):
     def __init__(self, max_lag=1):
         self._max_lag = max_lag
         self.identifier = compose(self.identifier, parameter("maxlag", max_lag))
+
+    def input_problem(self, n_observations, n_processes):
+        # MGC needs 5 samples, and the largest lag keeps only n - max_lag.
+        return self._minimum_observations_problem(
+            n_observations, self._max_lag + 5, f"MGC of the {self._max_lag}-sample lag needs 5 samples")
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
