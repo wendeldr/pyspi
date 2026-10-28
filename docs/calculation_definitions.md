@@ -431,6 +431,16 @@ mathematical target/source convention. Known-model and channel-permutation
 checks cover the public orientation and consistent pair fitting described below.
 Wavelet sign conventions remain outside this Fourier review.
 
+## Cross-distance correlation and convergent cross mapping orientation
+
+`dcorrx`, `mgcx` and `ccm` use the same public convention as the other
+directed measures: entry `[i, j]` is evidence that row i drives column j.
+hyppo's `DcorrX(x, y)`/`MGCX(x, y)` relate `x[t+lag]` to `y[t]` (y -> x), so the
+target is passed first. pyEDM's `"i:j"` column is i's manifold estimating j,
+which is evidence of j -> i, so it is stored at `[j, i]`. These are pure
+transposes of the earlier outputs; values are unchanged. `ccm_*_diff[i, j]`
+is `ccm[i, j] - ccm[j, i]`, positive when i -> j is the stronger direction.
+
 ## Directed coherence
 
 `dcoh` returns **squared directed coherence at each frequency**, followed by
