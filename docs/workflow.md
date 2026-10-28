@@ -170,13 +170,18 @@ imports may initialize their normal third-party caches. NumPy/Python RNG state
 and mutable SPI class label lists are restored after inspection; labels remain
 unvalidated scientific metadata.
 
-The packaged [reviewed.yaml](../pyspi/workflow/reviewed.yaml) contains 205
+The packaged [reviewed.yaml](../pyspi/workflow/reviewed.yaml) contains 203
 requests derived from the 185 identifiers in the archived patient surveys.
 It removes ten group-delay band requests, adds 22 signed PLI/wPLI requests
 matching the existing bands, and adds eight cross-correlation requests (signed
 minimum/peak without selection and six significant-only summaries). Factorized
 directed additions are excluded because of their runtime; corrected methods
-remain available in explicit configurations. Other selections are preserved.
+remain available in explicit configurations. The two `EllipticEnvelope`
+precision requests are omitted: sklearn's `EllipticEnvelope.fit` is
+`MinCovDet.fit` plus an outlier offset the precision never uses, so pyspi now
+serves both estimators from one seeded FAST-MCD fit and their outputs are
+identical to `prec_MinCovDet` and `prec-sq_MinCovDet`. Other selections are
+preserved.
 The example workflow selects `reviewed`; the former `retained185` preset name
 has been replaced, so update custom workflow YAMLs that use that name.
 

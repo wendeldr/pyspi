@@ -1,6 +1,7 @@
 import numpy as np
 
 from pyspi._spectral import (
+    PHASE_MOMENTS,
     canonical_directed_measure,
     data_spectral_cache,
     directed_workspace,
@@ -75,6 +76,11 @@ class NonparametricSpectral:
 
 
 class NonparametricSpectralMultivariate(NonparametricSpectral):
+    def _register_shared_work(self, data):
+        kinds = PHASE_MOMENTS.get(self.measure)
+        if kinds:
+            data_spectral_cache(data).phase_requests.setdefault(self._fs, set()).update(kinds)
+
     def _get_cache(self, data):
         conn = spectral_workspace(data, self._fs)
         return conn.measure(self.measure, **self._spectral_options()), conn.frequencies

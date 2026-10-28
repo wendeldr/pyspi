@@ -210,6 +210,35 @@ def test_covariance_and_precision_keep_fitted_models_intact_and_share_fit(estima
     assert np.isfinite(fitted.score(data.to_numpy(realisation=0).T))
 
 
+def test_elliptic_envelope_serves_from_the_min_cov_det_fit():
+    data = make_data(np.random.default_rng(320).normal(size=(5, 600)))
+    with patch.object(basic.FastMinCovDet, "fit", autospec=True, side_effect=basic.FastMinCovDet.fit) as mcd, \
+            patch.object(basic.cov.EllipticEnvelope, "fit", autospec=True) as envelope:
+        results = {(kind.identifier, estimator, squared): kind(estimator=estimator, squared=squared).multivariate(data)
+                   for kind in (basic.Covariance, basic.Precision)
+                   for estimator in ("MinCovDet", "EllipticEnvelope")
+                   for squared in (False, True)}
+    assert mcd.call_count == 1 and envelope.call_count == 0
+    assert mcd.call_args.args[0].random_state == basic.ROBUST_RANDOM_STATE
+    for (identifier, _, squared), expected in results.items():
+        np.testing.assert_array_equal(results[(identifier, "EllipticEnvelope", squared)], expected)
+    assert set(basic._basic_workspace(data).estimators) == {"MinCovDet"}
+
+
+def test_robust_fits_are_reproducible_without_global_seeding():
+    values = np.random.default_rng(321).normal(size=(5, 600))
+    np.random.seed(7)
+    first = basic.Precision(estimator="MinCovDet").multivariate(make_data(values))
+    np.random.seed(8)
+    second = basic.Precision(estimator="EllipticEnvelope").multivariate(make_data(values))
+    np.testing.assert_array_equal(first, second)
+    # The fixed seed reproduces the historically seeded global-RNG fit.
+    np.random.seed(basic.ROBUST_RANDOM_STATE)
+    reference = basic.cov.EllipticEnvelope().fit(values.T).precision_
+    np.fill_diagonal(reference, np.nan)
+    np.testing.assert_array_equal(first, reference)
+
+
 def test_fitting_warnings_are_visible():
     original = basic.cov.EmpiricalCovariance.fit
     def fit(model, values):

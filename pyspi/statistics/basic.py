@@ -5,8 +5,16 @@ import numpy as np
 
 from pyspi._cache import cached_workspace
 from pyspi._rank import KendallWorkspace, SpearmanWorkspace
+from pyspi._robust import FastMinCovDet
 from pyspi._xcorr import CrossCorrelationWorkspace, SUMMARY_KEYS
 from pyspi.base import Undirected, Signed, parse_bivariate, parse_multivariate
+
+
+#: FAST-MCD draws its candidate subsets from a random stream. sklearn defaults
+#: to the unseeded global numpy RNG, so a fixed seed keeps the robust fits
+#: reproducible run to run. It equals the regression harness seed, so the
+#: stored goldens are unchanged.
+ROBUST_RANDOM_STATE = 42
 
 
 class _BasicWorkspace:
@@ -19,6 +27,18 @@ def _basic_workspace(data):
     if data.n_replications != 1:
         raise ValueError("Covariance and precision require a single realisation.")
     return cached_workspace(data, "basic", _BasicWorkspace)
+
+
+def _fit_name(estimator):
+    # EllipticEnvelope.fit is MinCovDet.fit followed by an outlier offset that
+    # covariance_/precision_ never use, so both serve from one FAST-MCD fit.
+    return "MinCovDet" if estimator == "EllipticEnvelope" else estimator
+
+
+def _fit_estimator(name, values):
+    if name == "MinCovDet":
+        return FastMinCovDet(random_state=ROBUST_RANDOM_STATE).fit(values)
+    return getattr(cov, name)().fit(values)
 
 
 class Estimators(Undirected, Signed):
@@ -45,9 +65,10 @@ class Estimators(Undirected, Signed):
 
     def _from_cache(self, data):
         work = _basic_workspace(data)
-        if self._estimator not in work.estimators:
-            work.estimators[self._estimator] = getattr(cov, self._estimator)().fit(work.values.T)
-        return work.estimators[self._estimator]
+        name = _fit_name(self._estimator)
+        if name not in work.estimators:
+            work.estimators[name] = _fit_estimator(name, work.values.T)
+        return work.estimators[name]
 
     @parse_multivariate
     def multivariate(self, data):

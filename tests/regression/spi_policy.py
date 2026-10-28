@@ -25,6 +25,9 @@ DEFAULT_ATOL = 1e-8
 #: (pattern, rtol, atol, reason). First match wins; the default applies otherwise.
 #: The stochastic rows keep the default values; they are listed to document
 #: that those SPIs match only because ``seed_all()`` runs right before them.
+#: The robust covariance SPIs (``*MinCovDet``, ``*EllipticEnvelope``) are no
+#: longer listed: pyspi fits FAST-MCD with ``basic.ROBUST_RANDOM_STATE`` (the
+#: harness seed), so they reproduce their goldens without ``seed_all()``.
 #:
 #: The iterative optimisers (``*GraphicalLassoCV*``, ``phi_*``, ``gpfit_*``,
 #: ``anm``) are not listed: seeded run-to-run and against the stored goldens
@@ -33,10 +36,6 @@ DEFAULT_ATOL = 1e-8
 #: another machine shows drift, re-add a row for that pattern with the measured
 #: drift in its reason.
 TOLERANCES = [
-    ("cov*EllipticEnvelope", 1e-6, 1e-8, "sklearn robust covariance draws from the global numpy RNG; reproducible only via seed_all()"),
-    ("prec*EllipticEnvelope", 1e-6, 1e-8, "as above"),
-    ("cov*MinCovDet", 1e-6, 1e-8, "as above"),
-    ("prec*MinCovDet", 1e-6, 1e-8, "as above"),
     ("bary*_sgddtw_*", 1e-6, 1e-8, "tslearn subgradient DBA shuffles with the global numpy RNG; reproducible only via seed_all()"),
 ]
 
@@ -44,21 +43,13 @@ TOLERANCES = [
 #: only when ``seed_all()`` runs right before ``multivariate``, and are marked
 #: ``stochastic``.
 STOCHASTIC = [
-    "cov*EllipticEnvelope",
-    "prec*EllipticEnvelope",
-    "cov*MinCovDet",
-    "prec*MinCovDet",
     "bary*_sgddtw_*",
 ]
 
 #: Excluded from the Calculator end-to-end comparison: a single seeded
 #: Calculator pass consumes the global RNG in a different order than the
 #: per-SPI seeding, and these SPIs then differ from their per-SPI goldens.
-#: The ``*EllipticEnvelope`` SPIs are stochastic too but were measured to
-#: reproduce their per-SPI goldens exactly in that pass, so they are compared.
 CALC_E2E_SKIP = [
-    "cov*MinCovDet",
-    "prec*MinCovDet",
     "bary*_sgddtw_*",
 ]
 

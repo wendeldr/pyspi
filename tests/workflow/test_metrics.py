@@ -149,7 +149,7 @@ def test_reviewed_preset_preserves_unrelated_inventory_and_applies_approved_chan
     import pyspi
     path = Path(pyspi.__file__).parent / "workflow/reviewed.yaml"
     metrics = resolve_metrics(path)
-    assert len(metrics) == len({m.identifier for m in metrics}) == 200
+    assert len(metrics) == len({m.identifier for m in metrics}) == 198
     root = Path(__file__).resolve().parents[2]
     for patient in ("004", "105", "111"):
         survey = json.loads((root / f"docs/storage_comparison/explore/properties_{patient}_64.json").read_text())
@@ -157,7 +157,9 @@ def test_reviewed_preset_preserves_unrelated_inventory_and_applies_approved_chan
         changed_classes = {"CrossCorrelation", "SignedPhaseLagIndex", "SignedWeightedPhaseLagIndex"}
         removed = {"bary_euclidean_mean", "bary-sq_euclidean_mean", "lmfit_Ridge", "lmfit_SGDRegressor",
                    "je_gaussian", "ce_gaussian", "lmfit_Lasso",
-                   "te_symbolic_k-1_kt-1_l-1_lt-1", "te_symbolic_k-10_kt-1_l-1_lt-1"}
+                   "te_symbolic_k-1_kt-1_l-1_lt-1", "te_symbolic_k-10_kt-1_l-1_lt-1",
+                   # Identical to prec_MinCovDet/prec-sq_MinCovDet since the fit is shared.
+                   "prec_EllipticEnvelope", "prec-sq_EllipticEnvelope"}
         assert {m.identifier for m in metrics if m.class_name not in changed_classes} == {
             identifier for identifier in historical if not identifier.startswith(("xcorr", "gd_"))
             and identifier not in removed} | {"lmfit_Lasso_alpha-0-1",

@@ -134,6 +134,59 @@ def test_batched_cache_preserves_requested_hits_during_eviction():
     assert len(values) == 3
 
 
+PHASE_CLASSES = [spectral.PhaseLockingValue, spectral.PhaseLagIndex, spectral.SignedPhaseLagIndex,
+                 spectral.WeightedPhaseLagIndex, spectral.SignedWeightedPhaseLagIndex,
+                 spectral.DebiasedSquaredPhaseLagIndex, spectral.DebiasedSquaredWeightedPhaseLagIndex,
+                 spectral.PairwisePhaseConsistency]
+
+
+def test_registered_phase_moments_form_in_one_pass_and_match_separate_computation(tmp_path):
+    import yaml
+    from pyspi._spectral import PHASE_MOMENTS, PHASE_MOMENT_ORDER
+    from pyspi.calculator import Calculator
+    raw = np.random.default_rng(13).normal(size=(6, 96))
+    bands = [{"fmin": 0, "fmax": 0.5}, {"fmin": 0.1, "fmax": 0.3, "statistic": "max"}]
+    # Each class on its own Data: nothing registered, so only its own moments form.
+    expected = {}
+    for cls in PHASE_CLASSES:
+        for band in bands:
+            spi = cls(**band)
+            fresh = Data(raw)
+            expected[spi.identifier] = spi.multivariate(fresh)
+            formed = {key[1] for key in spectral_workspace(fresh, 1)._arrays.entries if key[0] == "phase_statistic"}
+            assert formed <= set(PHASE_MOMENTS[spi.measure]) | {"nonzero"}
+    config = {".statistics.spectral": {cls.__name__: {"configs": bands} for cls in reversed(PHASE_CLASSES)}}
+    path = tmp_path / "phase.yaml"
+    path.write_text(yaml.safe_dump(config, sort_keys=False))
+    calc = Calculator(dataset=Data(raw), configfile=str(path))
+    conn = spectral_workspace(calc.dataset, 1)
+    default_budget = conn._arrays.max_bytes
+    with patch.object(conn, "_reduce_phase", wraps=conn._reduce_phase) as reduce:
+        calc.compute()
+    assert reduce.call_count == 1
+    assert reduce.call_args.args[0] == list(PHASE_MOMENT_ORDER)
+    assert set(calc.spis) == set(expected)
+    for identifier, value in expected.items():
+        np.testing.assert_array_equal(calc.table[identifier].to_numpy(), value, err_msg=identifier)
+    assert conn.phase_requests == set(PHASE_MOMENT_ORDER)
+    retained = sum(ArrayCache.size(v) for k, v in conn._arrays.entries.items() if k[0] in ("phase_statistic", "measure"))
+    assert conn._arrays.max_bytes > default_budget >= retained
+
+
+def test_phase_registration_is_scoped_to_its_sampling_frequency_and_keeps_the_default_budget_otherwise():
+    data = Data(np.random.default_rng(14).normal(size=(3, 64)))
+    spectral.PhaseLockingValue(fs=2)._register_shared_work(data)
+    spectral.CoherenceMagnitude()._register_shared_work(data)
+    assert spectral_workspace(data, 1).phase_requests == set()
+    assert spectral_workspace(data, 1)._arrays.max_bytes == ArrayCache().max_bytes
+    assert spectral_workspace(data, 2).phase_requests == {"unit"}
+    assert spectral_workspace(data, 2)._arrays.max_bytes > ArrayCache().max_bytes
+    conn = spectral_workspace(data, 1)
+    with patch.object(conn, "_reduce_phase", wraps=conn._reduce_phase) as reduce:
+        conn.measure("signed_phase_lag_index")
+    assert reduce.call_args.args[0] == ["sign", "nonzero"]
+
+
 def test_signed_unsigned_and_debiased_variants_share_signs_and_are_order_independent():
     raw = np.random.default_rng(12).normal(size=(3, 64))
     classes = [spectral.PhaseLagIndex, spectral.SignedPhaseLagIndex,
