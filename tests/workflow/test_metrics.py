@@ -37,6 +37,15 @@ def test_xcorr_conflicting_workflow_sampling_rate_rejected(metric_config):
         resolve_metrics(path, sampling_rate_hz=2048)
 
 
+def test_spectral_hz_bands_must_match_workflow_sampling_rate(metric_config):
+    path = metric_config({"CoherenceMagnitude": {"configs": [{"fs": 2048, "fmin": 30, "fmax": 70}, {"fs": 1}]}},
+                         module=".statistics.spectral")
+    assert [m.identifier for m in resolve_metrics(path, sampling_rate_hz=2048)] == [
+        "cohmag_mean_band0030-0070hz", "cohmag_mean_band0-0p5cyc"]
+    with pytest.raises(WorkflowError, match="fs differs"):
+        resolve_metrics(path, sampling_rate_hz=1024)
+
+
 @pytest.mark.parametrize("classes,match", [
     ({"SpearmanR": {"configs": [{"bogus": 1}, {"squared": True}]}}, "unknown parameters"),
     ({"Covariance": {"configs": [{"estimator": "Typo"}]}}, "unknown covariance"),
@@ -153,7 +162,11 @@ def test_reviewed_preset_preserves_unrelated_inventory_and_applies_approved_chan
     assert len(metrics) == len({m.identifier for m in metrics}) == 195
     root = Path(__file__).resolve().parents[2]
     with open(root / "docs/metric_names.csv") as f:
-        renamed = {row["old_identifier"]: row["new_identifier"] for row in csv.DictReader(f)}
+        rows = list(csv.DictReader(f))
+    # Prefer the preset's own mapping: its bands are in Hz at 2048 Hz.
+    renamed = {row["old_identifier"]: row["new_identifier"] for row in rows}
+    renamed.update({row["old_identifier"]: row["new_identifier"] for row in rows
+                    if "pyspi/workflow/reviewed.yaml" in row["configs"].split(";")})
     for patient in ("004", "105", "111"):
         survey = json.loads((root / f"docs/storage_comparison/explore/properties_{patient}_64.json").read_text())
         historical = {renamed.get(row["metric"], row["metric"]) for row in survey["rows"]}

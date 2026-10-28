@@ -36,7 +36,11 @@ gc_gaussian_targethistory01_targetdelay01_sourcehistory01_sourcedelay01
   `autoembed`, `theilerauto`), so parameter fields always hold numbers.
 
 `docs/metric_names.csv` maps every identifier produced by the shipped
-configurations before this grammar to its current form.
+configurations before this grammar to its current form; the `configs` column
+names the files that produce it. The workflow preset `reviewed.yaml` now gives
+its bands in Hz at `fs: 2048` (the workflow rejects any other
+`sampling_rate_hz` for them), so its old fractional names map to Hz names,
+while the same old names in the library configs map to cycles per sample.
 
 ## Ridge regression error
 

@@ -1,7 +1,7 @@
 # Reviewed EEG selection, derived from the historical 185-metric inventory.
 # Includes signed phase-lag and expanded cross-correlation summaries.
 # Group delay and costly factorized directed families are excluded from this run.
-# Metric fs/bands remain explicit; EDF sampling_rate_hz does not rewrite them.
+# Spectral bands are in Hz at fs 2048; the workflow rejects a different sampling_rate_hz.
 # Review scope and measured runtime limits: docs/spectral_directed_review.md.
 # 195 outputs after the systematic amplitude/redundancy review. Equivalent
 # normalized outputs were selected by standalone cost, without assuming shared
@@ -219,27 +219,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   CoherenceMagnitude:
     labels:
     - undirected
@@ -249,27 +239,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   ImaginaryCoherence:
     labels:
     - undirected
@@ -279,27 +259,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   PhaseSlopeIndex:
     labels:
     - directed
@@ -309,27 +279,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   PhaseLockingValue:
     labels:
     - undirected
@@ -339,27 +299,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   PhaseLagIndex:
     labels:
     - undirected
@@ -369,27 +319,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   SignedPhaseLagIndex:
     labels:
     - directed
@@ -399,27 +339,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   WeightedPhaseLagIndex:
     labels:
     - undirected
@@ -429,27 +359,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   SignedWeightedPhaseLagIndex:
     labels:
     - directed
@@ -459,27 +379,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   DebiasedSquaredPhaseLagIndex:
     labels:
     - undirected
@@ -489,27 +399,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   DebiasedSquaredWeightedPhaseLagIndex:
     labels:
     - undirected
@@ -519,27 +419,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
   PairwisePhaseConsistency:
     labels:
     - undirected
@@ -549,27 +439,17 @@
     - frequency-dependent
     dependencies: null
     configs:
-    - fs: 1
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-    - fmin: 0.001953125
-      fmax: 0.00390625
-    - fmin: 0.00390625
-      fmax: 0.005859375
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
+    - {fs: 2048}
+    - {fs: 2048, fmin: 1, fmax: 4}
+    - {fs: 2048, fmin: 4, fmax: 8}
+    - {fs: 2048, fmin: 8, fmax: 12}
+    - {fs: 2048, fmin: 12, fmax: 30}
+    - {fs: 2048, fmin: 30, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 150}
+    - {fs: 2048, fmin: 150, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 70}
+    - {fs: 2048, fmin: 70, fmax: 250}
+    - {fs: 2048, fmin: 1, fmax: 250}
 .statistics.misc:
   LinearModel:
     labels:

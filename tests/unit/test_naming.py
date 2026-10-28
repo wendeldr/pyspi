@@ -136,7 +136,13 @@ def test_every_catalogued_identifier_fits_the_grammar_and_the_mapping():
     with open(ROOT / "docs/metric_names.csv") as f:
         rows = list(csv.DictReader(f))
     mapped = {row["new_identifier"] for row in rows}
-    assert len(mapped) == len(rows) == len({row["old_identifier"] for row in rows})
+    # One new name per row; an old name maps once per configuration file
+    # (the fs=1 full band is cycles per sample in the library configs and
+    # 0-1024 Hz in the 2048 Hz workflow preset).
+    assert len(mapped) == len(rows)
+    for config in {c for row in rows for c in row["configs"].split(";")}:
+        olds = [row["old_identifier"] for row in rows if config in row["configs"].split(";")]
+        assert len(olds) == len(set(olds)), config
     for name in names:
         assert re.fullmatch(r"[a-z0-9_-]+", name), name
         parse(name)

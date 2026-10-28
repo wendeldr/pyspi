@@ -108,9 +108,7 @@ def _validate_parameters(cls, params, where):
            for parent in cls.__mro__):
         if params.get("estimator", "gaussian") not in ("gaussian", "kernel", "kraskov", "kozachenko", "symbolic"):
             raise WorkflowError(f"{where}: unknown information-theory estimator")
-    if any(parent.__name__ in ("NonparametricSpectral", "ParametricSpectral", "mne")
-           and parent.__module__ in ("pyspi.statistics.spectral", "pyspi.statistics.wavelet")
-           for parent in cls.__mro__):
+    if _frequency_metric(cls):
         fs = positive_number(params.get("fs", 1), f"{where}.fs")
         fmin, fmax = params.get("fmin", 0), params.get("fmax")
         fmax = float(fs / 2) if fmax is None else fmax
@@ -118,6 +116,12 @@ def _validate_parameters(cls, params, where):
             isinstance(fmax, bool) or not isinstance(fmax, (int, float)) or
             not 0 <= fmin <= fmax <= float(fs / 2)):
             raise WorkflowError(f"{where}: frequency band must satisfy 0 <= fmin <= fmax <= fs/2")
+
+
+def _frequency_metric(cls):
+    return any(parent.__name__ in ("NonparametricSpectral", "ParametricSpectral", "mne")
+               and parent.__module__ in ("pyspi.statistics.spectral", "pyspi.statistics.wavelet")
+               for parent in cls.__mro__)
 
 
 def resolve_metrics(path, *, sampling_rate_hz=None) -> tuple[Metric, ...]:
@@ -159,6 +163,11 @@ def resolve_metrics(path, *, sampling_rate_hz=None) -> tuple[Metric, ...]:
                         if "fs" in params and float(positive_number(params["fs"], f"{where}.fs")) != rate:
                             raise WorkflowError(f"{where}: fs differs from workflow sampling_rate_hz")
                         params = {**params, "fs": rate}
+                    elif _frequency_metric(cls) and sampling_rate_hz is not None and "fs" in params:
+                        # Bands are in Hz unless fs is 1 (cycles per sample, valid at any rate).
+                        fs = float(positive_number(params["fs"], f"{where}.fs"))
+                        if fs != 1 and fs != float(positive_number(sampling_rate_hz, "sampling_rate_hz")):
+                            raise WorkflowError(f"{where}: fs differs from workflow sampling_rate_hz")
                     required = spi_dependencies(cls, params, dependencies)
                     if "java" in required:
                         java_required()
