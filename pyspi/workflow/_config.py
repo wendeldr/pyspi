@@ -229,7 +229,7 @@ def load_config(path) -> Configuration:
         preset = metrics["preset"]
         presets = {"all": "config.yaml", "fast": "fast_config.yaml",
                    "sonnet": "sonnet_config.yaml", "fabfour": "fabfour_config.yaml",
-                   "retained185": "workflow/retained185.yaml"}
+                   "reviewed": "workflow/reviewed.yaml"}
         if not isinstance(preset, str) or preset not in presets:
             raise WorkflowError(f"unknown metrics preset {preset!r}; choose {list(presets)}")
         metric_config = Path(__file__).resolve().parents[1] / presets[preset]

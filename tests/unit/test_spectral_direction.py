@@ -1,7 +1,5 @@
 """Independent direction and metadata checks for Fourier spectral measures."""
 
-from unittest.mock import patch
-
 import numpy as np
 import pytest
 
@@ -48,20 +46,16 @@ def exact_phase_connection(order=(0, 1, 2)):
 
 def test_group_delay_signed_r_is_pearson_correlation_for_each_ordered_pair():
     conn, frequencies, phase = exact_phase_connection()
-    # Isolate the regression from the separate, unchanged significance rule.
-    def select(values, *args, **kwargs):
-        return np.ones(values.shape, bool)
-    with patch("pyspi._spectral._find_significant_frequencies", side_effect=select):
-        delay, slope, correlation = conn.group_delay((1, 24))
-        order = [2, 0, 1]
-        permuted = exact_phase_connection(order)[0].group_delay((1, 24))
+    delay, slope, correlation = conn.group_delay((1, 24))
+    order = [2, 0, 1]
+    permuted = exact_phase_connection(order)[0].group_delay((1, 24))
     selected = (frequencies >= 1) & (frequencies <= 24)
-    f = frequencies[selected]
+    f = frequencies[selected][::6]
     for i in range(3):
         for j in range(3):
             if i == j:
                 continue
-            y = (phase[i] - phase[j])[selected]
+            y = (phase[i] - phase[j])[selected][::6]
             expected_slope = np.dot(f-f.mean(), y-y.mean()) / np.dot(f-f.mean(), f-f.mean())
             expected_r = np.corrcoef(f, y)[0, 1]
             np.testing.assert_allclose(slope[0, i, j], expected_slope, atol=1e-14)
@@ -111,10 +105,22 @@ def one_way_coupling():
                                  spectral.DirectedTransferFunction,
                                  spectral.DirectDirectedTransferFunction,
                                  spectral.SpectralGrangerCausality])
-def test_existing_transfer_matrix_convention_is_row_target_column_source(cls, one_way_coupling):
-    # Channel 0 drives channel 1 in the simulation. This checks the meaning
-    # of the existing orientation; it does not endorse the factorization's
-    # numerical order sensitivity or calibrate the estimator's null bias.
+def test_directed_source_first_orientation_and_channel_permutation(cls, one_way_coupling):
+    # Channel 0 drives channel 1. This checks direction and permutation, not
+    # statistical significance or the estimator's null bias.
     result = cls(fmin=.01, fmax=.2).multivariate(one_way_coupling)
     assert np.isfinite(result[1, 0]) and np.isfinite(result[0, 1])
-    assert result[1, 0] > 3*result[0, 1]
+    assert result[0, 1] > 3*result[1, 0]
+    order = [2, 1, 0]
+    permuted = Data(one_way_coupling.to_numpy(realisation=0)[order], normalise=False)
+    actual = cls(fmin=.01, fmax=.2).multivariate(permuted)
+    np.testing.assert_allclose(actual, result[np.ix_(order, order)], rtol=1e-10, atol=1e-11)
+
+
+def test_parametric_granger_source_first_orientation_and_channel_permutation(one_way_coupling):
+    spi = spectral.SpectralGrangerCausality(method="parametric", order=1, fmin=.01, fmax=.2)
+    result = spi.multivariate(one_way_coupling)
+    assert result[0, 1] > 3*result[1, 0]
+    order = [2, 0, 1]
+    permuted = Data(one_way_coupling.to_numpy(realisation=0)[order], normalise=False)
+    np.testing.assert_allclose(spi.multivariate(permuted), result[np.ix_(order, order)], atol=1e-11)

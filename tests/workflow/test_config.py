@@ -90,7 +90,7 @@ def test_duplicate_identity_and_source(edf, workflow):
             load_config(workflow(a, recordings=records))
 
 
-@pytest.mark.parametrize("preset", ["all", "fast", "sonnet", "fabfour", "retained185"])
+@pytest.mark.parametrize("preset", ["all", "fast", "sonnet", "fabfour", "reviewed"])
 def test_presets_resolve_to_packaged_files(preset, edf, workflow):
     cfg = load_config(workflow(edf(), metrics={"preset": preset}))
     assert cfg.metric_config.is_file()

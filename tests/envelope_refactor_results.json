@@ -1,0 +1,88 @@
+{
+  "shape": [
+    118,
+    1024
+  ],
+  "seed": 731,
+  "specifications": [
+    [
+      false,
+      false,
+      false
+    ],
+    [
+      true,
+      false,
+      false
+    ],
+    [
+      false,
+      true,
+      false
+    ],
+    [
+      true,
+      true,
+      false
+    ],
+    [
+      true,
+      false,
+      true
+    ],
+    [
+      true,
+      true,
+      true
+    ]
+  ],
+  "raw_seconds": {
+    "before": [
+      0.8191806800023187,
+      0.8417524470132776,
+      0.8331847579975147
+    ],
+    "after": [
+      0.7779102839995176,
+      0.7747007050202228,
+      0.7696849779749755
+    ]
+  },
+  "median_seconds": {
+    "before": 0.8331847579975147,
+    "after": 0.7747007050202228
+  },
+  "speedup": 1.0754924483717427,
+  "extrapolated_sequential_seconds": {
+    "before": {
+      "one_window": 0.8331847579975147,
+      "600_windows": 499.9108547985088,
+      "600_windows_x_69": 34493.84898109711
+    },
+    "after": {
+      "one_window": 0.7747007050202228,
+      "600_windows": 464.8204230121337,
+      "600_windows_x_69": 32072.609187837224
+    }
+  },
+  "maximum_absolute_differences": [
+    9.298117831235686e-16,
+    1.1726730697603216e-15,
+    8.257283745649602e-16,
+    9.011038443196284e-13,
+    1.1726730697603216e-15,
+    9.011038443196284e-13
+  ],
+  "protocol": "Fresh Data/cache each run; six variants sharing the same window; original MNE delegate including combine(mean) versus refactor. Three alternating repeats by default, one numerical-library thread; no I/O. Synthetic 118x1024 timing is not a patient runtime prediction.",
+  "environment": {
+    "numpy": "2.5.4",
+    "scipy": "1.17.1",
+    "mne": "1.13.2",
+    "mne-connectivity": "0.9.0"
+  },
+  "source_sha256": {
+    "pyspi/_envelope.py": "aa74597ebafb8319155cf52b218c8b34086fac3b23b823674e3b2dfe4d5f7eeb",
+    "pyspi/statistics/misc.py": "375d217a9aea54497f91553e86f80cf730e1150cb1eb72a6085f975b93cdb6dd",
+    "tests/benchmark_envelope.py": "2094350f17f25d4fd04ea6de839af926b5120c2a22113cc672e97b69f202dfef"
+  }
+}

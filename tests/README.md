@@ -26,6 +26,10 @@ shared cache/base-class/configuration change or evidence of wider impact.
 | `unit/test_spectral.py` | spectral estimator agreement, shared transforms/factorizations, bounded temporary arrays/caches, sampling-rate isolation, mutable inputs, empty bands, and phase branch boundaries |
 | `unit/test_psi.py` | independent raw PSI definition checks, inclusive adjacent-bin selection, direction, frequency units, and unavailable-band reporting |
 | `unit/test_spectral_bands.py` | shared DC/Nyquist grid, scalar endpoint formulas, transform-derived group-delay fits, unit scaling, Granger DC, and unavailable-band reporting |
+| `unit/test_group_delay.py` | independent beta-null/BH/OLS reference, real/complex null calibration, pair/window isolation, contiguous-run handling, diagnostics and shared fits |
+| `unit/test_wilson.py`, `unit/test_directed_formulas.py`, `unit/test_directed_integration.py` | exact VAR/reference formulas, channel-order independent fits, native-grid dDTF, source-first direction, failure isolation and shared enabled requests |
+| `unit/test_envelope.py` | six PEC definitions, projection/absolute order, numerical degeneracy, scale invariance and shared cache ownership |
+| `benchmark_review_selection.py`, `review_selection_results.json`, `benchmark_envelope.py`, `envelope_refactor_results.json` | measured complete/incremental candidate costs and PEC before/after family timing |
 | `benchmark_spectral.py`, `spectral*_refactor_results.json` | paired spectral timings and historical/current receipts, including traced allocation peaks and explicit definition/frequency-selection differences |
 | `test_calc.py`, `test_utils.py`, `test_phi_native.py` | original tests, unchanged |
 | `test_SPIs.py` | original CML7 z-score benchmark (`legacy`, `slow`) |
@@ -345,8 +349,8 @@ coherency, tiny defined coherency, channel permutations, blocked reductions and
 cache ownership. The implementation normalizes the shared complex coherency
 before summing, avoiding a full extra angle tensor. Undefined directions are
 NaN. Ordinary phase maxima are removed from the default/fast configurations
-and rejected at construction. Counts are now 298 and 230; retained185 remains
-185 because it already contains only phase means. Wavelet phase is unchanged.
+and rejected at construction. Counts became 298 and 230; the retained selection at that checkpoint stayed
+185 because it already contained only phase means. Wavelet phase is unchanged.
 
 Three phase-mean arrays were regenerated and three phase-max arrays removed
 from each small/full golden set. The other 295 arrays in each set, all
@@ -372,10 +376,58 @@ equivalent-output benchmarks.
 
 Peak traced allocation fell from 244.7 to 230.9 MiB (not process RSS).
 Timing varies with machine load; raw runs are retained in the receipt.
-Directed-model diagnosis and its unresolved choices are recorded separately
+Directed-model diagnosis, approved decisions and completed refactoring are recorded
 in [spectral_directed_review.md](../docs/spectral_directed_review.md).
 
-## Squared directed coherence
+## Completed directed/PEC refactor
+
+`unit/test_wilson.py` validates the discrete plus identity, exact VAR transfer
+functions/correlated innovations, channel permutation, numerical rank and
+failure isolation. `unit/test_directed_formulas.py` checks DC-family normalization,
+dDTF against direct inverse-spectrum formulas, native-grid endpoints and stable
+Granger power decomposition independently of the factorizer.
+`unit/test_directed_integration.py` and affected spectral/direction tests cover
+source-first output, pair-local diagnostics, bounded shared fits, disabled
+families, native-grid reconstruction and Data mutation. The obsolete spectral
+Granger whole-matrix ValueError fallback is removed: unsupported inputs raise,
+while numerical fit failures remain local to their pair.
+
+All **49 PEC checks** passed against independent scalar definitions and
+adversarial constant/duplicate/near-proportional, analytic and extreme-unit
+inputs. All focused Wilson, formula and integration checks passed as well.
+After the independent checks, the affected regression run passed **73**
+small/preprocessing/catalogue checks and **60** larger-fixture checks. Two
+remaining affected cache checks and three config/reporting checks also passed.
+These were scoped runs; earlier unrelated suites and the completed GD/smoothing
+experiments were not repeated.
+
+The affected regressions can be reproduced with:
+
+```bash
+.venv/bin/python -B -m pytest tests/regression/test_spi_goldens.py --runslow --require-java -q -k '(test_spi_matches_golden and (dcoh or pdcoh or dtf or sgc or pec)) or (test_preprocessing_variant_matches_golden and (sgc or pec)) or test_catalogue_matches_golden_meta or test_spi_catalogue'
+.venv/bin/python -B -m pytest tests/regression/test_spi_goldens.py --pyspi-size=full --runslow --require-java -q -k 'test_spi_matches_golden and (dcoh or pdcoh or dtf or sgc or pec)'
+```
+
+`audit/checks/probes/refresh_spectral_pec_goldens.py` refreshes only the affected
+snapshots in a temporary copy and verifies unrelated arrays before writing.
+Sixty arrays per main set and eight preprocessing arrays were refreshed;
+238 arrays per main set and 88 preprocessing arrays were byte-identical.
+Unrelated entries and previous partial-regeneration provenance were preserved.
+The preprocessing catalogue-order list additionally drops the three previously
+removed phase-max identifiers, without removing any numerical variant.
+The first refresh stopped on that stale metadata before writing; the corrected
+refresh used one generation pass rather than repeating determinism checks that
+had already passed. JSON formatting was retained to keep the diff reviewable.
+
+Runtime scripts and raw receipts are listed above. Six shared PEC variants
+improve from 0.833 to 0.775 seconds (~1.08x) on 118x1024 synthetic data.
+dDTF/all six directed families require new pair fits even when the original
+selection has populated shared transforms: measured increments are tens of
+seconds, so they remain excluded. Timing ranges, x600/x600x69 estimates,
+config changes and limitations are in
+[spectral_directed_review.md](../docs/spectral_directed_review.md#measured-runtime-and-selection-gate).
+
+## Squared directed coherence: earlier checkpoint
 
 `unit/test_directed_coherence.py` checks the approved source-variance-weighted
 squared definition against independent scalar formulas and exact VAR transfer
@@ -384,7 +436,8 @@ including self, zero inflow, channel-unit scaling through 1e-120 to 1e120,
 formula permutation equivariance, model-array ownership and squaring before
 band mean/max. The known example changes from 2.9373 to 0.9878, matching the
 standard formula within 2.3e-16. Existing pairwise model/orientation tests also
-pass. Factorization order sensitivity remains an independent unresolved issue.
+pass. Factorization order sensitivity was still unresolved at that checkpoint;
+the completed refactor below repairs it.
 
 Only six `dcoh` numerical arrays per small/full golden set changed in this
 stage. All 292 other arrays per set, including the prior phase correction,
@@ -420,7 +473,8 @@ previously cached moments are reused. All Fourier band summaries use a slice of
 the sorted frequency grid, avoiding a redundant tensor copy. PLV no longer takes
 a second absolute value of an already nonnegative result. The new signed
 variants are present in the all/fast catalogues (301/233 total SPIs), while the
-retained185 selection stays at 185.
+retained185 selection stayed at 185 at that checkpoint; the subsequent
+reviewed preset incorporates the approved additions/removals.
 
 Only the 12 existing ordinary PLI/wPLI numerical snapshots per small/full set
 are replaced; 12 signed snapshots are added. The other 277 numerical snapshots

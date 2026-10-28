@@ -147,9 +147,6 @@
   "phase_multitaper_mean_fs-1_fmin-0_fmax-0-5",
   "phase_multitaper_mean_fs-1_fmin-0_fmax-0-25",
   "phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
-  "phase_multitaper_max_fs-1_fmin-0_fmax-0-5",
-  "phase_multitaper_max_fs-1_fmin-0_fmax-0-25",
-  "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
   "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5",
   "cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25",
   "cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5",
@@ -485,6 +482,113 @@
     "pyspi/_spectral.py": "939b3fcb7a13c07483b39c612036bbccf10ba709ff8a4e1d5c320b7f88cecd60",
     "pyspi/statistics/spectral.py": "63a499ee1366fff4f7ae05f0e849ee95b6a919a0b31fd3bbd75f042f8487b1d1"
    }
+  },
+  {
+   "command": ".venv/bin/python -B audit/checks/probes/refresh_spectral_pec_goldens.py",
+   "environment": {
+    "java": "26",
+    "omp_num_threads": "1",
+    "packages": {
+     "cdt": "0.6.0",
+     "hyppo": "0.5.2",
+     "jpype1": "1.7.1",
+     "mne": "1.13.2",
+     "nitime": "0.12.1",
+     "numpy": "2.5.4",
+     "pandas": "3.0.6",
+     "pyEDM": "1.15.2.0",
+     "pyyaml": "6.0.3",
+     "scikit-learn": "1.9.1",
+     "scipy": "1.17.1",
+     "sktime": "1.2.0",
+     "spectral-connectivity": "1.1.2",
+     "statsmodels": "0.15.0",
+     "torch": "2.14.1+cpu",
+     "tslearn": "0.9.0"
+    },
+    "platform": "linux",
+    "pyspi_commit": "cb6080827602940e3a5a6e05c667365eb18dd1cc",
+    "pyspi_version": "2.0.2",
+    "python": "3.12.14"
+   },
+   "generated": "2026-10-28T00:01:50.501803+00:00",
+   "generator_arguments": [
+    [
+     "--size",
+     "all",
+     "--spis",
+     "[dgp]*coh_*",
+     "--repeat",
+     "1"
+    ],
+    [
+     "--size",
+     "all",
+     "--spis",
+     "*dtf_*",
+     "--repeat",
+     "1"
+    ],
+    [
+     "--size",
+     "all",
+     "--spis",
+     "sgc_*",
+     "--repeat",
+     "1"
+    ],
+    [
+     "--size",
+     "all",
+     "--spis",
+     "pec*",
+     "--repeat",
+     "1"
+    ],
+    [
+     "--preproc",
+     "--spis",
+     "sgc_nonparametric*",
+     "--repeat",
+     "1"
+    ],
+    [
+     "--preproc",
+     "--spis",
+     "pec*",
+     "--repeat",
+     "1"
+    ]
+   ],
+   "identifiers": [
+    "pec::n0d0",
+    "pec::n0d1",
+    "pec::n1d0",
+    "pec::n1d1",
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5::n0d0",
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5::n0d1",
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5::n1d0",
+    "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5::n1d1"
+   ],
+   "metadata_serialization": "Original one-space sorted-key JSON formatting retained after generation; no numerical recomputation.",
+   "metadata_serialization_source_sha256": "c7c67388981580f71e8d298be60bbacd25dfd9e0c0478f1533df158469e3edb0",
+   "reason": "Approved directed formulas, source-first orientation, symmetric Wilson fits, native directed grid, pair-local failures and corrected PEC definitions/numerics.",
+   "removed_obsolete_catalogue_order_entries": [
+    "phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5",
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-25",
+    "phase_multitaper_max_fs-1_fmin-0_fmax-0-5"
+   ],
+   "source_sha256": {
+    "audit/checks/probes/refresh_spectral_pec_goldens.py": "2a2ea31d7cd5fb96c8aed4aab7897741ac8b1c0dfa4c19ed6520413a7b22c01b",
+    "pyspi/_directed.py": "929b0221c83313cb413c43226fe65a4fac2deec07ca459e8ee595bf5e9055220",
+    "pyspi/_envelope.py": "aa74597ebafb8319155cf52b218c8b34086fac3b23b823674e3b2dfe4d5f7eeb",
+    "pyspi/_spectral.py": "744841bed2eeeb23953461d06b936be50beb74dae999ad5d876fa2cccd90393d",
+    "pyspi/_wilson.py": "925b7bd54fc0b7a71f27c21871484996e5a2b6f3e18ff27a22f5000b8b845c58",
+    "pyspi/calculator.py": "0d286fea8b318c0407fcd8aaa75d2e422794b9742bd73e163e033e9603df172d",
+    "pyspi/statistics/misc.py": "375d217a9aea54497f91553e86f80cf730e1150cb1eb72a6085f975b93cdb6dd",
+    "pyspi/statistics/spectral.py": "1fd5be7f0ed1df262f77a4d4596a878f4ce357f14f96fd93c91eeaee37d7829b"
+   },
+   "unrelated_arrays_verified_byte_identical": 88
   }
  ],
  "schema": 1,
@@ -763,8 +867,8 @@
    "error": null,
    "labels": [
     "misc",
-    "undirected",
-    "unsigned"
+    "signed",
+    "undirected"
    ],
    "module": ".statistics.misc",
    "nan_offdiag": 0,
@@ -774,7 +878,7 @@
     "orth": false
    },
    "status": "ok",
-   "time_s": 0.000181
+   "time_s": 0.000842
   },
   "phi_star_t-1_norm-0": {
    "cls": "IntegratedInformation",
@@ -885,7 +989,7 @@
     "statistic": "mean"
    },
    "status": "ok",
-   "time_s": 0.065072
+   "time_s": 0.03138
   },
   "spearmanr": {
    "cls": "SpearmanR",
@@ -1464,7 +1568,7 @@
    "nan_offdiag": 0,
    "normalise": false,
    "status": "ok",
-   "time_s": 0.000156
+   "time_s": 0.000811
   },
   "pec::n0d1": {
    "detrend": true,
@@ -1473,7 +1577,7 @@
    "nan_offdiag": 0,
    "normalise": false,
    "status": "ok",
-   "time_s": 0.000181
+   "time_s": 0.000842
   },
   "pec::n1d0": {
    "detrend": false,
@@ -1482,7 +1586,7 @@
    "nan_offdiag": 0,
    "normalise": true,
    "status": "ok",
-   "time_s": 0.000164
+   "time_s": 0.00072
   },
   "pec::n1d1": {
    "detrend": true,
@@ -1491,7 +1595,7 @@
    "nan_offdiag": 0,
    "normalise": true,
    "status": "ok",
-   "time_s": 0.000162
+   "time_s": 0.000744
   },
   "phi_star_t-1_norm-0::n0d0": {
    "detrend": false,
@@ -1680,7 +1784,7 @@
    "nan_offdiag": 0,
    "normalise": false,
    "status": "ok",
-   "time_s": 0.062804
+   "time_s": 0.020677
   },
   "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5::n0d1": {
    "detrend": true,
@@ -1689,7 +1793,7 @@
    "nan_offdiag": 0,
    "normalise": false,
    "status": "ok",
-   "time_s": 0.065072
+   "time_s": 0.01765
   },
   "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5::n1d0": {
    "detrend": false,
@@ -1698,7 +1802,7 @@
    "nan_offdiag": 0,
    "normalise": true,
    "status": "ok",
-   "time_s": 0.056532
+   "time_s": 0.03138
   },
   "sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5::n1d1": {
    "detrend": true,
@@ -1707,7 +1811,7 @@
    "nan_offdiag": 0,
    "normalise": true,
    "status": "ok",
-   "time_s": 0.05687
+   "time_s": 0.023923
   },
   "spearmanr::n0d0": {
    "detrend": false,

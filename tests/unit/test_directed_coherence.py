@@ -100,9 +100,10 @@ def test_square_at_each_frequency_before_band_summary(statistic, expected):
     conn = model(h, np.eye(2)[None])
     spi = DirectedCoherence(fmin=.125, fmax=.25, statistic=statistic)
     data = Data(np.random.default_rng(55).normal(size=(2, 32)), normalise=False)
-    with patch.object(spi, "_get_cache", return_value=(conn.directed_coherence(), conn.frequencies)):
-        result = spi.multivariate(data)
-    assert result[0, 1] == pytest.approx(expected)
+    with patch("pyspi.statistics.spectral.directed_workspace", return_value=conn):
+        with patch.object(conn, "_directed_blocks", return_value=iter([(np.array([[0, 1]]), conn)])):
+            result = spi.multivariate(data)
+    assert result[1, 0] == pytest.approx(expected)
     assert np.isnan(result.diagonal()).all()
 
 

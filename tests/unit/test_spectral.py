@@ -62,34 +62,29 @@ def test_spectral_estimator_and_band_agreement(cls, n, statistic):
 
 @pytest.mark.parametrize("cls", DIRECTED_CLASSES)
 @pytest.mark.parametrize("statistic", ["mean", "max"])
-def test_pairwise_models_match_separate_ordered_pair_reference(cls, statistic):
+def test_pairwise_wrappers_match_individual_pair_formula_summaries(cls, statistic):
     data = make_data(p=3)
     spi = cls(fmin=.02, fmax=.4, statistic=statistic)
     expected = np.full((3, 3), np.nan)
     for i in range(3):
         for j in range(3):
             if i != j:
-                conn = reference(data, indices=[i, j])
+                pair_data = Data(data.to_numpy(realisation=0)[[i, j]], normalise=False)
+                conn = spectral_workspace(pair_data, 1)
                 mask = (conn.frequencies >= .02) & (conn.frequencies <= .4)
-                if cls is spectral.DirectedCoherence:
-                    # The installed dependency has an incorrect DC formula.
-                    # Keep its fitted model but normalize source-weighted power
-                    # independently, before summarizing the selected frequencies.
-                    transfer = conn._transfer_function[0]
-                    variance = np.diag(conn._noise_covariance[0])
-                    weights = abs(transfer)**2 * variance[None, None, :]
-                    values = (weights / weights.sum(axis=-1, keepdims=True))[mask, 0, 1]
-                else:
-                    values = getattr(conn, spi.measure)()[0, mask, 0, 1]
+                # Formula/order integration reference on separately fitted pairs.
+                # The factorizer itself has independent known-model tests.
+                transfer = conn._transfer_function[0]
+                power = abs(transfer)**2
+                weights = power.copy()
+                if cls in (spectral.DirectedCoherence, spectral.GeneralizedPartialDirectedCoherence):
+                    weights *= np.diag(conn._noise_covariance[0])[None, None, :]
+                values = (weights/weights.sum(axis=-1, keepdims=True))[:, 1, 0]
                 if cls is spectral.DirectDirectedTransferFunction:
-                    # dDTF normalizes over its entire one-sided frequency grid.
-                    # Include the newly exposed Nyquist term in that denominator.
-                    from spectral_connectivity.connectivity import _estimate_transfer_function
-                    transfer = _estimate_transfer_function(conn._minimum_phase_factor)[0]
-                    old_energy = np.sum(abs(transfer[:64, 0, :])**2)
-                    full_energy = np.sum(abs(transfer[:65, 0, :])**2)
-                    values *= np.sqrt(old_energy / full_energy)
-                expected[i, j] = getattr(np, "nan" + statistic)(values)
+                    spectrum = transfer @ conn._noise_covariance[0] @ transfer.swapaxes(-1, -2).conj()
+                    partial = abs(spectrum[:, 1, 0])**2 / (spectrum[:, 0, 0].real*spectrum[:, 1, 1].real)
+                    values = power[:, 1, 0]/power[:, 1, :].sum()*partial
+                expected[i, j] = getattr(np, "nan" + statistic)(values[mask])
     actual = spi.multivariate(data)
     np.testing.assert_allclose(actual, expected, rtol=1e-9, atol=1e-11)
     np.testing.assert_allclose(spi.bivariate(data, i=2, j=0), expected[2, 0], rtol=1e-9, atol=1e-11)
@@ -98,21 +93,14 @@ def test_pairwise_models_match_separate_ordered_pair_reference(cls, statistic):
 @pytest.mark.parametrize("cls,statistic", [
     (spectral.GroupDelay, "delay"), (spectral.GroupDelay, "slope"), (spectral.GroupDelay, "rvalue"),
 ])
-def test_group_delay_preserves_fit_and_significance_with_transform_spacing(cls, statistic):
+def test_group_delay_summary_variants_and_cache_ownership(cls, statistic):
     data = make_data(n=512, p=3)
     spi = cls(fmin=.02, fmax=.4, statistic=statistic)
-    conn = reference(data)
-    expected = getattr(conn, spi.measure)(
-        frequencies_of_interest=(.02, .4), frequency_resolution=6/512,
-    )
-    if cls is spectral.GroupDelay:
-        expected = expected[("delay", "slope", "rvalue").index(statistic)]
+    conn = spectral_workspace(data, 1)
+    # Mathematical references live in test_group_delay.py. This covers the
+    # public wrappers selecting/copying each of the shared outputs.
+    expected = conn.group_delay((.02, .4))[("delay", "slope", "rvalue").index(statistic)]
     expected = expected[0].copy()
-    if statistic == "rvalue":
-        # The dependency mirrors signed r without reversing it. Only its
-        # forward regression is a reference; reversing phase negates r.
-        i, j = np.triu_indices(len(expected), 1)
-        expected[j, i] = -expected[i, j]
     np.fill_diagonal(expected, np.nan)
     assert np.isfinite(expected).any(), "Reference must exercise actual estimates, not only NaNs"
     actual = spi.multivariate(data)
@@ -121,16 +109,22 @@ def test_group_delay_preserves_fit_and_significance_with_transform_spacing(cls, 
     np.testing.assert_allclose(spi.multivariate(data), expected, rtol=1e-10, atol=1e-12)
 
 
-def test_nonparametric_granger_matches_dependency():
+def test_nonparametric_granger_pairwise_wrapper_matches_power_decomposition():
     data = make_data(p=3)
-    conn = reference(data)
     spi = spectral.SpectralGrangerCausality(fmin=.02, fmax=.4)
-    mask = (conn.frequencies >= .02) & (conn.frequencies <= .4)
-    values = conn.pairwise_spectral_granger_prediction()[0, mask]
-    expected = np.nanmean(values, axis=0)
-    nan_pct = np.isnan(values).mean(axis=0)
-    np.fill_diagonal(nan_pct, 0)
-    expected[nan_pct > spi.nan_threshold] = np.nan
+    expected = np.full((3, 3), np.nan)
+    for i in range(3):
+        for j in range(3):
+            if i == j:
+                continue
+            conn = spectral_workspace(Data(data.to_numpy(realisation=0)[[i, j]], normalise=False), 1)
+            h, covariance = conn._transfer_function[0], conn._noise_covariance[0]
+            spectrum = h @ covariance @ h.swapaxes(-1, -2).conj()
+            residual = covariance[0, 0]-covariance[0, 1]**2/covariance[1, 1]
+            total = spectrum[:, 1, 1].real
+            values = np.log(total/(total-residual*abs(h[:, 1, 0])**2))
+            mask = (conn.frequencies >= .02) & (conn.frequencies <= .4)
+            expected[i, j] = values[mask].mean()
     np.testing.assert_allclose(spi.multivariate(data), expected, rtol=1e-9, atol=1e-11)
 
 
@@ -172,24 +166,34 @@ def test_transform_and_coherency_shared_across_measures_and_bands():
             assert cross.call_count == 1
 
 
-def test_pair_factorization_shared_across_measures_but_keeps_channel_order():
-    import spectral_connectivity.connectivity as dependency
+def test_pair_factorization_shared_across_measures_and_both_directions():
+    import pyspi._spectral as implementation
     data = make_data(p=3)
-    with patch.object(dependency, "minimum_phase_decomposition", wraps=dependency.minimum_phase_decomposition) as factor:
+    with patch.object(implementation, "factorize", wraps=implementation.factorize) as factor:
         for cls in DIRECTED_CLASSES:
             cls().multivariate(data)
         spectral.SpectralGrangerCausality().multivariate(data)
-        assert factor.call_count == 6  # six ordered pairs; Granger reuses three
+        assert factor.call_count == 1
+        assert factor.call_args.args[0].shape[0] == 3  # three unique pairs, batched
+    conn = spectral_workspace(data, 1)
+    assert conn.pair(0, 1) is conn.pair(1, 0)
 
 
-def test_directed_band_reuse_survives_pair_cache_eviction():
-    import spectral_connectivity.connectivity as dependency
+def test_planned_directed_bands_share_bounded_streaming_pair_fits():
+    import pyspi._spectral as implementation
     data = make_data(p=7)
-    with patch.object(dependency, "minimum_phase_decomposition", wraps=dependency.minimum_phase_decomposition) as factor:
-        for lo, hi in ((0, .5), (0, .25), (.25, .5)):
-            spectral.DirectedCoherence(fmin=lo, fmax=hi).multivariate(data)
-        assert factor.call_count == 42
-        assert len(spectral_workspace(data, 1)._pairs) == 16
+    spis = [cls(fmin=lo, fmax=hi) for cls in DIRECTED_CLASSES
+            for lo, hi in ((0, .5), (0, .25), (.25, .5))]
+    for spi in spis:
+        spi._register_shared_work(data)
+    conn = spectral_workspace(data, 1)
+    conn.block_bytes = 128*10*16*2  # two pairs per block
+    with patch.object(implementation, "factorize", wraps=implementation.factorize) as factor:
+        for spi in spis:
+            spi.multivariate(data)
+        assert sum(call.args[0].shape[0] for call in factor.call_args_list) == 21
+        assert all(call.args[0].shape[0] <= 2 for call in factor.call_args_list)
+        assert not conn._pairs  # no retained full pair models in the streaming path
 
 
 @pytest.mark.parametrize("mutation", ["replace", "add", "remove", "view"])

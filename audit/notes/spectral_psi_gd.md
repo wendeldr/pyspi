@@ -1,5 +1,10 @@
 # spectral_psi_gd family: define, trace and check
 
+This is the historical audit before the spectral refactors. Its implementation
+descriptions are preserved as evidence, not as descriptions of the current
+code. Current group-delay corrections, diagnostics and EEG missingness results
+are in [group_delay_review.md](../../docs/group_delay_review.md).
+
 Units: `spectral.psi` (identifiers `psi_multitaper_mean_fs-1_fmin-0_fmax-0-5`, `..._fmin-0_fmax-0-25`, `..._fmin-0-25_fmax-0-5`; ten further EEG band identifiers, 11 EEG identifiers in all with the config identifier `psi_multitaper_mean_fs-1_fmin-0_fmax-0-5`, which the EEG selection also keeps) and `spectral.gd` (`gd_multitaper_delay_fs-1_*` for the same three bands; ten EEG band identifiers).
 Classes: `PhaseSlopeIndex(NonparametricSpectralMultivariate, Undirected)` at `pyspi/statistics/spectral.py:288-301` and `GroupDelay(NonparametricSpectralMultivariate, Directed)` at `spectral.py:304-317`.
 Delegate: spectral_connectivity 1.1.2 (`Connectivity.phase_slope_index`, `Connectivity.group_delay`), used through the NumPy-2 shim `pyspi/_spectral_compat.py`. The group-delay regression runs in scipy 1.17.1 `scipy.stats.mstats.linregress`.

@@ -139,8 +139,10 @@ Channels are centered and transformed once per input. Batched inverse FFTs
 evaluate each unique channel pair once, with a bounded curve cache. Summaries
 share both curves and lag selection. Data mutation invalidates shared work.
 The all/fast catalogues include signed `min` and `peak` with both selection
-modes. `retained185.yaml` keeps its four existing max/mean, ordinary/squared,
-`sigonly=False` requests; adding variants there is an explicit analysis choice.
+modes. `workflow/reviewed.yaml` includes the original four unrestricted max/mean
+requests, unrestricted signed minimum/peak, and the six corresponding
+significant-only summaries. The workflow resolves their sampling frequency
+before converting the 125 ms lag limit to samples.
 
 ## Spearman, Kendall, covariance and precision
 
@@ -205,13 +207,11 @@ already contained only phase means. Shared coherency and bounded temporary
 arrays avoid a full extra tensor of angles. Wavelet phase has a separate
 orientation/estimation path and is not changed by this Fourier-phase review.
 
-The factorization-based directed metrics currently use **row = target,
-column = source**, the transfer-matrix convention. This differs from the
-positive-lead interpretation above; no matrix transposition was made in this
-review. Synthetic one-way-coupling checks confirm that convention. Reversing
-the input order also changes fitted values beyond rounding error; that
-numerical factorization issue remains under review. The parametric Granger
-path and wavelet sign conventions have not been reviewed here.
+Factorization-based metrics and both spectral Granger methods now return
+**row = source, column = target**. Internal transfer matrices retain their
+mathematical target/source convention. Known-model and channel-permutation
+checks cover the public orientation and consistent pair fitting described below.
+Wavelet sign conventions remain outside this Fourier review.
 
 ## Directed coherence
 
@@ -223,9 +223,11 @@ the requested band mean or maximum. For target `i` and source `j`:
 `H` maps the model's innovations into the observed channels; `variance[j]`
 is source j's innovation variance. The denominator includes the target's own
 innovation. Defined values lie in [0, 1] and sum to 1 across sources within
-each fitted model, before pyspi masks the self-entry. The wrapper fits each
-ordered pair separately, so the assembled off-diagonal multichannel matrix
-does **not** have a row-sum-one guarantee.
+each fitted model, before pyspi masks the self-entry. One model is fitted for
+each unique pair and shared by both directions. Public matrices use row=source,
+column=target, whereas the formula above uses the internal target/source
+indexing of H. The assembled off-diagonal multichannel matrix does **not** have
+a row- or column-sum-one guarantee: its entries come from different pair models.
 
 This matches the [current upstream squared DC formula](https://spectral-connectivity.readthedocs.io/en/latest/_modules/spectral_connectivity/connectivity.html#Connectivity.directed_coherence).
 It replaces the installed dependency's mixed powers and incorrectly oriented
@@ -241,9 +243,9 @@ the square of the magnitude band's mean would be `0.25`.
 This diagonal-variance normalization assumes uncorrelated innovations when
 interpreted as shares of the target's observed power. With correlated
 innovations it omits cross terms; interpret it as normalized weighted transfer
-strength. Matrix orientation, pairwise fitting and factorization policy are
-unchanged by this formula correction. Both band summaries and every frequency
-band use the corrected definition, independently of preset membership.
+strength. Both band summaries and every frequency band use the corrected
+definition, independently of preset membership. The shared directed-family
+fit and public orientation are described below.
 
 ## Phase-lag, phase-locking and debiased variants
 
@@ -299,9 +301,10 @@ Phase reductions use upper-triangle channel tiles and fill the reverse through
 the appropriate conjugate, sign reversal or symmetry, avoiding repeated work.
 
 The `all` and `fast` catalogues include both signed variants with mean/max and
-three bands; their sizes are 301 and 233. The selected 185-metric EEG workflow
-keeps its metric selection; its existing PLI/wPLI names now use the corrected
-unsigned definitions. Added signed variants can be selected explicitly.
+three bands; after removing ordinary coherence-phase maxima their sizes are
+298 and 230. Existing PLI/wPLI names use the corrected unsigned definitions.
+The reviewed EEG selection includes signed PLI/wPLI on the same eleven bands
+as their unsigned counterparts, sharing the underlying reductions.
 
 ### Zero signs and undefined weighted ratios
 
@@ -338,3 +341,95 @@ for those zero imaginary observations.
 The statistical assumptions behind taper-based debiasing remain a separate
 review item. The formulas and sign conventions of the wavelet implementations
 were not changed here.
+
+## Shared directed spectral calculations
+
+DC, DTF, PDC, generalized PDC, dDTF and nonparametric spectral Granger use one
+two-channel fit per unique pair. Public entry `[A1, C1]` means A1 -> C1;
+parametric spectral Granger uses the same public convention. These pairwise
+models do not condition on other recorded channels. A relationship can therefore
+reflect omitted common drivers or indirect paths; the name "direct dDTF" does
+not change that limitation.
+
+DTF and PDC use squared magnitudes at each frequency. Generalized PDC also
+weights the autoregressive coefficients by innovation variances. In a two-channel
+model, off-diagonal PDC equals DTF, and off-diagonal generalized PDC equals DC.
+The implementation shares those results. These are not independent features
+under pairwise fitting; the equalities do not generally hold for larger models.
+
+Squared dDTF is `ffDTF_squared * partial_coherence_squared` at each frequency.
+For internal target i, source j,
+`ffDTF_squared[i,j,f] = abs(H[i,j,f])**2 / sum_(g,k)(abs(H[i,k,g])**2)`.
+Partial coherence is obtained from the inverse model spectrum, not PDC. In a
+pair it equals ordinary coherence magnitude squared. Multiply before taking
+the band's mean or maximum. The denominator uses all native nonnegative FFT
+bins, including DC and even-length Nyquist once, irrespective of the reported
+band. The grid is unpadded, so FFT-speed padding cannot change its normalization.
+Other Fourier metrics retain their previously reviewed grids; tapered samples
+are reused if a native-length directed transform is needed. Different native
+window lengths can still change the discrete dDTF scale.
+
+The Wilson iteration uses a symmetric positive square-root start and a discrete
+plus operator that splits zero and even-grid midpoint lags equally. It retains
+positive lags and removes negative lags, satisfying `G_plus + G_plus.H = G`
+on a Hermitian frequency grid without a triangular channel-order choice.
+Both relative iterate change and reconstructed-spectrum residual must be at
+most 1e-10; the iteration cap is 100. Validation uses channel-power equilibration
+so units do not hide errors. Singular, invalid, nonfinite or nonconvergent pairs
+produce NaN while healthy pairs remain usable. No ridge, substitute model or
+averaging of opposite channel-order fits is used. Finite-grid reconstruction
+does not validate statistical assumptions or eliminate impulse-response aliasing.
+
+Nonparametric Granger uses the correlated-innovation power decomposition and a
+stable logarithmic ratio. A genuine zero remains zero; it is no longer discarded
+as NaN. Zero intrinsic power has no finite estimate and is left unavailable,
+without an epsilon replacement. Parametric Granger retains nitime's model and
+order-selection definition, fits each unique pair once, and isolates failures
+to their pair rather than discarding the full matrix.
+Unsupported inputs raise an error instead of being converted into an apparently
+successful all-NaN calculation by the former whole-matrix exception fallback.
+
+`spi.diagnostics(data)` exposes pair reasons and unavailable-bin fractions.
+Nonparametric directed diagnostics also provide reconstruction residual and
+iteration count. They are detached copies; these detailed matrices are not
+automatically persisted by the workflow's generic metric-report schema.
+Calculator registers enabled directed requests before evaluation, then streams
+the necessary bands and families through bounded pair batches. Standalone
+requests share the four distinct spectral families for the requested band.
+Cached band matrices replace retaining every fitted pair spectrum. Modifying
+Data invalidates the shared results.
+
+## Envelope correlation (PEC)
+
+These metrics use envelopes of the supplied signal and apply no internal band
+filter. Broadband input therefore gives broadband envelope correlation.
+`pec` is Pearson correlation of Hilbert **amplitudes**, despite the historical
+family name "power envelope correlation". `pec_log` correlates **log power**,
+computed as `2*log(amplitude)` to avoid squaring overflow/underflow.
+
+For the orthogonalized variants, correlate the envelope of X with the envelope
+of `Im(Y * conj(X) / abs(X))`, repeat with X and Y reversed, and average the
+two coefficients. Log variants transform the envelopes to log power before
+correlation. Ordinary orthogonalized outputs average the signed coefficients;
+`_abs` outputs average their absolute values. Thus coefficients -0.9 and +0.2
+give -0.35 signed and +0.55 absolute. This is not the absolute value of -0.35.
+Projection direction does not indicate causal direction; the final matrix is
+symmetric. Only absolute variants have unsigned labels.
+
+Constant envelopes have undefined Pearson correlation. A zero orthogonal
+component also has undefined correlation, not a measured zero association.
+The implementation centers both inputs, handles exact duplicate/proportional
+signals without converting cancellation residue into coupling, and uses
+scale-aware propagated rounding bounds to identify unresolved envelopes.
+Small but resolved variation remains valid. Exact zero log envelopes and zero
+orthogonalization reference amplitudes produce NaN without arbitrary floors
+or dropping samples. If either directional coefficient is unavailable, their
+symmetrized value is unavailable. `spi.diagnostics(data)` gives the reasons;
+orthogonalized variants also expose each projection direction's reason.
+
+All six variants share one analytic transform per Data. The signed and absolute
+orthogonalized variants share directional coefficients, and amplitude/log-power
+variants share the pair products. Redundant single-epoch container averaging is
+removed. Results and diagnostic arrays are detached from the cache, which is
+invalidated by Data mutation. The numerical guards are not statistical
+significance tests, and orthogonalization does not establish causation.

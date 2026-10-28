@@ -1,10 +1,10 @@
 """Shared CPU spectral work, independent of SPI band summaries.
 
 PSI implements Nolte et al. (2008), equation 3, on adjacent FFT bins in an
-inclusive band. All Fourier estimators share a one-sided grid including DC and
-Nyquist. Group delay derives its regression spacing from the transform's
-spectral resolution. Two-sided coefficients remain available for Wilson
-factorization.
+inclusive band. Fourier estimators use one-sided grids including DC and
+even-length Nyquist. Directed calculations use the native unpadded grid;
+group delay derives its regression spacing from the transform's spectral
+resolution. Two-sided coefficients remain available for Wilson factorization.
 """
 
 from collections import OrderedDict
@@ -12,24 +12,29 @@ from functools import cached_property
 from itertools import combinations
 
 import numpy as np
-from scipy.stats import linregress
-from spectral_connectivity.connectivity import (
-    _estimate_predictive_power,
-    _estimate_transfer_function,
-    _find_significant_frequencies,
-    _remove_instantaneous_causality,
-)
-from spectral_connectivity.statistics import coherence_bias
-
+from scipy.fft import fft, ifft
+from pyspi import _directed
 from pyspi._cache import ArrayCache, cached_workspace
+from pyspi._group_delay import estimate as estimate_group_delay
 from pyspi._spectral_compat import spectral_connectivity as sc
+from pyspi._wilson import REASONS as FIT_REASONS, adjoint, factorize, inverse
+
+
+DIRECTED_MEASURES = ("directed_coherence", "directed_transfer_function",
+                     "direct_directed_transfer_function", "pairwise_spectral_granger_prediction")
+
+
+def canonical_directed_measure(name):
+    # Off-diagonal equalities for pairwise, not conditional multichannel, fits.
+    return {"partial_directed_coherence": "directed_transfer_function",
+            "generalized_partial_directed_coherence": "directed_coherence"}.get(name, name)
 
 
 class SpectralConnectivity(sc.Connectivity):
     """One transform, shared powers/coherency, and bounded taper products.
 
     Only the trials+tapers expectation used by pyspi is supported here.
-    The inherited directed estimators reuse cached factorization properties.
+    Directed formulas reuse cached factorization properties within each pair batch.
     """
 
     # This bounds each temporary complex outer-product block, independently of
@@ -42,6 +47,9 @@ class SpectralConnectivity(sc.Connectivity):
         self.frequency_resolution = frequency_resolution
         self._arrays = ArrayCache()
         self._pairs = OrderedDict()
+        self.directed_requests = set()
+        self._fit_diagnostics = None
+        self._native_directed = None
 
     @cached_property
     def frequencies(self):
@@ -54,20 +62,29 @@ class SpectralConnectivity(sc.Connectivity):
         return super()._power
 
     @cached_property
+    def _factorization(self):
+        return factorize(self._expectation_cross_spectral_matrix())
+
+    @cached_property
     def _minimum_phase_factor(self):
-        return super()._minimum_phase_factor
+        return self._factorization.factor
+
+    @cached_property
+    def _factor_zero(self):
+        return np.fft.ifft(self._minimum_phase_factor, axis=-3)[..., 0, :, :].real
 
     @cached_property
     def _transfer_function(self):
-        return _estimate_transfer_function(self._minimum_phase_factor)[..., :self.frequencies.size, :, :]
+        return (self._minimum_phase_factor[..., :self.frequencies.size, :, :]
+                @ inverse(self._factor_zero)[..., None, :, :])
 
     @cached_property
     def _noise_covariance(self):
-        return super()._noise_covariance
+        return self._factor_zero @ adjoint(self._factor_zero)
 
     @cached_property
     def _MVAR_Fourier_coefficients(self):
-        return super()._MVAR_Fourier_coefficients
+        return inverse(self._transfer_function)
 
     @property
     def _positive_coefficients(self):
@@ -84,17 +101,19 @@ class SpectralConnectivity(sc.Connectivity):
         diagonal innovation variances; correlated innovations prevent reading
         the normalized strengths as exact shares of observed target power.
         """
-        variance = np.diagonal(self._noise_covariance, axis1=-2, axis2=-1)
-        amplitude = np.abs(self._transfer_function)
-        amplitude *= np.sqrt(variance)[..., None, None, :]
-        # A common row scale cancels from the ratio. Scale amplitudes before
-        # squaring to avoid overflow/underflow after changes of channel units.
-        scale = amplitude.max(axis=-1, keepdims=True)
-        np.divide(amplitude, scale, out=amplitude, where=scale > 0)
-        np.square(amplitude, out=amplitude)
-        total = amplitude.sum(axis=-1, keepdims=True)
-        return np.divide(amplitude, total, out=np.full_like(amplitude, np.nan),
-                         where=total > 0)
+        return _directed.directed_coherence(self._transfer_function, self._noise_covariance)
+
+    def directed_transfer_function(self):
+        return _directed.directed_transfer_function(self._transfer_function)
+
+    def partial_directed_coherence(self):
+        return _directed.partial_directed_coherence(self._transfer_function)
+
+    def generalized_partial_directed_coherence(self):
+        return _directed.generalized_partial_directed_coherence(self._transfer_function, self._noise_covariance)
+
+    def direct_directed_transfer_function(self):
+        return _directed.direct_directed_transfer_function(self._transfer_function, self._noise_covariance)
 
     @staticmethod
     def _mean_cross_spectrum(coefficients):
@@ -216,15 +235,28 @@ class SpectralConnectivity(sc.Connectivity):
         return result
 
     def group_delay(self, frequencies_of_interest=None, significance_threshold=0.05):
-        """Fit unwrapped coherence phase on spaced, significant in-band bins.
+        """Signed delay/slope/r using per-pair zero-coherence significance tests.
 
         The spacing is ceil(transform bandwidth / FFT spacing), independent of
-        the requested band width. Keep the dependency's coherence significance
-        test, largest-cluster selection, and minimum of three retained points.
+        the requested band width. Retain the largest significant cluster and
+        require at least three spaced points. BH corrects each pair/window's
+        frequencies separately; it does not control network-wide FDR.
         Nominal bandwidth spacing approximates independence; it is not a proof
         that neighboring spectral estimates are statistically independent.
         """
+        return self.group_delay_details(frequencies_of_interest, significance_threshold)[:3]
+
+    def group_delay_details(self, frequencies_of_interest=None, significance_threshold=0.05):
+        band = None if frequencies_of_interest is None else tuple(frequencies_of_interest)
+        key = ("group_delay", band, significance_threshold)
+        return self._arrays.get(key, lambda: self._group_delay_details(band, significance_threshold))
+
+    def _group_delay_details(self, band, alpha):
+        if not np.isfinite(alpha) or not 0 < alpha < 1:
+            raise ValueError("Group delay significance threshold must be between zero and one.")
         frequencies = self.frequencies
+        if frequencies.size < 2:
+            raise ValueError("Group delay requires at least two transform frequencies.")
         resolution = self.frequency_resolution
         if resolution is None or not np.isfinite(resolution) or resolution <= 0:
             raise ValueError("Group delay requires the transform's positive spectral resolution.")
@@ -234,40 +266,20 @@ class SpectralConnectivity(sc.Connectivity):
         if np.isclose(ratio, nearest, rtol=8 * np.finfo(float).eps, atol=0):
             ratio = nearest
         step = max(1, int(np.ceil(ratio)))
-        selected = (np.ones(frequencies.size, dtype=bool) if frequencies_of_interest is None
-                    else frequency_mask(frequencies, *frequencies_of_interest))
+        first = 0 if band is None else np.searchsorted(frequencies, band[0], side="left")
+        last = frequencies.size if band is None else np.searchsorted(frequencies, band[1], side="right")
+        selected = slice(first, last)
         frequencies = frequencies[selected]
         if frequencies[::step].size < 3:
             raise ValueError(
                 "Group delay requires at least three frequency bins spaced by the "
                 "transform's spectral resolution in the inclusive band."
             )
-        coherency = self.coherency()[:, selected]
-        windows, _, channels, _ = coherency.shape
-        slope = np.full((windows, channels, channels), np.nan)
-        rvalue = np.full_like(slope, np.nan)
-        i, j = np.triu_indices(channels, 1)
-        if not i.size:
-            return slope.copy(), slope, rvalue
-        pairs = coherency[..., i, j]
-        significant = _find_significant_frequencies(
-            pairs, coherence_bias(self.n_observations), step,
-            significance_threshold=significance_threshold,
-        )
-        phase = np.unwrap(np.angle(pairs), axis=1)
-        for window in range(windows):
-            for pair, (row, col) in enumerate(zip(i, j)):
-                keep = significant[window, :, pair]
-                if keep.sum() < 3:
-                    continue
-                fit = linregress(frequencies[keep], phase[window, keep, pair])
-                slope[window, row, col] = fit.slope
-                slope[window, col, row] = -fit.slope
-                # r is the signed correlation of frequency with unwrapped
-                # phase. Reversing the pair negates phase, hence negates r.
-                rvalue[window, row, col] = fit.rvalue
-                rvalue[window, col, row] = -fit.rvalue
-        return slope / (2 * np.pi), slope, rvalue
+        nfft = self.fourier_coefficients.shape[-2]
+        bins = np.arange(first, last)
+        real_bins = (bins == 0) | ((nfft % 2 == 0) & (bins == nfft//2))
+        return estimate_group_delay(self.coherency()[:, selected], frequencies,
+                                    self.n_observations, real_bins, step, alpha, self.block_bytes)
 
     def imaginary_coherence(self):
         # The public matrix wrapper excludes the diagonal for all these measures.
@@ -403,6 +415,9 @@ class SpectralConnectivity(sc.Connectivity):
                          out=np.full_like(weights, np.nan), where=weights > 0)
 
     def measure(self, name, **kwargs):
+        if name == "group_delay":
+            # Fits and diagnostic arrays share one bounded cache entry.
+            return self.group_delay(**kwargs)
         if name == "signed_phase_lag_index":
             # Already cached as the sign moment; do not count the same array
             # twice against the cache's byte budget.
@@ -411,12 +426,8 @@ class SpectralConnectivity(sc.Connectivity):
         return self._arrays.get(key, lambda: getattr(self, name)(**kwargs))
 
     def pair(self, i, j):
-        """Reuse an ordered two-channel model, with bounded storage.
-
-        The dependency's factorization is observably order-sensitive. Sharing
-        between (i,j) and (j,i) requires a separate numerical/scientific review.
-        """
-        key = (i, j)
+        """One model per unique pair, in ascending channel-index order."""
+        key = tuple(sorted((i, j)))
         if key not in self._pairs:
             self._pairs[key] = SpectralConnectivity(
                 self.fourier_coefficients[..., list(key)], self.all_frequencies, self.time,
@@ -428,36 +439,124 @@ class SpectralConnectivity(sc.Connectivity):
         return self._pairs[key]
 
     def pairwise_spectral_granger_prediction(self):
-        # Same pairwise estimator as the dependency, sharing the pair models used
-        # by directed coherence. Avoid constructing a full two-sided P x P CSM.
-        w, _, _, _, p = self.fourier_coefficients.shape
-        result = np.full((w, self.frequencies.size, p, p), np.nan)
-        for i, j in combinations(range(p), 2):
-            pair = self.pair(i, j)
-            try:
-                values = _estimate_predictive_power(
-                    pair._power[..., : self.frequencies.size, :],
-                    _remove_instantaneous_causality(pair._noise_covariance),
-                    pair._transfer_function,
-                )
-                result[..., i, j] = values[..., 0, 1]
-                result[..., j, i] = values[..., 1, 0]
-            except np.linalg.LinAlgError:
-                pass  # The dependency marks a failed pair NaN as well.
-        return result
+        return self.pairwise_measure("pairwise_spectral_granger_prediction")
 
-    def ordered_pair_measure(self, name):
+    def pairwise_measure(self, name):
         """Retain a measure's spectrum across bands even when pair models evict."""
-        return self._arrays.get(("ordered_pairs", name), lambda: self._ordered_pair_measure(name))
+        name = canonical_directed_measure(name)
+        return self._arrays.get(("directed_pairs", name), lambda: self._pairwise_measure(name))
 
-    def _ordered_pair_measure(self, name):
+    def _pairwise_measure(self, name):
         w, _, _, _, p = self.fourier_coefficients.shape
         result = np.full((w, self.frequencies.size, p, p), np.nan)
-        for j in range(p):
-            for i in range(p):
-                if i != j:
-                    result[..., i, j] = self.pair(i, j).measure(name)[..., 0, 1]
+        for pairs, model in self._directed_blocks():
+            values = self._directed_values(model, name).reshape(w, len(pairs), -1, 2)
+            i, j = pairs.T
+            result[..., i, j] = values[..., 0].transpose(0, 2, 1)
+            result[..., j, i] = values[..., 1].transpose(0, 2, 1)
         return result
+
+    def _directed_blocks(self):
+        """Fit bounded batches of unique pairs, recording pair/window diagnostics."""
+        coefficients = self.fourier_coefficients
+        w, r, k, n, p = coefficients.shape
+        pairs = np.array(list(combinations(range(p), 2)), dtype=int).reshape(-1, 2)
+        # Bound each coefficient/CSM temporary. Iteration has several such arrays;
+        # block_bytes is not a total-process memory limit.
+        step = max(1, min(64, self.block_bytes//(w*n*max(2*r*k, 4)*16)))
+        reason = np.full((w, p, p), len(FIT_REASONS), dtype=np.uint8)
+        residual = np.full((w, p, p), np.nan)
+        iterations = np.zeros((w, p, p), dtype=np.int32)
+        for start in range(0, len(pairs), step):
+            block = pairs[start:start+step]
+            selected = coefficients[..., block].transpose(0, 4, 1, 2, 3, 5)
+            selected = selected.reshape(w*len(block), r, k, n, 2)
+            model = SpectralConnectivity(selected, self.all_frequencies,
+                                         np.arange(w*len(block)),
+                                         frequency_resolution=self.frequency_resolution)
+            fit = model._factorization
+            i, j = block.T
+            reason[:, i, j] = reason[:, j, i] = fit.reason.reshape(w, -1)
+            residual[:, i, j] = residual[:, j, i] = fit.residual.reshape(w, -1)
+            iterations[:, i, j] = iterations[:, j, i] = fit.iterations.reshape(w, -1)
+            yield block, model
+        self._fit_diagnostics = (reason, residual, iterations)
+
+    @staticmethod
+    def _directed_values(model, name):
+        if name == "pairwise_spectral_granger_prediction":
+            values = _directed.pairwise_granger(model._transfer_function, model._noise_covariance)
+        else:
+            values = getattr(model, name)()
+        # Last axis is direction: ascending pair's first->second, second->first.
+        return values[..., [1, 0], [0, 1]]
+
+    def directed_summary(self, name, band):
+        """Mean, maximum and unavailable fraction from one shared pair-fit pass.
+
+        Calculator registers all requested bands/measures before evaluation,
+        enabling streaming fits even when full spectra exceed the cache budget.
+        Standalone calls share all four algebraic families for their requested
+        band. Cached results are small band matrices, not all pair models.
+        """
+        name = canonical_directed_measure(name)
+        band = tuple(band)
+        key = ("directed_summary", name, band)
+        if key in self._arrays.entries:
+            return self._arrays.get(key, None)
+        requests = self.directed_requests or {(kind, band) for kind in DIRECTED_MEASURES}
+        requests = requests | {(name, band)}
+        keys = [("directed_summary", kind, bounds) for kind, bounds in sorted(requests)]
+        return self._arrays.get_many(keys, self._directed_summaries)[key]
+
+    def _directed_summaries(self, missing):
+        w, _, _, _, p = self.fourier_coefficients.shape
+        output = {key: (np.full((w, p, p), np.nan), np.full((w, p, p), np.nan),
+                        np.ones((w, p, p))) for key in missing}
+        selections = {}
+        for key in missing:
+            low, high = key[2]
+            first = np.searchsorted(self.frequencies, low, side="left")
+            last = np.searchsorted(self.frequencies, high, side="right")
+            if last > first:
+                selections[key] = slice(first, last)
+        if not selections:
+            return output
+        names = sorted({key[1] for key in selections})
+        for pairs, model in self._directed_blocks():
+            i, j = pairs.T
+            for name in names:
+                values = self._directed_values(model, name).reshape(w, len(pairs), -1, 2)
+                for key, selected in selections.items():
+                    if key[1] != name:
+                        continue
+                    band = values[:, :, selected]
+                    finite = np.isfinite(band)
+                    count = finite.sum(axis=2)
+                    total = np.where(finite, band, 0).sum(axis=2)
+                    mean = np.divide(total, count, out=np.full_like(total, np.nan), where=count > 0)
+                    maximum = np.where(finite, band, -np.inf).max(axis=2)
+                    maximum[count == 0] = np.nan
+                    fraction = 1-count/band.shape[2]
+                    for matrix, reduced in zip(output[key], (mean, maximum, fraction)):
+                        matrix[:, i, j], matrix[:, j, i] = reduced[..., 0], reduced[..., 1]
+        return output
+
+    def directed_diagnostics(self, name, band):
+        _, _, fraction = self.directed_summary(name, band)
+        empty_band = not ((self.frequencies >= band[0]) & (self.frequencies <= band[1])).any()
+        if empty_band or self._fit_diagnostics is None:
+            # An empty requested band needs no fit and has no frequency estimate.
+            reason = np.full(fraction.shape, "empty_frequency_band", dtype="U32")
+            diagonal = np.arange(reason.shape[-1])
+            reason[..., diagonal, diagonal] = "diagonal"
+            return dict(reason=reason, reconstruction_error=np.full(fraction.shape, np.nan),
+                        iterations=np.zeros(fraction.shape, dtype=int), unavailable_fraction=fraction.copy())
+        codes, residual, iterations = self._fit_diagnostics
+        reasons = np.append(FIT_REASONS, "diagonal")[codes].astype("U32")
+        reasons[(codes == 0) & (fraction > 0)] = "undefined_frequency_values"
+        return dict(reason=reasons.copy(), reconstruction_error=residual.copy(),
+                    iterations=iterations.copy(), unavailable_fraction=fraction.copy())
 
 
 class _DataSpectralCache:
@@ -465,6 +564,7 @@ class _DataSpectralCache:
         self.source = source
         self.workspaces = OrderedDict()
         self.parametric = ArrayCache()
+        self.directed_requests = {}
 
 
 def data_spectral_cache(data):
@@ -494,7 +594,30 @@ def spectral_workspace(data, sampling_frequency):
         if len(cache.workspaces) > 2:
             cache.workspaces.popitem(last=False)
     cache.workspaces.move_to_end(settings)
+    cache.workspaces[settings].directed_requests = cache.directed_requests.get(sampling_frequency, set())
     return cache.workspaces[settings]
+
+
+def directed_workspace(data, sampling_frequency):
+    """Evaluate directed fits on the native observation grid, reusing tapers.
+
+    The dependency may pad other Fourier measures to a fast FFT length. Recover
+    the already tapered time samples and transform at native length, only when
+    needed. This avoids silently making dDTF scale depend on FFT-speed padding
+    while preserving other measures' previously reviewed frequency grids.
+    """
+    parent = spectral_workspace(data, sampling_frequency)
+    n = data.n_observations
+    if parent.fourier_coefficients.shape[-2] == n:
+        return parent
+    if parent._native_directed is None:
+        samples = ifft(parent.fourier_coefficients, axis=-2)[..., :n, :].real
+        coefficients = fft(samples, axis=-2)
+        parent._native_directed = SpectralConnectivity(
+            coefficients, np.fft.fftfreq(n, 1/sampling_frequency), parent.time,
+            frequency_resolution=parent.frequency_resolution)
+    parent._native_directed.directed_requests = parent.directed_requests
+    return parent._native_directed
 
 
 def frequency_mask(frequencies, fmin, fmax):

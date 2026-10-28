@@ -316,6 +316,13 @@ class Calculator:
             raise TypeError("on_metric_complete must be callable or None")
 
         self._metric_reports.clear()
+        # Register shared spectral requests without calculating any metric. The
+        # first directed SPI can then fit each pair once and stream every enabled
+        # band/family summary, keeping memory independent of full spectral output.
+        for implementation in self.spis.values():
+            register = getattr(implementation, "_register_shared_work", None)
+            if register is not None:
+                register(self.dataset)
         pbar = tqdm(self.spis.keys())
         try:
             for spi in pbar:

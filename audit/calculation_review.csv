@@ -5,7 +5,7 @@ preproc.two_array_api,,1,1,,
 base.pair_handling,,,,,
 spectral.multitaper_csm,,,,,Shared FFT/cross-spectra; avoids large taper-product arrays.
 spectral.band_selection,,,,,
-spectral.wilson_factorisation,,,,,
+spectral.wilson_factorisation,,,,,Corrected causal projection; channel-order invariant pair fits; numerical failure diagnostics.
 wavelet.morlet_cwt,,,,,
 infotheory.est.gaussian,,,,,
 infotheory.est.kozachenko,,,,,
@@ -43,9 +43,9 @@ pli-signed_multitaper_max_fs-1,all configured frequency bands,,,,Signed phase-la
 wpli-signed_multitaper_mean_fs-1,all configured frequency bands,,,,Shared wPLI work; zero weights -> NaN.
 wpli-signed_multitaper_max_fs-1,all configured frequency bands,,,,Shared wPLI work; zero weights -> NaN.
 psi_multitaper_mean_fs-1,all configured frequency bands,1,1,,"3 bands, 118x1024: 11.62 s -> 0.37 s (~31.1x). Shared spectra; adjacent-bin PSI replaces all-frequency pairs. Correct signed/directed labels."
-gd_multitaper_delay_fs-1,all configured frequency bands,,,,"3 bands, 118x1024: 12.01 s -> 4.07 s (~2.9x). Transform-derived spacing replaces /50; inclusive bands. Correct signed/directed labels."
-gd_multitaper_slope_fs-1,all configured frequency bands,,,,Correct signed/directed labels.
-gd_multitaper_rvalue_fs-1,all configured frequency bands,,,,Reverse-pair r sign fixed; invariant to channel reordering.
+gd_multitaper_delay_fs-1,all configured frequency bands,,,,"3 bands, 118x1024: 5.94 s -> 1.06 s (~5.6x). Batched fits and per-pair significance; calibrated coherence test; NaN diagnostics."
+gd_multitaper_slope_fs-1,all configured frequency bands,,,,Shares delay fit; calibrated per-pair significance; NaN diagnostics.
+gd_multitaper_rvalue_fs-1,all configured frequency bands,,,,Shares delay fit; calibrated per-pair significance; signed r; NaN diagnostics.
 je_gaussian,,,,,
 ce_gaussian,,,,,
 mi_gaussian,,,,,
@@ -108,12 +108,12 @@ prec_MinCovDet,,,,,Prevents stale results and accidental changes to cached fits;
 prec-sq_MinCovDet,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
 cov_EllipticEnvelope,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
 cov-sq_EllipticEnvelope,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
-pec,,,,,
-pec_orth,,,,,
-pec_orth_abs,,,,,
-pec_log,,,,,
-pec_orth_log,,,,,
-pec_orth_log_abs,,,,,
+pec,,,,,"6 variants, 118x1024: 0.83 s -> 0.77 s (~1.08x). Shared envelopes/projections; centered correlations."
+pec_orth,,,,,Shared projections; constant or roundoff-only envelopes return NaN with reasons.
+pec_orth_abs,,,,,Reuses directional correlations; abs before averaging; undefined envelopes return NaN.
+pec_log,,,,,Stable log power; centered correlations; undefined envelopes return NaN with reasons.
+pec_orth_log,,,,,Shared projections and stable log power; numerical degeneracy handled.
+pec_orth_log_abs,,,,,Reuses log-power directional correlations; abs before averaging; degeneracy handled.
 pdist_euclidean,,,,,
 pdist_cityblock,,,,,
 pdist_cosine,,,,,
@@ -199,24 +199,24 @@ phi_star_t-1_norm-0,,,,,
 phi_star_t-1_norm-1,,,,,
 phi_Geo_t-1_norm-0,,,,,
 phi_Geo_t-1_norm-1,,,,,
-dtf_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
-dtf_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
-dcoh_multitaper_mean_fs-1,all configured frequency bands,,,,"4x1024, 6 variants: 0.260 s -> 0.261 s. Correct squared DC/source weighting; shared fits."
-dcoh_multitaper_max_fs-1,all configured frequency bands,,,,Correct squared DC/source weighting before band max; shared fits.
-pdcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
-pdcoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
-gpdcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
-gpdcoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; inclusive band edges and Nyquist.
-ddtf_multitaper_mean_fs-1,all configured frequency bands,,,,Shared pair models; includes band edges and Nyquist in normalization.
-ddtf_multitaper_max_fs-1,all configured frequency bands,,,,Shared pair models; includes band edges and Nyquist in normalization.
-sgc_nonparametric_mean_fs-1,all configured frequency bands,,,,Shared factorization; inclusive bands through Nyquist; requested DC retained.
-sgc_nonparametric_max_fs-1,all configured frequency bands,,,,Shared factorization; inclusive bands through Nyquist; requested DC retained.
-sgc_parametric_mean_fs-1_order-None,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
-sgc_parametric_max_fs-1_order-None,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
-sgc_parametric_mean_fs-1_order-1,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
-sgc_parametric_max_fs-1_order-1,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
-sgc_parametric_mean_fs-1_order-20,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
-sgc_parametric_max_fs-1_order-20,all configured frequency bands,,,,Inclusive bands; requested DC retained instead of silently shifted.
+dtf_multitaper_mean_fs-1,all configured frequency bands,,,,One pair fit shared across directions/bands; source-first outputs; pairwise PDC reuses DTF.
+dtf_multitaper_max_fs-1,all configured frequency bands,,,,One pair fit shared across directions/bands; source-first outputs; pairwise PDC reuses DTF.
+dcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Squared source-weighted DC; one shared fit per pair; source-first outputs.
+dcoh_multitaper_max_fs-1,all configured frequency bands,,,,Squared source-weighted DC; one shared fit per pair; source-first outputs.
+pdcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Reuses equivalent pairwise DTF; source-first outputs; shared fits.
+pdcoh_multitaper_max_fs-1,all configured frequency bands,,,,Reuses equivalent pairwise DTF; source-first outputs; shared fits.
+gpdcoh_multitaper_mean_fs-1,all configured frequency bands,,,,Reuses equivalent pairwise squared DC; source-first outputs; shared fits.
+gpdcoh_multitaper_max_fs-1,all configured frequency bands,,,,Reuses equivalent pairwise squared DC; source-first outputs; shared fits.
+ddtf_multitaper_mean_fs-1,all configured frequency bands,,,,"118x1024, 11 bands: ~67 s/window; excluded. Correct squared DTF x partial coherence; native grid."
+ddtf_multitaper_max_fs-1,all configured frequency bands,,,,Correct squared formula and native-grid normalization; shared fits; excluded from run.
+sgc_nonparametric_mean_fs-1,all configured frequency bands,,,,Shared order-invariant pair fits; source-first outputs; valid zeros retained; failed pairs isolated.
+sgc_nonparametric_max_fs-1,all configured frequency bands,,,,Shared order-invariant pair fits; source-first outputs; valid zeros retained; failed pairs isolated.
+sgc_parametric_mean_fs-1_order-None,all configured frequency bands,,,,Source-first outputs; failed pair fits preserve healthy pairs.
+sgc_parametric_max_fs-1_order-None,all configured frequency bands,,,,Source-first outputs; failed pair fits preserve healthy pairs.
+sgc_parametric_mean_fs-1_order-1,all configured frequency bands,,,,Source-first outputs; failed pair fits preserve healthy pairs.
+sgc_parametric_max_fs-1_order-1,all configured frequency bands,,,,Source-first outputs; failed pair fits preserve healthy pairs.
+sgc_parametric_mean_fs-1_order-20,all configured frequency bands,,,,Source-first outputs; failed pair fits preserve healthy pairs.
+sgc_parametric_max_fs-1_order-20,all configured frequency bands,,,,Source-first outputs; failed pair fits preserve healthy pairs.
 psi_wavelet_mean_fs-1_mean,all configured frequency bands,,,,
 psi_wavelet_max_fs-1_max,all configured frequency bands,,,,
 gpfit_DotProduct,,,,,

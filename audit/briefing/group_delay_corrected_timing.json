@@ -1,0 +1,91 @@
+{
+  "source_sha256": {
+    "pyspi/_group_delay.py": "b3dadeccc4ede37a3adc1dd9cd20b31fb2ad79c569a1231ea2bfc5c876ad7224",
+    "pyspi/_spectral.py": "578311f16978c24e19f8c6769e8147ba9b6da74ce2c375efaeafd00299b71e3b",
+    "pyspi/statistics/spectral.py": "2908bd005583f88530587a4658693d7bf5fa6b138c4e44d2b02c5ec6c0bc7b40",
+    "audit/checks/probes/group_delay_corrected.py": "c8e2b9727323bb20cf36b842535f88dde62cb782d5755c70ce965cd6448bd341"
+  },
+  "baseline_revision": "cb60808",
+  "channels": 118,
+  "samples": 1024,
+  "fs": 2048,
+  "bands": [
+    [
+      0,
+      1024
+    ],
+    [
+      0,
+      512
+    ],
+    [
+      512,
+      1024
+    ]
+  ],
+  "numerical_threads": 1,
+  "repeats": 3,
+  "workloads": {
+    "sparse": {
+      "seconds": {
+        "before": [
+          6.541521314997226,
+          5.936141998012317,
+          5.867406908015255
+        ],
+        "after": [
+          0.9983427499828395,
+          1.0595977220218629,
+          1.0705547359830234
+        ]
+      },
+      "finite_pairs_by_band": {
+        "before": [
+          1,
+          1,
+          1
+        ],
+        "after": [
+          1,
+          1,
+          1
+        ]
+      },
+      "median_seconds": {
+        "before": 5.936141998012317,
+        "after": 1.0595977220218629
+      }
+    },
+    "dense": {
+      "seconds": {
+        "before": [
+          13.134597259981092,
+          13.22757097100839,
+          13.189835969009437
+        ],
+        "after": [
+          1.9434993749891873,
+          1.8649357209797017,
+          1.9395723430207
+        ]
+      },
+      "finite_pairs_by_band": {
+        "before": [
+          6903,
+          6903,
+          6903
+        ],
+        "after": [
+          6903,
+          6903,
+          6903
+        ]
+      },
+      "median_seconds": {
+        "before": 13.189835969009437,
+        "after": 1.9395723430207
+      }
+    }
+  },
+  "limits": "Fresh Data, FFT/coherency, selection, regression, all three bands. No I/O or other metrics. Definitions intentionally differ; not an equivalence benchmark."
+}

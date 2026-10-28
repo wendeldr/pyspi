@@ -135,20 +135,34 @@ def test_rng_and_shared_label_state_restored_even_on_failure(metric_config):
 
 
 @pytest.mark.java
-def test_retained_preset_preserves_inventory_with_explicit_xcorr_definitions():
+def test_reviewed_preset_preserves_unrelated_inventory_and_applies_approved_changes():
     import pyspi
-    path = Path(pyspi.__file__).parent / "workflow/retained185.yaml"
+    path = Path(pyspi.__file__).parent / "workflow/reviewed.yaml"
     metrics = resolve_metrics(path)
-    assert len(metrics) == len({m.identifier for m in metrics}) == 185
+    assert len(metrics) == len({m.identifier for m in metrics}) == 205
     root = Path(__file__).resolve().parents[2]
     for patient in ("004", "105", "111"):
         survey = json.loads((root / f"docs/storage_comparison/explore/properties_{patient}_64.json").read_text())
         historical = {row["metric"] for row in survey["rows"]}
-        assert {m.identifier for m in metrics if m.class_name != "CrossCorrelation"} == {
-            identifier for identifier in historical if not identifier.startswith("xcorr")}
+        changed_classes = {"CrossCorrelation", "SignedPhaseLagIndex", "SignedWeightedPhaseLagIndex"}
+        assert {m.identifier for m in metrics if m.class_name not in changed_classes} == {
+            identifier for identifier in historical if not identifier.startswith(("xcorr", "gd_"))}
         assert {m.identifier for m in metrics if m.class_name == "CrossCorrelation"} == {
             f"xcorr{sq}_{stat}_sig-False_fs-1_lag-0-125"
-            for sq in ("", "-sq") for stat in ("max", "mean")}
+            for sq in ("", "-sq") for stat in ("max", "mean")} | {
+            f"xcorr_{stat}_sig-False_fs-1_lag-0-125" for stat in ("min", "peak")} | {
+            f"xcorr{sq}_{stat}_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05"
+            for stat, sq in (("max", ""), ("max", "-sq"), ("mean", ""), ("mean", "-sq"),
+                             ("min", ""), ("peak", ""))}
+    for original, signed, prefix in (("PhaseLagIndex", "SignedPhaseLagIndex", "pli"),
+                                     ("WeightedPhaseLagIndex", "SignedWeightedPhaseLagIndex", "wpli")):
+        expected = {m.identifier.replace(prefix+"_", prefix+"-signed_", 1)
+                    for m in metrics if m.class_name == original}
+        assert len(expected) == 11
+        assert {m.identifier for m in metrics if m.class_name == signed} == expected
+    assert not {m.class_name for m in metrics} & {
+        "GroupDelay", "DirectedCoherence", "PartialDirectedCoherence", "GeneralizedPartialDirectedCoherence",
+        "DirectedTransferFunction", "DirectDirectedTransferFunction", "SpectralGrangerCausality"}
 
 
 @pytest.mark.java

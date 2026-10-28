@@ -15,8 +15,8 @@ Cross-correlation uses the workflow's target sampling rate to convert its
 configurable lag limit (default ±125 ms) to samples. A conflicting metric `fs`
 is rejected. See [calculation definitions](calculation_definitions.md) for
 minimum/peak variants, squaring order and significant-lag selection. The
-retained185 preset keeps its existing four cross-correlation requests;
-new variants can be selected in a custom metric configuration.
+reviewed preset includes unrestricted and significant-only max/mean,
+ordinary/squared, plus signed minimum and strongest-magnitude summaries.
 
 ## Terminal usage
 
@@ -49,7 +49,7 @@ and resolved without creating directories.
 version: 1
 edf_glob: /path/to/baseline_edfs/*.[Ee][Dd][Ff]
 metrics:
-  preset: retained185
+  preset: reviewed
 sampling_rate_hz: 2048
 bandpass:
   low_hz: 0.5
@@ -70,7 +70,7 @@ output_directory: /path/to/new_results
   explicit recording order is preserved. A source cannot appear twice, and
   `(patient_id, recording_id)` pairs must be unique. IDs default to the filename
   stem; no project-specific patient-number parsing is assumed.
-- `metrics` selects either a preset (`retained185`, `all`, `fast`, `sonnet`,
+- `metrics` selects either a preset (`reviewed`, `all`, `fast`, `sonnet`,
   `fabfour`) or `config: path/to/metrics.yaml` using pyspi's existing SPI YAML
   structure. The resolved report preserves configuration order.
 - `sampling_rate_hz`, `bandpass.low_hz`, `bandpass.high_hz`, and `reference` are
@@ -101,7 +101,7 @@ recordings:
       - index: 0
         name: A1
 metrics:
-  preset: retained185
+  preset: reviewed
 sampling_rate_hz: 2048
 bandpass: {low_hz: 0.5, high_hz: 500}
 reference: car
@@ -170,13 +170,22 @@ imports may initialize their normal third-party caches. NumPy/Python RNG state
 and mutable SPI class label lists are restored after inspection; labels remain
 unvalidated scientific metadata.
 
-The packaged [retained185.yaml](../pyspi/workflow/retained185.yaml) matches the
-185 identifiers in all three archived patient surveys. The historical timing
+The packaged [reviewed.yaml](../pyspi/workflow/reviewed.yaml) contains 205
+requests derived from the 185 identifiers in the archived patient surveys.
+It removes ten group-delay band requests, adds 22 signed PLI/wPLI requests
+matching the existing bands, and adds eight cross-correlation requests (signed
+minimum/peak without selection and six significant-only summaries). Factorized
+directed additions are excluded because of their runtime; corrected methods
+remain available in explicit configurations. Other selections are preserved.
+The example workflow selects `reviewed`; the former `retained185` preset name
+has been replaced, so update custom workflow YAMLs that use that name.
+
+The historical timing
 `used.yaml` contains 186 different requests: four significant-only
 cross-correlation variants instead of the two stored unrestricted max variants,
-and no stored Gaussian GC configuration. The preset aligns those choices and
-otherwise preserves the historical parameters, including full-precision bands.
-This reconstructs the requested inventory; it does not prove the exact original
+and no stored Gaussian GC configuration. The original inventory reconstruction
+aligned those choices and preserved full-precision bands; the reviewed config
+then applies the additions/removals above. This does not prove the exact original
 run's environment, defaults, preprocessing, or numerical outputs.
 
 Current verbose identifiers are retained. Simpler names and a separate parameter

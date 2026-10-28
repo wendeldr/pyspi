@@ -1,8 +1,8 @@
-# Retained 185 identifiers reconstructed from the saved patient-store inventory.
-# Based on historical used.yaml, with its cross-correlation choices aligned
-# to that inventory and its omitted Gaussian GC configuration restored.
+# Reviewed EEG selection, derived from the historical 185-metric inventory.
+# Includes signed phase-lag and expanded cross-correlation summaries.
+# Group delay and costly factorized directed families are excluded from this run.
 # Metric fs/bands remain explicit; EDF sampling_rate_hz does not rewrite them.
-# This is identifier/parameter reconstruction, not mathematical validation.
+# Review scope and measured runtime limits: docs/spectral_directed_review.md.
 .statistics.basic:
   Covariance:
     labels:
@@ -106,6 +106,24 @@
     - statistic: mean
       squared: true
       sigonly: false
+    - statistic: min
+      sigonly: false
+    - statistic: peak
+      sigonly: false
+    - statistic: max
+      sigonly: true
+    - statistic: max
+      squared: true
+      sigonly: true
+    - statistic: mean
+      sigonly: true
+    - statistic: mean
+      squared: true
+      sigonly: true
+    - statistic: min
+      sigonly: true
+    - statistic: peak
+      sigonly: true
 .statistics.distance:
   PairwiseDistance:
     labels:
@@ -395,6 +413,36 @@
       fmax: 0.1220703125
     - fmin: 0.00048828125
       fmax: 0.1220703125
+  SignedPhaseLagIndex:
+    labels:
+    - directed
+    - linear
+    - signed
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
   WeightedPhaseLagIndex:
     labels:
     - undirected
@@ -425,11 +473,41 @@
       fmax: 0.1220703125
     - fmin: 0.00048828125
       fmax: 0.1220703125
+  SignedWeightedPhaseLagIndex:
+    labels:
+    - directed
+    - linear
+    - signed
+    - bivariate
+    - frequency-dependent
+    dependencies: null
+    configs:
+    - fs: 1
+    - fmin: 0.00048828125
+      fmax: 0.001953125
+    - fmin: 0.001953125
+      fmax: 0.00390625
+    - fmin: 0.00390625
+      fmax: 0.005859375
+    - fmin: 0.005859375
+      fmax: 0.0146484375
+    - fmin: 0.0146484375
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.0732421875
+    - fmin: 0.0732421875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.0341796875
+    - fmin: 0.0341796875
+      fmax: 0.1220703125
+    - fmin: 0.00048828125
+      fmax: 0.1220703125
   DebiasedSquaredPhaseLagIndex:
     labels:
     - undirected
     - linear
-    - unsigned
+    - signed
     - bivariate
     - frequency-dependent
     dependencies: null
@@ -459,7 +537,7 @@
     labels:
     - undirected
     - linear
-    - unsigned
+    - signed
     - bivariate
     - frequency-dependent
     dependencies: null
@@ -489,7 +567,7 @@
     labels:
     - undirected
     - linear
-    - unsigned
+    - signed
     - bivariate
     - frequency-dependent
     dependencies: null
@@ -515,45 +593,6 @@
       fmax: 0.1220703125
     - fmin: 0.00048828125
       fmax: 0.1220703125
-  GroupDelay:
-    labels:
-    - directed
-    - linear
-    - signed
-    - bivariate
-    - frequency-dependent
-    dependencies: null
-    configs:
-    - fmin: 0.00048828125
-      fmax: 0.001953125
-      statistic: delay
-    - fmin: 0.001953125
-      fmax: 0.00390625
-      statistic: delay
-    - fmin: 0.00390625
-      fmax: 0.005859375
-      statistic: delay
-    - fmin: 0.005859375
-      fmax: 0.0146484375
-      statistic: delay
-    - fmin: 0.0146484375
-      fmax: 0.0341796875
-      statistic: delay
-    - fmin: 0.0341796875
-      fmax: 0.0732421875
-      statistic: delay
-    - fmin: 0.0732421875
-      fmax: 0.1220703125
-      statistic: delay
-    - fmin: 0.00048828125
-      fmax: 0.0341796875
-      statistic: delay
-    - fmin: 0.0341796875
-      fmax: 0.1220703125
-      statistic: delay
-    - fmin: 0.00048828125
-      fmax: 0.1220703125
-      statistic: delay
 .statistics.misc:
   LinearModel:
     labels:
@@ -573,7 +612,7 @@
     labels:
     - undirected
     - linear
-    - unsigned
+    - signed/unsigned
     - bivariate
     - time-dependent
     dependencies: null

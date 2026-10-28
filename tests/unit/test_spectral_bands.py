@@ -24,9 +24,11 @@ def test_common_grid_and_transfer_include_dc_and_last_positive_bin(n):
         expected = (x * y.conj()).mean() / np.sqrt((abs(x)**2).mean() * (abs(y)**2).mean())
         np.testing.assert_allclose(conn.coherency()[0, f, 0, 1], expected, atol=1e-13)
         np.testing.assert_allclose(conn.power()[0, f, 0], (abs(x)**2).mean(), atol=1e-13)
-    # Independent two-sided factorization and impulse-response normalization.
-    reference = sc.Connectivity.from_multitaper(transform)
-    factor = reference._minimum_phase_factor
+    # Factorization identities on the complete two-sided spectrum; independent
+    # known-model recovery and causal projection are checked in test_wilson.py.
+    factor = conn._minimum_phase_factor
+    spectrum = np.einsum("wrkfi,wrkfj->wfij", coefficients, coefficients.conj())/5
+    np.testing.assert_allclose(factor @ factor.swapaxes(-1, -2).conj(), spectrum, rtol=1e-9, atol=1e-10)
     lag_zero = np.fft.ifft(factor, axis=1).real[:, 0]
     transfer = factor @ np.linalg.inv(lag_zero)[:, None]
     np.testing.assert_allclose(conn._transfer_function, transfer[:, :len(frequencies)],

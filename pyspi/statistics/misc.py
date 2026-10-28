@@ -7,12 +7,13 @@ from statsmodels.tsa.vector_ar.vecm import coint_johansen
 from sklearn.gaussian_process import kernels, GaussianProcessRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn import linear_model
-import mne_connectivity as mnec
+from pyspi._envelope import envelope_workspace
 from pyspi.lib.ids.dependence import compute_IDS
 
 from pyspi.base import (
     Directed,
     Undirected,
+    Signed,
     Unsigned,
     parse_bivariate,
     parse_multivariate,
@@ -147,15 +148,23 @@ class GPModel(Directed, Unsigned):
         return mean_squared_error(y_predict, np.ravel(z[j]))
 
 
-class PowerEnvelopeCorrelation(Undirected, Unsigned):
-    name = "Power envelope correlation"
+class PowerEnvelopeCorrelation(Undirected, Signed):
+    """Amplitude or log-power envelope correlation of the supplied signal.
+
+    No internal band filter is applied. Orthogonalized results average both
+    projection directions; absolute variants take abs before that average.
+    """
+
+    name = "Envelope correlation"
     identifier = "pec"
-    labels = ["unsigned", "misc", "undirected"]
+    labels = ["misc", "undirected"]
 
     def __init__(self, orth=False, log=False, absolute=False):
-        self._orth = False
-        if orth:
-            self._orth = "pairwise"
+        if absolute and not orth:
+            raise ValueError("absolute=True requires pairwise orthogonalization.")
+        self._orth = bool(orth)
+        self.labels = self.labels + ["unsigned" if absolute else "signed"]
+        if self._orth:
             self.identifier += "_orth"
         self._log = log
         if log:
@@ -164,16 +173,16 @@ class PowerEnvelopeCorrelation(Undirected, Unsigned):
         if absolute:
             self.identifier += "_abs"
 
+    def issigned(self):
+        return not self._absolute
+
     @parse_multivariate
     def multivariate(self, data):
-        z = np.moveaxis(data.to_numpy(), 2, 0)
-        adj = np.squeeze(
-            mnec.envelope_correlation(
-                z, orthogonalize=self._orth, log=self._log, absolute=self._absolute
-            ).combine("mean").get_data(output="dense")
-        )
-        np.fill_diagonal(adj, np.nan)
-        return adj
+        return envelope_workspace(data).result(self._orth, self._log, self._absolute)
+
+    @parse_multivariate
+    def diagnostics(self, data):
+        return envelope_workspace(data).diagnostics(self._orth, self._log)
 
 class InterDependenceScore(Undirected, Unsigned):
     name = "Interdependence score"
