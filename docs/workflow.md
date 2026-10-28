@@ -39,6 +39,19 @@ invalid configuration/input or unavailable requested dependencies. Ready means
 header/configuration checks passed; it does not establish signal quality,
 estimator convergence, or mathematical correctness.
 
+Before a long run, ask for a planning estimate of its duration and output size:
+
+```bash
+uv run --no-sync python -m pyspi.workflow estimate workflow.yaml
+uv run --no-sync python -m pyspi.workflow estimate workflow.yaml --json
+```
+
+The first call measures a calibration beside the configuration
+(`workflow.yaml.calibration.json`, about a minute for the reviewed selection
+on a 118-contact recording) and later calls reuse it while the metric set,
+window and preprocessing still match. See
+[Calibration and runtime estimates](#calibration-and-runtime-estimates).
+
 ## Configuration
 
 Version 1 accepts these fields; unknown fields and duplicate YAML keys fail.
@@ -540,3 +553,60 @@ does not refactor the production format or retain every completed matrix before
 a batch commits. Files per patient therefore increase with smaller batches.
 Representative measurements and verification are recorded in
 [execution_results.json](../tests/workflow/execution_results.json).
+
+## Calibration and runtime estimates
+
+`estimate CONFIG` prints, per recording, the channel count, planned windows,
+seconds per window, preparation, compute, output and total time, and the
+expected stored size, followed by cohort totals and the ten costliest metrics.
+`--json` prints the same figures. Only the configuration is required: worker
+count, threads and spectral cache come from its `execution` block.
+
+The numbers come from a calibration measured with the configuration's own
+metric set. `estimate` measures one automatically when none exists beside the
+configuration or the existing one no longer matches its metric identifiers,
+window length, detrend/z-score or threads; `calibrate CONFIG` rebuilds it on
+demand with optional `--channels`, `--windows-per-point`, `--budget-seconds`
+and `--synthetic`. Any metric configuration the workflow accepts can be
+calibrated, including Java information estimators; the Calculator is built
+exactly as a run builds it.
+
+Calibration prepares the recording with the most output channels exactly as a
+run would, then times the first 2, 4, 8, …, 128 and finally all of its channels
+through the Calculator on a few windows from the middle of the recording.
+Measuring at the full count matters: whole-matrix estimators have a fixed cost
+that dominates at small counts and a steep tail at large ones, so power laws
+fitted on small counts under-predict by several times. Every other recording
+in the cohort is interpolated between measured counts (log-log linear). A
+recording above the largest measured count is extrapolated with the local
+exponent clamped to [0, 3] and reported as such. The ladder stops early when
+the next count is predicted to exceed the budget (default 600 seconds), which
+keeps calibration finite for costly families such as Kraskov transfer entropy,
+convergent cross mapping or wavelet coherence; those estimates then extrapolate.
+
+Estimates deliberately err long and large. Each ladder point records the
+slowest of its timed windows, and the stages carry fixed headroom (25%
+preparation, 15% compute, 40% output, 10% stored size), because a run that
+finishes early costs nothing while an overrun costs a schedule. On the
+verification recording below the measured figures sat 10–25% under the
+uninflated prediction. Per recording, with N output channels, W planned
+windows and the configured worker count, before headroom:
+
+- compute = W × seconds-per-window(N) ÷ (workers × 0.9 efficiency), plus half
+  a window per batch commit per idle worker when workers > 1;
+- preparation scales the calibration recording's measured preparation time by
+  native channel-samples;
+- output time = batches × measured commit cost + raw matrix bytes × measured
+  seconds per byte, where batches follow `output_batch_mib`;
+- stored size = raw matrix bytes × each metric's measured on-disk ratio (which
+  already reflects upper-triangle packing and compression) plus the diagnostic
+  reports.
+
+Per-metric times are additive only for one metric set, because shared
+covariance and spectral caches charge the first metric in a family; this is why
+a changed metric set triggers a new calibration rather than a subset sum.
+Robust covariance and graphical-lasso fits are iterative and data dependent, so
+synthetic data (`--synthetic`) misstates them and omits preparation entirely;
+use it only without a usable EDF. Spectral-cache size, host load, resumed runs
+and other patients' conditioning all move real durations. A bounded
+`profile --max-windows` run remains the way to check an estimate.
