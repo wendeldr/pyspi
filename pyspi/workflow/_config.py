@@ -163,6 +163,8 @@ class Configuration:
     output_batch_mib: float
     metadata: Path | None
     execution: dict
+    output_dtype: str
+    output_dtype_overrides: dict
 
 
 def load_config(path) -> Configuration:
@@ -172,7 +174,7 @@ def load_config(path) -> Configuration:
     cfg = fields(read_yaml(path), {"version", "recordings", "edf_glob", "metrics",
                  "edf_directory", "metadata", "sampling_rate_hz", "window", "preprocessing",
                  "bandpass", "notch", "reference", "run_name", "output_batch_mib", "output_directory",
-                 "execution"}, "workflow")
+                 "execution", "output_dtype", "output_dtype_overrides"}, "workflow")
     if type(cfg.get("version")) is not int or cfg["version"] != 1:
         raise WorkflowError("workflow version must be 1")
     if sum(key in cfg for key in ("recordings", "edf_glob", "edf_directory")) != 1:
@@ -287,8 +289,15 @@ def load_config(path) -> Configuration:
             raise WorkflowError(f"execution.{key} must be a positive integer")
     if scratch is not None:
         execution["scratch_directory"] = str(scratch)
+    from ._precision import dtype_name
+    output_dtype = dtype_name(cfg.get("output_dtype"), "output_dtype (required)")
+    overrides = cfg.get("output_dtype_overrides", {})
+    if not isinstance(overrides, dict) or any(not isinstance(k, str) or not k for k in overrides):
+        raise WorkflowError("output_dtype_overrides must map metric identifiers to dtypes")
+    overrides = {key: dtype_name(value, f"output_dtype_overrides.{key}")
+                 for key, value in overrides.items()}
     return Configuration(path, tuple(recordings), metric_config, rate, length, step,
                          detrend, zscore, output, (float(low), float(high)), notch, reference,
                          safe_id(cfg["run_name"], "run_name") if "run_name" in cfg else None,
                          float(positive_number(cfg.get("output_batch_mib", 64), "output_batch_mib")), metadata,
-                         execution)
+                         execution, output_dtype, overrides)

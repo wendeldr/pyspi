@@ -22,6 +22,7 @@ from ._output import RUN_SCHEMA, Journal, atomic_json, child_path, read_json
 from ._preflight import preflight
 from ._prepare import prepare_recording
 from ._windows import plan_windows
+from ._precision import resolve_dtypes, convert_output
 
 
 @contextmanager
@@ -71,7 +72,8 @@ def _contract(cfg, recording, entry, metrics, environment, max_windows):
                 "window_seconds": float(cfg.window_seconds), "step_seconds": float(cfg.step_seconds),
                 "detrend": cfg.detrend, "zscore": cfg.zscore,
                 "metrics": [m.as_dict() for m in metrics], "environment": environment,
-                "output_batch_mib": cfg.output_batch_mib, "max_windows": max_windows}
+                "output_batch_mib": cfg.output_batch_mib, "max_windows": max_windows,
+                "output_dtypes": resolve_dtypes(cfg, [m.identifier for m in metrics])}
     if cfg.reference["method"] == "rest":
         forward = Path(cfg.reference["forward"])
         stat = forward.stat()
@@ -140,7 +142,12 @@ def _class_label_state(metrics):
 
 
 def _batch_size(cfg, n, metrics):
-    one = n * n * 8 * metrics
+    # Integer counts are used only by estimates without per-metric inventory.
+    if isinstance(metrics, int):
+        bytes_per_pair = np.dtype(cfg.output_dtype).itemsize * metrics
+    else:
+        bytes_per_pair = sum(np.dtype(dt).itemsize for dt in resolve_dtypes(cfg, metrics).values())
+    one = n * n * bytes_per_pair
     target = int(cfg.output_batch_mib * 1024 ** 2)
     if one > target:
         warnings.warn(f"one output window needs approximately {one} bytes, exceeding output_batch_mib; "
@@ -160,10 +167,10 @@ def _new_manifest(contract, entry, cfg, metadata_link):
     plan = planned_windows(entry, cfg)
     if contract["max_windows"] is not None:
         plan = replace(plan, count=min(plan.count, contract["max_windows"]))
-    size = _batch_size(cfg, len(entry["output_channels"]), len(contract["metrics"]))
+    size = _batch_size(cfg, len(entry["output_channels"]), [m["identifier"] for m in contract["metrics"]])
     return {"schema": RUN_SCHEMA, "contract": contract, "state": "pending",
             "channels": entry["output_channels"], "recording_metadata": metadata_link,
-            "windows": plan.as_dict(include_ranges=False), "dtypes": {}, "sessions": [],
+            "windows": plan.as_dict(include_ranges=False), "dtypes": contract["output_dtypes"].copy(), "sessions": [],
             "batches": [{"start": start, "stop": min(start + size, plan.count), "state": "pending"}
                         for start in range(0, plan.count, size)]}
 
@@ -251,11 +258,16 @@ def _commit_batch(path, manifest, batch, buffers, journal, metrics, session):
             shutil.rmtree(old)
 
 
-def _store_values(buffers, report, values, valid, n, count, slot):
+def _store_values(buffers, report, values, valid, n, count, slot, dtypes):
     if values is None:
         return
     if values.dtype not in (np.dtype("float32"), np.dtype("float64")) or values.shape != (len(valid), len(valid)):
         raise WorkflowError("Calculator produced unsupported output dtype/axes")
+    values, conversion = convert_output(values, dtypes[report.identifier], report.identifier)
+    if conversion is not None:
+        conversion["positions"] = [[int(valid[row]), int(valid[column])]
+                                   for row, column in conversion["positions"]]
+        conversion["position_axes"] = "zero_based_output_row_column"
     if report.identifier not in buffers:
         buffers[report.identifier] = np.full((n, n, count), np.nan, dtype=values.dtype)
     if buffers[report.identifier].dtype != values.dtype:
@@ -263,6 +275,7 @@ def _store_values(buffers, report, values, valid, n, count, slot):
     target = buffers[report.identifier][:, :, slot]
     target[:] = np.nan
     target[np.ix_(valid, valid)] = values
+    return conversion
 
 
 def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failures, session, pool=None):
@@ -316,10 +329,11 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
                     session.setdefault("worker_jvm_started", {})[str(result.pid)] = result.jvm_started
                     output_started = perf_counter()
                     for report, values in result.records:
-                        journal.record(result.window, report, stage=result.stage, window_warnings=result.warnings)
                         session["metric_elapsed_seconds"] += report.elapsed_seconds
-                        _store_values(buffers, report, values, result.valid, n, count,
-                                      result.window-batch["start"])
+                        conversion = _store_values(buffers, report, values, result.valid, n, count,
+                                                   result.window-batch["start"], manifest["dtypes"])
+                        journal.record(result.window, report, stage=result.stage, window_warnings=result.warnings,
+                                       output_conversion=conversion)
                     journal.sync()
                     session["output_seconds"] += perf_counter()-output_started
             finally:
@@ -373,9 +387,10 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
 
             def complete(report, values):
                 before = perf_counter()
-                journal.record(window, report, window_warnings=window_warnings)
                 session["metric_elapsed_seconds"] += report.elapsed_seconds
-                _store_values(buffers, report, values, valid, n, count, window-batch["start"])
+                conversion = _store_values(buffers, report, values, valid, n, count,
+                                           window-batch["start"], manifest["dtypes"])
+                journal.record(window, report, window_warnings=window_warnings, output_conversion=conversion)
                 session["output_seconds"] += perf_counter() - before
 
             before = perf_counter()

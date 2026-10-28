@@ -36,6 +36,8 @@ class PreflightReport:
                 "pyspi_version": version("pyspi"), "configuration": str(cfg.source),
                 "metric_config": str(cfg.metric_config),
                 "execution": cfg.execution.copy(),
+                "output_dtype": cfg.output_dtype,
+                "output_dtype_overrides": cfg.output_dtype_overrides.copy(),
                 "sampling_rate_hz": float(self.sampling_rate_hz),
                 "window": {"length_seconds": float(cfg.window_seconds), "step_seconds": float(cfg.step_seconds)},
                 "preprocessing": [operation for enabled, operation in
@@ -70,6 +72,8 @@ def preflight(config) -> PreflightReport:
             raise WorkflowError("window length/step must each span a whole number of samples at the target sampling_rate_hz")
     metrics = resolve_metrics(cfg.metric_config, sampling_rate_hz=float(target))
     required_bands(metrics, cfg)
+    from ._precision import resolve_dtypes
+    resolve_dtypes(cfg, [metric.identifier for metric in metrics])
     recordings = []
     for recording, header, channels in selected:
         output_names = reference_names([name for _, name in channels], cfg.reference)

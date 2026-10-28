@@ -87,6 +87,11 @@ def calibration_issues(calibration, cfg, report):
     identifiers = [m.identifier for m in report.metrics]
     if list(calibration["metrics"]) != identifiers:
         stale.append("metric set differs from the calibration (shared caches make per-metric times non-additive)")
+    from ._precision import resolve_dtypes
+    if any(calibration.get("dtypes", {}).get(name) != dtype
+           for name, dtype in resolve_dtypes(cfg, identifiers).items()
+           if name in calibration["metrics"]):
+        stale.append("output precision differs from the calibration")
     window = int(cfg.window_seconds * cfg.sampling_rate_hz)
     if calibration["window_samples"] != window:
         stale.append(f"window length differs ({calibration['window_samples']} calibrated vs {window} samples)")
@@ -124,7 +129,7 @@ def estimate_recording(entry, cfg, calibration, *, max_windows=None):
     if usable < 2:
         raise WorkflowError("fewer than two channels have an available reference")
     per_window = window_seconds(calibration, usable)
-    batch = _batch_size(cfg, n, len(identifiers))
+    batch = _batch_size(cfg, n, identifiers)
     batches = math.ceil(count / batch) if count else 0
     workers = cfg.execution["workers"]
     efficiency = 1. if workers == 1 else PARALLEL_EFFICIENCY
@@ -138,7 +143,8 @@ def estimate_recording(entry, cfg, calibration, *, max_windows=None):
     if preparation is not None and preparation["native_samples"]:
         prepare = preparation["seconds"] / preparation["native_samples"] * native_samples * HEADROOM["prepare"]
     output = calibration["output"]
-    raw_per_window = sum(n * n * _itemsize(calibration, m) for m in identifiers)
+    from ._precision import resolve_dtypes
+    raw_per_window = sum(n * n * np.dtype(dt).itemsize for dt in resolve_dtypes(cfg, identifiers).values())
     raw_bytes = count * raw_per_window
     output_seconds = (batches * output["seconds_per_batch"] + raw_bytes * output["seconds_per_raw_byte"]) * HEADROOM["output"]
     stored_bytes = count * sum(output["stored_ratio"][m] * n * n * _itemsize(calibration, m) for m in identifiers)

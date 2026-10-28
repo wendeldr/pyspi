@@ -86,8 +86,10 @@ class Journal:
         sync_directory(self.path.parent)
         sync_directory(self.path.parent.parent)
 
-    def record(self, window, report, *, stage="calculation", window_warnings=()):
+    def record(self, window, report, *, stage="calculation", window_warnings=(), output_conversion=None):
         event = {"window": window, "stage": stage, "report": report.as_dict()}
+        if output_conversion is not None:
+            event["output_conversion"] = output_conversion
         if window_warnings:
             event["window_preprocessing_warnings"] = [asdict(w) for w in window_warnings]
         self.stream.write(json.dumps(event, allow_nan=False, separators=(",", ":")) + "\n")

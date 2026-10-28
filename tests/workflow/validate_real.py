@@ -54,7 +54,7 @@ def main():
         bounded = args.output / f"{legacy.stem}-bounded-selection.json"
         bounded.write_text(json.dumps(document))
         config = args.output / f"{legacy.stem}.yaml"
-        config.write_text(yaml.safe_dump({"version": 1, "recordings": [str(edf)],
+        config.write_text(yaml.safe_dump({"version": 1, "output_dtype": "float64", "recordings": [str(edf)],
             "metadata": str(bounded), "metrics": {"config": str(metric_file)}, "sampling_rate_hz": 2048,
             "bandpass": {"low_hz": .5, "high_hz": 500}, "reference": "car",
             "window": {"length_seconds": .5, "step_seconds": .25 if i % 2 else .5},

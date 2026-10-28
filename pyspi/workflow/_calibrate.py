@@ -245,11 +245,17 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
             buffers, events = {}, []
             for slot, timing in enumerate(timings):
                 for r, values in timing["records"]:
-                    _store_values(buffers, r, values, timing["valid"], count, len(windows), slot)
-                    events.append({"window": slot, "stage": "calculation", "report": r.as_dict()})
+                    from ._precision import resolve_dtypes
+                    conversion = _store_values(buffers, r, values, timing["valid"], count, len(windows), slot,
+                                               resolve_dtypes(cfg, [m.identifier for m in report.metrics]))
+                    event = {"window": slot, "stage": "calculation", "report": r.as_dict()}
+                    if conversion is not None:
+                        event["output_conversion"] = conversion
+                    events.append(event)
             for m in report.metrics:
                 if m.identifier not in buffers:
-                    buffers[m.identifier] = np.full((count, count, len(windows)), np.nan)
+                    buffers[m.identifier] = np.full((count, count, len(windows)), np.nan,
+                                                   dtype=resolve_dtypes(cfg, [s.identifier for s in report.metrics])[m.identifier])
                 dtypes[m.identifier] = buffers[m.identifier].dtype.str
         measured = points[-1]["channels"]
         output = _measure_output(Path(temp) / "output", buffers, events, report.metrics, names[:measured], len(windows))

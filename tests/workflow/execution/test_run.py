@@ -212,7 +212,7 @@ def test_failed_first_batch_does_not_force_float64_precision(execution_config, m
         bits = np.array([[0, 0x80000000], [0x7fc00123, 0]], dtype=np.uint32)
         return bits.view(np.float32)
     monkeypatch.setattr(Covariance, "multivariate", metric)
-    [path] = run(execution_config(output_batch_mib=32/1024**2), max_windows=2)
+    [path] = run(execution_config(output_dtype="float32", output_batch_mib=32/1024**2), max_windows=2)
     reader = open_run(path)
     values = reader.load(reader.metrics[0])
     assert values.dtype == np.float32

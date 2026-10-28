@@ -34,7 +34,7 @@ def main():
     args.out = args.out.resolve()
     args.out.mkdir(parents=True, exist_ok=True)
     # Resolve paths through the validated Configuration before relocating YAML.
-    base = {"version": 1, "recordings": [{"path": str(r.path), "patient_id": r.patient_id,
+    base = {"version": 1, "output_dtype": "float64", "recordings": [{"path": str(r.path), "patient_id": r.patient_id,
              "recording_id": r.recording_id, "channels": list(r.channels) if r.channels else None}
              for r in cfg.recordings], "metrics": {"config": str(cfg.metric_config)},
             "sampling_rate_hz": float(cfg.sampling_rate_hz), "bandpass": {

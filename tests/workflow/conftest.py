@@ -55,7 +55,7 @@ def metric_config(tmp_path):
 @pytest.fixture
 def workflow(tmp_path, metric_config):
     def write(path, *, config=None, **changes):
-        cfg = {"version": 1, "recordings": [{"path": str(path)}],
+        cfg = {"version": 1, "output_dtype": "float64", "recordings": [{"path": str(path)}],
                "metrics": changes["metrics"] if "metrics" in changes else {"config": str(metric_config())},
                "sampling_rate_hz": 8, "bandpass": {"low_hz": .5, "high_hz": 3}, "reference": "none"}
         if config is not None:

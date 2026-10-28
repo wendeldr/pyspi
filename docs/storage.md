@@ -1,7 +1,7 @@
 # Exact connectivity storage
 
 `pyspi.storage` stores connectivity matrices in a local Zarr v3 directory, one
-group per metric. It preserves native **float32 and float64 bits**, including
+group per metric. It preserves native **float16, float32 and float64 bits**, including
 NaN payloads, infinities, subnormals, and signed zeros. It never changes metric
 definitions, takes absolute values, drops reciprocal differences, or converts
 precision. Other input dtypes are rejected; explicitly convert them upstream
@@ -215,3 +215,26 @@ analysis, such as the project's prediction-cache builder.
 See [the storage test guide](../tests/storage/README.md) and
 [production validation](../tests/storage/PRODUCTION_RESULTS.md). Benchmarks use
 synthetic matrices and temporary directories; existing patient stores are untouched.
+
+## Shared implementation and workflow precision
+
+The compact engine is now supplied by `seeg-dataset`; `pyspi.storage` delegates
+packing, writing and reading to that implementation. Native float16, float32 and
+float64 inputs are supported with both pcodec and Zstd. Storage preserves the
+bits supplied to it; it does not choose or convert precision.
+
+Workflow configurations must set `output_dtype: float32` (or float16/float64).
+`output_dtype_overrides` maps exact selected metric identifiers to an alternative
+dtype. Unmatched identifiers are rejected before calculation. Estimator arithmetic
+is unchanged; conversion happens once when collecting output. Batch buffers use
+the requested per-metric sizes, and precision choices participate in resume checks.
+
+Any finite value that overflows on conversion becomes signed infinity, without
+stopping the run. Each affected event in `attempts.jsonl` and committed
+`reports.json` includes `output_conversion`: source/output dtype, count, sign
+counts, zero-based output row/column `positions`, and corresponding finite
+`original_values`. The event identifies the metric and zero-based window. Values
+and positions have matching order; ordinary JSON parsing into float64 recovers
+source float64 values exactly. Use the run's channel list to interpret positions.
+Existing NaNs/infinities are not conversion-overflow events. Reductions do not
+silently remove infinity: downstream analysis must choose its invalid-value policy.

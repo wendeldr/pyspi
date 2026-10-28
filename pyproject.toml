@@ -61,6 +61,7 @@ classifiers = [
 
 [project.optional-dependencies]
 storage = [
+    "seeg-dataset>=0.1.0",
     "zarr>=3.4.1,<4",
     "google-crc32c>=1.9,<2",
     "numcodecs>=0.17,<0.18",
@@ -90,6 +91,7 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.uv.sources]
+seeg-dataset = { path = "../seeg-dataset", editable = true }
 torch = { index = "pytorch-cpu" }
 
 [project.urls]

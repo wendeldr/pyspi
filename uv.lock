@@ -873,6 +873,7 @@ dependencies = [
 
 [package.optional-dependencies]
 storage = [
+    { name = "seeg-dataset" },
     { name = "google-crc32c" },
     { name = "numcodecs" },
     { name = "pcodec" },
@@ -887,6 +888,7 @@ testing = [
 
 [package.metadata]
 requires-dist = [
+    { name = "seeg-dataset", marker = "extra == 'storage'", editable = "../seeg-dataset" },
     { name = "cdt", specifier = "==0.6.0" },
     { name = "colorama", specifier = ">=0.4.6,<0.5" },
     { name = "dill", specifier = ">=0.4.1,<0.5" },
@@ -1350,3 +1352,31 @@ sdist = { url = "https://files.pythonhosted.org/packages/3e/62/e8a36a4b65f01499c
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a6/82/0dbc9bc77b49cfb9268dc2b2b1dcd04346c8c7ed52e272b76a628a941656/zarr-3.4.1-py3-none-any.whl", hash = "sha256:38b540578a119352bdce02a720d7bfd99846e77f0728c58b1bab3d1f547526a0", size = 405257, upload-time = "2026-10-08T17:14:23.926Z" },
 ]
+
+[[package]]
+name = "seeg-dataset"
+version = "0.1.0"
+source = { editable = "../seeg-dataset" }
+dependencies = [
+    { name = "google-crc32c" },
+    { name = "numcodecs" },
+    { name = "numpy" },
+    { name = "pcodec" },
+    { name = "zarr" },
+]
+
+[package.optional-dependencies]
+testing = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "google-crc32c", specifier = ">=1.9,<2" },
+    { name = "numcodecs", specifier = ">=0.17,<0.18" },
+    { name = "numpy", specifier = ">=2.5.4,<2.6" },
+    { name = "pcodec", specifier = ">=1.0.4,<2" },
+    { name = "pytest", marker = "extra == 'testing'", specifier = ">=8.4,<10" },
+    { name = "zarr", specifier = ">=3.4.1,<4" },
+]
+provides-extras = ["testing"]
