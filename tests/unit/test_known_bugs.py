@@ -49,34 +49,17 @@ def _finite_offdiag(*mats):
 
 
 # --------------------------------------------------------------------------- #
-# 1. TransferEntropy(estimator='symbolic') falls through to the Gaussian TE
+# 1. Symbolic TE dispatch is fixed; independent definitions live in
+#    test_symbolic_transfer.py. Keep a small guard against reintroducing it.
 # --------------------------------------------------------------------------- #
-@pytest.fixture(scope="module")
-def te_outputs(jvm, statistics_modules):
-    # Module-scoped fixtures are set up before the function-scoped autouse
-    # ``_skip_java_without_jvm``, so the java marker alone cannot skip this.
-    if not jvm or "infotheory" not in statistics_modules:
-        pytest.skip("JVM unavailable: TransferEntropy needs JIDT")
-    infotheory = statistics_modules["infotheory"]
+def test_te_symbolic_fixed():
+    from pyspi.statistics import infotheory
     x = _seeded(3, 80, seed=11)
-    sym = infotheory.TransferEntropy(estimator="symbolic", k_history=1, l_history=1)
+    sym = infotheory.TransferEntropy(estimator="symbolic", pattern_length=3)
     gau = infotheory.TransferEntropy(estimator="gaussian", k_history=1, l_history=1)
     assert sym.identifier.startswith("te_symbolic") and gau.identifier.startswith("gc_gaussian")
-    return _finite_offdiag(sym.multivariate(_data(x)), gau.multivariate(_data(x)))
-
-
-@pytest.mark.java
-def test_te_symbolic_current(te_outputs):
-    sym, gau = te_outputs
-    assert _same(sym, gau)
-
-
-@pytest.mark.java
-@pytest.mark.xfail(strict=True, raises=AssertionError,
-                   reason="known bug: symbolic TE uses TransferEntropyCalculatorGaussian")
-def test_te_symbolic_fixed(te_outputs):
-    sym, gau = te_outputs
-    assert not _same(sym, gau)
+    symbolic, gaussian = _finite_offdiag(sym.multivariate(_data(x)), gau.multivariate(_data(x)))
+    assert not _same(symbolic, gaussian)
 
 
 # --------------------------------------------------------------------------- #

@@ -138,8 +138,8 @@
   "te_kernel_W-0.25_k-1",
   "gc_gaussian_k-max-10_tau-max-2",
   "gc_gaussian_k-1_kt-1_l-1_lt-1",
-  "te_symbolic_k-1_kt-1_l-1_lt-1",
-  "te_symbolic_k-10_kt-1_l-1_lt-1",
+  "te_symbolic_m-3_tau-4_h-4",
+  "te_symbolic_m-3_tau-16_h-16",
   "phi_star_t-1_norm-0",
   "phi_star_t-1_norm-1",
   "phi_Geo_t-1_norm-0",
@@ -623,6 +623,27 @@
    "unrelated_arrays_preserved": 96,
    "updated": [],
    "validation": "tests/unit/test_regression_refactor.py: 53 passed before regeneration"
+  },
+  {
+   "generated": "2026-10-28T14:13:39.855053+00:00",
+   "metadata_only": [],
+   "reason": "Approved standard DI sum, exact XME k=10 lag count, genuine m=3 ordinal TE. Gaussian Java dependency and differential-entropy labels corrected.",
+   "removed": [],
+   "source_sha256": {
+    "audit/checks/probes/refresh_information_goldens.py": "2da59389a4da98110306ff0b9781e1efd86319e7b92cd1581e6253b9a0fd10c3",
+    "pyspi/_gaussian.py": "e6519849caf4dd233eb8166d491fa787481b7605c7e485670840b2f52844d989",
+    "pyspi/_gaussian_history.py": "e769ccae035b8bd48845947e73d9edc11f8ed246c25ed38b19c3594fa21dbdec",
+    "pyspi/_information_history.py": "bb73f2d20f94b9f60762e0a7591725493bb1504b8b9db21cf58d61ffa6c7e155",
+    "pyspi/_symbolic.py": "2cc6ff1a09eddaa1df9d95936831adc812da1008494af255e3bac32b4a46ef24",
+    "pyspi/config.yaml": "d5b8d97b04e164427099c06227ea5888449c26b97c4a70923565a48eb47e3afe",
+    "pyspi/statistics/infotheory.py": "3f3cd6ffcd7b1f5dac6a0bc1cb9fde7fd7f1e3346a53670739636558c9e7f3a4",
+    "tests/unit/test_gaussian_history.py": "e6cf7930caec76f1b04e81a5e47fbd7fd85801834e01ad61cf63a371d9057882",
+    "tests/unit/test_information_history.py": "efc3184867c0deb89d54660f4e0adcce98666c9525f02fcf52ddf92e56279d71",
+    "tests/unit/test_symbolic_transfer.py": "480f65c90cecebb5510aaf939019f5006fd13fd45fc13b3dcbb24de4cbad3a36"
+   },
+   "unrelated_arrays_preserved": 96,
+   "updated": [],
+   "validation": "39 Gaussian-history and 20 retained-estimator cases passed; 9 independent ordinal-count/edge cases passed before refresh. Unchanged formulas retain their numerical arrays."
   }
  ],
  "schema": 1,

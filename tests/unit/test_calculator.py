@@ -50,9 +50,7 @@ def _randn(p=3, t=100, seed=SEED):
 
 @pytest.fixture(scope="module")
 def computed_fabfour(jvm):
-    # ``jvm`` is requested so the JVM starts before ``infotheory`` is imported.
-    # Without a JVM, di_gaussian is excluded and the remaining three SPIs are
-    # used; the tests on this fixture only check per-SPI layout, so they still run.
+    # All four metrics, including native Gaussian DI, work without a JVM.
     calc = Calculator(dataset=_randn(), subset="fabfour")
     calc.compute()
     return calc
@@ -72,11 +70,15 @@ def test_missing_java_dependency_skips_jidt_spis(jvm, monkeypatch):
     monkeypatch.setattr(Calculator, "_optional_dependencies", {"java": False})
     calc = Calculator()
     ids = list(calc.spis)
-    native = {"mi_gaussian", "je_gaussian", "ce_gaussian", "tlmi_gaussian"}
+    native = {"mi_gaussian", "je_gaussian", "ce_gaussian", "tlmi_gaussian",
+              "cce_gaussian", "di_gaussian", "si_gaussian_k-1",
+              "xme_gaussian_k1", "xme_gaussian_k10",
+              "gc_gaussian_k-1_kt-1_l-1_lt-1", "gc_gaussian_k-max-10_tau-max-2",
+              "te_symbolic_m-3_tau-4_h-4", "te_symbolic_m-3_tau-16_h-16"}
     assert {i for i in ids if i.startswith(JAVA_PREFIXES)} == native
     # Native Gaussian entries remain usable within mixed-estimator classes.
-    assert len(calc._excluded_spis) == 35
-    assert calc.n_spis == 263
+    assert len(calc._excluded_spis) == 26
+    assert calc.n_spis == 272
     assert all(deps == ["java"] for _, deps in calc._excluded_spis)
     # Integrated information lives in the infotheory module but has no java dependency.
     assert any(i.startswith("phi_") for i in ids)
@@ -122,8 +124,7 @@ def test_compute_without_dataset_raises(basic_config):
 
 
 def test_spi_exception_in_compute_yields_all_nan_block(jvm, monkeypatch):
-    # Without a JVM fabfour loses di_gaussian; the check below covers whichever
-    # SPIs were loaded, so this test also runs without Java.
+    # The complete fabfour subset now works without Java.
     calc = Calculator(dataset=_randn(), subset="fabfour")
     failing = "spearmanr-sq"
 

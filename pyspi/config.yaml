@@ -619,12 +619,14 @@
         l_history: 1
 
       - estimator: symbolic
-        k_history: 1
-        l_history: 1
+        pattern_length: 3
+        pattern_spacing: 4
+        prediction_shift: 4
 
       - estimator: symbolic
-        k_history: 10
-        l_history: 1
+        pattern_length: 3
+        pattern_spacing: 16
+        prediction_shift: 16
 
   IntegratedInformation:
     labels:

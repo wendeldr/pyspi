@@ -182,7 +182,8 @@ def test_native_constructor_serialization_and_jvm_independence(tmp_path):
 import jpype
 import numpy as np
 from pathlib import Path
-from pyspi.statistics.infotheory import JointEntropy, ConditionalEntropy, MutualInfo, TimeLaggedMutualInfo
+from pyspi.statistics.infotheory import (JointEntropy, ConditionalEntropy, MutualInfo, TimeLaggedMutualInfo,
+    TransferEntropy, CrossmapEntropy, CausalEntropy, DirectedInfo, StochasticInteraction)
 from pyspi.data import Data
 from pyspi.calculator import Calculator
 from pyspi.workflow._metrics import resolve_metrics
@@ -190,6 +191,10 @@ assert not jpype.isJVMStarted()
 d=Data(np.random.default_rng(90).normal(size=(3,40))*1e-6, normalise=False)
 for cls in (JointEntropy, ConditionalEntropy, MutualInfo, TimeLaggedMutualInfo):
     assert np.isfinite(cls().multivariate(d)[0,1])
+for spi in (TransferEntropy(), CrossmapEntropy(), CausalEntropy(), DirectedInfo(), StochasticInteraction(),
+            TransferEntropy(auto_embed_method='MAX_CORR_AIS', k_search_max=3, tau_search_max=2),
+            TransferEntropy(estimator='symbolic',pattern_spacing=4,prediction_shift=4)):
+    assert np.isfinite(spi.multivariate(d)[0,1])
 assert not jpype.isJVMStarted()
 path=Path(__import__('sys').argv[1])
 path.write_text('.statistics.infotheory:\\n  MutualInfo:\\n    dependencies: [java]\\n    configs:\\n    - estimator: gaussian\\n')

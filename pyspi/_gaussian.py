@@ -13,7 +13,7 @@ from pyspi._moments import moment_workspace
 H_UNIT = .5 * (1 + np.log(2*np.pi))
 REASONS = np.array(["estimated", "constant_variable", "singular_covariance",
                     "nonfinite_input", "insufficient_observations", "diagonal",
-                    "numerical_failure"])
+                    "numerical_failure", "redundant_conditioning"])
 
 
 def _pair_information(work, lag=0):
@@ -103,9 +103,21 @@ def _simple_result(data, measure):
     return work.arrays.get(("gaussian_result", measure), compute)
 
 
-def gaussian_result(data, measure):
-    return _simple_result(data, measure)[0].copy()
+def gaussian_result(data, measure, **parameters):
+    if measure in ("mi", "je", "ce", "tlmi"):
+        return _simple_result(data, measure)[0].copy()
+    from pyspi._gaussian_history import history_result
+    return history_result(data, measure, **parameters)[0].copy()
 
 
-def gaussian_diagnostics(data, measure):
-    return {"reason": REASONS[_simple_result(data, measure)[1]].copy()}
+def gaussian_diagnostics(data, measure, **parameters):
+    if measure in ("mi", "je", "ce", "tlmi"):
+        reason = _simple_result(data, measure)[1]
+    else:
+        from pyspi._gaussian_history import history_result
+        reason = history_result(data, measure, **parameters)[1]
+    result = {"reason": REASONS[reason].copy()}
+    if measure == "te" and parameters.get("auto_embed_method") is not None:
+        from pyspi._gaussian_history import embedding_diagnostics
+        result.update(embedding_diagnostics(data, parameters["k_search_max"], parameters["tau_search_max"]))
+    return result

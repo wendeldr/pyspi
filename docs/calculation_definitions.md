@@ -117,7 +117,111 @@ Formula/covariance provenance is recorded in
 [`audit/checks/refs/_kernels_infotheory.py`](../audit/checks/refs/_kernels_infotheory.py)
 against the bundled JIDT source; see also the upstream
 [Gaussian MI implementation](https://github.com/jlizier/jidt/blob/master/java/source/infodynamics/measures/continuous/gaussian/MutualInfoCalculatorMultiVariateGaussian.java).
-History-based Gaussian calculations are still being refactored separately.
+The history-based Gaussian measures below also use native numerical work.
+
+## Gaussian Granger / transfer entropy and aligned histories
+
+`gc_gaussian_*[i,j]` is **half** the natural log of the prediction-error
+variance ratio: target-only history versus target plus source history.
+It is Gaussian transfer entropy in nats; conventional Geweke F is twice this
+number. It remains a pairwise calculation and does not account for other
+channels. Rows are sources and columns are targets.
+
+For fixed histories, target lags are `1 + k_tau * arange(k_history)` and source
+lags are `1 + l_tau * arange(l_history)`. Both models use the same aligned
+observations and predict the next sample. At 2048 Hz, consecutive history
+lengths 1, 4, 16 and 32 reach back 0.488, 1.953, 7.813 and 15.625 ms; they do
+not change the prediction horizon to those values. Outer analysis windows
+remain 0.5 seconds without overlap.
+
+Automatic Gaussian embedding retains JIDT's `MAX_CORR_AIS` rule: maximize each
+channel's own Gaussian active information storage minus `k/(2*N)`, where N is
+the candidate's aligned sample count. Search once per channel, retaining the
+first strict maximum; a one-sample history has only one distinct spacing.
+For each source/target choice, refit the restricted model on the same
+observations as the full model. This is the existing selection rule, not
+cross-validated prediction or a jointly selected multichannel VAR order.
+
+Centered observations, aligned histories, target-only fits and cross-products
+are shared only when their sample intervals and lag sets agree. Covariance
+solves use a reciprocal-condition estimate; unreliable solves and tiny
+residuals fall back to least squares on the observations. Numerically redundant
+conditioning columns are rank-reduced, without ridge, jitter or a threshold
+in physical amplitude units. Saturated fits, nonfinite input and other
+failures have separate diagnostics. The derived moment/history cache is
+bounded at 256 MiB; large requests use blocks instead of an unbounded global
+Gram matrix. Returned values and diagnostics do not expose mutable cache arrays.
+
+## Source-history conditional entropy, causal entropy and directed information
+
+`xme_*_k{k}[i,j]` means `H(j[t] | i[t-1], ..., i[t-k])`: exactly k source
+lags, no target-history conditioning. The former k=10 implementation used nine
+lags. The identifier remains `xme`, but its descriptive name is **source-history
+conditional entropy**; it is unrelated to convergent cross mapping (CCM).
+
+For term m, define `Ypast = (j[t-1], ..., j[t-m+1])` and
+`Xpresentpast = (i[t], ..., i[t-m+1])`. Causally conditioned entropy sums
+`H(j[t] | Ypast, Xpresentpast)` over m=1..n. Directed information sums
+`I(j[t]; Xpresentpast | Ypast)` over the same terms. Each term uses its own
+aligned `T-m+1` observations. The default n remains five; a nondefault n is
+included in the identifier.
+
+DI includes the present source, so instantaneous relationships contribute.
+It differs from strictly past-to-future TE. At n=1 it reduces to ordinary MI.
+This follows the conditional-information sum in
+[Massey (1990), equation 7](https://www.isiweb.ee.ethz.ch/archive/massey_pub/pdf/BI532.pdf).
+The old target-only autocorrelation contribution has been removed across
+Gaussian, kernel and Kozachenko variants. CCE and XME are differential
+entropies and can be negative. Finite-sample non-Gaussian DI estimates can also
+be negative; they are not silently clipped.
+
+Gaussian and Kozachenko outputs use nats. Retained JIDT kernel entropy outputs
+keep their existing **bits** convention. Aligned raw histories, target-only
+conditional entropies and causal sums are shared by the retained Java
+estimators where their parameters and sample intervals match. Their
+data-dependent caches, including automatic Theiler windows, invalidate on
+data mutation. The existing Theiler formula and integer truncation are
+unchanged; each channel's autocorrelation is now calculated once.
+
+Stochastic interaction at delay d is
+`H(i[t]|i[t-d]) + H(j[t]|j[t-d]) - H(i[t],j[t]|i[t-d],j[t-d])`.
+The Gaussian calculation evaluates each unordered pair once, shares target
+prediction errors with compatible Granger calculations, and diagnoses singular
+joint residuals rather than inventing a finite value. Retained Java stochastic
+interaction shares its target-only terms with DI. Reverse-pair evaluations
+remain for the non-Gaussian joint estimators: a seeded, finite-sample estimator
+must not be presumed numerically permutation-invariant solely from its formula.
+
+Independent OLS, determinant and conditional-information references are in
+[`audit/checks/refs/_kernels_infotheory.py`](../audit/checks/refs/_kernels_infotheory.py);
+the retained estimator checks also construct JIDT embeddings independently.
+
+## Symbolic transfer entropy
+
+`te_symbolic_m-{m}_tau-{tau}_h-{h}` computes empirical conditional mutual
+information `I(source_pattern[t]; target_pattern[t+h] | target_pattern[t])`,
+in nats. A pattern orders m observations spaced tau samples apart, from oldest
+to newest. Equal values retain their temporal order. The implementation uses
+ordinal symbols and categorical counts; it no longer dispatches to Gaussian TE.
+Pattern length one is rejected because its only symbol carries no information.
+The ordinal-pattern approach comes from
+[Staniek and Lehnertz (2008)](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.100.158101);
+the explicit settings below define this implementation's sampled transitions.
+
+The reviewed candidates use m=3, with spacing/prediction shift 4/4 and 16/16
+samples. At 2048 Hz their pattern spans are 3.906 and 15.625 ms; the shifts are
+1.953 and 7.813 ms. A 1024-sample window supplies 1012 and 976 aligned pattern
+transitions, respectively, with six possible patterns per channel. Patterns
+and successive transitions overlap inside a window; outer windows still do not.
+
+These are plug-in estimates, not bias-corrected effects or significance tests.
+Independent autocorrelated signals can have positive finite-window estimates;
+overlapping symbols also reduce the effective independent sample count.
+Diagnostics report available transitions, observed patterns, tie fractions,
+target transition entropy and joint-state occupancy. All six marginal symbols
+being observed does not prove adequate sampling of every joint state or
+clinical usefulness. Longer patterns can make the state space impractical;
+the sparse counting path avoids allocating factorial-sized dense arrays.
 
 ## Cross-correlation
 

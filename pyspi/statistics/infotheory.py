@@ -6,10 +6,19 @@ import logging
 
 from pyspi.base import Undirected, Directed, Unsigned, parse_univariate, parse_bivariate, parse_multivariate
 from pyspi._gaussian import gaussian_result, gaussian_diagnostics, gaussian_marginal_entropy
+from pyspi._moments import moment_workspace
+from pyspi._information_history import history
+
+
+def _positive_integer(value, name):
+    if isinstance(value, (bool, np.bool_)) or not isinstance(value, (int, np.integer)) or value < 1:
+        raise ValueError(f"{name} must be a positive integer.")
+
 
 class JIDTBase(Unsigned):
 
     _native_gaussian_measure = None
+    _estimators = ("gaussian", "kernel", "kozachenko")
 
     @classmethod
     def requires_java(cls, estimator="gaussian", **kwargs):
@@ -21,13 +30,13 @@ class JIDTBase(Unsigned):
     @parse_multivariate
     def multivariate(self, data):
         if self._estimator == "gaussian" and self._native_gaussian_measure:
-            return gaussian_result(data, self._native_gaussian_measure)
+            return gaussian_result(data, self._native_gaussian_measure, **getattr(self, "_gaussian_parameters", {}))
         return super().multivariate(data)
 
     @parse_multivariate
     def diagnostics(self, data):
         if self._estimator == "gaussian" and self._native_gaussian_measure:
-            return gaussian_diagnostics(data, self._native_gaussian_measure)
+            return gaussian_diagnostics(data, self._native_gaussian_measure, **getattr(self, "_gaussian_parameters", {}))
         return {}
 
     # List of (currently) modifiable parameters
@@ -50,7 +59,8 @@ class JIDTBase(Unsigned):
     def __init__(
         self, estimator="gaussian", kernel_width=0.5, prop_k=4, dyn_corr_excl=None
     ):
-
+        if estimator not in self._estimators:
+            raise ValueError(f"{type(self).__name__} supports estimators {self._estimators}.")
         self._estimator = estimator
         self._kernel_width = kernel_width
         self._prop_k = prop_k
@@ -69,7 +79,7 @@ class JIDTBase(Unsigned):
                 raise NotImplementedError(
                     "Symbolic estimator is only available for transfer entropy."
                 )
-            self.labels = self.labels + ["symbolic"]
+            self.labels = self.labels + ["symbolic", "nonlinear"]
             self._dyn_corr_excl = None
             return
         else:
@@ -97,10 +107,9 @@ class JIDTBase(Unsigned):
         self._entropy_calc = self._getcalc("entropy")
 
     def __deepcopy__(self, memo):
-        newone = type(self)()
-        newone.__dict__.update(self.__dict__)
-        for attr in newone.__dict__:
-            setattr(newone, attr, copy.deepcopy(getattr(self, attr), memo))
+        newone = type(self).__new__(type(self))
+        memo[id(self)] = newone
+        newone.__setstate__(copy.deepcopy(self.__getstate__(), memo))
         return newone
 
     def _setup(self, calc):
@@ -133,7 +142,9 @@ class JIDTBase(Unsigned):
                     self._base_class.kozachenko.EntropyCalculatorMultiVariateKozachenko()
                 )
             else:
-                calc = self._base_class.gaussian.EntropyCalculatorMultiVariateGaussian()
+                # KSG MI/TE own their estimator; no separate entropy calculator
+                # is used. Gaussian and symbolic construction returned above.
+                return None
         elif measure == "MutualInfo":
             if self._estimator == "kernel":
                 calc = self._base_class.kernel.MutualInfoCalculatorMultiVariateKernel()
@@ -142,16 +153,14 @@ class JIDTBase(Unsigned):
                     self._base_class.kraskov.MutualInfoCalculatorMultiVariateKraskov1()
                 )
             else:
-                calc = (
-                    self._base_class.gaussian.MutualInfoCalculatorMultiVariateGaussian()
-                )
+                raise ValueError(f"No Java MI estimator for {self._estimator}.")
         elif measure == "TransferEntropy":
             if self._estimator == "kernel":
                 calc = self._base_class.kernel.TransferEntropyCalculatorKernel()
             elif self._estimator == "kraskov":
                 calc = self._base_class.kraskov.TransferEntropyCalculatorKraskov()
             else:
-                calc = self._base_class.gaussian.TransferEntropyCalculatorGaussian()
+                raise ValueError(f"No Java TE estimator for {self._estimator}.")
         else:
             raise TypeError(f"Unknown measure: {measure}")
 
@@ -162,85 +171,56 @@ class JIDTBase(Unsigned):
     def _compute_entropy(self, data, i=None):
         if self._estimator == "gaussian" and self._native_gaussian_measure:
             return gaussian_marginal_entropy(data)[i]
-        if not hasattr(data, "entropy"):
-            data.entropy = {}
-
-        key = self._getkey()
-        if key not in data.entropy:
-            data.entropy[key] = np.full((data.n_processes,), -np.inf)
-
-        if data.entropy[key][i] == -np.inf:
-            x = np.squeeze(data.to_numpy()[i])
-
-            self._entropy_calc.initialise(1)
-            self._entropy_calc.setObservations(jp.JArray(jp.JDouble, 1)(x))
-
-            data.entropy[key][
-                i
-            ] = self._entropy_calc.computeAverageLocalOfObservations()
-
-        return data.entropy[key][i]
+        work = moment_workspace(data)
+        return work.arrays.get(("information_entropy", self._getkey(), i),
+                               lambda: np.asarray(self._entropy_of(work.source[i, :, None]))).item()
 
     # No Theiler window is available in the JIDT estimator
     @parse_bivariate
     def _compute_joint_entropy(self, data, i, j):
         if self._estimator == "gaussian" and self._native_gaussian_measure:
             return gaussian_result(data, "je")[i, j]
-        if not hasattr(data, "joint_entropy"):
-            data.joint_entropy = {}
+        work = moment_workspace(data)
+        return work.arrays.get(("information_joint_entropy", self._getkey(), min(i,j), max(i,j)),
+                               lambda: np.asarray(self._entropy_of(work.source[[i,j]].T))).item()
 
-        key = self._getkey()
-        if key not in data.joint_entropy:
-            data.joint_entropy[key] = np.full((data.n_processes, data.n_processes), -np.inf)
-
-        if data.joint_entropy[key][i, j] == -np.inf:
-            x, y = data.to_numpy()[[i, j]]
-
-            self._entropy_calc.initialise(2)
-            self._entropy_calc.setObservations(jp.JArray(jp.JDouble, 2)(np.concatenate([x, y], axis=1)))
-
-            data.joint_entropy[key][i, j] = self._entropy_calc.computeAverageLocalOfObservations()
-            data.joint_entropy[key][j, i] = data.joint_entropy[key][i, j]
-
-        return data.joint_entropy[key][i, j]
+    def _entropy_of(self, observations):
+        observations = np.asarray(observations, dtype=float)
+        if not observations.shape[1]:
+            return 0.
+        self._entropy_calc.initialise(observations.shape[1])
+        self._entropy_calc.setObservations(jp.JArray.of(observations))
+        return float(self._entropy_calc.computeAverageLocalOfObservations())
 
     # No Theiler window is available in the JIDT estimator
     def _compute_conditional_entropy(self, X, Y):
-        XY = np.concatenate([X, Y], axis=1)
+        return self._entropy_of(np.concatenate([X, Y], axis=1))-self._entropy_of(Y)
 
-        self._entropy_calc.initialise(XY.shape[1])
-        self._entropy_calc.setObservations(jp.JArray(jp.JDouble, XY.ndim)(XY))
-
-        H_XY = self._entropy_calc.computeAverageLocalOfObservations()
-
-        self._entropy_calc.initialise(Y.shape[1])
-        self._entropy_calc.setObservations(jp.JArray(jp.JDouble, Y.ndim)(Y))
-
-        H_Y = self._entropy_calc.computeAverageLocalOfObservations()
-
-        return H_XY - H_Y
+    def _target_conditional_entropy(self, data, channel, lags):
+        """Share aligned target-only terms between DI and stochastic interaction."""
+        work = moment_workspace(data)
+        lags = tuple(lags)
+        start = max((0, *lags))
+        def compute():
+            past = history(work, start, lags)[channel]
+            future = work.source[channel, start:, None]
+            return np.asarray(self._compute_conditional_entropy(future, past))
+        return work.arrays.get(("information_target_conditional_entropy", self._getkey(), lags, channel), compute).item()
 
     def _set_theiler_window(self, data, i, j):
         if self._dyn_corr_excl == "AUTO":
-            if not hasattr(data, "theiler"):
-                z = data.to_numpy()
-                theiler_window = -np.ones((data.n_processes, data.n_processes))
-
-                # Compute effective sample size for each pair
-                for _i in range(data.n_processes):
-                    targ = z[_i]
-                    for _j in range(_i + 1, data.n_processes):
-                        src = z[_j]
-
-                        # Initialize the Theiler window using Bartlett's formula
-                        theiler_window[_i, _j] = 2 * np.dot(
-                            utils.acf(src), utils.acf(targ)
-                        )
-                        theiler_window[_j, _i] = theiler_window[_i, _j]
-                data.theiler = theiler_window
-
+            work = moment_workspace(data)
+            def compute():
+                # Preserve the existing Bartlett definition and integer
+                # truncation; compute each channel's ACF once. The bounded
+                # workspace invalidates this table when Data changes.
+                acfs = np.array([utils.acf(row) for row in work.source])
+                values = 2 * (acfs @ acfs.T)
+                np.fill_diagonal(values, -1.)
+                return values
+            theiler = work.arrays.get(("information_auto_theiler",), compute)
             self._calc.setProperty(
-                self._DYN_CORR_EXCL_PROP_NAME, str(int(data.theiler[i, j]))
+                self._DYN_CORR_EXCL_PROP_NAME, str(int(theiler[i, j]))
             )
         elif self._dyn_corr_excl is not None:
             self._calc.setProperty(
@@ -287,6 +267,7 @@ class MutualInfo(JIDTBase, Undirected):
     identifier = "mi"
     labels = ["unsigned", "infotheory", "unordered", "undirected"]
     _native_gaussian_measure = "mi"
+    _estimators = ("gaussian", "kernel", "kraskov")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -323,6 +304,7 @@ class TimeLaggedMutualInfo(JIDTBase, Directed):
     identifier = "tlmi"
     labels = ["unsigned", "infotheory", "temporal", "directed"]
     _native_gaussian_measure = "tlmi"
+    _estimators = ("gaussian", "kernel", "kraskov")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -360,6 +342,12 @@ class TransferEntropy(JIDTBase, Directed):
     name = "Transfer entropy"
     identifier = "te"
     labels = ["unsigned", "embedding", "infotheory", "temporal", "directed"]
+    _native_gaussian_measure = "te"
+    _estimators = ("gaussian", "kernel", "kraskov", "symbolic")
+
+    @classmethod
+    def requires_java(cls, estimator="gaussian", **kwargs):
+        return estimator not in ("gaussian", "symbolic")
 
     def __init__(
         self,
@@ -370,39 +358,93 @@ class TransferEntropy(JIDTBase, Directed):
         k_tau=1,
         l_history=1,
         l_tau=1,
+        pattern_length=None,
+        pattern_spacing=None,
+        prediction_shift=None,
         **kwargs,
     ):
 
         if "estimator" not in kwargs.keys() or kwargs["estimator"] == "gaussian":
             self.identifier = "gc"
+        for name, value in (("k_history", k_history), ("k_tau", k_tau),
+                            ("l_history", l_history), ("l_tau", l_tau)):
+            _positive_integer(value, name)
+        if auto_embed_method is not None:
+            _positive_integer(k_search_max, "k_search_max")
+            if kwargs.get("estimator", "gaussian") != "kernel":
+                _positive_integer(tau_search_max, "tau_search_max")
+            if kwargs.get("estimator", "gaussian") == "gaussian" and auto_embed_method != "MAX_CORR_AIS":
+                raise ValueError("Native Gaussian automatic embedding supports MAX_CORR_AIS.")
+        self._gaussian_parameters = dict(auto_embed_method=auto_embed_method, k_search_max=k_search_max,
+                                        tau_search_max=tau_search_max, k_history=k_history, k_tau=k_tau,
+                                        l_history=l_history, l_tau=l_tau)
         super().__init__(**kwargs)
         self._calc = self._getcalc("TransferEntropy")
+        if self._estimator == "symbolic":
+            if auto_embed_method is not None or (k_history, k_tau, l_history, l_tau) != (1, 1, 1, 1):
+                raise ValueError("Symbolic TE uses pattern_length, pattern_spacing and prediction_shift, not Gaussian histories or auto embedding.")
+            length = 3 if pattern_length is None else pattern_length
+            spacing = 1 if pattern_spacing is None else pattern_spacing
+            shift = 1 if prediction_shift is None else prediction_shift
+            for name, value in (("pattern_length", length), ("pattern_spacing", spacing), ("prediction_shift", shift)):
+                _positive_integer(value, name)
+            if not 2 <= length <= 20:
+                raise ValueError("pattern_length must be 2..20; length one contains no ordinal information.")
+            self._symbolic_parameters = dict(pattern_length=length, pattern_spacing=spacing, prediction_shift=shift)
+            self.identifier += f"_m-{length}_tau-{spacing}_h-{shift}"
+            return
+        if any(value is not None for value in (pattern_length, pattern_spacing, prediction_shift)):
+            raise ValueError("Ordinal pattern parameters apply only to estimator='symbolic'.")
 
         # Auto-embedding
         if auto_embed_method is not None:
-            self._calc.setProperty(self._AUTO_EMBED_METHOD_PROP_NAME, auto_embed_method)
-            self._calc.setProperty(self._K_SEARCH_MAX_PROP_NAME, str(k_search_max))
             if self._estimator != "kernel":
                 self.identifier = self.identifier + "_k-max-{}_tau-max-{}".format(
                     k_search_max, tau_search_max
-                )
-                self._calc.setProperty(
-                    self._TAU_SEARCH_MAX_PROP_NAME, str(tau_search_max)
                 )
             else:
                 self.identifier = self.identifier + "_k-max-{}".format(k_search_max)
             # Set up calculator
         else:
-            self._calc.setProperty(self._K_HISTORY_PROP_NAME, str(k_history))
             if self._estimator != "kernel":
-                self._calc.setProperty(self._K_TAU_PROP_NAME, str(k_tau))
-                self._calc.setProperty(self._L_HISTORY_PROP_NAME, str(l_history))
-                self._calc.setProperty(self._L_TAU_PROP_NAME, str(l_tau))
                 self.identifier = self.identifier + "_k-{}_kt-{}_l-{}_lt-{}".format(
                     k_history, k_tau, l_history, l_tau
                 )
             else:
                 self.identifier = self.identifier + "_k-{}".format(k_history)
+        self._configure_calc()
+
+    @parse_multivariate
+    def multivariate(self, data):
+        if self._estimator == "symbolic":
+            from pyspi._symbolic import symbolic_result
+            return symbolic_result(data, **self._symbolic_parameters)
+        return super().multivariate(data)
+
+    @parse_multivariate
+    def diagnostics(self, data):
+        if self._estimator == "symbolic":
+            from pyspi._symbolic import symbolic_diagnostics
+            return symbolic_diagnostics(data, **self._symbolic_parameters)
+        return super().diagnostics(data)
+
+    def _configure_calc(self):
+        if self._calc is None:
+            return
+        parameters = self._gaussian_parameters
+        if parameters["auto_embed_method"] is not None:
+            settings = {self._AUTO_EMBED_METHOD_PROP_NAME: parameters["auto_embed_method"],
+                        self._K_SEARCH_MAX_PROP_NAME: parameters["k_search_max"]}
+            if self._estimator != "kernel":
+                settings[self._TAU_SEARCH_MAX_PROP_NAME] = parameters["tau_search_max"]
+        else:
+            settings = {self._K_HISTORY_PROP_NAME: parameters["k_history"]}
+            if self._estimator != "kernel":
+                settings.update({self._K_TAU_PROP_NAME: parameters["k_tau"],
+                                 self._L_HISTORY_PROP_NAME: parameters["l_history"],
+                                 self._L_TAU_PROP_NAME: parameters["l_tau"]})
+        for name, value in settings.items():
+            self._calc.setProperty(name, str(value))
 
     def __setstate__(self, state):
         """Re-initialise the calculator"""
@@ -410,12 +452,18 @@ class TransferEntropy(JIDTBase, Directed):
         super().__setstate__(state)
         self.__dict__.update(state)
         self._calc = self._getcalc("TransferEntropy")
+        self._configure_calc()
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None, verbose=False):
         """
         Compute transfer entropy from i->j
         """
+        if self._estimator == "gaussian":
+            return gaussian_result(data, "te", **self._gaussian_parameters)[i, j]
+        if self._estimator == "symbolic":
+            from pyspi._symbolic import symbolic_result
+            return symbolic_result(data, **self._symbolic_parameters)[i, j]
         self._set_theiler_window(data, i, j)
         self._calc.initialise()
         src, targ = data.to_numpy(squeeze=True)[[i, j]]
@@ -431,85 +479,65 @@ class TransferEntropy(JIDTBase, Directed):
 
 class CrossmapEntropy(JIDTBase, Directed):
 
-    name = "Cross-map entropy"
+    name = "Source-history conditional entropy"
     identifier = "xme"
-    labels = ["unsigned", "infotheory", "temporal", "directed"]
+    labels = ["signed", "infotheory", "temporal", "directed"]
+    _native_gaussian_measure = "xme"
 
     def __init__(self, history_length=10, **kwargs):
+        _positive_integer(history_length, "history_length")
         super().__init__(**kwargs)
         self.identifier += f"_k{history_length}"
         self._history_length = history_length
+        self._gaussian_parameters = dict(history_length=history_length)
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
-        src, targ = data.to_numpy(squeeze=True)[[i, j]]
+        if self._estimator == "gaussian":
+            return gaussian_result(data, "xme", **self._gaussian_parameters)[i, j]
         k = self._history_length
-        targ_future = targ[k:]
-        src_past = np.expand_dims(src[k - 1 : -1], axis=1)
-        for i in range(2, k):
-            src_past = np.append(
-                src_past, np.expand_dims(src[k - i : -i], axis=1), axis=1
-            )
-
-        joint = np.concatenate([src_past, np.expand_dims(targ_future, axis=1)], axis=1)
-
-        self._entropy_calc.initialise(joint.shape[1])
-        self._entropy_calc.setObservations(jp.JArray(jp.JDouble, 2)(joint))
-        H_xy = self._entropy_calc.computeAverageLocalOfObservations()
-
-        self._entropy_calc.initialise(src_past.shape[1])
-        self._entropy_calc.setObservations(jp.JArray(jp.JDouble, 2)(src_past))
-        H_y = self._entropy_calc.computeAverageLocalOfObservations()
-
-        return H_xy - H_y
+        work = moment_workspace(data)
+        past = history(work, k, range(1, k+1))[i]
+        # Keep XME's existing source-first column order for the retained
+        # estimators' seeded noise; the corrected lag set now has exactly k.
+        joint = np.column_stack([past, work.source[j, k:]])
+        conditioning = work.arrays.get(("information_source_history_entropy", self._getkey(), k, i),
+                                      lambda: np.asarray(self._entropy_of(past))).item()
+        return self._entropy_of(joint)-conditioning
 
 
 class CausalEntropy(JIDTBase, Directed):
 
     name = "Causally conditioned entropy"
     identifier = "cce"
-    labels = ["unsigned", "infotheory", "temporal", "directed"]
+    labels = ["signed", "infotheory", "temporal", "directed"]
+    _native_gaussian_measure = "cce"
 
     def __init__(self, n=5, **kwargs):
+        _positive_integer(n, "n")
         super().__init__(**kwargs)
         self._n = n
+        self._gaussian_parameters = dict(n=n)
+        if n != 5:
+            self.identifier += f"_n-{n}"
 
-    def _compute_causal_entropy(self, src, targ):
-
-        src = np.squeeze(src)
-        targ = np.squeeze(targ)
-
-        m_utils = jp.JPackage("infodynamics.utils").MatrixUtils
-
-        causal_entropy = 0
-        for i in range(1, self._n + 1):
-            Yp = m_utils.makeDelayEmbeddingVector(jp.JArray(jp.JDouble, 1)(targ), i - 1)[:-1]
-            Xp = m_utils.makeDelayEmbeddingVector(jp.JArray(jp.JDouble, 1)(src), i)
-            XYp = np.concatenate([Yp, Xp], axis=1)
-
-            Yf = np.expand_dims(targ[i - 1 :], 1)
-            causal_entropy = causal_entropy + self._compute_conditional_entropy(Yf, XYp)
-        return causal_entropy
-
-    def _getkey(self):
-        return super(CausalEntropy, self)._getkey() + (self._n,)
+    def _causal_entropy(self, data, i, j):
+        work = moment_workspace(data)
+        def compute():
+            value = 0.
+            for m in range(1, self._n+1):
+                past = history(work, m-1, range(1, m))[j]
+                source = history(work, m-1, range(m))[i]
+                future = work.source[j, m-1:, None]
+                value += self._compute_conditional_entropy(future, np.column_stack([past, source]))
+            return np.asarray(value)
+        return work.arrays.get(("information_causal_entropy", self._getkey(), self._n, i, j), compute).item()
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
-        if not hasattr(data, "causal_entropy"):
-            data.causal_entropy = {}
-
-        key = self._getkey()
-        if key not in data.causal_entropy:
-            data.causal_entropy[key] = np.full(
-                (data.n_processes, data.n_processes), -np.inf
-            )
-
-        if data.causal_entropy[key][i, j] == -np.inf:
-            z = data.to_numpy(squeeze=True)
-            data.causal_entropy[key][i, j] = self._compute_causal_entropy(z[i], z[j])
-
-        return data.causal_entropy[key][i, j]
+        if self._estimator == "gaussian":
+            return gaussian_result(data, "cce", **self._gaussian_parameters)[i, j]
+        return self._causal_entropy(data, i, j)
 
 
 class DirectedInfo(CausalEntropy, Directed):
@@ -517,35 +545,28 @@ class DirectedInfo(CausalEntropy, Directed):
     name = "Directed information"
     identifier = "di"
     labels = ["unsigned", "infotheory", "temporal", "directed"]
+    _native_gaussian_measure = "di"
 
     def __init__(self, n=5, **kwargs):
-        super().__init__(**kwargs)
-        self._n = n
+        super().__init__(n=n, **kwargs)
 
-    def _compute_entropy_rates(self, targ):
-
-        targ = np.squeeze(targ)
-        m_utils = jp.JPackage("infodynamics.utils").MatrixUtils
-
-        entropy_rate_sum = 0
-        for i in range(1, self._n + 1):
-            # Compute entropy for an i-dimensional embedding
-            self._entropy_calc.initialise(i)
-
-            Yi = m_utils.makeDelayEmbeddingVector(jp.JArray(jp.JDouble, 1)(targ), i)
-            self._entropy_calc.setObservations(Yi)
-            entropy_rate_sum = entropy_rate_sum + self._entropy_calc.computeAverageLocalOfObservations() / i
-
-        return entropy_rate_sum
+    def _target_entropy_sum(self, data, j):
+        work = moment_workspace(data)
+        def compute():
+            value = 0.
+            for m in range(1, self._n+1):
+                value += self._target_conditional_entropy(data, j, range(1, m))
+            return np.asarray(value)
+        return work.arrays.get(("information_target_entropy_sum", self._getkey(), self._n, j), compute).item()
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
         """Compute directed information from i to j"""
 
-        entropy_rates = self._compute_entropy_rates(data.to_numpy(squeeze=True)[j])
-        causal_entropy = super().bivariate(data, i=i, j=j)
+        if self._estimator == "gaussian":
+            return gaussian_result(data, "di", **self._gaussian_parameters)[i, j]
 
-        return entropy_rates - causal_entropy
+        return self._target_entropy_sum(data, j)-self._causal_entropy(data, i, j)
 
 
 class StochasticInteraction(JIDTBase, Undirected):
@@ -553,21 +574,26 @@ class StochasticInteraction(JIDTBase, Undirected):
     name = "Stochastic interaction"
     identifier = "si"
     labels = ["unsigned", "infotheory", "temporal", "undirected"]
+    _native_gaussian_measure = "si"
 
     def __init__(self, delay=1, **kwargs):
+        _positive_integer(delay, "delay")
         super().__init__(**kwargs)
         self._delay = delay
         self.identifier += f"_k-{delay}"
+        self._gaussian_parameters = dict(delay=delay)
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None, verbose=False):
+        if self._estimator == "gaussian":
+            return gaussian_result(data, "si", **self._gaussian_parameters)[i, j]
         x, y = data.to_numpy()[[i, j]]
         xy = np.concatenate([x, y], axis=1)
         tau = self._delay
 
         H_joint = self._compute_conditional_entropy(xy[tau:], xy[:-tau])
-        H_src = self._compute_conditional_entropy(x[tau:], x[:-tau])
-        H_targ = self._compute_conditional_entropy(y[tau:], y[:-tau])
+        H_src = self._target_conditional_entropy(data, i, (tau,))
+        H_targ = self._target_conditional_entropy(data, j, (tau,))
 
         return H_src + H_targ - H_joint
 

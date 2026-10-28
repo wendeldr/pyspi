@@ -171,8 +171,7 @@
     - unsigned
     - bivariate
     - contemporaneous
-    dependencies:
-    - java
+    dependencies: null
     configs:
     - estimator: gaussian
   TimeLaggedMutualInfo:
@@ -182,8 +181,7 @@
     - unsigned
     - bivariate
     - time-dependent
-    dependencies:
-    - java
+    dependencies: null
     configs:
     - estimator: gaussian
   TransferEntropy:
@@ -193,18 +191,27 @@
     - unsigned
     - bivariate
     - time-dependent
-    dependencies:
-    - java
+    dependencies: null
     configs:
     - estimator: gaussian
       k_history: 1
       l_history: 1
+    # Same next-sample prediction, with four preceding samples in each channel.
+    # Orders 16/32 stay out of this run: stable fits cost about 12/32 seconds
+    # on the 118-channel EEG pilot window, versus 0.11 seconds for order 4.
+    - estimator: gaussian
+      k_history: 4
+      l_history: 4
+    # Genuine ordinal TE; positive finite-window null bias is not significance.
+    # Overlapping patterns inside each window do not change the outer windows.
     - estimator: symbolic
-      k_history: 1
-      l_history: 1
+      pattern_length: 3
+      pattern_spacing: 4
+      prediction_shift: 4
     - estimator: symbolic
-      k_history: 10
-      l_history: 1
+      pattern_length: 3
+      pattern_spacing: 16
+      prediction_shift: 16
 .statistics.spectral:
   CoherencePhase:
     labels:

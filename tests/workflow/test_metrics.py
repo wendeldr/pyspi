@@ -149,17 +149,20 @@ def test_reviewed_preset_preserves_unrelated_inventory_and_applies_approved_chan
     import pyspi
     path = Path(pyspi.__file__).parent / "workflow/reviewed.yaml"
     metrics = resolve_metrics(path)
-    assert len(metrics) == len({m.identifier for m in metrics}) == 199
+    assert len(metrics) == len({m.identifier for m in metrics}) == 200
     root = Path(__file__).resolve().parents[2]
     for patient in ("004", "105", "111"):
         survey = json.loads((root / f"docs/storage_comparison/explore/properties_{patient}_64.json").read_text())
         historical = {row["metric"] for row in survey["rows"]}
         changed_classes = {"CrossCorrelation", "SignedPhaseLagIndex", "SignedWeightedPhaseLagIndex"}
         removed = {"bary_euclidean_mean", "bary-sq_euclidean_mean", "lmfit_Ridge", "lmfit_SGDRegressor",
-                   "je_gaussian", "ce_gaussian", "lmfit_Lasso"}
+                   "je_gaussian", "ce_gaussian", "lmfit_Lasso",
+                   "te_symbolic_k-1_kt-1_l-1_lt-1", "te_symbolic_k-10_kt-1_l-1_lt-1"}
         assert {m.identifier for m in metrics if m.class_name not in changed_classes} == {
             identifier for identifier in historical if not identifier.startswith(("xcorr", "gd_"))
-            and identifier not in removed} | {"lmfit_Lasso_alpha-0-1"}
+            and identifier not in removed} | {"lmfit_Lasso_alpha-0-1",
+                "te_symbolic_m-3_tau-4_h-4", "te_symbolic_m-3_tau-16_h-16",
+                "gc_gaussian_k-4_kt-1_l-4_lt-1"}
         assert {m.identifier for m in metrics if m.class_name == "CrossCorrelation"} == {
             f"xcorr{sq}_{stat}_sig-False_fs-1_lag-0-125"
             for sq in ("", "-sq") for stat in ("max", "mean")} | {
