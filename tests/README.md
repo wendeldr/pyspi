@@ -15,7 +15,7 @@ shared cache/base-class/configuration change or evidence of wider impact.
 | path | what it covers |
 |---|---|
 | `regression/test_spi_goldens.py` | one golden comparison per SPI, preprocessing variants, `Calculator` end-to-end passes (fast subset by default, full config with `--runslow`), catalogue checks |
-| `regression/test_extra_goldens.py`, `regression/extra_config.yaml` | snapshot goldens for nine wavelet classes that `config.yaml` leaves out (see [Extra goldens](#extra-goldens)) |
+| `regression/test_extra_goldens.py`, `regression/extra_config.yaml` | snapshot goldens for seven wavelet classes that `config.yaml` leaves out (see [Extra goldens](#extra-goldens)) |
 | `regression/harness.py`, `regression/spi_policy.py` | shared build/seed/compute/compare code and the per-SPI policy (tolerances, slow, stochastic) |
 | `regression/generate_goldens.py` | writes and checks the goldens |
 | `compatibility/` | targeted NumPy 2 spectral and wavelet paths, frozen baseline inventory |
@@ -135,18 +135,18 @@ Options:
 
 `test_extra_goldens.py` attaches the same markers itself from `goldens/extra/small/meta.json` (none applies today). The `Calculator` and catalogue tests carry `java` (and the full end-to-end test `slow`) explicitly.
 
-`FORCE_SLOW` (used only for an identifier or preprocessing variant without a recorded `time_s`; every current golden records one): `ccm_*`, `*kraskov*DCE*`, `hhg`, `mgc*`, `*sgddtw*`, `softdtw*`, `anm`, `gpfit_*`, `*MinCovDet*`, `*EllipticEnvelope*`, `*GraphicalLassoCV*`, `sgc_parametric*`, `cce_*`, `di_*`.
+`FORCE_SLOW` (used only for an identifier or preprocessing variant without a recorded `time_s`; every current golden records one): `ccm_*`, `*kraskov*theilerauto*`, `hhg`, `mgc*`, `*sgddtw*`, `softdtw*`, `anm`, `gpfit_*`, `*mincovdet*`, `*ellipticenvelope*`, `*graphicallassocv*`, `sgc_parametric*`, `cce_*`, `di_*`.
 
 ## How the SPI regression works
 
 - `test_spi_matches_golden[<identifier>]`: builds the SPI from its `meta.json` entry (module, class, params; `params: null` records default construction, otherwise recorded params are passed without fallback), makes a fresh `Data`, seeds the RNGs, runs `multivariate`, and sets the diagonal to NaN like `Calculator.compute`. Output must be a real square process matrix. The NaN mask and success/error status must match; values use the policy tolerance. A recorded calculation error must reproduce its exact exception representation (type and message). Another exception, or a successful all-NaN return replacing an error, fails. Constructor and seeding failures always propagate.
-- `test_preprocessing_variant_matches_golden[<identifier>-n?d?]` (golden key `<identifier>::n?d?`): 24 representative SPIs (`spi_policy.PREPROC_SPIS`: three to five per statistics module, except wavelet, which has one because its six SPIs are all `psi_wavelet` band variants; `anm` is included because its output changes with `normalise`, while `igci` and `reci` differ between `n1d0` and `n0d0` by at most 3e-15) under all four `(normalise, detrend)` combinations, 96 keys in all, on the small window of cml7 with a fixed per-channel affine distortion (`x * scale + offset + slope * t`, recorded in `goldens/preproc/meta.json`) so that each flag measurably changes the input. Suffix `n1d0` is the Calculator default; `n1d1` is the EEG workflow (detrend, then z-score). 92 variants have status `ok`; the four cross-correlation variants now return partial NaNs for pairs without significant lags, without calculation errors. No variant is `slow`; the slowest, `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1::n1d0`, measured 1.94 s, just under the 2.0 s threshold. The 24 resolved identifiers (from `goldens/preproc/meta.json` `spis`): `anm`, `bary_euclidean_mean`, `cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5`, `coint_johansen_max_eig_stat_order-1_ardiff-1`, `cov_EmpiricalCovariance`, `dcorr`, `dtw`, `gwtau`, `ids`, `igci`, `kendalltau`, `lmfit_Ridge`, `mi_gaussian`, `pdist_euclidean`, `pec`, `phi_star_t-1_norm-0`, `plv_multitaper_mean_fs-1_fmin-0_fmax-0-5`, `prec_EmpiricalCovariance`, `psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean`, `reci`, `sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5`, `spearmanr`, `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1`, `xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05`.
-- Two fixture checks: `spearmanr`, `kendalltau` and `dcorr` give the same golden for `n1d0` and `n0d0` (rank-based or per-variable scale-invariant; measured max difference 0, 0 and 1.9e-15), and `cov_EmpiricalCovariance` differs between them.
+- `test_preprocessing_variant_matches_golden[<identifier>-n?d?]` (golden key `<identifier>::n?d?`): 24 representative SPIs (`spi_policy.PREPROC_SPIS`: three to five per statistics module, except wavelet, which has one because its six SPIs are all `psi_wavelet` band variants; `anm` is included because its output changes with `normalise`, while `igci` and `reci` differ between `n1d0` and `n0d0` by at most 3e-15) under all four `(normalise, detrend)` combinations, 96 keys in all, on the small window of cml7 with a fixed per-channel affine distortion (`x * scale + offset + slope * t`, recorded in `goldens/preproc/meta.json`) so that each flag measurably changes the input. Suffix `n1d0` is the Calculator default; `n1d1` is the EEG workflow (detrend, then z-score). 92 variants have status `ok`; the four cross-correlation variants now return partial NaNs for pairs without significant lags, without calculation errors. No variant is `slow`; the slowest, `te_kraskov_neighbours04_targethistory01_targetdelay01_sourcehistory01_sourcedelay01::n1d0`, measured 1.94 s, just under the 2.0 s threshold. The 24 resolved identifiers (from `goldens/preproc/meta.json` `spis`): `anm`, `bary_euclidean_mean`, `cohmag_mean_band0-0p5cyc`, `coint_johansen_lineartrend_maxeig_lagdiffs01`, `cov_empirical`, `dcorr`, `dtw`, `gwtau`, `ids_pnormmax_terms06_bandwidth0p5`, `igci`, `kendalltau`, `lmfit_ridge_penaltysum_alpha1`, `mi_gaussian`, `pdist_euclidean`, `pec`, `phi_star_delay01`, `plv_mean_band0-0p5cyc`, `prec_empirical`, `psi_wavelet_mean_band0-0p5cyc`, `reci`, `sgc_nonparametric_mean_band0-0p5cyc`, `spearmanr`, `te_kraskov_neighbours04_targethistory01_targetdelay01_sourcehistory01_sourcedelay01`, `xcorr_holm_max_maxlag0p125_alpha0p05`.
+- Two fixture checks: `spearmanr`, `kendalltau` and `dcorr` give the same golden for `n1d0` and `n0d0` (rank-based or per-variable scale-invariant; measured max difference 0, 0 and 1.9e-15), and `cov_empirical` differs between them.
 - `test_calculator_table_matches_goldens_fast` (default tier, `java`): writes a temporary config holding every identifier of the package's `config.yaml` that has a golden and is not `slow` at the selected size (module and class order kept, so the shared caches fill in the same order as a full pass), checks that the `Calculator` loads exactly those identifiers, runs one seeded `Calculator` pass with shared caches and compares each table block with its per-SPI golden. At small size that is 278 SPIs (289 minus the 11 slow ones) measured here at 32 s when run alone (plus 4 s setup for the JVM and imports) and 17 s inside a full default run, where earlier tests have already paid the first-call costs. It is the default-tier test that notices a cache-keying change (two SPIs reading each other's cached spectra), which the per-SPI tests cannot see because each runs on a fresh `Data`.
 - `test_calculator_table_matches_goldens` (`slow`, `java`): the same over the full `config.yaml`.
-- Both end-to-end tests skip `spi_policy.CALC_E2E_SKIP` (`bary*_sgddtw_*`; 4 identifiers): a single seeded pass draws from the global RNG in a different order than per-SPI seeding, and these then differ from their goldens. The eight robust covariance SPIs (`*MinCovDet`, `*EllipticEnvelope`) were skipped or stochastic until pyspi fixed their FAST-MCD seed (`basic.ROBUST_RANDOM_STATE`, equal to the harness seed) and served `EllipticEnvelope` from the `MinCovDet` fit; they now reproduce their per-SPI goldens in every pass and are compared. All mismatches are reported together.
+- Both end-to-end tests skip `spi_policy.CALC_E2E_SKIP` (`bary*_sgddtw_*`; 4 identifiers): a single seeded pass draws from the global RNG in a different order than per-SPI seeding, and these then differ from their goldens. The eight robust covariance SPIs (`*mincovdet`, `*ellipticenvelope`) were skipped or stochastic until pyspi fixed their FAST-MCD seed (`basic.ROBUST_RANDOM_STATE`, equal to the harness seed) and served `EllipticEnvelope` from the `MinCovDet` fit; they now reproduce their per-SPI goldens in every pass and are compared. All mismatches are reported together.
 - A separate shared-cache test includes all stochastic identifiers, reseeding immediately before each SPI while retaining the shared `Data` caches. This provides numerical comparisons for the exclusions under controlled RNG conditions; the normal Calculator tests retain their existing seeding behavior.
-- `test_catalogue_matches_golden_meta` (`java`): loads the imported package's `config.yaml` through both `harness.catalogue` and `Calculator`, and asserts that the identifier sets equal the recorded ones, that the harness order and classes match what the `Calculator` loaded, and that for every identifier `module`, `cls`, `params` and `deps` equal `meta.json` (after a JSON round trip) and `labels` match as sorted sets. The per-SPI tests rebuild each SPI from the recorded params, so this is what reports a `config.yaml` parameter edit that keeps the identifier (for example `terms` of `ids`).
+- `test_catalogue_matches_golden_meta` (`java`): loads the imported package's `config.yaml` through both `harness.catalogue` and `Calculator`, and asserts that the identifier sets equal the recorded ones, that the harness order and classes match what the `Calculator` loaded, and that for every identifier `module`, `cls`, `params` and `deps` equal `meta.json` (after a JSON round trip) and `labels` match as sorted sets. The per-SPI tests rebuild each SPI from the recorded params, so this is what reports a `config.yaml` parameter edit that keeps the identifier (for example `nan_threshold` of the `sgc_*` SPIs, which the identifier does not record).
 - `test_spi_catalogue[all|fast|sonnet|fabfour]`: subset sizes 301/233/14/4; for `all`, identifier order equals `calculator_order` and each SPI's labels equal the recorded ones.
 
 ### Tolerance policy (`regression/spi_policy.py`)
@@ -158,9 +158,9 @@ First matching `fnmatch` pattern wins.
 | `bary*_sgddtw_*` | 1e-6 | 1e-8 | tslearn subgradient DBA shuffles with the global numpy RNG (marker `stochastic`; regenerate on a tslearn upgrade) |
 | everything else | 1e-6 | 1e-8 | default; absorbs BLAS drift between machines; `atol` covers pure rounding noise (e.g. `bary_euclidean_mean` ~1e-16) |
 
-The stochastic pattern matches 4 identifiers (the `-sq` variants included); its row keeps the default values and is listed to document that they match only because `seed_all()` runs right before them. The robust covariance SPIs (`cov*`/`prec*` `MinCovDet` and `EllipticEnvelope`) left this list when pyspi fixed their FAST-MCD seed; they are deterministic and keep the default tolerances.
+The stochastic pattern matches 4 identifiers (the `_sq` variants included); its row keeps the default values and is listed to document that they match only because `seed_all()` runs right before them. The robust covariance SPIs (`cov*`/`prec*` `MinCovDet` and `EllipticEnvelope`) left this list when pyspi fixed their FAST-MCD seed; they are deterministic and keep the default tolerances.
 
-The iterative optimisers (`*GraphicalLassoCV*`, `phi_*`, `gpfit_*`, `anm`) have no row: seeded run to run and against the stored goldens they were measured bit-for-bit reproducible on the generating machine (the 11 matching identifiers, each recomputed twice at both sizes: maximum absolute difference from the stored goldens 0), so the default applies. If another machine shows drift for one of them, re-add a row for that pattern with the measured drift written in its reason, not a guessed tolerance. Overrides are documented exceptions; do not loosen a tolerance to make a failure go away.
+The iterative optimisers (`*graphicallassocv*`, `phi_*`, `gpfit_*`, `anm`) have no row: seeded run to run and against the stored goldens they were measured bit-for-bit reproducible on the generating machine (the 11 matching identifiers, each recomputed twice at both sizes: maximum absolute difference from the stored goldens 0), so the default applies. If another machine shows drift for one of them, re-add a row for that pattern with the measured drift written in its reason, not a guessed tolerance. Overrides are documented exceptions; do not loosen a tolerance to make a failure go away.
 
 ## Basic rank and cache refactor
 
@@ -445,7 +445,7 @@ The focused spectral run passed 162 checks. The already-started broader run
 finished with 1,402 passed, 15 skipped and 7 existing expected failures.
 Subsequent validation was restricted to the six changed larger DC regressions:
 all six passed (`--pyspi-size=full -k 'test_spi_matches_golden and
-dcoh_multitaper and not pdcoh'`).
+dcoh_mean and not pdcoh'`).
 
 `benchmark_directed_coherence.py --baseline 923b9f6 --repeats 7 --cpu 2`
 records the corrected implementation in `directed_coherence_results.json`.
@@ -549,11 +549,11 @@ Taper independence remains a scientific review item; see the
 
 ## Extra goldens
 
-`regression/extra_config.yaml` lists nine wavelet classes from `pyspi/statistics/wavelet.py` that run today but are absent from `pyspi/config.yaml`: `cohmag` (`CoherenceMagnitude`), `phase` (`CoherencePhase`), `icoh` (`ImaginaryCoherence`), `plv` (`PhaseLockingValue`), `ppc` (`PairwisePhaseConsistency`), `pli` (`PhaseLagIndex`), `dspli` (`DebiasedSquaredWeightedPhaseLagIndex`), `wspli` (`weighted_PhaseLagIndex`) and `dwspli` (`debiased_weighted_squared_PhaseLagIndex`). Each has the six band/statistic configs that `PhaseSlopeIndex` uses in `config.yaml`, giving 54 identifiers named `<id>_wavelet_{mean|max}_fs-1_fmin-{0|0-25}_fmax-{0-25|0-5}` (the band pairs are `0`-`0-5`, `0`-`0-25` and `0-25`-`0-5`), for example `cohmag_wavelet_mean_fs-1_fmin-0_fmax-0-5`. They all go through the per-`Data` `data.mne[measure]` cache, which no SPI in the default config exercises.
+`regression/extra_config.yaml` lists seven wavelet classes from `pyspi/statistics/wavelet.py` that run today but are absent from `pyspi/config.yaml`: `cohmag` (`CoherenceMagnitude`), `phase` (`CoherencePhase`), `icoh` (`ImaginaryCoherence`), `plv` (`PhaseLockingValue`), `pli` (`PhaseLagIndex`), `wspli` (`weighted_PhaseLagIndex`) and `dwspli` (`debiased_weighted_squared_PhaseLagIndex`). `ppc` (`PairwisePhaseConsistency`) and `dspli` (`DebiasedSquaredWeightedPhaseLagIndex`) were removed: they are never finite on single-epoch input, and `Calculator` refuses them. Each listed class has the six band/statistic configs that `PhaseSlopeIndex` uses in `config.yaml`, giving 42 identifiers named `<id>_wavelet_{mean|max}_band{0-0p5|0-0p25|0p25-0p5}cyc`, for example `cohmag_wavelet_mean_band0-0p5cyc`. They all go through the per-`Data` `data.mne[(measure, fs)]` cache, which no SPI in the default config exercises.
 
-The goldens are in `regression/goldens/extra/small/{values.npz,meta.json}`, generated on the small window (5 processes x 64 observations, `normalise=True`, `detrend=False`, seed 42) with mne 0.23.0. All 54 have status `ok`, and none is `slow`, `java` or `stochastic`. These are snapshots of current output, and many are degenerate on the single-epoch input: off the diagonal, `cohmag` and `plv` are 1, `ppc` and `dspli` are `-inf` (status `ok` counts only NaN), `dwspli` is 0 and `icoh` is rounding noise (below 2e-14, inside the 1e-8 `atol`); `plv`, `ppc`, `dspli` and `dwspli` give the same matrix for all six bands. Only `phase`, `pli` and `wspli` carry non-trivial values. They are locked as they are.
+The goldens are in `regression/goldens/extra/small/{values.npz,meta.json}`, generated on the small window (5 processes x 64 observations, `normalise=True`, `detrend=False`, seed 42) with mne 0.23.0. All 42 have status `ok`, and none is `slow`, `java` or `stochastic`. These are snapshots of current output, and many are degenerate on the single-epoch input: off the diagonal, `cohmag` and `plv` are 1, `dwspli` is 0 and `icoh` is rounding noise (below 2e-14, inside the 1e-8 `atol`); `plv` and `dwspli` give the same matrix for all six bands. Only `phase`, `pli` and `wspli` carry non-trivial values. They are locked as they are.
 
-`regression/test_extra_goldens.py` has 56 tests: one check that the set's identifiers, order, constructor parameters, dependencies, and labels match `extra_config.yaml`, 54 per-SPI tests, and one `Calculator` end-to-end test checking the shared cache. They need no Java, use their own stored dataset spec independently of `--pyspi-size`, and fail if the required golden files are absent. Nondegenerate frequency/time tensors in `unit/test_numeric_boundaries.py` supplement these snapshots, checking aggregation, endpoint selection, angle/magnitude transforms, orientation, and cache reuse without claiming to validate MNE's estimator formulas.
+`regression/test_extra_goldens.py` has 44 tests: one check that the set's identifiers, order, constructor parameters, dependencies, and labels match `extra_config.yaml`, 42 per-SPI tests, and one `Calculator` end-to-end test checking the shared cache. They need no Java, use their own stored dataset spec independently of `--pyspi-size`, and fail if the required golden files are absent. Nondegenerate frequency/time tensors in `unit/test_numeric_boundaries.py` supplement these snapshots, checking aggregation, endpoint selection, angle/magnitude transforms, orientation, and cache reuse without claiming to validate MNE's estimator formulas.
 
 ## Regenerating the goldens
 
@@ -662,11 +662,11 @@ The confirmed implementation issues below are locked in `unit/test_known_bugs.py
 9. `CorrelationFrame(calc_frame)` calls the nonexistent `getstatlabels()`.
 10. `utils.convert_mdf_to_ddf` raises under pandas>=3 (`stack(dropna=...)` is rejected); found while writing the unit tests, locked without a paired xfail.
 
-Bug 9 needs the JVM (`java`). **Some SPIs are never exercised by a default run.** The bug-2 tests are `slow`, all nine `ccm_*` goldens and the two auto-embedding `te_kraskov_*_k-max-10_tau-max-4` goldens are `slow` at both sizes, and the six `ddtf_multitaper_*` and `mgcx_maxlag-10` goldens are `slow` at full size, so none of these runs without `--runslow`. After touching ccm, TE kraskov auto-embedding, ddtf or mgcx, run `.venv/bin/python -m pytest --runslow -k "ccm or te_kraskov" --ignore=tests/test_SPIs.py` (20 tests at small size) and the full tier before trusting a green default run.
+Bug 9 needs the JVM (`java`). **Some SPIs are never exercised by a default run.** The bug-2 tests are `slow`, all nine `ccm_*` goldens and the two auto-embedding `te_kraskov_*_autoembed_*` goldens are `slow` at both sizes, and the six `ddtf_multitaper_*` and `mgcx_maxlag10` goldens are `slow` at full size, so none of these runs without `--runslow`. After touching ccm, TE kraskov auto-embedding, ddtf or mgcx, run `.venv/bin/python -m pytest --runslow -k "ccm or te_kraskov" --ignore=tests/test_SPIs.py` (20 tests at small size) and the full tier before trusting a green default run.
 
 ### Flagged for investigation (locked as-is, not confirmed bugs)
 
-- **Degenerate outputs in the extra wavelet set** (`goldens/extra/small`, the nine `*_wavelet_*` classes absent from `config.yaml`). Off the diagonal, `cohmag` and `plv` are exactly 1.0 everywhere, `ppc` and `dspli` are `-inf` everywhere, `dwspli` is 0 everywhere, `icoh` is rounding noise (about 1e-16), and those six are identical for all six band/statistic configs. Only `phase`, `pli` and `wspli` vary with the input and the band. The wrapper passes a single epoch (`1 x processes x samples`) to `mne_connectivity.spectral_connectivity_epochs`, replacing the original `mne.connectivity.spectral_connectivity` path during migration while preserving its outputs. The likely cause of the degeneracy is aggregation across a single epoch: phase consistency is trivially 1 and pairwise phase consistency divides by `n(n-1) = 0`. The six `psi_wavelet_*` SPIs in `config.yaml` use a separate cache (`data.mne_psi`); their nondegenerate snapshots do not validate their axis selection or formula. Estimator usability remains a scientific review item; the goldens preserve the observed values so changes are detected.
+- **Degenerate outputs in the extra wavelet set** (`goldens/extra/small`, the seven `*_wavelet_*` classes absent from `config.yaml`). Off the diagonal, `cohmag` and `plv` are exactly 1.0 everywhere, `dwspli` is 0 everywhere, `icoh` is rounding noise (about 1e-16), and those four are identical for all six band/statistic configs. `ppc` and `dspli` were `-inf` everywhere and are now refused. Only `phase`, `pli` and `wspli` vary with the input and the band. The wrapper passes a single epoch (`1 x processes x samples`) to `mne_connectivity.spectral_connectivity_epochs`, replacing the original `mne.connectivity.spectral_connectivity` path during migration while preserving its outputs. The likely cause of the degeneracy is aggregation across a single epoch: phase consistency is trivially 1 and pairwise phase consistency divides by `n(n-1) = 0`. The six `psi_wavelet_*` SPIs in `config.yaml` use a separate cache (`data.mne_psi`); their nondegenerate snapshots do not validate their axis selection or formula. Estimator usability remains a scientific review item; the goldens preserve the observed values so changes are detected.
 
 ### Dependency constraints that affect calculations
 
@@ -771,52 +771,52 @@ come from their individual snapshots and are not production benchmarks; use the
 <!-- Generated from goldens/{small,full}/meta.json with a short inline Python snippet (slow = spi_policy.is_slow(identifier, time_s), stochastic = spi_policy.is_stochastic, java = "java" in deps); regenerate rather than hand-edit. -->
 | identifier | module | status (small) | time_s (small) | slow (small) | status (full) | time_s (full) | slow (full) | stochastic | java |
 |---|---|---|---:|:-:|---|---:|:-:|:-:|:-:|
-| `cov_EmpiricalCovariance` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `cov_EllipticEnvelope` | .statistics.basic | ok | 0.022 |  | ok | 0.023 |  | yes |  |
-| `cov_GraphicalLasso` | .statistics.basic | ok | 0.003 |  | ok | 0.002 |  |  |  |
-| `cov_GraphicalLassoCV` | .statistics.basic | ok | 0.227 |  | ok | 0.328 |  |  |  |
-| `cov_LedoitWolf` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `cov_MinCovDet` | .statistics.basic | ok | 0.022 |  | ok | 0.023 |  | yes |  |
-| `cov_OAS` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `cov_ShrunkCovariance` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `cov-sq_EmpiricalCovariance` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `cov-sq_EllipticEnvelope` | .statistics.basic | ok | 0.022 |  | ok | 0.023 |  | yes |  |
-| `cov-sq_GraphicalLasso` | .statistics.basic | ok | 0.003 |  | ok | 0.002 |  |  |  |
-| `cov-sq_GraphicalLassoCV` | .statistics.basic | ok | 0.233 |  | ok | 0.332 |  |  |  |
-| `cov-sq_LedoitWolf` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `cov-sq_MinCovDet` | .statistics.basic | ok | 0.022 |  | ok | 0.023 |  | yes |  |
-| `cov-sq_OAS` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `cov-sq_ShrunkCovariance` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `prec_EmpiricalCovariance` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `prec_EllipticEnvelope` | .statistics.basic | ok | 0.022 |  | ok | 0.023 |  | yes |  |
-| `prec_GraphicalLasso` | .statistics.basic | ok | 0.003 |  | ok | 0.002 |  |  |  |
-| `prec_GraphicalLassoCV` | .statistics.basic | ok | 0.226 |  | ok | 0.333 |  |  |  |
-| `prec_LedoitWolf` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `prec_MinCovDet` | .statistics.basic | ok | 0.021 |  | ok | 0.023 |  | yes |  |
-| `prec_OAS` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `prec_ShrunkCovariance` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `prec-sq_EmpiricalCovariance` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `prec-sq_EllipticEnvelope` | .statistics.basic | ok | 0.021 |  | ok | 0.023 |  | yes |  |
-| `prec-sq_GraphicalLasso` | .statistics.basic | ok | 0.003 |  | ok | 0.002 |  |  |  |
-| `prec-sq_GraphicalLassoCV` | .statistics.basic | ok | 0.225 |  | ok | 0.331 |  |  |  |
-| `prec-sq_LedoitWolf` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `prec-sq_MinCovDet` | .statistics.basic | ok | 0.021 |  | ok | 0.023 |  | yes |  |
-| `prec-sq_OAS` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `prec-sq_ShrunkCovariance` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `spearmanr-sq` | .statistics.basic | ok | 0.005 |  | ok | 0.011 |  |  |  |
+| `cov_empirical` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `cov_ellipticenvelope` | .statistics.basic | ok | 0.022 |  | ok | 0.023 |  | yes |  |
+| `cov_graphicallasso` | .statistics.basic | ok | 0.003 |  | ok | 0.002 |  |  |  |
+| `cov_graphicallassocv` | .statistics.basic | ok | 0.227 |  | ok | 0.328 |  |  |  |
+| `cov_ledoitwolf` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `cov_mincovdet` | .statistics.basic | ok | 0.022 |  | ok | 0.023 |  | yes |  |
+| `cov_oas` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `cov_shrunk` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `cov_sq_empirical` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `cov_sq_ellipticenvelope` | .statistics.basic | ok | 0.022 |  | ok | 0.023 |  | yes |  |
+| `cov_sq_graphicallasso` | .statistics.basic | ok | 0.003 |  | ok | 0.002 |  |  |  |
+| `cov_sq_graphicallassocv` | .statistics.basic | ok | 0.233 |  | ok | 0.332 |  |  |  |
+| `cov_sq_ledoitwolf` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `cov_sq_mincovdet` | .statistics.basic | ok | 0.022 |  | ok | 0.023 |  | yes |  |
+| `cov_sq_oas` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `cov_sq_shrunk` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `prec_empirical` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `prec_ellipticenvelope` | .statistics.basic | ok | 0.022 |  | ok | 0.023 |  | yes |  |
+| `prec_graphicallasso` | .statistics.basic | ok | 0.003 |  | ok | 0.002 |  |  |  |
+| `prec_graphicallassocv` | .statistics.basic | ok | 0.226 |  | ok | 0.333 |  |  |  |
+| `prec_ledoitwolf` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `prec_mincovdet` | .statistics.basic | ok | 0.021 |  | ok | 0.023 |  | yes |  |
+| `prec_oas` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `prec_shrunk` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `prec_sq_empirical` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `prec_sq_ellipticenvelope` | .statistics.basic | ok | 0.021 |  | ok | 0.023 |  | yes |  |
+| `prec_sq_graphicallasso` | .statistics.basic | ok | 0.003 |  | ok | 0.002 |  |  |  |
+| `prec_sq_graphicallassocv` | .statistics.basic | ok | 0.225 |  | ok | 0.331 |  |  |  |
+| `prec_sq_ledoitwolf` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `prec_sq_mincovdet` | .statistics.basic | ok | 0.021 |  | ok | 0.023 |  | yes |  |
+| `prec_sq_oas` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `prec_sq_shrunk` | .statistics.basic | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `spearmanr_sq` | .statistics.basic | ok | 0.005 |  | ok | 0.011 |  |  |  |
 | `spearmanr` | .statistics.basic | ok | 0.005 |  | ok | 0.011 |  |  |  |
-| `kendalltau-sq` | .statistics.basic | ok | 0.005 |  | ok | 0.010 |  |  |  |
+| `kendalltau_sq` | .statistics.basic | ok | 0.005 |  | ok | 0.010 |  |  |  |
 | `kendalltau` | .statistics.basic | ok | 0.005 |  | ok | 0.010 |  |  |  |
-| `xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
-| `xcorr-sq_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
-| `xcorr_mean_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
-| `xcorr-sq_mean_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
-| `xcorr_mean_sig-False_fs-1_lag-0-125` | .statistics.basic | ok | 0.001 |  | ok | 0.001 |  |  |  |
-| `xcorr-sq_mean_sig-False_fs-1_lag-0-125` | .statistics.basic | ok | 0.000 |  | ok | 0.001 |  |  |  |
-| `xcorr_min_sig-False_fs-1_lag-0-125` | .statistics.basic | ok | 0.001 |  | ok | 0.001 |  |  |  |
-| `xcorr_min_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
-| `xcorr_peak_sig-False_fs-1_lag-0-125` | .statistics.basic | ok | 0.000 |  | ok | 0.001 |  |  |  |
-| `xcorr_peak_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr_holm_max_maxlag0p125_alpha0p05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr_sq_holm_max_maxlag0p125_alpha0p05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr_holm_mean_maxlag0p125_alpha0p05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr_sq_holm_mean_maxlag0p125_alpha0p05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr_mean_maxlag0p125` | .statistics.basic | ok | 0.001 |  | ok | 0.001 |  |  |  |
+| `xcorr_sq_mean_maxlag0p125` | .statistics.basic | ok | 0.000 |  | ok | 0.001 |  |  |  |
+| `xcorr_min_maxlag0p125` | .statistics.basic | ok | 0.001 |  | ok | 0.001 |  |  |  |
+| `xcorr_holm_min_maxlag0p125_alpha0p05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
+| `xcorr_peak_maxlag0p125` | .statistics.basic | ok | 0.000 |  | ok | 0.001 |  |  |  |
+| `xcorr_holm_peak_maxlag0p125_alpha0p05` | .statistics.basic | partial_nan | 0.001 |  | partial_nan | 0.001 |  |  |  |
 | `pdist_euclidean` | .statistics.distance | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `pdist_cityblock` | .statistics.distance | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `pdist_cosine` | .statistics.distance | ok | 0.000 |  | ok | 0.000 |  |  |  |
@@ -829,19 +829,19 @@ come from their individual snapshots and are not production benchmarks; use the
 | `hsic` | .statistics.distance | ok | 0.018 |  | ok | 0.047 |  |  |  |
 | `hsic_biased` | .statistics.distance | ok | 0.018 |  | ok | 0.047 |  |  |  |
 | `hhg` | .statistics.distance | ok | 0.043 |  | ok | 0.295 |  |  |  |
-| `mgcx_maxlag-1` | .statistics.distance | ok | 0.239 |  | ok | 0.768 |  |  |  |
-| `mgcx_maxlag-10` | .statistics.distance | ok | 0.687 |  | ok | 2.278 | yes |  |  |
-| `dcorrx_maxlag-1` | .statistics.distance | ok | 0.025 |  | ok | 0.066 |  |  |  |
-| `dcorrx_maxlag-10` | .statistics.distance | ok | 0.103 |  | ok | 0.285 |  |  |  |
+| `mgcx_maxlag01` | .statistics.distance | ok | 0.239 |  | ok | 0.768 |  |  |  |
+| `mgcx_maxlag10` | .statistics.distance | ok | 0.687 |  | ok | 2.278 | yes |  |  |
+| `dcorrx_maxlag01` | .statistics.distance | ok | 0.025 |  | ok | 0.066 |  |  |  |
+| `dcorrx_maxlag10` | .statistics.distance | ok | 0.103 |  | ok | 0.285 |  |  |  |
 | `dtw` | .statistics.distance | ok | 0.005 |  | ok | 0.016 |  |  |  |
-| `dtw_constraint-itakura` | .statistics.distance | ok | 0.005 |  | ok | 0.016 |  |  |  |
-| `dtw_constraint-sakoe-chiba` | .statistics.distance | ok | 0.005 |  | ok | 0.015 |  |  |  |
+| `dtw_itakura` | .statistics.distance | ok | 0.005 |  | ok | 0.016 |  |  |  |
+| `dtw_sakoechiba` | .statistics.distance | ok | 0.005 |  | ok | 0.015 |  |  |  |
 | `softdtw` | .statistics.distance | ok | 0.013 |  | ok | 0.042 |  |  |  |
-| `softdtw_constraint-itakura` | .statistics.distance | ok | 0.013 |  | ok | 0.042 |  |  |  |
-| `softdtw_constraint-sakoe-chiba` | .statistics.distance | ok | 0.013 |  | ok | 0.041 |  |  |  |
+| `softdtw_itakura` | .statistics.distance | ok | 0.013 |  | ok | 0.042 |  |  |  |
+| `softdtw_sakoechiba` | .statistics.distance | ok | 0.013 |  | ok | 0.041 |  |  |  |
 | `lcss` | .statistics.distance | ok | 0.005 |  | ok | 0.017 |  |  |  |
-| `lcss_constraint-itakura` | .statistics.distance | ok | 0.005 |  | ok | 0.017 |  |  |  |
-| `lcss_constraint-sakoe-chiba` | .statistics.distance | ok | 0.005 |  | ok | 0.017 |  |  |  |
+| `lcss_itakura` | .statistics.distance | ok | 0.005 |  | ok | 0.017 |  |  |  |
+| `lcss_sakoechiba` | .statistics.distance | ok | 0.005 |  | ok | 0.017 |  |  |  |
 | `bary_euclidean_mean` | .statistics.distance | ok | 0.005 |  | ok | 0.016 |  |  |  |
 | `bary_euclidean_max` | .statistics.distance | ok | 0.005 |  | ok | 0.015 |  |  |  |
 | `bary_dtw_mean` | .statistics.distance | ok | 0.006 |  | ok | 0.023 |  |  |  |
@@ -850,216 +850,216 @@ come from their individual snapshots and are not production benchmarks; use the
 | `bary_sgddtw_max` | .statistics.distance | ok | 0.009 |  | ok | 0.035 |  | yes |  |
 | `bary_softdtw_mean` | .statistics.distance | ok | 0.319 |  | ok | 1.124 |  |  |  |
 | `bary_softdtw_max` | .statistics.distance | ok | 0.324 |  | ok | 1.143 |  |  |  |
-| `bary-sq_euclidean_mean` | .statistics.distance | ok | 0.005 |  | ok | 0.016 |  |  |  |
-| `bary-sq_euclidean_max` | .statistics.distance | ok | 0.005 |  | ok | 0.015 |  |  |  |
-| `bary-sq_dtw_mean` | .statistics.distance | ok | 0.005 |  | ok | 0.024 |  |  |  |
-| `bary-sq_dtw_max` | .statistics.distance | ok | 0.005 |  | ok | 0.023 |  |  |  |
-| `bary-sq_sgddtw_mean` | .statistics.distance | ok | 0.009 |  | ok | 0.035 |  | yes |  |
-| `bary-sq_sgddtw_max` | .statistics.distance | ok | 0.009 |  | ok | 0.035 |  | yes |  |
-| `bary-sq_softdtw_mean` | .statistics.distance | ok | 0.322 |  | ok | 1.115 |  |  |  |
-| `bary-sq_softdtw_max` | .statistics.distance | ok | 0.320 |  | ok | 1.114 |  |  |  |
+| `bary_sq_euclidean_mean` | .statistics.distance | ok | 0.005 |  | ok | 0.016 |  |  |  |
+| `bary_sq_euclidean_max` | .statistics.distance | ok | 0.005 |  | ok | 0.015 |  |  |  |
+| `bary_sq_dtw_mean` | .statistics.distance | ok | 0.005 |  | ok | 0.024 |  |  |  |
+| `bary_sq_dtw_max` | .statistics.distance | ok | 0.005 |  | ok | 0.023 |  |  |  |
+| `bary_sq_sgddtw_mean` | .statistics.distance | ok | 0.009 |  | ok | 0.035 |  | yes |  |
+| `bary_sq_sgddtw_max` | .statistics.distance | ok | 0.009 |  | ok | 0.035 |  | yes |  |
+| `bary_sq_softdtw_mean` | .statistics.distance | ok | 0.322 |  | ok | 1.115 |  |  |  |
+| `bary_sq_softdtw_max` | .statistics.distance | ok | 0.320 |  | ok | 1.114 |  |  |  |
 | `gwtau` | .statistics.distance | ok | 0.001 |  | ok | 0.002 |  |  |  |
 | `anm` | .statistics.causal | ok | 0.246 |  | ok | 0.827 |  |  |  |
 | `cds` | .statistics.causal | ok | 0.061 |  | ok | 0.213 |  |  |  |
 | `reci` | .statistics.causal | ok | 0.036 |  | ok | 0.072 |  |  |  |
 | `igci` | .statistics.causal | ok | 0.018 |  | ok | 0.043 |  |  |  |
-| `ccm_E-None_mean` | .statistics.causal | ok | 3.373 | yes | ok | 14.601 | yes |  |  |
-| `ccm_E-None_max` | .statistics.causal | ok | 3.348 | yes | ok | 14.736 | yes |  |  |
-| `ccm_E-None_diff` | .statistics.causal | ok | 3.365 | yes | ok | 15.000 | yes |  |  |
-| `ccm_E-1_mean` | .statistics.causal | ok | 2.899 | yes | ok | 12.590 | yes |  |  |
-| `ccm_E-1_max` | .statistics.causal | ok | 2.912 | yes | ok | 12.658 | yes |  |  |
-| `ccm_E-1_diff` | .statistics.causal | ok | 2.903 | yes | ok | 12.313 | yes |  |  |
-| `ccm_E-10_mean` | .statistics.causal | ok | 3.322 | yes | ok | 14.419 | yes |  |  |
-| `ccm_E-10_max` | .statistics.causal | ok | 3.338 | yes | ok | 14.442 | yes |  |  |
-| `ccm_E-10_diff` | .statistics.causal | ok | 3.323 | yes | ok | 14.558 | yes |  |  |
+| `ccm_autodim_mean` | .statistics.causal | ok | 3.373 | yes | ok | 14.601 | yes |  |  |
+| `ccm_autodim_max` | .statistics.causal | ok | 3.348 | yes | ok | 14.736 | yes |  |  |
+| `ccm_autodim_diff` | .statistics.causal | ok | 3.365 | yes | ok | 15.000 | yes |  |  |
+| `ccm_mean_dim01` | .statistics.causal | ok | 2.899 | yes | ok | 12.590 | yes |  |  |
+| `ccm_max_dim01` | .statistics.causal | ok | 2.912 | yes | ok | 12.658 | yes |  |  |
+| `ccm_diff_dim01` | .statistics.causal | ok | 2.903 | yes | ok | 12.313 | yes |  |  |
+| `ccm_mean_dim10` | .statistics.causal | ok | 3.322 | yes | ok | 14.419 | yes |  |  |
+| `ccm_max_dim10` | .statistics.causal | ok | 3.338 | yes | ok | 14.442 | yes |  |  |
+| `ccm_diff_dim10` | .statistics.causal | ok | 3.323 | yes | ok | 14.558 | yes |  |  |
 | `je_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.005 |  |  |  |
 | `je_kozachenko` | .statistics.infotheory | ok | 0.002 |  | ok | 0.014 |  |  | yes |
-| `je_kernel_W-0.5` | .statistics.infotheory | ok | 0.002 |  | ok | 0.009 |  |  |  |
+| `je_kernel_width0p5` | .statistics.infotheory | ok | 0.002 |  | ok | 0.009 |  |  |  |
 | `ce_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.004 |  |  |  |
 | `ce_kozachenko` | .statistics.infotheory | ok | 0.002 |  | ok | 0.008 |  |  | yes |
-| `ce_kernel_W-0.5` | .statistics.infotheory | ok | 0.002 |  | ok | 0.005 |  |  |  |
-| `cce_gaussian` | .statistics.infotheory | ok | 0.037 |  | ok | 0.113 |  |  |  |
-| `cce_kozachenko` | .statistics.infotheory | ok | 0.052 |  | ok | 0.186 |  |  | yes |
-| `cce_kernel_W-0.5` | .statistics.infotheory | ok | 1.406 |  | ok | 0.955 |  |  |  |
-| `xme_gaussian_k1` | .statistics.infotheory | ok | 0.003 |  | ok | 0.010 |  |  |  |
-| `xme_kozachenko_k1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.020 |  |  | yes |
-| `xme_kernel_W-0.5_k1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.015 |  |  |  |
-| `xme_gaussian_k10` | .statistics.infotheory | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `xme_kozachenko_k10` | .statistics.infotheory | ok | 0.006 |  | ok | 0.013 |  |  | yes |
-| `xme_kernel_W-0.5_k10` | .statistics.infotheory | ok | 0.002 |  | ok | 0.006 |  |  |  |
-| `di_gaussian` | .statistics.infotheory | ok | 0.006 |  | ok | 0.006 |  |  |  |
-| `di_kozachenko` | .statistics.infotheory | ok | 0.043 |  | ok | 0.113 |  |  | yes |
-| `di_kernel_W-0.5` | .statistics.infotheory | ok | 1.780 |  | ok | 0.770 |  |  |  |
-| `si_gaussian_k-1` | .statistics.infotheory | ok | 0.009 |  | ok | 0.027 |  |  |  |
-| `si_kozachenko_k-1` | .statistics.infotheory | ok | 0.013 |  | ok | 0.046 |  |  | yes |
-| `si_kernel_W-0.5_k-1` | .statistics.infotheory | ok | 0.014 |  | ok | 0.047 |  |  |  |
+| `ce_kernel_width0p5` | .statistics.infotheory | ok | 0.002 |  | ok | 0.005 |  |  |  |
+| `cce_gaussian_horizon05` | .statistics.infotheory | ok | 0.037 |  | ok | 0.113 |  |  |  |
+| `cce_kozachenko_horizon05` | .statistics.infotheory | ok | 0.052 |  | ok | 0.186 |  |  | yes |
+| `cce_kernel_width0p5_horizon05` | .statistics.infotheory | ok | 1.406 |  | ok | 0.955 |  |  |  |
+| `xme_gaussian_history01` | .statistics.infotheory | ok | 0.003 |  | ok | 0.010 |  |  |  |
+| `xme_kozachenko_history01` | .statistics.infotheory | ok | 0.004 |  | ok | 0.020 |  |  | yes |
+| `xme_kernel_width0p5_history01` | .statistics.infotheory | ok | 0.004 |  | ok | 0.015 |  |  |  |
+| `xme_gaussian_history10` | .statistics.infotheory | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `xme_kozachenko_history10` | .statistics.infotheory | ok | 0.006 |  | ok | 0.013 |  |  | yes |
+| `xme_kernel_width0p5_history10` | .statistics.infotheory | ok | 0.002 |  | ok | 0.006 |  |  |  |
+| `di_gaussian_horizon05` | .statistics.infotheory | ok | 0.006 |  | ok | 0.006 |  |  |  |
+| `di_kozachenko_horizon05` | .statistics.infotheory | ok | 0.043 |  | ok | 0.113 |  |  | yes |
+| `di_kernel_width0p5_horizon05` | .statistics.infotheory | ok | 1.780 |  | ok | 0.770 |  |  |  |
+| `si_gaussian_delay01` | .statistics.infotheory | ok | 0.009 |  | ok | 0.027 |  |  |  |
+| `si_kozachenko_delay01` | .statistics.infotheory | ok | 0.013 |  | ok | 0.046 |  |  | yes |
+| `si_kernel_width0p5_delay01` | .statistics.infotheory | ok | 0.014 |  | ok | 0.047 |  |  |  |
 | `mi_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  |  |
-| `mi_kraskov_NN-4` | .statistics.infotheory | ok | 0.426 |  | ok | 0.228 |  |  | yes |
-| `mi_kraskov_NN-4_DCE` | .statistics.infotheory | ok | 0.283 |  | ok | 0.226 |  |  | yes |
-| `mi_kernel_W-0.25` | .statistics.infotheory | ok | 0.002 |  | ok | 0.007 |  |  |  |
+| `mi_kraskov_neighbours04` | .statistics.infotheory | ok | 0.426 |  | ok | 0.228 |  |  | yes |
+| `mi_kraskov_theilerauto_neighbours04` | .statistics.infotheory | ok | 0.283 |  | ok | 0.226 |  |  | yes |
+| `mi_kernel_width0p25` | .statistics.infotheory | ok | 0.002 |  | ok | 0.007 |  |  |  |
 | `tlmi_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  |  |
-| `tlmi_kraskov_NN-4` | .statistics.infotheory | ok | 0.115 |  | ok | 0.220 |  |  | yes |
-| `tlmi_kraskov_NN-4_DCE` | .statistics.infotheory | ok | 0.105 |  | ok | 0.224 |  |  | yes |
-| `tlmi_kernel_W-0.25` | .statistics.infotheory | ok | 0.002 |  | ok | 0.006 |  |  |  |
-| `te_kraskov_NN-4_k-max-10_tau-max-4` | .statistics.infotheory | ok | 12.967 | yes | ok | 16.209 | yes |  | yes |
-| `te_kraskov_NN-4_DCE_k-max-10_tau-max-4` | .statistics.infotheory | ok | 13.883 | yes | ok | 16.197 | yes |  | yes |
-| `te_kraskov_NN-4_DCE_k-2_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.515 |  | ok | 0.234 |  |  | yes |
-| `te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.323 |  | ok | 0.232 |  |  | yes |
-| `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.527 |  | ok | 0.226 |  |  | yes |
-| `te_kernel_W-0.25_k-1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.005 |  |  |  |
-| `gc_gaussian_k-max-10_tau-max-2` | .statistics.infotheory | ok | 0.045 |  | ok | 0.075 |  |  |  |
-| `gc_gaussian_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  |  |
-| `te_symbolic_m-3_tau-4_h-4` | .statistics.infotheory | ok | 0.001 |  | ok | 0.001 |  |  |  |
-| `te_symbolic_m-3_tau-16_h-16` | .statistics.infotheory | ok | 0.001 |  | ok | 0.001 |  |  |  |
-| `phi_star_t-1_norm-0` | .statistics.infotheory | ok | 0.036 |  | ok | 0.077 |  |  |  |
-| `phi_star_t-1_norm-1` | .statistics.infotheory | ok | 0.037 |  | ok | 0.082 |  |  |  |
-| `phi_Geo_t-1_norm-0` | .statistics.infotheory | ok | 0.097 |  | ok | 0.190 |  |  |  |
-| `phi_Geo_t-1_norm-1` | .statistics.infotheory | ok | 0.097 |  | ok | 0.191 |  |  |  |
-| `phase_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `phase_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `phase_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `tlmi_kraskov_neighbours04` | .statistics.infotheory | ok | 0.115 |  | ok | 0.220 |  |  | yes |
+| `tlmi_kraskov_theilerauto_neighbours04` | .statistics.infotheory | ok | 0.105 |  | ok | 0.224 |  |  | yes |
+| `tlmi_kernel_width0p25` | .statistics.infotheory | ok | 0.002 |  | ok | 0.006 |  |  |  |
+| `te_kraskov_autoembed_maxcorrais_neighbours04_maxtargethistory10_maxtargetdelay04` | .statistics.infotheory | ok | 12.967 | yes | ok | 16.209 | yes |  | yes |
+| `te_kraskov_theilerauto_autoembed_maxcorrais_neighbours04_maxtargethistory10_maxtargetdelay04` | .statistics.infotheory | ok | 13.883 | yes | ok | 16.197 | yes |  | yes |
+| `te_kraskov_theilerauto_neighbours04_targethistory02_targetdelay01_sourcehistory01_sourcedelay01` | .statistics.infotheory | ok | 0.515 |  | ok | 0.234 |  |  | yes |
+| `te_kraskov_theilerauto_neighbours04_targethistory01_targetdelay01_sourcehistory01_sourcedelay01` | .statistics.infotheory | ok | 0.323 |  | ok | 0.232 |  |  | yes |
+| `te_kraskov_neighbours04_targethistory01_targetdelay01_sourcehistory01_sourcedelay01` | .statistics.infotheory | ok | 0.527 |  | ok | 0.226 |  |  | yes |
+| `te_kernel_width0p25_targethistory01` | .statistics.infotheory | ok | 0.004 |  | ok | 0.005 |  |  |  |
+| `gc_gaussian_autoembed_maxcorrais_maxtargethistory10_maxtargetdelay02` | .statistics.infotheory | ok | 0.045 |  | ok | 0.075 |  |  |  |
+| `gc_gaussian_targethistory01_targetdelay01_sourcehistory01_sourcedelay01` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  |  |
+| `te_symbolic_patternlength03_spacing04_shift04` | .statistics.infotheory | ok | 0.001 |  | ok | 0.001 |  |  |  |
+| `te_symbolic_patternlength03_spacing16_shift16` | .statistics.infotheory | ok | 0.001 |  | ok | 0.001 |  |  |  |
+| `phi_star_delay01` | .statistics.infotheory | ok | 0.036 |  | ok | 0.077 |  |  |  |
+| `phi_star_normalized_delay01` | .statistics.infotheory | ok | 0.037 |  | ok | 0.082 |  |  |  |
+| `phi_geo_delay01` | .statistics.infotheory | ok | 0.097 |  | ok | 0.190 |  |  |  |
+| `phi_geo_normalized_delay01` | .statistics.infotheory | ok | 0.097 |  | ok | 0.191 |  |  |  |
+| `phase_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `phase_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `phase_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
 | `phase_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
 | `phase_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
 | `phase_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `cohmag_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `cohmag_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `cohmag_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `cohmag_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `cohmag_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `icoh_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `icoh_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `icoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `icoh_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `icoh_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `icoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `psi_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.007 |  |  |  |
-| `psi_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.003 |  | ok | 0.005 |  |  |  |
-| `psi_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.003 |  | ok | 0.005 |  |  |  |
-| `plv_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.003 |  | ok | 0.004 |  |  |  |
-| `plv_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.003 |  | ok | 0.004 |  |  |  |
-| `plv_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.003 |  | ok | 0.002 |  |  |  |
-| `plv_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `plv_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `plv_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `pli_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `pli_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `pli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `pli_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `pli_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `pli_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `wpli_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `wpli_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `wpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `wpli_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `wpli_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `wpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dspli_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dspli_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dspli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dspli_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dspli_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dspli_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dswpli_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dswpli_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dswpli_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dswpli_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dswpli_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `ppc_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `ppc_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `ppc_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `ppc_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `ppc_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `ppc_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `dtf_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.403 |  | ok | 1.260 |  |  |  |
-| `dtf_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.422 |  | ok | 1.271 |  |  |  |
-| `dtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.415 |  | ok | 1.269 |  |  |  |
-| `dtf_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.416 |  | ok | 1.283 |  |  |  |
-| `dtf_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.412 |  | ok | 1.287 |  |  |  |
-| `dtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.406 |  | ok | 1.285 |  |  |  |
-| `dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.616 |  | ok | 1.886 |  |  |  |
-| `dcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.607 |  | ok | 1.888 |  |  |  |
-| `dcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.595 |  | ok | 1.879 |  |  |  |
-| `dcoh_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.625 |  | ok | 1.890 |  |  |  |
-| `dcoh_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.628 |  | ok | 1.893 |  |  |  |
-| `dcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.589 |  | ok | 1.912 |  |  |  |
-| `pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.418 |  | ok | 1.314 |  |  |  |
-| `pdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.419 |  | ok | 1.299 |  |  |  |
-| `pdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.407 |  | ok | 1.293 |  |  |  |
-| `pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.399 |  | ok | 1.281 |  |  |  |
-| `pdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.400 |  | ok | 1.300 |  |  |  |
-| `pdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.414 |  | ok | 1.347 |  |  |  |
-| `gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.612 |  | ok | 1.958 |  |  |  |
-| `gpdcoh_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.599 |  | ok | 1.956 |  |  |  |
-| `gpdcoh_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.594 |  | ok | 1.950 |  |  |  |
-| `gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.607 |  | ok | 1.948 |  |  |  |
-| `gpdcoh_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.611 |  | ok | 1.958 |  |  |  |
-| `gpdcoh_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.604 |  | ok | 1.949 |  |  |  |
-| `ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.799 |  | ok | 2.563 | yes |  |  |
-| `ddtf_multitaper_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.807 |  | ok | 2.502 | yes |  |  |
-| `ddtf_multitaper_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.808 |  | ok | 2.490 | yes |  |  |
-| `ddtf_multitaper_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.797 |  | ok | 2.490 | yes |  |  |
-| `ddtf_multitaper_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.801 |  | ok | 2.491 | yes |  |  |
-| `ddtf_multitaper_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.795 |  | ok | 2.491 | yes |  |  |
-| `gd_multitaper_delay_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | partial_nan | 0.005 |  | partial_nan | 0.012 |  |  |  |
-| `gd_multitaper_delay_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | partial_nan | 0.005 |  | partial_nan | 0.010 |  |  |  |
-| `gd_multitaper_delay_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | partial_nan | 0.005 |  | partial_nan | 0.011 |  |  |  |
-| `sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.103 |  | ok | 0.326 |  |  |  |
-| `sgc_nonparametric_mean_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.102 |  | ok | 0.350 |  |  |  |
-| `sgc_nonparametric_mean_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.101 |  | ok | 0.342 |  |  |  |
-| `sgc_nonparametric_max_fs-1_fmin-0_fmax-0-5` | .statistics.spectral | ok | 0.104 |  | ok | 0.347 |  |  |  |
-| `sgc_nonparametric_max_fs-1_fmin-0_fmax-0-25` | .statistics.spectral | ok | 0.103 |  | ok | 0.337 |  |  |  |
-| `sgc_nonparametric_max_fs-1_fmin-0-25_fmax-0-5` | .statistics.spectral | ok | 0.102 |  | ok | 0.344 |  |  |  |
-| `sgc_parametric_mean_fs-1_fmin-0_fmax-0-5_order-None` | .statistics.spectral | ok | 0.006 |  | ok | 0.014 |  |  |  |
-| `sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-None` | .statistics.spectral | ok | 0.006 |  | ok | 0.013 |  |  |  |
-| `sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-None` | .statistics.spectral | ok | 0.006 |  | ok | 0.013 |  |  |  |
+| `cohmag_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `cohmag_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `cohmag_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `cohmag_max_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `cohmag_max_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `cohmag_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `icoh_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `icoh_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `icoh_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `icoh_max_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `icoh_max_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `icoh_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `psi_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.007 |  |  |  |
+| `psi_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.003 |  | ok | 0.005 |  |  |  |
+| `psi_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.003 |  | ok | 0.005 |  |  |  |
+| `plv_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.003 |  | ok | 0.004 |  |  |  |
+| `plv_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.003 |  | ok | 0.004 |  |  |  |
+| `plv_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.003 |  | ok | 0.002 |  |  |  |
+| `plv_max_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `plv_max_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `plv_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `pli_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `pli_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `pli_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `pli_max_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `pli_max_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `pli_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `wpli_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `wpli_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `wpli_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `wpli_max_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `wpli_max_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `wpli_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dspli_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dspli_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dspli_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dspli_max_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dspli_max_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dspli_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dswpli_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dswpli_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dswpli_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dswpli_max_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dswpli_max_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dswpli_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `ppc_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `ppc_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `ppc_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `ppc_max_band0-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `ppc_max_band0-0p25cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `ppc_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `dtf_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.403 |  | ok | 1.260 |  |  |  |
+| `dtf_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.422 |  | ok | 1.271 |  |  |  |
+| `dtf_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.415 |  | ok | 1.269 |  |  |  |
+| `dtf_max_band0-0p5cyc` | .statistics.spectral | ok | 0.416 |  | ok | 1.283 |  |  |  |
+| `dtf_max_band0-0p25cyc` | .statistics.spectral | ok | 0.412 |  | ok | 1.287 |  |  |  |
+| `dtf_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.406 |  | ok | 1.285 |  |  |  |
+| `dcoh_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.616 |  | ok | 1.886 |  |  |  |
+| `dcoh_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.607 |  | ok | 1.888 |  |  |  |
+| `dcoh_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.595 |  | ok | 1.879 |  |  |  |
+| `dcoh_max_band0-0p5cyc` | .statistics.spectral | ok | 0.625 |  | ok | 1.890 |  |  |  |
+| `dcoh_max_band0-0p25cyc` | .statistics.spectral | ok | 0.628 |  | ok | 1.893 |  |  |  |
+| `dcoh_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.589 |  | ok | 1.912 |  |  |  |
+| `pdcoh_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.418 |  | ok | 1.314 |  |  |  |
+| `pdcoh_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.419 |  | ok | 1.299 |  |  |  |
+| `pdcoh_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.407 |  | ok | 1.293 |  |  |  |
+| `pdcoh_max_band0-0p5cyc` | .statistics.spectral | ok | 0.399 |  | ok | 1.281 |  |  |  |
+| `pdcoh_max_band0-0p25cyc` | .statistics.spectral | ok | 0.400 |  | ok | 1.300 |  |  |  |
+| `pdcoh_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.414 |  | ok | 1.347 |  |  |  |
+| `gpdcoh_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.612 |  | ok | 1.958 |  |  |  |
+| `gpdcoh_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.599 |  | ok | 1.956 |  |  |  |
+| `gpdcoh_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.594 |  | ok | 1.950 |  |  |  |
+| `gpdcoh_max_band0-0p5cyc` | .statistics.spectral | ok | 0.607 |  | ok | 1.948 |  |  |  |
+| `gpdcoh_max_band0-0p25cyc` | .statistics.spectral | ok | 0.611 |  | ok | 1.958 |  |  |  |
+| `gpdcoh_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.604 |  | ok | 1.949 |  |  |  |
+| `ddtf_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.799 |  | ok | 2.563 | yes |  |  |
+| `ddtf_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.807 |  | ok | 2.502 | yes |  |  |
+| `ddtf_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.808 |  | ok | 2.490 | yes |  |  |
+| `ddtf_max_band0-0p5cyc` | .statistics.spectral | ok | 0.797 |  | ok | 2.490 | yes |  |  |
+| `ddtf_max_band0-0p25cyc` | .statistics.spectral | ok | 0.801 |  | ok | 2.491 | yes |  |  |
+| `ddtf_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.795 |  | ok | 2.491 | yes |  |  |
+| `gd_delay_band0-0p5cyc` | .statistics.spectral | partial_nan | 0.005 |  | partial_nan | 0.012 |  |  |  |
+| `gd_delay_band0-0p25cyc` | .statistics.spectral | partial_nan | 0.005 |  | partial_nan | 0.010 |  |  |  |
+| `gd_delay_band0p25-0p5cyc` | .statistics.spectral | partial_nan | 0.005 |  | partial_nan | 0.011 |  |  |  |
+| `sgc_nonparametric_mean_band0-0p5cyc` | .statistics.spectral | ok | 0.103 |  | ok | 0.326 |  |  |  |
+| `sgc_nonparametric_mean_band0-0p25cyc` | .statistics.spectral | ok | 0.102 |  | ok | 0.350 |  |  |  |
+| `sgc_nonparametric_mean_band0p25-0p5cyc` | .statistics.spectral | ok | 0.101 |  | ok | 0.342 |  |  |  |
+| `sgc_nonparametric_max_band0-0p5cyc` | .statistics.spectral | ok | 0.104 |  | ok | 0.347 |  |  |  |
+| `sgc_nonparametric_max_band0-0p25cyc` | .statistics.spectral | ok | 0.103 |  | ok | 0.337 |  |  |  |
+| `sgc_nonparametric_max_band0p25-0p5cyc` | .statistics.spectral | ok | 0.102 |  | ok | 0.344 |  |  |  |
+| `sgc_parametric_autoorder_mean_band0-0p5cyc_maxorder50` | .statistics.spectral | ok | 0.006 |  | ok | 0.014 |  |  |  |
+| `sgc_parametric_autoorder_mean_band0-0p25cyc_maxorder50` | .statistics.spectral | ok | 0.006 |  | ok | 0.013 |  |  |  |
+| `sgc_parametric_autoorder_mean_band0p25-0p5cyc_maxorder50` | .statistics.spectral | ok | 0.006 |  | ok | 0.013 |  |  |  |
 | `sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-1` | .statistics.spectral | ok | 0.004 |  | ok | 0.009 |  |  |  |
-| `sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-1` | .statistics.spectral | ok | 0.004 |  | ok | 0.009 |  |  |  |
-| `sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-1` | .statistics.spectral | ok | 0.004 |  | ok | 0.009 |  |  |  |
+| `sgc_parametric_mean_band0-0p25cyc_order01` | .statistics.spectral | ok | 0.004 |  | ok | 0.009 |  |  |  |
+| `sgc_parametric_mean_band0p25-0p5cyc_order01` | .statistics.spectral | ok | 0.004 |  | ok | 0.009 |  |  |  |
 | `sgc_parametric_mean_fs-1_fmin-1e-05_fmax-0-5_order-20` | .statistics.spectral | partial_nan | 0.022 |  | ok | 0.046 |  |  |  |
-| `sgc_parametric_mean_fs-1_fmin-0_fmax-0-25_order-20` | .statistics.spectral | partial_nan | 0.022 |  | ok | 0.046 |  |  |  |
-| `sgc_parametric_mean_fs-1_fmin-0-25_fmax-0-5_order-20` | .statistics.spectral | partial_nan | 0.022 |  | ok | 0.046 |  |  |  |
+| `sgc_parametric_mean_band0-0p25cyc_order20` | .statistics.spectral | partial_nan | 0.022 |  | ok | 0.046 |  |  |  |
+| `sgc_parametric_mean_band0p25-0p5cyc_order20` | .statistics.spectral | partial_nan | 0.022 |  | ok | 0.046 |  |  |  |
 | `sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-None` | .statistics.spectral | ok | 0.006 |  | ok | 0.013 |  |  |  |
-| `sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-None` | .statistics.spectral | ok | 0.006 |  | ok | 0.013 |  |  |  |
-| `sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-None` | .statistics.spectral | ok | 0.006 |  | ok | 0.013 |  |  |  |
+| `sgc_parametric_autoorder_max_band0-0p25cyc_maxorder50` | .statistics.spectral | ok | 0.006 |  | ok | 0.013 |  |  |  |
+| `sgc_parametric_autoorder_max_band0p25-0p5cyc_maxorder50` | .statistics.spectral | ok | 0.006 |  | ok | 0.013 |  |  |  |
 | `sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-1` | .statistics.spectral | ok | 0.004 |  | ok | 0.009 |  |  |  |
-| `sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-1` | .statistics.spectral | ok | 0.004 |  | ok | 0.009 |  |  |  |
-| `sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-1` | .statistics.spectral | ok | 0.004 |  | ok | 0.009 |  |  |  |
+| `sgc_parametric_max_band0-0p25cyc_order01` | .statistics.spectral | ok | 0.004 |  | ok | 0.009 |  |  |  |
+| `sgc_parametric_max_band0p25-0p5cyc_order01` | .statistics.spectral | ok | 0.004 |  | ok | 0.009 |  |  |  |
 | `sgc_parametric_max_fs-1_fmin-1e-05_fmax-0-5_order-20` | .statistics.spectral | partial_nan | 0.022 |  | ok | 0.046 |  |  |  |
-| `sgc_parametric_max_fs-1_fmin-0_fmax-0-25_order-20` | .statistics.spectral | partial_nan | 0.022 |  | ok | 0.046 |  |  |  |
-| `sgc_parametric_max_fs-1_fmin-0-25_fmax-0-5_order-20` | .statistics.spectral | partial_nan | 0.022 |  | ok | 0.046 |  |  |  |
-| `psi_wavelet_mean_fs-1_fmin-0_fmax-0-5_mean` | .statistics.wavelet | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `psi_wavelet_mean_fs-1_fmin-0_fmax-0-25_mean` | .statistics.wavelet | ok | 0.002 |  | ok | 0.002 |  |  |  |
-| `psi_wavelet_mean_fs-1_fmin-0-25_fmax-0-5_mean` | .statistics.wavelet | ok | 0.001 |  | ok | 0.002 |  |  |  |
-| `psi_wavelet_max_fs-1_fmin-0_fmax-0-5_max` | .statistics.wavelet | ok | 0.001 |  | ok | 0.002 |  |  |  |
-| `psi_wavelet_max_fs-1_fmin-0_fmax-0-25_max` | .statistics.wavelet | ok | 0.001 |  | ok | 0.002 |  |  |  |
-| `psi_wavelet_max_fs-1_fmin-0-25_fmax-0-5_max` | .statistics.wavelet | ok | 0.001 |  | ok | 0.002 |  |  |  |
-| `lmfit_Ridge` | .statistics.misc | ok | 0.016 |  | ok | 0.035 |  |  |  |
-| `lmfit_Lasso` | .statistics.misc | ok | 0.018 |  | ok | 0.037 |  |  |  |
+| `sgc_parametric_max_band0-0p25cyc_order20` | .statistics.spectral | partial_nan | 0.022 |  | ok | 0.046 |  |  |  |
+| `sgc_parametric_max_band0p25-0p5cyc_order20` | .statistics.spectral | partial_nan | 0.022 |  | ok | 0.046 |  |  |  |
+| `psi_wavelet_mean_band0-0p5cyc` | .statistics.wavelet | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `psi_wavelet_mean_band0-0p25cyc` | .statistics.wavelet | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `psi_wavelet_mean_band0p25-0p5cyc` | .statistics.wavelet | ok | 0.001 |  | ok | 0.002 |  |  |  |
+| `psi_wavelet_max_band0-0p5cyc` | .statistics.wavelet | ok | 0.001 |  | ok | 0.002 |  |  |  |
+| `psi_wavelet_max_band0-0p25cyc` | .statistics.wavelet | ok | 0.001 |  | ok | 0.002 |  |  |  |
+| `psi_wavelet_max_band0p25-0p5cyc` | .statistics.wavelet | ok | 0.001 |  | ok | 0.002 |  |  |  |
+| `lmfit_ridge_penaltysum_alpha1` | .statistics.misc | ok | 0.016 |  | ok | 0.035 |  |  |  |
+| `lmfit_lasso_alpha1` | .statistics.misc | ok | 0.018 |  | ok | 0.037 |  |  |  |
 | `lmfit_SGDRegressor` | .statistics.misc | ok | 0.017 |  | ok | 0.038 |  |  |  |
-| `lmfit_ElasticNet` | .statistics.misc | ok | 0.018 |  | ok | 0.038 |  |  |  |
-| `lmfit_BayesianRidge` | .statistics.misc | ok | 0.019 |  | ok | 0.039 |  |  |  |
-| `gpfit_DotProduct` | .statistics.misc | ok | 0.204 |  | ok | 0.610 |  |  |  |
-| `gpfit_RBF` | .statistics.misc | ok | 0.320 |  | ok | 0.977 |  |  |  |
-| `coint_johansen_max_eig_stat_order-0_ardiff-10` | .statistics.misc | ok | 0.008 |  | ok | 0.019 |  |  |  |
-| `coint_johansen_trace_stat_order-0_ardiff-10` | .statistics.misc | ok | 0.008 |  | ok | 0.020 |  |  |  |
-| `coint_johansen_max_eig_stat_order-0_ardiff-1` | .statistics.misc | ok | 0.007 |  | ok | 0.016 |  |  |  |
-| `coint_johansen_trace_stat_order-0_ardiff-1` | .statistics.misc | ok | 0.007 |  | ok | 0.016 |  |  |  |
-| `coint_johansen_max_eig_stat_order-1_ardiff-10` | .statistics.misc | ok | 0.009 |  | ok | 0.020 |  |  |  |
-| `coint_johansen_trace_stat_order-1_ardiff-10` | .statistics.misc | ok | 0.009 |  | ok | 0.020 |  |  |  |
-| `coint_johansen_max_eig_stat_order-1_ardiff-1` | .statistics.misc | ok | 0.007 |  | ok | 0.016 |  |  |  |
-| `coint_johansen_trace_stat_order-1_ardiff-1` | .statistics.misc | ok | 0.007 |  | ok | 0.016 |  |  |  |
-| `coint_aeg_tstat_trend-c_autolag-aic_maxlag-10` | .statistics.misc | ok | 0.025 |  | ok | 0.056 |  |  |  |
-| `coint_aeg_tstat_trend-ct_autolag-aic_maxlag-10` | .statistics.misc | ok | 0.025 |  | ok | 0.054 |  |  |  |
-| `coint_aeg_tstat_trend-ct_autolag-bic_maxlag-10` | .statistics.misc | ok | 0.025 |  | ok | 0.053 |  |  |  |
+| `lmfit_elasticnet_alpha1_lassoratio0p5` | .statistics.misc | ok | 0.018 |  | ok | 0.038 |  |  |  |
+| `lmfit_bayesianridge` | .statistics.misc | ok | 0.019 |  | ok | 0.039 |  |  |  |
+| `gpfit_dotproduct` | .statistics.misc | ok | 0.204 |  | ok | 0.610 |  |  |  |
+| `gpfit_rbf` | .statistics.misc | ok | 0.320 |  | ok | 0.977 |  |  |  |
+| `coint_johansen_constant_maxeig_lagdiffs10` | .statistics.misc | ok | 0.008 |  | ok | 0.019 |  |  |  |
+| `coint_johansen_constant_trace_lagdiffs10` | .statistics.misc | ok | 0.008 |  | ok | 0.020 |  |  |  |
+| `coint_johansen_constant_maxeig_lagdiffs01` | .statistics.misc | ok | 0.007 |  | ok | 0.016 |  |  |  |
+| `coint_johansen_constant_trace_lagdiffs01` | .statistics.misc | ok | 0.007 |  | ok | 0.016 |  |  |  |
+| `coint_johansen_lineartrend_maxeig_lagdiffs10` | .statistics.misc | ok | 0.009 |  | ok | 0.020 |  |  |  |
+| `coint_johansen_lineartrend_trace_lagdiffs10` | .statistics.misc | ok | 0.009 |  | ok | 0.020 |  |  |  |
+| `coint_johansen_lineartrend_maxeig_lagdiffs01` | .statistics.misc | ok | 0.007 |  | ok | 0.016 |  |  |  |
+| `coint_johansen_lineartrend_trace_lagdiffs01` | .statistics.misc | ok | 0.007 |  | ok | 0.016 |  |  |  |
+| `coint_aeg_constant_autolagaic_tstat_maxlag10` | .statistics.misc | ok | 0.025 |  | ok | 0.056 |  |  |  |
+| `coint_aeg_lineartrend_autolagaic_tstat_maxlag10` | .statistics.misc | ok | 0.025 |  | ok | 0.054 |  |  |  |
+| `coint_aeg_lineartrend_autolagbic_tstat_maxlag10` | .statistics.misc | ok | 0.025 |  | ok | 0.053 |  |  |  |
 | `pec` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `pec_orth` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `pec_log` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `pec_orth_log` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `pec_orth_abs` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
 | `pec_orth_log_abs` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
-| `ids` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
+| `ids_pnormmax_terms06_bandwidth0p5` | .statistics.misc | ok | 0.000 |  | ok | 0.000 |  |  |  |
 # Additional pairwise candidates
 
 `tests/unit/test_pairwise_candidates.py` independently checks histogram KL and

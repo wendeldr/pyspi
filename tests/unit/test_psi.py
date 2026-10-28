@@ -193,17 +193,15 @@ def test_agrees_with_mne_adjacent_formula_on_identical_coherency():
                                rtol=1e-12, atol=1e-13)
 
 
-def test_calculator_reports_unavailable_band_without_fabricating_zero(tmp_path):
+def test_calculator_refuses_unavailable_band_before_computing(tmp_path):
     config = tmp_path / 'psi.yaml'
     config.write_text(yaml.safe_dump({'.statistics.spectral': {'PhaseSlopeIndex': {
         'configs': [{'fs': 2048, 'fmin': 8, 'fmax': 9}],
     }}}))
     raw = np.random.default_rng(487).normal(size=(2, 1024))
-    calc = Calculator(dataset=Data(raw, normalise=False), configfile=str(config))
-    with pytest.warns(UserWarning, match='at least two FFT bins'):
-        calc.compute()
-    report, = calc.metric_reports.values()
-    assert report.status == 'failed'
-    assert report.error.type == 'builtins.ValueError'
-    assert 'got 1' in report.error.message
-    assert np.isnan(calc.table.to_numpy()).all()
+    with pytest.raises(ValueError, match='psi_mean_band0008-0009hz: band 8-9 Hz has 1 usable frequencies'):
+        Calculator(dataset=Data(raw, normalise=False), configfile=str(config))
+    # The estimator itself still refuses rather than fabricating zero.
+    spi = PhaseSlopeIndex(fs=2048, fmin=8, fmax=9)
+    with pytest.raises(ValueError, match='at least two FFT bins'):
+        spi.multivariate(Data(raw, normalise=False))

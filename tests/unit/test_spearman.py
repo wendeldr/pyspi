@@ -104,7 +104,7 @@ def test_labels_are_independent_for_each_instance():
     original = SpearmanR.labels.copy()
     plain, squared, another = SpearmanR(), SpearmanR(squared=True), SpearmanR()
     assert plain.identifier == "spearmanr"
-    assert squared.identifier == "spearmanr-sq"
+    assert squared.identifier == "spearmanr_sq"
     assert plain.issigned() and not squared.issigned()
     assert plain.labels == original + ["signed"]
     assert squared.labels == original + ["unsigned"]

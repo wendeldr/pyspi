@@ -222,7 +222,7 @@ for estimator in ('gaussian', 'kernel', 'kraskov'):
     calc=Calculator(configfile=path, dataset=np.random.default_rng(91).normal(size=(2,40)))
     assert jpype.isJVMStarted() == (estimator == 'kraskov')
     calc.compute()
-    identifier = {'gaussian':'mi_gaussian','kernel':'mi_kernel_W-0.5','kraskov':'mi_kraskov_NN-4'}[estimator]
+    identifier = {'gaussian':'mi_gaussian','kernel':'mi_kernel_width0p5','kraskov':'mi_kraskov_neighbours04'}[estimator]
     assert list(calc.spis) == [identifier]
     assert np.isfinite(calc.table[identifier].to_numpy()[0,1])
 '''

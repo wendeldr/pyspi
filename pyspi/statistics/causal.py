@@ -7,6 +7,7 @@ from cdt.causality.pairwise.ANM import normalized_hsic
 
 from pyspi.base import Directed, Unsigned, Signed, parse_bivariate, parse_multivariate
 from pyspi._regression import regression_result
+from pyspi._naming import compose, parameter, word
 
 
 class AdditiveNoiseModel(Directed, Unsigned):
@@ -79,7 +80,19 @@ class ConvergentCrossMapping(Directed, Signed):
         self._statistic = statistic
         self._E = embedding_dimension
 
-        self.identifier += f"_E-{embedding_dimension}_{statistic}"
+        # Without a fixed embedding dimension, simplex projection chooses it.
+        self.identifier = compose(self.identifier, *(["autodim"] if embedding_dimension is None else []),
+                                  word(statistic),
+                                  *([] if embedding_dimension is None else [parameter("dim", embedding_dimension)]))
+
+    def input_problem(self, n_observations, n_processes):
+        # Library sizes run from ceil(2E/10)*10 to floor((N-E-1)/10)*10 in 21
+        # steps; pyEDM rejects a zero step. Without a fixed E the largest
+        # tested dimension (10) is used.
+        E = 10 if self._E is None else int(self._E)
+        lower = int(np.ceil(2 * E / 10) * 10)
+        return self._minimum_observations_problem(
+            n_observations, lower + 31 + E, f"convergent cross-mapping library sizes at embedding dimension {E}")
 
     @property
     def key(self):

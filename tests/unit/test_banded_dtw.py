@@ -58,8 +58,8 @@ def test_banded_extreme_units_and_invalid_channel_isolation():
 
 def test_banded_radius_settings():
     default = DynamicTimeWarping(global_constraint="sakoe_chiba")
-    assert default.identifier == "dtw_constraint-sakoe-chiba"
-    assert DynamicTimeWarping(global_constraint="sakoe_chiba", sakoe_chiba_radius=4).identifier.endswith("radius-4")
+    assert default.identifier == "dtw_sakoechiba"
+    assert DynamicTimeWarping(global_constraint="sakoe_chiba", sakoe_chiba_radius=4).identifier.endswith("radius04")
     for radius in [True, -1, 1.5]:
         with pytest.raises(ValueError):
             DynamicTimeWarping(global_constraint="sakoe_chiba", sakoe_chiba_radius=radius)

@@ -1,10 +1,10 @@
 """Golden-value regression tests for working SPIs that ``config.yaml`` leaves out.
 
-``tests/regression/extra_config.yaml`` lists nine wavelet classes from
+``tests/regression/extra_config.yaml`` lists seven wavelet classes from
 ``pyspi/statistics/wavelet.py`` (cohmag, phase, icoh, plv, ppc, pli, dspli,
 wspli, dwspli) that run today but are absent from ``pyspi/config.yaml``, each
 with the six band/statistic configs ``PhaseSlopeIndex`` uses there. They all
-go through ``mne._get_cache`` and its per-``Data`` ``data.mne[measure]`` cache,
+go through ``mne._get_cache`` and its per-``Data`` ``data.mne[(measure, fs)]`` cache,
 which no SPI in the default config exercises.
 
 Like the main suite these are change detectors, not correctness proofs: the
@@ -79,7 +79,7 @@ def test_extra_set_matches_config(extra_meta):
     entries, by_id = harness.catalogue(EXTRA_CONFIG)
     assert [e["identifier"] for e in entries] == extra_meta["calculator_order"]
     assert set(by_id) == set(extra_meta["spis"])  # meta.json is written with sorted keys
-    assert len(by_id) == 54
+    assert len(by_id) == 42
     assert all(e["cls"] != "PhaseSlopeIndex" for e in entries)
     from regression.generate_goldens import catalogue_mismatches
     for ident, entry in by_id.items():
@@ -100,8 +100,8 @@ def test_extra_spi_matches_golden(extra_identifier, extra_meta, extra_values, ex
 def test_extra_calculator_matches_goldens(extra_meta, extra_values, extra_raw, seed_all, with_callback):
     """One Calculator pass over extra_config.yaml on a single ``Data``.
 
-    The six band variants of each class reuse one ``data.mne[measure]`` entry
-    and the nine classes share the ``data.mne`` dict, so this exercises the
+    The six band variants of each class reuse one ``data.mne[(measure, fs)]`` entry
+    and the seven classes share the ``data.mne`` dict, so this exercises the
     cache hits that the per-SPI tests (fresh ``Data`` each) never reach.
     """
     from pyspi.calculator import Calculator
@@ -112,8 +112,8 @@ def test_extra_calculator_matches_goldens(extra_meta, extra_values, extra_raw, s
     seed_all(extra_meta["seed"])
     harness.compute_calculator_with_reports(calc, with_callback)
 
-    measures = {spi.measure for spi in calc.spis.values()}
-    assert len(measures) == 9
+    measures = {(spi.measure, spi._fs) for spi in calc.spis.values()}
+    assert len(measures) == 7
     assert set(data.mne) == measures
 
     failures = []

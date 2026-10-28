@@ -1,4 +1,6 @@
 import mne_connectivity as mnec
+from pyspi._naming import compose, frequency_band, word
+from pyspi._spectral import band_bins, band_problem
 from pyspi.base import (
     Directed,
     Undirected,
@@ -9,18 +11,30 @@ from pyspi.base import (
 )
 import numpy as np
 from numpy.exceptions import AxisError
-import warnings
 from functools import partial
 
 
+def _wavelet_frequencies(count, fs):
+    """Wavelet centre frequencies: fixed in cycles per sample, scaled to the units of fs."""
+    return np.linspace(0.2, 0.5, count) * fs
+
+
+def _computed_frequencies(frequencies, fs, n_observations):
+    # mne-connectivity keeps the frequencies with at least five cycles in the
+    # window, up to Nyquist; the band summaries select from these.
+    return frequencies[(frequencies >= 5 * fs / n_observations) & (frequencies <= fs / 2)]
+
+
 class mne(Unsigned):
+    _wavelet_count = 125
+    #: Estimators that divide by (epochs - 1); the data are one epoch.
+    _needs_several_epochs = False
+
     def __init__(self, fs=1, fmin=0, fmax=None, statistic="mean"):
         if fmax is None:
             fmax = fs / 2
 
         self._fs = fs
-        if fs != 1:
-            warnings.warn("Multiple sampling frequencies not yet handled.")
         self._fmin = fmin
         self._fmax = fmax
         if statistic == "mean":
@@ -32,12 +46,7 @@ class mne(Unsigned):
 
         self._statistic = statistic
 
-        paramstr = (
-            f"_wavelet_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}".replace(
-                ".", "-"
-            )
-        )
-        self.identifier += paramstr
+        self.identifier = compose(self.identifier, "wavelet", word(statistic), frequency_band(fmin, fmax, fs))
 
     @property
     def measure(self):
@@ -46,21 +55,36 @@ class mne(Unsigned):
         except AttributeError:
             raise AttributeError(f"Include measure for {self.identifier}")
 
+    def input_problem(self, n_observations, n_processes=None):
+        """Why this band has no estimate for windows of n_observations samples, or None."""
+        if self._needs_several_epochs:
+            return (f"{self.identifier}: mne-connectivity's '{self.measure}' averages over epochs and "
+                    "divides by (epochs - 1), but pyspi passes each window as one epoch, so it is never "
+                    "finite (inf or NaN) for any data. Remove it.")
+        frequencies = _computed_frequencies(_wavelet_frequencies(self._wavelet_count, self._fs),
+                                            self._fs, n_observations)
+        found = band_bins(frequencies, self._fmin, self._fmax)
+        return band_problem(self, n_observations, frequencies, found, 1, 1)
+
     def _get_cache(self, data):
+        # Results depend on the sampling rate, so the cache is keyed by both.
+        key = (self.measure, self._fs)
         try:
-            conn, freq = data.mne[self.measure]
+            conn, freq = data.mne[key]
         except (KeyError, AttributeError):
             z = np.moveaxis(data.to_numpy(), 2, 0)
 
-            cwt_freqs = np.linspace(0.2, 0.5, 125)
-            cwt_n_cycles = cwt_freqs / 7.0
+            # The wavelet grid is fixed in cycles per sample; scaling it by fs
+            # keeps the same wavelets when frequencies are given in Hz.
+            cwt_freqs = _wavelet_frequencies(self._wavelet_count, self._fs)
+            cwt_n_cycles = cwt_freqs / self._fs / 7.0
             connectivity = mnec.spectral_connectivity_epochs(
                 data=z,
                 method=self.measure,
                 mode="cwt_morlet",
                 sfreq=self._fs,
                 mt_adaptive=True,
-                fmin=5 / data.n_observations,
+                fmin=5 * self._fs / data.n_observations,
                 fmax=self._fs / 2,
                 cwt_freqs=cwt_freqs,
                 cwt_n_cycles=cwt_n_cycles,
@@ -70,9 +94,9 @@ class mne(Unsigned):
             freq = np.asarray(connectivity.freqs)
 
             try:
-                data.mne[self.measure] = (conn, freq)
+                data.mne[key] = (conn, freq)
             except AttributeError:
-                data.mne = {self.measure: (conn, freq)}
+                data.mne = {key: (conn, freq)}
 
         freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
 
@@ -144,6 +168,7 @@ class PhaseLockingValue(mne, Undirected):
 class PairwisePhaseConsistency(mne, Undirected):
     name = "Pairwise phase consistency (wavelet)"
     labels = ["unsigned", "wavelet", "undirected"]
+    _needs_several_epochs = True
 
     def __init__(self, **kwargs):
         self.identifier = "ppc"
@@ -164,6 +189,7 @@ class PhaseLagIndex(mne, Undirected):
 class DebiasedSquaredWeightedPhaseLagIndex(mne, Undirected):
     name = "Debiased squared phase lag index (wavelet)"
     labels = ["unsigned", "wavelet", "undirected"]
+    _needs_several_epochs = True
 
     def __init__(self, **kwargs):
         self.identifier = "dspli"
@@ -195,19 +221,27 @@ class PhaseSlopeIndex(Signed, mne, Undirected):
     name = "Phase slope index (wavelet)"
     labels = ["signed", "wavelet", "undirected"]
 
+    _wavelet_count = 10
+
+    def input_problem(self, n_observations, n_processes=None):
+        # MNE returns one band-reduced PSI series. The historical wrapper
+        # indexes its time axis using frequency indices, so it cannot represent
+        # the requested band. Do not certify it using a frequency-count check.
+        return (f"{self.identifier}: the wavelet PSI wrapper cannot apply its frequency band "
+                "correctly (frequency indices select time samples). Remove this variant; "
+                "multitaper PSI supports explicit bands. Changing the band/window cannot fix this wrapper.")
+
     def __init__(self, **kwargs):
         self.identifier = "psi"
         super().__init__(**kwargs)
-        self.identifier += f"_{self._statistic}"
 
     def _get_cache(self, data):
         try:
-            psi = data.mne_psi["psi"]
-            freq = data.mne_psi["freq"]
-        except AttributeError:
+            psi, freq = data.mne_psi[self._fs]
+        except (AttributeError, KeyError):
             z = np.moveaxis(data.to_numpy(), 2, 0)
 
-            freqs = np.linspace(0.2, 0.5, 10)
+            freqs = _wavelet_frequencies(self._wavelet_count, self._fs)
             connectivity = mnec.phase_slope_index(
                 data=z,
                 mode="cwt_morlet",
@@ -220,7 +254,10 @@ class PhaseSlopeIndex(Signed, mne, Undirected):
             # Match the old API's computed frequencies, not the new result's
             # band centres. Preserve the wrapper's existing selection here.
             freq = np.asarray(connectivity.attrs["freqs_computed"][0])
-            data.mne_psi = dict(psi=psi, freq=freq)
+            try:
+                data.mne_psi[self._fs] = (psi, freq)
+            except AttributeError:
+                data.mne_psi = {self._fs: (psi, freq)}
 
         # freq = conn.frequencies
         freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]

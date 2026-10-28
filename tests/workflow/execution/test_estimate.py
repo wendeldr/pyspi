@@ -31,12 +31,12 @@ def test_calibrate_measures_ladder_and_output(four_channel_config):
     assert result["schema"] == "pyspi-workflow-calibration/1"
     assert [p["channels"] for p in result["points"]] == [2, 4]
     assert all(p["window_seconds"] > 0 and p["windows"] == 2 for p in result["points"])
-    assert result["metrics"] == ["cov_EmpiricalCovariance"]
-    assert result["dtypes"] == {"cov_EmpiricalCovariance": "<f8"}
+    assert result["metrics"] == ["cov_empirical"]
+    assert result["dtypes"] == {"cov_empirical": "<f8"}
     assert result["preparation"]["seconds"] > 0 and result["preparation"]["channels"] == 4
     assert result["source"]["kind"] == "edf" and result["source"]["output_channels"] == 4
     output = result["output"]
-    assert set(output["stored_ratio"]) == {"cov_EmpiricalCovariance"} and output["stored_ratio"]["cov_EmpiricalCovariance"] > 0
+    assert set(output["stored_ratio"]) == {"cov_empirical"} and output["stored_ratio"]["cov_empirical"] > 0
     assert output["seconds_per_batch"] >= 0 and output["seconds_per_raw_byte"] >= 0
     assert output["report_bytes_per_event"] > 0 and output["raw_bytes_per_window"] == 4 * 4 * 8
     assert result["calculator_setup_seconds"] > 0 and result["window_samples"] == 128

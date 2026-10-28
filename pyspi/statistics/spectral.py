@@ -2,13 +2,19 @@ import numpy as np
 
 from pyspi._spectral import (
     PHASE_MOMENTS,
+    band_bins,
+    band_problem,
     canonical_directed_measure,
     data_spectral_cache,
     directed_workspace,
     frequency_mask,
+    group_delay_step,
+    multitaper_grid,
+    one_sided_frequencies,
     spectral_workspace,
     validate_frequencies,
 )
+from pyspi._naming import compose, frequency_band, parameter, word
 from pyspi.base import (
     Directed,
     Undirected,
@@ -26,6 +32,9 @@ class NonparametricSpectral:
     """Base class for the nonparametric spectral methods from the Eden-Kramer repo"""
 
     _absolute_band_values = False
+    _name_variants = ()
+    #: Fewest in-band frequencies the estimator needs (PSI needs an adjacent pair).
+    _minimum_bins = 1
 
     def __init__(self, fs=1, fmin=0, fmax=None, statistic="mean"):
         if fmax is None:
@@ -43,12 +52,8 @@ class NonparametricSpectral:
         else:
             self._statfn = None
         self._statistic = statistic
-        paramstr = (
-            f"_multitaper_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}".replace(
-                ".", "-"
-            )
-        )
-        self.identifier += paramstr
+        self.identifier = compose(self.identifier, *self._name_variants, word(statistic),
+                                  frequency_band(fmin, fmax, fs))
 
     @property
     def measure(self):
@@ -59,6 +64,25 @@ class NonparametricSpectral:
 
     def _spectral_options(self):
         return {}
+
+    def _band_grid(self, n_observations):
+        return multitaper_grid(n_observations, self._fs)[0]
+
+    def input_problem(self, n_observations, n_processes=None):
+        """Why this SPI has no estimate for windows of n_observations samples, or None.
+
+        Uses the calculation's own transform limits, frequency grid and inclusive
+        band selection, so it can be checked before any data are processed.
+        """
+        return self._transform_problem(n_observations) or self._band_problem(n_observations)
+
+    def _transform_problem(self, n_observations):
+        return self._minimum_observations_problem(n_observations, 7, "the multitaper transform with NW=3")
+
+    def _band_problem(self, n_observations):
+        frequencies = self._band_grid(n_observations)
+        found = band_bins(frequencies, self._fmin, self._fmax)
+        return band_problem(self, n_observations, frequencies, found, self._minimum_bins, self._minimum_bins)
 
     def _summarise_band(self, values, frequencies):
         # The shared one-sided grid is sorted. An inclusive slice avoids
@@ -100,6 +124,10 @@ class NonparametricSpectralMultivariate(NonparametricSpectral):
 
 
 class NonparametricSpectralBivariate(NonparametricSpectral):
+    def _band_grid(self, n_observations):
+        # directed_workspace transforms at the native, unpadded length.
+        return one_sided_frequencies(n_observations, self._fs)
+
     def _register_shared_work(self, data):
         cache = data_spectral_cache(data)
         cache.directed_requests.setdefault(self._fs, set()).add(
@@ -205,9 +233,10 @@ class SignedPhaseLagIndex(NonparametricSpectralMultivariate, Directed, Signed):
 
     name = "Signed phase lag index"
     labels = ["signed", "spectral", "directed"]
+    _name_variants = ("signed",)
 
     def __init__(self, **kwargs):
-        self.identifier = "pli-signed"
+        self.identifier = "pli"
         super().__init__(**kwargs)
         self._measure = "signed_phase_lag_index"
 
@@ -228,9 +257,10 @@ class SignedWeightedPhaseLagIndex(NonparametricSpectralMultivariate, Directed, S
 
     name = "Signed weighted phase lag index"
     labels = ["signed", "spectral", "directed"]
+    _name_variants = ("signed",)
 
     def __init__(self, **kwargs):
-        self.identifier = "wpli-signed"
+        self.identifier = "wpli"
         super().__init__(**kwargs)
         self._measure = "signed_weighted_phase_lag_index"
 
@@ -329,6 +359,8 @@ class PhaseSlopeIndex(NonparametricSpectralMultivariate, Directed, Signed):
     name = "Phase slope index"
     labels = ["signed", "spectral", "directed"]
 
+    _minimum_bins = 2
+
     def __init__(self, **kwargs):
         self.identifier = "psi"
         super().__init__(**kwargs)
@@ -350,6 +382,15 @@ class GroupDelay(NonparametricSpectralMultivariate, Directed, Signed):
         self.identifier = "gd"
         super().__init__(statistic=statistic, **kwargs)
         self._measure = "group_delay"
+
+    def _band_problem(self, n_observations):
+        # The regression needs three in-band points spaced by the resolution.
+        frequencies, resolution = multitaper_grid(n_observations, self._fs)
+        step = group_delay_step(frequencies, resolution)
+        first = np.searchsorted(frequencies, self._fmin, side="left")
+        last = np.searchsorted(frequencies, self._fmax, side="right")
+        found = frequencies[first:last][::step].size
+        return band_problem(self, n_observations, frequencies, found, 3, 2 * step + 1)
 
     def _spectral_options(self):
         return dict(
@@ -415,17 +456,15 @@ class SpectralGrangerCausality(NonparametricSpectralMultivariate, Directed, Unsi
         self._method = method
         if self._method == "nonparametric":
             self._measure = "pairwise_spectral_granger_prediction"
-            paramstr = f"_nonparametric_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}".replace(
-                ".", "-"
-            )
+            variants, parameters = [], []
         else:
             self._order = order
             self._max_order = max_order
-            paramstr = f"_parametric_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}_order-{order}".replace(
-                ".", "-"
-            )
-
-        self.identifier = self.identifier + paramstr
+            # Without a fixed order, the model order is selected up to max_order.
+            variants = ["autoorder"] if order is None else []
+            parameters = [parameter("maxorder", max_order) if order is None else parameter("order", order)]
+        self.identifier = compose(self.identifier, method, *variants, *([] if ignore_nan else ["nanstrict"]),
+                                  word(statistic), frequency_band(self._fmin, self._fmax, fs), *parameters)
 
     def _get_cache(self, data):
         if self._method == "nonparametric":
@@ -440,6 +479,24 @@ class SpectralGrangerCausality(NonparametricSpectralMultivariate, Directed, Unsi
     def _register_shared_work(self, data):
         if self._method == "nonparametric":
             NonparametricSpectralBivariate._register_shared_work(self, data)
+
+    def _transform_problem(self, n_observations):
+        if self._method == "nonparametric":
+            return super()._transform_problem(n_observations)
+        if self._order is None:
+            # nitime may select any order below max_order from the data.
+            return self._minimum_observations_problem(
+                n_observations, self._max_order, f"AR order selection up to order {self._max_order - 1}")
+        # The backend requests autocovariances through lag `order`. A larger
+        # empirical reliability margin is not a mathematical impossibility.
+        return self._minimum_observations_problem(
+            n_observations, self._order + 1, f"autocovariances through lag {self._order}")
+
+    def _band_grid(self, n_observations):
+        if self._method == "nonparametric":
+            return NonparametricSpectralBivariate._band_grid(self, n_observations)
+        # nitime's transfer grid has 1024 points whatever the window length.
+        return np.fft.rfftfreq(1024, 1/self._fs)
 
     def _parametric_spectrum(self, data):
         # Retain nitime's pairwise model/order-selection definition and 1024-bin

@@ -61,7 +61,7 @@ def computed_fabfour(jvm):
 # --------------------------------------------------------------------------- #
 def test_temp_yaml_loads_expected_identifiers(basic_config):
     calc = Calculator(configfile=basic_config)
-    assert list(calc.spis) == ["cov_EmpiricalCovariance", "cov_LedoitWolf", "spearmanr"]
+    assert list(calc.spis) == ["cov_empirical", "cov_ledoitwolf", "spearmanr"]
     assert calc.n_spis == 3
     assert calc._excluded_spis == []
 
@@ -71,14 +71,14 @@ def test_missing_java_dependency_skips_jidt_spis(jvm, monkeypatch):
     calc = Calculator()
     ids = list(calc.spis)
     native = {"mi_gaussian", "je_gaussian", "ce_gaussian", "tlmi_gaussian",
-              "cce_gaussian", "di_gaussian", "si_gaussian_k-1",
-              "xme_gaussian_k1", "xme_gaussian_k10",
-              "gc_gaussian_k-1_kt-1_l-1_lt-1", "gc_gaussian_k-max-10_tau-max-2",
-              "te_symbolic_m-3_tau-4_h-4", "te_symbolic_m-3_tau-16_h-16",
-              "je_kernel_W-0.5", "ce_kernel_W-0.5", "cce_kernel_W-0.5",
-              "xme_kernel_W-0.5_k1", "xme_kernel_W-0.5_k10", "di_kernel_W-0.5",
-              "si_kernel_W-0.5_k-1", "mi_kernel_W-0.25", "tlmi_kernel_W-0.25",
-              "te_kernel_W-0.25_k-1"}
+              "cce_gaussian_horizon05", "di_gaussian_horizon05", "si_gaussian_delay01",
+              "xme_gaussian_history01", "xme_gaussian_history10",
+              "gc_gaussian_targethistory01_targetdelay01_sourcehistory01_sourcedelay01", "gc_gaussian_autoembed_maxcorrais_maxtargethistory10_maxtargetdelay02",
+              "te_symbolic_patternlength03_spacing04_shift04", "te_symbolic_patternlength03_spacing16_shift16",
+              "je_kernel_width0p5", "ce_kernel_width0p5", "cce_kernel_width0p5_horizon05",
+              "xme_kernel_width0p5_history01", "xme_kernel_width0p5_history10", "di_kernel_width0p5_horizon05",
+              "si_kernel_width0p5_delay01", "mi_kernel_width0p25", "tlmi_kernel_width0p25",
+              "te_kernel_width0p25_targethistory01"}
     assert {i for i in ids if i.startswith(JAVA_PREFIXES)} == native
     # Native Gaussian/kernel entries remain usable within mixed classes.
     assert len(calc._excluded_spis) == 16
@@ -130,7 +130,7 @@ def test_compute_without_dataset_raises(basic_config):
 def test_spi_exception_in_compute_yields_all_nan_block(jvm, monkeypatch):
     # The complete fabfour subset now works without Java.
     calc = Calculator(dataset=_randn(), subset="fabfour")
-    failing = "spearmanr-sq"
+    failing = "spearmanr_sq"
 
     def boom(*args, **kwargs):
         raise RuntimeError("boom")

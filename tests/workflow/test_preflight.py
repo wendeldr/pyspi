@@ -60,7 +60,30 @@ def test_xcorr_preflight_binds_target_rate_after_resampling(edf, workflow, metri
     report = preflight(workflow(edf(samples=(16, 16)), metrics={"config": str(config)}))
     assert report.recordings[0]["status"] == "requires_resampling"
     assert report.metrics[0].parameters["fs"] == 8
-    assert report.metrics[0].identifier == "xcorr_peak_sig-False_fs-8_lag-0-125"
+    assert report.metrics[0].identifier == "xcorr_peak_maxlag0125ms"
+
+
+def test_preflight_refuses_metrics_without_an_estimate_for_the_windows(edf, workflow, metric_config):
+    # 0.5 s at 8 Hz is 4 samples; the NW=3 multitaper transform needs 7.
+    config = metric_config({"CoherenceMagnitude": {"configs": [{}]}}, module=".statistics.spectral")
+    with pytest.raises(WorkflowError, match=r"(?s)1 metric\(s\) cannot be estimated from 4-sample windows.*cohmag"):
+        preflight(workflow(edf(samples=(8, 8)), metrics={"config": str(config)}))
+
+
+def test_run_rejects_bad_band_before_reading_samples_or_creating_output(edf, workflow, metric_config, tmp_path, monkeypatch):
+    from pyspi.workflow import run
+    from pyspi.workflow import _run
+    config = metric_config({"PhaseSlopeIndex": {"configs": [
+        {"fs": 2048, "fmin": 8, "fmax": 9}]}}, module=".statistics.spectral")
+    output = tmp_path / "uncreated"
+    path = workflow(edf(), metrics={"config": str(config)}, sampling_rate_hz=2048,
+                    output_directory=str(output))
+    def forbidden(*args, **kwargs):
+        pytest.fail("sample preparation started before invalid-band rejection")
+    monkeypatch.setattr(_run, "prepare_recording", forbidden)
+    with pytest.raises(WorkflowError, match="psi_mean_band0008-0009hz"):
+        run(path)
+    assert not output.exists()
 
 
 @pytest.mark.parametrize("native", [4, 16])

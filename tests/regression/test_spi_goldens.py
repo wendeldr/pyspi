@@ -20,7 +20,7 @@ a failure means an output changed. Regenerate only for an intentional change
 * ``test_catalogue_matches_golden_meta`` -- the config as loaded now (module,
   class, constructor params, dependencies, labels per identifier) equals the
   recorded catalogue, so a parameter edit that keeps the identifier (for
-  example ``terms`` of ``ids``) is reported even though the per-SPI tests
+  example ``nan_threshold`` of the ``sgc_*`` SPIs) is reported even though the per-SPI tests
   rebuild each SPI from the recorded params.
 * ``test_spi_catalogue[...]`` -- subset sizes, order and labels.
 
@@ -62,6 +62,10 @@ def _compute(entry, data, seed, seed_all):
 @pytest.mark.regression
 def test_spi_matches_golden(identifier, golden_meta, golden_values, spi_data, seed_all):
     entry = golden_meta["spis"][identifier]
+    # Calculator refuses an SPI with no reliable estimate at this window shape.
+    problem = harness.build_spi(entry).input_problem(spi_data.n_observations, spi_data.n_processes)
+    if problem:
+        pytest.skip(problem)
     out = _compute(entry, spi_data, golden_meta["seed"], seed_all)
     harness.assert_spi_allclose(out, golden_values[identifier], identifier)
 
@@ -94,7 +98,7 @@ def test_preproc_fixture_normalise_invariant(invariant_spi, preproc_values):
 
 def test_preproc_fixture_normalise_changes_covariance(preproc_values):
     """On the distorted fixture, z-scoring must change the empirical covariance."""
-    ident = "cov_EmpiricalCovariance"
+    ident = "cov_empirical"
     n1 = preproc_values[spi_policy.preproc_key(ident, True, False)]
     n0 = preproc_values[spi_policy.preproc_key(ident, False, False)]
     assert not np.allclose(n1, n0, equal_nan=True)
@@ -109,8 +113,9 @@ def _package_config():
     return Path(pyspi.__file__).resolve().parent / "config.yaml"
 
 
-def _write_fast_config(src, dst, golden_meta):
-    """Write ``src`` minus every config whose identifier is ``slow`` (or has no golden).
+def _write_fast_config(src, dst, golden_meta, shape, include_slow=False):
+    """Write ``src`` minus every config whose identifier is ``slow`` (or has no golden),
+    or that Calculator refuses for data of ``shape`` (observations, processes).
 
     Identifiers come from :func:`harness.iter_config_entries`, i.e. the SPIs are
     instantiated exactly as ``Calculator._load_yaml`` would. A class built
@@ -123,13 +128,14 @@ def _write_fast_config(src, dst, golden_meta):
     with open(src) as f:
         yf = yaml.load(f, Loader=yaml.FullLoader)
 
-    def keep(ident):
+    def keep(ident, spi):
         entry = golden_meta["spis"].get(ident)
-        return entry is not None and not spi_policy.is_slow(ident, entry.get("time_s"))
+        return (entry is not None and (include_slow or not spi_policy.is_slow(ident, entry.get("time_s")))
+                and spi.input_problem(*shape) is None)
 
     kept_params, kept_verbatim, kept_idents = {}, set(), []
-    for entry, _spi in harness.iter_config_entries(src, harness.optional_dependencies()):
-        if not keep(entry["identifier"]):
+    for entry, spi in harness.iter_config_entries(src, harness.optional_dependencies()):
+        if not keep(entry["identifier"], spi):
             continue
         kept_idents.append(entry["identifier"])
         key = (entry["module"], entry["cls"])
@@ -178,11 +184,11 @@ def test_calculator_table_matches_goldens_fast(golden_meta, golden_values, raw_d
     """Calculator pass (shared caches) over the non-slow SPIs only."""
     from pyspi.calculator import Calculator
 
+    data = harness.make_data(raw_dataset, golden_meta["dataset"])
     configfile = tmp_path / "fast_goldens_config.yaml"
-    kept = _write_fast_config(_package_config(), configfile, golden_meta)
+    kept = _write_fast_config(_package_config(), configfile, golden_meta, (data.n_observations, data.n_processes))
     assert kept, "no non-slow SPIs left to run"
 
-    data = harness.make_data(raw_dataset, golden_meta["dataset"])
     calc = Calculator(dataset=data, configfile=str(configfile))
     assert list(calc.spis) == kept
     seed_all(golden_meta["seed"])
@@ -196,15 +202,19 @@ def test_calculator_table_matches_goldens_fast(golden_meta, golden_values, raw_d
 @pytest.mark.java
 @pytest.mark.regression
 @pytest.mark.parametrize("with_callback", [False, True], ids=["default", "callback"])
-def test_calculator_table_matches_goldens(golden_meta, golden_values, raw_dataset, seed_all, with_callback):
+def test_calculator_table_matches_goldens(golden_meta, golden_values, raw_dataset, seed_all, tmp_path, with_callback):
     from pyspi.calculator import Calculator
 
     data = harness.make_data(raw_dataset, golden_meta["dataset"])
-    calc = Calculator(dataset=data)
+    # The package config minus SPIs Calculator refuses at this window shape.
+    configfile = tmp_path / "goldens_config.yaml"
+    kept = _write_fast_config(_package_config(), configfile, golden_meta, (data.n_observations, data.n_processes),
+                              include_slow=True)
+    calc = Calculator(dataset=data, configfile=str(configfile))
     seed_all(golden_meta["seed"])
     harness.compute_calculator_with_reports(calc, with_callback)
 
-    failures = _calculator_mismatches(calc, golden_meta, golden_values, golden_meta["spis"])
+    failures = _calculator_mismatches(calc, golden_meta, golden_values, kept)
     assert not failures, "Calculator table differs from per-SPI goldens:\n" + "\n".join(failures)
 
 

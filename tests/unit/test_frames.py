@@ -13,7 +13,7 @@ from pyspi.calculator import CalculatorFrame, CorrelationFrame
 from pyspi.data import Data
 
 SEED = 42
-FABFOUR = ["cov_EmpiricalCovariance", "spearmanr-sq", "di_gaussian", "pec"]
+FABFOUR = ["cov_empirical", "spearmanr_sq", "di_gaussian_horizon05", "pec"]
 SHAPES = {"a": (3, 100), "b": (4, 80)}  # name -> (n_processes, n_observations)
 
 
@@ -92,7 +92,7 @@ def test_get_correlation_df_without_labels(frame):
         # edges with covariance; comparisons involving unsigned metrics use
         # magnitudes. Keep the scientific label assertion explicit.
         calc = calcs[name]
-        signed = ["cov_EmpiricalCovariance", "pec"]
+        signed = ["cov_empirical", "pec"]
         assert [s for s in FABFOUR if calc.spis[s].issigned()] == signed
         expected = calc.table.stack().abs().corr(method="spearman")
         expected.loc[signed, signed] = calc.table.stack()[signed].corr(method="spearman")

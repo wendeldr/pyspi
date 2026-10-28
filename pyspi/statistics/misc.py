@@ -6,10 +6,11 @@ from statsmodels.tsa.vector_ar.vecm import coint_johansen
 from sklearn.gaussian_process import kernels, GaussianProcessRegressor
 from sklearn.metrics import mean_squared_error
 from pyspi._envelope import envelope_workspace
-from pyspi._bands import band_identifier, band_inputs, frequency_band, phase_amplitude_result, PAC_REASONS
+from pyspi._bands import band_inputs, frequency_band, phase_amplitude_result, PAC_REASONS
 from pyspi._regression import regression_result, regression_diagnostics
 from pyspi._moments import moment_workspace
 from pyspi.lib.ids.dependence import compute_IDS
+from pyspi._naming import compose, hz_band, parameter, word
 
 from pyspi.base import (
     Directed,
@@ -19,6 +20,19 @@ from pyspi.base import (
     parse_bivariate,
     parse_multivariate,
 )
+
+
+# Deterministic terms: Johansen det_order and Engle-Granger trend codes.
+_DETERMINISTIC = {-1: "nodeterministic", 0: "constant", 1: "lineartrend",
+                  "n": "nodeterministic", "nc": "nodeterministic", "c": "constant",
+                  "ct": "lineartrend", "ctt": "quadratictrend"}
+
+
+def _deterministic(value, name):
+    # Codes without a descriptive name keep the backend's own spelling.
+    if value in _DETERMINISTIC:
+        return _DETERMINISTIC[value]
+    return parameter(name, value) if isinstance(value, (int, np.integer)) else name + word(value)
 
 
 class Cointegration(Undirected, Unsigned):
@@ -39,19 +53,43 @@ class Cointegration(Undirected, Unsigned):
     ):
         self._method = method
         self._statistic = statistic
+        # trace_stat -> trace, max_eig_stat -> maxeig
+        statistic_name = word(statistic.removesuffix("_stat"))
         if method == "johansen":
-            self.identifier += (
-                f"_{method}_{statistic}_order-{det_order}_ardiff-{k_ar_diff}"
-            )
+            deterministic = _deterministic(det_order, "detorder")
+            fields = [word(method), statistic_name, parameter("lagdiffs", k_ar_diff)]
+            fields.insert(1 if deterministic.isalpha() else 3, deterministic)
+            self.identifier = compose(self.identifier, *fields)
             self._det_order = det_order
             self._k_ar_diff = k_ar_diff
         else:
             self._autolag = autolag
             self._maxlag = maxlag
             self._trend = trend
-            self.identifier += (
-                f"_{method}_{statistic}_trend-{trend}_autolag-{autolag}_maxlag-{maxlag}"
-            )
+            lag_choice = "fixedlag" if autolag is None else "autolag" + word(autolag)
+            # maxlag=None lets statsmodels choose its default maximum lag.
+            lag_limit = ["defaultmaxlag"] if maxlag is None else []
+            self.identifier = compose(self.identifier, word(method), _deterministic(trend, "trend"), lag_choice,
+                                      *lag_limit, statistic_name,
+                                      *([] if maxlag is None else [parameter("maxlag", maxlag)]))
+
+    def input_problem(self, n_observations, n_processes):
+        if self._method == "johansen":
+            # Of n-k-1 aligned rows, the 2*k lagged regressors and (when
+            # present) centering consume rank. The joint pair of two-variable
+            # residual blocks needs four remaining dimensions to avoid a
+            # forced unit canonical correlation / singular log statistic.
+            k = self._k_ar_diff
+            minimum = 3*k + (5 if self._det_order == -1 else 6)
+            reason = f"the Johansen test with {k} lagged differences"
+        else:
+            # The cointegrating regression needs a residual degree of freedom;
+            # statsmodels' ADF on its residuals needs maxlag <= nobs//2 - 1.
+            terms = 0 if self._trend in ("n", "nc") else len(self._trend)
+            minimum, reason = terms + 2, f"the cointegrating regression with trend '{self._trend}'"
+            if self._maxlag is not None and 2*self._maxlag + 2 > minimum:
+                minimum, reason = 2*self._maxlag + 2, f"the residual ADF test with maxlag {self._maxlag}"
+        return self._minimum_observations_problem(n_observations, minimum, reason)
 
     @property
     def key(self):
@@ -128,15 +166,14 @@ class LinearModel(Directed, Unsigned):
         penalty_scale = default_scale if penalty_scale is None else penalty_scale
         if penalty_scale not in ("sum", "mean") or (model != "Ridge" and penalty_scale != default_scale):
             raise ValueError("penalty_scale must be sum or mean for Ridge; Lasso/ElasticNet use mean.")
-        self.identifier += f"_{model}"
         self._model_name = model
         self._parameters = dict(alpha=alpha, l1_ratio=l1_ratio, penalty_scale=penalty_scale)
-        if alpha != 1.:
-            self.identifier += f"_alpha-{alpha}".replace(".", "-")
-        if model == "ElasticNet" and l1_ratio != .5:
-            self.identifier += f"_l1-{l1_ratio}".replace(".", "-")
-        if penalty_scale != default_scale:
-            self.identifier += f"_scale-{penalty_scale}"
+        # Only Ridge can choose how the penalty scales with the sample count;
+        # BayesianRidge estimates its own penalty.
+        self.identifier = compose(
+            self.identifier, word(model), *(["penalty" + penalty_scale] if model == "Ridge" else []),
+            *([] if model == "BayesianRidge" else [parameter("alpha", alpha, 1)]),
+            *([parameter("lassoratio", l1_ratio, 1)] if model == "ElasticNet" else []))
 
     @parse_multivariate
     def multivariate(self, data):
@@ -157,7 +194,7 @@ class GPModel(Directed, Unsigned):
     labels = ["misc", "unsigned", "unordered", "normal", "nonlinear", "directed"]
 
     def __init__(self, kernel="RBF"):
-        self.identifier += f"_{kernel}"
+        self.identifier = compose(self.identifier, word(kernel))
         self._kernel = kernels.ConstantKernel() + kernels.WhiteKernel()
         self._kernel += getattr(kernels, kernel)()
 
@@ -189,18 +226,13 @@ class PowerEnvelopeCorrelation(Undirected, Signed):
             raise ValueError("absolute=True requires pairwise orthogonalization.")
         self._orth = bool(orth)
         self.labels = self.labels + ["unsigned" if absolute else "signed"]
-        if self._orth:
-            self.identifier += "_orth"
         self._log = log
-        if log:
-            self.identifier += "_log"
         self._absolute = absolute
-        if absolute:
-            self.identifier += "_abs"
         self.band = None if band is None else frequency_band(band)
         self.continuous_bands = () if self.band is None else (self.band,)
-        if self.band is not None:
-            self.identifier += "_band-" + band_identifier(self.band)
+        self.identifier = compose("pec", *[flag for flag, on in
+            (("orth", self._orth), ("log", log), ("abs", absolute)) if on],
+            *([] if self.band is None else [hz_band(*self.band)]))
 
     def issigned(self):
         return not self._absolute
@@ -240,7 +272,8 @@ class PhaseAmplitudeCoupling(Directed, Unsigned):
         if self.phase_band[1] > self.amplitude_band[0]:
             raise ValueError("phase and amplitude bands must be ordered and nonoverlapping")
         self.continuous_bands = (self.phase_band, self.amplitude_band)
-        self.identifier += f"_phase-{band_identifier(self.phase_band)}_amp-{band_identifier(self.amplitude_band)}"
+        self.identifier = compose("pac", hz_band(*self.phase_band, name="phaseband"),
+                                  hz_band(*self.amplitude_band, name="amplitudeband"))
 
     @parse_multivariate
     def multivariate(self, data):
@@ -274,8 +307,13 @@ class InterDependenceScore(Undirected, Unsigned):
         self._num_terms = terms
         self._p_norm = pnorm
         self._bandwidth_term = bandwidth
-        if (terms, pnorm, bandwidth) != (6, "max", .5):
-            self.identifier += f"_terms-{terms}_pnorm-{pnorm}_bandwidth-{bandwidth:g}".replace(".", "-")
+        # A named norm ('max') is a variant word; a numeric p is a parameter.
+        fields = [parameter("terms", terms), parameter("bandwidth", bandwidth, 1)]
+        if isinstance(pnorm, str):
+            fields.insert(0, "pnorm" + word(pnorm))
+        else:
+            fields.append(parameter("pnorm", pnorm, 1))
+        self.identifier = compose(self.identifier, *fields)
 
 
     @parse_multivariate

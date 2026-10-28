@@ -4,6 +4,7 @@ import sklearn.covariance as cov
 import numpy as np
 
 from pyspi._cache import cached_workspace
+from pyspi._naming import compose, duration, parameter, word
 from pyspi._rank import KendallWorkspace, SpearmanWorkspace
 from pyspi._robust import FastMinCovDet
 from pyspi._xcorr import CrossCorrelationWorkspace, SUMMARY_KEYS
@@ -51,17 +52,25 @@ class Estimators(Undirected, Signed):
     labels = ["basic", "unordered", "linear", "undirected"]
 
     def __init__(self, kind, estimator="EmpiricalCovariance", squared=False):
-        paramstr = f"_{estimator}"
         if squared:
-            paramstr = "-sq" + paramstr
             self.labels = Estimators.labels + ["unsigned"]
             self.issigned = lambda: False
         else:
             self.labels = Estimators.labels + ["signed"]
-        self.identifier = self.identifier + paramstr
+        # EmpiricalCovariance -> empirical, ShrunkCovariance -> shrunk.
+        name = word(estimator)
+        name = name.removesuffix("covariance") or name
+        self.identifier = compose(self.identifier, *(["sq"] if squared else []), name)
         self._squared = squared
         self._estimator = estimator
         self._kind = kind
+
+    def input_problem(self, n_observations, n_processes):
+        if self._estimator == "GraphicalLassoCV":
+            return self._minimum_observations_problem(n_observations, 5, "GraphicalLassoCV uses 5-fold cross-validation")
+        # Regularization can make GraphicalLasso estimable even when processes
+        # outnumber observations. Convergence is data-dependent, not a shape veto.
+        return None
 
     def _from_cache(self, data):
         work = _basic_workspace(data)
@@ -135,13 +144,13 @@ class CrossCorrelation(Undirected, Signed):
         self.fs, self.max_lag_seconds, self.alpha = float(fs), float(max_lag_seconds), float(alpha)
         self.labels = self.labels + ["unsigned" if squared else "signed"]
         self._index = SUMMARY_KEYS.index((statistic, squared))
-        # Round-trip float strings prevent different parameters sharing an ID.
-        def token(value):
-            return str(int(value)) if value.is_integer() else repr(value).replace(".", "-")
-        self.identifier = (f"xcorr{'-sq' if squared else ''}_{statistic}_sig-{sigonly}"
-                           f"_fs-{token(self.fs)}_lag-{token(self.max_lag_seconds)}")
-        if sigonly:
-            self.identifier += f"_bartlett-holm_alpha-{token(self.alpha)}"
+        # The lag window is in milliseconds when the sampling rate is known;
+        # with the default fs=1 it is a number of samples.
+        lag = (parameter("maxlag", self.max_lag_seconds, 1) if self.fs == 1
+               else duration("maxlag", self.max_lag_seconds))
+        # holm: Bartlett significance with Holm correction at level alpha.
+        self.identifier = compose("xcorr", *(["sq"] if squared else []), *(["holm"] if sigonly else []),
+                                  statistic, lag, *([parameter("alpha", self.alpha, 1)] if sigonly else []))
 
     def issigned(self):
         return not self._squared
@@ -207,7 +216,7 @@ class _RankCorrelation(Undirected, Signed):
         self._squared = squared
         self.labels = self.labels + ["unsigned" if squared else "signed"]
         if squared:
-            self.identifier = self.identifier + "-sq"
+            self.identifier = compose(self.identifier, "sq")
 
     def issigned(self):
         return not self._squared

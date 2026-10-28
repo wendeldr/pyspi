@@ -100,7 +100,7 @@ def main():
     meta = json.loads((root/'tests/regression/goldens/small/meta.json').read_text())
     directed = next(name for name in meta['spis'] if name.startswith('dcoh_'))
     cases = {
-     'zero_covariance': ('tests/regression/test_spi_goldens.py::test_spi_matches_golden[cov_EmpiricalCovariance]', False),
+     'zero_covariance': ('tests/regression/test_spi_goldens.py::test_spi_matches_golden[cov_empirical]', False),
      'transpose_directed_edges': (f'tests/regression/test_spi_goldens.py::test_spi_matches_golden[{directed}]', False),
      'skip_detrending': ('tests/unit/test_data.py::test_detrend_then_zscore_order', False),
      'ignore_wavelet_band': ('tests/unit/test_numeric_boundaries.py::test_wavelet_nondegenerate_aggregation_and_backend_cache[CoherenceMagnitude-mean]', False),

@@ -5,9 +5,83 @@ reviewed. It is not a claim that every pySPI calculation has been reviewed.
 Performance notes belong in `audit/calculation_review.csv`; implementation
 history belongs in Git.
 
+## SPI identifiers
+
+Identifiers follow one grammar (`pyspi/_naming.py`), so they can be parsed and
+used unchanged as file names or table columns:
+
+```
+<measure>[_<variant>...][_<parameter>...]
+cohmag_mean_band0030-0070hz
+xcorr_sq_holm_mean_maxlag0125ms_alpha0p05
+gc_gaussian_targethistory01_targetdelay01_sourcehistory01_sourcedelay01
+```
+
+- Only `a-z`, `0-9`, `_` and `-` occur. `_` separates fields, `-` only joins
+  the two ends of a range, and `p` is the decimal point (`0p05` = 0.05).
+- The first field is the measure. Variant fields contain no digits; they are
+  transforms (`sq`, `abs`, `log`, `orth`), the method or estimator, the
+  significance test (`holm`) and the statistic, in that order. A boolean option
+  appears only when it is on (`biased`, `normalized`).
+- Parameter fields are `<name><number or range><unit>`. Without a unit, the
+  parameter name indicates a count (history, bins) or dimensionless setting (alpha, width). Numbers are written exactly and zero-padded to a minimum
+  width, so identifiers in one family line up and sort numerically; a wider
+  value is written in full.
+- Frequency bands are in Hz (`band0030-0070hz`) when `fs` is the sampling rate.
+  With the default `fs=1` the rate is unknown and the band is in cycles per
+  sample (`band0p25-0p5cyc`). Both describe the same bins: `fs=2048, fmin=30,
+  fmax=70` and `fs=1, fmin=30/2048, fmax=70/2048` give the same values to
+  within rounding (about 1e-15).
+- Values chosen automatically become variant words (`autoorder`, `autodim`,
+  `autoembed`, `theilerauto`), so parameter fields always hold numbers.
+
+`docs/metric_names.csv` maps every identifier produced by the shipped
+configurations before this grammar to its current form; the `configs` column
+names the files that produce it. The workflow preset `reviewed.yaml` now gives
+its bands in Hz at `fs: 2048` (the workflow rejects any other
+`sampling_rate_hz` for them), so its old fractional names map to Hz names,
+while the same old names in the library configs map to cycles per sample.
+
+## Refusing SPIs that cannot be estimated
+
+Before any data are processed, every SPI reports whether its parameters can
+give an estimate for windows of a given shape (`Directed.input_problem`).
+`Calculator.load_dataset` and `Calculator.compute` raise one `ValueError` listing every refused SPI, and
+workflow preflight raises `WorkflowError` for the window length at
+`sampling_rate_hz`, so a configuration cannot silently produce tables of NaN.
+Checks use structural limits and the actual frequency grids. They do not
+guarantee convergence or finite outputs for every signal. Empirical reliability
+margins are not hard rejection thresholds:
+
+| SPI | needs window length T of at least |
+|---|---|
+| multitaper, directed and nonparametric Granger spectra | 7, and enough bins in the band on the calculation's own grid (1; PSI 2 adjacent; group delay 3 points one spectral resolution apart) |
+| wavelet SPIs | a band that holds at least one wavelet frequency (0.2-0.5 fs, at least 5 cycles per window); `ppc` and debiased squared PLI are always refused, as they divide by epochs - 1 and the window is one epoch. Wavelet PSI is refused because the wrapper incorrectly indexes time with frequency indices; changing its band cannot repair this |
+| parametric spectral Granger | order + 1 with a fixed order; `max_order` with automatic order |
+| GraphicalLassoCV | 5 (5-fold CV); ordinary GraphicalLasso has no processes-based rejection threshold |
+| native dcorr / HSIC / MGC | 4 (biased 2) / 3 (biased 2) / 5 |
+| DcorrX / MGCX | max_lag + 3 / max_lag + 5 |
+| CCM | ceil(2E/10)*10 + 31 + E (E = 10 when chosen automatically) |
+| Johansen / Engle-Granger cointegration | 3 x lag differences + 5 (+6 with a deterministic term) / max(2 x maxlag + 2, trend terms + 2) |
+| Gaussian TE (GC) | longest lag + k + l + 2, using the search limits for automatic embedding |
+| Gaussian XME / CCE, DI / SI | 2k + 2 / 3n / delay + 5 |
+| Kozachenko XME / CCE, DI / SI | k + 2 / n + 1 / delay + 2 |
+| Kraskov MI / TLMI / TE | neighbours + 1 (+1 for TLMI, + longest lag for TE) + 2 x a fixed Theiler window |
+| Gaussian JE, CE, MI / TLMI; kernel estimators | 3 / 4; kernel: 2 aligned samples (TLMI adds 1; TE adds target history). Fixed kernel exclusion w needs at least 2w aligned samples |
+| symbolic TE | (pattern length - 1) x spacing + shift + 1 |
+| phi | delay + 4 |
+| envelope correlation (PEC) | 4 |
+| pairwise distance | Bray-Curtis 3; haversine exactly 2; Mahalanobis more processes than observations |
+
+Values that are never valid are rejected when the SPI is built: phi types other
+than `star` and `Geo`, and the `wminkowski` and `precomputed` distances. NaN
+that depends on the data (no significant lag for Holm cross-correlation, an
+automatic Theiler window, a singular fit on collinear channels) cannot be
+predicted and is still reported per metric.
+
 ## Ridge regression error
 
-`lmfit_Ridge` reports the in-sample mean squared error of predicting channel j
+`lmfit_ridge_penaltysum_alpha1` reports the in-sample mean squared error of predicting channel j
 from channel i, including an unpenalized intercept. It minimizes the **sum** of
 squared residuals plus the squared slope (Ridge penalty alpha=1):
 
@@ -27,7 +101,7 @@ All channel means and cross-products are shared, replacing separate model fits.
 `penalty_scale="mean"` minimizes `MSE + alpha*b**2`. Thus mean scaling uses
 `alpha*T` in the coefficient's sum-of-squares denominator. The former
 `lmfit_SGDRegressor` is replaced by
-`lmfit_Ridge_alpha-0-0001_scale-mean`, the exact solution to its squared-loss
+`lmfit_ridge_penaltymean_alpha0p0001`, the exact solution to its squared-loss
 plus L2 objective. The stochastic optimizer, its seed effects and its early
 stopping error are removed. No SGD compatibility alias is provided.
 

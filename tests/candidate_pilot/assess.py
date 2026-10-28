@@ -89,7 +89,7 @@ def main():
         or s.class_name == "Covariance" and s.parameters.get("estimator") == "EmpiricalCovariance"
         or s.class_name == "PairwiseDistance" and s.parameters.get("metric") == "cosine"
         or s.class_name == "CrossCorrelation" and s.parameters.get("statistic") == "peak" and not s.parameters.get("sigonly", True)
-        or s.class_name == "PhaseLockingValue" and s.parameters.get("fmin") == 30/2048 and s.parameters.get("fmax") == 70/2048)]
+        or s.class_name == "PhaseLockingValue" and s.parameters.get("fs") == 2048 and s.parameters.get("fmin") == 30 and s.parameters.get("fmax") == 70)]
     baselines = instantiate(baseline_specs)
     result = {"seed": 20261028, "replicates": args.replicates, "patients": {},
         "baseline_ids": [m.identifier for m in baselines],

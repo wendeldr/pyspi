@@ -25,11 +25,11 @@ DEFAULT_ATOL = 1e-8
 #: (pattern, rtol, atol, reason). First match wins; the default applies otherwise.
 #: The stochastic rows keep the default values; they are listed to document
 #: that those SPIs match only because ``seed_all()`` runs right before them.
-#: The robust covariance SPIs (``*MinCovDet``, ``*EllipticEnvelope``) are no
+#: The robust covariance SPIs (``*mincovdet``, ``*ellipticenvelope``) are no
 #: longer listed: pyspi fits FAST-MCD with ``basic.ROBUST_RANDOM_STATE`` (the
 #: harness seed), so they reproduce their goldens without ``seed_all()``.
 #:
-#: The iterative optimisers (``*GraphicalLassoCV*``, ``phi_*``, ``gpfit_*``,
+#: The iterative optimisers (``*graphicallassocv*``, ``phi_*``, ``gpfit_*``,
 #: ``anm``) are not listed: seeded run-to-run and against the stored goldens
 #: they were measured bit-for-bit reproducible on the generating machine (max
 #: difference 0 for all 11 matching identifiers), so the default applies. If
@@ -59,16 +59,16 @@ CALC_E2E_SKIP = [
 #: so a fast implementation of a historically slow SPI still runs by default.
 FORCE_SLOW = [
     "ccm_*",
-    "*kraskov*DCE*",
+    "*kraskov*theilerauto*",
     "hhg",
     "mgc*",
     "*sgddtw*",
     "softdtw*",
     "anm",
     "gpfit_*",
-    "*MinCovDet*",
-    "*EllipticEnvelope*",
-    "*GraphicalLassoCV*",
+    "*mincovdet*",
+    "*ellipticenvelope*",
+    "*graphicallassocv*",
     "sgc_parametric*",
     "cce_*",
     "di_*",
@@ -82,9 +82,9 @@ FORCE_SLOW = [
 #: small size.
 PREPROC_SPIS = [
     # basic
-    "cov_EmpiricalCovariance",
-    "prec_EmpiricalCovariance",
-    "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05",
+    "cov_empirical",
+    "prec_empirical",
+    "xcorr_holm_max_maxlag0p125_alpha0p05",
     "spearmanr",
     "kendalltau",
     # distance
@@ -99,19 +99,19 @@ PREPROC_SPIS = [
     "anm",  # the only normalise-sensitive causal SPI; ~0.25 s per variant
     # infotheory
     "mi_gaussian",
-    "te_kraskov_NN-4_k-1_kt-1_l-1_lt-1",
-    "phi_star_t-1_norm-0",
+    "te_kraskov_neighbours04_targethistory01_targetdelay01_sourcehistory01_sourcedelay01",
+    "phi_star_delay01",
     # spectral
-    "cohmag_multitaper_mean",
-    "plv_multitaper_mean",
+    "cohmag_mean",
+    "plv_mean",
     "sgc_nonparametric_mean",
     # wavelet
     "psi_wavelet_mean",
     # misc
-    "coint_johansen_max_eig_stat_order-1_ardiff-1",
-    "lmfit_Ridge",
+    "coint_johansen_lineartrend_maxeig_lagdiffs01",
+    "lmfit_ridge_penaltysum_alpha1",
     "pec",
-    "ids",
+    "ids_pnormmax_terms06_bandwidth0p5",
 ]
 
 #: Preprocessing variants: (normalise, detrend) -> key suffix.

@@ -45,17 +45,24 @@ def test_parallel_matches_serial_and_resume_can_change_resources(signal_edf, exe
         np.testing.assert_allclose(results[0][metric], results[1][metric], rtol=1e-12, atol=1e-14)
 
 
-def test_parallel_failures_are_reported_and_retry_keeps_successes(signal_edf, execution_config, tmp_path):
+def test_parallel_failures_are_reported_and_retry_keeps_successes(edf, execution_config, tmp_path):
+    # Identical channels without re-referencing make the pairwise Johansen fit
+    # singular in every window: a data-dependent failure no pre-run check can
+    # predict, while covariance still succeeds.
+    t = np.arange(256 * 20) / 256
+    wave = np.rint(6000*np.sin(2*np.pi*10*t) + 2000*np.sin(2*np.pi*60*t))
+    source = edf(labels=("EEG A1", "EEG B2"), samples=(256, 256), records=20, values=[wave, wave], name="twins.EDF")
     metrics = tmp_path / "failures.yaml"
     metrics.write_text(yaml.safe_dump({
         ".statistics.basic": {"Covariance": {"configs": [{}]}},
-        ".statistics.spectral": {"GroupDelay": {"configs": [{"fmin": .12, "fmax": .12}]}}}))
-    config = execution_config(metrics={"config": str(metrics)}, output_batch_mib=.01,
-                              execution={"workers": 2})
+        ".statistics.misc": {"Cointegration": {"configs": [{}]}}}))
+    config = execution_config(source=source, reference="none", metrics={"config": str(metrics)},
+                              output_batch_mib=.01, execution={"workers": 2})
     [path] = run(config, max_windows=2)
     reader = open_run(path)
     success = next(m for m in reader.metrics if m.startswith("cov_"))
-    failed = next(m for m in reader.metrics if m.startswith("gd_"))
+    failed = next(m for m in reader.metrics if m.startswith("coint_"))
+    assert set(reader.statuses(success)) == {"success"}
     assert set(reader.statuses(failed)) == {"failed"}
     assert all(e["report"]["error"] for e in reader.diagnostics(failed))
     before = reader.load(success).copy()

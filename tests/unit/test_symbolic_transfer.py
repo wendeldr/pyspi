@@ -94,7 +94,7 @@ def test_symbolic_direction_bias_and_degeneracy_are_visible():
 
 def test_symbolic_configuration_is_explicit_and_serializable():
     spi=TransferEntropy(estimator='symbolic',pattern_length=3,pattern_spacing=16,prediction_shift=16)
-    assert spi.identifier=='te_symbolic_m-3_tau-16_h-16'
+    assert spi.identifier=='te_symbolic_patternlength03_spacing16_shift16'
     assert not spi.requires_java(estimator='symbolic') and spi._calc is None
     d=data(np.random.default_rng(1404).normal(size=(2,100)))
     np.testing.assert_array_equal(pickle.loads(pickle.dumps(spi)).multivariate(d),spi.multivariate(d))

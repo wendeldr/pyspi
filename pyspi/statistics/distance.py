@@ -16,6 +16,7 @@ from pyspi._barycenter import euclidean_summary
 from pyspi._distance_correlation import distance_correlation
 from pyspi._histogram import histogram_relative_entropy
 from pyspi._dtw import banded_dtw
+from pyspi._naming import compose, parameter, word
 
 from pyspi.base import (
     Directed,
@@ -34,8 +35,23 @@ class PairwiseDistance(Undirected, Unsigned):
     labels = ["unsigned", "distance", "unordered", "nonlinear", "undirected"]
 
     def __init__(self, metric="euclidean", **kwargs):
+        # Processes are points with one coordinate per observation. These two
+        # cannot apply: wminkowski needs weights that are never passed, and
+        # precomputed expects a distance matrix instead of time series.
+        if metric in ("wminkowski", "precomputed"):
+            raise ValueError(f"PairwiseDistance cannot use metric {metric!r} on time series.")
         self._metric = metric
-        self.identifier += f"_{metric}"
+        self.identifier = compose(self.identifier, word(metric))
+
+    def input_problem(self, n_observations, n_processes):
+        if self._metric == "haversine" and n_observations != 2:
+            return (f"{self.identifier}: haversine distance takes 2-D (latitude, longitude) points, so it needs "
+                    f"exactly 2 observations per window; got {n_observations}. Use another metric.")
+        if self._metric == "mahalanobis" and n_processes <= n_observations:
+            return (f"{self.identifier}: Mahalanobis distance inverts the covariance of the {n_observations} "
+                    f"observations across processes, which needs more processes than observations; "
+                    f"got {n_processes}. Use another metric.")
+        return None
 
     @parse_multivariate
     def multivariate(self, data):
@@ -53,10 +69,13 @@ class HilbertSchmidtIndependenceCriterion(Undirected, Unsigned):
     identifier = "hsic"
     labels = ["unsigned", "distance", "unordered", "nonlinear", "undirected"]
 
+    def input_problem(self, n_observations, n_processes):
+        return self._minimum_observations_problem(n_observations, 2 if self._biased else 3, "hyppo's HSIC")
+
     def __init__(self, biased=False):
         self._biased = biased
         if biased:
-            self.identifier += "_biased"
+            self.identifier = compose(self.identifier, "biased")
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -91,7 +110,12 @@ class DistanceCorrelation(Undirected, Unsigned):
         self.labels = [label for label in self.labels if label != "unsigned"] + [
             "unsigned" if biased else "signed"]
         if biased:
-            self.identifier += "_biased"
+            self.identifier = compose(self.identifier, "biased")
+
+    def input_problem(self, n_observations, n_processes):
+        # The native U-centered coefficient is undefined below four samples.
+        return self._minimum_observations_problem(
+            n_observations, 2 if self._biased else 4, "distance correlation centering")
 
     def issigned(self):
         return not self._biased
@@ -119,9 +143,8 @@ class HistogramRelativeEntropy(Undirected, Unsigned):
             raise ValueError("pseudocount must be finite and positive")
         self._bins = int(bins)
         self._pseudocount = float(pseudocount)
-        self.identifier += f"_bins-{bins}"
-        if pseudocount != 1e-10:
-            self.identifier += f"_pseudocount-{pseudocount:g}".replace(".", "-")
+        self.identifier = compose("histre", parameter("bins", bins),
+                                  parameter("pseudocount", pseudocount, 1))
 
     @parse_multivariate
     def multivariate(self, data):
@@ -143,6 +166,9 @@ class MultiscaleGraphCorrelation(Undirected, Unsigned):
     identifier = "mgc"
     labels = ["distance", "unsigned", "unordered", "nonlinear", "undirected"]
 
+    def input_problem(self, n_observations, n_processes):
+        return self._minimum_observations_problem(n_observations, 5, "hyppo's MGC needs at least 5 samples")
+
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
         x, y = data.to_numpy()[[i, j]]
@@ -159,7 +185,12 @@ class CrossDistanceCorrelation(Directed, Unsigned):
 
     def __init__(self, max_lag=1):
         self._max_lag = max_lag
-        self.identifier += f"_maxlag-{max_lag}"
+        self.identifier = compose(self.identifier, parameter("maxlag", max_lag))
+
+    def input_problem(self, n_observations, n_processes):
+        # The largest lag correlates only the last n - max_lag samples.
+        return self._minimum_observations_problem(
+            n_observations, self._max_lag + 3, f"distance correlation of the {self._max_lag}-sample lag")
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -181,7 +212,12 @@ class CrossMultiscaleGraphCorrelation(Directed, Unsigned):
 
     def __init__(self, max_lag=1):
         self._max_lag = max_lag
-        self.identifier += f"_maxlag-{max_lag}"
+        self.identifier = compose(self.identifier, parameter("maxlag", max_lag))
+
+    def input_problem(self, n_observations, n_processes):
+        # MGC needs 5 samples, and the largest lag keeps only n - max_lag.
+        return self._minimum_observations_problem(
+            n_observations, self._max_lag + 5, f"MGC of the {self._max_lag}-sample lag needs 5 samples")
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -198,10 +234,8 @@ class TimeWarping(Undirected, Unsigned):
     labels = ["unsigned", "distance", "temporal", "undirected", "nonlinear"]
 
     def __init__(self, global_constraint=None):
-        gcstr = global_constraint
-        if gcstr is not None:
-            gcstr = gcstr.replace("_", "-")
-            self.identifier += f"_constraint-{gcstr}"
+        if global_constraint is not None:
+            self.identifier = compose(self.identifier, word(global_constraint))
         self._global_constraint = global_constraint
 
     @property
@@ -233,7 +267,7 @@ class DynamicTimeWarping(TimeWarping):
             raise ValueError("sakoe_chiba_radius applies only to the sakoe_chiba constraint")
         self._radius = int(sakoe_chiba_radius)
         if self._radius != 1:
-            self.identifier += f"_radius-{self._radius}"
+            self.identifier += "_" + parameter("radius", self._radius)
         self._simfn = tslearn.metrics.dtw
 
     @parse_multivariate
@@ -294,7 +328,6 @@ class Barycenter(Directed, Signed):
         self._preproc = lambda x: x
         if squared:
             self._preproc = lambda x: x**2
-            self.identifier += f"-sq"
             self.issigned = lambda: False
             self.labels = [label for label in Barycenter.labels if label != "signed"] + ["unsigned"]
 
@@ -307,7 +340,7 @@ class Barycenter(Directed, Signed):
         else:
             raise NameError(f"Unknown statistic: {statistic}")
 
-        self.identifier += f"_{mode}_{statistic}"
+        self.identifier = compose(self.identifier, *(["sq"] if squared else []), word(mode), word(statistic))
 
     @parse_multivariate
     def multivariate(self, data):

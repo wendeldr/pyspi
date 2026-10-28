@@ -1,3 +1,4 @@
+import csv
 import json
 from pathlib import Path
 import random
@@ -13,8 +14,8 @@ def test_defaults_and_configured_order(metric_config):
     path = metric_config({"Covariance": {"configs": [{"squared": True}, {}]},
                           "CrossCorrelation": {"configs": None}})
     metrics = resolve_metrics(path)
-    assert [m.identifier for m in metrics] == ["cov-sq_EmpiricalCovariance", "cov_EmpiricalCovariance",
-                                             "xcorr_max_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05"]
+    assert [m.identifier for m in metrics] == ["cov_sq_empirical", "cov_empirical",
+                                             "xcorr_holm_max_maxlag0p125_alpha0p05"]
     assert metrics[0].parameters == {"squared": True}
     assert "EmpiricalCovariance" in metrics[0].constructor_signature
 
@@ -27,13 +28,22 @@ def test_xcorr_uses_workflow_sampling_rate(metric_config, fs):
     path = metric_config({"CrossCorrelation": {"configs": [params]}})
     metric = resolve_metrics(path, sampling_rate_hz=2048)[0]
     assert metric.parameters["fs"] == 2048
-    assert metric.identifier == "xcorr_min_sig-False_fs-2048_lag-0-125"
+    assert metric.identifier == "xcorr_min_maxlag0125ms"
 
 
 def test_xcorr_conflicting_workflow_sampling_rate_rejected(metric_config):
     path = metric_config({"CrossCorrelation": {"configs": [{"fs": 1000}]}})
     with pytest.raises(WorkflowError, match="fs differs"):
         resolve_metrics(path, sampling_rate_hz=2048)
+
+
+def test_spectral_hz_bands_must_match_workflow_sampling_rate(metric_config):
+    path = metric_config({"CoherenceMagnitude": {"configs": [{"fs": 2048, "fmin": 30, "fmax": 70}, {"fs": 1}]}},
+                         module=".statistics.spectral")
+    assert [m.identifier for m in resolve_metrics(path, sampling_rate_hz=2048)] == [
+        "cohmag_mean_band0030-0070hz", "cohmag_mean_band0-0p5cyc"]
+    with pytest.raises(WorkflowError, match="fs differs"):
+        resolve_metrics(path, sampling_rate_hz=1024)
 
 
 @pytest.mark.parametrize("classes,match", [
@@ -119,15 +129,15 @@ def test_invalid_spectral_geometry_rejected(params, metric_config):
         resolve_metrics(metric_config({"CoherenceMagnitude": {"configs": [params]}}, module=".statistics.spectral"))
 
 
-def test_parameters_keep_full_precision_and_rounded_identifier_collisions_fail(metric_config):
+def test_parameters_keep_full_precision_and_close_bands_stay_distinct(metric_config):
     params = {"fmin": 0.1000123456789, "fmax": 0.4}
     path = metric_config({"CoherenceMagnitude": {"configs": [params]}}, module=".statistics.spectral")
     metric = resolve_metrics(path)[0]
     assert metric.parameters == params
     path = metric_config({"CoherenceMagnitude": {"configs": [params, {"fmin": 0.100023456789, "fmax": 0.4}]}},
                          module=".statistics.spectral")
-    with pytest.raises(WorkflowError, match="duplicate metric identifier"):
-        resolve_metrics(path)
+    assert [m.identifier for m in resolve_metrics(path)] == [
+        "cohmag_mean_band0p1000123456789-0p4cyc", "cohmag_mean_band0p100023456789-0p4cyc"]
 
 
 def test_rng_and_shared_label_state_restored_even_on_failure(metric_config):
@@ -151,33 +161,39 @@ def test_reviewed_preset_preserves_unrelated_inventory_and_applies_approved_chan
     metrics = resolve_metrics(path)
     assert len(metrics) == len({m.identifier for m in metrics}) == 188
     root = Path(__file__).resolve().parents[2]
+    with open(root / "docs/metric_names.csv") as f:
+        rows = list(csv.DictReader(f))
+    # Prefer the preset's own mapping: its bands are in Hz at 2048 Hz.
+    renamed = {row["old_identifier"]: row["new_identifier"] for row in rows}
+    renamed.update({row["old_identifier"]: row["new_identifier"] for row in rows
+                    if "pyspi/workflow/reviewed.yaml" in row["configs"].split(";")})
     for patient in ("004", "105", "111"):
         survey = json.loads((root / f"docs/storage_comparison/explore/properties_{patient}_64.json").read_text())
-        historical = {row["metric"] for row in survey["rows"]}
+        historical = {renamed.get(row["metric"], row["metric"]) for row in survey["rows"]}
         changed_classes = {"CrossCorrelation", "SignedPhaseLagIndex", "SignedWeightedPhaseLagIndex"}
-        removed = {"bary_euclidean_mean", "bary-sq_euclidean_mean", "lmfit_Ridge", "lmfit_SGDRegressor",
-                   "je_gaussian", "ce_gaussian", "lmfit_Lasso",
+        removed = {"bary_euclidean_mean", "bary_sq_euclidean_mean", "lmfit_ridge_penaltysum_alpha1", "lmfit_SGDRegressor",
+                   "je_gaussian", "ce_gaussian", "lmfit_lasso_alpha1",
                    "te_symbolic_k-1_kt-1_l-1_lt-1", "te_symbolic_k-10_kt-1_l-1_lt-1",
-                   "cov_EmpiricalCovariance", "cov_ShrunkCovariance", "cov-sq_ShrunkCovariance",
-                   "prec_EllipticEnvelope", "prec-sq_EllipticEnvelope",
-                   "cov-sq_GraphicalLasso", "prec_GraphicalLasso", "prec-sq_GraphicalLasso",
-                   "cov_GraphicalLassoCV", "cov-sq_GraphicalLassoCV",
-                   "prec_GraphicalLassoCV", "prec-sq_GraphicalLassoCV"}
+                   "cov_empirical", "cov_shrunk", "cov_sq_shrunk",
+                   "prec_ellipticenvelope", "prec_sq_ellipticenvelope",
+                   "cov_sq_graphicallasso", "prec_graphicallasso", "prec_sq_graphicallasso",
+                   "cov_graphicallassocv", "cov_sq_graphicallassocv",
+                   "prec_graphicallassocv", "prec_sq_graphicallassocv"}
         assert {m.identifier for m in metrics if m.class_name not in changed_classes} == {
             identifier for identifier in historical if not identifier.startswith(("xcorr", "gd_"))
-            and identifier not in removed} | {"lmfit_Lasso_alpha-0-1",
-                "te_symbolic_m-3_tau-4_h-4", "te_symbolic_m-3_tau-16_h-16",
-                "gc_gaussian_k-4_kt-1_l-4_lt-1"}
+            and identifier not in removed} | {"lmfit_lasso_alpha0p1",
+                "te_symbolic_patternlength03_spacing04_shift04", "te_symbolic_patternlength03_spacing16_shift16",
+                "gc_gaussian_targethistory04_targetdelay01_sourcehistory04_sourcedelay01"}
         assert {m.identifier for m in metrics if m.class_name == "CrossCorrelation"} == {
-            f"xcorr{sq}_{stat}_sig-False_fs-1_lag-0-125"
-            for sq in ("", "-sq") for stat in ("max", "mean")} | {
-            f"xcorr_{stat}_sig-False_fs-1_lag-0-125" for stat in ("min", "peak")} | {
-            f"xcorr{sq}_{stat}_sig-True_fs-1_lag-0-125_bartlett-holm_alpha-0-05"
-            for stat, sq in (("max", ""), ("max", "-sq"), ("mean", ""), ("mean", "-sq"),
+            f"xcorr{sq}_{stat}_maxlag0p125"
+            for sq in ("", "_sq") for stat in ("max", "mean")} | {
+            f"xcorr_{stat}_maxlag0p125" for stat in ("min", "peak")} | {
+            f"xcorr{sq}_holm_{stat}_maxlag0p125_alpha0p05"
+            for stat, sq in (("max", ""), ("max", "_sq"), ("mean", ""), ("mean", "_sq"),
                              ("min", ""), ("peak", ""))}
     for original, signed, prefix in (("PhaseLagIndex", "SignedPhaseLagIndex", "pli"),
                                      ("WeightedPhaseLagIndex", "SignedWeightedPhaseLagIndex", "wpli")):
-        expected = {m.identifier.replace(prefix+"_", prefix+"-signed_", 1)
+        expected = {m.identifier.replace(prefix+"_", prefix+"_signed_", 1)
                     for m in metrics if m.class_name == original}
         assert len(expected) == 11
         assert {m.identifier for m in metrics if m.class_name == signed} == expected

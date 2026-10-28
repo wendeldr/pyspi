@@ -31,7 +31,7 @@ def test_curve_clamps_below_and_extrapolates_with_bounded_exponent():
         curve([], 8)
 
 
-def _calibration(metrics=("cov_EmpiricalCovariance",), *, window=4, kind="edf", code=None,
+def _calibration(metrics=("cov_empirical",), *, window=4, kind="edf", code=None,
                  threads=1, cache=256, detrend=True, zscore=True):
     points = []
     for channels, seconds in ((2, .01), (4, .04)):

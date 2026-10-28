@@ -170,7 +170,7 @@ def test_calculator_reload_recomputes_instead_of_reusing_previous_caches(tmp_pat
         centered = raw - raw.mean(axis=1, keepdims=True)
         expected = centered @ centered.T / 80
         np.fill_diagonal(expected, np.nan)
-        actual = calc.table["cov_EmpiricalCovariance"].to_numpy()
+        actual = calc.table["cov_empirical"].to_numpy()
         np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=1e-12)
         if previous is not None:
             assert not np.allclose(actual, previous, equal_nan=True)

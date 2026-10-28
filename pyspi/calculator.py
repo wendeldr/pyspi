@@ -10,6 +10,7 @@ from colorama import init, Fore
 init(autoreset=True)
 
 # From this package
+from .base import input_problems
 from .data import Data
 from .calculation import MetricReport, _capture_metric_warnings, _describe_error
 from .utils import convert_mdf_to_ddf, check_optional_deps, inspect_calc_results
@@ -272,6 +273,9 @@ class Calculator:
                             # estimator-specific dependency selection is separate.
                             spi = cls()
                             fallback = True
+                        if spi.identifier in self._spis:
+                            raise ValueError(f"Duplicate SPI identifier {spi.identifier!r}; "
+                                             "remove or distinguish the conflicting configurations.")
                         self._spis[spi.identifier] = spi
                         print(f'Succesfully initialised SPI with identifier "{spi.identifier}" and labels {spi.labels}')
                         if fallback:
@@ -285,9 +289,11 @@ class Calculator:
                 New dataset to attach to calculator.
         """
         if not isinstance(dataset, Data):
-            self._dataset = Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend)
-        else:
-            self._dataset = dataset
+            dataset = Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend)
+        # Refuse SPIs whose parameters cannot produce an estimate for this
+        # window shape, instead of computing tables of NaN.
+        self._validate_dataset_shape(dataset)
+        self._dataset = dataset
 
         if filtered_bands is not None:
             self._dataset.set_filtered_bands(filtered_bands, sampling_rate_hz=sampling_rate_hz)
@@ -306,6 +312,14 @@ class Calculator:
         self._table.columns.name = "process"
         self._metric_reports.clear()
         self.dataset._spectral_cache_bytes = self._spectral_cache_bytes
+
+    def _validate_dataset_shape(self, dataset):
+        problems = input_problems(self.spis.values(), dataset.n_observations, dataset.n_processes)
+        if problems:
+            raise ValueError(
+                f"{len(problems)} SPI(s) cannot be estimated from {dataset.n_observations}-observation, "
+                f"{dataset.n_processes}-process data. Remove them or change their parameters:\n  "
+                + "\n  ".join(problems))
 
     def compute(self, *, on_metric_complete=None):
         """Compute the SPIs on the MVTS dataset, returning None as before.
@@ -329,6 +343,8 @@ class Calculator:
             )
         if on_metric_complete is not None and not callable(on_metric_complete):
             raise TypeError("on_metric_complete must be callable or None")
+        # Data and the SPI dictionary can change after load_dataset.
+        self._validate_dataset_shape(self.dataset)
 
         self._metric_reports.clear()
         # Register shared spectral requests without calculating any metric. The

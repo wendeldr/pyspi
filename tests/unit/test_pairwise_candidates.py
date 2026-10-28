@@ -146,7 +146,7 @@ def test_ids_invalid_settings(kwargs):
 
 
 def test_ids_parameter_identifiers_and_import_preserve_rng():
-    assert InterDependenceScore().identifier == "ids"
+    assert InterDependenceScore().identifier == "ids_pnormmax_terms06_bandwidth0p5"
     assert InterDependenceScore(terms=2).identifier != InterDependenceScore(bandwidth=.25).identifier
     code = """
 import json, numpy as np

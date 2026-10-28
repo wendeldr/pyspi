@@ -1,16 +1,20 @@
 # Extra SPI config for the golden-value regression suite (tests/regression/test_extra_goldens.py).
 #
-# These nine wavelet classes from pyspi/statistics/wavelet.py run today but are
+# These seven wavelet classes from pyspi/statistics/wavelet.py run today but are
 # NOT listed in pyspi/config.yaml, so the default Calculator never builds them
 # and the main golden sets do not cover them. Unlike PhaseSlopeIndex (the only
 # wavelet SPI in config.yaml), they all go through mne._get_cache and share the
-# per-Data ``data.mne[measure]`` cache. They are locked here only as a snapshot
+# per-Data ``data.mne[(measure, fs)]`` cache. They are locked here only as a snapshot
 # of current output (a change detector); the stored values are not checked
 # against any independent calculation.
 #
 # Same schema as pyspi/config.yaml. Each class uses the six band/statistic
 # configs that PhaseSlopeIndex uses in config.yaml, so identifiers follow the
-# same naming (<id>_wavelet_<statistic>_fs-1_fmin-..._fmax-...).
+# same naming (<id>_wavelet_<statistic>_band<fmin>-<fmax>cyc).
+#
+# PairwisePhaseConsistency and DebiasedSquaredWeightedPhaseLagIndex are not listed:
+# mne-connectivity divides them by (epochs - 1) and pyspi passes one epoch, so they
+# are never finite (-inf or NaN) and Calculator refuses them (Directed.input_problem).
 #
 # Regenerate (writes tests/regression/goldens/extra/small/{values.npz,meta.json}):
 #   .venv/bin/python tests/regression/generate_goldens.py --size small --repeat 2 \
@@ -131,63 +135,7 @@
         fmax: 0.5
         statistic: max
 
-  PairwisePhaseConsistency:
-    labels:
-      - undirected
-      - unsigned
-      - time/frequency dependent
-      - bivariate
-    dependencies:
-    configs:
-      - fs: 1
-
-      - fmin: 0
-        fmax: 0.25
-
-      - fmin: 0.25
-        fmax: 0.5
-
-      - fmin: 0
-        fmax: 0.5
-        statistic: max
-
-      - fmin: 0
-        fmax: 0.25
-        statistic: max
-
-      - fmin: 0.25
-        fmax: 0.5
-        statistic: max
-
   PhaseLagIndex:
-    labels:
-      - undirected
-      - unsigned
-      - time/frequency dependent
-      - bivariate
-    dependencies:
-    configs:
-      - fs: 1
-
-      - fmin: 0
-        fmax: 0.25
-
-      - fmin: 0.25
-        fmax: 0.5
-
-      - fmin: 0
-        fmax: 0.5
-        statistic: max
-
-      - fmin: 0
-        fmax: 0.25
-        statistic: max
-
-      - fmin: 0.25
-        fmax: 0.5
-        statistic: max
-
-  DebiasedSquaredWeightedPhaseLagIndex:
     labels:
       - undirected
       - unsigned

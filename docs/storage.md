@@ -104,7 +104,7 @@ write_calculator("one_window.pspi", calc,
 
 # Each item is an already computed Calculator for one window.
 write_calculator("patient.pspi", calculated_windows,
-                 metrics=["pec", "spearmanr-sq"],
+                 metrics=["pec", "spearmanr_sq"],
                  channel_names=["B1", "B2", "A1", "A2"],
                  recording={"sampling_rate": 2048,
                             "window_onsets": [0, 1024]})
