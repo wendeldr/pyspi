@@ -1,0 +1,127 @@
+{
+  "created_utc": "2026-10-28T14:41:46.566280+00:00",
+  "scope": "Approved regression and Gaussian information refactor; completed spectral/PEC code preserved.",
+  "source_sha256": {
+    "pyspi/_moments.py": "2d701cfc8356c4892e769c3f13da21d0ae1105ded3f720adb45bc2ab07575c8f",
+    "pyspi/_regression.py": "42a65549f48e320de357e46b26a4bcf4228f76da1c50af2992825220e34d0a45",
+    "pyspi/_barycenter.py": "7aeb2ecb4ef1ce73c48cc536d05bc64b6ae55b6ff06777257029644766357b67",
+    "pyspi/_gaussian.py": "e6519849caf4dd233eb8166d491fa787481b7605c7e485670840b2f52844d989",
+    "pyspi/_gaussian_history.py": "e769ccae035b8bd48845947e73d9edc11f8ed246c25ed38b19c3594fa21dbdec",
+    "pyspi/_information_history.py": "bb73f2d20f94b9f60762e0a7591725493bb1504b8b9db21cf58d61ffa6c7e155",
+    "pyspi/_symbolic.py": "2cc6ff1a09eddaa1df9d95936831adc812da1008494af255e3bac32b4a46ef24",
+    "pyspi/statistics/infotheory.py": "3f3cd6ffcd7b1f5dac6a0bc1cb9fde7fd7f1e3346a53670739636558c9e7f3a4",
+    "pyspi/workflow/reviewed.yaml": "a46d7ae1e713f1fb18ee28cb213f7432fcce63be8003b6d6100f84385f34472f",
+    "pyspi/workflow/amplitude_sensitivity.yaml": "e125fe0ff4c4a81e18be60c6a988aef9a3607cc686e2b7bacfdddf09e7789ce5",
+    "examples/workflow/amplitude_sensitivity.yaml": "c87890d2de300490458e4c2a769e3221c640572abb7dd3ac759327ef30536a38"
+  },
+  "independent_checks": {
+    "regression": {
+      "file": "tests/unit/test_regression_refactor.py",
+      "passed": 53,
+      "evidence": "/tmp/pyspi-regression-models.log"
+    },
+    "euclidean_barycenter": {
+      "passed": 8,
+      "evidence": "/tmp/pyspi-barycenter-focused.log"
+    },
+    "gaussian_simple": {
+      "file": "tests/unit/test_gaussian_native.py",
+      "passed": 21,
+      "note": "20 initial passes; one NaN fixture corrected and passed in the subsequent 13-check dependency run. JVM-free integration extended and passed in final integration run."
+    },
+    "gaussian_history": {
+      "file": "tests/unit/test_gaussian_history.py",
+      "passed": 39,
+      "evidence": "/tmp/pyspi-history-conditioning-checks.log"
+    },
+    "retained_java_history": {
+      "file": "tests/unit/test_information_history.py",
+      "passed": 20,
+      "note": "19 passes with the Gaussian-history run; one Java-string conversion fixture corrected and the failed case alone passed afterward."
+    },
+    "symbolic": {
+      "file": "tests/unit/test_symbolic_transfer.py",
+      "passed": 9,
+      "evidence": "/tmp/pyspi-history-layout-symbolic-counts.log"
+    }
+  },
+  "affected_regressions": {
+    "information_small_preprocessing_catalogue": {
+      "passed": 52,
+      "evidence": "/tmp/pyspi-information-regression-small.log"
+    },
+    "information_full": {
+      "passed": 39,
+      "evidence": "/tmp/pyspi-information-regression-full.log"
+    },
+    "information_integration_config": {
+      "passed": 10,
+      "evidence": "/tmp/pyspi-information-integration.log"
+    },
+    "earlier_regression_small_preprocessing_catalogue": {
+      "passed": 18,
+      "evidence": "/tmp/pyspi-regression-second-small.log"
+    },
+    "earlier_regression_full": {
+      "passed": 9,
+      "evidence": "/tmp/pyspi-regression-second-full.log"
+    }
+  },
+  "golden_preservation": {
+    "information_numeric_updates_per_size": 8,
+    "unchanged_arrays_byte_identical_to_c28ffed": {
+      "small": 290,
+      "full": 290,
+      "preproc": 96
+    },
+    "provenance": "partial_regenerations in each golden meta.json"
+  },
+  "selection": {
+    "before": 205,
+    "after": 200,
+    "removed_count": 6,
+    "addition": "Gaussian TE with four consecutive source and target lags",
+    "replacements": [
+      "Lasso alpha=0.1",
+      "Genuine symbolic TE m=3 spacing/shift 4/4 and 16/16"
+    ],
+    "disabled_candidates": [
+      "Gaussian TE orders 16/32"
+    ],
+    "alternative_metric_count": 9
+  },
+  "alternative_config": {
+    "detrend": true,
+    "zscore": false,
+    "reference": "car",
+    "window_seconds": 0.5,
+    "step_seconds": 0.5,
+    "synthetic_all_outputs_finite": true,
+    "je_ce_affinity_with_mi_broken_by_unequal_variances": true,
+    "java_required": false,
+    "note": "Schema checked after substituting template paths only; no patient sample reads or workflow output creation in this check."
+  },
+  "runtime_receipts": [
+    "tests/regression_refactor_results.json",
+    "tests/regression_family_results.json",
+    "tests/regression_selection_results.json",
+    "tests/information_family_results.json",
+    "tests/information_selection_results.json",
+    "tests/information_regression_increment_results.json",
+    "tests/information_candidate_results.json"
+  ],
+  "scientific_pilots": [
+    "audit/briefing/lasso_penalty_review.json",
+    "audit/briefing/symbolic_null_review.json",
+    "audit/briefing/information_eeg_review.json",
+    "audit/briefing/information_eeg_conditioning_review.json"
+  ],
+  "limits": [
+    "Synthetic timings exclude preprocessing and I/O; serial cohort projections are not measured throughput.",
+    "The first EEG long-history pilot predates the corrected numerical guard; use the conditioning recheck for current Granger validity/runtime.",
+    "Positive symbolic null bias remains and is documented; these pilots do not establish clinical discrimination.",
+    "Raw amplitude template needs real input/metadata/output paths; local rereferencing still needs validated contact mapping."
+  ],
+  "csv_preservation": "All pre-existing parameters and user flags retained; 23 scoped notes updated, two symbolic identifiers renamed, one order-4 row added.",
+  "followup": "Window parallelism, numerical thread settings, JVM worker startup and whole-process memory accounting documented for a subsequent goal."
+}

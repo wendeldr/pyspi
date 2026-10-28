@@ -597,7 +597,7 @@ Compare the checkout, lock, selected test tier, installed packages (`uv pip chec
 
 The confirmed implementation issues below are locked in `unit/test_known_bugs.py`, generally with a current-behavior test and a strict xfail describing a proposed change. These are change alarms; they do not independently establish the mathematical correctness of the proposed behavior. Item 5 records the agreed standard PLI definition, backed by independent scalar tests.
 
-1. `TransferEntropy(estimator='symbolic')` falls through to the Gaussian calculator (`te_symbolic_* == gc_gaussian_*`).
+1. **Fixed:** `TransferEntropy(estimator='symbolic')` computes ordinal-pattern TE with explicit pattern length, spacing and prediction shift. Independent categorical-count tests replace the former Gaussian-dispatch bug lock.
 2. `ConvergentCrossMapping(embedding_dimension=None)` picks max E (10), not best-rho E (`ccm_E-None == ccm_E-10`). Both tests are `slow`.
 3. `SoftDynamicTimeWarping` ignores `global_constraint` (three identical configs).
 4. **Fixed:** `KendallTau` and `SpearmanR` own their instance labels. Their signed/unsigned label metadata in the small/full/preprocessing golden sets was corrected without regenerating numerical values.
@@ -608,7 +608,7 @@ The confirmed implementation issues below are locked in `unit/test_known_bugs.py
 9. `CorrelationFrame(calc_frame)` calls the nonexistent `getstatlabels()`.
 10. `utils.convert_mdf_to_ddf` raises under pandas>=3 (`stack(dropna=...)` is rejected); found while writing the unit tests, locked without a paired xfail.
 
-Bugs 1 and 9 need the JVM (`java`). **Some SPIs are never exercised by a default run.** The bug-2 tests are `slow`, all nine `ccm_*` goldens and the two auto-embedding `te_kraskov_*_k-max-10_tau-max-4` goldens are `slow` at both sizes, and the six `ddtf_multitaper_*` and `mgcx_maxlag-10` goldens are `slow` at full size, so none of these runs without `--runslow`. After touching ccm, TE kraskov auto-embedding, ddtf or mgcx, run `.venv/bin/python -m pytest --runslow -k "ccm or te_kraskov" --ignore=tests/test_SPIs.py` (20 tests at small size) and the full tier before trusting a green default run.
+Bug 9 needs the JVM (`java`). **Some SPIs are never exercised by a default run.** The bug-2 tests are `slow`, all nine `ccm_*` goldens and the two auto-embedding `te_kraskov_*_k-max-10_tau-max-4` goldens are `slow` at both sizes, and the six `ddtf_multitaper_*` and `mgcx_maxlag-10` goldens are `slow` at full size, so none of these runs without `--runslow`. After touching ccm, TE kraskov auto-embedding, ddtf or mgcx, run `.venv/bin/python -m pytest --runslow -k "ccm or te_kraskov" --ignore=tests/test_SPIs.py` (20 tests at small size) and the full tier before trusting a green default run.
 
 ### Flagged for investigation (locked as-is, not confirmed bugs)
 
@@ -650,7 +650,7 @@ arrays are preserved. Preprocessing metadata changes only catalogue order.
 Affected golden checks passed (18 small/preprocessing/catalogue, 9 full).
 Timings and definition decisions are in
 [`docs/regression_gaussian_review.md`](../docs/regression_gaussian_review.md).
-These completed checks do not claim that the pending Gaussian refactor is done.
+These counts cover the regression chunk; the completed Gaussian/history checks follow.
 
 ## SPI coverage
 
@@ -660,9 +660,24 @@ raw/extreme units, source/target orientation, permutation, near-perfect fits,
 local singular/nonfinite handling, cache ownership/invalidation, normalization
 redundancy, serialization and JVM-free construction/execution. Numerical
 goldens for JE/CE/MI/TLMI are retained; metadata updates only remove their Java
-requirements and correct JE/CE signed labels. History-based Gaussian and
-symbolic TE work remains pending. Nine affected small/preprocessing/catalogue
+requirements and correct JE/CE signed labels. Nine affected small/preprocessing/catalogue
 checks and four full Gaussian checks passed without changing numerical arrays.
+
+History-based native Gaussian work now has 39 passing independent checks in
+`unit/test_gaussian_history.py`: OLS/determinant references, fixed/automatic
+histories, known directed models, DI without target-only inflation, exact XME
+lag counts, units, degeneracy, mutation and bounded-cache behavior. A filtered
+design checks the reciprocal-condition guard that the EEG pilot showed was
+necessary; Cholesky diagonal thresholds alone were insufficient.
+`unit/test_information_history.py` has 20 passing checks against independently
+constructed Java embeddings and entropy calls, plus sharing, mutation and
+serialization. `unit/test_symbolic_transfer.py` has nine independent ordinal
+count/direction/edge checks. Family benchmarks and the EEG/runtime gates are now complete. Only the eight
+intentionally changed numerical outputs were refreshed at each size, with
+provenance. The final affected checks passed: 52 small/preprocessing/catalogue,
+39 full-size and 10 integration/configuration checks. The working config has
+200 outputs; its selection and all runtime/memory projections are recorded in
+`docs/regression_gaussian_review.md`.
 
 Historical 289-identifier inventory before the signed phase-lag additions, in `Calculator` order, from `goldens/small/meta.json` (5 x 64) and `goldens/full/meta.json` (7 x 100). `time_s` is the generator's fastest measured time for one `multivariate` call on the generating machine (a 64-core machine with `OMP_NUM_THREADS=1`; versions and the thread setting are in `meta.json`); `slow` is the marker at that size.
 
@@ -672,6 +687,10 @@ Historical 289-identifier inventory before the signed phase-lag additions, in `C
 | full (7 x 100) | 280 | 9 | 0 | 12 | 277 |
 
 The default tier's fast `Calculator` end-to-end test computes the same non-slow SPIs (278 at small size) in one pass and compares all of them except the 8 in `CALC_E2E_SKIP`. Missing-value markers and partial-NaN statuses follow the current metadata below. Cross-correlation missing values record empty significant-lag selections; the previous preprocessing IndexError is fixed.
+
+Information-family rows below reflect current golden metadata. Generation times
+come from their individual snapshots and are not production benchmarks; use the
+118-channel family receipts above for performance comparisons.
 
 <!-- Generated from goldens/{small,full}/meta.json with a short inline Python snippet (slow = spi_policy.is_slow(identifier, time_s), stochastic = spi_policy.is_stochastic, java = "java" in deps); regenerate rather than hand-edit. -->
 | identifier | module | status (small) | time_s (small) | slow (small) | status (full) | time_s (full) | slow (full) | stochastic | java |
@@ -777,32 +796,32 @@ The default tier's fast `Calculator` end-to-end test computes the same non-slow 
 | `ccm_E-10_mean` | .statistics.causal | ok | 3.322 | yes | ok | 14.419 | yes |  |  |
 | `ccm_E-10_max` | .statistics.causal | ok | 3.338 | yes | ok | 14.442 | yes |  |  |
 | `ccm_E-10_diff` | .statistics.causal | ok | 3.323 | yes | ok | 14.558 | yes |  |  |
-| `je_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.005 |  |  | yes |
+| `je_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.005 |  |  |  |
 | `je_kozachenko` | .statistics.infotheory | ok | 0.002 |  | ok | 0.014 |  |  | yes |
 | `je_kernel_W-0.5` | .statistics.infotheory | ok | 0.002 |  | ok | 0.009 |  |  | yes |
-| `ce_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.004 |  |  | yes |
+| `ce_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.004 |  |  |  |
 | `ce_kozachenko` | .statistics.infotheory | ok | 0.002 |  | ok | 0.008 |  |  | yes |
 | `ce_kernel_W-0.5` | .statistics.infotheory | ok | 0.002 |  | ok | 0.005 |  |  | yes |
-| `cce_gaussian` | .statistics.infotheory | ok | 0.037 |  | ok | 0.113 |  |  | yes |
+| `cce_gaussian` | .statistics.infotheory | ok | 0.037 |  | ok | 0.113 |  |  |  |
 | `cce_kozachenko` | .statistics.infotheory | ok | 0.052 |  | ok | 0.186 |  |  | yes |
 | `cce_kernel_W-0.5` | .statistics.infotheory | ok | 1.406 |  | ok | 0.955 |  |  | yes |
-| `xme_gaussian_k1` | .statistics.infotheory | ok | 0.003 |  | ok | 0.010 |  |  | yes |
+| `xme_gaussian_k1` | .statistics.infotheory | ok | 0.003 |  | ok | 0.010 |  |  |  |
 | `xme_kozachenko_k1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.020 |  |  | yes |
 | `xme_kernel_W-0.5_k1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.015 |  |  | yes |
-| `xme_gaussian_k10` | .statistics.infotheory | ok | 0.004 |  | ok | 0.012 |  |  | yes |
-| `xme_kozachenko_k10` | .statistics.infotheory | ok | 0.006 |  | ok | 0.029 |  |  | yes |
-| `xme_kernel_W-0.5_k10` | .statistics.infotheory | ok | 0.005 |  | ok | 0.018 |  |  | yes |
-| `di_gaussian` | .statistics.infotheory | ok | 0.037 |  | ok | 0.119 |  |  | yes |
-| `di_kozachenko` | .statistics.infotheory | ok | 0.051 |  | ok | 0.214 |  |  | yes |
-| `di_kernel_W-0.5` | .statistics.infotheory | ok | 0.848 |  | ok | 0.810 |  |  | yes |
-| `si_gaussian_k-1` | .statistics.infotheory | ok | 0.009 |  | ok | 0.027 |  |  | yes |
+| `xme_gaussian_k10` | .statistics.infotheory | ok | 0.002 |  | ok | 0.002 |  |  |  |
+| `xme_kozachenko_k10` | .statistics.infotheory | ok | 0.006 |  | ok | 0.013 |  |  | yes |
+| `xme_kernel_W-0.5_k10` | .statistics.infotheory | ok | 0.002 |  | ok | 0.006 |  |  | yes |
+| `di_gaussian` | .statistics.infotheory | ok | 0.006 |  | ok | 0.006 |  |  |  |
+| `di_kozachenko` | .statistics.infotheory | ok | 0.043 |  | ok | 0.113 |  |  | yes |
+| `di_kernel_W-0.5` | .statistics.infotheory | ok | 1.780 |  | ok | 0.770 |  |  | yes |
+| `si_gaussian_k-1` | .statistics.infotheory | ok | 0.009 |  | ok | 0.027 |  |  |  |
 | `si_kozachenko_k-1` | .statistics.infotheory | ok | 0.013 |  | ok | 0.046 |  |  | yes |
 | `si_kernel_W-0.5_k-1` | .statistics.infotheory | ok | 0.014 |  | ok | 0.047 |  |  | yes |
-| `mi_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  | yes |
+| `mi_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  |  |
 | `mi_kraskov_NN-4` | .statistics.infotheory | ok | 0.426 |  | ok | 0.228 |  |  | yes |
 | `mi_kraskov_NN-4_DCE` | .statistics.infotheory | ok | 0.283 |  | ok | 0.226 |  |  | yes |
 | `mi_kernel_W-0.25` | .statistics.infotheory | ok | 0.002 |  | ok | 0.007 |  |  | yes |
-| `tlmi_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  | yes |
+| `tlmi_gaussian` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  |  |
 | `tlmi_kraskov_NN-4` | .statistics.infotheory | ok | 0.115 |  | ok | 0.220 |  |  | yes |
 | `tlmi_kraskov_NN-4_DCE` | .statistics.infotheory | ok | 0.105 |  | ok | 0.224 |  |  | yes |
 | `tlmi_kernel_W-0.25` | .statistics.infotheory | ok | 0.002 |  | ok | 0.006 |  |  | yes |
@@ -812,10 +831,10 @@ The default tier's fast `Calculator` end-to-end test computes the same non-slow 
 | `te_kraskov_NN-4_DCE_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.323 |  | ok | 0.232 |  |  | yes |
 | `te_kraskov_NN-4_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.527 |  | ok | 0.226 |  |  | yes |
 | `te_kernel_W-0.25_k-1` | .statistics.infotheory | ok | 0.004 |  | ok | 0.005 |  |  | yes |
-| `gc_gaussian_k-max-10_tau-max-2` | .statistics.infotheory | ok | 0.045 |  | ok | 0.075 |  |  | yes |
-| `gc_gaussian_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  | yes |
-| `te_symbolic_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  | yes |
-| `te_symbolic_k-10_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.002 |  | ok | 0.004 |  |  | yes |
+| `gc_gaussian_k-max-10_tau-max-2` | .statistics.infotheory | ok | 0.045 |  | ok | 0.075 |  |  |  |
+| `gc_gaussian_k-1_kt-1_l-1_lt-1` | .statistics.infotheory | ok | 0.001 |  | ok | 0.002 |  |  |  |
+| `te_symbolic_m-3_tau-4_h-4` | .statistics.infotheory | ok | 0.001 |  | ok | 0.001 |  |  |  |
+| `te_symbolic_m-3_tau-16_h-16` | .statistics.infotheory | ok | 0.001 |  | ok | 0.001 |  |  |  |
 | `phi_star_t-1_norm-0` | .statistics.infotheory | ok | 0.036 |  | ok | 0.077 |  |  |  |
 | `phi_star_t-1_norm-1` | .statistics.infotheory | ok | 0.037 |  | ok | 0.082 |  |  |  |
 | `phi_Geo_t-1_norm-0` | .statistics.infotheory | ok | 0.097 |  | ok | 0.190 |  |  |  |

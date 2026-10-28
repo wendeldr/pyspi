@@ -46,19 +46,20 @@ psi_multitaper_mean_fs-1,all configured frequency bands,1,1,,"3 bands, 118x1024:
 gd_multitaper_delay_fs-1,all configured frequency bands,,,,"3 bands, 118x1024: 5.94 s -> 1.06 s (~5.6x). Batched fits and per-pair significance; calibrated coherence test; NaN diagnostics."
 gd_multitaper_slope_fs-1,all configured frequency bands,,,,Shares delay fit; calibrated per-pair significance; NaN diagnostics.
 gd_multitaper_rvalue_fs-1,all configured frequency bands,,,,Shares delay fit; calibrated per-pair significance; signed r; NaN diagnostics.
-je_gaussian,,,,,Shared native moments; correct voltage-scale handling and signed entropy label.
-ce_gaussian,,,,,Shared native moments; correct voltage-scale handling and signed entropy label.
-mi_gaussian,,,,,Shared native moments replace pairwise Java; stable near-perfect fits.
-tlmi_gaussian,,,,,Batched aligned moments replace pairwise Java; no duplicate interval preprocessing.
-gc_gaussian_k-1_kt-1_l-1_lt-1,,,,,
-te_symbolic_k-1_kt-1_l-1_lt-1,,,,,
-te_symbolic_k-10_kt-1_l-1_lt-1,,,,,
-cce_gaussian,,,,,
-xme_gaussian_k1,,,,,
-xme_gaussian_k10,,,,,
-di_gaussian,,,,,
-si_gaussian_k-1,,,,,
-gc_gaussian_k-max-10_tau-max-2,,,,,
+je_gaussian,,,,,6.72 s -> 2.69 ms (family-warm); shared native moments.
+ce_gaussian,,,,,33.07 ms -> 0.25 ms (family-warm); reuse native moments after JE.
+mi_gaussian,,,,,3.63 s -> 0.19 ms (family-warm); reuse native moments after entropy.
+tlmi_gaussian,,,,,3.19 s -> 1.30 ms (family-warm); batched aligned moments.
+gc_gaussian_k-1_kt-1_l-1_lt-1,,,,,6.24 s -> 11.83 ms (family-warm); shared native history fits.
+gc_gaussian_k-4_kt-1_l-4_lt-1,,,,,~0.10 s synthetic / 0.11 s EEG pilot per window; shared native history fits.
+te_symbolic_m-3_tau-4_h-4,,,,,Genuine ordinal TE replaces Gaussian dispatch; 90.51 ms/window after shared family.
+te_symbolic_m-3_tau-16_h-16,,,,,Genuine ordinal TE replaces Gaussian dispatch; 86.14 ms/window after shared family.
+cce_gaussian,,,,,363.80 s -> 396.18 ms (family-warm); shared native histories/fits.
+xme_gaussian_k1,,,,,25.79 s -> 8.11 ms (family-warm); shared native history fits.
+xme_gaussian_k10,,,,,33.27 s -> 174.38 ms (family-warm); native fits; corrected ten-lag count.
+di_gaussian,,,,,10.57 s -> 0.27 ms (family-warm); corrected conditional sum; reuse CCE fits.
+si_gaussian_k-1,,,,,76.17 s -> 12.02 ms (family-warm); shared target fits; unique pairs.
+gc_gaussian_k-max-10_tau-max-2,,,,,167.81 s -> 1.32 s (family-warm); embedding search once/channel.
 lmfit_Ridge,,,,,~6956x faster (23.2 s -> 3.34 ms/window); shared centered cross-products replace pairwise fits.
 lmfit_Lasso,,,,,~1.2 ms added/window; exact shared fit; run alpha=0.1 varies on EEG.
 lmfit_SGDRegressor,,,,,Replaced iterative SGD with exact Ridge; omitted from normalized run as redundant.
@@ -171,18 +172,18 @@ ccm_E-10_max,,,,,
 ccm_E-10_diff,,,,,
 je_kozachenko,,,,,
 ce_kozachenko,,,,,
-cce_kozachenko,,,,,
-xme_kozachenko_k1,,,,,
-xme_kozachenko_k10,,,,,
-di_kozachenko,,,,,
-si_kozachenko_k-1,,,,,
+cce_kozachenko,,,,,Shared histories/causal sums; bulk Java transfer.
+xme_kozachenko_k1,,,,,Shared source histories/entropies; bulk Java transfer.
+xme_kozachenko_k10,,,,,Corrected ten-lag count; shared source histories/entropies.
+di_kozachenko,,,,,Corrected conditional-information sum; shared target and causal terms.
+si_kozachenko_k-1,,,,,Reuse target conditional-entropy terms across pairs and with DI.
 je_kernel_W-0.5,,,,,
 ce_kernel_W-0.5,,,,,
-cce_kernel_W-0.5,,,,,
-xme_kernel_W-0.5_k1,,,,,
-xme_kernel_W-0.5_k10,,,,,
-di_kernel_W-0.5,,,,,
-si_kernel_W-0.5_k-1,,,,,
+cce_kernel_W-0.5,,,,,Shared histories/causal sums; bulk Java transfer.
+xme_kernel_W-0.5_k1,,,,,Shared source histories/entropies; bulk Java transfer.
+xme_kernel_W-0.5_k10,,,,,Corrected ten-lag count; shared source histories/entropies.
+di_kernel_W-0.5,,,,,Corrected conditional-information sum; shared target and causal terms.
+si_kernel_W-0.5_k-1,,,,,Reuse target conditional-entropy terms across pairs and with DI.
 mi_kernel_W-0.25,,,,,
 tlmi_kernel_W-0.25,,,,,
 te_kernel_W-0.25_k-1,,,,,

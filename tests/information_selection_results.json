@@ -1,0 +1,144 @@
+{
+  "created_utc": "2026-10-28T14:12:43.742697+00:00",
+  "baseline_commit": "092f6e7e394979fb8502725d79f7cca431c9f30d",
+  "shape": [
+    118,
+    1024
+  ],
+  "seed": 1501,
+  "scope": "retained",
+  "repeats": 1,
+  "python": "3.12.14",
+  "numpy": "2.5.4",
+  "threadpools": [
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/numpy.libs/libscipy_openblas64_-f48b354e.so",
+      "version": "0.3.34.106.0",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    },
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 1,
+      "prefix": "libscipy_openblas",
+      "filepath": "/home/dan/git/pyspi/.venv/lib/python3.12/site-packages/scipy.libs/libscipy_openblas-6cdc3b4a.so",
+      "version": "0.3.30",
+      "threading_layer": "pthreads",
+      "architecture": "Haswell"
+    }
+  ],
+  "import_seconds": 0.9076035900216084,
+  "java_startup_seconds": 0.16701563500100747,
+  "load_start": [
+    0.68701171875,
+    0.84521484375,
+    2.06396484375
+  ],
+  "load_end": [
+    1.27880859375,
+    0.978515625,
+    2.05029296875
+  ],
+  "seconds": {
+    "baseline": [
+      {
+        "JE": 6.789813273004256,
+        "CE": 0.05494239000836387,
+        "MI": 3.4354584559914656,
+        "TLMI": 3.402407582005253,
+        "GC1": 6.7003002100100275,
+        "SYM4": 6.442618080007378,
+        "SYM16": 15.343535646999953
+      }
+    ],
+    "native": [
+      {
+        "MI": 0.002670755988219753,
+        "TLMI": 0.003658258996438235,
+        "GC1": 0.015031563001684844,
+        "GC4": 0.10510801899363287,
+        "SYM4": 0.0846820370061323,
+        "SYM16": 0.08100096601992846
+      }
+    ]
+  },
+  "total_median_seconds": {
+    "baseline": 42.1690756380267,
+    "native": 0.29215160000603646
+  },
+  "incremental_median_seconds": {
+    "baseline": {
+      "JE": 6.789813273004256,
+      "CE": 0.05494239000836387,
+      "MI": 3.4354584559914656,
+      "TLMI": 3.402407582005253,
+      "GC1": 6.7003002100100275,
+      "SYM4": 6.442618080007378,
+      "SYM16": 15.343535646999953
+    },
+    "native": {
+      "MI": 0.002670755988219753,
+      "TLMI": 0.003658258996438235,
+      "GC1": 0.015031563001684844,
+      "GC4": 0.10510801899363287,
+      "SYM4": 0.0846820370061323,
+      "SYM16": 0.08100096601992846
+    }
+  },
+  "regression_warmup_seconds": [],
+  "max_absolute_difference": {
+    "MI": 2.47198095326695e-16,
+    "TLMI": 4.504840439040366e-16,
+    "GC1": 7.444132116285473e-16,
+    "SYM4": 0.15760738495139873,
+    "SYM16": 0.1610235122908867
+  },
+  "actual_native_workload_retained_cache": [
+    {
+      "snapshot_bytes": 966656,
+      "derived_cache_bytes": 26456196
+    }
+  ],
+  "projected_seconds": {
+    "baseline": {
+      "1": 42.1690756380267,
+      "600": 25301.44538281602,
+      "41400": 1745799.7314143053
+    },
+    "native": {
+      "1": 0.29215160000603646,
+      "600": 175.29096000362188,
+      "41400": 12095.07624024991
+    }
+  },
+  "native_memory": {
+    "tracemalloc_retained_bytes": 27440150,
+    "tracemalloc_peak_bytes": 35593774,
+    "snapshot_bytes": 966656,
+    "derived_cache_bytes": 26456196
+  },
+  "source_sha256": {
+    "pyspi/_moments.py": "2d701cfc8356c4892e769c3f13da21d0ae1105ded3f720adb45bc2ab07575c8f",
+    "pyspi/_gaussian.py": "e6519849caf4dd233eb8166d491fa787481b7605c7e485670840b2f52844d989",
+    "pyspi/_gaussian_history.py": "e769ccae035b8bd48845947e73d9edc11f8ed246c25ed38b19c3594fa21dbdec",
+    "pyspi/_symbolic.py": "2cc6ff1a09eddaa1df9d95936831adc812da1008494af255e3bac32b4a46ef24",
+    "pyspi/_information_history.py": "bb73f2d20f94b9f60762e0a7591725493bb1504b8b9db21cf58d61ffa6c7e155",
+    "pyspi/statistics/infotheory.py": "3f3cd6ffcd7b1f5dac6a0bc1cb9fde7fd7f1e3346a53670739636558c9e7f3a4"
+  },
+  "definition_changes": {
+    "DI": "Correct conditional-information sum including present source.",
+    "XME10": "Ten source lags, not nine.",
+    "SYM4/SYM16": "Genuine m=3 ordinal TE at spacing/shift 4/4 and 16/16; old variants executed Gaussian k=1 and k=10."
+  },
+  "protocol": {
+    "timed": "Fresh Data/cache, metric matrix calls in listed order; preprocessing, imports, startup and I/O excluded.",
+    "sharing": "Stage times are actual increments after the preceding family stages; warm-regression is recorded separately.",
+    "memory": "Separate cold native pass. Tracemalloc is not process RSS or Java/native-library heap accounting.",
+    "limits": "Synthetic window on this computer. Serial extrapolations are not measured cohort throughput. A one-repeat baseline has no estimated timing dispersion."
+  }
+}

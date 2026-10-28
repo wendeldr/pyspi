@@ -63,18 +63,19 @@ spectral/PEC review, 0.5-second nonoverlapping windows, and existing preprocessi
 
 | Scope | State / required evidence |
 | --- | --- |
-| Shared computation | In progress: mutation-checked bounded moment cache, transformation and observation-interval keys. Gaussian consumers pending. |
+| Shared computation | Complete: mutation-checked bounded moment/history cache; transformation, sample-alignment and lag keys; shared target fits and independent auto-embedding searches. Full-family and actual shared-increment benchmarks recorded below. |
 | Ridge and RECI | Complete initial chunk: 19 focused cases (18 initial passes plus corrected near-cubic fixture), 10 small/preprocessing and 2 full goldens pass; no golden changes. Three-repeat timings below. |
 | BayesianRidge, Lasso, ElasticNet, SGD | Implemented and independently checked: 53 regression tests; exact penalties and separately stopped Bayesian updates. Full-family and retained-selection timings below. |
 | Euclidean barycenters | Shared moment means and bounded unique-pair extrema; 8 independent cases pass. Other barycenter modes are unchanged. |
-| Gaussian MI, joint/conditional entropy and lagged MI | Native shared moments implemented; 21 independent checks pass, including voltage/extreme units, singular-pair isolation, JVM-free construction/execution and redundancy under averaging. Family timing pending with remaining Gaussian work. |
-| Fixed/automatic Gaussian TE, stochastic interaction, crossmap/causal entropy, DI | Pending shared aligned histories, formula checks and independent references. |
-| Cross-metric corrections | Current Data.add_process already preprocesses consistently; do not repeat the old audit's now-fixed input bug. Generic undirected loop still duplicates pairs; change only proven symmetric affected metrics. |
-| Config / redundancy | Alpha=0.1 Lasso varies on all 36 EEG pilot windows and meets runtime gate. Six approved redundant outputs removed: current selection 199, before pending Granger/symbolic candidates. Starting selection: 205. Separate nine-output amplitude/reference template uses detrend=true, zscore=false. |
-| Validation / goldens | Focused tests and affected regression checks; update only changed outputs with provenance. |
-| Timings / memory | Comparable 118 × 1,024 workload; full families and shared incremental stages; per-window, ×600 and ×41,400 projections. |
-| Documentation / CSV | Keep this ledger current; CSV only brief verified corrections and measured speedups. |
-| Workflow opportunities | Record window parallelism/thread and memory limits for a later goal; no production multiprocessing here. |
+| Gaussian MI, joint/conditional entropy and lagged MI | Complete: shared native moments; 21 independent checks, affected regressions and full/shared family benchmarks. JVM-free integration includes the history and symbolic calculations too. |
+| Fixed/automatic Gaussian TE, stochastic interaction, crossmap/causal entropy, DI | Complete: 39 independent Gaussian-history checks, including a filtered ill-conditioned design; 20 retained-estimator checks; affected small/full goldens and benchmarks. |
+| Genuine symbolic TE | Implemented with independent categorical counts, direction, permutation, ties, sparse/dense and mutation checks (9 passed). Three-patient EEG occupancy and autocorrelated-null checks completed. Both approved m=3 replacements enabled. |
+| Cross-metric corrections | Shared bounded raw histories, target conditional entropies and CCE/DI sums; mutation-aware automatic Theiler windows with one ACF per channel; Java TE serialization retains configured histories. Gaussian SI evaluates unique pairs. Retained non-Gaussian reverse evaluations remain until numerical permutation behavior is established. |
+| Config / redundancy | Alpha=0.1 Lasso varies on all 36 EEG pilot windows and meets runtime gate. Six approved redundant outputs removed; both symbolic variants replaced; Gaussian order 4 added: selection 200, starting from 205. Orders 16/32 disabled by EEG runtime gate. Separate nine-output amplitude/reference template uses detrend=true, zscore=false. |
+| Validation / goldens | 52 affected small/preprocessing/catalogue and 39 full checks passed; 10 integration/configuration checks passed. Eight intentionally changed numerical outputs refreshed at each size; unrelated arrays preserved, with provenance. |
+| Timings / memory | Complete: comparable 118 × 1,024 full families, actual shared increments, native memory and per-window/×600/×41,400 projections; real EEG conditioning gate. |
+| Documentation / CSV | Definitions, benchmark limitations and final selection recorded; brief verified CSV notes preserve unrelated records and user flags. |
+| Workflow opportunities | Window parallelism, numerical-thread/JVM and whole-process memory measurements documented for a later goal. No production multiprocessing added. |
 
 The goal authorizes commits in reasonable chunks. Pushing is not requested.
 DTW, CCM, distance-dependence refactors, and non-Gaussian Java replacement remain
@@ -205,7 +206,185 @@ remaining Gaussian family can be measured with actual shared costs.
 The affected checks passed: 9 small/preprocessing/catalogue cases and 4 full
 Gaussian cases. Their numerical arrays were not regenerated.
 
-Still pending: fixed/automatic Granger, stochastic interaction, corrected XME
-and DI, shared causal entropy, genuine symbolic TE, higher-history runtime gates,
-final config inclusion/count and the full Gaussian benchmark. This foundation
-does not finish the active goal.
+The following history work and final verification complete this initial
+foundation's remaining scope.
+
+## Shared histories and information corrections
+
+Fixed and MAX_CORR_AIS Gaussian TE, SI, CCE, DI and XME now use native aligned
+moments/observations. The source-history count and DI conditional-information
+formula are corrected across retained kernel and Kozachenko estimators too.
+Gaussian outputs preserve nats and the half-log prediction-error convention;
+retained kernel entropy outputs preserve bits. Definitions and singular-case
+behavior are in `docs/calculation_definitions.md`.
+
+The independent checks now include 39 Gaussian-history cases and 20 retained
+Java-estimator cases. They cover direct OLS/determinants, independently selected
+automatic embeddings, known lagged/instantaneous coupling, independent-source
+DI, exact XME lag counts, sample alignment, voltage units, constants, singular
+conditioning, permutation/direction, serialization and mutation/cache ownership.
+One new Theiler test initially needed `str()` to convert a Java string before
+`int()`; only that failed fixture was repeated after the correction.
+
+The first EEG pilot (`audit/briefing/information_eeg_review.json`) revealed that
+long-history covariance fits needed a stronger numerical guard: small Cholesky
+diagonal entries alone missed ill-conditioned restricted models. The reciprocal
+condition check now uses the existing factorization and routes unreliable fits
+to direct least squares. On the failing 12-channel EEG window, order-32 NaNs
+disappeared and inspected restricted/full residuals matched independent direct
+fits. The initial long-history timings and values predate this fix and must not
+serve as the final runtime/validity gate. Updated representative timings are
+recorded below. No regularization or alternate scientific estimator was introduced.
+
+Symbolic TE uses m=3, spacing/shift 4/4 and 16/16, with shared symbolization and
+bounded categorical counts. All 36 twelve-contact EEG windows had finite,
+varying outputs, all six marginal patterns, and no tied patterns. The full
+118-contact pilot window also passed those checks. This proves feasibility of
+the requested state space, not adequate joint sampling, absence of null bias,
+optimal settings or EZ discrimination.
+
+Final verification passed: 52 small/preprocessing/catalogue checks, 39 full
+affected checks and 10 integration/configuration checks, including JVM-free
+history/symbolic execution and the exact 200-output working inventory.
+Only DI, XME k=10 and the two genuine symbolic replacements were numerically
+regenerated at small/full sizes (eight outputs per size), after independent
+formula tests. Other affected dependency/label fields changed with provenance;
+all unrelated arrays and records were preserved. The alternative nine-metric
+template also executed on unequal-amplitude synthetic signals without a JVM:
+all outputs were finite and JE/CE ceased to be affine functions of MI alone.
+Only template paths were substituted for schema validation; no cohort run or
+output directory was created.
+
+## Information-family benchmark and symbolic controls
+
+`tests/information_family_results.json` compares the committed Java wrappers at
+`092f6e7` with the native implementation on the same seeded 118 × 1024 window,
+one numerical thread, fresh Data per family, and the listed family order.
+One complete historical pass took **719.07 s**; the replacement took **2.107 s**
+(about **341× faster**). New serial projections are **21.07 minutes ×600** and
+**24.23 hours ×41,400**. This is the entire reviewed information library family,
+including automatic embedding and measures absent from the working run.
+
+| Stage after preceding family calculations | Old increment | New increment |
+| --- | ---: | ---: |
+| Joint entropy, including shared moments | 6.722 s | 2.688 ms |
+| Conditional entropy | 33.07 ms | 0.246 ms |
+| Causal entropy | 363.80 s | 396.18 ms |
+| Source-history entropy, k=1 | 25.79 s | 8.109 ms |
+| Source-history entropy, k=10 | 33.27 s | 174.38 ms |
+| Directed information after causal entropy | 10.57 s | 0.275 ms |
+| Stochastic interaction | 76.17 s | 12.02 ms |
+| MI after the shared entropy calculations | 3.627 s | 0.186 ms |
+| Lag-one MI | 3.191 s | 1.295 ms |
+| Automatic Gaussian embedding / TE | 167.81 s | 1322.74 ms |
+| Gaussian TE, order 1 | 6.240 s | 11.83 ms |
+| Symbolic spacing/shift 4/4 replacement | 6.319 s | 90.51 ms |
+| Symbolic spacing/shift 16/16 replacement | 15.53 s | 86.14 ms |
+
+These are actual stage increments, not independently cold timings. In
+particular, causal entropy already computes the native DI terms. Unchanged
+definitions differ by at most **6.22e-15**, including automatic embedding.
+DI, k=10 source-history entropy and both symbolic outputs intentionally changed;
+their correctness comes from independent formulas/counts and models, not old
+output agreement. No old full-family pass was repeated after completion.
+The benchmark now checkpoints completed historical stages and shared Data so
+an interrupted pass can resume without repeating finished fits.
+
+Separately measured native retained cache: **255.65 MiB**, plus **0.92 MiB**
+input snapshot; tracemalloc peak **265.22 MiB**. This is Python/NumPy allocation
+accounting, not whole-process RSS or Java/native-library heap usage. Imports
+took 0.904 s and JVM startup 0.176 s separately; preprocessing and I/O are
+excluded. A single old pass has no estimated timing dispersion. Load and
+patient-specific conditioning limit serial cohort projections.
+
+`audit/briefing/symbolic_null_review.json` uses eight seeded AR(1), coefficient
+0.9, controls per setting and sample length. At 1024 samples, mean independent
+TE is **0.0321 / 0.0585 nats** for spacing 4/16; mean deliberately coupled TE is
+**0.784 / 0.772**, with reverse estimates **0.0326 / 0.0492**. At 8192 samples,
+independent means fall to **0.00415 / 0.00644** while coupled means remain
+**0.785 / 0.780**. Longer synthetic records characterize sampling bias only;
+the run retains 1024-sample windows. This supports the approved candidates'
+nondegeneracy and directional sensitivity, not patient-specific significance or
+EZ discrimination. Both genuine symbolic variants replace their two misleading
+Gaussian-dispatch entries in the working config without changing its count.
+
+## Selected information family and additional-history gate
+
+`tests/information_selection_results.json` measures the original selected
+Gaussian/incorrect-symbolic family together, versus the approved replacement
+including order 4. The original family took **42.17 s/window**; the replacement
+took **0.292 s/window**, about **144× faster**. New serial projections are
+**2.92 minutes for 600 windows** and **3.36 hours for 600×69**. These are this
+information subset's costs, not the total runtime of all 200 selected metrics.
+The benchmark excludes imports, preprocessing and I/O and uses one numerical
+thread on the same synthetic 118 × 1024 data. The original JE/CE were included
+in the old workload and removed from the new workload by the approved
+redundancy decision. Corrected symbolic definitions also intentionally differ.
+
+| New selected stage | Cold-family increment | Increment after retained regressions |
+| --- | ---: | ---: |
+| Gaussian MI | 2.67 ms | 1.32 ms |
+| Lag-one Gaussian MI | 3.66 ms | 3.13 ms |
+| Gaussian TE, order 1 | 15.03 ms | 14.12 ms |
+| Gaussian TE, order 4 | 105.11 ms | 103.66 ms |
+| Symbolic spacing/shift 4/4 | 84.68 ms | 86.83 ms |
+| Symbolic spacing/shift 16/16 | 81.00 ms | 82.39 ms |
+
+The second column is the actual original/new comparison pass; the third is
+the median of five native-only passes in
+`tests/information_regression_increment_results.json`, after Lasso alpha=0.1,
+ElasticNet, BayesianRidge and RECI have populated shared moments. No old
+regression or information fits were repeated for that incremental experiment.
+The information increment's median is **0.292 s** (2.92 min / 3.36 h at the
+two projections). The combined retained regression plus information workload
+has median **0.301 s** (**3.01 min ×600 / 3.47 h ×41,400**). The gain from
+cross-family sharing is modest compared with eliminating pairwise estimators;
+do not multiply individual speedups. The selected information cache retains
+**25.23 MiB** plus the 0.92 MiB snapshot, with cold tracemalloc peak **33.95 MiB**.
+The actual combined regression/information derived cache is **29.61 MiB**.
+
+The post-fix EEG check is
+`audit/briefing/information_eeg_conditioning_review.json`. All Gaussian candidate
+outputs were finite in all 36 twelve-contact windows, across patients 001,
+041 and 096, and in the full 118-contact window. The latter took:
+
+| Added/history setting | One full EEG window | ×600 | ×41,400 | Run decision |
+| --- | ---: | ---: | ---: | --- |
+| Order 1 (already selected) | 0.0187 s | 11.21 s | 12.89 min | Keep |
+| Order 4 | 0.1097 s | 65.80 s | 1.26 h | Add |
+| Order 16 | 11.65 s | 1.94 h | 134.0 h | Disabled |
+| Order 32 | 31.87 s | 5.31 h | 366.5 h | Disabled |
+
+The three-repeat synthetic candidate receipt is
+`tests/information_candidate_results.json`: order-4/16/32 increments were
+0.100/0.590/2.026 s. Stable direct fitting on smooth real EEG is materially
+more expensive at longer histories. These projections assume the single full
+pilot window's cost throughout; they do not estimate cohort heterogeneity or
+parallel throughput. Runtime alone rules out 16/32 under the approved gate;
+their library implementations remain available and correctly defined.
+
+Final working selection: **205 → 200 outputs**. Remove six redundant outputs
+(ordinary/squared Euclidean barycenter means, original Ridge, exact SGD/Ridge
+replacement, Gaussian JE and CE). Replace default Lasso with alpha=0.1 and
+both mislabeled symbolic entries with genuine m=3 variants (no count change).
+Add one Gaussian order-4 output. Earlier basic/phase changes remain selected;
+group delay and the expensive directed spectral additions remain absent.
+The separate amplitude/reference template still has nine metrics and explicitly
+sets `detrend: true`, `zscore: false`, CAR and 0.5-second nonoverlapping windows.
+
+## Subsequent workflow goal
+
+Measure independent-window parallelism only after the serial calculation work
+is settled. Use one BLAS/OpenMP thread per worker initially and test worker
+counts against throughput, rather than multiplying serial speedups by core
+count. Each window owns its mutation-checked input snapshot and derived caches;
+the 256 MiB moment/history limit is per window, not a whole-process memory cap.
+Spectral and cross-correlation caches, temporary arrays, recording buffers,
+imports and any retained JVM heap add to it. Measure peak process RSS under
+the complete selected family before choosing the number of workers.
+
+Native Gaussian/symbolic runs no longer need Java startup. If another selected
+metric needs Java, initialize it safely inside a worker; do not fork an active
+JVM. Keep output writes coordinated and record the actual preprocessing/window
+order. These are follow-up measurements, not production multiprocessing changes
+in this goal.
