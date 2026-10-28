@@ -125,6 +125,18 @@ class Data:
         else:
             return dat
 
+    def set_filtered_bands(self, bands, *, sampling_rate_hz):
+        """Attach owned, aligned windows from continuously filtered recordings.
+
+        Keys are ``(low_hz, high_hz)``; arrays have the same channel/sample order
+        as this Data. Supply samples before window detrending/z-scoring. PEC
+        applies this Data's flags; PAC follows its documented raw-band definition.
+        Reattach after replacing or mutating the main Data. No filtering occurs
+        here and previously attached band windows are replaced, not accumulated.
+        """
+        from ._bands import BandInputs
+        self._filtered_band_inputs = BandInputs(self, bands, sampling_rate_hz)
+
     @staticmethod
     def convert_to_numpy(data):
         """Converts other data instances to default numpy format."""
@@ -235,6 +247,7 @@ class Data:
             )
 
         self._data = data
+        self.__dict__.pop("_filtered_band_inputs", None)
         self.data_type = type(data[0, 00, 0])
 
         self._reset_data_size()

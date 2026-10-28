@@ -62,9 +62,10 @@ def synthetic_block(channels, samples, seed=0):
     return block
 
 
-def _time_window(calc, block, names, start, stop, *, source_indices=None):
+def _time_window(calc, block, names, start, stop, *, source_indices=None, bands=None, sampling_rate_hz=None):
     from pyspi.calculation import _capture_metric_warnings
     from pyspi.data import InvalidChannelsError
+    from ._bands import window_band_views
 
     valid = np.arange(len(names))
     records = []
@@ -74,7 +75,9 @@ def _time_window(calc, block, names, start, stop, *, source_indices=None):
         while valid.size >= 2:
             try:
                 indices = valid if source_indices is None else source_indices[valid]
-                calc.load_dataset(block[indices, start:stop].copy())
+                calc.load_dataset(block[indices, start:stop].copy(),
+                    filtered_bands=window_band_views(bands or {}, indices, start, stop) or None,
+                    sampling_rate_hz=sampling_rate_hz)
                 break
             except InvalidChannelsError as exc:
                 valid = np.delete(valid, exc.processes)
@@ -152,6 +155,7 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
     from ._prepare import prepare_recording
     from ._preflight import preflight
     from ._run import _calculator, _class_label_state, _environment, _store_values
+    from ._bands import required_bands, prepare_band_views
 
     cfg = config if isinstance(config, Configuration) else load_config(config)
     if type(windows_per_point) is not int or windows_per_point < 1:
@@ -161,6 +165,7 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
     out = sidecar_path(cfg) if out is None else Path(out)
     started = perf_counter()
     report = preflight(cfg)
+    band_specs = required_bands(report.metrics, cfg)
     index = choose_recording(report)
     entry, recording = report.recordings[index], cfg.recordings[index]
     all_names = entry["output_channels"]
@@ -179,19 +184,21 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
         if synthetic:
             step = int(cfg.step_seconds * cfg.sampling_rate_hz)
             block = synthetic_block(total, (windows_per_point - 1) * step + window)
+            bands, _ = prepare_band_views(block, cfg, band_specs)
             plan = plan_windows(block.shape[1], cfg.sampling_rate_hz, cfg.window_seconds, cfg.step_seconds)
             preparation = None
             source = {"kind": "synthetic", "patient_id": None, "recording_id": None, "path": None}
         else:
             before = perf_counter()
             with _capture_metric_warnings():
-                prepared = prepare_recording(recording, cfg)
+                prepared = prepare_recording(recording, cfg, bands=band_specs)
             preparation = {"seconds": perf_counter() - before, "channels": len(entry["channels"]),
                            "native_samples": sum(c["native_samples"] for c in entry["channels"]),
                            "edf_bytes": recording.path.stat().st_size, "details": prepared.details}
             if prepared.channel_names != all_names:
                 raise WorkflowError("prepared channels disagree with the preflight channel order")
             block = prepared.data
+            bands = prepared.bands
             plan = plan_windows(block.shape[1], cfg.sampling_rate_hz, cfg.window_seconds, cfg.step_seconds,
                                 recording=f"{entry['patient_id']}/{entry['recording_id']}")
             source = {"kind": "edf", "patient_id": entry["patient_id"], "recording_id": entry["recording_id"],
@@ -212,7 +219,8 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
                     break
             selected = np.arange(count) if synthetic else available[:count]
             timings = [_time_window(calc, block, names[:count], w * plan.step_samples,
-                                    w * plan.step_samples + plan.length_samples, source_indices=selected)
+                                    w * plan.step_samples + plan.length_samples, source_indices=selected,
+                                    bands=bands, sampling_rate_hz=float(cfg.sampling_rate_hz))
                        for w in windows]
             metrics = {}
             for m in report.metrics:
@@ -255,6 +263,7 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
                           "load_average_before": list(os.getloadavg()) if hasattr(os, "getloadavg") else None},
               "execution": cfg.execution.copy(), "window_samples": window,
               "sampling_rate_hz": float(cfg.sampling_rate_hz), "detrend": cfg.detrend, "zscore": cfg.zscore,
+              "continuous_bands_hz": [list(band) for band in band_specs],
               "metrics": [m.identifier for m in report.metrics], "dtypes": dtypes, "source": source,
               "calculator_setup_seconds": setup_seconds, "preparation": preparation,
               "ladder": ladder, "budget": budget,

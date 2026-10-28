@@ -313,6 +313,37 @@ The continuous preparation order is fixed:
    Data and intermediate caches. Every new window gets a fresh Data/cache.
    Parallel completion order can differ; stored window axes retain chronological order.
 
+Metrics with explicit `continuous_bands` requirements add shared continuous
+band views after rereferencing and before window slicing. For example,
+`PowerEnvelopeCorrelation(band=[30, 70])` uses 30–70 Hz input rather than the
+broadband window. Each band must fit inside the configured broad passband and
+below Nyquist. A band identical to the workflow passband reuses that signal.
+Otherwise filtering uses the same FIR settings, in channel blocks covering
+the entire time axis. Distinct bands are calculated once per recording.
+
+Additional views are temporary `.npy` files mapped read-only by workers.
+`execution.scratch_directory` optionally selects their filesystem and the
+parallel input scratch location. By default, scratch is under the output
+directory; standalone preparation without an output directory uses OS temp.
+Use a disk-backed filesystem for large recordings: `/tmp` can be RAM-backed.
+Scratch files are removed when their prepared recording/worker pool is released.
+Estimate `prepared_bytes` includes the logical band views; `band_file_bytes`
+identifies their file storage. Neither value is a measurement of resident RAM.
+
+Band PEC follows normal window preprocessing. The exploratory
+`PhaseAmplitudeCoupling` class follows its prototype's definition: window
+Hilbert transforms of continuously filtered samples without extra window
+detrending/z-scoring, source phase on rows and target amplitude on columns.
+Its amplitude is centered inside the estimator. These distinct preprocessing
+choices intentionally prevent incompatible transform sharing. Definitions,
+limitations and benchmark receipts are in [the candidate review](additional_pairwise_review.md).
+
+For standalone calculations, attach aligned, pre-window-preprocessing band
+arrays with `Data.set_filtered_bands({(30, 70): samples}, sampling_rate_hz=2048)`
+or the matching `Calculator.load_dataset(..., filtered_bands=..., sampling_rate_hz=...)`
+keywords. The library does not silently filter a short window when bands are
+missing. Reattach bands after changing the main Data.
+
 `notch` accepts `enabled` (default true), `line_frequency_hz` (60), `width_hz`
 (1), and `transition_hz` (1). Width is the full stopband width; MNE splits the
 transition setting equally between the edges. All harmonics whose complete

@@ -11,15 +11,15 @@ reference costs must be reported explicitly.
 | Requirement | State / evidence |
 | --- | --- |
 | Histogram relative entropy | Implemented; explicit KL, invariance, invalid-input and cache checks pass. |
-| Continuous 30–70 Hz PEC views | Pending. |
+| Continuous 30–70 Hz PEC views | Implemented with shared bounded filtering, file-backed views, exact PEC preprocessing, and serial/parallel checks. |
 | Kernel MI, IDS, Gaussian DI/SI assessment | IDS input/cache/RNG cleanup passes focused checks; matched EEG assessment pending. |
-| Cross-channel 16–30 / 70–150 Hz coupling | Pending. |
+| Cross-channel 16–30 / 70–150 Hz coupling | Prototype formula integrated with source-row orientation, independent scalar/model checks and diagnostics; matched EEG surrogate assessment pending. |
 | Exact bounded distance correlation | Implemented; both conventions share products; independent centering and golden checks pass. Multi-patient gate pending. |
 | Exact radius-one DTW | Implemented; full-grid oracle and tslearn comparisons pass. Run inclusion remains separate. |
 | Matched CAR / contact-centered Laplacian | Explicit topology, masks, geometry metadata and serial/parallel execution implemented; real-data matched comparison and sensitivity checks pending. |
-| Representative EEG runtime / memory / workflow costs | Pending; prior single-window feasibility receipts are not completion evidence. |
+| Representative EEG runtime / memory / workflow costs | First production formula and three-window band receipts recorded; multi-patient/reference, output and worker-tree gates pending. |
 | Novelty, coverage and surrogate assessment | Pending; reuse historical top_features evidence with its limitations. |
-| Candidate configs, docs, CSV, regressions and commits | Pending. |
+| Candidate configs, docs, CSV, regressions and commits | Separate 11-output pilot resolves without JVM; docs/brief CSV and focused checks updated. Final inclusion/configuration gates pending. |
 
 ## Definitions being implemented
 
@@ -123,6 +123,81 @@ Local references use direct neighbor arithmetic and one shared mean per shaft,
 avoiding dense channel-by-channel mixing of an entire recording. Two independent
 linear-operator comparisons and the affected continuous-preparation check passed
 after this optimization; no runtime gain is claimed before measurement.
+
+## Band candidate definitions and first EEG timing
+
+`pec_band-30-70Hz` and `pec_orth_abs_band-30-70Hz` use the corrected PEC
+definitions on continuously filtered 30–70 Hz signals. Window detrending and
+z-scoring follow the workflow flags, then the existing shared analytic/envelope
+workspace computes the coefficients and diagnostics. Broadband PEC remains
+separate. A band with an unusable channel does not remove that channel from
+other metrics or poison healthy band pairs.
+
+`pac_phase-16-30Hz_amp-70-150Hz` starts from the top_features prototype. If
+`u_i(t) = exp(i*phase_i(t))` and `a_j(t)` is the target amplitude minus its
+window mean, the output is `abs(sum(u_i*a_j))/(sqrt(T)*norm(a_j))`.
+Rows are phase sources and columns amplitude targets, transposing the old
+prototype's orientation. This is a bounded association, not a causal estimator
+or a Tort modulation index. Zero/unresolved phase and constant/unresolved
+amplitude return NaN with reasons instead of zero. Diagonals remain missing.
+The analytic transforms use the same next-fast-length FFT convention as PEC;
+at the approved 1,024 samples this is exactly the prototype's FFT length.
+
+PAC applies no extra per-window detrending/z-scoring to the filtered band
+samples, preserving the prototype definition. PEC does apply those flags.
+Consequently transforms are shared only for matching band and preprocessing
+choices. Continuous bands use the existing workflow's MNE FIR settings,
+including its prior notches and broad filter; the historical exploration used
+Butterworth filters. Historical predictive evidence is therefore motivation,
+not validation of these current outputs. Half-second beta windows contain only
+8–15 cycles; magnitude estimates can have autocorrelation-sensitive null bias.
+Shared references, nonsinusoidal waveforms and transients can also produce
+cross-frequency association. The planned surrogate checks are still required.
+
+Band inputs are owned window copies, with explicit missing-band errors and
+invalidation when the main Data changes. Continuous views are stored in temporary
+files, filtered in channel blocks of about 16 MiB (at least one full channel),
+and mapped by spawned workers without per-worker recording copies. Time is
+never blocked for filtering. Scratch should use a disk filesystem, not tmpfs.
+
+[First band receipt](../tests/band_candidate_001_results.json): patient 001,
+118 channels, 1,024 samples, windows 0/304/608, one numerical thread. Three
+distinct EEG windows per standalone output; values below are medians, not
+repeated same-window microbenchmarks. Data construction, band window copies and
+lazy per-metric preprocessing are included; continuous preparation and output
+writing are excluded from the projected calculation times.
+
+| Output | Seconds/window | 600 windows | 600 × 72 windows |
+| --- | ---: | ---: | ---: |
+| Broadband ordinary PEC (comparison) | 0.00926 | 5.55 s | 6.67 min |
+| Broadband absolute orthogonalized PEC (comparison) | 0.692 | 6.92 min | 8.30 h |
+| 30–70 Hz ordinary PEC | 0.0131 | 7.85 s | 9.42 min |
+| 30–70 Hz absolute orthogonalized PEC | 0.715 | 7.15 min | 8.58 h |
+| Beta/high-gamma PAC | 0.0163 | 9.77 s | 11.73 min |
+
+All five together took a median 1.471 seconds/window, including common input
+setup. The receipt records actual increments in that order; it does not infer
+sharing gains by subtracting unrelated standalone timings. Every off-diagonal
+pair was finite in these three windows. This does not establish predictive value.
+
+Continuous preparation took 26.22 seconds for the complete recording; the three
+extra band filters and their file writes accounted for 14.80 seconds. Band files
+occupied 1.65 GiB; process peak RSS, including preparation/imports/all candidates,
+was 1.32 GiB. It is a single-process high-water mark, not a worker-tree memory
+measurement. Multi-patient, reference-specific, output and parallel throughput
+gates remain pending.
+
+The separate [11-output pilot selection](../pyspi/workflow/additional_candidate_pilot.yaml)
+contains all candidates for bounded evaluation, including secondary radius-one
+DTW. It is not a full-cohort inclusion decision. Established selections remain
+188 normalized outputs and 12 amplitude outputs.
+
+Focused validation covers 25 band unit cases (independent PAC formula/known
+modulation, all PEC preprocessing flags, ownership, permutation, extreme units,
+invalid inputs and matching-transform sharing), continuous-filter comparisons,
+serial/spawned masked outputs, calibration, and file-backed block equivalence.
+The six affected broadband PEC goldens and relevant cache/window regressions
+passed; no numerical goldens were changed.
 
 ## Prior evidence
 

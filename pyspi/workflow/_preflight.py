@@ -10,6 +10,7 @@ from ._metrics import resolve_metrics
 from ._windows import plan_windows
 from ._prepare import reference_names
 from ._reference import reference_plan
+from ._bands import required_bands
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,7 @@ class PreflightReport:
                                   ((cfg.detrend, "detrend"), (cfg.zscore, "zscore")) if enabled],
                 "preparation": {"bandpass": {"low_hz": cfg.bandpass[0], "high_hz": cfg.bandpass[1]},
                                 "notch": cfg.notch, "reference": cfg.reference,
+                                "continuous_bands_hz": required_bands(self.metrics, cfg),
                                 "resampling_method": "polyphase"},
                 "output_directory": str(cfg.output_directory) if cfg.output_directory is not None else None,
                 "metrics": [metric.as_dict() for metric in self.metrics], "recordings": recordings}
@@ -67,6 +69,7 @@ def preflight(config) -> PreflightReport:
         if (seconds * target).denominator != 1:
             raise WorkflowError("window length/step must each span a whole number of samples at the target sampling_rate_hz")
     metrics = resolve_metrics(cfg.metric_config, sampling_rate_hz=float(target))
+    required_bands(metrics, cfg)
     recordings = []
     for recording, header, channels in selected:
         output_names = reference_names([name for _, name in channels], cfg.reference)

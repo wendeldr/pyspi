@@ -62,7 +62,7 @@ class WindowResult:
 _worker = None
 
 
-def _initialize(filename, metrics, cfg, names, step, length, available=None):
+def _initialize(filename, metrics, cfg, names, step, length, available=None, band_files=None):
     global _worker
     from ._run import _calculator
 
@@ -74,14 +74,17 @@ def _initialize(filename, metrics, cfg, names, step, length, available=None):
     with open(os.devnull, "w") as quiet, redirect_stdout(quiet), redirect_stderr(quiet):
         calc = _calculator(metrics, cfg, Path(directory.name))
     _worker = (np.load(filename, mmap_mode="r"), calc, dict(calc.spis), names, step, length,
-               np.arange(len(names)) if available is None else np.asarray(available))
+               np.arange(len(names)) if available is None else np.asarray(available),
+               {band: np.load(path, mmap_mode="r") for band, path in (band_files or {}).items()},
+               float(cfg.sampling_rate_hz))
 
 
 def _compute(job):
     from pyspi.calculation import MetricReport, _capture_metric_warnings, _describe_error
     from pyspi.data import InvalidChannelsError
+    from ._bands import window_band_views
 
-    data, calc, all_spis, names, step, length, available = _worker
+    data, calc, all_spis, names, step, length, available, bands, rate = _worker
     window, active = job
     calc.spis.clear()
     calc.spis.update((identifier, all_spis[identifier]) for identifier in active)
@@ -93,7 +96,10 @@ def _compute(job):
             with _capture_metric_warnings() as emitted:
                 while valid.size >= 2:
                     try:
-                        calc.load_dataset(data[valid, window*step:window*step+length].copy())
+                        start, stop = window*step, window*step+length
+                        calc.load_dataset(data[valid, start:stop].copy(),
+                            filtered_bands=window_band_views(bands, valid, start, stop) or None,
+                            sampling_rate_hz=rate)
                         break
                     except InvalidChannelsError as exc:
                         excluded = [names[i] for i in valid[exc.processes]]
@@ -117,20 +123,33 @@ def _compute(job):
 class WindowPool:
     """At most one in-flight window/result per worker, sharing read-only input."""
 
-    def __init__(self, prepared, metrics, cfg, plan, directory):
+    def __init__(self, prepared, metrics, cfg, plan):
         from ._reference import available_indices
+        from ._bands import scratch_directory
         started = perf_counter()
+        self.input_directory = tempfile.TemporaryDirectory(prefix="pyspi-window-input-", dir=scratch_directory(cfg))
+        directory = self.input_directory.name
         filename = Path(directory) / "prepared.npy"
+        reused = {band for band, view in prepared.bands.items() if view is prepared.data}
         np.save(filename, prepared.data, allow_pickle=False)
         # Release the owned continuous array; mappings share the file's pages
         # across workers instead of copying the recording into every process.
         prepared.data = np.load(filename, mmap_mode="r")
+        band_files = {}
+        for i, band in enumerate(prepared.bands):
+            mapped = isinstance(prepared.bands[band], np.memmap)
+            path = (filename if band in reused else Path(prepared.bands[band].filename) if mapped
+                    else Path(directory) / f"band-{i}.npy")
+            if band not in reused and not mapped:
+                np.save(path, prepared.bands[band], allow_pickle=False)
+            prepared.bands[band] = np.load(path, mmap_mode="r")
+            band_files[band] = str(path)
         self.workers = cfg.execution["workers"]
         self.executor = ProcessPoolExecutor(max_workers=self.workers,
             mp_context=multiprocessing.get_context("spawn"), initializer=_initialize,
             initargs=(str(filename), metrics, cfg, prepared.channel_names,
                       plan["step_samples"], plan["length_samples"],
-                      available_indices(prepared.details, len(prepared.channel_names))))
+                      available_indices(prepared.details, len(prepared.channel_names)), band_files))
         self.setup_seconds = perf_counter()-started
 
     def map(self, jobs):
@@ -165,3 +184,4 @@ class WindowPool:
                 process.join()
         else:
             self.executor.shutdown(wait=True)
+        self.input_directory.cleanup()

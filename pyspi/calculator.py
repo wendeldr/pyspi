@@ -277,7 +277,7 @@ class Calculator:
                         if fallback:
                             break
 
-    def load_dataset(self, dataset):
+    def load_dataset(self, dataset, *, filtered_bands=None, sampling_rate_hz=None):
         """Load new dataset into existing instance.
 
         Args:
@@ -288,6 +288,9 @@ class Calculator:
             self._dataset = Data(Data.convert_to_numpy(dataset), normalise=self._normalise, detrend=self._detrend)
         else:
             self._dataset = dataset
+
+        if filtered_bands is not None:
+            self._dataset.set_filtered_bands(filtered_bands, sampling_rate_hz=sampling_rate_hz)
 
         columns = pd.MultiIndex.from_product(
             [self.spis.keys(), self._dataset.procnames], names=["spi", "process"]

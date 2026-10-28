@@ -1,6 +1,7 @@
 """Continuous MNE preparation, separate from Calculator and its window caches."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from tempfile import TemporaryDirectory
 from time import perf_counter
 
 import numpy as np
@@ -55,9 +56,11 @@ class PreparedRecording:
     channel_names: list[str]
     details: dict
     elapsed_seconds: float
+    bands: dict = field(default_factory=dict)
+    band_directory: TemporaryDirectory | None = field(default=None, repr=False)
 
 
-def prepare_recording(recording, cfg, *, channels=None):
+def prepare_recording(recording, cfg, *, channels=None, bands=None):
     """Load only retained signals, notch at each native rate, then align rates.
 
     Mixed-rate EDFs are opened once per native-rate group so MNE cannot silently
@@ -66,6 +69,10 @@ def prepare_recording(recording, cfg, *, channels=None):
     bounded separately. MNE converts EDF physical units to SI (normally volts).
     """
     import mne
+    from ._bands import prepare_band_views, required_bands, scratch_directory
+    if bands is None:
+        from ._metrics import resolve_metrics
+        bands = required_bands(resolve_metrics(cfg.metric_config, sampling_rate_hz=float(cfg.sampling_rate_hz)), cfg)
 
     started = perf_counter()
     header = read_header(recording.path)
@@ -154,4 +161,10 @@ def prepare_recording(recording, cfg, *, channels=None):
                "notch": {**cfg.notch, **FIR}, "resampling_method": "polyphase"}
     if plan is not None:
         details["reference_geometry"] = reference_details(names, plan)
-    return PreparedRecording(data, output_names, details, perf_counter() - started)
+    band_directory = (TemporaryDirectory(prefix="pyspi-continuous-bands-", dir=scratch_directory(cfg))
+                      if bands else None)
+    views, band_details = prepare_band_views(data, cfg, bands,
+        directory=None if band_directory is None else band_directory.name)
+    if band_details:
+        details["continuous_bands"] = band_details
+    return PreparedRecording(data, output_names, details, perf_counter() - started, views, band_directory)

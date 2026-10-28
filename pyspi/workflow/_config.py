@@ -275,7 +275,9 @@ def load_config(path) -> Configuration:
     output = cfg.get("output_directory")
     output = _path(output, base, "output_directory") if output is not None else None
     execution = fields(cfg.get("execution", {}),
-                       {"workers", "threads_per_worker", "spectral_cache_mib"}, "execution")
+                       {"workers", "threads_per_worker", "spectral_cache_mib", "scratch_directory"}, "execution")
+    scratch = (_path(execution["scratch_directory"], base, "execution.scratch_directory")
+               if "scratch_directory" in execution else None)
     execution = {"workers": execution.get("workers", 1),
                  "threads_per_worker": execution.get("threads_per_worker", 1),
                  "spectral_cache_mib": float(positive_number(
@@ -283,6 +285,8 @@ def load_config(path) -> Configuration:
     for key in ("workers", "threads_per_worker"):
         if type(execution[key]) is not int or execution[key] < 1:
             raise WorkflowError(f"execution.{key} must be a positive integer")
+    if scratch is not None:
+        execution["scratch_directory"] = str(scratch)
     return Configuration(path, tuple(recordings), metric_config, rate, length, step,
                          detrend, zscore, output, (float(low), float(high)), notch, reference,
                          safe_id(cfg["run_name"], "run_name") if "run_name" in cfg else None,

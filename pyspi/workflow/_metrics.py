@@ -23,6 +23,7 @@ class Metric:
     dependencies: tuple[str, ...]
     labels: tuple[str, ...]
     initialization_warnings: tuple[str, ...]
+    continuous_bands: tuple[tuple[float, float], ...] = ()
 
     def as_dict(self):
         return asdict(self)
@@ -170,6 +171,9 @@ def resolve_metrics(path, *, sampling_rate_hz=None) -> tuple[Metric, ...]:
                     with warnings.catch_warnings(record=True) as captured:
                         warnings.simplefilter("always")
                         spi = cls(**params)
+                        bands = tuple(getattr(spi, "continuous_bands", ()))
+                        if sampling_rate_hz is not None and any(band[1] >= sampling_rate_hz / 2 for band in bands):
+                            raise WorkflowError(f"{where}: continuous bands must lie below workflow Nyquist")
                 except WorkflowError:
                     raise
                 except Exception as exc:
@@ -182,7 +186,7 @@ def resolve_metrics(path, *, sampling_rate_hz=None) -> tuple[Metric, ...]:
                 seen.add(identifier)
                 result.append(Metric(identifier, cls.__module__, name, json.loads(json.dumps(params)),
                                      str(inspect.signature(cls)), tuple(required), tuple(spi.labels),
-                                     tuple(str(w.message) for w in captured)))
+                                     tuple(str(w.message) for w in captured), bands))
     finally:
         for labels, original in label_lists.values():
             labels[:] = original

@@ -6,6 +6,7 @@ from statsmodels.tsa.vector_ar.vecm import coint_johansen
 from sklearn.gaussian_process import kernels, GaussianProcessRegressor
 from sklearn.metrics import mean_squared_error
 from pyspi._envelope import envelope_workspace
+from pyspi._bands import band_identifier, band_inputs, frequency_band, phase_amplitude_result, PAC_REASONS
 from pyspi._regression import regression_result, regression_diagnostics
 from pyspi._moments import moment_workspace
 from pyspi.lib.ids.dependence import compute_IDS
@@ -174,7 +175,8 @@ class GPModel(Directed, Unsigned):
 class PowerEnvelopeCorrelation(Undirected, Signed):
     """Amplitude or log-power envelope correlation of the supplied signal.
 
-    No internal band filter is applied. Orthogonalized results average both
+    No internal band filter is applied. An optional Hz band requires supplied
+    continuously filtered windows. Orthogonalized results average both
     projection directions; absolute variants take abs before that average.
     """
 
@@ -182,7 +184,7 @@ class PowerEnvelopeCorrelation(Undirected, Signed):
     identifier = "pec"
     labels = ["misc", "undirected"]
 
-    def __init__(self, orth=False, log=False, absolute=False):
+    def __init__(self, orth=False, log=False, absolute=False, band=None):
         if absolute and not orth:
             raise ValueError("absolute=True requires pairwise orthogonalization.")
         self._orth = bool(orth)
@@ -195,17 +197,62 @@ class PowerEnvelopeCorrelation(Undirected, Signed):
         self._absolute = absolute
         if absolute:
             self.identifier += "_abs"
+        self.band = None if band is None else frequency_band(band)
+        self.continuous_bands = () if self.band is None else (self.band,)
+        if self.band is not None:
+            self.identifier += "_band-" + band_identifier(self.band)
 
     def issigned(self):
         return not self._absolute
 
     @parse_multivariate
     def multivariate(self, data):
-        return envelope_workspace(data).result(self._orth, self._log, self._absolute)
+        work = envelope_workspace(data) if self.band is None else band_inputs(data).envelope(self.band, preprocess=True)
+        return work.result(self._orth, self._log, self._absolute)
 
     @parse_multivariate
     def diagnostics(self, data):
-        return envelope_workspace(data).diagnostics(self._orth, self._log)
+        if self.band is None:
+            return envelope_workspace(data).diagnostics(self._orth, self._log)
+        return band_inputs(data).envelope_diagnostics(self.band, self._orth, self._log)
+
+    @parse_bivariate
+    def bivariate(self, data, i=None, j=None):
+        return self.multivariate(data)[i, j]
+
+
+class PhaseAmplitudeCoupling(Directed, Unsigned):
+    """Exploratory source-phase / target-amplitude association, not causality.
+
+    The magnitude of sum(exp(i*phase_source) * centered_amplitude_target),
+    divided by sqrt(samples) * norm(centered_amplitude_target). Both analytic
+    signals are obtained within the window from continuously filtered inputs;
+    no additional window detrending or z-scoring is applied to those inputs.
+    """
+
+    name = "Cross-channel phase-amplitude coupling"
+    identifier = "pac"
+    labels = ["misc", "directed", "unsigned", "nonlinear", "frequency-dependent"]
+
+    def __init__(self, phase_band=(16, 30), amplitude_band=(70, 150)):
+        self.phase_band = frequency_band(phase_band)
+        self.amplitude_band = frequency_band(amplitude_band)
+        if self.phase_band[1] > self.amplitude_band[0]:
+            raise ValueError("phase and amplitude bands must be ordered and nonoverlapping")
+        self.continuous_bands = (self.phase_band, self.amplitude_band)
+        self.identifier += f"_phase-{band_identifier(self.phase_band)}_amp-{band_identifier(self.amplitude_band)}"
+
+    @parse_multivariate
+    def multivariate(self, data):
+        return phase_amplitude_result(data, self.phase_band, self.amplitude_band)[0].copy()
+
+    @parse_bivariate
+    def bivariate(self, data, i=None, j=None):
+        return self.multivariate(data)[i, j]
+
+    @parse_multivariate
+    def diagnostics(self, data):
+        return {"reason": PAC_REASONS[phase_amplitude_result(data, self.phase_band, self.amplitude_band)[1]].copy()}
 
 class InterDependenceScore(Undirected, Unsigned):
     name = "Interdependence score"

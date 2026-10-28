@@ -349,7 +349,10 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
                 with _capture_metric_warnings() as window_warnings, redirect_stdout(sys.stderr):
                     while valid.size >= 2:
                         try:
-                            calc.load_dataset(prepared.data[valid, start:stop].copy())
+                            from ._bands import window_band_views
+                            calc.load_dataset(prepared.data[valid, start:stop].copy(),
+                                filtered_bands=window_band_views(prepared.bands, valid, start, stop) or None,
+                                sampling_rate_hz=float(manifest["contract"]["sampling_rate_hz"]))
                             break
                         except InvalidChannelsError as exc:
                             excluded = [manifest["channels"][i] for i in valid[exc.processes]]
@@ -485,7 +488,8 @@ def _run(config, *, resume=False, retry_failures=False, max_windows=None):
                         before = perf_counter()
                         try:
                             with _capture_metric_warnings() as preparation_warnings:
-                                prepared = prepare_recording(recording, cfg)
+                                from ._bands import required_bands
+                                prepared = prepare_recording(recording, cfg, bands=required_bands(report.metrics, cfg))
                         finally:
                             session["preparation_seconds"] = perf_counter() - before
                         manifest["preparation"] = {**prepared.details,
@@ -505,7 +509,7 @@ def _run(config, *, resume=False, retry_failures=False, max_windows=None):
                         interrupted = True
                         try:
                             if cfg.execution["workers"] > 1:
-                                pool = WindowPool(prepared, report.metrics, cfg, manifest["windows"], temp)
+                                pool = WindowPool(prepared, report.metrics, cfg, manifest["windows"])
                                 session["parallel_input_setup_seconds"] = pool.setup_seconds
                             for batch in needed:
                                 _execute_batch(path, manifest, batch, prepared, calc, report.metrics,

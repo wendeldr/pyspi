@@ -1077,3 +1077,21 @@ the optimization scope to unconstrained or soft DTW.
 prepared EEG window. `tests/pairwise_candidate_math_results.json` records the
 first patient-001 comparison; it is not a multi-patient or workflow benchmark.
 Progress and remaining gates are in `docs/additional_pairwise_review.md`.
+## Additional pairwise band candidates
+
+`tests/unit/test_band_candidates.py` checks the prototype PAC formula and a
+known phase/amplitude model, source-row orientation, band PEC preprocessing,
+owned/copyable inputs, invalidation and numerical degeneracy. Workflow checks
+in `tests/workflow/execution/test_band_candidates.py` cover continuous filtering,
+shared file-backed views, reference masks, serial/spawn equivalence and calibration.
+Run only affected cases after subsequent changes; these are separate from the
+existing broadband PEC goldens.
+
+`tests/benchmark_band_candidates.py` measures selected real EEG windows using
+an existing workflow's source/selection/preprocessing. It calculates only the
+two broadband PEC comparisons and three band candidates, independent of that
+workflow's metric selection. Supply `--scratch` on a disk filesystem. The first
+receipt is `tests/band_candidate_001_results.json`; it is not a cohort or
+parallel/output throughput benchmark. The separate
+`pyspi/workflow/additional_candidate_pilot.yaml` selects eleven candidates for
+bounded follow-up evaluation, not the established production run.

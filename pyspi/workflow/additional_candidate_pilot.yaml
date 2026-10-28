@@ -1,0 +1,48 @@
+# Eleven outputs for bounded candidate evaluation, NOT the established run.
+# Do not launch this on the full cohort: representative runtime, reference,
+# novelty and surrogate gates are still pending. DTW inclusion is secondary.
+# Main reviewed.yaml and amplitude_sensitivity.yaml are unchanged.
+# Band metrics require the EEG workflow or explicitly attached continuous-band
+# windows; they never filter individual half-second windows as a fallback.
+.statistics.distance:
+  HistogramRelativeEntropy:
+    configs:
+    - bins: 10
+      pseudocount: 1.0e-10
+  DistanceCorrelation:
+    configs:
+    - biased: false
+    - biased: true
+  DynamicTimeWarping:
+    configs:
+    - global_constraint: sakoe_chiba
+      sakoe_chiba_radius: 1
+.statistics.misc:
+  PowerEnvelopeCorrelation:
+    configs:
+    - band: [30, 70]
+    - band: [30, 70]
+      orth: true
+      absolute: true
+  PhaseAmplitudeCoupling:
+    configs:
+    - phase_band: [16, 30]
+      amplitude_band: [70, 150]
+  InterDependenceScore:
+    configs:
+    - terms: 6
+      pnorm: max
+      bandwidth: 0.5
+.statistics.infotheory:
+  MutualInfo:
+    configs:
+    - estimator: kernel
+      kernel_width: 0.25
+  DirectedInfo:
+    configs:
+    - estimator: gaussian
+      n: 5
+  StochasticInteraction:
+    configs:
+    - estimator: gaussian
+      delay: 1

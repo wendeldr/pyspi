@@ -145,13 +145,18 @@ def estimate_recording(entry, cfg, calibration, *, max_windows=None):
     stored_bytes += count * len(identifiers) * output["report_bytes_per_event"]
     stored_bytes *= HEADROOM["stored"]
     prepared_samples = max(1, round(entry["duration_seconds"] * float(cfg.sampling_rate_hz)))
+    band_details = (calibration.get("preparation") or {}).get("details", {}).get("continuous_bands", [])
+    band_specs = calibration.get("continuous_bands_hz")
+    extra_bands = (sum(tuple(band) != cfg.bandpass for band in band_specs) if band_specs is not None
+                   else sum(not band["reused_workflow_bandpass"] for band in band_details))
     return {"patient_id": entry["patient_id"], "recording_id": entry["recording_id"],
             "channels": n, "calculation_channels": usable, "windows": count, "batch_windows": batch, "batches": batches,
             "window_seconds": seconds, "mode": per_window["mode"],
             "prepare_seconds": prepare, "compute_seconds": compute, "output_seconds": output_seconds,
             "total_seconds": (prepare or 0.) + compute + output_seconds,
             "raw_output_bytes": raw_bytes, "stored_bytes": stored_bytes,
-            "memory": {"prepared_bytes": len(entry["channels"]) * prepared_samples * 8,
+            "memory": {"prepared_bytes": (len(entry["channels"]) + extra_bands*n) * prepared_samples * 8,
+                       "band_file_bytes": extra_bands * n * prepared_samples * 8,
                        "batch_buffer_bytes": batch * raw_per_window},
             "breakdown_sum_seconds": per_window["metric_sum_seconds"]}
 
