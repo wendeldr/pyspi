@@ -222,7 +222,7 @@ for estimator in ('gaussian', 'kernel'):
     calc=Calculator(configfile=path, dataset=np.random.default_rng(91).normal(size=(2,40)))
     assert jpype.isJVMStarted() == (estimator == 'kernel')
     calc.compute()
-    identifier = 'mi_gaussian' if estimator == 'gaussian' else 'mi_kernel_W-0.5'
+    identifier = 'mi_gaussian' if estimator == 'gaussian' else 'mi_kernel_width0p5'
     assert list(calc.spis) == [identifier]
     assert np.isfinite(calc.table[identifier].to_numpy()[0,1])
 '''

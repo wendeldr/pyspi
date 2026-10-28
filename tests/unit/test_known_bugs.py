@@ -152,7 +152,7 @@ def duplicate_config(tmp_path, monkeypatch):
 
 def test_duplicate_identifiers_current(duplicate_config):
     calc = Calculator(configfile=duplicate_config)
-    assert list(calc.spis) == ["cov_EmpiricalCovariance"]
+    assert list(calc.spis) == ["cov_empirical"]
 
 
 # pytest.fail.Exception is what pytest.raises throws on "DID NOT RAISE"; any

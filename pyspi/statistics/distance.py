@@ -14,6 +14,7 @@ from hyppo.independence import (
 )
 from hyppo.time_series import MGCX, DcorrX
 from pyspi._barycenter import euclidean_summary
+from pyspi._naming import compose, parameter, word
 
 from pyspi.base import (
     Directed,
@@ -33,7 +34,7 @@ class PairwiseDistance(Undirected, Unsigned):
 
     def __init__(self, metric="euclidean", **kwargs):
         self._metric = metric
-        self.identifier += f"_{metric}"
+        self.identifier = compose(self.identifier, word(metric))
 
     @parse_multivariate
     def multivariate(self, data):
@@ -54,7 +55,7 @@ class HilbertSchmidtIndependenceCriterion(Undirected, Unsigned):
     def __init__(self, biased=False):
         self._biased = biased
         if biased:
-            self.identifier += "_biased"
+            self.identifier = compose(self.identifier, "biased")
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -87,7 +88,7 @@ class DistanceCorrelation(Undirected, Unsigned):
     def __init__(self, biased=False):
         self._biased = biased
         if biased:
-            self.identifier += "_biased"
+            self.identifier = compose(self.identifier, "biased")
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -120,7 +121,7 @@ class CrossDistanceCorrelation(Directed, Unsigned):
 
     def __init__(self, max_lag=1):
         self._max_lag = max_lag
-        self.identifier += f"_maxlag-{max_lag}"
+        self.identifier = compose(self.identifier, parameter("maxlag", max_lag))
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -142,7 +143,7 @@ class CrossMultiscaleGraphCorrelation(Directed, Unsigned):
 
     def __init__(self, max_lag=1):
         self._max_lag = max_lag
-        self.identifier += f"_maxlag-{max_lag}"
+        self.identifier = compose(self.identifier, parameter("maxlag", max_lag))
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
@@ -159,10 +160,8 @@ class TimeWarping(Undirected, Unsigned):
     labels = ["unsigned", "distance", "temporal", "undirected", "nonlinear"]
 
     def __init__(self, global_constraint=None):
-        gcstr = global_constraint
-        if gcstr is not None:
-            gcstr = gcstr.replace("_", "-")
-            self.identifier += f"_constraint-{gcstr}"
+        if global_constraint is not None:
+            self.identifier = compose(self.identifier, word(global_constraint))
         self._global_constraint = global_constraint
 
     @property
@@ -235,7 +234,6 @@ class Barycenter(Directed, Signed):
         self._preproc = lambda x: x
         if squared:
             self._preproc = lambda x: x**2
-            self.identifier += f"-sq"
             self.issigned = lambda: False
             self.labels = [label for label in Barycenter.labels if label != "signed"] + ["unsigned"]
 
@@ -248,7 +246,7 @@ class Barycenter(Directed, Signed):
         else:
             raise NameError(f"Unknown statistic: {statistic}")
 
-        self.identifier += f"_{mode}_{statistic}"
+        self.identifier = compose(self.identifier, *(["sq"] if squared else []), word(mode), word(statistic))
 
     @parse_multivariate
     def multivariate(self, data):

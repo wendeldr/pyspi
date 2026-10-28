@@ -5,9 +5,42 @@ reviewed. It is not a claim that every pySPI calculation has been reviewed.
 Performance notes belong in `audit/calculation_review.csv`; implementation
 history belongs in Git.
 
+## SPI identifiers
+
+Identifiers follow one grammar (`pyspi/_naming.py`), so they can be parsed and
+used unchanged as file names or table columns:
+
+```
+<measure>[_<variant>...][_<parameter>...]
+cohmag_mean_band0030-0070hz
+xcorr_sq_holm_mean_maxlag0125ms_alpha0p05
+gc_gaussian_targethistory01_targetdelay01_sourcehistory01_sourcedelay01
+```
+
+- Only `a-z`, `0-9`, `_` and `-` occur. `_` separates fields, `-` only joins
+  the two ends of a range, and `p` is the decimal point (`0p05` = 0.05).
+- The first field is the measure. Variant fields contain no digits; they are
+  transforms (`sq`, `abs`, `log`, `orth`), the method or estimator, the
+  significance test (`holm`) and the statistic, in that order. A boolean option
+  appears only when it is on (`biased`, `normalized`).
+- Parameter fields are `<name><number or range><unit>`. A number without a unit
+  counts samples. Numbers are written exactly and zero-padded to a minimum
+  width, so identifiers in one family line up and sort numerically; a wider
+  value is written in full.
+- Frequency bands are in Hz (`band0030-0070hz`) when `fs` is the sampling rate.
+  With the default `fs=1` the rate is unknown and the band is in cycles per
+  sample (`band0p25-0p5cyc`). Both describe the same bins: `fs=2048, fmin=30,
+  fmax=70` and `fs=1, fmin=30/2048, fmax=70/2048` give the same values to
+  within rounding (about 1e-15).
+- Values chosen automatically become variant words (`autoorder`, `autodim`,
+  `autoembed`, `theilerauto`), so parameter fields always hold numbers.
+
+`docs/metric_names.csv` maps every identifier produced by the shipped
+configurations before this grammar to its current form.
+
 ## Ridge regression error
 
-`lmfit_Ridge` reports the in-sample mean squared error of predicting channel j
+`lmfit_ridge_penaltysum_alpha1` reports the in-sample mean squared error of predicting channel j
 from channel i, including an unpenalized intercept. It minimizes the **sum** of
 squared residuals plus the squared slope (Ridge penalty alpha=1):
 
@@ -27,7 +60,7 @@ All channel means and cross-products are shared, replacing separate model fits.
 `penalty_scale="mean"` minimizes `MSE + alpha*b**2`. Thus mean scaling uses
 `alpha*T` in the coefficient's sum-of-squares denominator. The former
 `lmfit_SGDRegressor` is replaced by
-`lmfit_Ridge_alpha-0-0001_scale-mean`, the exact solution to its squared-loss
+`lmfit_ridge_penaltymean_alpha0p0001`, the exact solution to its squared-loss
 plus L2 objective. The stochastic optimizer, its seed effects and its early
 stopping error are removed. No SGD compatibility alias is provided.
 

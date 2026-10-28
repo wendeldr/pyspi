@@ -20,7 +20,7 @@ a failure means an output changed. Regenerate only for an intentional change
 * ``test_catalogue_matches_golden_meta`` -- the config as loaded now (module,
   class, constructor params, dependencies, labels per identifier) equals the
   recorded catalogue, so a parameter edit that keeps the identifier (for
-  example ``terms`` of ``ids``) is reported even though the per-SPI tests
+  example ``nan_threshold`` of the ``sgc_*`` SPIs) is reported even though the per-SPI tests
   rebuild each SPI from the recorded params.
 * ``test_spi_catalogue[...]`` -- subset sizes, order and labels.
 
@@ -94,7 +94,7 @@ def test_preproc_fixture_normalise_invariant(invariant_spi, preproc_values):
 
 def test_preproc_fixture_normalise_changes_covariance(preproc_values):
     """On the distorted fixture, z-scoring must change the empirical covariance."""
-    ident = "cov_EmpiricalCovariance"
+    ident = "cov_empirical"
     n1 = preproc_values[spi_policy.preproc_key(ident, True, False)]
     n0 = preproc_values[spi_policy.preproc_key(ident, False, False)]
     assert not np.allclose(n1, n0, equal_nan=True)

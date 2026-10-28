@@ -1,4 +1,5 @@
 import mne_connectivity as mnec
+from pyspi._naming import compose, frequency_band, word
 from pyspi.base import (
     Directed,
     Undirected,
@@ -9,7 +10,6 @@ from pyspi.base import (
 )
 import numpy as np
 from numpy.exceptions import AxisError
-import warnings
 from functools import partial
 
 
@@ -19,8 +19,6 @@ class mne(Unsigned):
             fmax = fs / 2
 
         self._fs = fs
-        if fs != 1:
-            warnings.warn("Multiple sampling frequencies not yet handled.")
         self._fmin = fmin
         self._fmax = fmax
         if statistic == "mean":
@@ -32,12 +30,7 @@ class mne(Unsigned):
 
         self._statistic = statistic
 
-        paramstr = (
-            f"_wavelet_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}".replace(
-                ".", "-"
-            )
-        )
-        self.identifier += paramstr
+        self.identifier = compose(self.identifier, "wavelet", word(statistic), frequency_band(fmin, fmax, fs))
 
     @property
     def measure(self):
@@ -47,20 +40,24 @@ class mne(Unsigned):
             raise AttributeError(f"Include measure for {self.identifier}")
 
     def _get_cache(self, data):
+        # Results depend on the sampling rate, so the cache is keyed by both.
+        key = (self.measure, self._fs)
         try:
-            conn, freq = data.mne[self.measure]
+            conn, freq = data.mne[key]
         except (KeyError, AttributeError):
             z = np.moveaxis(data.to_numpy(), 2, 0)
 
-            cwt_freqs = np.linspace(0.2, 0.5, 125)
-            cwt_n_cycles = cwt_freqs / 7.0
+            # The wavelet grid is fixed in cycles per sample; scaling it by fs
+            # keeps the same wavelets when frequencies are given in Hz.
+            cwt_freqs = np.linspace(0.2, 0.5, 125) * self._fs
+            cwt_n_cycles = cwt_freqs / self._fs / 7.0
             connectivity = mnec.spectral_connectivity_epochs(
                 data=z,
                 method=self.measure,
                 mode="cwt_morlet",
                 sfreq=self._fs,
                 mt_adaptive=True,
-                fmin=5 / data.n_observations,
+                fmin=5 * self._fs / data.n_observations,
                 fmax=self._fs / 2,
                 cwt_freqs=cwt_freqs,
                 cwt_n_cycles=cwt_n_cycles,
@@ -70,9 +67,9 @@ class mne(Unsigned):
             freq = np.asarray(connectivity.freqs)
 
             try:
-                data.mne[self.measure] = (conn, freq)
+                data.mne[key] = (conn, freq)
             except AttributeError:
-                data.mne = {self.measure: (conn, freq)}
+                data.mne = {key: (conn, freq)}
 
         freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]
 
@@ -198,16 +195,14 @@ class PhaseSlopeIndex(Signed, mne, Undirected):
     def __init__(self, **kwargs):
         self.identifier = "psi"
         super().__init__(**kwargs)
-        self.identifier += f"_{self._statistic}"
 
     def _get_cache(self, data):
         try:
-            psi = data.mne_psi["psi"]
-            freq = data.mne_psi["freq"]
-        except AttributeError:
+            psi, freq = data.mne_psi[self._fs]
+        except (AttributeError, KeyError):
             z = np.moveaxis(data.to_numpy(), 2, 0)
 
-            freqs = np.linspace(0.2, 0.5, 10)
+            freqs = np.linspace(0.2, 0.5, 10) * self._fs
             connectivity = mnec.phase_slope_index(
                 data=z,
                 mode="cwt_morlet",
@@ -220,7 +215,10 @@ class PhaseSlopeIndex(Signed, mne, Undirected):
             # Match the old API's computed frequencies, not the new result's
             # band centres. Preserve the wrapper's existing selection here.
             freq = np.asarray(connectivity.attrs["freqs_computed"][0])
-            data.mne_psi = dict(psi=psi, freq=freq)
+            try:
+                data.mne_psi[self._fs] = (psi, freq)
+            except AttributeError:
+                data.mne_psi = {self._fs: (psi, freq)}
 
         # freq = conn.frequencies
         freq_id = np.where((freq >= self._fmin) * (freq <= self._fmax))[0]

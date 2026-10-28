@@ -7,6 +7,7 @@ from cdt.causality.pairwise.ANM import normalized_hsic
 
 from pyspi.base import Directed, Unsigned, Signed, parse_bivariate, parse_multivariate
 from pyspi._regression import regression_result
+from pyspi._naming import compose, parameter, word
 
 
 class AdditiveNoiseModel(Directed, Unsigned):
@@ -79,7 +80,10 @@ class ConvergentCrossMapping(Directed, Signed):
         self._statistic = statistic
         self._E = embedding_dimension
 
-        self.identifier += f"_E-{embedding_dimension}_{statistic}"
+        # Without a fixed embedding dimension, simplex projection chooses it.
+        self.identifier = compose(self.identifier, *(["autodim"] if embedding_dimension is None else []),
+                                  word(statistic),
+                                  *([] if embedding_dimension is None else [parameter("dim", embedding_dimension)]))
 
     @property
     def key(self):

@@ -230,7 +230,7 @@ def test_regression_model_sharing_and_explicit_penalties():
     changed = [spi.multivariate(data) for spi in specs]
     assert all(not np.allclose(a, b, equal_nan=True) for a, b in zip(results, changed))
     assert LinearModel("Lasso", alpha=.10000001).identifier != LinearModel("Lasso", alpha=.10000002).identifier
-    assert LinearModel("Ridge", alpha=.0001, penalty_scale="mean").identifier == "lmfit_Ridge_alpha-0-0001_scale-mean"
+    assert LinearModel("Ridge", alpha=.0001, penalty_scale="mean").identifier == "lmfit_ridge_penaltymean_alpha0p0001"
 
 
 @pytest.mark.parametrize("kwargs", [

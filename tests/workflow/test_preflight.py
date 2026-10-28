@@ -60,7 +60,7 @@ def test_xcorr_preflight_binds_target_rate_after_resampling(edf, workflow, metri
     report = preflight(workflow(edf(samples=(16, 16)), metrics={"config": str(config)}))
     assert report.recordings[0]["status"] == "requires_resampling"
     assert report.metrics[0].parameters["fs"] == 8
-    assert report.metrics[0].identifier == "xcorr_peak_sig-False_fs-8_lag-0-125"
+    assert report.metrics[0].identifier == "xcorr_peak_maxlag0125ms"
 
 
 @pytest.mark.parametrize("native", [4, 16])

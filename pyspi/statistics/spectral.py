@@ -9,6 +9,7 @@ from pyspi._spectral import (
     spectral_workspace,
     validate_frequencies,
 )
+from pyspi._naming import compose, frequency_band, parameter, word
 from pyspi.base import (
     Directed,
     Undirected,
@@ -26,6 +27,7 @@ class NonparametricSpectral:
     """Base class for the nonparametric spectral methods from the Eden-Kramer repo"""
 
     _absolute_band_values = False
+    _name_variants = ()
 
     def __init__(self, fs=1, fmin=0, fmax=None, statistic="mean"):
         if fmax is None:
@@ -43,12 +45,8 @@ class NonparametricSpectral:
         else:
             self._statfn = None
         self._statistic = statistic
-        paramstr = (
-            f"_multitaper_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}".replace(
-                ".", "-"
-            )
-        )
-        self.identifier += paramstr
+        self.identifier = compose(self.identifier, *self._name_variants, word(statistic),
+                                  frequency_band(fmin, fmax, fs))
 
     @property
     def measure(self):
@@ -205,9 +203,10 @@ class SignedPhaseLagIndex(NonparametricSpectralMultivariate, Directed, Signed):
 
     name = "Signed phase lag index"
     labels = ["signed", "spectral", "directed"]
+    _name_variants = ("signed",)
 
     def __init__(self, **kwargs):
-        self.identifier = "pli-signed"
+        self.identifier = "pli"
         super().__init__(**kwargs)
         self._measure = "signed_phase_lag_index"
 
@@ -228,9 +227,10 @@ class SignedWeightedPhaseLagIndex(NonparametricSpectralMultivariate, Directed, S
 
     name = "Signed weighted phase lag index"
     labels = ["signed", "spectral", "directed"]
+    _name_variants = ("signed",)
 
     def __init__(self, **kwargs):
-        self.identifier = "wpli-signed"
+        self.identifier = "wpli"
         super().__init__(**kwargs)
         self._measure = "signed_weighted_phase_lag_index"
 
@@ -415,17 +415,15 @@ class SpectralGrangerCausality(NonparametricSpectralMultivariate, Directed, Unsi
         self._method = method
         if self._method == "nonparametric":
             self._measure = "pairwise_spectral_granger_prediction"
-            paramstr = f"_nonparametric_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}".replace(
-                ".", "-"
-            )
+            variants, parameters = [], []
         else:
             self._order = order
             self._max_order = max_order
-            paramstr = f"_parametric_{statistic}_fs-{fs}_fmin-{fmin:.3g}_fmax-{fmax:.3g}_order-{order}".replace(
-                ".", "-"
-            )
-
-        self.identifier = self.identifier + paramstr
+            # Without a fixed order, the model order is selected up to max_order.
+            variants = ["autoorder"] if order is None else []
+            parameters = [parameter("maxorder", max_order) if order is None else parameter("order", order)]
+        self.identifier = compose(self.identifier, method, *variants, *([] if ignore_nan else ["nanstrict"]),
+                                  word(statistic), frequency_band(self._fmin, self._fmax, fs), *parameters)
 
     def _get_cache(self, data):
         if self._method == "nonparametric":

@@ -59,7 +59,7 @@ def test_wavelet_three_dimensional_cache_uses_axiserror_fallback():
 
     data = Data(np.arange(60., dtype=float).reshape(3, 20), normalise=False, detrend=False)
     values = np.arange(27., dtype=float).reshape(3, 3, 3)
-    data.mne = {"coh": (values, np.array([0.2, 0.3, 0.4]))}
+    data.mne = {("coh", 1): (values, np.array([0.2, 0.3, 0.4]))}
     actual = CoherenceMagnitude().multivariate(data)
     np.testing.assert_array_equal(
         actual, [[np.nan, 10., 19.], [10., np.nan, 22.], [19., 22., np.nan]],

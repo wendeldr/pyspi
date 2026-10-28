@@ -8,6 +8,7 @@ from pyspi.base import Undirected, Directed, Unsigned, parse_univariate, parse_b
 from pyspi._gaussian import gaussian_result, gaussian_diagnostics, gaussian_marginal_entropy
 from pyspi._moments import moment_workspace
 from pyspi._information_history import history
+from pyspi._naming import compose, parameter, word
 
 
 def _positive_integer(value, name):
@@ -67,12 +68,13 @@ class JIDTBase(Unsigned):
         self._dyn_corr_excl = dyn_corr_excl
         self._entropy_calc = self._getcalc("entropy")
 
-        self.identifier = self.identifier + "_" + estimator
+        self._measure_name = self.identifier
+        self._name_variants, self._name_parameters = [word(estimator)], []
         if estimator == "kraskov":
-            self.identifier = self.identifier + "_NN-{}".format(prop_k)
+            self._name_parameters.append(parameter("neighbours", prop_k))
             self.labels = self.labels + ["nonlinear"]
         elif estimator == "kernel":
-            self.identifier = self.identifier + "_W-{}".format(kernel_width)
+            self._name_parameters.append(parameter("width", kernel_width, 1))
             self.labels = self.labels + ["nonlinear"]
         elif estimator == "symbolic":
             if not isinstance(self, TransferEntropy):
@@ -81,13 +83,22 @@ class JIDTBase(Unsigned):
                 )
             self.labels = self.labels + ["symbolic", "nonlinear"]
             self._dyn_corr_excl = None
-            return
         else:
             self.labels = self.labels + ["linear"]
             self._dyn_corr_excl = None
 
-        if self._dyn_corr_excl:
-            self.identifier = self.identifier + "_DCE"
+        # Dynamic correlation exclusion is a Theiler window: chosen per pair
+        # ("AUTO") or a fixed number of samples.
+        if self._dyn_corr_excl == "AUTO":
+            self._name_variants.append("theilerauto")
+        elif self._dyn_corr_excl:
+            self._name_parameters.append(parameter("theiler", int(self._dyn_corr_excl)))
+        self._rename()
+
+    def _rename(self, variants=(), parameters=()):
+        self._name_variants.extend(variants)
+        self._name_parameters.extend(parameters)
+        self.identifier = compose(self._measure_name, *self._name_variants, *self._name_parameters)
 
     def __getstate__(self):
         state = dict(self.__dict__)
@@ -391,27 +402,23 @@ class TransferEntropy(JIDTBase, Directed):
             if not 2 <= length <= 20:
                 raise ValueError("pattern_length must be 2..20; length one contains no ordinal information.")
             self._symbolic_parameters = dict(pattern_length=length, pattern_spacing=spacing, prediction_shift=shift)
-            self.identifier += f"_m-{length}_tau-{spacing}_h-{shift}"
+            self._rename(parameters=(parameter("patternlength", length), parameter("spacing", spacing),
+                                     parameter("shift", shift)))
             return
         if any(value is not None for value in (pattern_length, pattern_spacing, prediction_shift)):
             raise ValueError("Ordinal pattern parameters apply only to estimator='symbolic'.")
 
-        # Auto-embedding
+        # k/l are the target/source history lengths, k_tau/l_tau their delays.
         if auto_embed_method is not None:
+            searched = [parameter("maxtargethistory", k_search_max)]
             if self._estimator != "kernel":
-                self.identifier = self.identifier + "_k-max-{}_tau-max-{}".format(
-                    k_search_max, tau_search_max
-                )
-            else:
-                self.identifier = self.identifier + "_k-max-{}".format(k_search_max)
-            # Set up calculator
+                searched.append(parameter("maxtargetdelay", tau_search_max))
+            self._rename(("autoembed", word(auto_embed_method)), searched)
+        elif self._estimator != "kernel":
+            self._rename(parameters=(parameter("targethistory", k_history), parameter("targetdelay", k_tau),
+                                     parameter("sourcehistory", l_history), parameter("sourcedelay", l_tau)))
         else:
-            if self._estimator != "kernel":
-                self.identifier = self.identifier + "_k-{}_kt-{}_l-{}_lt-{}".format(
-                    k_history, k_tau, l_history, l_tau
-                )
-            else:
-                self.identifier = self.identifier + "_k-{}".format(k_history)
+            self._rename(parameters=(parameter("targethistory", k_history),))
         self._configure_calc()
 
     @parse_multivariate
@@ -487,7 +494,7 @@ class CrossmapEntropy(JIDTBase, Directed):
     def __init__(self, history_length=10, **kwargs):
         _positive_integer(history_length, "history_length")
         super().__init__(**kwargs)
-        self.identifier += f"_k{history_length}"
+        self._rename(parameters=(parameter("history", history_length),))
         self._history_length = history_length
         self._gaussian_parameters = dict(history_length=history_length)
 
@@ -518,8 +525,8 @@ class CausalEntropy(JIDTBase, Directed):
         super().__init__(**kwargs)
         self._n = n
         self._gaussian_parameters = dict(n=n)
-        if n != 5:
-            self.identifier += f"_n-{n}"
+        # n is the number of causally conditioned time steps.
+        self._rename(parameters=(parameter("horizon", n),))
 
     def _causal_entropy(self, data, i, j):
         work = moment_workspace(data)
@@ -580,7 +587,7 @@ class StochasticInteraction(JIDTBase, Undirected):
         _positive_integer(delay, "delay")
         super().__init__(**kwargs)
         self._delay = delay
-        self.identifier += f"_k-{delay}"
+        self._rename(parameters=(parameter("delay", delay),))
         self._gaussian_parameters = dict(delay=delay)
 
     @parse_bivariate
@@ -608,7 +615,9 @@ class IntegratedInformation(Undirected, Unsigned):
         self._phitype = phitype
         self._delay = delay
         self._normalization = normalization
-        self.identifier += f"_{phitype}_t-{delay}_norm-{normalization}"
+        # phi_native normalizes only when normalization == 1.
+        self.identifier = compose(self.identifier, word(phitype), *(["normalized"] if normalization == 1 else []),
+                                  parameter("delay", delay))
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
