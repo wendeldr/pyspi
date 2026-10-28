@@ -9,6 +9,7 @@ from ._edf import read_header, select_channels
 from ._metrics import resolve_metrics
 from ._windows import plan_windows
 from ._prepare import reference_names
+from ._reference import reference_plan
 
 
 @dataclass(frozen=True)
@@ -69,6 +70,8 @@ def preflight(config) -> PreflightReport:
     recordings = []
     for recording, header, channels in selected:
         output_names = reference_names([name for _, name in channels], cfg.reference)
+        reference = reference_plan(output_names, cfg.reference)
+        available = reference[1].tolist() if reference is not None else [True] * len(output_names)
         matching = all(signal.rate == target for signal, _ in channels)
         windows = None
         if matching:
@@ -79,6 +82,7 @@ def preflight(config) -> PreflightReport:
                            "path": str(header.path), "status": "ready" if matching else "requires_resampling",
                            "duration_seconds": float(header.records * header.record_seconds),
                            "output_channels": output_names,
+                           "reference_available": available,
                            "channels": [{"source_index": signal.index, "source_label": signal.label,
                                          "name": name, "native_sampling_rate_hz": float(signal.rate),
                                          "native_samples": header.records * signal.samples_per_record}

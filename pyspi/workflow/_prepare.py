@@ -7,6 +7,7 @@ import numpy as np
 
 from ._config import WorkflowError
 from ._edf import read_header, select_channels
+from ._reference import apply_shaft_reference, reference_plan, reference_details
 
 
 FIR = dict(method="fir", phase="zero", fir_window="hamming", fir_design="firwin",
@@ -26,6 +27,8 @@ def harmonics(rate, notch):
 def reference_names(names, reference):
     """Validate retained-channel references and determine the resulting axes."""
     method = reference["method"]
+    if method in ("laplacian", "shaft_average"):
+        reference_plan(names, reference)
     required = []
     if method == "channels":
         required = reference["channels"]
@@ -119,6 +122,7 @@ def prepare_recording(recording, cfg, *, channels=None):
                                       n_jobs=1, verbose="ERROR", **FIR)
     raw = mne.io.RawArray(prepared, mne.create_info(names, target, "eeg"), copy="auto", verbose="ERROR")
     method = cfg.reference["method"]
+    plan = reference_plan(names, cfg.reference)
     if method == "car":
         raw.set_eeg_reference("average", projection=False, verbose="ERROR")
     elif method in ("channels", "mapping"):
@@ -135,6 +139,10 @@ def prepare_recording(recording, cfg, *, channels=None):
     # get_data() gives an owned public array, independent of the temporary Raw.
     data = raw.get_data()
     raw.close()
+    if method in ("laplacian", "shaft_average"):
+        data = apply_shaft_reference(data, names, cfg.reference, plan)
+        # Zero placeholders are never sent to metrics: the explicit mask is
+        # applied even when window z-scoring is disabled.
     if not np.isfinite(data).all():
         raise WorkflowError("EEG preparation produced nonfinite samples")
     details = {"sampling_rate_hz": target, "samples": data.shape[1], "units": "SI (EDF physical units)",
@@ -144,4 +152,6 @@ def prepare_recording(recording, cfg, *, channels=None):
                             "lower_transition_hz": min(max(low * .25, 2), low),
                             "upper_transition_hz": min(max(high * .25, 2), target / 2 - high)},
                "notch": {**cfg.notch, **FIR}, "resampling_method": "polyphase"}
+    if plan is not None:
+        details["reference_geometry"] = reference_details(names, plan)
     return PreparedRecording(data, output_names, details, perf_counter() - started)

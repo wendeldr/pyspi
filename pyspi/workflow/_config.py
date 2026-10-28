@@ -82,15 +82,29 @@ def safe_id(value, where):
 def reference_config(value, base):
     if isinstance(value, str):
         value = {"method": value}
-    fields(value, {"method", "channels", "mapping", "anode", "cathode", "names", "drop_refs", "forward"}, "reference")
+    fields(value, {"method", "channels", "mapping", "anode", "cathode", "names", "drop_refs", "forward", "shafts"}, "reference")
     method = value.get("method")
     options = {"none": set(), "car": set(), "channels": {"channels"},
                "mapping": {"mapping"}, "bipolar": {"anode", "cathode", "names", "drop_refs"},
-               "rest": {"forward"}}
+               "rest": {"forward"}, "laplacian": {"shafts"}, "shaft_average": {"shafts"}}
     if not isinstance(method, str) or method not in options:
         raise WorkflowError(f"reference.method must be one of {list(options)}")
     fields(value, {"method"} | options[method], "reference")
     result = dict(value)
+    if method in ("laplacian", "shaft_average"):
+        shafts = value.get("shafts")
+        if not isinstance(shafts, dict) or not shafts:
+            raise WorkflowError("reference.shafts must map shaft names to physically ordered contact lists")
+        seen = set()
+        for shaft, contacts in shafts.items():
+            text(shaft, "reference shaft name")
+            if not isinstance(contacts, list) or not contacts:
+                raise WorkflowError("each shaft must contain a nonempty ordered contact list")
+            for contact in contacts:
+                text(contact, "reference shaft contact")
+                if contact in seen:
+                    raise WorkflowError(f"contact {contact!r} occurs more than once in reference.shafts")
+                seen.add(contact)
     for key in ("channels", "anode", "cathode", "names"):
         if key in options[method] and key != "names":
             if not isinstance(value.get(key), list) or not value[key]:

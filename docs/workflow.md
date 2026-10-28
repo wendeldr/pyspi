@@ -307,7 +307,7 @@ The continuous preparation order is fixed:
 2. Apply native-rate MNE FIR harmonic notches.
 3. Resample mismatches using MNE polyphase, before windowing.
 4. Apply continuous MNE zero-phase FIR bandpass at the target rate.
-5. Apply the configured MNE reference to actual data.
+5. Apply the configured reference to actual data.
 6. Define windows chronologically, then use Calculator's existing detrend-then-z-score
    preprocessing per window (`ddof=1`). All requested metrics share that window's
    Data and intermediate caches. Every new window gets a fresh Data/cache.
@@ -347,9 +347,39 @@ CAR averages only retained channels. Named/mapped/bipolar references likewise
 use retained names; missing contacts fail before calculation. Bipolar outputs
 follow MNE order (remaining original channels, then supplied pairs), with their
 derivation recorded. REST requires a separately prepared matching MNE forward
-solution. No custom referencing or electrode-selection rule is implemented.
-With one retained channel, CAR makes a zero signal; normalisation then fails
-and is recorded as window-preprocessing failure rather than changing reference.
+solution. No automatic electrode-selection rule is implemented.
+With one retained channel, CAR has no usable output; it is recorded as a
+window-preprocessing failure rather than changing reference.
+
+For a strict contact-centered Laplacian, supply physical shaft order explicitly:
+
+```yaml
+reference:
+  method: laplacian
+  shafts:
+    A: [A1, A2, A3, A4, A5]
+    B: [B1, B2, B3, B4]
+```
+
+Lists must include intervening physical contacts even when they were excluded
+from the retained selection. Each available output is the central contact
+minus the mean of its immediately preceding and following contacts. Endpoints
+and contacts missing either neighbor retain their output labels but all their
+pairwise results are NaN, including when z-scoring is disabled. There is no
+one-neighbor, CAR, or original-signal fallback. Unassigned retained contacts and
+duplicate layout entries are errors. Layouts are never inferred by sorting
+names. Use a recording-specific layout when shaft identities differ.
+
+`method: shaft_average` accepts the same layout and subtracts the mean of all
+retained contacts on that shaft, including the target. A shaft with fewer than
+two retained contacts is unavailable. This option is for explicit exploratory
+comparisons, not an automatic replacement for CAR.
+
+CAR and shaft references record coefficients, unavailable reasons, shared-source
+pairs, and proportional pairs in preparation metadata. The recorded null
+correlation assumes independent equal-variance source signals; it describes
+reference geometry, not measured connectivity. Calibration and runtime estimates
+count usable contacts for computation and all output contacts for storage.
 
 ### One alternative to the normalized run
 
@@ -398,11 +428,11 @@ excluding preprocessing, imports and I/O. Receipts and per-family increments
 are linked from the complete review; no clinical discrimination was tested.
 
 CAR is the runnable reference in the template. A local neighbor-average
-(Laplacian) montage is a candidate comparison, using the existing explicit
-`reference.method: mapping` support. It requires confirmed same-shaft adjacency
-and a decision for endpoints or missing neighbors. It is not automatically
-generated from channel-name sorting. A partial mapping leaves unlisted channels
-unchanged; do not interpret them as locally referenced. Any chosen local
+(Laplacian) montage is a candidate comparison using the strict
+`reference.method: laplacian` support above. It requires confirmed same-shaft
+adjacency and masks endpoints and gaps. The older general-purpose `mapping`
+option leaves unlisted channels unchanged; do not use a partial mapping to
+represent a complete local montage. Any chosen local
 montage needs matching output/contact-label interpretation and its own output
 directory. Shared contacts in local references can themselves induce pairwise
 relationships, so a change in connectivity is not by itself evidence that one

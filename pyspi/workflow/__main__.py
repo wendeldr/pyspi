@@ -61,7 +61,7 @@ def main(argv=None):
             from ._calibrate import calibrate
             channels = None
             if args.channels:
-                total = max(len(r["output_channels"]) for r in preflight(args.config).recordings)
+                total = max(sum(r["reference_available"]) for r in preflight(args.config).recordings)
                 channels = [total if item.strip() == "all" else int(item) for item in args.channels.split(",")]
             result = calibrate(args.config, channels=channels, windows_per_point=args.windows_per_point,
                                synthetic=args.synthetic, budget_seconds=args.budget_seconds)

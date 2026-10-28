@@ -36,10 +36,11 @@ def default_ladder(channels):
 
 
 def choose_recording(report):
-    """Index of the recording with the most output channels; every other recording interpolates."""
+    """Index with the most usable contacts; other computation counts interpolate."""
     if not report.recordings:
         raise WorkflowError("no recordings to calibrate")
-    return max(range(len(report.recordings)), key=lambda i: (len(report.recordings[i]["output_channels"]), -i))
+    return max(range(len(report.recordings)), key=lambda i: (
+        sum(report.recordings[i].get("reference_available", [True] * len(report.recordings[i]["output_channels"]))), -i))
 
 
 def pick_windows(count, k):
@@ -61,7 +62,7 @@ def synthetic_block(channels, samples, seed=0):
     return block
 
 
-def _time_window(calc, block, names, start, stop):
+def _time_window(calc, block, names, start, stop, *, source_indices=None):
     from pyspi.calculation import _capture_metric_warnings
     from pyspi.data import InvalidChannelsError
 
@@ -72,7 +73,8 @@ def _time_window(calc, block, names, start, stop):
             _capture_metric_warnings() as emitted:
         while valid.size >= 2:
             try:
-                calc.load_dataset(block[valid, start:stop].copy())
+                indices = valid if source_indices is None else source_indices[valid]
+                calc.load_dataset(block[indices, start:stop].copy())
                 break
             except InvalidChannelsError as exc:
                 valid = np.delete(valid, exc.processes)
@@ -161,7 +163,9 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
     report = preflight(cfg)
     index = choose_recording(report)
     entry, recording = report.recordings[index], cfg.recordings[index]
-    names = entry["output_channels"]
+    all_names = entry["output_channels"]
+    available = np.flatnonzero(entry.get("reference_available", [True] * len(all_names)))
+    names = [all_names[i] for i in available]
     total = len(names)
     ladder = default_ladder(total) if channels is None else sorted({int(c) for c in channels})
     if not ladder or ladder[0] < 2 or ladder[-1] > total:
@@ -185,7 +189,7 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
             preparation = {"seconds": perf_counter() - before, "channels": len(entry["channels"]),
                            "native_samples": sum(c["native_samples"] for c in entry["channels"]),
                            "edf_bytes": recording.path.stat().st_size, "details": prepared.details}
-            if prepared.channel_names != names:
+            if prepared.channel_names != all_names:
                 raise WorkflowError("prepared channels disagree with the preflight channel order")
             block = prepared.data
             plan = plan_windows(block.shape[1], cfg.sampling_rate_hz, cfg.window_seconds, cfg.step_seconds,
@@ -193,7 +197,8 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
             source = {"kind": "edf", "patient_id": entry["patient_id"], "recording_id": entry["recording_id"],
                       "path": entry["path"]}
         windows = pick_windows(plan.count, windows_per_point)
-        source.update(output_channels=total, windows_used=windows, windows_available=plan.count)
+        source.update(output_channels=len(all_names), calculation_channels=total,
+                      windows_used=windows, windows_available=plan.count)
         points, buffers, events, dtypes = [], {}, [], {}
         budget = {"seconds": float(budget_seconds), "stopped_before_channels": None, "predicted_seconds": None}
         measuring_started = perf_counter()
@@ -205,8 +210,10 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
                     print(f"calibration budget reached; skipping {count}+ channels (predicted {predicted:.0f} s)",
                           file=sys.stderr)
                     break
-            timings = [_time_window(calc, block[:count], names[:count], w * plan.step_samples,
-                                    w * plan.step_samples + plan.length_samples) for w in windows]
+            selected = np.arange(count) if synthetic else available[:count]
+            timings = [_time_window(calc, block, names[:count], w * plan.step_samples,
+                                    w * plan.step_samples + plan.length_samples, source_indices=selected)
+                       for w in windows]
             metrics = {}
             for m in report.metrics:
                 seconds = [next(r.elapsed_seconds for r, _ in t["records"] if r.identifier == m.identifier)

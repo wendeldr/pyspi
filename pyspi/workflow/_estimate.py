@@ -93,6 +93,10 @@ def calibration_issues(calibration, cfg, report):
     for key, value in (("detrend", cfg.detrend), ("zscore", cfg.zscore)):
         if calibration[key] != value:
             stale.append(f"{key} differs from the calibration")
+    preparation = calibration.get("preparation") or {}
+    reference = preparation.get("details", {}).get("reference")
+    if reference is not None and reference != cfg.reference:
+        stale.append("reference differs from the calibration")
     if calibration["execution"]["threads_per_worker"] != cfg.execution["threads_per_worker"]:
         stale.append("threads_per_worker differs from the calibration")
     if calibration["execution"]["spectral_cache_mib"] != cfg.execution["spectral_cache_mib"]:
@@ -116,7 +120,10 @@ def estimate_recording(entry, cfg, calibration, *, max_windows=None):
     identifiers = calibration["metrics"]
     plan = planned_windows(entry, cfg)
     count = plan.count if max_windows is None else min(plan.count, max_windows)
-    per_window = window_seconds(calibration, n)
+    usable = sum(entry.get("reference_available", [True] * n))
+    if usable < 2:
+        raise WorkflowError("fewer than two channels have an available reference")
+    per_window = window_seconds(calibration, usable)
     batch = _batch_size(cfg, n, len(identifiers))
     batches = math.ceil(count / batch) if count else 0
     workers = cfg.execution["workers"]
@@ -139,7 +146,7 @@ def estimate_recording(entry, cfg, calibration, *, max_windows=None):
     stored_bytes *= HEADROOM["stored"]
     prepared_samples = max(1, round(entry["duration_seconds"] * float(cfg.sampling_rate_hz)))
     return {"patient_id": entry["patient_id"], "recording_id": entry["recording_id"],
-            "channels": n, "windows": count, "batch_windows": batch, "batches": batches,
+            "channels": n, "calculation_channels": usable, "windows": count, "batch_windows": batch, "batches": batches,
             "window_seconds": seconds, "mode": per_window["mode"],
             "prepare_seconds": prepare, "compute_seconds": compute, "output_seconds": output_seconds,
             "total_seconds": (prepare or 0.) + compute + output_seconds,
@@ -181,15 +188,15 @@ def estimate(config, calibration=None, *, max_windows=None):
     recordings = [estimate_recording(entry, cfg, calibration, max_windows=max_windows)
                   for entry in report.recordings]
     top = max(p["channels"] for p in calibration["points"])
-    above = [r for r in recordings if r["channels"] > top]
+    above = [r for r in recordings if r["calculation_channels"] > top]
     if above:
-        worst = max(r["channels"] for r in above)
+        worst = max(r["calculation_channels"] for r in above)
         budget = calibration.get("budget") or {}
         reason = (f" (the calibration stopped at its {budget['seconds']:.0f} s budget before "
                   f"{budget['stopped_before_channels']} channels)" if budget.get("stopped_before_channels") else "")
         notes.append(f"{len(above)} recording(s) exceed the calibrated {top} channels (up to {worst}, "
                      f"{worst / top:.1f}x); their times are extrapolated and cache effects are not modelled{reason}")
-    typical = int(median(r["channels"] for r in recordings)) if recordings else top
+    typical = int(median(r["calculation_channels"] for r in recordings)) if recordings else top
     breakdown = window_seconds(calibration, typical)
     if breakdown["seconds"] > 1 and (abs(breakdown["metric_sum_seconds"] - breakdown["seconds"])
                                      > BREAKDOWN_TOLERANCE * breakdown["seconds"]):

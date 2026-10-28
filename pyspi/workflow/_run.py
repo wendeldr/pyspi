@@ -343,7 +343,8 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
             start = window * manifest["windows"]["step_samples"]
             stop = start + manifest["windows"]["length_samples"]
             before = perf_counter()
-            valid = np.arange(n)
+            from ._reference import available_indices
+            valid = available_indices(prepared.details, n)
             try:
                 with _capture_metric_warnings() as window_warnings, redirect_stdout(sys.stderr):
                     while valid.size >= 2:

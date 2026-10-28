@@ -62,7 +62,7 @@ class WindowResult:
 _worker = None
 
 
-def _initialize(filename, metrics, cfg, names, step, length):
+def _initialize(filename, metrics, cfg, names, step, length, available=None):
     global _worker
     from ._run import _calculator
 
@@ -73,18 +73,19 @@ def _initialize(filename, metrics, cfg, names, step, length):
     atexit.register(limits.__exit__, None, None, None)
     with open(os.devnull, "w") as quiet, redirect_stdout(quiet), redirect_stderr(quiet):
         calc = _calculator(metrics, cfg, Path(directory.name))
-    _worker = (np.load(filename, mmap_mode="r"), calc, dict(calc.spis), names, step, length)
+    _worker = (np.load(filename, mmap_mode="r"), calc, dict(calc.spis), names, step, length,
+               np.arange(len(names)) if available is None else np.asarray(available))
 
 
 def _compute(job):
     from pyspi.calculation import MetricReport, _capture_metric_warnings, _describe_error
     from pyspi.data import InvalidChannelsError
 
-    data, calc, all_spis, names, step, length = _worker
+    data, calc, all_spis, names, step, length, available = _worker
     window, active = job
     calc.spis.clear()
     calc.spis.update((identifier, all_spis[identifier]) for identifier in active)
-    valid = np.arange(len(names))
+    valid = available.copy()
     started = perf_counter()
     records = []
     with open(os.devnull, "w") as quiet, redirect_stdout(quiet), redirect_stderr(quiet):
@@ -117,6 +118,7 @@ class WindowPool:
     """At most one in-flight window/result per worker, sharing read-only input."""
 
     def __init__(self, prepared, metrics, cfg, plan, directory):
+        from ._reference import available_indices
         started = perf_counter()
         filename = Path(directory) / "prepared.npy"
         np.save(filename, prepared.data, allow_pickle=False)
@@ -127,7 +129,8 @@ class WindowPool:
         self.executor = ProcessPoolExecutor(max_workers=self.workers,
             mp_context=multiprocessing.get_context("spawn"), initializer=_initialize,
             initargs=(str(filename), metrics, cfg, prepared.channel_names,
-                      plan["step_samples"], plan["length_samples"]))
+                      plan["step_samples"], plan["length_samples"],
+                      available_indices(prepared.details, len(prepared.channel_names))))
         self.setup_seconds = perf_counter()-started
 
     def map(self, jobs):

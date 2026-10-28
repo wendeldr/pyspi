@@ -16,7 +16,7 @@ reference costs must be reported explicitly.
 | Cross-channel 16–30 / 70–150 Hz coupling | Pending. |
 | Exact bounded distance correlation | Implemented; both conventions share products; independent centering and golden checks pass. Multi-patient gate pending. |
 | Exact radius-one DTW | Implemented; full-grid oracle and tslearn comparisons pass. Run inclusion remains separate. |
-| Matched CAR / contact-centered Laplacian | Pending, including membership/missing-contact metadata and sensitivity checks. |
+| Matched CAR / contact-centered Laplacian | Explicit topology, masks, geometry metadata and serial/parallel execution implemented; real-data matched comparison and sensitivity checks pending. |
 | Representative EEG runtime / memory / workflow costs | Pending; prior single-window feasibility receipts are not completion evidence. |
 | Novelty, coverage and surrogate assessment | Pending; reuse historical top_features evidence with its limitations. |
 | Candidate configs, docs, CSV, regressions and commits | Pending. |
@@ -102,6 +102,27 @@ window; patient/channel variation and workflow costs remain to be measured.
 Numerical golden arrays remain unchanged. Only the bias-corrected distance
 correlation's signed label is updated in golden metadata, with source provenance.
 No old passing unrelated suite has been rerun.
+
+## Reference workflow validation
+
+Strict Laplacian layouts retain missing physical neighbors in the ordered shaft
+list. Endpoints/gaps are explicitly unavailable, without fallback; output axes
+retain their original contact names. CAR and shaft references record linear
+coefficients, shared sources, proportional rows, and the equal-variance independent
+source null correlation. These geometry diagnostics are not empirical evidence
+of connectivity. Shaft-average support is available for exploratory comparison;
+candidate run inclusion is still pending.
+
+Ten geometry/config checks passed. Nine preparation/execution checks passed,
+covering the direct continuous Laplacian formula, serial and spawned masks with
+normalization disabled, usable-channel calibration versus full-size output,
+three unchanged CAR pipeline comparisons, and real/synthetic calibration
+regressions. No numerical goldens changed.
+Two additional focused calibration CLI/validity checks passed.
+Local references use direct neighbor arithmetic and one shared mean per shaft,
+avoiding dense channel-by-channel mixing of an entire recording. Two independent
+linear-operator comparisons and the affected continuous-preparation check passed
+after this optimization; no runtime gain is claimed before measurement.
 
 ## Prior evidence
 
