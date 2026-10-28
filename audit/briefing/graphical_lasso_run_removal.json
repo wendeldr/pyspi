@@ -1,0 +1,872 @@
+{
+  "basis": "Reanalysis of completed four-window CAR profiles; no estimator rerun. 118 channels, 1024 samples, 195 historical outputs.",
+  "decision": "Remove all seven selected GraphicalLasso/GraphicalLassoCV outputs; main 188, amplitude 12.",
+  "limits": "Per-window metric time includes shared successful fits and repeated failed attempts. Scaling is serial-equivalent removed calculation work, not measured end-to-end or parallel savings. One patient, four windows.",
+  "cases": [
+    {
+      "case": "w1-t1-c256",
+      "source": "/tmp/pyspi-workflow-profiles-pqmnp77t/comparison/results/001/calculations/w1-t1-c256/batches/00000000/attempt-9c4c4b7eb76541e69c95eb996a7bd0d7/reports.json",
+      "source_sha256": "99677de0320a6b40cf58f72be2d162d30d685a418f37133a6240c92af1699e54",
+      "family_seconds_per_window": {
+        "GraphicalLassoCV": 7.566046848987753,
+        "GraphicalLasso": 1.6638658399970154
+      },
+      "total_seconds_per_window": 9.229912688984768,
+      "total_seconds_600": 5537.947613390861,
+      "total_seconds_41400": 382118.3853239694,
+      "reports": [
+        {
+          "window": 0,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 7.625671794987284,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 1.9801477549772244,
+          "error": null,
+          "warning_count": 80,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: 3.360e-01"
+          ]
+        },
+        {
+          "window": 0,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0007165689894463867,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0005511209892574698,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.000536116975126788,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0009902489837259054,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006612249999307096,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 8.002424229984172,
+          "error": null,
+          "warning_count": 1,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: -1.129e-01"
+          ]
+        },
+        {
+          "window": 1,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 2.1006211350031663,
+          "error": null,
+          "warning_count": 138,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: -7.358e-01"
+          ]
+        },
+        {
+          "window": 1,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0007291760121006519,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0006996899901423603,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0005915049987379462,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0005532010109163821,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0004995949857402593,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 7.111234044015873,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 2.2944759679958224,
+          "error": null,
+          "warning_count": 151,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: 3.530e-01"
+          ]
+        },
+        {
+          "window": 2,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006982390186749399,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0007722920272499323,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0005467860028147697,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.000685130013152957,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006038139981683344,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 7.5171879090194125,
+          "error": null,
+          "warning_count": 1,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: -1.096e-02"
+          ]
+        },
+        {
+          "window": 3,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "failed",
+          "elapsed_seconds": 0.09538269200129434,
+          "error": {
+            "type": "builtins.FloatingPointError",
+            "message": "Non SPD result: the system is too ill-conditioned for this solver. The system is too ill-conditioned for this solver"
+          },
+          "warning_count": 140,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0007008529792074114,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec_GraphicalLasso",
+          "status": "failed",
+          "elapsed_seconds": 0.09053613999276422,
+          "error": {
+            "type": "builtins.FloatingPointError",
+            "message": "Non SPD result: the system is too ill-conditioned for this solver. The system is too ill-conditioned for this solver"
+          },
+          "warning_count": 140,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0007131180027499795,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "failed",
+          "elapsed_seconds": 0.09004798700334504,
+          "error": {
+            "type": "builtins.FloatingPointError",
+            "message": "Non SPD result: the system is too ill-conditioned for this solver. The system is too ill-conditioned for this solver"
+          },
+          "warning_count": 140,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006724209815729409,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        }
+      ]
+    },
+    {
+      "case": "w1-t2-c256",
+      "source": "/tmp/pyspi-workflow-profiles-pqmnp77t/comparison/results/001/calculations/w1-t2-c256/batches/00000000/attempt-29605379bd824e99973885493f47c67d/reports.json",
+      "source_sha256": "788b392f113a1a128bca76563a2281e306ec8ed387b1dfdf174a1a957f30c593",
+      "family_seconds_per_window": {
+        "GraphicalLassoCV": 7.940757402240706,
+        "GraphicalLasso": 1.657680247517419
+      },
+      "total_seconds_per_window": 9.598437649758125,
+      "total_seconds_600": 5759.062589854875,
+      "total_seconds_41400": 397375.3186999864,
+      "reports": [
+        {
+          "window": 0,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 8.252383640996413,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 1.9722711910144426,
+          "error": null,
+          "warning_count": 80,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: 2.841e-01"
+          ]
+        },
+        {
+          "window": 0,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006346740119624883,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0005446460272651166,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0005772899894509465,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.000543474976439029,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0005373129970394075,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 8.355709653988015,
+          "error": null,
+          "warning_count": 1,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: -4.364e-02"
+          ]
+        },
+        {
+          "window": 1,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 2.2106013580050785,
+          "error": null,
+          "warning_count": 138,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: -8.232e-01"
+          ]
+        },
+        {
+          "window": 1,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0007606679864693433,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0005326640093699098,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0005256989970803261,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0007838640012778342,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0005589299835264683,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 7.168562541977735,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 2.1685151210112963,
+          "error": null,
+          "warning_count": 151,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: 3.781e-01"
+          ]
+        },
+        {
+          "window": 2,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006156410090625286,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0004822140035685152,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0004827840020880103,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0005596459959633648,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0005260919861029834,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 7.978041235008277,
+          "error": null,
+          "warning_count": 1,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: -4.550e-02"
+          ]
+        },
+        {
+          "window": 3,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "failed",
+          "elapsed_seconds": 0.09227145800832659,
+          "error": {
+            "type": "builtins.FloatingPointError",
+            "message": "Non SPD result: the system is too ill-conditioned for this solver. The system is too ill-conditioned for this solver"
+          },
+          "warning_count": 140,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006741250108461827,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec_GraphicalLasso",
+          "status": "failed",
+          "elapsed_seconds": 0.09215224700164981,
+          "error": {
+            "type": "builtins.FloatingPointError",
+            "message": "Non SPD result: the system is too ill-conditioned for this solver. The system is too ill-conditioned for this solver"
+          },
+          "warning_count": 140,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0007481270004063845,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "failed",
+          "elapsed_seconds": 0.09146310601499863,
+          "error": {
+            "type": "builtins.FloatingPointError",
+            "message": "Non SPD result: the system is too ill-conditioned for this solver. The system is too ill-conditioned for this solver"
+          },
+          "warning_count": 140,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0016911940183490515,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        }
+      ]
+    },
+    {
+      "case": "w2-t1-c256",
+      "source": "/tmp/pyspi-workflow-profiles-pqmnp77t/final-native/results/001/calculations/w2-t1-c256/batches/00000000/attempt-5effae58f1db422d9e216372c8241977/reports.json",
+      "source_sha256": "4f4d97036770396115fd6566a68b09fa80ff7eaf809144bc310838f48547c2fd",
+      "family_seconds_per_window": {
+        "GraphicalLassoCV": 7.773639801736863,
+        "GraphicalLasso": 1.6849927177536301
+      },
+      "total_seconds_per_window": 9.458632519490493,
+      "total_seconds_600": 5675.179511694296,
+      "total_seconds_41400": 391587.3863069064,
+      "reports": [
+        {
+          "window": 0,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 7.495291814004304,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 1.9932648339890875,
+          "error": null,
+          "warning_count": 80,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: 3.360e-01"
+          ]
+        },
+        {
+          "window": 0,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006427629850804806,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0005464169953484088,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.00090502601233311,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.00048208399675786495,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 0,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0004799329908564687,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 8.21023183898069,
+          "error": null,
+          "warning_count": 1,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: -1.129e-01"
+          ]
+        },
+        {
+          "window": 1,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 2.156343562004622,
+          "error": null,
+          "warning_count": 138,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: -7.358e-01"
+          ]
+        },
+        {
+          "window": 1,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.000682104000588879,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0005445860151667148,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.000515418010763824,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0006345919973682612,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 1,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0005037869850639254,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 7.382037926989142,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 2.3153076890157536,
+          "error": null,
+          "warning_count": 151,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: 3.530e-01"
+          ]
+        },
+        {
+          "window": 2,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006649309943895787,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0005327260005287826,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0005540229903999716,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "success",
+          "elapsed_seconds": 0.0006150350091047585,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 2,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0007006899977568537,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "cov_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 7.999283057986759,
+          "error": null,
+          "warning_count": 1,
+          "final_nonconvergence": [
+            "graphical_lasso: did not converge after 100 iteration: dual gap: -1.096e-02"
+          ]
+        },
+        {
+          "window": 3,
+          "identifier": "cov-sq_GraphicalLasso",
+          "status": "failed",
+          "elapsed_seconds": 0.09246737699140795,
+          "error": {
+            "type": "builtins.FloatingPointError",
+            "message": "Non SPD result: the system is too ill-conditioned for this solver. The system is too ill-conditioned for this solver"
+          },
+          "warning_count": 140,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "cov-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0007348770159296691,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec_GraphicalLasso",
+          "status": "failed",
+          "elapsed_seconds": 0.09041013100068085,
+          "error": {
+            "type": "builtins.FloatingPointError",
+            "message": "Non SPD result: the system is too ill-conditioned for this solver. The system is too ill-conditioned for this solver"
+          },
+          "warning_count": 140,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006454399845097214,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec-sq_GraphicalLasso",
+          "status": "failed",
+          "elapsed_seconds": 0.08882183799869381,
+          "error": {
+            "type": "builtins.FloatingPointError",
+            "message": "Non SPD result: the system is too ill-conditioned for this solver. The system is too ill-conditioned for this solver"
+          },
+          "warning_count": 140,
+          "final_nonconvergence": []
+        },
+        {
+          "window": 3,
+          "identifier": "prec-sq_GraphicalLassoCV",
+          "status": "success",
+          "elapsed_seconds": 0.0006855770188849419,
+          "error": null,
+          "warning_count": 0,
+          "final_nonconvergence": []
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "selection_contract": "1 passed, 44 deselected; tests/workflow/test_metrics.py::test_reviewed_preset_preserves_unrelated_inventory_and_applies_approved_changes",
+    "static_check": "Exactly seven config removals; unrelated settings and CSV fields preserved; amplitude config unchanged.",
+    "native_dependency_check": {
+      "main_outputs": 188,
+      "amplitude_outputs": 12,
+      "optional_dependencies": [],
+      "jvm_started": false
+    }
+  }
+}

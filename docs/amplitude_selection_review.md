@@ -1,7 +1,9 @@
 # Systematic amplitude-selection review
 
 The review covered all **200 starting outputs**. After approved redundancy
-removals, the main normalized selection contains **195 outputs**. The alternative selects
+removals, the main normalized selection contained **195 outputs**. The subsequent
+[GraphicalLasso review](workflow_performance_review.md#graphical-lasso-run-removal)
+removes seven more, leaving **188**. The alternative selects
 **12 existing outputs**, using the same signals, reference, filters and 0.5-second
 nonoverlapping windows, with **detrend=true, zscore=false**. This replaces the
 earlier incomplete review of nine hand-selected outputs. Every starting main-run

@@ -199,3 +199,52 @@ run. Focused integration checks and provenance are recorded in
 [`run_hotspots_merge_results.json`](../tests/run_hotspots_merge_results.json).
 The earlier profile receipts remain records of their exact measured code/config
 hashes. The temporary worktree is removed after the merged changes are committed.
+
+## Graphical lasso run removal
+
+On 2026-10-28 the user preferred dropping this problematic family to a substantial
+solver refactor. The working selection now excludes its seven outputs: fixed
+GraphicalLasso squared covariance and ordinary/squared precision, plus all four
+GraphicalLassoCV outputs. Main selection: **195 -> 188**. Amplitude selection:
+**12**, already excluding both estimators. Library implementations remain available.
+Earlier profiles above describe the original 195-output workload.
+
+Re-reading the completed serial CAR pilot's reports establishes:
+
+- Fixed GraphicalLasso: final nonconvergence on windows 0, 1 and 2; a
+  `FloatingPointError` for a non-positive-definite result on window 3. That failed
+  fit was retried for each of its three outputs because failures are not cached.
+- GraphicalLassoCV: final nonconvergence on windows 1 and 3. Its selection stage
+  additionally fits many candidate penalties/folds; a clean final warning list
+  does not certify all candidate fits.
+- The previous one-versus-two-thread comparison changed all seven selected
+  outputs, reaching 0.6543 absolute difference in squared precision. A fixed
+  thread count improves repeatability but does not establish convergence.
+
+| Removed requests, including shared fits and failed retries | Mean seconds/window | x600 | x600x69 |
+| --- | ---: | ---: | ---: |
+| Fixed GraphicalLasso, three outputs | 1.664 | 16.64 min | 19.13 h |
+| GraphicalLassoCV, four outputs | 7.566 | 75.66 min | 87.01 h |
+| Both | 9.230 | 92.30 min | 106.14 h |
+
+These are existing measured calculation costs, accounting for sharing; output
+variants are not charged a complete fit each when a fit succeeds. Together they
+were 41.7% of the serial pilot's summed metric time. Projections describe removed
+serial-equivalent work, not measured elapsed savings with multiple workers or a
+new complete workflow benchmark. Four windows from one patient do not establish
+cohort-wide cost or failure rates. The final two-worker pilot similarly spent
+9.459 seconds of summed metric work per window on this family.
+
+The model is mathematically valid, but this solver/setup is unreliable on the
+tested data. The wrapper currently calls sklearn defaults; earlier cache and
+warning-suppression bugs were already fixed. The
+[original audit](../audit/notes/cov_prec_glasso.md) separately found solver
+optimality failures, and [sklearn's guidance](https://scikit-learn.org/stable/modules/covariance.html#sparse-inverse-covariance)
+notes instability on highly correlated data. CAR introduces a linear dependency;
+that complicates fitting but does not itself invalidate a regularized estimator.
+No penalty, solver, preprocessing or thread setting was changed here.
+
+The [extracted receipt](../audit/briefing/graphical_lasso_run_removal.json) preserves
+source report hashes, costs, final warning messages and errors. The existing
+selection-contract test is updated to verify the seven removals while preserving
+every unrelated output. No estimator tests or numerical goldens need updating.

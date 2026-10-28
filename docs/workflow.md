@@ -170,7 +170,7 @@ imports may initialize their normal third-party caches. NumPy/Python RNG state
 and mutable SPI class label lists are restored after inspection; labels remain
 unvalidated scientific metadata.
 
-The packaged [reviewed.yaml](../pyspi/workflow/reviewed.yaml) contains 195
+The packaged [reviewed.yaml](../pyspi/workflow/reviewed.yaml) contains 188
 requests derived from the 185 identifiers in the archived patient surveys.
 It removes ten group-delay band requests, adds 22 signed PLI/wPLI requests
 matching the existing bands, and adds eight cross-correlation requests (signed
@@ -183,10 +183,15 @@ removes five further normalized redundancies, selecting representatives by
 standalone runtime. See [the regression/Gaussian review](regression_gaussian_review.md)
 and [the amplitude selection review](amplitude_selection_review.md) for the
 complete decisions and benchmark receipts.
+The later CAR resource review drops seven GraphicalLasso/GraphicalLassoCV
+outputs for solver failures and runtime, reducing 195 to 188. The existing
+four-window serial pilot spent 9.23 seconds/window on these requests (including
+failed refits), about 42% of measured metric work. See the
+[removal evidence](workflow_performance_review.md#graphical-lasso-run-removal).
 MinCovDet and EllipticEnvelope now also share one seeded FAST-MCD fit in the
 library: the latter only adds an outlier threshold that covariance and precision
 outputs do not use. The two redundant EllipticEnvelope precision requests remain
-excluded from the 195-output selection.
+excluded from the 188-output selection.
 The example workflow selects `reviewed`; the former `retained185` preset name
 has been replaced, so update custom workflow YAMLs that use that name.
 
@@ -206,9 +211,11 @@ a window's diagnostics reach the parent when that window finishes; interrupted
 in-flight windows are recomputed on resume. Resource settings are recorded per
 session and may change on resume. Random estimators without fixed seeds can
 still vary with scheduling; the reviewed robust fits use a fixed seed.
-Keep one numerical thread per worker for this reviewed selection: the CAR
-pilot found convergence-sensitive GraphicalLasso results at two threads, with
-no speed benefit. Do not mix those thread settings across resumed sessions.
+One numerical thread per worker remains the default. The earlier CAR pilot
+found convergence-sensitive GraphicalLasso results at two threads; those outputs
+are now excluded. The other outputs agreed within the recorded tolerance, but
+the two-thread trial showed no overall speed benefit. Prefer window workers
+until a new profile demonstrates a benefit from additional numerical threads.
 
 Use `python -m pyspi.workflow profile CONFIG --max-windows 4 --report trial.json`
 with a new output location for an end-to-end measurement including continuous
@@ -353,9 +360,11 @@ or singular/numerical effects. Five more are deferred: four GraphicalLassoCV
 outputs with numerical/runtime problems, and signed-data Bray-Curtis with a
 potentially vanishing denominator. Previously removed normalized redundancies
 were also reconsidered. Five additional normalized redundancies were removed
-using standalone timings to choose representatives: the main selection is now
+using standalone timings to choose representatives: that review left
 **195 outputs**, retaining cosine distance, squared empirical covariance and
-MinCovDet precision over their equivalent alternatives.
+MinCovDet precision over their equivalent alternatives. The subsequent
+GraphicalLasso removal leaves **188 main outputs**; the amplitude selection
+remains **12**.
 
 The six included precision outputs change beyond pairwise amplitude rescaling
 because shrinkage acts on unequal raw variances. They are fitted inverse

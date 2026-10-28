@@ -93,13 +93,13 @@ prec_OAS,,,,,Prevents stale results and accidental changes to cached fits; fitti
 prec-sq_OAS,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
 prec_ShrunkCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
 prec-sq_ShrunkCovariance,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
-cov-sq_GraphicalLasso,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
-cov_GraphicalLassoCV,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. 118x1024: 4.2 s = 80 sklearn glasso fits (4 refinements x 5 folds x 4 alphas) + final. Left as is: n_jobs cuts wall time only; compiled solver unverified.
-cov-sq_GraphicalLassoCV,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. 118x1024: 4.2 s = 80 sklearn glasso fits (4 refinements x 5 folds x 4 alphas) + final. Left as is: n_jobs cuts wall time only; compiled solver unverified.
-prec_GraphicalLasso,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
-prec-sq_GraphicalLasso,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
-prec_GraphicalLassoCV,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. 118x1024: 4.2 s = 80 sklearn glasso fits (4 refinements x 5 folds x 4 alphas) + final. Left as is: n_jobs cuts wall time only; compiled solver unverified.
-prec-sq_GraphicalLassoCV,,1,1,,Prevents stale results and accidental changes to cached fits; fitting warnings visible. 118x1024: 4.2 s = 80 sklearn glasso fits (4 refinements x 5 folds x 4 alphas) + final. Left as is: n_jobs cuts wall time only; compiled solver unverified.
+cov-sq_GraphicalLasso,,,,,Dropped from run: CAR solver failures/nonconvergence; fixed-penalty family ~1.66 s/window including failed refits.
+cov_GraphicalLassoCV,,1,1,,Dropped from run: CAR solver failures/nonconvergence; CV family ~7.57 s/window shared across four outputs.
+cov-sq_GraphicalLassoCV,,1,1,,Dropped from run: CAR solver failures/nonconvergence; CV family ~7.57 s/window shared across four outputs.
+prec_GraphicalLasso,,,,,Dropped from run: CAR solver failures/nonconvergence; fixed-penalty family ~1.66 s/window including failed refits.
+prec-sq_GraphicalLasso,,,,,Dropped from run: CAR solver failures/nonconvergence; fixed-penalty family ~1.66 s/window including failed refits.
+prec_GraphicalLassoCV,,1,1,,Dropped from run: CAR solver failures/nonconvergence; CV family ~7.57 s/window shared across four outputs.
+prec-sq_GraphicalLassoCV,,1,1,,Dropped from run: CAR solver failures/nonconvergence; CV family ~7.57 s/window shared across four outputs.
 cov_GraphicalLasso,,,,,Prevents stale results and accidental changes to cached fits; fitting warnings visible.
 cov_MinCovDet,,1,1,,Full-rank 118x1024: 4.35 -> 1.39 s; Cholesky steps/shared seeded fit. CAR/ill-conditioned inputs use reference fit.
 cov-sq_MinCovDet,,1,1,,Full-rank 118x1024: 4.35 -> 1.39 s; Cholesky steps/shared seeded fit. CAR/ill-conditioned inputs use reference fit.
