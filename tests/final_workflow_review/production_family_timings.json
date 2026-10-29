@@ -1,0 +1,193 @@
+{
+  "baseline_commit": "99ed77d",
+  "shape": [
+    3,
+    118,
+    1024
+  ],
+  "threads": 1,
+  "limits": "Three real CAR windows from patient 001. Preparation, imports, JIT loading/compilation and output excluded. Includes Data construction and diagnostics. No throughput or whole-process memory claim; cohort totals are sequential projections without startup or contention.",
+  "source_sha256": {
+    "/tmp/pyspi-candidate-pilot/001-inputs.npz": "c7792de12dfd2e8593651c5c3854d93e6a2e9dc697720e6711c1204f55fa5361",
+    "pyspi/_envelope.py": "fdbb0e77d99db6b4649a50fd423eb679d3276f130323bec08369d541714106f5",
+    "pyspi/_envelope_kernel.py": "060f81ff4936385505665258fc1b8d9df0a9e0615838a900a47fb2c9feabdbd4",
+    "pyspi/_histogram.py": "6a2f3e896753ef741fd0c174e337d3870404c2ba9af5aa0748755937eb728d33",
+    "pyspi/_lightweight.py": "debbc75b6b37d56d24ffff3c0af6910d66ab62c39c3bb3c17bc0177d813ae994",
+    "pyspi/statistics/basic.py": "729307088b3bb317ccfe5f20795a6ad6164bf1e3da6332848fb98e3e0e0446b0",
+    "pyspi/statistics/distance.py": "b5b79606e6dff09719224433df8ad9b1b0f2508e500142299de6c805c96355f5",
+    "tests/final_workflow_review/benchmark_families.py": "b6654e48b0277e388113e269f1fceebf126c21a0551bb3760e2ab4f010555608"
+  },
+  "baseline_sha256": {
+    "envelope": "aa74597ebafb8319155cf52b218c8b34086fac3b23b823674e3b2dfe4d5f7eeb",
+    "histogram": "bf8b8b68cf1f5a6e13f2e34047b747ea2b3b676f0157f4b905d3a15bc4ab21e2"
+  },
+  "timings": {
+    "envelope_before_amplitude_orth": {
+      "seconds": [
+        0.7710956019873265,
+        0.7381783190066926,
+        0.7329800679872278
+      ],
+      "median_seconds": 0.7381783190066926,
+      "x600_seconds": 442.90699140401557,
+      "x41400_hours": 8.489050668576965
+    },
+    "envelope_after_amplitude_orth": {
+      "seconds": [
+        0.12464947201078758,
+        0.1247771880007349,
+        0.11915355699602515
+      ],
+      "median_seconds": 0.12464947201078758,
+      "x600_seconds": 74.78968320647255,
+      "x41400_hours": 1.4334689281240571
+    },
+    "envelope_before_complete_six": {
+      "seconds": [
+        0.7211772880109493,
+        0.750126311002532,
+        0.7500111759873107
+      ],
+      "median_seconds": 0.7500111759873107,
+      "x600_seconds": 450.0067055923864,
+      "x41400_hours": 8.625128523854073
+    },
+    "envelope_after_complete_six": {
+      "seconds": [
+        0.36905109699000604,
+        0.36541831798967905,
+        0.3649905219790526
+      ],
+      "median_seconds": 0.36541831798967905,
+      "x600_seconds": 219.25099079380743,
+      "x41400_hours": 4.202310656881309
+    },
+    "histogram_before_RE": {
+      "seconds": [
+        0.011933575995499268,
+        0.011048378015402704,
+        0.010630634002154693
+      ],
+      "median_seconds": 0.011048378015402704,
+      "x600_seconds": 6.629026809241623,
+      "x41400_hours": 0.1270563471771311
+    },
+    "histogram_after_RE": {
+      "seconds": [
+        0.003368655015947297,
+        0.0033396449871361256,
+        0.0048362379893660545
+      ],
+      "median_seconds": 0.003368655015947297,
+      "x600_seconds": 2.0211930095683783,
+      "x41400_hours": 0.03873953268339392
+    },
+    "histogram_after_RE_and_JS": {
+      "seconds": [
+        0.005686532007530332,
+        0.006682536011794582,
+        0.0050816859875340015
+      ],
+      "median_seconds": 0.005686532007530332,
+      "x600_seconds": 3.411919204518199,
+      "x41400_hours": 0.06539511808659881
+    },
+    "lagcorr_samples20_lag0009p765625ms": {
+      "seconds": [
+        0.003975050989538431,
+        0.003986977011663839,
+        0.004215927008772269
+      ],
+      "median_seconds": 0.003986977011663839,
+      "x600_seconds": 2.3921862069983035,
+      "x41400_hours": 0.04585023563413415
+    },
+    "eventexcess_threshold3": {
+      "seconds": [
+        0.0048018189845606685,
+        0.003568480024114251,
+        0.004492011008551344
+      ],
+      "median_seconds": 0.004492011008551344,
+      "x600_seconds": 2.6952066051308066,
+      "x41400_hours": 0.05165812659834046
+    },
+    "partialcorr_ledoitwolf": {
+      "seconds": [
+        0.006875035003758967,
+        0.006408360990462825,
+        0.007562793005490676
+      ],
+      "median_seconds": 0.006875035003758967,
+      "x600_seconds": 4.12502100225538,
+      "x41400_hours": 0.07906290254322812
+    },
+    "histre_bins10_pseudocount0p0000000001": {
+      "seconds": [
+        0.00296347399125807,
+        0.002904078020947054,
+        0.0032647080079186708
+      ],
+      "median_seconds": 0.00296347399125807,
+      "x600_seconds": 1.778084394754842,
+      "x41400_hours": 0.034079950899467804
+    },
+    "histjs_bins10_pseudocount0p0000000001": {
+      "seconds": [
+        0.005417381995357573,
+        0.004502942989347503,
+        0.004442118020961061
+      ],
+      "median_seconds": 0.004502942989347503,
+      "x600_seconds": 2.7017657936085016,
+      "x41400_hours": 0.05178384437749628
+    },
+    "log_scale_ratio_unnormalized": {
+      "seconds": [
+        0.002071138995233923,
+        0.0019566849805414677,
+        0.0021059249993413687
+      ],
+      "median_seconds": 0.002071138995233923,
+      "x600_seconds": 1.242683397140354,
+      "x41400_hours": 0.023818098445190117
+    },
+    "complete_five_normalized_candidates": {
+      "seconds": [
+        0.02181253398885019,
+        0.019153482979163527,
+        0.02108210200094618
+      ],
+      "median_seconds": 0.02108210200094618,
+      "x600_seconds": 12.649261200567707,
+      "x41400_hours": 0.24244417301088106
+    },
+    "increment_partial_and_JS_after_precision_and_RE": {
+      "seconds": [
+        0.004389898007502779,
+        0.004810321988770738,
+        0.004783640993991867
+      ],
+      "median_seconds": 0.004783640993991867,
+      "x600_seconds": 2.87018459639512,
+      "x41400_hours": 0.05501187143090647
+    }
+  },
+  "differences": {
+    "amplitude_orth": 1.6653345369377348e-15,
+    "complete_six": 1.6653345369377348e-15,
+    "histogram_RE": 0.0
+  },
+  "numba_load_or_compile_plus_small_warmup_seconds": 0.24183635498047806,
+  "matching_diagnostics_cases": [
+    "ordinary",
+    "proportional",
+    "almost_proportional",
+    "nonfinite",
+    "constant",
+    "zero"
+  ],
+  "post_measurement_changes": [
+    "Fixed-lag invalid-input diagnostics subsequently narrowed finite checks to the two used observation intervals; finite-data formula unchanged. PartialCorrelation subsequently added a two-observation preflight guard. Re-measure combined final workflows after integration; these are initial family measurements."
+  ]
+}

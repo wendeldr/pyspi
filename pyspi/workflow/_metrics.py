@@ -167,8 +167,8 @@ def resolve_metrics(path, *, sampling_rate_hz=None) -> tuple[Metric, ...]:
                     from pyspi.base import Directed
                     if not inspect.isclass(cls) or not issubclass(cls, Directed):
                         raise WorkflowError(f"{where}: requested class is not an SPI")
-                    from pyspi.statistics.basic import CrossCorrelation
-                    if issubclass(cls, CrossCorrelation) and sampling_rate_hz is not None:
+                    from pyspi.statistics.basic import CrossCorrelation, FixedLagCorrelation
+                    if issubclass(cls, (CrossCorrelation, FixedLagCorrelation)) and sampling_rate_hz is not None:
                         rate = float(positive_number(sampling_rate_hz, "sampling_rate_hz"))
                         if "fs" in params and float(positive_number(params["fs"], f"{where}.fs")) != rate:
                             raise WorkflowError(f"{where}: fs differs from workflow sampling_rate_hz")

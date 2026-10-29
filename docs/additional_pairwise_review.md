@@ -1,5 +1,9 @@
 # Additional pairwise candidate review
 
+The approved implementation is tracked in [final_workflow_review.md](final_workflow_review.md).
+The section below records the earlier source review and prototype evidence; its
+"not implemented" statuses describe that review date, not the current worktree.
+
 ## Subsequent top_features and workflow-sharing review
 
 After the adaptive-local reference was approved, the source review was extended

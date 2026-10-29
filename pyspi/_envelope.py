@@ -12,6 +12,7 @@ from scipy.fftpack import next_fast_len
 from scipy.signal import hilbert
 
 from pyspi._cache import cached_workspace
+from pyspi._envelope_kernel import orthogonal_directions
 
 
 REASONS = np.array(["estimated", "nonfinite_input", "zero_log_envelope", "constant_envelope",
@@ -45,13 +46,11 @@ def _unit_centered(values, error):
 
 
 class EnvelopeWorkspace:
-    block_bytes = 16*2**20
-
     def __init__(self, source):
         self.source = np.asarray(source, dtype=np.complex128 if np.iscomplexobj(source) else np.float64)
         self._bases = {}
         self._ordinary = {}
-        self._orthogonal = None
+        self._orthogonal = {}
 
     @cached_property
     def analytic(self):
@@ -115,54 +114,14 @@ class EnvelopeWorkspace:
         return self._ordinary[log]
 
     def orthogonal(self, log):
-        if self._orthogonal is None:
-            self._orthogonal = self._orthogonal_directions()
+        if log not in self._orthogonal:
+            self._orthogonal[log] = self._orthogonal_directions(log)
         return self._orthogonal[log]
 
-    def _orthogonal_directions(self):
+    def _orthogonal_directions(self, log):
         z, amplitude, error = self.analytic
-        p, n = z.shape
-        pairs = np.column_stack(np.triu_indices(p, 1))
-        result = {log: (np.full((p, p), np.nan), np.full((p, p), 7, dtype=np.uint8))
-                  for log in (False, True)}
-        # Each real temporary is bounded; several coexist during a block.
-        step = max(1, min(128, self.block_bytes//(n*8)))
-        for start in range(0, len(pairs), step):
-            i, j = pairs[start:start+step].T
-            first, second = z[i], z[j]
-            # Explicit real products make exact duplicate-channel cancellation
-            # exact, unlike complex division followed by complex multiplication.
-            product_a = second.imag*first.real
-            product_b = second.real*first.imag
-            cross = abs(product_a-product_b)
-            cross_error = (amplitude[j]*error[i] + amplitude[i]*error[j] + error[i]*error[j]
-                           + 3*np.finfo(float).eps*(abs(product_a)+abs(product_b)))
-            for seed, other in ((i, j), (j, i)):
-                with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
-                    orth = cross/amplitude[seed]
-                    orth_error = (cross_error + orth*error[seed])/amplitude[seed]
-                    degenerate = np.linalg.norm(orth, axis=-1) <= np.linalg.norm(orth_error, axis=-1)
-                zero_reference = (amplitude[seed] == 0).any(axis=-1)
-                nonfinite_input = ~self.input_finite[seed] | ~self.input_finite[other]
-                for log in (False, True):
-                    unit_seed, seed_reason = self.base(log)
-                    if log:
-                        with np.errstate(divide="ignore", invalid="ignore"):
-                            values, errors = 2*np.log(orth), 2*orth_error/orth
-                    else:
-                        values, errors = orth, orth_error
-                    unit_orth, reason = _unit_centered(values, errors)
-                    reason = np.maximum(reason, seed_reason[seed])
-                    if log:
-                        reason[(orth == 0).any(axis=-1)] = 2
-                    reason[degenerate] = 5
-                    reason[zero_reference] = 4
-                    reason[nonfinite_input] = 1
-                    correlation = np.einsum("ij,ij->i", unit_seed[seed], unit_orth)
-                    correlation, reason = self._bounded_correlation(correlation, reason, n)
-                    result[log][0][seed, other] = correlation
-                    result[log][1][seed, other] = reason
-        return result
+        unit, seed_reason = self.base(log)
+        return orthogonal_directions(z, amplitude, error, self.input_finite, unit, seed_reason, log)
 
     def result(self, orth, log, absolute):
         if not orth:

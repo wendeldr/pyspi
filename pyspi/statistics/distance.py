@@ -14,7 +14,7 @@ from hyppo.independence import (
 from hyppo.time_series import MGCX, DcorrX
 from pyspi._barycenter import euclidean_summary
 from pyspi._distance_correlation import distance_correlation
-from pyspi._histogram import histogram_relative_entropy
+from pyspi._histogram import histogram_divergence
 from pyspi._dtw import banded_dtw
 from pyspi._naming import compose, parameter, word
 
@@ -134,6 +134,7 @@ class HistogramRelativeEntropy(Undirected, Unsigned):
 
     name = "Histogram relative entropy"
     identifier = "histre"
+    _divergence = "relative_entropy"
     labels = ["unsigned", "distance", "unordered", "nonlinear", "undirected", "bivariate"]
 
     def __init__(self, bins=10, pseudocount=1e-10):
@@ -143,20 +144,28 @@ class HistogramRelativeEntropy(Undirected, Unsigned):
             raise ValueError("pseudocount must be finite and positive")
         self._bins = int(bins)
         self._pseudocount = float(pseudocount)
-        self.identifier = compose("histre", parameter("bins", bins),
+        self.identifier = compose(self.identifier, parameter("bins", bins),
                                   parameter("pseudocount", pseudocount, 1))
 
     @parse_multivariate
     def multivariate(self, data):
-        return histogram_relative_entropy(data, self._bins, self._pseudocount)[0]
+        return histogram_divergence(data, self._bins, self._pseudocount, self._divergence)[0]
 
     @parse_multivariate
     def diagnostics(self, data):
-        return {"reason": histogram_relative_entropy(data, self._bins, self._pseudocount)[1]}
+        return {"reason": histogram_divergence(data, self._bins, self._pseudocount, self._divergence)[1]}
 
     @parse_bivariate
     def bivariate(self, data, i=None, j=None):
         return self.multivariate(data)[i, j]
+
+
+class HistogramJensenShannon(HistogramRelativeEntropy):
+    """Jensen–Shannon divergence (not its square root), in nats, on marginal shapes."""
+
+    name = "Histogram Jensen–Shannon divergence"
+    identifier = "histjs"
+    _divergence = "jensen_shannon"
 
 
 class MultiscaleGraphCorrelation(Undirected, Unsigned):

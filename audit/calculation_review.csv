@@ -109,8 +109,8 @@ prec_MinCovDet,,1,1,,Full-rank 118x1024: 4.35 -> 1.39 s; Cholesky steps/shared s
 prec-sq_MinCovDet,,1,1,,Full-rank 118x1024: 4.35 -> 1.39 s; Cholesky steps/shared seeded fit. CAR/ill-conditioned inputs use reference fit.
 cov_EllipticEnvelope,,1,1,,Shared seeded MinCovDet fit avoids duplicate fitting; duplicate precision outputs omitted from run.
 cov-sq_EllipticEnvelope,,1,1,,Shared seeded MinCovDet fit avoids duplicate fitting; duplicate precision outputs omitted from run.
-pec,,,,,"6 variants, 118x1024: 0.83 s -> 0.77 s (~1.08x). Shared envelopes/projections; centered correlations."
-pec_orth,,,,,Shared projections; constant or roundoff-only envelopes return NaN with reasons.
+pec,,,,,"6 variants, 118x1024: 0.75 s -> 0.37 s (~2.1x); compiled guarded reductions; shared envelopes."
+pec_orth,,,,,"Amplitude-only, 118x1024: 0.74 s -> 0.12 s (~5.9x); compiled guards; skips unused log work."
 pec_orth_abs,,,,,Reuses directional correlations; abs before averaging; undefined envelopes return NaN.
 pec_log,,,,,Stable log power; centered correlations; undefined envelopes return NaN with reasons.
 pec_orth_log,,,,,Shared projections and stable log power; numerical degeneracy handled.
@@ -252,7 +252,12 @@ wspli_wavelet_mean_fs-1,all configured frequency bands,,,,
 wspli_wavelet_max_fs-1,all configured frequency bands,,,,
 dwspli_wavelet_mean_fs-1,all configured frequency bands,,,,
 dwspli_wavelet_max_fs-1,all configured frequency bands,,,,
-histre_bins-10,bins=10; pseudocount=1e-10,,,,~0.020 s/118ch CAR window; shared channel histograms; distribution-shape comparison.
+histre_bins-10,bins=10; pseudocount=1e-10,,,,118x1024: 11 ms -> 3.4 ms; compiled counts shared with Jensen-Shannon; same bins/guards.
 pec_band-30-70Hz,,,,,~0.013 s/118ch CAR window; continuous band filtering and shared PEC transforms.
 pec_orth_abs_band-30-70Hz,,,,,~0.75 s/118ch CAR window; shared band inputs and PEC transforms; exploratory.
 pac_phase-16-30Hz_amp-70-150Hz,,,,,~0.016 s/118ch CAR window; shared band inputs; phase-to-amplitude association; exploratory.
+lagcorr_samples20,lag=20 samples; fs=2048 Hz,,,,~4 ms/118ch window; shared aligned moments; source-first lag correlation.
+eventexcess_threshold3,abs(sample-z)>3,,,,"~4.5 ms/118ch window; indicator covariance; event proxy, not spike detection."
+logscaleratio,detrended; unnormalized,,,,~2.1 ms/118ch window; stable log standard-deviation ratio.
+partialcorr_ledoitwolf,,,,,~6.9 ms/118ch standalone; shares intact LedoitWolf precision; conditional association.
+histjs_bins10,bins=10; pseudocount=1e-10,,,,RE+JS ~5.7 ms/118ch window; shared histograms; divergence in nats.

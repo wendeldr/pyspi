@@ -4,11 +4,12 @@ import sklearn.covariance as cov
 import numpy as np
 
 from pyspi._cache import cached_workspace
+from pyspi._lightweight import lightweight_result
 from pyspi._naming import compose, duration, parameter, word
 from pyspi._rank import KendallWorkspace, SpearmanWorkspace
 from pyspi._robust import FastMinCovDet
 from pyspi._xcorr import CrossCorrelationWorkspace, SUMMARY_KEYS
-from pyspi.base import Undirected, Signed, parse_bivariate, parse_multivariate
+from pyspi.base import Directed, Undirected, Signed, parse_bivariate, parse_multivariate
 
 
 #: FAST-MCD draws its candidate subsets from a random stream. sklearn defaults
@@ -106,6 +107,115 @@ class Precision(Estimators):
 
     def __init__(self, estimator="EmpiricalCovariance", squared=False):
         super().__init__(kind="precision", squared=squared, estimator=estimator)
+
+
+class PartialCorrelation(Estimators):
+    """LedoitWolf-regularized partial correlation conditional on all input channels."""
+
+    name = "LedoitWolf partial correlation"
+    identifier = "partialcorr"
+
+    def __init__(self):
+        super().__init__(kind="precision", estimator="LedoitWolf")
+
+    def input_problem(self, n_observations, n_processes):
+        return self._minimum_observations_problem(n_observations, 2, "sample variation requires two observations")
+
+    def _result(self, data):
+        work = _basic_workspace(data)
+        values = work.values
+        p = len(values)
+        reason = np.full((p, p), "estimated", dtype="U24")
+        # Dropping a nonfinite channel would silently change the conditioning set.
+        if not np.isfinite(values).all():
+            result = np.full((p, p), np.nan)
+            reason[:] = "nonfinite_conditioning"
+        else:
+            precision = self._from_cache(data).precision_
+            diagonal = np.diag(precision)
+            with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+                scale = np.sqrt(diagonal)
+                result = -precision/scale[:, None]/scale[None, :]
+            invalid = ~np.isfinite(result) | (abs(result) > 1+8*values.shape[1]*np.finfo(float).eps)
+            reason[invalid] = "numerical_failure"
+            constant = np.all(values == values[:, :1], axis=1)
+            reason[constant[:, None] | constant[None, :]] = "constant_input"
+            result = np.clip(result, -1., 1.)
+            result[reason != "estimated"] = np.nan
+        np.fill_diagonal(result, np.nan)
+        np.fill_diagonal(reason, "diagonal")
+        return result, reason
+
+    @parse_multivariate
+    def multivariate(self, data):
+        return self._result(data)[0]
+
+    @parse_multivariate
+    def diagnostics(self, data):
+        return {"reason": self._result(data)[1]}
+
+    @parse_bivariate
+    def bivariate(self, data, i=None, j=None):
+        return self.multivariate(data)[i, j]
+
+
+class _MomentReduction:
+    @parse_multivariate
+    def multivariate(self, data):
+        return lightweight_result(data, self._reduction, self._setting)[0]
+
+    @parse_multivariate
+    def diagnostics(self, data):
+        return {"reason": lightweight_result(data, self._reduction, self._setting)[1]}
+
+    @parse_bivariate
+    def bivariate(self, data, i=None, j=None):
+        return self.multivariate(data)[i, j]
+
+    def input_problem(self, n_observations, n_processes):
+        lag = self._setting if self._reduction == "lag" else 0
+        return self._minimum_observations_problem(n_observations, lag+2, "two aligned observations are required")
+
+
+class FixedLagCorrelation(_MomentReduction, Directed, Signed):
+    """Pearson correlation of source[:-lag] and target[lag:], each recentered."""
+
+    name = "Fixed-lag correlation"
+    labels = ["basic", "signed", "directed", "linear", "temporal", "bivariate"]
+    _reduction = "lag"
+
+    def __init__(self, lag_samples=20, fs=2048):
+        if isinstance(lag_samples, (bool, np.bool_)) or not isinstance(lag_samples, (int, np.integer)) or lag_samples < 1:
+            raise ValueError("lag_samples must be a positive integer")
+        if isinstance(fs, (bool, str)) or not np.isscalar(fs) or np.iscomplexobj(fs) or not np.isfinite(fs) or fs <= 0:
+            raise ValueError("fs must be finite and positive")
+        self._setting = int(lag_samples)
+        self.fs = float(fs)
+        self.identifier = compose("lagcorr", parameter("samples", lag_samples), duration("lag", lag_samples/self.fs))
+
+
+class ThresholdEventExcess(_MomentReduction, Undirected, Signed):
+    """Covariance of abs(sample-z-score) > threshold indicators; an event proxy."""
+
+    name = "Threshold-event excess"
+    labels = ["basic", "signed", "undirected", "nonlinear", "bivariate"]
+    _reduction = "event"
+
+    def __init__(self, threshold=3):
+        if isinstance(threshold, (bool, str)) or not np.isscalar(threshold) or np.iscomplexobj(threshold) or not np.isfinite(threshold) or threshold <= 0:
+            raise ValueError("threshold must be finite and positive")
+        self._setting = float(threshold)
+        self.identifier = compose("eventexcess", parameter("threshold", threshold, 1))
+
+
+class LogScaleRatio(_MomentReduction, Directed, Signed):
+    """log(std(target)/std(source)); signed amplitude contrast, not causal flow."""
+
+    name = "Log scale ratio"
+    identifier = "logscaleratio"
+    labels = ["basic", "signed", "directed", "unordered", "bivariate"]
+    _reduction = "log_scale"
+    _setting = None
 
 
 class CrossCorrelationUnavailableWarning(UserWarning):

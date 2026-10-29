@@ -156,7 +156,8 @@ def test_shared_hilbert_and_directional_work_and_cache_ownership():
                 diagnostic["reason"][:] = "changed"
                 np.testing.assert_allclose(spi.multivariate(data), expected, atol=0)
                 assert spi.diagnostics(data)["reason"][0, 1] == "estimated"
-    assert analytic.call_count == directions.call_count == 1
+    assert analytic.call_count == 1
+    assert directions.call_count == 2  # one per requested transform, shared by signed/absolute
 
 
 @pytest.mark.parametrize("mutation", ["view", "replace"])
@@ -175,11 +176,10 @@ def test_mutation_invalidates_envelope_cache(mutation):
     assert envelope_workspace(data) is not old
 
 
-def test_channel_permutation_and_one_pair_blocks():
+def test_channel_permutation_and_bounded_scratch():
     raw = np.random.default_rng(8).normal(size=(5, 129))
     expected = EnvelopeWorkspace(raw)
     blocked = EnvelopeWorkspace(raw)
-    blocked.block_bytes = 129*8
     order = [3, 1, 4, 0, 2]
     permuted = EnvelopeWorkspace(raw[order])
     for orth, log, absolute in SPECS:
@@ -207,3 +207,10 @@ def test_instance_labels_are_signed_unless_absolute_and_do_not_leak():
     assert PowerEnvelopeCorrelation.labels == ["misc", "undirected"]
     with pytest.raises(ValueError, match="orthogonalization"):
         PowerEnvelopeCorrelation(absolute=True)
+
+
+def test_amplitude_only_does_not_compute_unused_log_variants():
+    work = EnvelopeWorkspace(np.random.default_rng(810).normal(size=(4, 128)))
+    work.result(True, False, True)
+    assert set(work._bases) == {False}
+    assert set(work._orthogonal) == {False}
