@@ -20,7 +20,7 @@ completion gate, not satisfied by the bounded profiling windows.
 | Group configuration / bounded shared continuous preparation | Implemented; synthetic and real separate/shared equivalence passes, including all 239 stored outputs. |
 | Output/reference/preprocessing contracts | Existing contracts retained; new metrics have focused serial/spawn/resume coverage. Group isolation and serial/spawn/resume tests pass; real full-patient audit pending. |
 | Final workflow timings, larger recording, complete process memory and tuning | Bounded 118/249-contact profiles and tuning completed below; complete-patient throughput remains pending. |
-| Final full-patient runs | Pending 3–5 complete patients, all selected final groups, float32 outputs and completion/availability audit. |
+| Final full-patient runs | Patient 001 complete and audited across all six groups, 609 windows, float32. Patient 006 running; 111 queued. Three complete audited patients remain the completion gate. |
 | Final configs/counts, brief CSV notes, review and chunked commits | In progress. No push authorized. |
 
 ## New calculation definitions
@@ -372,6 +372,11 @@ New telemetry records worker readiness and result-delivery delay. Delivery inclu
 serialization, transport and queue waiting; these overlap other worker activity
 and must not be added as independent wall-time components. The two affected
 serial/parallel shared-execution tests passed after this instrumentation change.
+Likewise, `calculation_wall_seconds` includes result callbacks/journal handling;
+in parallel mode it also includes worker startup, preprocessing and transport.
+`output_seconds` includes callback handling as well as batch persistence, so
+calculation and output columns overlap. Use measured end-to-end elapsed time for
+total throughput; do not obtain it by adding these diagnostic stage counters.
 
 Full-patient execution and the bounded-memory payload audit remain required.
 `tests/final_workflow_review/run_full_patient.py` profiles every planned window;
@@ -390,3 +395,53 @@ such output (0.282%); missing significance is not a calculation failure or zero
 connectivity. Existing robust-covariance rank/determinant warnings remain in the
 logs; the approved safeguards and estimator settings were not weakened to remove
 them. These bounded results do not establish the behavior of every later window.
+
+## Complete-patient results (in progress)
+
+Patient 001 has completed all six groups with 118 contacts and 609 full windows.
+The [whole-run profile](../tests/final_workflow_review/001-full-profile.json) records
+6526.45 seconds (1 h 49 min) including preparation, startup, calculations and
+writing. Two workers were used only for main CAR; other groups used one. Peak
+process-tree PSS was 3809 MiB (RSS 4587 MiB); minimum system-available memory was
+1656 MiB. No JVM was started. Shared preparation had one base miss/two hits,
+three reference misses/three hits, no evictions, and 8.78 GiB peak retained disk
+files within the 16 GiB budget.
+
+| Patient 001 workload | Elapsed per recording window | x600 | x600x69 |
+|---|---:|---:|---:|
+| Main CAR, 201 outputs | 8.060 s | 80.60 min | 92.69 h |
+| CAR amplitude, 13 outputs | 0.119 s | 1.19 min | 1.37 h |
+| Custom-local normalized, 15 outputs | 2.292 s | 22.92 min | 26.36 h |
+| Custom-local amplitude, 1 output | 0.0088 s | 5.26 s | 0.10 h |
+| Shaft normalized, 8 outputs | 0.220 s | 2.20 min | 2.53 h |
+| Shaft amplitude, 1 output | 0.0089 s | 5.35 s | 0.10 h |
+| All groups including orchestration | 10.717 s | 107.17 min | 123.24 h |
+
+These are measured full-group elapsed times divided by 609, not sums of overlapping
+stage counters. The projections repeat this same 118-contact workload and include
+its amortized preparation/startup/writing. They are not predictions for patients
+with different contact counts or conditioning, and exclude the subsequent audit.
+Individual metric timings within a shared family must not be interpreted as
+standalone costs; the independent family/incremental benchmarks remain above.
+
+The [full payload audit](../tests/final_workflow_review/001-full-audit.json) read
+every saved matrix, checking complete window coverage, authoritative contacts and
+order, reference/preprocessing identity, float32 dtype, storage availability,
+diagonal/reference masks, attempt statuses and recoverable overflow records.
+All **145551 attempts succeeded**. There were no missing payloads, unavailable
+reference contacts, infinite outputs or precision overflows. Saved run files
+total 2.78 GiB, including metadata and diagnostics. Clinical input files and
+historical runs were not changed.
+
+Off-diagonal NaNs occurred only in the six significance-filtered cross-correlation
+outputs. Each retained 11232 of 8407854 directed pair/windows (0.134%); the rest
+had no significant lag under the approved test. These are successful missing
+estimates, not failed calculations or zero connectivity. The full audit also
+records the existing robust-covariance rank/determinant warnings. Coherence
+magnitude's mean emits an empty-slice warning for its deliberately missing
+self-connection diagonal; its off-diagonal results were all finite. No warnings
+were suppressed to obtain a clean-looking run.
+
+Patient 006 is running and patient 111 is queued through the same driver, each
+with a full profile and automatic payload audit. The goal is not complete until
+all three patients and the final cross-patient review finish.
