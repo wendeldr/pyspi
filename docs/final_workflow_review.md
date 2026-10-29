@@ -20,7 +20,7 @@ completion gate, not satisfied by the bounded profiling windows.
 | Group configuration / bounded shared continuous preparation | Implemented; synthetic and real separate/shared equivalence passes, including all 239 stored outputs. |
 | Output/reference/preprocessing contracts | Existing contracts retained; new metrics have focused serial/spawn/resume coverage. Group isolation and serial/spawn/resume tests pass; real full-patient audit pending. |
 | Final workflow timings, larger recording, complete process memory and tuning | Bounded 118/249-contact profiles and tuning completed below; complete-patient throughput remains pending. |
-| Final full-patient runs | Patient 001 complete and audited across all six groups, 609 windows, float32. Patient 006 running; 111 queued. Three complete audited patients remain the completion gate. |
+| Final full-patient runs | Patients 001 and 006 complete and audited across all six groups (609/605 windows), float32. Patient 111 running. Three complete audited patients remain the completion gate. |
 | Final configs/counts, brief CSV notes, review and chunked commits | In progress. No push authorized. |
 
 ## New calculation definitions
@@ -442,6 +442,34 @@ magnitude's mean emits an empty-slice warning for its deliberately missing
 self-connection diagonal; its off-diagonal results were all finite. No warnings
 were suppressed to obtain a clean-looking run.
 
-Patient 006 is running and patient 111 is queued through the same driver, each
-with a full profile and automatic payload audit. The goal is not complete until
-all three patients and the final cross-patient review finish.
+Patient 006 has also completed all six groups: 80 contacts, 605 windows and
+**144595 successful attempts**. Its
+[profile](../tests/final_workflow_review/006-full-profile.json) records 3097.77
+seconds (51 min 38 s), with the same two-worker main-CAR/serial-other-groups
+settings. Peak process-tree PSS was 3697 MiB (RSS 4848 MiB), minimum available
+system memory 2237 MiB, and peak retained disk preparation 5.91 GiB with no
+evictions. Its [full payload audit](../tests/final_workflow_review/006-full-audit.json)
+again found no failed attempts, missing payloads, unavailable reference contacts,
+infinite outputs or precision overflows. Stored run files total 1.30 GiB.
+The same six significance-filtered cross-correlations are the only outputs with
+off-diagonal NaNs: each retained 6212/3823600 directed pair/windows (0.162%).
+Covariance and missing-diagonal warning categories match patient 001.
+
+| Patient 006 workload | Elapsed per recording window | x600 | x600x69 |
+|---|---:|---:|---:|
+| Main CAR, 201 outputs | 3.769 s | 37.69 min | 43.34 h |
+| CAR amplitude, 13 outputs | 0.0653 s | 39.19 s | 0.75 h |
+| Custom-local normalized, 15 outputs | 1.141 s | 11.41 min | 13.12 h |
+| Custom-local amplitude, 1 output | 0.0065 s | 3.89 s | 0.075 h |
+| Shaft normalized, 8 outputs | 0.123 s | 1.23 min | 1.41 h |
+| Shaft amplitude, 1 output | 0.0065 s | 3.90 s | 0.075 h |
+| All groups including orchestration | 5.120 s | 51.20 min | 58.88 h |
+
+The same projection limits apply: these repeat an 80-contact workload, not a
+mixed cohort, and exclude the subsequent audit. The substantially different
+118/80-contact times demonstrate why one channel count should not be used as
+a blanket cohort prediction.
+
+Patient 111 is running through the same driver with one worker, a full profile
+and automatic payload audit. The goal is not complete until that larger patient
+and the final cross-patient review finish.
