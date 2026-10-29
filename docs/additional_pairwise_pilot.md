@@ -13,9 +13,13 @@ the runtime budget.
 
 Use [the common nine-output selection](../pyspi/workflow/additional_candidates.yaml)
 or [the CAR ten-output selection](../pyspi/workflow/additional_candidates_car.yaml)
-and matched patient-001 workflow examples for
+and the current patient-001 workflow examples for
 [CAR](../examples/workflow/additional_candidates_car.yaml) and
-[strict Laplacian](../examples/workflow/additional_candidates_laplacian.yaml).
+[custom local reference](../examples/workflow/additional_candidates_local.yaml).
+The custom reference supersedes the strict-Laplacian example for future runs;
+**all Laplacian measurements below describe the historical strict method**.
+The [original pilot config](../tests/candidate_pilot/configs/001-laplacian.yaml)
+retains that method for reproducing the measurements.
 Each uses two workers, one numerical thread, 2048 Hz output, 0.5-second
 nonoverlapping windows, detrending and z-scoring. Band PEC follows these window
 flags; PAC retains its documented prototype preprocessing. The established
@@ -46,7 +50,9 @@ workflow profiles below use the normal production preparation order.
 
 The historical cache includes 72 people with 40–249 retained contacts. Coordinates
 support complete, forward-ordered shaft layouts for 71. Patient **090** has a
-coordinate-order reversal on E′: its local layout must be reviewed before use.
+coordinate-order reversal on E′: its coordinate-validated strict local layout
+required review. The subsequently approved custom reference uses authoritative
+contact numbering and equal spacing, so coordinates do not gate that method.
 No physical order was silently changed. This check establishes metadata
 consistency, not clinical localization accuracy. The three concrete pilot
 layouts retain excluded contacts in the shaft lists so gaps cannot be bridged.
@@ -331,6 +337,7 @@ Both final workflow examples (ten CAR / nine Laplacian) pass preflight without s
 the established 188/12 counts and CSV identity/flag columns are preserved.
 
 Kernel MI is enabled only in the CAR selection, as agreed; no inclusion
-decision remains pending. Patient 090 local geometry remains an explicit input-data
-limitation, not an inferred layout. Full-cohort production, predictive
+decision remains pending. Patient 090's coordinate issue remains a limitation of
+the historical geometry validation; the later custom reference does not use
+coordinates (see [its methods and cohort scan](adaptive_local_reference.md)). Full-cohort production, predictive
 validation, wider DTW and additional reference runs remain outside this goal.

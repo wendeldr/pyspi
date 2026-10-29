@@ -63,7 +63,7 @@ with the metadata, including order. No new QC exclusions or sorting are inferred
                 results.zarr/<metric>/
 ```
 
-`none`, `car`, `laplacian`, and other supported references occupy separate
+`none`, `car`, `laplacian`, `adaptive_local`, and other supported references occupy separate
 reference groups. Metric identifiers remain mathematical names. A default run
 signature includes the complete reference settings, contact pool/order, filters,
 sampling rate, and detrend/zscore settings, so different local definitions or
@@ -154,3 +154,8 @@ receipt. Working metric selections remain 188 normalized, 12 amplitude, and
 The new composite run schema is `seeg-connectivity-run/1`. Old standalone
 `pyspi-eeg-run/1` indexes are not silently migrated or interpreted as new runs;
 their compact per-batch payloads remain accessible through the storage reader.
+
+The [custom local reference](adaptive_local_reference.md) derives shaft membership
+and numbered contact order from each patient's metadata. It preserves CAR's
+contact axes while recording a per-contact reference rule and weights. No shaft
+lists or coordinates are required in the workflow configuration.

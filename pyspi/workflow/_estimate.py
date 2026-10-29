@@ -100,7 +100,13 @@ def calibration_issues(calibration, cfg, report):
             stale.append(f"{key} differs from the calibration")
     preparation = calibration.get("preparation") or {}
     reference = preparation.get("details", {}).get("reference")
-    if reference is not None and reference != cfg.reference:
+    expected_reference = cfg.reference
+    if cfg.reference["method"] == "adaptive_local":
+        source = calibration["source"]
+        expected_reference = next((entry["reference"] for entry in report.recordings
+                                   if entry["patient_id"] == source.get("patient_id")
+                                   and entry["recording_id"] == source.get("recording_id")), None)
+    if reference is not None and reference != expected_reference:
         stale.append("reference differs from the calibration")
     if calibration["execution"]["threads_per_worker"] != cfg.execution["threads_per_worker"]:
         stale.append("threads_per_worker differs from the calibration")

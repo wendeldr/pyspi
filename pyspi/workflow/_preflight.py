@@ -10,6 +10,7 @@ from ._metrics import metric_input_problems, resolve_metrics
 from ._windows import plan_windows
 from ._prepare import reference_names
 from ._reference import reference_plan
+from ._adaptive_reference import resolve_reference
 from ._bands import required_bands
 
 
@@ -92,8 +93,9 @@ def preflight(config) -> PreflightReport:
     resolve_dtypes(cfg, [metric.identifier for metric in metrics])
     recordings = []
     for recording, header, channels in selected:
-        output_names = reference_names([name for _, name in channels], cfg.reference)
-        reference = reference_plan(output_names, cfg.reference)
+        resolved_reference = resolve_reference(cfg, recording)
+        output_names = reference_names([name for _, name in channels], resolved_reference)
+        reference = reference_plan(output_names, resolved_reference)
         available = reference[1].tolist() if reference is not None else [True] * len(output_names)
         matching = all(signal.rate == target for signal, _ in channels)
         windows = None
@@ -105,6 +107,7 @@ def preflight(config) -> PreflightReport:
                            "path": str(header.path), "status": "ready" if matching else "requires_resampling",
                            "duration_seconds": float(header.records * header.record_seconds),
                            "output_channels": output_names,
+                           "reference": resolved_reference,
                            "reference_available": available,
                            "channels": [{"source_index": signal.index, "source_label": signal.label,
                                          "name": name, "native_sampling_rate_hz": float(signal.rate),

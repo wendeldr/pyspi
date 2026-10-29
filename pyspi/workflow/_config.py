@@ -85,7 +85,8 @@ def reference_config(value, base):
     method = value.get("method")
     options = {"none": set(), "car": set(), "channels": {"channels"},
                "mapping": {"mapping"}, "bipolar": {"anode", "cathode", "names", "drop_refs"},
-               "rest": {"forward"}, "laplacian": {"shafts"}, "shaft_average": {"shafts"}}
+               "rest": {"forward"}, "laplacian": {"shafts"}, "shaft_average": {"shafts"},
+               "adaptive_local": set()}
     if not isinstance(method, str) or method not in options:
         raise WorkflowError(f"reference.method must be one of {list(options)}")
     fields(value, {"method"} | options[method], "reference")

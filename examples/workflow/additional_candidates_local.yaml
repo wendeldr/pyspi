@@ -1,0 +1,43 @@
+# Matched nine-output custom local-reference run; patient 001 is the example.
+# Patient-specific shaft membership and contact order come from dataset metadata.
+# Uses equal-spacing fractions, endpoint subtraction, shaft-average gap fallback,
+# and CAR for shafts with fewer than three good contacts. No coordinate weights.
+# Methods and exact rules: docs/adaptive_local_reference.md.
+# Keep contacts, filters and windows matched with the CAR workflow.
+# Profile with --max-windows 12 before a production run. Two workers / one
+# numerical thread follow the earlier strict-Laplacian pilot; custom-reference
+# estimator timings have not been measured in a production cohort.
+version: 1
+output_dtype: float32
+recordings:
+- path: /home/dan/data/IEEG/baseline_edfs/001_Baseline.EDF
+  patient_id: '001'
+  recording_id: baseline
+metrics:
+  config: ../../pyspi/workflow/additional_candidates.yaml
+sampling_rate_hz: 2048
+bandpass:
+  low_hz: 0.5
+  high_hz: 500
+notch:
+  enabled: true
+  line_frequency_hz: 60
+  width_hz: 1
+  transition_hz: 1
+window:
+  length_seconds: 0.5
+  step_seconds: 0.5
+preprocessing:
+  detrend: true
+  zscore: true
+output_batch_mib: 32
+execution:
+  workers: 2
+  threads_per_worker: 1
+  spectral_cache_mib: 256
+  scratch_directory: ../../.candidate-scratch
+reference:
+  method: adaptive_local
+run_name: additional-candidates
+dataset:
+  data_lake_config: ../../../seeg-data-lake/config.toml

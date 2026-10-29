@@ -1,9 +1,7 @@
 # Ten-output candidate run for patient 001; CAR reference (includes kernel MI).
 # Ready for bounded review: profile with --max-windows 12 before a production run.
-# Keep channels, filters and windows matched between references. Adapt recordings
-# and physical shaft lists together for other patients; do not reuse 001's layout.
-# Layout provenance: tests/candidate_pilot/reference_layouts.json.
-# Patient 090's coordinate ordering requires review before a local-reference run.
+# Keep contacts, filters and windows matched with additional_candidates_local.yaml.
+# Both workflows resolve patient-specific contacts from dataset metadata.
 # Two workers / one numerical thread follows the measured candidate workflow;
 # memory and speed on the largest patient with two workers are still projections.
 # Definitions, selection decisions and costs: docs/additional_pairwise_pilot.md.

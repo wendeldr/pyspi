@@ -468,6 +468,7 @@ def _run(config, *, resume=False, retry_failures=False, max_windows=None):
         if resume and not any((path / "run.json").is_file() for _, path in addresses):
             raise WorkflowError("no run to resume among the configured recordings")
         for recording, entry, (patient, path) in zip(cfg.recordings, report.recordings, addresses):
+            cfg = replace(report.configuration, reference=entry["reference"])
             recording_started = perf_counter()
             contract = _contract(cfg, recording, entry, report.metrics, environment, max_windows)
             with _run_lock(path):

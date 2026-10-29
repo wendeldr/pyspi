@@ -1,6 +1,6 @@
 """Continuous MNE preparation, separate from Calculator and its window caches."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from tempfile import TemporaryDirectory
 from time import perf_counter
 
@@ -28,7 +28,7 @@ def harmonics(rate, notch):
 def reference_names(names, reference):
     """Validate retained-channel references and determine the resulting axes."""
     method = reference["method"]
-    if method in ("laplacian", "shaft_average"):
+    if method in ("laplacian", "shaft_average", "adaptive_local"):
         reference_plan(names, reference)
     required = []
     if method == "channels":
@@ -69,6 +69,8 @@ def prepare_recording(recording, cfg, *, channels=None, bands=None):
     bounded separately. MNE converts EDF physical units to SI (normally volts).
     """
     import mne
+    from ._adaptive_reference import resolve_reference
+    cfg = replace(cfg, reference=resolve_reference(cfg, recording))
     from ._bands import prepare_band_views, required_bands, scratch_directory
     if bands is None:
         from ._metrics import resolve_metrics
@@ -146,7 +148,7 @@ def prepare_recording(recording, cfg, *, channels=None, bands=None):
     # get_data() gives an owned public array, independent of the temporary Raw.
     data = raw.get_data()
     raw.close()
-    if method in ("laplacian", "shaft_average"):
+    if method in ("laplacian", "shaft_average", "adaptive_local"):
         data = apply_shaft_reference(data, names, cfg.reference, plan)
         # Zero placeholders are never sent to metrics: the explicit mask is
         # applied even when window z-scoring is disabled.

@@ -384,7 +384,8 @@ CAR averages only retained channels. Named/mapped/bipolar references likewise
 use retained names; missing contacts fail before calculation. Bipolar outputs
 follow MNE order (remaining original channels, then supplied pairs), with their
 derivation recorded. REST requires a separately prepared matching MNE forward
-solution. No automatic electrode-selection rule is implemented.
+solution. The custom `adaptive_local` reference resolves its shaft layout from
+patient metadata automatically; named references retain explicit selection.
 With one retained channel, CAR has no usable output; it is recorded as a
 window-preprocessing failure rather than changing reference.
 
@@ -422,19 +423,24 @@ Reference is a **workflow-level** setting, not a metric parameter. It is applied
 once per prepared recording before window calculations; every selected metric
 uses that referenced recording. A metric configuration selects calculations,
 while a workflow configuration selects recordings, reference, preprocessing,
-execution and output. To compare references, run separate workflow configs with
+execution and output. To compare references, run separate workflow configs.
+Dataset mode separates their output by reference; standalone mode requires
 distinct run names. To compare only a few metrics, point those workflows at a
 smaller metric selection. `reference: none` preserves the acquisition reference;
 it does not reconstruct an unreferenced voltage signal.
 
 The additional-candidate examples are ready for patient 001:
 [CAR, ten outputs](../examples/workflow/additional_candidates_car.yaml) and
-[strict Laplacian, nine outputs](../examples/workflow/additional_candidates_laplacian.yaml).
-CAR includes kernel MI; Laplacian omits it following the runtime decision.
+[custom local reference, nine outputs](../examples/workflow/additional_candidates_local.yaml).
+CAR includes kernel MI; the local selection omits it following the runtime decision.
 Both use two workers with one numerical thread. To disable CAR kernel MI,
 change its `metrics.config` to `../../pyspi/workflow/additional_candidates.yaml`.
-The Laplacian shaft lists belong to patient 001: supply each other patient's
-own verified physical layout, usually through a separate workflow config.
+The custom local workflow resolves each patient's contacts from dataset metadata;
+there are no patient-specific shaft lists in its config. See the
+[complete methods description](adaptive_local_reference.md) for weighted gaps,
+endpoint subtraction, shaft-average/CAR fallbacks and saved provenance.
+Historical pilot timings used strict Laplacian, which masked some contacts;
+retaining more contacts can increase downstream calculation cost.
 
 ### One alternative to the normalized run
 
@@ -482,14 +488,15 @@ amplitudes and volts/microvolts unit controls. The 12-output benchmark at
 excluding preprocessing, imports and I/O. Receipts and per-family increments
 are linked from the complete review; no clinical discrimination was tested.
 
-CAR is the runnable reference in the template. A local neighbor-average
-(Laplacian) montage is a candidate comparison using the strict
-`reference.method: laplacian` support above. It requires confirmed same-shaft
-adjacency and masks endpoints and gaps. The older general-purpose `mapping`
+CAR is the runnable reference in the template. The contact-preserving
+`reference.method: adaptive_local` is the approved local comparison; its
+[methods description](adaptive_local_reference.md) defines all fallbacks.
+The separate strict `laplacian` reference remains available for explicitly
+requested comparisons and masks endpoints and missing neighbors. The older general-purpose `mapping`
 option leaves unlisted channels unchanged; do not use a partial mapping to
 represent a complete local montage. Any chosen local
-montage needs matching output/contact-label interpretation and its own output
-directory. Shared contacts in local references can themselves induce pairwise
+montage needs matching output/contact-label interpretation and a separate
+reference output group (or a distinct standalone run directory). Shared contacts in local references can themselves induce pairwise
 relationships, so a change in connectivity is not by itself evidence that one
 reference reveals the true network. See the
 [SEEG reference comparison](https://pmc.ncbi.nlm.nih.gov/articles/PMC6495648/) and

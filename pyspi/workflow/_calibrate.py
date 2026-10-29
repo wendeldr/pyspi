@@ -169,6 +169,9 @@ def calibrate(config, *, out=None, channels=None, windows_per_point=2, synthetic
     band_specs = required_bands(report.metrics, cfg)
     index = choose_recording(report)
     entry, recording = report.recordings[index], cfg.recordings[index]
+    # Freeze the same patient-specific reference that preflight validated.
+    from dataclasses import replace
+    cfg = replace(cfg, reference=entry["reference"])
     all_names = entry["output_channels"]
     available = np.flatnonzero(entry.get("reference_available", [True] * len(all_names)))
     names = [all_names[i] for i in available]

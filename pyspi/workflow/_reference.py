@@ -13,6 +13,9 @@ from ._config import WorkflowError
 def reference_plan(names, reference):
     """Return linear weights and availability for CAR/explicit shaft references."""
     method = reference["method"]
+    if method == "adaptive_local":
+        from ._adaptive_reference import adaptive_plan
+        return adaptive_plan(names, reference)
     if method not in ("car", "laplacian", "shaft_average"):
         return None
     n = len(names)
@@ -93,6 +96,9 @@ describe mixing geometry, not estimates of physiological connectivity.
 def apply_shaft_reference(source, names, reference, plan):
     """Apply local references in O(channels * samples), without dense mixing."""
     weights, available, _ = plan
+    if reference["method"] == "adaptive_local":
+        from ._adaptive_reference import apply_adaptive_reference
+        return apply_adaptive_reference(source, names, reference)
     out = np.zeros_like(source)
     if reference["method"] == "laplacian":
         for i in np.flatnonzero(available):

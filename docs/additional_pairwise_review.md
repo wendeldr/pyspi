@@ -21,7 +21,7 @@ pilot stays available; no definition or runtime decisions remain pending.
 | Cross-channel 16–30 / 70–150 Hz coupling | Prototype integrated and validated; matched surrogates show a substantial positive null baseline; retained as exploratory. |
 | Exact bounded distance correlation | Implemented and independently validated; three-patient standalone/shared costs, fast-library comparison and comparative tracked allocations recorded. |
 | Exact radius-one DTW | Implemented and validated; pilot rankings closely track cosine distance, so absent from the selected CAR/Laplacian configs. |
-| Matched CAR / contact-centered Laplacian | Implemented; three-patient matched comparison and shared-reference controls complete. Patient 090 local metadata needs review. |
+| Matched CAR / contact-centered Laplacian | Implemented; three-patient matched comparison and shared-reference controls complete. Historical coordinate validation flagged patient 090. The later [custom local reference](adaptive_local_reference.md) uses contact numbering instead. |
 | Representative EEG runtime / memory / workflow costs | Three sizes, both references, actual nine/eleven-output family costs, 12-window worker profiles, PSS and cohort projections recorded. |
 | Novelty, coverage and surrogate assessment | Descriptive baseline and surrogate checks complete; no new predictive-value claim or cohort model search. |
 | Candidate configs, docs, CSV, regressions and commits | Ten CAR / nine Laplacian outputs prepared and checked; kernel MI enabled for CAR by user choice. Main 188/12 selections unchanged. |
