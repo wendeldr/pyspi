@@ -1,40 +1,40 @@
 source_feature,source_category,calculation_kind,production_reference,group,mapping,status
-car__relative_entropy,new_source_output,raw,car,normalized,HistogramRelativeEntropy,implemented; final group selection pending
+car__relative_entropy,new_source_output,raw,car,normalized,HistogramRelativeEntropy,selected
 car__jensen_shannon,new_source_output,raw,car,omit_default_empirical_redundancy,HistogramJensenShannon,omit_default_empirical_redundancy
-car__relative_entropy__mean_abs_change,new_source_output,derived,car,normalized,mean over valid adjacent windows of abs(delta(HistogramRelativeEntropy)),implemented; final group selection pending
-shaft__relative_entropy,new_source_output,raw,shaft_average,normalized,HistogramRelativeEntropy,implemented; final group selection pending
+car__relative_entropy__mean_abs_change,new_source_output,derived,car,normalized,mean over valid adjacent windows of abs(delta(HistogramRelativeEntropy)),selected; derived outputs computed downstream
+shaft__relative_entropy,new_source_output,raw,shaft_average,normalized,HistogramRelativeEntropy,selected
 shaft__jensen_shannon,new_source_output,raw,shaft_average,omit_default_empirical_redundancy,HistogramJensenShannon,omit_default_empirical_redundancy
-shaft__relative_entropy__mean_abs_change,new_source_output,derived,shaft_average,normalized,mean over valid adjacent windows of abs(delta(HistogramRelativeEntropy)),implemented; final group selection pending
+shaft__relative_entropy__mean_abs_change,new_source_output,derived,shaft_average,normalized,mean over valid adjacent windows of abs(delta(HistogramRelativeEntropy)),selected; derived outputs computed downstream
 local__jensen_shannon,new_source_output,raw,adaptive_local,omit_default_empirical_redundancy,HistogramJensenShannon,omit_default_empirical_redundancy
-local__relative_entropy,new_source_output,raw,adaptive_local,normalized,HistogramRelativeEntropy,implemented; final group selection pending
-local__relative_entropy__mean_abs_change,new_source_output,derived,adaptive_local,normalized,mean over valid adjacent windows of abs(delta(HistogramRelativeEntropy)),implemented; final group selection pending
-stored__pearson,legacy_control,derived,car,normalized,1 - pdist_cosine,implemented; final group selection pending
-shaft__beta_gamma_pac,new_source_output,raw,shaft_average,normalized,"PhaseAmplitudeCoupling(phase_band=(16,30), amplitude_band=(70,150))",implemented; final group selection pending
-car__beta_gamma_pac,new_source_output,raw,car,normalized,"PhaseAmplitudeCoupling(phase_band=(16,30), amplitude_band=(70,150))",implemented; final group selection pending
-car__lag10ms,new_source_output,raw,car,normalized,"FixedLagCorrelation(lag_samples=20, fs=2048); exact 9.765625 ms",implemented; final group selection pending
-car__log_scale_ratio,new_source_output,raw,car,amplitude,LogScaleRatio,implemented; final group selection pending
-local__orth_envelope__mean_abs_change,new_source_output,derived,adaptive_local,normalized,"mean over valid adjacent windows of abs(delta(PowerEnvelopeCorrelation(orth=True, absolute=True) broadband))",implemented; final group selection pending
-local__beta_gamma_pac,new_source_output,raw,adaptive_local,normalized,"PhaseAmplitudeCoupling(phase_band=(16,30), amplitude_band=(70,150))",implemented; final group selection pending
-shaft__log_scale_ratio,new_source_output,raw,shaft_average,amplitude,LogScaleRatio,implemented; final group selection pending
-local__event_excess,new_source_output,raw,adaptive_local,normalized,ThresholdEventExcess(threshold=3),implemented; final group selection pending
-shaft__pearson__mean_abs_change,new_source_output,derived,shaft_average,normalized,mean over valid adjacent windows of abs(delta(1 - pdist_cosine)),implemented; final group selection pending
-local__orth_envelope,new_source_output,raw,adaptive_local,normalized,"PowerEnvelopeCorrelation(orth=True, absolute=True) broadband",implemented; final group selection pending
-shaft__orth_envelope__mean_abs_change,new_source_output,derived,shaft_average,normalized,"mean over valid adjacent windows of abs(delta(PowerEnvelopeCorrelation(orth=True, absolute=True) broadband))",implemented; final group selection pending
-stored__orth_envelope,legacy_control,raw,car,normalized,"PowerEnvelopeCorrelation(orth=True, absolute=True) broadband",implemented; final group selection pending
-local__pearson__mean_abs_change,new_source_output,derived,adaptive_local,normalized,mean over valid adjacent windows of abs(delta(1 - pdist_cosine)),implemented; final group selection pending
-shaft__orth_envelope,new_source_output,raw,shaft_average,normalized,"PowerEnvelopeCorrelation(orth=True, absolute=True) broadband",implemented; final group selection pending
-local__envelope,new_source_output,raw,adaptive_local,normalized,PowerEnvelopeCorrelation() broadband,implemented; final group selection pending
-local__abs_pearson,new_source_output,derived,adaptive_local,normalized,abs(1 - pdist_cosine) before temporal averaging,implemented; final group selection pending
-local__log_scale_ratio,new_source_output,raw,adaptive_local,amplitude,LogScaleRatio,implemented; final group selection pending
-shaft__abs_pearson,new_source_output,derived,shaft_average,normalized,abs(1 - pdist_cosine) before temporal averaging,implemented; final group selection pending
-shaft__lag10ms,new_source_output,raw,shaft_average,normalized,"FixedLagCorrelation(lag_samples=20, fs=2048); exact 9.765625 ms",implemented; final group selection pending
-stored__envelope,legacy_control,raw,car,normalized,PowerEnvelopeCorrelation() broadband,implemented; final group selection pending
-shaft__envelope,new_source_output,raw,shaft_average,normalized,PowerEnvelopeCorrelation() broadband,implemented; final group selection pending
-local__lag10ms,new_source_output,raw,adaptive_local,normalized,"FixedLagCorrelation(lag_samples=20, fs=2048); exact 9.765625 ms",implemented; final group selection pending
-shaft__pearson,new_source_output,derived,shaft_average,normalized,1 - pdist_cosine,implemented; final group selection pending
-shaft__event_excess,new_source_output,raw,shaft_average,normalized,ThresholdEventExcess(threshold=3),implemented; final group selection pending
-local__pearson,new_source_output,derived,adaptive_local,normalized,1 - pdist_cosine,implemented; final group selection pending
-car__event_excess,new_source_output,raw,car,normalized,ThresholdEventExcess(threshold=3),implemented; final group selection pending
-separately_suggested_partial_correlation,separate_suggestion,raw,car,normalized,PartialCorrelation(); condition on all supplied channels,implemented; final group selection pending
-separately_suggested_partial_correlation,separate_suggestion,raw,adaptive_local,normalized,PartialCorrelation(); condition on all supplied channels,implemented; final group selection pending
-separately_suggested_partial_correlation,separate_suggestion,raw,shaft_average,normalized,PartialCorrelation(); condition on all supplied channels,implemented; final group selection pending
+local__relative_entropy,new_source_output,raw,adaptive_local,normalized,HistogramRelativeEntropy,selected
+local__relative_entropy__mean_abs_change,new_source_output,derived,adaptive_local,normalized,mean over valid adjacent windows of abs(delta(HistogramRelativeEntropy)),selected; derived outputs computed downstream
+stored__pearson,legacy_control,derived,car,normalized,1 - pdist_cosine,selected; derived outputs computed downstream
+shaft__beta_gamma_pac,new_source_output,raw,shaft_average,normalized,"PhaseAmplitudeCoupling(phase_band=(16,30), amplitude_band=(70,150))",selected
+car__beta_gamma_pac,new_source_output,raw,car,normalized,"PhaseAmplitudeCoupling(phase_band=(16,30), amplitude_band=(70,150))",selected
+car__lag10ms,new_source_output,raw,car,normalized,"FixedLagCorrelation(lag_samples=20, fs=2048); exact 9.765625 ms",selected
+car__log_scale_ratio,new_source_output,raw,car,amplitude,LogScaleRatio,selected
+local__orth_envelope__mean_abs_change,new_source_output,derived,adaptive_local,normalized,"mean over valid adjacent windows of abs(delta(PowerEnvelopeCorrelation(orth=True, absolute=True) broadband))",selected; derived outputs computed downstream
+local__beta_gamma_pac,new_source_output,raw,adaptive_local,normalized,"PhaseAmplitudeCoupling(phase_band=(16,30), amplitude_band=(70,150))",selected
+shaft__log_scale_ratio,new_source_output,raw,shaft_average,amplitude,LogScaleRatio,selected
+local__event_excess,new_source_output,raw,adaptive_local,normalized,ThresholdEventExcess(threshold=3),selected
+shaft__pearson__mean_abs_change,new_source_output,derived,shaft_average,normalized,mean over valid adjacent windows of abs(delta(1 - pdist_cosine)),selected; derived outputs computed downstream
+local__orth_envelope,new_source_output,raw,adaptive_local,normalized,"PowerEnvelopeCorrelation(orth=True, absolute=True) broadband",selected
+shaft__orth_envelope__mean_abs_change,new_source_output,derived,shaft_average,normalized,"mean over valid adjacent windows of abs(delta(PowerEnvelopeCorrelation(orth=True, absolute=True) broadband))",selected; derived outputs computed downstream
+stored__orth_envelope,legacy_control,raw,car,normalized,"PowerEnvelopeCorrelation(orth=True, absolute=True) broadband",selected
+local__pearson__mean_abs_change,new_source_output,derived,adaptive_local,normalized,mean over valid adjacent windows of abs(delta(1 - pdist_cosine)),selected; derived outputs computed downstream
+shaft__orth_envelope,new_source_output,raw,shaft_average,normalized,"PowerEnvelopeCorrelation(orth=True, absolute=True) broadband",selected
+local__envelope,new_source_output,raw,adaptive_local,normalized,PowerEnvelopeCorrelation() broadband,selected
+local__abs_pearson,new_source_output,derived,adaptive_local,normalized,abs(1 - pdist_cosine) before temporal averaging,selected; derived outputs computed downstream
+local__log_scale_ratio,new_source_output,raw,adaptive_local,amplitude,LogScaleRatio,selected
+shaft__abs_pearson,new_source_output,derived,shaft_average,normalized,abs(1 - pdist_cosine) before temporal averaging,selected; derived outputs computed downstream
+shaft__lag10ms,new_source_output,raw,shaft_average,normalized,"FixedLagCorrelation(lag_samples=20, fs=2048); exact 9.765625 ms",selected
+stored__envelope,legacy_control,raw,car,normalized,PowerEnvelopeCorrelation() broadband,selected
+shaft__envelope,new_source_output,raw,shaft_average,normalized,PowerEnvelopeCorrelation() broadband,selected
+local__lag10ms,new_source_output,raw,adaptive_local,normalized,"FixedLagCorrelation(lag_samples=20, fs=2048); exact 9.765625 ms",selected
+shaft__pearson,new_source_output,derived,shaft_average,normalized,1 - pdist_cosine,selected; derived outputs computed downstream
+shaft__event_excess,new_source_output,raw,shaft_average,normalized,ThresholdEventExcess(threshold=3),selected
+local__pearson,new_source_output,derived,adaptive_local,normalized,1 - pdist_cosine,selected; derived outputs computed downstream
+car__event_excess,new_source_output,raw,car,normalized,ThresholdEventExcess(threshold=3),selected
+separately_suggested_partial_correlation,separate_suggestion,raw,car,normalized,PartialCorrelation(); condition on all supplied channels,selected
+separately_suggested_partial_correlation,separate_suggestion,raw,adaptive_local,normalized,PartialCorrelation(); condition on all supplied channels,selected
+separately_suggested_partial_correlation,separate_suggestion,raw,shaft_average,normalized,PartialCorrelation(); condition on all supplied channels,selected

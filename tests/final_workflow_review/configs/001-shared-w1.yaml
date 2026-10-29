@@ -1,0 +1,66 @@
+version: 1
+output_dtype: float32
+recordings:
+- path: /home/dan/data/IEEG/baseline_edfs/001_Baseline.EDF
+  patient_id: '001'
+  recording_id: baseline
+sampling_rate_hz: 2048
+bandpass:
+  low_hz: 0.5
+  high_hz: 500
+notch:
+  enabled: true
+  line_frequency_hz: 60
+  width_hz: 1
+  transition_hz: 1
+window:
+  length_seconds: 0.5
+  step_seconds: 0.5
+reference: car
+preprocessing:
+  detrend: true
+  zscore: true
+output_batch_mib: 32
+execution:
+  workers: 1
+  threads_per_worker: 1
+  spectral_cache_mib: 256
+  scratch_directory: /home/dan/git/pyspi/.candidate-scratch
+sharing:
+  preparation_cache_mib: 8192
+run_name: final-profile-001-shared-w1
+dataset:
+  directory: /home/dan/data/IEEG/connectivity
+groups:
+  car-normalized:
+    metrics:
+      config: /home/dan/git/pyspi/pyspi/workflow/reviewed.yaml
+  car-amplitude:
+    metrics:
+      config: /home/dan/git/pyspi/pyspi/workflow/amplitude_sensitivity.yaml
+    preprocessing:
+      zscore: false
+  local-normalized:
+    metrics:
+      config: /home/dan/git/pyspi/pyspi/workflow/additional_candidates.yaml
+    reference: adaptive_local
+  local-amplitude:
+    metrics:
+      config: /home/dan/git/pyspi/pyspi/workflow/log_scale.yaml
+    reference: adaptive_local
+    preprocessing:
+      zscore: false
+  shaft-normalized:
+    metrics:
+      config: /home/dan/git/pyspi/pyspi/workflow/shaft_candidates.yaml
+    reference:
+      method: shaft_average
+      shafts: metadata
+  shaft-amplitude:
+    metrics:
+      config: /home/dan/git/pyspi/pyspi/workflow/log_scale.yaml
+    reference:
+      method: shaft_average
+      shafts: metadata
+    preprocessing:
+      zscore: false

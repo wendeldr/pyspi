@@ -1,0 +1,35 @@
+# Eight normalized shaft-average candidates; explicit limited reference comparison.
+# Reference and preprocessing are selected by the workflow group.
+.statistics.basic:
+  FixedLagCorrelation:
+    configs:
+    - lag_samples: 20
+      fs: 2048
+  ThresholdEventExcess:
+    configs:
+    - threshold: 3
+  PartialCorrelation:
+    configs:
+    - {}
+.statistics.distance:
+  HistogramRelativeEntropy:
+    configs:
+    - bins: 10
+      pseudocount: 1.0e-10
+  PairwiseDistance:
+    configs:
+    - metric: cosine
+.statistics.misc:
+  PowerEnvelopeCorrelation:
+    configs:
+    - {}
+    - orth: true
+      absolute: true
+  PhaseAmplitudeCoupling:
+    configs:
+    - phase_band:
+      - 16
+      - 30
+      amplitude_band:
+      - 70
+      - 150

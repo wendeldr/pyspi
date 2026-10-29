@@ -1,9 +1,12 @@
+# 201 outputs: previous 188 plus 10 approved CAR candidates and 3 lightweight additions.
+# Jensen-Shannon remains available but omitted for measured redundancy with RE.
+# These additions are integrated here to share family work in each window.
 # Reviewed EEG selection, derived from the historical 185-metric inventory.
 # Includes signed phase-lag and expanded cross-correlation summaries.
 # Group delay and costly factorized directed families are excluded from this run.
 # Spectral bands are in Hz at fs 2048; the workflow rejects a different sampling_rate_hz.
 # Review scope and measured runtime limits: docs/spectral_directed_review.md.
-# 188 outputs: the amplitude/redundancy review left 195, then seven GraphicalLasso
+# Historical baseline: the amplitude/redundancy review left 195, then seven GraphicalLasso
 # /GraphicalLassoCV outputs were dropped for CAR solver failures and runtime.
 # Evidence: docs/workflow_performance_review.md. Equivalent
 # normalized outputs were selected by standalone cost, without assuming shared
@@ -112,6 +115,16 @@
       sigonly: true
     - statistic: peak
       sigonly: true
+  FixedLagCorrelation:
+    configs:
+    - lag_samples: 20
+      fs: 2048
+  ThresholdEventExcess:
+    configs:
+    - threshold: 3
+  PartialCorrelation:
+    configs:
+    - {}
 .statistics.distance:
   PairwiseDistance:
     labels:
@@ -141,6 +154,14 @@
     - mode: euclidean
       statistic: max
       squared: true
+  HistogramRelativeEntropy:
+    configs:
+    - bins: 10
+      pseudocount: 1.0e-10
+  DistanceCorrelation:
+    configs:
+    - biased: false
+    - biased: true
 .statistics.causal:
   RegressionErrorCausalInference:
     labels:
@@ -162,6 +183,8 @@
     dependencies: null
     configs:
     - estimator: gaussian
+    - estimator: kernel
+      kernel_width: 0.25
   TimeLaggedMutualInfo:
     labels:
     - directed
@@ -200,6 +223,14 @@
       pattern_length: 3
       pattern_spacing: 16
       prediction_shift: 16
+  DirectedInfo:
+    configs:
+    - estimator: gaussian
+      n: 5
+  StochasticInteraction:
+    configs:
+    - estimator: gaussian
+      delay: 1
 .statistics.spectral:
   CoherencePhase:
     labels:
@@ -482,3 +513,24 @@
     - orth: true
       log: true
       absolute: true
+    - band:
+      - 30
+      - 70
+    - band:
+      - 30
+      - 70
+      orth: true
+      absolute: true
+  PhaseAmplitudeCoupling:
+    configs:
+    - phase_band:
+      - 16
+      - 30
+      amplitude_band:
+      - 70
+      - 150
+  InterDependenceScore:
+    configs:
+    - terms: 6
+      pnorm: max
+      bandwidth: 0.5

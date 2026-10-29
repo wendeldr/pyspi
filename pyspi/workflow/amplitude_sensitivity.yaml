@@ -1,5 +1,6 @@
+# 13 outputs: the 12 reviewed amplitude-sensitive outputs plus LogScaleRatio.
 # Amplitude-sensitive selection from a systematic review of all 200 outputs
-# in reviewed.yaml. 12 outputs; per-output decisions: audit/amplitude_review.csv.
+# in the earlier reviewed.yaml. Original 12-output decisions: audit/amplitude_review.csv.
 # Definitions, exclusions and measured cost: docs/amplitude_selection_review.md.
 # Use with examples/workflow/amplitude_sensitivity.yaml:
 # detrend: true, zscore: false; 0.5 s nonoverlapping windows at 2048 Hz.
@@ -24,6 +25,9 @@
       squared: true
     - estimator: ShrunkCovariance
       squared: true
+  LogScaleRatio:
+    configs:
+    - {}
 .statistics.distance:
   PairwiseDistance:
     configs:

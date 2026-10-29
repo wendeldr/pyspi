@@ -129,9 +129,18 @@ class WindowPool:
         started = perf_counter()
         self.input_directory = tempfile.TemporaryDirectory(prefix="pyspi-window-input-", dir=scratch_directory(cfg))
         directory = self.input_directory.name
-        filename = Path(directory) / "prepared.npy"
+        mapped_base = isinstance(prepared.data, np.memmap) and prepared.data.flags.c_contiguous
+        filename = Path(prepared.data.filename) if mapped_base else Path(directory) / "prepared.npy"
+        if mapped_base:
+            original = np.load(filename, mmap_mode="r")
+            mapped_base = (original.shape == prepared.data.shape and original.dtype == prepared.data.dtype
+                           and original.offset == prepared.data.offset)
+            del original
+            if not mapped_base:
+                filename = Path(directory) / "prepared.npy"
         reused = {band for band, view in prepared.bands.items() if view is prepared.data}
-        np.save(filename, prepared.data, allow_pickle=False)
+        if not mapped_base:
+            np.save(filename, prepared.data, allow_pickle=False)
         # Release the owned continuous array; mappings share the file's pages
         # across workers instead of copying the recording into every process.
         prepared.data = np.load(filename, mmap_mode="r")

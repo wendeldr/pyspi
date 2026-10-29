@@ -1,10 +1,5 @@
-# Nine additional outputs for reviewed candidate runs; established selections stay separate.
-# Use the matched CAR / custom local-reference workflow examples. Evidence and limits:
-# docs/additional_pairwise_pilot.md. PAC and orthogonalized PEC remain exploratory.
-# Radius-one DTW remains pilot-only: pair rankings were very close to cosine distance.
-# Kernel MI is enabled in the separate additional_candidates_car.yaml selection.
-# No extra shaft-average, original-reference or bipolar production run is selected.
-# Continuous bands must be prepared by the workflow before half-second windowing.
+# 15 custom-local outputs, including broadband envelopes and cosine for downstream Pearson.
+# Same approved definitions; reference/preprocessing belong to the workflow.
 .statistics.distance:
   HistogramRelativeEntropy:
     configs:
@@ -14,6 +9,9 @@
     configs:
     - biased: false
     - biased: true
+  PairwiseDistance:
+    configs:
+    - metric: cosine
 .statistics.misc:
   PowerEnvelopeCorrelation:
     configs:
@@ -24,6 +22,9 @@
       - 30
       - 70
       orth: true
+      absolute: true
+    - {}
+    - orth: true
       absolute: true
   PhaseAmplitudeCoupling:
     configs:
@@ -47,3 +48,14 @@
     configs:
     - estimator: gaussian
       delay: 1
+.statistics.basic:
+  FixedLagCorrelation:
+    configs:
+    - lag_samples: 20
+      fs: 2048
+  ThresholdEventExcess:
+    configs:
+    - threshold: 3
+  PartialCorrelation:
+    configs:
+    - {}

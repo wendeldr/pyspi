@@ -18,6 +18,13 @@ def main(argv=None):
     execute.add_argument("--resume", action="store_true", help="retain committed batches and recompute unfinished batches")
     execute.add_argument("--retry-failures", action="store_true", help="with --resume, explicitly retry recorded failures")
     execute.add_argument("--max-windows", type=int, help="explicitly limit output for a bounded trial (continuous preparation still uses the recording)")
+    group_check = commands.add_parser("preflight-experiment", help="validate every named metric group")
+    group_check.add_argument("config")
+    grouped = commands.add_parser("run-experiment", help="run named groups with bounded shared preparation")
+    grouped.add_argument("config")
+    grouped.add_argument("--resume", action="store_true")
+    grouped.add_argument("--retry-failures", action="store_true")
+    grouped.add_argument("--max-windows", type=int)
     export = commands.add_parser("export-selection", help="read legacy Zarr electrode order and match actual EDF headers")
     export.add_argument("store")
     export.add_argument("edf")
@@ -35,6 +42,10 @@ def main(argv=None):
     measure.add_argument("config")
     measure.add_argument("--max-windows", type=int, required=True)
     measure.add_argument("--report", required=True, help="JSON measurement receipt")
+    experiment_measure = commands.add_parser("profile-experiment", help="profile complete grouped execution and process-tree memory")
+    experiment_measure.add_argument("config")
+    experiment_measure.add_argument("--max-windows", type=int, required=True)
+    experiment_measure.add_argument("--report", required=True)
     guess = commands.add_parser("estimate", help="estimate run time and output size from the configuration; "
                                 "measures a calibration beside it when none is current")
     guess.add_argument("config", help="workflow YAML path")
@@ -52,6 +63,18 @@ def main(argv=None):
                        "larger recordings are then extrapolated")
     args = parser.parse_args(argv)
     try:
+        if args.command == "profile-experiment":
+            from ._profile import profile_experiment
+            result = profile_experiment(args.config, max_windows=args.max_windows, report_path=args.report)
+            print(json.dumps({key: result[key] for key in ("recording_windows", "elapsed_seconds", "process_tree_memory")}, indent=2))
+            return 0
+        if args.command in ("preflight-experiment", "run-experiment"):
+            from .experiment import preflight_experiment, run_experiment
+            result = (preflight_experiment(args.config) if args.command == "preflight-experiment" else
+                      run_experiment(args.config, resume=args.resume, retry_failures=args.retry_failures,
+                                     max_windows=args.max_windows))
+            print(json.dumps(result, indent=2, allow_nan=False))
+            return 0
         if args.command == "estimate":
             from ._estimate import estimate, format_estimate
             result = estimate(args.config)

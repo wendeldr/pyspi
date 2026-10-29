@@ -159,7 +159,10 @@ def test_reviewed_preset_preserves_unrelated_inventory_and_applies_approved_chan
     import pyspi
     path = Path(pyspi.__file__).parent / "workflow/reviewed.yaml"
     metrics = resolve_metrics(path)
-    assert len(metrics) == len({m.identifier for m in metrics}) == 188
+    assert len(metrics) == len({m.identifier for m in metrics}) == 201
+    additions = {m.identifier for m in resolve_metrics(path.parent / "additional_candidates_car.yaml")}
+    assert len(additions) == 13
+    assert additions <= {m.identifier for m in metrics}
     root = Path(__file__).resolve().parents[2]
     with open(root / "docs/metric_names.csv") as f:
         rows = list(csv.DictReader(f))
@@ -179,7 +182,7 @@ def test_reviewed_preset_preserves_unrelated_inventory_and_applies_approved_chan
                    "cov_sq_graphicallasso", "prec_graphicallasso", "prec_sq_graphicallasso",
                    "cov_graphicallassocv", "cov_sq_graphicallassocv",
                    "prec_graphicallassocv", "prec_sq_graphicallassocv"}
-        assert {m.identifier for m in metrics if m.class_name not in changed_classes} == {
+        assert {m.identifier for m in metrics if m.class_name not in changed_classes} - additions == {
             identifier for identifier in historical if not identifier.startswith(("xcorr", "gd_"))
             and identifier not in removed} | {"lmfit_lasso_alpha0p1",
                 "te_symbolic_patternlength03_spacing04_shift04", "te_symbolic_patternlength03_spacing16_shift16",

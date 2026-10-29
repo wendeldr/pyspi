@@ -423,7 +423,7 @@ def run(config, *, resume=False, retry_failures=False, max_windows=None):
         return _run(cfg, resume=resume, retry_failures=retry_failures, max_windows=max_windows)
 
 
-def _run(config, *, resume=False, retry_failures=False, max_windows=None):
+def _run(config, *, resume=False, retry_failures=False, max_windows=None, preparation=None):
     """Return one run-folder path per recording.
 
     Resume reuses committed batches and recomputes unfinished batches. Durable
@@ -522,7 +522,8 @@ def _run(config, *, resume=False, retry_failures=False, max_windows=None):
                         try:
                             with _capture_metric_warnings() as preparation_warnings:
                                 from ._bands import required_bands
-                                prepared = prepare_recording(recording, cfg, bands=required_bands(report.metrics, cfg))
+                                prepare = prepare_recording if preparation is None else preparation
+                                prepared = prepare(recording, cfg, bands=required_bands(report.metrics, cfg))
                         finally:
                             session["preparation_seconds"] = perf_counter() - before
                         manifest["preparation"] = {**prepared.details,

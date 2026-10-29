@@ -173,8 +173,14 @@ class Configuration:
 def load_config(path) -> Configuration:
     """Resolve paths relative to the YAML file, without opening EDF samples."""
     path = Path(path).resolve()
+    return configuration_from_mapping(read_yaml(path), path)
+
+
+def configuration_from_mapping(document, path) -> Configuration:
+    """Resolve a standalone or experiment-group mapping through the same validation."""
+    path = Path(path).resolve()
     base = path.parent
-    cfg = fields(read_yaml(path), {"version", "recordings", "edf_glob", "metrics",
+    cfg = fields(document, {"version", "recordings", "edf_glob", "metrics",
                  "edf_directory", "metadata", "sampling_rate_hz", "window", "preprocessing",
                  "bandpass", "notch", "reference", "run_name", "output_batch_mib", "output_directory",
                  "execution", "output_dtype", "output_dtype_overrides", "dataset"}, "workflow")

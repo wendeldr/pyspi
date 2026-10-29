@@ -1,10 +1,5 @@
-# Ten candidate outputs for CAR: the nine common candidates plus kernel MI.
-# Kernel MI enabled by user choice; ~16 h/72 people with two workers (projection).
-# To disable it, remove the MutualInfo block below, or point the workflow's
-# metrics.config at additional_candidates.yaml (the nine-output common selection).
-# Laplacian workflow stays on the nine-output selection. Reference is selected
-# in the WORKFLOW config, not by this metric file's name.
-# Definitions and timings: docs/additional_pairwise_pilot.md.
+# 13 CAR candidate outputs, also included in reviewed.yaml; do not run both for the same input.
+# Includes optional-by-removal kernel MI; runtime evidence in docs/additional_pairwise_pilot.md.
 .statistics.distance:
   HistogramRelativeEntropy:
     configs:
@@ -51,3 +46,14 @@
     configs:
     - estimator: gaussian
       delay: 1
+.statistics.basic:
+  FixedLagCorrelation:
+    configs:
+    - lag_samples: 20
+      fs: 2048
+  ThresholdEventExcess:
+    configs:
+    - threshold: 3
+  PartialCorrelation:
+    configs:
+    - {}

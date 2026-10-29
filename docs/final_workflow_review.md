@@ -11,14 +11,14 @@ completion gate, not satisfied by the bounded profiling windows.
 
 | Requirement | Evidence / remaining work |
 |---|---|
-| Five inexpensive additions | Implemented in `statistics/basic.py` and `statistics/distance.py`; independent tests in `test_lightweight_candidates.py`. Run selections still to be updated. |
+| Five inexpensive additions | Implemented in `statistics/basic.py` and `statistics/distance.py`; independent tests in `test_lightweight_candidates.py`. Selected in the final groups below (JS omitted under the redundancy decision). |
 | Histogram and envelope optimization | Implemented and measured; receipt and limits below. |
 | JS redundancy across patients/references and temporal summaries | Completed three-patient/three-reference pilot below; omit default selection under the approved empirical criterion. |
 | Downstream Pearson / absolute Pearson / consecutive graph changes | Bounded `workflow.derived` iterator and ten focused tests; formulas, identity and temporal-summary guidance below. |
-| All 33 source outputs plus partial correlation accounted for | Source inventory exists in `additional_pairwise_review.md`; final coverage table/config selections pending. |
-| Broadband local and limited shaft-average combinations | Automatic shaft membership implemented/tested; final selections pending. |
-| Group configuration / bounded shared continuous preparation | Pending implementation and comparison against separate jobs. |
-| Output/reference/preprocessing contracts | Existing contracts retained; new metrics have focused serial/spawn/resume coverage. Group isolation still to be validated. |
+| All 33 source outputs plus partial correlation accounted for | Complete source coverage inventory and final six-group selection below. |
+| Broadband local and limited shaft-average combinations | Automatic shaft membership and limited final selection implemented/tested. |
+| Group configuration / bounded shared continuous preparation | Implemented; synthetic separate/shared equivalence passes. Real throughput comparison in progress. |
+| Output/reference/preprocessing contracts | Existing contracts retained; new metrics have focused serial/spawn/resume coverage. Group isolation and serial/spawn/resume tests pass; real full-patient audit pending. |
 | Final workflow timings, larger recording, complete process memory and tuning | Pending. Kernel receipts below are insufficient for this requirement. |
 | Final full-patient runs | Pending 3–5 complete patients, all selected final groups, float32 outputs and completion/availability audit. |
 | Final configs/counts, brief CSV notes, review and chunked commits | In progress. No push authorized. |
@@ -181,8 +181,7 @@ correlation. Local/shaft Pearson, absolute Pearson and graph changes are derived
 from per-window saved graphs. The source's 20-sample “10 ms” label is corrected
 to its exact duration; the intended lag stays 20 samples. Broadband local/shaft
 envelope and amplitude log-ratio groups will be selected explicitly without
-multiplying the entire main selection over references. Configuration integration
-is still pending; the inventory marks that status.
+multiplying the entire main selection over references. Configuration integration is complete; the inventory maps each selected source output to its final group.
 
 `reference: {method: shaft_average, shafts: metadata}` resolves the authoritative
 patient `electrodegroup` membership automatically. It preserves contact axes,
@@ -193,3 +192,104 @@ adaptive-local CAR fallbacks. Explicit shaft layouts retain their behavior.
 Three new tests and the 13 affected adaptive-reference tests passed.
 
 Source candidate ledger SHA256: `b9e15f442ffa8e054103c899a5424dedb096242230c95b2fcea1c709f845579e`.
+
+## Combined experiment and final selection
+
+[The experiment](../examples/workflow/final_experiment.yaml) requests six homogeneous
+jobs per recording. Global reference and preprocessing defaults apply unless a
+named group overrides them. A one-metric group supplies a metric-specific choice;
+several groups can request that metric under distinct references. Group names
+are appended to the run name, and the existing output contracts retain reference,
+preprocessing, metric, contact order and window identity independently.
+
+| Group | Outputs | Reference | Window preprocessing |
+|---|---:|---|---|
+| car-normalized | 201 | CAR | detrend, sample z-score |
+| car-amplitude | 13 | CAR | detrend only |
+| local-normalized | 15 | adaptive local | detrend, sample z-score |
+| local-amplitude | 1 | adaptive local | detrend only |
+| shaft-normalized | 8 | shaft average | detrend, sample z-score |
+| shaft-amplitude | 1 | shaft average | detrend only |
+| Total | 239 | | |
+
+CAR's previous 188-output main selection now includes the ten previously separate
+CAR candidates plus fixed-lag correlation, event excess and partial correlation.
+This keeps compatible per-window fits/transforms in one Calculator. The separate
+CAR candidate file remains usable alone (13 outputs), but must not be run in
+addition to the complete main selection for the same input. The local selection
+adds those three metrics, cosine for downstream Pearson, and two broadband
+envelope outputs to its prior nine. Shaft-average uses only the eight normalized
+candidates needed for the source coverage and partial correlation. Each reference
+also has its detrended, unnormalized log-scale ratio; CAR adds it to the existing
+12 amplitude outputs. Jensen–Shannon is the sole omission among the new estimator
+candidates, under the measured redundancy decision above. Expensive directed
+families, group delay and GraphicalLasso remain excluded.
+
+```sh
+python -m pyspi.workflow preflight-experiment examples/workflow/final_experiment.yaml
+python -m pyspi.workflow run-experiment examples/workflow/final_experiment.yaml
+# Resume complete/unfinished groups and create later groups not reached before interruption:
+python -m pyspi.workflow run-experiment examples/workflow/final_experiment.yaml --resume
+```
+
+`preflight-experiment` validates every group before calculation. Existing standalone
+`preflight`/`run` configurations continue to use the same metric, preparation and
+output code. Group overrides support metrics, reference, preprocessing, output
+precision/overrides and execution settings; EDF selection, filters and window grid
+are global in this schema. No reference decisions enter individual estimators.
+
+The invocation-local LRU caches disk-backed prepared recordings, bounded by
+`sharing.preparation_cache_mib` (8192 MiB initially; zero disables sharing for
+comparison). Keys include EDF identity, selected contact/order mapping, patient
+and recording, sampling rate, notch and broad filtering; reference keys additionally
+include the fully resolved weights/rules and continuous-band union. Window
+normalization is excluded from the preparation key because it still happens
+separately after slicing each group's windows. Cache lifetime ends at each
+recording boundary. Worker processes reopen existing mapped files instead of
+copying a mapped recording into a second scratch file.
+
+For none/CAR/explicit shaft/adaptive-local references, continuous band filtering
+is shared before the fixed instantaneous reference. These linear operations commute;
+independent reference-first tests compare the resulting arrays and metadata.
+Other reference methods retain the ordinary preparation path. Reference application
+uses bounded time blocks (no time filtering is blocked), preserving exact channel
+weights and authoritative output axes. The cache budget bounds retained files,
+not total process RAM or temporary working files: preparing one new entry may
+coexist with retained entries until insertion/eviction. Scratch belongs on a disk
+filesystem, not a small RAM-backed `/tmp`. The full process-tree memory profiles
+remain the authority for worker settings.
+
+Validation: eight new grouped execution tests cover defaults, serial/spawn
+agreement with separate jobs, custom-reference band commutation, cache bounds,
+read-only maps, settings isolation, complete/partial-group resume, invalid
+configuration rejection and process-tree profiling. Forty affected standalone
+config tests and the updated full-main inventory check passed. No mathematical
+goldens were changed.
+
+## Initial real grouped execution comparison (before further I/O tuning)
+
+Patient 001, all 239 outputs, four full windows, float32, one worker/thread,
+256 MiB spectral cache and 32 MiB output batches:
+
+| Mode | End-to-end | Summed preparation | Peak process-tree PSS |
+|---|---:|---:|---:|
+| Shared preparation | 157.8 s | 85.2 s | 1648 MiB |
+| Separate preparation | 163.1 s | 89.7 s | 2411 MiB |
+
+Receipts: [shared](../tests/final_workflow_review/001-shared-w1.json),
+[separate](../tests/final_workflow_review/001-separate-w1.json).
+Shared preparation loaded/filtered the base once, reused it for two further
+references, and reused each referenced input for its amplitude group. Amplitude
+preparation dropped to 3–29 ms, but writing the three referenced cache entries
+consumed most of the saved wall time. The initial total gain is only about 3%,
+although process memory fell about 32%; cache I/O is a demonstrated next hotspot.
+System-memory availability also includes file-cache state and other programs;
+these process peaks are not a promise of identical system pressure.
+
+[All 239 stored outputs](../tests/final_workflow_review/001-shared-separate-equivalence.json)
+were compared across every trial window: **bit-identical float32 values**, identical
+finite masks, availability, statuses, channels and reference/preprocessing
+identity. This includes the independently prepared bands and robust covariance
+outputs. Final tuning, the larger recording and complete-patient runs remain
+outstanding. These four-window elapsed times amortize a full recording's
+preparation over too few windows to predict cohort wall time directly.
