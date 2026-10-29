@@ -1,0 +1,547 @@
+{
+  "checks": "Three unbounded full-patient payload audits; six identical metric inventories; 239 outputs; complete successful attempts; no missing reference contacts, failed attempts, infinite outputs or precision overflows; current production sources and configs match recorded hashes. Successful numerical NaNs and warnings remain explicit for scientific review.",
+  "limits": "Payload checks are performed by audit_outputs.py. These totals summarize its receipts. Elapsed times include preparation, setup, computation and writing, but exclude the subsequent payload audit. Projections repeat each patient size separately, not the mixed cohort. Two workers only for 80/118-contact main CAR; 249-contact jobs are serial. Sampled memory and host load limit comparisons.",
+  "source_sha256": {
+    "pyspi/__init__.py": "c95f32131d40bcd18ff0e5c4d0279571d1a3ed24fa3560ef4ccf8c2449db0bc4",
+    "pyspi/_bands.py": "59e09752129c7dc350cdc43dbf46a1bb0126b5f1eeb1721623bef282630321bd",
+    "pyspi/_barycenter.py": "7aeb2ecb4ef1ce73c48cc536d05bc64b6ae55b6ff06777257029644766357b67",
+    "pyspi/_cache.py": "6283322077126be736592543ff6cd347740d4d20465032d5cc1f2e0460b775d4",
+    "pyspi/_dependencies.py": "43c2b39884592b0696fa1d952b7bd98a0cead9d5722e8199f3b1dee9fed4565d",
+    "pyspi/_directed.py": "929b0221c83313cb413c43226fe65a4fac2deec07ca459e8ee595bf5e9055220",
+    "pyspi/_distance_correlation.py": "7c267a4d703553a3ea6143f1135b4106cd1484cf1c549742b59808dcc31a18da",
+    "pyspi/_dtw.py": "81675965441d3b1ae0ac62d88c7fca7684b71e353dc89fd4ce8c1c3021b3b4dc",
+    "pyspi/_envelope.py": "fdbb0e77d99db6b4649a50fd423eb679d3276f130323bec08369d541714106f5",
+    "pyspi/_envelope_kernel.py": "060f81ff4936385505665258fc1b8d9df0a9e0615838a900a47fb2c9feabdbd4",
+    "pyspi/_gaussian.py": "e6519849caf4dd233eb8166d491fa787481b7605c7e485670840b2f52844d989",
+    "pyspi/_gaussian_history.py": "e769ccae035b8bd48845947e73d9edc11f8ed246c25ed38b19c3594fa21dbdec",
+    "pyspi/_group_delay.py": "1a68c509f61834a93652aedf814113e65d5d6d37f83fac740a41379104d8e0a2",
+    "pyspi/_histogram.py": "6a2f3e896753ef741fd0c174e337d3870404c2ba9af5aa0748755937eb728d33",
+    "pyspi/_information_history.py": "bb73f2d20f94b9f60762e0a7591725493bb1504b8b9db21cf58d61ffa6c7e155",
+    "pyspi/_kernel_information.py": "ea7eb8b8aa7afd31950309e75fbeadedb4a4d3c4b9e753baeaf2017c5380a1cc",
+    "pyspi/_lightweight.py": "bed72d8a73760f1bc3933419d926370672f551fa664e6bce3c38bb4dcf3ba61a",
+    "pyspi/_moments.py": "2d701cfc8356c4892e769c3f13da21d0ae1105ded3f720adb45bc2ab07575c8f",
+    "pyspi/_naming.py": "9e4a8996c4780bb3050be84a75ce8632fd4d623435b6042e5d64a353fc5da60a",
+    "pyspi/_rank.py": "a27994b35470e2fc8bcd8f327ebc7ef0cd5ac7f53bffe83ae6d915efd33ccec1",
+    "pyspi/_regression.py": "42a65549f48e320de357e46b26a4bcf4228f76da1c50af2992825220e34d0a45",
+    "pyspi/_robust.py": "0838bc2629e602d5474fa22d144461c6f515213e3975c754cade4b4a947af846",
+    "pyspi/_spectral.py": "a7ca83cf0bacf4563c3617ff99a3a291310551cd93902437d0a5d38a80ba1b2d",
+    "pyspi/_spectral_compat.py": "52ca7b6f9206dc9e6bea32232945980e2d6b19ac3b0280197b17132b741f6360",
+    "pyspi/_symbolic.py": "2cc6ff1a09eddaa1df9d95936831adc812da1008494af255e3bac32b4a46ef24",
+    "pyspi/_wilson.py": "925b7bd54fc0b7a71f27c21871484996e5a2b6f3e18ff27a22f5000b8b845c58",
+    "pyspi/_xcorr.py": "afc038f0768076d10c854e179685ff2501f32601c97c3c9e3c0accfb917a19db",
+    "pyspi/analysis.py": "4a79293ef7412de4cdbfae0af80514454004b5ded955ef14660c86df49aedf83",
+    "pyspi/base.py": "9b0003a761f232747c65285ba82b0776606b194f2955d3bd70a2e67b254db45d",
+    "pyspi/calculation.py": "46c02db9614cd29d8e3d3dd3ab733aaa5725cd5fabcbd40da9a7c69f1a6ff65a",
+    "pyspi/calculator.py": "c1790700342f2a29242627677463678a8baaf4e4d0263dd22f1823389520b542",
+    "pyspi/data.py": "ea83e6f47fa4f06623287bf3fa8afe86d2fcda5a38695ea72991cec95bd45eb4",
+    "pyspi/lib/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pyspi/lib/ids/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pyspi/lib/ids/dependence.py": "b9aec646e1f8ecf7cdbd7532e7edc167943fef0795ad3cce85a5a5a6ea236b50",
+    "pyspi/lib/ids/numpy_dependence.py": "0c8993ecbedc5ffae01908fa574138953057a88a38a3edcef55d957b8195c562",
+    "pyspi/lib/jidt/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pyspi/lib/phi_native.py": "f45e0a0c36288715b12f78723e0dfbc52547a9090a7ce05de2d2bed2f8815270",
+    "pyspi/statistics/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pyspi/statistics/basic.py": "d650c91f1c5a3611ead2a089719267cfc1cfda0c62412ee738ab002fc86a3e87",
+    "pyspi/statistics/causal.py": "b0615dd87fce5d65b6b4063811051a7a78b130322a4bd2250e65b88b2530df79",
+    "pyspi/statistics/distance.py": "b5b79606e6dff09719224433df8ad9b1b0f2508e500142299de6c805c96355f5",
+    "pyspi/statistics/infotheory.py": "e88c4b28195e7f34feebabe835f65b28460b94bebef54723508125ecb6626be6",
+    "pyspi/statistics/misc.py": "56b2a67eee8d4d0f24f43f066636d502cd7a17f6efe628ea5d2ae7df87f2d03f",
+    "pyspi/statistics/spectral.py": "19c52c3e3d48efdca2f444efb0d3ad7108aaea234c7baf6357d18aaf7c3f9252",
+    "pyspi/statistics/wavelet.py": "20404c7eb5f117470f85bc1bfee5aac332586f17d05fb60e2aa1f445b6345275",
+    "pyspi/storage/__init__.py": "cebf5c2a26e114516820f247e9d3481b08bc8ae89d10f49fd24ab66a60e64cde",
+    "pyspi/storage/__main__.py": "cad40e34a8ed4a2236038ae56eaacc4890cbb0dada9dcb1a25cd6228b1904c14",
+    "pyspi/storage/_calculator.py": "794b786c65349b2143e66f61d4e712b85eee0e5c3997cda7ddd6f4e8fc948302",
+    "pyspi/storage/_integrity.py": "35e7292d0afbafaeaa2531d6917b8d85c8b457bf7fc7aef5f7ca7f039edb051a",
+    "pyspi/storage/_packing.py": "6e68b677d184adc2972cfe5ca5632a708d29edd94b6f8a24768fc79d8a446672",
+    "pyspi/storage/_store.py": "0d1b74f4deb16a7df36cc40bc56e312fc8cfe446857ae47aca166a554a066656",
+    "pyspi/utils.py": "410b10f4f52839359b6197bacc26d91c56a7657df41c5db7e22d98620ef3aed3",
+    "pyspi/workflow/__init__.py": "3cde171e9a0434947b5a4895120f18b28e423794e9acc3abf43b405550a31c4a",
+    "pyspi/workflow/__main__.py": "833450839b95f074b7e528ec30e76811fdf2d07fff10bbbfd7b18aac19efc25f",
+    "pyspi/workflow/_adaptive_reference.py": "667f5c5bea4ac390fca33df5756a8449080f03641d050d777c19d68c6cb3be53",
+    "pyspi/workflow/_bands.py": "7bfc4da6387812f361280376e1b8078a4b8c6f172d20e3fd4e1955cb1d8bfb20",
+    "pyspi/workflow/_calibrate.py": "9fc2a6a2661861328f07e60ebce076a8525166f031a6ec464940ad08d508363e",
+    "pyspi/workflow/_config.py": "058fb9f842cb13503c0e4b31f3c3b7de94551c938e94237384f74de4f672c83e",
+    "pyspi/workflow/_dataset.py": "f8dfe1018b603b74a88fb6228c9cbaea6a6a57b1881d3b3531ba1db776e73a00",
+    "pyspi/workflow/_edf.py": "a1eda00669d50343c78262d7140fe9df2a8b2ed29dff09ff4042cdee3f750f71",
+    "pyspi/workflow/_estimate.py": "f9b75eb244c43e618d39b86f4e1e373085724889e6ecb5f1189d0697abb9e083",
+    "pyspi/workflow/_metadata.py": "5ba2a0e57ff8e0b4ec7ac7b65644f6e6bf0d67ff296772faade46ebf8b3d6302",
+    "pyspi/workflow/_metrics.py": "d0d0b369bb12069ccf3c5d9d965299370b81793421e5d1dcc9132a917fd635e2",
+    "pyspi/workflow/_output.py": "e452c065f3e3c41f1d3c0cf6ad026ab81f3cf11c58e69e46635ff8f8d8b828f3",
+    "pyspi/workflow/_parallel.py": "174d9452f57d81c0f224465c0d00cdad20af4a0a9084c5a1cfd8cebb72d89615",
+    "pyspi/workflow/_precision.py": "639cd4e2780d040b2edb3d1e8f7e98b2d8c7241f8386559f3107ebba08769139",
+    "pyspi/workflow/_preflight.py": "273ac32d1a6da85f4559f1c5cbac7fa0e176d39556c0cbb75b3a3373ba733bb3",
+    "pyspi/workflow/_prepare.py": "5a2c05de9a818acecb0f6892b9d7ec97ca30541d18674115ce86767a80cfce84",
+    "pyspi/workflow/_profile.py": "28c4c942a1c541d533a7fcd2cadf2b09e982f9f6d0f9430674898a1b04209406",
+    "pyspi/workflow/_reference.py": "b524a86fa82bb9053d34d14e0f2055df0bc49ff913f7dbcffdf7ee65e17bbd74",
+    "pyspi/workflow/_resources.py": "192cf4325cc096fcff4fb52df54e61041d3522e4ab8aac824842bc9586069baf",
+    "pyspi/workflow/_run.py": "6a5c25d998a57349ec021a3cfd4a3671f436af32e1166a483465595c1a36263d",
+    "pyspi/workflow/_shared_prepare.py": "569f86d9d84ea5eaf4beb980b2edbafbfe502c2c5a27f7adf53b78fc65f694c5",
+    "pyspi/workflow/_windows.py": "e4cc59389544b8dd6e415671886d87dba68a3c305e5a9658cf14f6a8f3e13840",
+    "pyspi/workflow/derived.py": "99e4752e3da83a1abf1bed8bdbe63659e0c1215e1f255a04dd806bdc04f7a16e",
+    "pyspi/workflow/experiment.py": "455764d74788212dda72db88d363940305dce53792644becc99f02a29680744e"
+  },
+  "patients": [
+    {
+      "patient": "001",
+      "channels": 118,
+      "windows": 609,
+      "groups": [
+        {
+          "group": "car-normalized",
+          "outputs": 201,
+          "windows": 609,
+          "successful_attempts": 122409,
+          "elapsed_seconds": 4908.687638883974,
+          "seconds_per_window": 8.06024242838091,
+          "seconds_600": 4836.145457028546,
+          "seconds_41400": 333694.0365349697,
+          "stored_bytes": 2417980861,
+          "metrics_with_successful_nan_pairs": {
+            "xcorr_holm_max_maxlag0125ms_alpha0p05": {
+              "success_windows": 609,
+              "success_finite_pairs": 11232,
+              "success_nan_pairs": 8396622,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_sq_holm_max_maxlag0125ms_alpha0p05": {
+              "success_windows": 609,
+              "success_finite_pairs": 11232,
+              "success_nan_pairs": 8396622,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_holm_mean_maxlag0125ms_alpha0p05": {
+              "success_windows": 609,
+              "success_finite_pairs": 11232,
+              "success_nan_pairs": 8396622,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_sq_holm_mean_maxlag0125ms_alpha0p05": {
+              "success_windows": 609,
+              "success_finite_pairs": 11232,
+              "success_nan_pairs": 8396622,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_holm_min_maxlag0125ms_alpha0p05": {
+              "success_windows": 609,
+              "success_finite_pairs": 11232,
+              "success_nan_pairs": 8396622,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_holm_peak_maxlag0125ms_alpha0p05": {
+              "success_windows": 609,
+              "success_finite_pairs": 11232,
+              "success_nan_pairs": 8396622,
+              "success_infinite_pairs": 0
+            }
+          },
+          "warning_events": 10501
+        },
+        {
+          "group": "car-amplitude",
+          "outputs": 13,
+          "windows": 609,
+          "successful_attempts": 7917,
+          "elapsed_seconds": 72.67069184599677,
+          "seconds_per_window": 0.11932790122495365,
+          "seconds_600": 71.59674073497219,
+          "seconds_41400": 4940.175110713081,
+          "stored_bytes": 179132662,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "local-normalized",
+          "outputs": 15,
+          "windows": 609,
+          "successful_attempts": 9135,
+          "elapsed_seconds": 1395.6834128079936,
+          "seconds_per_window": 2.291762582607543,
+          "seconds_600": 1375.0575495645257,
+          "seconds_41400": 94878.97091995228,
+          "stored_bytes": 233295769,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "local-amplitude",
+          "outputs": 1,
+          "windows": 609,
+          "successful_attempts": 609,
+          "elapsed_seconds": 5.336666057992261,
+          "seconds_per_window": 0.008762998453189263,
+          "seconds_600": 5.257799071913558,
+          "seconds_41400": 362.7881359620355,
+          "stored_bytes": 14348587,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "shaft-normalized",
+          "outputs": 8,
+          "windows": 609,
+          "successful_attempts": 4872,
+          "elapsed_seconds": 133.77408142900094,
+          "seconds_per_window": 0.21966187426765343,
+          "seconds_600": 131.79712456059207,
+          "seconds_41400": 9094.001594680853,
+          "stored_bytes": 123903488,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "shaft-amplitude",
+          "outputs": 1,
+          "windows": 609,
+          "successful_attempts": 609,
+          "elapsed_seconds": 5.430061645980459,
+          "seconds_per_window": 0.008916357382562329,
+          "seconds_600": 5.349814429537397,
+          "seconds_41400": 369.1371956380804,
+          "stored_bytes": 14348346,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        }
+      ],
+      "successful_attempts": 145551,
+      "stored_bytes": 2983009713,
+      "elapsed_seconds": 6526.454278426972,
+      "seconds_per_window": 10.716673691998313,
+      "seconds_600": 6430.004215198987,
+      "seconds_41400": 443670.29084873013,
+      "process_tree_memory": {
+        "peak_rss_mib": 4587.296875,
+        "peak_pss_mib": 3809.0029296875,
+        "peak_processes": 4,
+        "samples": 63806,
+        "interval_seconds": 0.05,
+        "counter_read_errors": 0,
+        "minimum_system_available_mib": 1655.640625,
+        "limits": "Linux sampled process-tree counters; short peaks may be missed. PSS accounts for shared pages; RSS double-counts them. System availability includes other jobs."
+      },
+      "preparation_cache": [
+        {
+          "patient_id": "001",
+          "recording_id": "baseline",
+          "base_misses": 1,
+          "base_hits": 2,
+          "reference_misses": 3,
+          "reference_hits": 3,
+          "evictions": 0,
+          "peak_retained_bytes": 9426831360,
+          "cache_limit_bytes": 17179869184
+        }
+      ],
+      "parent_jvm_started": false,
+      "profile_sha256": "e12b3435a708327e4b5d1812e4d56ab313f8de78a115241611cb10e1897d2429",
+      "audit_sha256": "1ab326f21a6a06f142fae14280936418f6f4581dd7b030e6545260944d857ed7"
+    },
+    {
+      "patient": "006",
+      "channels": 80,
+      "windows": 605,
+      "groups": [
+        {
+          "group": "car-normalized",
+          "outputs": 201,
+          "windows": 605,
+          "successful_attempts": 121605,
+          "elapsed_seconds": 2280.243323584029,
+          "seconds_per_window": 3.7689972290645106,
+          "seconds_600": 2261.398337438706,
+          "seconds_41400": 156036.48528327074,
+          "stored_bytes": 1128566599,
+          "metrics_with_successful_nan_pairs": {
+            "xcorr_holm_max_maxlag0125ms_alpha0p05": {
+              "success_windows": 605,
+              "success_finite_pairs": 6212,
+              "success_nan_pairs": 3817388,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_sq_holm_max_maxlag0125ms_alpha0p05": {
+              "success_windows": 605,
+              "success_finite_pairs": 6212,
+              "success_nan_pairs": 3817388,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_holm_mean_maxlag0125ms_alpha0p05": {
+              "success_windows": 605,
+              "success_finite_pairs": 6212,
+              "success_nan_pairs": 3817388,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_sq_holm_mean_maxlag0125ms_alpha0p05": {
+              "success_windows": 605,
+              "success_finite_pairs": 6212,
+              "success_nan_pairs": 3817388,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_holm_min_maxlag0125ms_alpha0p05": {
+              "success_windows": 605,
+              "success_finite_pairs": 6212,
+              "success_nan_pairs": 3817388,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_holm_peak_maxlag0125ms_alpha0p05": {
+              "success_windows": 605,
+              "success_finite_pairs": 6212,
+              "success_nan_pairs": 3817388,
+              "success_infinite_pairs": 0
+            }
+          },
+          "warning_events": 2388
+        },
+        {
+          "group": "car-amplitude",
+          "outputs": 13,
+          "windows": 605,
+          "successful_attempts": 7865,
+          "elapsed_seconds": 39.516064125986304,
+          "seconds_per_window": 0.06531580847270463,
+          "seconds_600": 39.18948508362278,
+          "seconds_41400": 2704.0744707699714,
+          "stored_bytes": 84928672,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "local-normalized",
+          "outputs": 15,
+          "windows": 605,
+          "successful_attempts": 9075,
+          "elapsed_seconds": 690.2540576289757,
+          "seconds_per_window": 1.1409157977338442,
+          "seconds_600": 684.5494786403066,
+          "seconds_41400": 47233.91402618115,
+          "stored_bytes": 108567012,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "local-amplitude",
+          "outputs": 1,
+          "windows": 605,
+          "successful_attempts": 605,
+          "elapsed_seconds": 3.9269693809910677,
+          "seconds_per_window": 0.006490858480976971,
+          "seconds_600": 3.894515088586183,
+          "seconds_41400": 268.72154111244663,
+          "stored_bytes": 6687711,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "shaft-normalized",
+          "outputs": 8,
+          "windows": 605,
+          "successful_attempts": 4840,
+          "elapsed_seconds": 74.40889315900858,
+          "seconds_per_window": 0.12298990604794807,
+          "seconds_600": 73.79394362876884,
+          "seconds_41400": 5091.78211038505,
+          "stored_bytes": 57685529,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "shaft-amplitude",
+          "outputs": 1,
+          "windows": 605,
+          "successful_attempts": 605,
+          "elapsed_seconds": 3.9357998960185796,
+          "seconds_per_window": 0.006505454373584429,
+          "seconds_600": 3.9032726241506572,
+          "seconds_41400": 269.3258110663954,
+          "stored_bytes": 6699336,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        }
+      ],
+      "successful_attempts": 144595,
+      "stored_bytes": 1393134859,
+      "elapsed_seconds": 3097.773847874021,
+      "seconds_per_window": 5.120287351857886,
+      "seconds_600": 3072.172411114732,
+      "seconds_41400": 211979.89636691648,
+      "process_tree_memory": {
+        "peak_rss_mib": 4848.3203125,
+        "peak_pss_mib": 3697.4921875,
+        "peak_processes": 4,
+        "samples": 29021,
+        "interval_seconds": 0.05,
+        "counter_read_errors": 3,
+        "minimum_system_available_mib": 2237.328125,
+        "limits": "Linux sampled process-tree counters; short peaks may be missed. PSS accounts for shared pages; RSS double-counts them. System availability includes other jobs."
+      },
+      "preparation_cache": [
+        {
+          "patient_id": "006",
+          "recording_id": "baseline",
+          "base_misses": 1,
+          "base_hits": 2,
+          "reference_misses": 3,
+          "reference_hits": 3,
+          "evictions": 0,
+          "peak_retained_bytes": 6349129728,
+          "cache_limit_bytes": 17179869184
+        }
+      ],
+      "parent_jvm_started": false,
+      "profile_sha256": "b6f59552be1bf1d2d4d8c671f66c72e10cbc384e171b86fbb78d9f94ee384aaf",
+      "audit_sha256": "dbcd7f2333e34ae1892479ceabc6e3aae6c66f2bd2d1a26234eca74437e42d0e"
+    },
+    {
+      "patient": "111",
+      "channels": 249,
+      "windows": 602,
+      "groups": [
+        {
+          "group": "car-normalized",
+          "outputs": 201,
+          "windows": 602,
+          "successful_attempts": 121002,
+          "elapsed_seconds": 33767.399612026,
+          "seconds_per_window": 56.092025933598,
+          "seconds_600": 33655.2155601588,
+          "seconds_41400": 2322209.8736509574,
+          "stored_bytes": 10546273423,
+          "metrics_with_successful_nan_pairs": {
+            "xcorr_holm_max_maxlag0125ms_alpha0p05": {
+              "success_windows": 602,
+              "success_finite_pairs": 81458,
+              "success_nan_pairs": 37093246,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_sq_holm_max_maxlag0125ms_alpha0p05": {
+              "success_windows": 602,
+              "success_finite_pairs": 81458,
+              "success_nan_pairs": 37093246,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_holm_mean_maxlag0125ms_alpha0p05": {
+              "success_windows": 602,
+              "success_finite_pairs": 81458,
+              "success_nan_pairs": 37093246,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_sq_holm_mean_maxlag0125ms_alpha0p05": {
+              "success_windows": 602,
+              "success_finite_pairs": 81458,
+              "success_nan_pairs": 37093246,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_holm_min_maxlag0125ms_alpha0p05": {
+              "success_windows": 602,
+              "success_finite_pairs": 81458,
+              "success_nan_pairs": 37093246,
+              "success_infinite_pairs": 0
+            },
+            "xcorr_holm_peak_maxlag0125ms_alpha0p05": {
+              "success_windows": 602,
+              "success_finite_pairs": 81458,
+              "success_nan_pairs": 37093246,
+              "success_infinite_pairs": 0
+            }
+          },
+          "warning_events": 52443
+        },
+        {
+          "group": "car-amplitude",
+          "outputs": 13,
+          "windows": 602,
+          "successful_attempts": 7826,
+          "elapsed_seconds": 293.3225810150034,
+          "seconds_per_window": 0.48724681231728134,
+          "seconds_600": 292.3480873903688,
+          "seconds_41400": 20172.018029935447,
+          "stored_bytes": 779777418,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "local-normalized",
+          "outputs": 15,
+          "windows": 602,
+          "successful_attempts": 9030,
+          "elapsed_seconds": 3524.7678729440086,
+          "seconds_per_window": 5.855096134458486,
+          "seconds_600": 3513.0576806750914,
+          "seconds_41400": 242400.9799665813,
+          "stored_bytes": 1022000376,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "local-amplitude",
+          "outputs": 1,
+          "windows": 602,
+          "successful_attempts": 602,
+          "elapsed_seconds": 23.229323586041573,
+          "seconds_per_window": 0.038586916255883015,
+          "seconds_600": 23.15214975352981,
+          "seconds_41400": 1597.498332993557,
+          "stored_bytes": 62234207,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "shaft-normalized",
+          "outputs": 8,
+          "windows": 602,
+          "successful_attempts": 4816,
+          "elapsed_seconds": 581.5464722629986,
+          "seconds_per_window": 0.9660240403039844,
+          "seconds_600": 579.6144241823906,
+          "seconds_41400": 39993.39526858495,
+          "stored_bytes": 541308388,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        },
+        {
+          "group": "shaft-amplitude",
+          "outputs": 1,
+          "windows": 602,
+          "successful_attempts": 602,
+          "elapsed_seconds": 18.729876739962492,
+          "seconds_per_window": 0.03111275205973836,
+          "seconds_600": 18.667651235843017,
+          "seconds_41400": 1288.0679352731681,
+          "stored_bytes": 62285476,
+          "metrics_with_successful_nan_pairs": {},
+          "warning_events": 0
+        }
+      ],
+      "successful_attempts": 143878,
+      "stored_bytes": 13013879288,
+      "elapsed_seconds": 38214.52790225099,
+      "seconds_per_window": 63.47928222965281,
+      "seconds_600": 38087.56933779168,
+      "seconds_41400": 2628042.2843076265,
+      "process_tree_memory": {
+        "peak_rss_mib": 5008.0625,
+        "peak_pss_mib": 5005.869140625,
+        "peak_processes": 1,
+        "samples": 453688,
+        "interval_seconds": 0.05,
+        "counter_read_errors": 0,
+        "minimum_system_available_mib": 745.60546875,
+        "limits": "Linux sampled process-tree counters; short peaks may be missed. PSS accounts for shared pages; RSS double-counts them. System availability includes other jobs."
+      },
+      "preparation_cache": [
+        {
+          "patient_id": "111",
+          "recording_id": "baseline",
+          "base_misses": 1,
+          "base_hits": 2,
+          "reference_misses": 3,
+          "reference_hits": 3,
+          "evictions": 1,
+          "peak_retained_bytes": 14749343232,
+          "cache_limit_bytes": 17179869184
+        }
+      ],
+      "parent_jvm_started": false,
+      "profile_sha256": "d24c004aa674d3c89a6d66f568f5c9e93c159f053390be19d9a05f11a5b2d743",
+      "audit_sha256": "ce2a43baa054ead46fa2c05fe4b46d9b93991629a88bab115d2ba56341658628"
+    }
+  ]
+}

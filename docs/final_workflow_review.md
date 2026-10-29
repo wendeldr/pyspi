@@ -1,11 +1,12 @@
 # Final workflow and lightweight pairwise review
 
-This implements the approved final-workflow goal. This document tracks completed
-work and outstanding gates; it is not a declaration that the goal is complete.
+This records the completed final-workflow goal and its validation evidence.
+All three selected patients completed all six groups, followed by full payload
+audits. The cross-patient provenance and receipt checks are linked below.
 
 The revised goal additionally requires **3–5 complete patients through the final
-workflow with float32 outputs** after implementation/validation. This is a required
-completion gate, not satisfied by the bounded profiling windows.
+workflow with float32 outputs** after implementation/validation. That gate is met
+by patients 001, 006 and 111; the bounded profiling windows are separate evidence.
 
 ## Requirements and evidence
 
@@ -18,10 +19,10 @@ completion gate, not satisfied by the bounded profiling windows.
 | All 33 source outputs plus partial correlation accounted for | Complete source coverage inventory and final six-group selection below. |
 | Broadband local and limited shaft-average combinations | Automatic shaft membership and limited final selection implemented/tested. |
 | Group configuration / bounded shared continuous preparation | Implemented; synthetic and real separate/shared equivalence passes, including all 239 stored outputs. |
-| Output/reference/preprocessing contracts | Existing contracts retained; new metrics have focused serial/spawn/resume coverage. Group isolation and serial/spawn/resume tests pass; real full-patient audit pending. |
-| Final workflow timings, larger recording, complete process memory and tuning | Bounded 118/249-contact profiles and tuning completed below; complete-patient throughput remains pending. |
-| Final full-patient runs | Patients 001 and 006 complete and audited across all six groups (609/605 windows), float32. Patient 111 running. Three complete audited patients remain the completion gate. |
-| Final configs/counts, brief CSV notes, review and chunked commits | In progress. No push authorized. |
+| Output/reference/preprocessing contracts | Existing contracts retained; focused serial/spawn/resume and group-isolation coverage passes. All 18 full-patient group outputs were read and audited. |
+| Final workflow timings, larger recording, complete process memory and tuning | Bounded 118/249-contact comparisons plus complete 80/118/249-contact profiles below; startup, computation, writing and sampled process-tree memory included. |
+| Final full-patient runs | Patients 001, 006 and 111 complete and audited across all six groups (609/605/602 windows), float32; 434024 successful attempts. |
+| Final configs/counts, brief CSV notes, review and chunked commits | Final six-group selection: 239 outputs. Formula/performance notes and validation receipts recorded; unrelated user flags preserved. No push authorized. |
 
 ## New calculation definitions
 
@@ -119,7 +120,7 @@ candidate regressions, 50 envelope tests, 12 banded-PEC preprocessing cases,
 and one serial/spawn/float32/resume integration test passed. The overlap-only
 invalid-input diagnostic and partial-correlation minimum-observation preflight
 guard were refined after the timing receipt; finite-data formulas are unchanged.
-Final workflow timings remain outstanding.
+Final workflow timings, including preparation and writing, are recorded below.
 
 ## Downstream derived features
 
@@ -187,7 +188,7 @@ records the three stored baseline controls and the separately suggested partial
 correlation. Local/shaft Pearson, absolute Pearson and graph changes are derived
 from per-window saved graphs. The source's 20-sample “10 ms” label is corrected
 to its exact duration; the intended lag stays 20 samples. Broadband local/shaft
-envelope and amplitude log-ratio groups will be selected explicitly without
+envelope and amplitude log-ratio groups are selected explicitly without
 multiplying the entire main selection over references. Configuration integration is complete; the inventory maps each selected source output to its final group.
 
 `reference: {method: shaft_average, shafts: metadata}` resolves the authoritative
@@ -297,8 +298,8 @@ these process peaks are not a promise of identical system pressure.
 were compared across every trial window: **bit-identical float32 values**, identical
 finite masks, availability, statuses, channels and reference/preprocessing
 identity. This includes the independently prepared bands and robust covariance
-outputs. Final tuning, the larger recording and complete-patient runs remain
-outstanding. These four-window elapsed times amortize a full recording's
+outputs. Subsequent tuning, the larger recording and complete-patient results
+are recorded below. These four-window elapsed times amortize a full recording's
 preparation over too few windows to predict cohort wall time directly.
 
 ## Final execution tuning
@@ -364,8 +365,9 @@ numerical thread and 256 MiB spectral cache. The general experiment keeps one
 worker for conservative larger-recording memory use. The patient-specific full-run
 configs use two workers only for main CAR at 80/118 contacts, and serial execution
 for inexpensive groups; all 249-contact groups remain serial. Two workers at 80
-contacts are an extrapolation from the measured 118-contact case, to be verified
-by the complete-patient profile. Larger cache settings are not selected: the
+contacts were initially extrapolated from the measured 118-contact case; the
+complete-patient profile below verifies that configuration. Larger cache settings
+are not selected: the
 118-contact savings are small and the 249-contact trial did not benefit.
 
 New telemetry records worker readiness and result-delivery delay. Delivery includes
@@ -378,7 +380,7 @@ in parallel mode it also includes worker startup, preprocessing and transport.
 calculation and output columns overlap. Use measured end-to-end elapsed time for
 total throughput; do not obtain it by adding these diagnostic stage counters.
 
-Full-patient execution and the bounded-memory payload audit remain required.
+For the completed full-patient runs,
 `tests/final_workflow_review/run_full_patient.py` profiles every planned window;
 `audit_outputs.py` reads every saved payload and checks the full contact/reference,
 preprocessing/window, availability, float32, status and overflow contracts.
@@ -396,7 +398,7 @@ connectivity. Existing robust-covariance rank/determinant warnings remain in the
 logs; the approved safeguards and estimator settings were not weakened to remove
 them. These bounded results do not establish the behavior of every later window.
 
-## Complete-patient results (in progress)
+## Complete-patient results
 
 Patient 001 has completed all six groups with 118 contacts and 609 full windows.
 The [whole-run profile](../tests/final_workflow_review/001-full-profile.json) records
@@ -470,6 +472,91 @@ mixed cohort, and exclude the subsequent audit. The substantially different
 118/80-contact times demonstrate why one channel count should not be used as
 a blanket cohort prediction.
 
-Patient 111 is running through the same driver with one worker, a full profile
-and automatic payload audit. The goal is not complete until that larger patient
-and the final cross-patient review finish.
+Patient 111 completed all six groups: 249 contacts, 602 windows and
+**143878 successful attempts**. Its
+[profile](../tests/final_workflow_review/111-full-profile.json) records 38214.53
+seconds (**10 h 36 min 55 s**), including preparation, calculation and writing;
+all groups used one worker and one numerical thread. The main CAR group took
+9 h 22 min 47 s; the other groups together took about 74 minutes. The
+[full payload audit](../tests/final_workflow_review/111-full-audit.json) passed
+after reading every matrix. There were no failed attempts, missing payloads,
+unavailable reference contacts, infinite outputs or precision overflows.
+Stored run files total 12.12 GiB, including metadata and diagnostics.
+
+| Patient 111 workload | Elapsed per recording window | x600 | x600x69 |
+|---|---:|---:|---:|
+| Main CAR, 201 outputs | 56.092 s | 9.35 h | 645.06 h |
+| CAR amplitude, 13 outputs | 0.487 s | 4.87 min | 5.60 h |
+| Custom-local normalized, 15 outputs | 5.855 s | 58.55 min | 67.33 h |
+| Custom-local amplitude, 1 output | 0.0386 s | 23.15 s | 0.44 h |
+| Shaft normalized, 8 outputs | 0.966 s | 9.66 min | 11.11 h |
+| Shaft amplitude, 1 output | 0.0311 s | 18.67 s | 0.36 h |
+| All groups including orchestration | 63.479 s | 10.58 h | 730.01 h |
+
+The cohort projection here repeats the largest, serial 249-contact workload;
+it is **not a prediction for the mixed-size cohort**. The 80/118-contact main
+jobs used two workers, so differences between these full runs combine channel
+count, scheduling and host conditions. No additional estimator or runtime
+tradeoff was adopted during the full runs.
+
+Peak process-tree PSS was 5006 MiB (RSS 5008 MiB), and minimum system-available
+memory was 746 MiB. This supports retaining the conservative single-worker
+setting for this larger recording. Shared preparation reused the base twice and
+each reference once; it recorded one eviction and a 13.74 GiB peak retained disk
+cache within the 16 GiB limit. Disk-cache limits do not bound total RAM or
+temporary preparation files. No JVM was started.
+
+As in the other two patients, off-diagonal NaNs occurred only in the six
+significance-filtered cross-correlation summaries. Each retained 81458 of
+37174704 directed pair/windows (0.219%); the rest had no significant lag.
+These are diagnosed missing estimates, not calculation failures or zero
+connectivity. The logs retain 602 rank-deficiency warnings and 50637 determinant
+increase warnings from the reference robust-covariance estimator, plus the 602
+cross-correlation warnings and 602 coherence-magnitude empty-diagonal warnings.
+All other off-diagonal outputs were finite. The existing singular-input
+MinCovDet safeguard and estimator settings remain unchanged.
+
+## Final completion audit
+
+[The cross-patient summary](../tests/final_workflow_review/full_patient_summary.json),
+reproduced by `python tests/final_workflow_review/summarize_full_patients.py`,
+checks all three completed profiles against their full payload-audit receipts.
+It verifies identical metric inventories, current source/config hashes,
+complete window counts and successful attempt counts. All 77 recorded production
+source files match across the three runs and the current worktree. This summary
+does not substitute for reading the payloads; `audit_outputs.py` performed that
+separately for each complete patient.
+
+The final validation covers **18 group runs, 1816 recording windows and 434024
+successful calculation attempts**, with 239 outputs per recording window. It
+validates the selected workflows and the affected library implementations; it
+does not claim a new review of every unrelated library estimator or option.
+Completed independent formula, edge-case, permutation, cache, serial/spawn and
+resume tests were reused. No unrelated passing tests were rerun and no numerical
+goldens changed for this final-workflow goal.
+
+Actual preparation provenance confirms 2048 Hz in every group. Patient 001 was
+polyphase-upsampled from 1024 Hz (312064 to 624128 samples); patients 006 and 111
+were already 2048 Hz. Every window and step contains 1024 samples. Incomplete
+trailing samples are excluded by the approved full-window policy. CAR/custom
+local/shaft references use the selected physical-voltage signals before window
+detrending and optional z-scoring. Contact identities, resolved reference weights
+and preprocessing remain recorded with the outputs.
+
+The source inventory accounts for all 33 exploration outputs, three baseline
+controls and partial correlation under three references. Four new estimator
+types are enabled: fixed-lag correlation, event excess, log-scale ratio and
+LedoitWolf partial correlation. Jensen–Shannon is implemented but omitted from
+the default selection under the measured redundancy decision. Existing CAR
+candidates are merged into main CAR to share computation; additional local and
+limited shaft combinations are explicit. Pearson/absolute Pearson and graph
+changes remain downstream derivations, not extra raw EEG calculations. The
+final raw-output counts are **201/13 CAR, 15/1 custom local and 8/1 shaft**
+(normalized/amplitude respectively). Earlier excluded expensive directed
+additions, group delay and GraphicalLasso remain excluded.
+
+These runs retain their recorded QC/contact selections. In particular, patient
+001 includes R6 and M6; discussion of their quality did not authorize changing
+labels or rerunning the patient. Computational completion is not a new clinical
+classification of those contacts. Any later exclusion changes the reference and
+requires a new affected-patient run, rather than deleting matrix rows afterward.
