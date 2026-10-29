@@ -55,8 +55,10 @@ def _reference_array(source, names, reference, directory, name, block_bytes=16*2
             out[:, start:start+block] = values-values.mean(axis=0, keepdims=True)
         else:
             out[:, start:start+block] = apply_shaft_reference(values, names, reference, plan)
-        out.flush()
         _release_pages(out)
+    # Scratch is private until this function returns. Sync once after completing
+    # the array, rather than fsyncing the entire mapped file after every block.
+    out.flush()
     del out
     _release_pages(source)
     return np.load(path, mmap_mode="r")

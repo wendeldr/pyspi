@@ -57,13 +57,16 @@ class WindowResult:
     peak_rss_mib: float
     pid: int
     jvm_started: bool
+    worker_ready_delay_seconds: float
+    finished_at: float
 
 
 _worker = None
+_worker_ready_delay = 0.
 
 
-def _initialize(filename, metrics, cfg, names, step, length, available=None, band_files=None):
-    global _worker
+def _initialize(filename, metrics, cfg, names, step, length, available=None, band_files=None, pool_created_at=None):
+    global _worker, _worker_ready_delay
     from ._run import _calculator
 
     directory = tempfile.TemporaryDirectory(prefix="pyspi-window-worker-")
@@ -77,6 +80,7 @@ def _initialize(filename, metrics, cfg, names, step, length, available=None, ban
                np.arange(len(names)) if available is None else np.asarray(available),
                {band: np.load(path, mmap_mode="r") for band, path in (band_files or {}).items()},
                float(cfg.sampling_rate_hz))
+    _worker_ready_delay = 0. if pool_created_at is None else perf_counter()-pool_created_at
 
 
 def _compute(job):
@@ -112,12 +116,14 @@ def _compute(job):
             records = [(MetricReport(identifier, "failed", 0., tuple(emitted), error), None)
                        for identifier in active]
             return WindowResult(window, valid, records, (), "window_preprocessing",
-                                perf_counter()-started, 0., peak_rss_mib(), os.getpid(), jvm_started())
+                                perf_counter()-started, 0., peak_rss_mib(), os.getpid(), jvm_started(),
+                                _worker_ready_delay, perf_counter())
         preprocessing = perf_counter()-started
         before = perf_counter()
         calc.compute(on_metric_complete=lambda report, values: records.append((report, values)))
     return WindowResult(window, valid, records, tuple(emitted), "calculation",
-                        preprocessing, perf_counter()-before, peak_rss_mib(), os.getpid(), jvm_started())
+                        preprocessing, perf_counter()-before, peak_rss_mib(), os.getpid(), jvm_started(),
+                        _worker_ready_delay, perf_counter())
 
 
 class WindowPool:
@@ -158,7 +164,7 @@ class WindowPool:
             mp_context=multiprocessing.get_context("spawn"), initializer=_initialize,
             initargs=(str(filename), metrics, cfg, prepared.channel_names,
                       plan["step_samples"], plan["length_samples"],
-                      available_indices(prepared.details, len(prepared.channel_names)), band_files))
+                      available_indices(prepared.details, len(prepared.channel_names)), band_files, perf_counter()))
         self.setup_seconds = perf_counter()-started
 
     def map(self, jobs):

@@ -20,15 +20,18 @@ notch: {enabled: true, line_frequency_hz: 60, width_hz: 1, transition_hz: 1}
 window: {length_seconds: 0.5, step_seconds: 0.5}
 reference: car
 preprocessing: {detrend: true, zscore: true}
-output_batch_mib: 32
+output_batch_mib: 128
 execution:
+  # Conservative for the 249-contact recording. A measured 118-contact trial
+  # supports two workers for car-normalized; keep small groups serial.
   workers: 1
   threads_per_worker: 1
   spectral_cache_mib: 256
   # Disk filesystem, not /tmp (which may be a small RAM-backed filesystem).
   scratch_directory: ../../.candidate-scratch
 sharing:
-  preparation_cache_mib: 8192
+  # Disk cache, not a RAM allocation; enough to retain the larger base and bands.
+  preparation_cache_mib: 16384
 run_name: final-reviewed
 dataset:
   data_lake_config: ../../../seeg-data-lake/config.toml

@@ -61,6 +61,13 @@ def test_shared_vs_separate_outputs_and_reuse(experiment_file, workers):
     assert result['preparation_cache'][0]['reference_hits'] == 1
     for record, (_, cfg) in zip(result['runs'], experiment.groups):
         shared = open_run(record['path'])
+        if workers > 1:
+            import json
+            session = json.loads((Path(record['path'])/'run.json').read_text())['sessions'][-1]
+            assert session['worker_ready_delay_seconds']
+            assert min(session['worker_ready_delay_seconds'].values()) > 0
+            assert session['result_delivery_seconds'] >= 0
+            assert session['worker_calculation_seconds'] > 0
         [separate_path] = run(replace(cfg, run_name=cfg.run_name+'-separate'), max_windows=2)
         separate = open_run(separate_path)
         assert shared.recording['reference'] == separate.recording['reference']

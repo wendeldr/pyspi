@@ -331,6 +331,11 @@ def _execute_batch(path, manifest, batch, prepared, calc, metrics, retry_failure
             before = perf_counter()
             try:
                 for result in pool.map(jobs):
+                    # Delivery includes serialization, IPC and any queue wait;
+                    # it overlaps other workers and is not additive wall time.
+                    session["result_delivery_seconds"] = session.get("result_delivery_seconds", 0.) + perf_counter()-result.finished_at
+                    session["worker_calculation_seconds"] = session.get("worker_calculation_seconds", 0.) + result.calculation_seconds
+                    session.setdefault("worker_ready_delay_seconds", {})[str(result.pid)] = result.worker_ready_delay_seconds
                     session["window_preprocessing_seconds"] += result.preprocessing_seconds
                     session.setdefault("worker_peak_rss_mib", {})[str(result.pid)] = result.peak_rss_mib
                     session.setdefault("worker_jvm_started", {})[str(result.pid)] = result.jvm_started

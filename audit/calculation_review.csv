@@ -27,7 +27,7 @@ phase_multitaper_max_fs-1,all configured frequency bands,,,,Removed: ordinary ma
 cohmag_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
 icoh_multitaper_max_fs-1,all configured frequency bands,,,,Shared spectral work; inclusive band edges and Nyquist.
 plv_multitaper_mean_fs-1,all configured frequency bands,1,1,,Shared phase vectors. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
-pli_multitaper_mean_fs-1,all configured frequency bands,1,1,,Magnitude before band summary. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
+pli_multitaper_mean_fs-1,all configured frequency bands,1,1,,249x1024 selected spectral family: 30.6 -> 19.6 s/window; prevent repeated PLI cache eviction. Values unchanged.
 wpli_multitaper_mean_fs-1,all configured frequency bands,1,1,,Zero weights -> NaN; removed amplitude cutoff. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
 dspli_multitaper_mean_fs-1,all configured frequency bands,1,1,,Corrected zero signs. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
 dswpli_multitaper_mean_fs-1,all configured frequency bands,1,1,,Stable pair sums; zero weights -> NaN. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
@@ -38,7 +38,7 @@ wpli_multitaper_max_fs-1,all configured frequency bands,,,,Remove amplitude cuto
 dspli_multitaper_max_fs-1,all configured frequency bands,,,,Correct zero signs; shared pair reductions.
 dswpli_multitaper_max_fs-1,all configured frequency bands,,,,Stable pair sums; zero weights -> NaN; lower memory.
 ppc_multitaper_max_fs-1,all configured frequency bands,,,,Shared phase vectors; reversed-pair reuse; valid negatives preserved.
-pli-signed_multitaper_mean_fs-1,all configured frequency bands,1,1,,Signed phase-lag values; shared PLI work. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
+pli-signed_multitaper_mean_fs-1,all configured frequency bands,1,1,,249x1024 selected spectral family: 30.6 -> 19.6 s/window; prevent repeated PLI cache eviction. Values unchanged.
 pli-signed_multitaper_max_fs-1,all configured frequency bands,,,,Signed phase-lag values; shared PLI work and reversed pairs.
 wpli-signed_multitaper_mean_fs-1,all configured frequency bands,1,1,,Shared wPLI work; zero weights -> NaN. CAR phase family: 5.94 -> 3.96 s/window with 256 -> 1024 MiB cache; fused reductions (+482 MiB peak RSS). Default 256 MiB.
 wpli-signed_multitaper_max_fs-1,all configured frequency bands,,,,Shared wPLI work; zero weights -> NaN.

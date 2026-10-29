@@ -17,9 +17,9 @@ completion gate, not satisfied by the bounded profiling windows.
 | Downstream Pearson / absolute Pearson / consecutive graph changes | Bounded `workflow.derived` iterator and ten focused tests; formulas, identity and temporal-summary guidance below. |
 | All 33 source outputs plus partial correlation accounted for | Complete source coverage inventory and final six-group selection below. |
 | Broadband local and limited shaft-average combinations | Automatic shaft membership and limited final selection implemented/tested. |
-| Group configuration / bounded shared continuous preparation | Implemented; synthetic separate/shared equivalence passes. Real throughput comparison in progress. |
+| Group configuration / bounded shared continuous preparation | Implemented; synthetic and real separate/shared equivalence passes, including all 239 stored outputs. |
 | Output/reference/preprocessing contracts | Existing contracts retained; new metrics have focused serial/spawn/resume coverage. Group isolation and serial/spawn/resume tests pass; real full-patient audit pending. |
-| Final workflow timings, larger recording, complete process memory and tuning | Pending. Kernel receipts below are insufficient for this requirement. |
+| Final workflow timings, larger recording, complete process memory and tuning | Bounded 118/249-contact profiles and tuning completed below; complete-patient throughput remains pending. |
 | Final full-patient runs | Pending 3–5 complete patients, all selected final groups, float32 outputs and completion/availability audit. |
 | Final configs/counts, brief CSV notes, review and chunked commits | In progress. No push authorized. |
 
@@ -293,3 +293,93 @@ identity. This includes the independently prepared bands and robust covariance
 outputs. Final tuning, the larger recording and complete-patient runs remain
 outstanding. These four-window elapsed times amortize a full recording's
 preparation over too few windows to predict cohort wall time directly.
+
+## Final execution tuning
+
+The [reference-I/O comparison](../tests/final_workflow_review/reference_io_timings.json)
+measured three alternating repetitions on the complete patient-001 prepared
+recording. Flushing a completed private scratch array once, rather than after
+every time block, reduced median CAR-array construction from 2.94 to 2.46 seconds
+(16%). All arrays were bit-identical; measured process PSS remained about
+1010–1025 MiB. Output durability/checkpoint behavior is unchanged. Dirty filesystem
+pages also consume system resources; the scratch cache budget is not a RAM cap.
+
+The [two-worker trial](../tests/final_workflow_review/001-tuned-w2.json) used
+128 MiB output batches and a 512 MiB spectral cache. All six groups/four windows
+took 146.8 seconds, versus the initial shared trial's 157.8 seconds. Process-tree
+PSS rose from 1648 to 3389 MiB. Main-CAR calculation wall time fell from 47.0 to
+34.2 seconds, despite worker startup; small groups spent more time starting workers
+than calculating. Summed writing time fell from 12.2 to 7.3 seconds. These changes
+were combined in this trial, so their individual speedups cannot be inferred.
+[Every stored output](../tests/final_workflow_review/001-tuned-equivalence.json)
+remained bit-identical, including availability and statuses. No JVM was started.
+
+The [249-contact trial](../tests/final_workflow_review/111-tuned-w1.json) used one
+worker/thread, 256 MiB spectral cache, 128 MiB output batches and 16 GiB disk
+preparation cache. All groups/four windows took 518.5 seconds, including 183.6
+seconds preparation, 307.2 seconds calculation and 18.9 seconds writing. Peak
+process-tree PSS was 3034 MiB; minimum system-available memory was 1425 MiB.
+The disk cache reused the base for both additional references and each referenced
+input for its amplitude group; peak retained files were about 13.7 GiB.
+
+That larger trial exposed a specific PLI cache problem: the requested sign matrix
+fits 256 MiB, but adding an optional count matrix evicted it and caused repeated
+calculation across bands. The fix caches the optional count only when both fit.
+Debiased PLI still explicitly obtains the count whenever it needs it. Formula,
+precision and undefined-input handling are unchanged. All 69 focused phase-lag
+tests passed, including a cache-boundary regression and independent scalar tests.
+The [complete 132-output spectral benchmark](../tests/final_workflow_review/spectral_cache_timings.json)
+compares the old policy, fixed 256 MiB and fixed 1024 MiB using three real windows
+at each channel count; it excludes preparation/storage and is not a full-run
+throughput measurement.
+
+| Complete selected spectral family | Median/window | x600 | x600x69 |
+|---|---:|---:|---:|
+| 118 contacts, old 256 MiB policy | 2.93 s | 29.3 min | 33.7 h |
+| 118 contacts, fixed 256 MiB | 2.95 s | 29.5 min | 34.0 h |
+| 118 contacts, fixed 1024 MiB | 2.67 s | 26.7 min | 30.7 h |
+| 249 contacts, old 256 MiB policy | 30.60 s | 5.10 h | 351.9 h |
+| 249 contacts, fixed 256 MiB | 19.56 s | 3.26 h | 224.9 h |
+| 249 contacts, fixed 1024 MiB | 21.27 s | 3.55 h | 244.6 h |
+
+Every result was bit-identical across all three policies on all six windows.
+At 249 contacts the fixed 256 MiB policy saves 36% of this family's time, or
+about 1.84 hours per 600 windows at that contact count. The 118-contact difference
+between old/fixed 256 MiB is timing noise, not a claimed regression or improvement.
+Sampled process PSS for fixed 256/1024 MiB peaked at 815/1306 MiB for 118 contacts
+and 2108/2867 MiB for 249; these isolated-family values include comparison arrays
+and are not whole-workflow memory limits. The cohort columns simply repeat each
+same-sized workload sequentially, excluding preparation/output/startup; real
+patients have different contact counts and may behave differently.
+
+Final defaults use 128 MiB output batches, 16 GiB disk preparation cache, one
+numerical thread and 256 MiB spectral cache. The general experiment keeps one
+worker for conservative larger-recording memory use. The patient-specific full-run
+configs use two workers only for main CAR at 80/118 contacts, and serial execution
+for inexpensive groups; all 249-contact groups remain serial. Two workers at 80
+contacts are an extrapolation from the measured 118-contact case, to be verified
+by the complete-patient profile. Larger cache settings are not selected: the
+118-contact savings are small and the 249-contact trial did not benefit.
+
+New telemetry records worker readiness and result-delivery delay. Delivery includes
+serialization, transport and queue waiting; these overlap other worker activity
+and must not be added as independent wall-time components. The two affected
+serial/parallel shared-execution tests passed after this instrumentation change.
+
+Full-patient execution and the bounded-memory payload audit remain required.
+`tests/final_workflow_review/run_full_patient.py` profiles every planned window;
+`audit_outputs.py` reads every saved payload and checks the full contact/reference,
+preprocessing/window, availability, float32, status and overflow contracts.
+Numerical NaNs and calculation failures are counted separately for investigation.
+
+The [001](../tests/final_workflow_review/001-bounded-audit.json) and
+[111](../tests/final_workflow_review/111-bounded-audit.json) bounded audits read
+all four windows of every one of the 239 outputs. All attempts succeeded; no
+payload was unavailable, no reference contact was unavailable, and no precision
+overflow occurred. Off-diagonal NaNs occurred only in the six significance-filtered
+cross-correlation summaries, with recorded `no_significant_lags` diagnostics.
+The 249-contact trial retained only 696 of 247008 directed pair/windows for each
+such output (0.282%); missing significance is not a calculation failure or zero
+connectivity. Existing robust-covariance rank/determinant warnings remain in the
+logs; the approved safeguards and estimator settings were not weakened to remove
+them. These bounded results do not establish the behavior of every later window.

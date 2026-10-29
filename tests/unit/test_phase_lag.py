@@ -325,3 +325,28 @@ def test_phase_pair_tiles_match_ordered_scalar_formulas_and_channel_permutations
             }
             for name in names:
                 np.testing.assert_allclose(values[name][w, 2, i, j], expected[name], atol=1e-14)
+
+
+def test_optional_count_does_not_evict_sign_matrix_between_bands():
+    raw = np.random.default_rng(812).normal(size=(6, 128))
+    data = Data(raw)
+    conn = spectral_workspace(data, 1)
+    w, r, k, f, p = conn._positive_coefficients.shape
+    sign_bytes = w*f*p*p*8
+    budget = sign_bytes + 1  # sign fits, but sign + compact nonzero count does not
+    data._spectral_cache_bytes = budget
+    conn = spectral_workspace(data, 1)
+    metrics = [cls(fmin=lo, fmax=hi, statistic=stat) for cls in
+               (spectral.PhaseLagIndex, spectral.SignedPhaseLagIndex)
+               for lo, hi in ((0, .5), (.1, .3)) for stat in ('mean', 'max')]
+    with patch.object(conn, '_reduce_phase', wraps=conn._reduce_phase) as reduced:
+        actual = [metric.multivariate(data) for metric in metrics]
+        assert reduced.call_count == 1
+        assert reduced.call_args.args[0] == ['sign']
+        assert conn._arrays.nbytes <= budget
+    independent = Data(raw)
+    for metric, values in zip(metrics, actual):
+        np.testing.assert_array_equal(values, metric.multivariate(independent))
+    # The debiased variant still explicitly computes its required count.
+    debiased = spectral.DebiasedSquaredPhaseLagIndex()
+    np.testing.assert_array_equal(debiased.multivariate(data), debiased.multivariate(independent))

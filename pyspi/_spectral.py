@@ -320,8 +320,12 @@ class SpectralConnectivity(sc.Connectivity):
     def _phase_statistics(self, *kinds):
         if "sign" in kinds and "nonzero" not in kinds:
             # Preserve a compact count alongside PLI so its debiased variant
-            # never needs another cross-product pass to identify zero signs.
-            kinds = (*kinds, "nonzero")
+            # can reuse it, but only when both fit. Otherwise inserting the
+            # optional count evicts the requested sign matrix on every band.
+            w, r, k, f, p = self._positive_coefficients.shape
+            together = w*f*p*p*(8 + np.dtype(np.min_scalar_type(r*k)).itemsize)
+            if together <= self._arrays.max_bytes:
+                kinds = (*kinds, "nonzero")
         # Registered moments not yet cached join the same pass: their
         # cross-products are the cost, and the extra reductions are cheap.
         fuse = self.phase_cache_required_bytes() <= self._arrays.max_bytes
