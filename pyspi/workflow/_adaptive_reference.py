@@ -72,16 +72,19 @@ def build_adaptive_reference(names, groups, *, patient_id):
 
 
 def resolve_reference(cfg, recording):
-    """Read metadata only when resolving an adaptive reference request."""
+    """Resolve patient-specific adaptive or explicitly metadata-based shaft references."""
     reference = cfg.reference
-    if reference["method"] != "adaptive_local":
+    shaft_average = reference["method"] == "shaft_average"
+    if reference["method"] != "adaptive_local" and not shaft_average:
         return reference
-    if "rules" in reference:
+    if "patient_id" in reference:
         if reference.get("patient_id") != recording.patient_id:
-            raise WorkflowError("adaptive reference belongs to a different patient")
+            raise WorkflowError("resolved reference belongs to a different patient")
+        return reference
+    if shaft_average and reference.get("shafts") != "metadata":
         return reference
     if cfg.dataset_directory is None:
-        raise WorkflowError("adaptive_local requires dataset metadata; configure dataset.directory or data_lake_config")
+        raise WorkflowError(f"{reference['method']} requires dataset metadata; configure dataset.directory or data_lake_config")
     from seeg_dataset import open_patient, patient_contacts
 
     patient = cfg.dataset_directory / f"{recording.patient_id}.zarr"
@@ -91,9 +94,17 @@ def resolve_reference(cfg, recording):
     info = open_patient(patient)["patient_info"]
     try:
         groups = info["electrodegroup"][:].tolist()
+        if shaft_average:
+            if len(groups) != len(names) or any(not isinstance(g, str) or not g for g in groups):
+                raise WorkflowError("shaft_average requires aligned nonempty electrodegroup labels")
+            shafts = {}
+            for name, group in zip(names, groups):
+                shafts.setdefault(group, []).append(name)
+            return {"method": "shaft_average", "definition": "pyspi-metadata-shaft-average/1",
+                    "patient_id": recording.patient_id, "shafts": shafts}
         return build_adaptive_reference(names, groups, patient_id=recording.patient_id)
     except (KeyError, TypeError, ValueError) as exc:
-        raise WorkflowError(f"{recording.patient_id}: cannot resolve adaptive_local metadata: {exc}") from exc
+        raise WorkflowError(f"{recording.patient_id}: cannot resolve {reference['method']} metadata: {exc}") from exc
 
 
 def adaptive_plan(names, reference):

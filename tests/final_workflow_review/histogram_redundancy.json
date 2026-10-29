@@ -1,0 +1,304 @@
+{
+  "limits": "Descriptive 3-patient x 3-reference x 3-sparse-window pilot, not predictive validation or exhaustive redundancy evidence. Equal-weight temporal means over cached windows. Same approved filtering and detrend-then-zscore preprocessing; custom local differs from the top_features source.",
+  "patients": {
+    "001": {
+      "channels": 118,
+      "window_indices": [
+        0,
+        304,
+        608
+      ],
+      "references": {
+        "car": {
+          "reference_definition_sha256": "bae8a9c8b927099a47e1d839cb8a2676a4afe75a74e5bcf78adbdd52103e91a8",
+          "per_window": [
+            {
+              "pairs": 6903,
+              "spearman": 0.9962224420748895,
+              "pearson": 0.9916769502821924,
+              "linear_residual_fraction_of_js_sd": 0.1287510243804274
+            },
+            {
+              "pairs": 6903,
+              "spearman": 0.996848985542413,
+              "pearson": 0.9942895321915243,
+              "linear_residual_fraction_of_js_sd": 0.10671610082063451
+            },
+            {
+              "pairs": 6903,
+              "spearman": 0.9951397810083609,
+              "pearson": 0.9828271443190433,
+              "linear_residual_fraction_of_js_sd": 0.18452860046527994
+            }
+          ],
+          "temporal_mean": {
+            "pairs": 6903,
+            "spearman": 0.9941259150422526,
+            "pearson": 0.9914038126190873,
+            "linear_residual_fraction_of_js_sd": 0.13083761051141996
+          }
+        },
+        "adaptive_local": {
+          "reference_definition_sha256": "26d05234c882a7e9abac610468fd5842d63766b8b5554fa60d45100a89dd6282",
+          "per_window": [
+            {
+              "pairs": 6903,
+              "spearman": 0.9962361060982525,
+              "pearson": 0.9905396117921376,
+              "linear_residual_fraction_of_js_sd": 0.13722710180821115
+            },
+            {
+              "pairs": 6903,
+              "spearman": 0.995971664229517,
+              "pearson": 0.9944893953930456,
+              "linear_residual_fraction_of_js_sd": 0.10483721882410954
+            },
+            {
+              "pairs": 6903,
+              "spearman": 0.9949491776393099,
+              "pearson": 0.9925785005463097,
+              "linear_residual_fraction_of_js_sd": 0.12160559301791954
+            }
+          ],
+          "temporal_mean": {
+            "pairs": 6903,
+            "spearman": 0.9942292640690135,
+            "pearson": 0.9922187392941444,
+            "linear_residual_fraction_of_js_sd": 0.12450692106681811
+          }
+        },
+        "shaft_average": {
+          "reference_definition_sha256": "e4fad3bf203c2c993f487941310070d2dbfbda11ca8dc78acd78fef55b648449",
+          "per_window": [
+            {
+              "pairs": 6903,
+              "spearman": 0.9961160041589727,
+              "pearson": 0.9909874616285628,
+              "linear_residual_fraction_of_js_sd": 0.13395465984793978
+            },
+            {
+              "pairs": 6903,
+              "spearman": 0.9969361363149293,
+              "pearson": 0.99441786737468,
+              "linear_residual_fraction_of_js_sd": 0.105513530156059
+            },
+            {
+              "pairs": 6903,
+              "spearman": 0.9957772235255623,
+              "pearson": 0.9903721344475827,
+              "linear_residual_fraction_of_js_sd": 0.1384306155073349
+            }
+          ],
+          "temporal_mean": {
+            "pairs": 6903,
+            "spearman": 0.9941649551923896,
+            "pearson": 0.991840341121965,
+            "linear_residual_fraction_of_js_sd": 0.12748622562090292
+          }
+        }
+      }
+    },
+    "006": {
+      "channels": 80,
+      "window_indices": [
+        0,
+        302,
+        604
+      ],
+      "references": {
+        "car": {
+          "reference_definition_sha256": "bae8a9c8b927099a47e1d839cb8a2676a4afe75a74e5bcf78adbdd52103e91a8",
+          "per_window": [
+            {
+              "pairs": 3160,
+              "spearman": 0.9955948339684993,
+              "pearson": 0.9927053487818007,
+              "linear_residual_fraction_of_js_sd": 0.12056571029941883
+            },
+            {
+              "pairs": 3160,
+              "spearman": 0.9951295641866511,
+              "pearson": 0.9940424147160722,
+              "linear_residual_fraction_of_js_sd": 0.10899393444334379
+            },
+            {
+              "pairs": 3160,
+              "spearman": 0.9956233165051876,
+              "pearson": 0.9890475001837826,
+              "linear_residual_fraction_of_js_sd": 0.1475975690186336
+            }
+          ],
+          "temporal_mean": {
+            "pairs": 3160,
+            "spearman": 0.9934708264510963,
+            "pearson": 0.9903211102749331,
+            "linear_residual_fraction_of_js_sd": 0.13879516758094873
+          }
+        },
+        "adaptive_local": {
+          "reference_definition_sha256": "95e62b00ea2297ceeabe76b9e0c2aa1d65bf6a51824e1f926e357fac4232c383",
+          "per_window": [
+            {
+              "pairs": 3160,
+              "spearman": 0.994693285775529,
+              "pearson": 0.9843689214644095,
+              "linear_residual_fraction_of_js_sd": 0.17611878507131373
+            },
+            {
+              "pairs": 3160,
+              "spearman": 0.9938860433923552,
+              "pearson": 0.9901597177995366,
+              "linear_residual_fraction_of_js_sd": 0.13994189239517182
+            },
+            {
+              "pairs": 3160,
+              "spearman": 0.9951134377984824,
+              "pearson": 0.9878048413105539,
+              "linear_residual_fraction_of_js_sd": 0.15569712740905411
+            }
+          ],
+          "temporal_mean": {
+            "pairs": 3160,
+            "spearman": 0.9918299697825218,
+            "pearson": 0.9891337294479122,
+            "linear_residual_fraction_of_js_sd": 0.1470185881732808
+          }
+        },
+        "shaft_average": {
+          "reference_definition_sha256": "baf27f070803d33e7136980732eb114d3c64369ae418cc392dfa14f9caf766ac",
+          "per_window": [
+            {
+              "pairs": 3160,
+              "spearman": 0.9947702938901046,
+              "pearson": 0.9892614062898055,
+              "linear_residual_fraction_of_js_sd": 0.14615700470903245
+            },
+            {
+              "pairs": 3160,
+              "spearman": 0.9941466729021274,
+              "pearson": 0.9907524027342203,
+              "linear_residual_fraction_of_js_sd": 0.13568226293944985
+            },
+            {
+              "pairs": 3160,
+              "spearman": 0.9921902874101145,
+              "pearson": 0.9848698509137803,
+              "linear_residual_fraction_of_js_sd": 0.17329563399309464
+            }
+          ],
+          "temporal_mean": {
+            "pairs": 3160,
+            "spearman": 0.9902169670238314,
+            "pearson": 0.9871906168202992,
+            "linear_residual_fraction_of_js_sd": 0.1595452476946826
+          }
+        }
+      }
+    },
+    "111": {
+      "channels": 249,
+      "window_indices": [
+        0,
+        300,
+        601
+      ],
+      "references": {
+        "car": {
+          "reference_definition_sha256": "bae8a9c8b927099a47e1d839cb8a2676a4afe75a74e5bcf78adbdd52103e91a8",
+          "per_window": [
+            {
+              "pairs": 30876,
+              "spearman": 0.995091922168599,
+              "pearson": 0.9888778997759998,
+              "linear_residual_fraction_of_js_sd": 0.1487296182157644
+            },
+            {
+              "pairs": 30876,
+              "spearman": 0.9960194080849166,
+              "pearson": 0.9871646941385204,
+              "linear_residual_fraction_of_js_sd": 0.15970556235273195
+            },
+            {
+              "pairs": 30876,
+              "spearman": 0.9951986806927129,
+              "pearson": 0.9921950970376354,
+              "linear_residual_fraction_of_js_sd": 0.12469518601163995
+            }
+          ],
+          "temporal_mean": {
+            "pairs": 30876,
+            "spearman": 0.9924749250965421,
+            "pearson": 0.9877547779249589,
+            "linear_residual_fraction_of_js_sd": 0.15601441820041714
+          }
+        },
+        "adaptive_local": {
+          "reference_definition_sha256": "995f84f6482361c90dc1fd392b0236d643b1a4374eeaa84f811988e38dbbad65",
+          "per_window": [
+            {
+              "pairs": 30876,
+              "spearman": 0.9947627255265558,
+              "pearson": 0.986943405154661,
+              "linear_residual_fraction_of_js_sd": 0.1610674238377275
+            },
+            {
+              "pairs": 30876,
+              "spearman": 0.9938786220486671,
+              "pearson": 0.981315354807411,
+              "linear_residual_fraction_of_js_sd": 0.19240627437587352
+            },
+            {
+              "pairs": 30876,
+              "spearman": 0.9942331336921504,
+              "pearson": 0.985078919210065,
+              "linear_residual_fraction_of_js_sd": 0.17210323334537056
+            }
+          ],
+          "temporal_mean": {
+            "pairs": 30876,
+            "spearman": 0.9906903230328731,
+            "pearson": 0.984408581737781,
+            "linear_residual_fraction_of_js_sd": 0.17589697041453206
+          }
+        },
+        "shaft_average": {
+          "reference_definition_sha256": "d8c14a412e0a907515119ff1af62b03513fe01a9c45a9de0a41dafc3afa3f862",
+          "per_window": [
+            {
+              "pairs": 30876,
+              "spearman": 0.9956058483446344,
+              "pearson": 0.9912501075679736,
+              "linear_residual_fraction_of_js_sd": 0.13199706150699037
+            },
+            {
+              "pairs": 30876,
+              "spearman": 0.9956974416402068,
+              "pearson": 0.9909677269837268,
+              "linear_residual_fraction_of_js_sd": 0.13410057448312665
+            },
+            {
+              "pairs": 30876,
+              "spearman": 0.9962136410056227,
+              "pearson": 0.992045858113198,
+              "linear_residual_fraction_of_js_sd": 0.12587698518970403
+            }
+          ],
+          "temporal_mean": {
+            "pairs": 30876,
+            "spearman": 0.9933383981838172,
+            "pearson": 0.9907678957662155,
+            "linear_residual_fraction_of_js_sd": 0.13556908467266834
+          }
+        }
+      }
+    }
+  },
+  "source_sha256": {
+    "/tmp/pyspi-candidate-pilot/001-inputs.npz": "c7792de12dfd2e8593651c5c3854d93e6a2e9dc697720e6711c1204f55fa5361",
+    "/tmp/pyspi-candidate-pilot/006-inputs.npz": "b46bf41b09f9936a7e3a7aa02e0c32153010e45e927d98dddc76f73d090992e7",
+    "/tmp/pyspi-candidate-pilot/111-inputs.npz": "66931eeb919d005a7a0f60a2569bf712925a1b84e7738ee31956f809c11541b9",
+    "pyspi/_histogram.py": "6a2f3e896753ef741fd0c174e337d3870404c2ba9af5aa0748755937eb728d33",
+    "pyspi/workflow/_adaptive_reference.py": "667f5c5bea4ac390fca33df5756a8449080f03641d050d777c19d68c6cb3be53",
+    "tests/final_workflow_review/assess_histogram_redundancy.py": "7260548d9d952061832a955f1f8ab844e8dfb133bcb87f0772fd95dc99f30290"
+  }
+}

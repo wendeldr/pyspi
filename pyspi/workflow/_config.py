@@ -93,6 +93,8 @@ def reference_config(value, base):
     result = dict(value)
     if method in ("laplacian", "shaft_average"):
         shafts = value.get("shafts")
+        if method == "shaft_average" and shafts == "metadata":
+            return result
         if not isinstance(shafts, dict) or not shafts:
             raise WorkflowError("reference.shafts must map shaft names to physically ordered contact lists")
         seen = set()

@@ -3,19 +3,24 @@
 This implements the approved final-workflow goal. This document tracks completed
 work and outstanding gates; it is not a declaration that the goal is complete.
 
+The revised goal additionally requires **3–5 complete patients through the final
+workflow with float32 outputs** after implementation/validation. This is a required
+completion gate, not satisfied by the bounded profiling windows.
+
 ## Requirements and evidence
 
 | Requirement | Evidence / remaining work |
 |---|---|
 | Five inexpensive additions | Implemented in `statistics/basic.py` and `statistics/distance.py`; independent tests in `test_lightweight_candidates.py`. Run selections still to be updated. |
 | Histogram and envelope optimization | Implemented and measured; receipt and limits below. |
-| JS redundancy across patients/references and temporal summaries | Pending representative comparison; retain provisionally. |
-| Downstream Pearson / absolute Pearson / consecutive graph changes | Pending API/documentation and tests. |
+| JS redundancy across patients/references and temporal summaries | Completed three-patient/three-reference pilot below; omit default selection under the approved empirical criterion. |
+| Downstream Pearson / absolute Pearson / consecutive graph changes | Bounded `workflow.derived` iterator and ten focused tests; formulas, identity and temporal-summary guidance below. |
 | All 33 source outputs plus partial correlation accounted for | Source inventory exists in `additional_pairwise_review.md`; final coverage table/config selections pending. |
-| Broadband local and limited shaft-average combinations | Pending selection and metadata-resolved shaft-average support. |
+| Broadband local and limited shaft-average combinations | Automatic shaft membership implemented/tested; final selections pending. |
 | Group configuration / bounded shared continuous preparation | Pending implementation and comparison against separate jobs. |
 | Output/reference/preprocessing contracts | Existing contracts retained; new metrics have focused serial/spawn/resume coverage. Group isolation still to be validated. |
 | Final workflow timings, larger recording, complete process memory and tuning | Pending. Kernel receipts below are insufficient for this requirement. |
+| Final full-patient runs | Pending 3–5 complete patients, all selected final groups, float32 outputs and completion/availability audit. |
 | Final configs/counts, brief CSV notes, review and chunked commits | In progress. No push authorized. |
 
 ## New calculation definitions
@@ -115,3 +120,76 @@ and one serial/spawn/float32/resume integration test passed. The overlap-only
 invalid-input diagnostic and partial-correlation minimum-observation preflight
 guard were refined after the timing receipt; finite-data formulas are unchanged.
 Final workflow timings remain outstanding.
+
+## Downstream derived features
+
+`pyspi.workflow.derived.iter_derived_windows` reads saved per-window outputs in
+bounded batches. It does not read EEG, write over raw outputs, or average over
+time. Each batch carries its run path, recording/reference/preprocessing identity,
+input metric, original window indices and pairwise validity mask.
+
+```python
+from pyspi.workflow.derived import iter_derived_windows
+
+for batch in iter_derived_windows(
+    run_path, "pdist_cosine", transform="absolute_pearson",
+    absolute_change=True, batch_windows=16,
+):
+    # batch.values: abs(abs(r[t]) - abs(r[t-1])), float64
+    # batch.valid: both values available, finite, successful, and adjacent
+    # batch.window_indices: original positions, never compressed across gaps
+    pass  # downstream analysis/persistence, not part of the raw EEG run
+```
+
+`transform="pearson"` computes `1-cosine_distance`; `absolute_pearson` applies
+absolute value per window. These automatic derivations require recorded z-scoring,
+which guarantees centered, nonzero-variance accepted channels. Detrending-only
+input can also satisfy the algebraic identity, but cosine outputs alone cannot
+prove a nonzero centered norm; the helper rejects that unverified case.
+`transform="identity"` supports changes of any saved metric, including RE and PEC.
+No change is defined at the first selected window, a missing predecessor, a
+failed/unfinished window, an unavailable contact or a nonfinite numerical value.
+Batch boundaries preserve the previous window; selection gaps never bridge it.
+
+For later temporal summaries, accumulate `where(batch.valid, batch.values, 0)`
+in float64 and divide by per-edge valid counts, leaving zero-count entries NaN.
+Average signed correlations, absolute correlations and their absolute changes
+separately: `mean(abs(r))` is generally not `abs(mean(r))`. Do not combine references,
+preprocessing identities or different recordings into a single adjacent-window
+sequence. Ten focused tests cover transformations, gap/failure handling, metadata
+checks and bounded reads; workflow groups will receive integration coverage later.
+
+## Redundancy and source coverage
+
+[The histogram redundancy receipt](../tests/final_workflow_review/histogram_redundancy.json)
+uses three windows each from current included patients 001 (118 contacts), 006
+(80), and 111 (249), under CAR, adaptive local, and shaft-average references.
+Per-window upper-triangle RE/JS rank correlations were 0.9922–0.9969; correlations
+of per-edge temporal means were 0.9902–0.9942. Temporal-mean Pearson correlations
+were 0.9844–0.9922. Residuals after a fitted linear relationship were still
+12–18% of JS's standard deviation: these are not algebraically identical metrics.
+Following the approved approximate-redundancy criterion, JS is omitted from the
+**default selection**, while its implementation remains available. The pilot does
+not establish redundancy for every patient, unusual distribution, or summary.
+Patient 004 from the historical cache is excluded in the current data-lake
+metadata (no labeled data), so it was replaced by 006, not silently reintroduced.
+
+[The coverage inventory](../tests/final_workflow_review/top_features_coverage.csv)
+accounts for all 33 new exploration outputs: 7 CAR, 13 local, 13 shaft. It also
+records the three stored baseline controls and the separately suggested partial
+correlation. Local/shaft Pearson, absolute Pearson and graph changes are derived
+from per-window saved graphs. The source's 20-sample “10 ms” label is corrected
+to its exact duration; the intended lag stays 20 samples. Broadband local/shaft
+envelope and amplitude log-ratio groups will be selected explicitly without
+multiplying the entire main selection over references. Configuration integration
+is still pending; the inventory marks that status.
+
+`reference: {method: shaft_average, shafts: metadata}` resolves the authoritative
+patient `electrodegroup` membership automatically. It preserves contact axes,
+subtracts each shaft's retained-contact mean, and records the resolved membership
+and coefficients. It has the existing shaft-mean definition: a singleton shaft
+is unavailable; two-contact shafts yield opposite signals. It does not inherit
+adaptive-local CAR fallbacks. Explicit shaft layouts retain their behavior.
+Three new tests and the 13 affected adaptive-reference tests passed.
+
+Source candidate ledger SHA256: `b9e15f442ffa8e054103c899a5424dedb096242230c95b2fcea1c709f845579e`.
