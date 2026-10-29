@@ -25,12 +25,11 @@ notch:
   width_hz: 1
   transition_hz: 1
 reference: car
-# For ONE local-reference comparison, use method: laplacian with explicit
-# validated physical shaft lists, e.g. A: [A1,A2,A3,...]. A2 becomes
-# A2 - mean(A1,A3); endpoints/gaps are masked without a fallback reference.
-# See docs/workflow.md for the schema; retain excluded contacts in those lists.
+# For ONE local-reference comparison, use method: adaptive_local. Patient
+# shafts and numbered contact order come from dataset metadata. Endpoints,
+# one-contact gaps and larger gaps follow docs/adaptive_local_reference.md.
 # Keep this same 12-output subset and preprocessing for that comparison;
-# use a distinct output directory. Reference changes mix channel signals and
+# dataset mode separates output by reference. Reference changes mix signals and
 # can change even scale-invariant metrics. To compare normalized connectivity
 # across references, use a matched subset of reviewed.yaml with zscore: true;
 # the amplitude-only selection here does not cover that separate comparison.

@@ -1,0 +1,125 @@
+{
+  "shape": [
+    118,
+    1024
+  ],
+  "windows": 3,
+  "threads": 1,
+  "design": "Three cached real EEG windows from patient 001, CAR, detrend then sample zscore. Candidate kernel-only probes, not production or complete workflow timings. Imports, CAR and detrending/zscore excluded. Exact source functions extracted via AST without running source scripts.",
+  "source_sha256": {
+    "/run/media/dan/DansFlash/ram_needs_rma_git/top_features/pilot_relative_entropy.py": "8d924f02d4ea003b3c1bf22b3958cbf45f7012162422f71a73ccb88477f15f07",
+    "/run/media/dan/DansFlash/ram_needs_rma_git/top_features/further_feature_exploration/scripts/extract.py": "3b2178ff2c2d86679968e16551edc5e191484df163f69b7334964f29afad8075",
+    "/tmp/pyspi-candidate-pilot/001-inputs.npz": "c7792de12dfd2e8593651c5c3854d93e6a2e9dc697720e6711c1204f55fa5361"
+  },
+  "timings": {
+    "top_histogram_RE_plus_JS": {
+      "seconds": [
+        0.0024115700216498226,
+        0.002468220016453415,
+        0.0023324360081460327
+      ],
+      "median_seconds": 0.0024115700216498226,
+      "x600_seconds": 1.4469420129898936,
+      "x41400_hours": 0.02773305524897296
+    },
+    "current_relative_entropy_including_Data": {
+      "seconds": [
+        0.012104392983019352,
+        0.010742042999481782,
+        0.010927264986094087
+      ],
+      "median_seconds": 0.010927264986094087,
+      "x600_seconds": 6.556358991656452,
+      "x41400_hours": 0.125663547340082
+    },
+    "JS_increment_after_histograms": {
+      "seconds": [
+        0.0011504539870657027,
+        0.0011445359850768,
+        0.0011545350134838372
+      ],
+      "median_seconds": 0.0011504539870657027,
+      "x600_seconds": 0.6902723922394216,
+      "x41400_hours": 0.01323022085125558
+    },
+    "fixed_lag_20_samples": {
+      "seconds": [
+        0.0016099599888548255,
+        0.0013769280049018562,
+        0.0015189209952950478
+      ],
+      "median_seconds": 0.0015189209952950478,
+      "x600_seconds": 0.9113525971770287,
+      "x41400_hours": 0.01746759144589305
+    },
+    "event_excess": {
+      "seconds": [
+        0.0008088350004982203,
+        0.0007229589973576367,
+        0.0007022210047580302
+      ],
+      "median_seconds": 0.0007229589973576367,
+      "x600_seconds": 0.433775398414582,
+      "x41400_hours": 0.008314028469612822
+    },
+    "log_scale_ratio_from_detrended_voltage": {
+      "seconds": [
+        0.00048226898070424795,
+        0.00040572299621999264,
+        0.0003986440133303404
+      ],
+      "median_seconds": 0.00040572299621999264,
+      "x600_seconds": 0.24343379773199558,
+      "x41400_hours": 0.004665814456529915
+    },
+    "LedoitWolf_partial_standalone": {
+      "seconds": [
+        0.01146687800064683,
+        0.0062707360193599015,
+        0.0049664579855743796
+      ],
+      "median_seconds": 0.0062707360193599015,
+      "x600_seconds": 3.762441611615941,
+      "x41400_hours": 0.07211346422263887
+    },
+    "partial_increment_after_fit": {
+      "seconds": [
+        9.212299482896924e-05,
+        6.106501678004861e-05,
+        4.968798020854592e-05
+      ],
+      "median_seconds": 6.106501678004861e-05,
+      "x600_seconds": 0.036639010068029165,
+      "x41400_hours": 0.000702247692970559
+    },
+    "top_orthogonal_envelope_amplitude_only": {
+      "seconds": [
+        0.025419677986064926,
+        0.02369850198738277,
+        0.023901217005914077
+      ],
+      "median_seconds": 0.023901217005914077,
+      "x600_seconds": 14.340730203548446,
+      "x41400_hours": 0.2748639955680119
+    },
+    "current_orthogonal_envelope_also_computes_log": {
+      "seconds": [
+        0.7385388089751359,
+        0.742484376009088,
+        0.7455899780034088
+      ],
+      "median_seconds": 0.742484376009088,
+      "x600_seconds": 445.4906256054528,
+      "x41400_hours": 8.538570324104512
+    }
+  },
+  "relative_entropy_comparison": [
+    2.220446049250313e-15,
+    2.886579864025407e-15,
+    2.6645352591003757e-15
+  ],
+  "jit_warmup_seconds": 1.6932642080064397,
+  "orthogonal_envelope_max_difference_last_window": 2.6645352591003757e-15,
+  "orthogonal_envelope_limits": "Source kernel omits production scale/degeneracy safeguards and does not compute log variants. Potential optimization, not a validated replacement or like-for-like family speedup.",
+  "relative_entropy_limits": "Same nonconstant finite off-diagonal estimator; production uses NaN diagonals and diagnosed NaNs for constants/nonfinite channels. Whole source filtering/reference/preprocessing pipeline is different."
+}

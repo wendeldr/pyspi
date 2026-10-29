@@ -1,5 +1,79 @@
 # Additional pairwise candidate review
 
+## Subsequent top_features and workflow-sharing review
+
+After the adaptive-local reference was approved, the source review was extended
+to `top_features/further_feature_exploration`, not just its initial recommendations.
+Its 33 candidates comprise reference combinations and temporal summaries, not 33
+different estimators. The complete newer report is
+`further_feature_exploration/reports/batches_1_2/report.md` in that source tree.
+
+Current histogram relative entropy matches its core: ten independent-range bins,
+1e-10 pseudocount, natural logarithms and the maximum of directional KL values.
+Comparison with the exact extracted prototype function on three cached real
+118-by-1024 CAR windows differed by at most 2.89e-15 off diagonal. Production
+keeps diagonals and undefined constant/nonfinite channels missing. It is enabled
+in both candidate selections. This does not reproduce the source's full pipeline:
+the newer source uses Butterworth 0.5–300 Hz filtering, different local-reference
+rules, boundary trimming and z-score-before-detrend preprocessing. Current
+workflow definitions remain those separately approved here.
+
+| Candidate from the source | Current state / next treatment |
+|---|---|
+| Relative entropy | Implemented and selected for CAR/custom local. |
+| Ordinary and absolute orthogonalized envelope correlation | Implemented. Main CAR selection includes broadband variants; local candidate selection currently uses 30–70 Hz variants. Broadband local/shaft requests would be additional reference/band combinations. |
+| Beta/high-gamma coupling | Implemented and selected for CAR/custom local. Shaft reference is an additional combination. |
+| Pearson / absolute Pearson | Derive from stored per-window cosine distance when centered: `r=1-distance`, then `abs(r)`. Different references still require their own calculation. Apply absolute value before temporal aggregation. |
+| Consecutive graph changes | Downstream derivation from raw per-window graphs; require genuinely adjacent windows and two valid values. No new raw EEG estimator needed. |
+| Fixed 20-sample lag correlation | Not implemented as a dedicated output; not equivalent to the selected max/mean/min cross-correlation summaries. Source uses destination-first orientation; any production addition must use documented source-first orientation. |
+| Threshold-event excess | Not implemented. Covariance of absolute standardized threshold exceedances above 3; not a clinical spike detector. |
+| Pairwise log scale ratio | Not implemented. Needs detrended, unnormalized voltage. Marginal amplitude contrast, not temporal coupling. |
+| Shrinkage partial correlation | Suggested separately; source's final 33 omit it. Current precision is not partial correlation. Normalize before discarding the fitted diagonal; cannot reconstruct from mean saved off-diagonal precision alone. |
+| Jensen–Shannon divergence | Not implemented. Very cheap shared histogram addition; source reports 0.9967 summary rank correlation with CAR relative entropy, an empirical near-redundancy rather than an algebraic identity. |
+| Shaft-average combinations | Existing explicit-layout reference, not an additional estimator. Automatic metadata resolution and a small selected profile would be needed for convenient cohort use. |
+
+The [bounded probe receipt](../tests/final_workflow_review/top_feature_probe.json)
+and [reproducer](../tests/final_workflow_review/probe_top_features.py) compare
+three existing real EEG windows. One numerical thread; medians below exclude
+preparation, imports, JIT warmup, output and production diagnostics. Cohort
+columns repeat the representative 118-channel cost for 600×69 windows and are
+not measured cohort elapsed times.
+
+| Prototype work | Window | ×600 | ×600×69 |
+|---|---:|---:|---:|
+| Fixed lag 20 | 1.52 ms | 0.91 s | 1.05 min |
+| Event excess | 0.72 ms | 0.43 s | 0.50 min |
+| Log scale ratio after detrending | 0.41 ms | 0.24 s | 0.28 min |
+| LedoitWolf partial correlation, including fit | 6.27 ms | 3.76 s | 4.33 min |
+| Partial correlation after shared fit | 0.061 ms | 0.037 s | 0.042 min |
+| Jensen–Shannon after shared histograms | 1.15 ms | 0.69 s | 0.79 min |
+
+The source's compiled amplitude-only orthogonal-envelope kernel took 23.9 ms
+versus 742.5 ms for the current workspace path. The current path also computes
+log variants and implements numerical-degeneracy safeguards absent from the
+prototype. Last-window finite outputs differed by 2.66e-15, but that does not
+validate edge cases or justify dropping the safeguards. This is a concrete
+remaining optimization investigation, not a delivered 31× family speedup.
+
+The source's combined compiled RE/JS kernel took 2.41 ms; current RE including
+Data construction took 10.93 ms. This comparison also differs in included work;
+histogram bin boundaries, extreme scales and undefined-input behavior need
+preservation before replacing production code.
+
+For workflow sharing, prefer one experiment description with global defaults
+and named groups of metrics sharing reference/preprocessing. A one-metric group
+serves as an override; multiple groups request multiple references. Resolve
+these into ordinary homogeneous Calculator/worker runs, preserving the existing
+output/resume contracts. Share compatible continuous reading/filtering/resampling
+before reference branches and share compatible band preparation. Avoid teaching
+every estimator about references or reusing result caches across differently
+preprocessed input. Separate existing configs should remain usable. This is the
+proposed next scope, not an implemented configuration schema.
+
+New additions should be assessed by runtime and meaningful redundancy; weak or
+uncertain predictive evidence alone is not an exclusion criterion. No additional
+estimators or reference combinations were enabled during this source review.
+
 This implements the approved ten-part additional-candidate goal. Established
 188-output normalized and 12-output amplitude selections remain separate.
 The target is roughly one day per measure for 72 people with 600 half-second
