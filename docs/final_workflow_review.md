@@ -157,7 +157,14 @@ Average signed correlations, absolute correlations and their absolute changes
 separately: `mean(abs(r))` is generally not `abs(mean(r))`. Do not combine references,
 preprocessing identities or different recordings into a single adjacent-window
 sequence. Ten focused tests cover transformations, gap/failure handling, metadata
-checks and bounded reads; workflow groups will receive integration coverage later.
+checks and bounded reads. The
+[saved-output integration receipt](../tests/final_workflow_review/derived_stored_output_validation.json)
+adds 36 cases across CAR, adaptive-local and shaft-average outputs: Pearson,
+absolute Pearson, their changes, and changes of RE/orthogonalized envelope
+correlation agree exactly with independent saved-array formulas. Two-window
+batches and gapped selections verify boundary behavior; raw outputs and reference
+provenance remain unchanged. These checks use the bounded four-window trial,
+not a substitute for the full-patient payload audit.
 
 ## Redundancy and source coverage
 

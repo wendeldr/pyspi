@@ -1,0 +1,492 @@
+{
+  "profile": "tests/final_workflow_review/001-tuned-w2.json",
+  "checks": "Independent saved-array formulas match exactly across two-window batch boundaries and selection gaps; raw arrays unchanged; reference provenance retained. No EEG calculations or temporal averages performed.",
+  "cases": [
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 55224
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 55224
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "histre_bins10_pseudocount0p0000000001",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "histre_bins10_pseudocount0p0000000001",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "pec_orth_abs",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "car-normalized",
+      "metric": "pec_orth_abs",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 55224
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 55224
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "histre_bins10_pseudocount0p0000000001",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "histre_bins10_pseudocount0p0000000001",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "pec_orth_abs",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "local-normalized",
+      "metric": "pec_orth_abs",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 55224
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "pdist_cosine",
+      "transform": "pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 55224
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": false,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "pdist_cosine",
+      "transform": "absolute_pearson",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "histre_bins10_pseudocount0p0000000001",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "histre_bins10_pseudocount0p0000000001",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "pec_orth_abs",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "valid_values": 41418
+    },
+    {
+      "patient": "001",
+      "group": "shaft-normalized",
+      "metric": "pec_orth_abs",
+      "transform": "identity",
+      "absolute_change": true,
+      "windows": [
+        0,
+        2,
+        3
+      ],
+      "valid_values": 13806
+    }
+  ]
+}
